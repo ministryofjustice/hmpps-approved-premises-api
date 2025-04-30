@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
@@ -75,6 +77,7 @@ class PlacementRequestDetailTransformerTest {
   private val transformedPlacementRequest = getTransformedPlacementRequest()
   private val mockApplicationEntity = mockk<ApprovedPremisesApplicationEntity>()
   private val mockApplication = mockk<Application>()
+  private val mockCas1Application = mockk<Cas1Application>()
 
   @BeforeEach
   fun setup() {
@@ -248,6 +251,55 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.booking).isNull()
     assertThat(result.legacyBooking).isNull()
     assertThat(result.spaceBookings).isEmpty()
+  }
+
+  @Test
+  fun `transforms correctly to Cas1PlacementRequestDetail`() {
+    val transformedPlacementRequest = getTransformedPlacementRequest()
+
+    every { mockPlacementRequestEntity.booking } returns null
+    every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf()
+    every { mockPlacementRequestEntity.isParole } returns false
+    every { mockPlacementRequestEntity.application } returns mockApplicationEntity
+    every { mockPlacementRequestEntity.isWithdrawn } returns true
+
+    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
+    every { mockApplicationsTransformer.transformJpaToCas1Application(mockApplicationEntity, mockPersonInfoResult) } returns mockCas1Application
+    every { mockPersonTransformer.personInfoResultToPersonSummaryInfoResult(mockPersonInfoResult) } returns mockPersonSummaryInfoResult
+
+    val result = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(mockPlacementRequestEntity, mockPersonInfoResult)
+    assertThat(result).isInstanceOf(Cas1PlacementRequestDetail::class.java)
+
+    assertThat(result.id).isEqualTo(transformedPlacementRequest.id)
+    assertThat(result.gender).isEqualTo(transformedPlacementRequest.gender)
+    assertThat(result.type).isEqualTo(transformedPlacementRequest.type)
+    assertThat(result.expectedArrival).isEqualTo(transformedPlacementRequest.expectedArrival)
+    assertThat(result.duration).isEqualTo(transformedPlacementRequest.duration)
+    assertThat(result.location).isEqualTo(transformedPlacementRequest.location)
+    assertThat(result.radius).isEqualTo(transformedPlacementRequest.radius)
+    assertThat(result.essentialCriteria).isEqualTo(transformedPlacementRequest.essentialCriteria)
+    assertThat(result.desirableCriteria).isEqualTo(transformedPlacementRequest.desirableCriteria)
+    assertThat(result.person).isEqualTo(transformedPlacementRequest.person)
+    assertThat(result.risks).isEqualTo(transformedPlacementRequest.risks)
+    assertThat(result.applicationId).isEqualTo(transformedPlacementRequest.applicationId)
+    assertThat(result.assessmentId).isEqualTo(transformedPlacementRequest.assessmentId)
+    assertThat(result.releaseType).isEqualTo(transformedPlacementRequest.releaseType)
+    assertThat(result.status).isEqualTo(transformedPlacementRequest.status)
+    assertThat(result.assessmentDecision).isEqualTo(transformedPlacementRequest.assessmentDecision)
+    assertThat(result.assessmentDate).isEqualTo(transformedPlacementRequest.assessmentDate)
+    assertThat(result.applicationDate).isEqualTo(transformedPlacementRequest.applicationDate)
+    assertThat(result.assessor).isEqualTo(transformedPlacementRequest.assessor)
+    assertThat(result.notes).isEqualTo(transformedPlacementRequest.notes)
+    assertThat(result.booking).isNull()
+    assertThat(result.legacyBooking).isNull()
+    assertThat(result.spaceBookings).isEmpty()
+    assertThat(result.isWithdrawn).isEqualTo(true)
+    assertThat(result.isParole).isEqualTo(false)
+    assertThat(result.application).isEqualTo(mockCas1Application)
+
+    verify(exactly = 1) {
+      mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult)
+    }
   }
 
   private fun getTransformedPlacementRequest(): PlacementRequest {

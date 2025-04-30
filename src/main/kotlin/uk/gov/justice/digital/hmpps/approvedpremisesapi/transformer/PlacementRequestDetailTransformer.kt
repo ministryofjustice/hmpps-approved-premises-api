@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -21,6 +22,7 @@ class PlacementRequestDetailTransformer(
     bookingSummaryTransformer,
   )
 
+  @Deprecated("Use transformJpaToCas1PlacementRequestDetail instead")
   fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult, cancellations: List<CancellationEntity>): PlacementRequestDetail {
     val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, personInfo)
     val personSummaryInfo = personTransformer.personInfoResultToPersonSummaryInfoResult(personInfo)
@@ -58,6 +60,45 @@ class PlacementRequestDetailTransformer(
       isWithdrawn = jpa.isWithdrawn,
       isParole = jpa.isParole,
       application = applicationTransformer.transformJpaToApi(jpa.application, personInfo),
+    )
+  }
+
+  fun transformJpaToCas1PlacementRequestDetail(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestDetail {
+    val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, personInfo)
+    val personSummaryInfo = personTransformer.personInfoResultToPersonSummaryInfoResult(personInfo)
+    val placementRequestBookingSummary = placementRequestBookingSummaryTransformer.getBookingSummary(jpa)
+
+    return Cas1PlacementRequestDetail(
+      id = placementRequest.id,
+      gender = placementRequest.gender,
+      type = placementRequest.type,
+      expectedArrival = placementRequest.expectedArrival,
+      duration = placementRequest.duration,
+      location = placementRequest.location,
+      radius = placementRequest.radius,
+      essentialCriteria = placementRequest.essentialCriteria,
+      desirableCriteria = placementRequest.desirableCriteria,
+      person = placementRequest.person,
+      risks = placementRequest.risks,
+      applicationId = placementRequest.applicationId,
+      assessmentId = placementRequest.assessmentId,
+      releaseType = placementRequest.releaseType,
+      status = placementRequest.status,
+      assessmentDecision = placementRequest.assessmentDecision,
+      assessmentDate = placementRequest.assessmentDate,
+      applicationDate = placementRequest.applicationDate,
+      assessor = placementRequest.assessor,
+      notes = placementRequest.notes,
+      booking = placementRequestBookingSummary,
+      spaceBookings = jpa.spaceBookings.filter { it.isActive() }.map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
+      legacyBooking = if (placementRequestBookingSummary?.type == PlacementRequestBookingSummary.Type.legacy) {
+        placementRequestBookingSummary
+      } else {
+        null
+      },
+      isWithdrawn = jpa.isWithdrawn,
+      isParole = jpa.isParole,
+      application = applicationTransformer.transformJpaToCas1Application(jpa.application, personInfo),
     )
   }
 }

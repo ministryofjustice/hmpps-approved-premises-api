@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -126,6 +127,21 @@ class PlacementRequestService(
 
   fun getPlacementRequestOrNull(id: UUID) = placementRequestRepository.findByIdOrNull(id)
 
+  fun getPlacementRequest(
+    user: UserEntity,
+    id: UUID,
+  ): CasResult<PlacementRequestEntity> {
+    val placementRequest = placementRequestRepository.findByIdOrNull(id)
+      ?: return CasResult.NotFound("PlacementRequest", id.toString())
+
+    if (!offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy())) {
+      return CasResult.Unauthorised()
+    }
+
+    return CasResult.Success(placementRequest)
+  }
+
+  @Deprecated("Use getPlacementRequest instead")
   fun getPlacementRequestForUser(
     user: UserEntity,
     id: UUID,

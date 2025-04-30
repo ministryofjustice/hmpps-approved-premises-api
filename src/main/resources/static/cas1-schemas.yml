@@ -1812,7 +1812,31 @@ components:
       required:
         - document
         - rejectionRationale
-
+    Cas1PlacementRequestDetail:
+      allOf:
+        - $ref: '_shared.yml#/components/schemas/PlacementRequest'
+        - type: object
+          properties:
+            application:
+              $ref: '#/components/schemas/Cas1Application'
+            legacyBooking:
+              description: The legacy booking associated with this placement request
+              $ref: '_shared.yml#/components/schemas/PlacementRequestBookingSummary'
+            spaceBookings:
+              description: The space bookings associated with this placement request
+              type: array
+              items:
+                $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummary'
+          required:
+            - application
+            - spaceBookings
+    Cas1WithdrawPlacementRequest:
+      type: object
+      properties:
+        reason:
+          $ref: '_shared.yml#/components/schemas/WithdrawPlacementRequestReason'
+      required:
+        - reason
 
 
 

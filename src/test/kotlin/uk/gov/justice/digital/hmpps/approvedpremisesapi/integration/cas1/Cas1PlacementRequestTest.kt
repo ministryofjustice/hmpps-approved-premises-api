@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -8,9 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -19,23 +17,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -46,17 +49,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
 
-class PlacementRequestsTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var placementRequestTransformer: PlacementRequestTransformer
+class Cas1PlacementRequestTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer
@@ -74,28 +72,35 @@ class PlacementRequestsTest : IntegrationTestBase() {
     probationRegion = givenAProbationRegion()
   }
 
-  /**
-   Some of these tests are duplicated in [PlacementRequestRepositoryTest]
-
-   Ideally all tests should be via the API, where possible
-   */
-  @Deprecated("Superseded by Cas1Dashboard tests")
   @Nested
-  inner class Dashboard {
+  @SuppressWarnings("LargeClass")
+  inner class Search {
 
-    private fun createBooking(placementRequest: PlacementRequestEntity) {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
+    private fun createBooking(
+      placementRequest: PlacementRequestEntity,
+      premises: ApprovedPremisesEntity? = approvedPremisesEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
         withLocalAuthorityArea(
           localAuthorityEntityFactory.produceAndPersist(),
         )
-      }
-
+      },
+      arrivalDate: LocalDate? = LocalDate.now(),
+    ): BookingEntity {
       placementRequest.booking = bookingEntityFactory.produceAndPersist {
-        withPremises(premises)
+        withPremises(premises as PremisesEntity)
+        withArrivalDate(arrivalDate!!)
       }
       realPlacementRequestRepository.save(placementRequest)
+
+      return placementRequest.booking!!
     }
+
+    private fun createSpaceBooking(placementRequest: PlacementRequestEntity, premises: ApprovedPremisesEntity? = null, canonicalArrivalDate: LocalDate? = LocalDate.now()): Cas1SpaceBookingEntity = givenACas1SpaceBooking(
+      premises = premises,
+      crn = placementRequest.application.crn,
+      placementRequest = placementRequest,
+      canonicalArrivalDate = canonicalArrivalDate!!,
+    )
 
     private fun createBookingNotMadeRecord(placementRequest: PlacementRequestEntity) {
       placementRequest.bookingNotMades = mutableListOf(
@@ -108,7 +113,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @Test
     fun `Get dashboard without JWT returns 401`() {
       webTestClient.get()
-        .uri("/placement-requests/dashboard")
+        .uri("/cas1/placement-requests")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -119,11 +124,244 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `Get dashboard without CAS1_VIEW_CRU_DASHBOARD permission returns 401`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
-          .uri("/placement-requests/dashboard")
+          .uri("/cas1/placement-requests")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+
+    @Test
+    fun `should return 1 placement request when there are 0 active bookings`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled booking
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
+            val cancellation = cancellationEntityFactory.produceAndPersist {
+              withBooking(placementRequest.booking!!)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+            placementRequest.booking!!.cancellations.add(cancellation)
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.unableToMatch)
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isNull()
+            assertThat(summaries[0].firstBookingArrivalDate).isNull()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `should return 1 placement request when it has an active booking`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // create a booking
+            createBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("legacy_booking_premises"),
+              arrivalDate = LocalDate.parse("2025-01-01"),
+            )
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            val person = personTransformer.transformModelToPersonApi(
+              PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+            )
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person).isEqualTo(person)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(cas1PlacementRequestSummaryTransformer.getStatus(placementRequest))
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isEqualTo("legacy_booking_premises")
+            assertThat(summaries[0].firstBookingArrivalDate).isEqualTo(LocalDate.parse("2025-01-01"))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `should return 1 placement request when it has an active space booking`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled booking
+            val booking = createBooking(placementRequest)
+
+            cancellationEntityFactory.produceAndPersist {
+              withBooking(booking)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // create a space booking
+            createSpaceBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("space_booking_premises"),
+              canonicalArrivalDate = LocalDate.parse("2025-01-01"),
+            )
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.matched)
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isEqualTo("space_booking_premises")
+            assertThat(summaries[0].firstBookingArrivalDate).isEqualTo(LocalDate.parse("2025-01-01"))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `should return a placement request with the earliest space booking`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled booking
+            val booking = createBooking(placementRequest)
+
+            cancellationEntityFactory.produceAndPersist {
+              withBooking(booking)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // create a space booking
+            createSpaceBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("space_booking_premises"),
+              canonicalArrivalDate = LocalDate.parse("2025-01-02"),
+            )
+
+            // create an earlier space booking
+            createSpaceBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("earlier_space_booking_premises"),
+              canonicalArrivalDate = LocalDate.parse("2025-01-01"),
+            )
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.matched)
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isEqualTo("earlier_space_booking_premises")
+            assertThat(summaries[0].firstBookingArrivalDate).isEqualTo(LocalDate.parse("2025-01-01"))
+          }
+        }
       }
     }
 
@@ -140,7 +378,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             val withdrawnPlacementRequest = createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
 
             webTestClient.get()
-              .uri("/placement-requests/dashboard")
+              .uri("/cas1/placement-requests")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -149,11 +387,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    placementRequestTransformer.transformJpaToApi(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                       unmatchedPlacementRequest,
                       PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
-                    placementRequestTransformer.transformJpaToApi(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                       withdrawnPlacementRequest,
                       PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
@@ -180,12 +418,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
           createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
 
           val result = webTestClient.get()
-            .uri("/placement-requests/dashboard?status=notMatched")
+            .uri("/cas1/placement-requests?status=notMatched")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .bodyAsListOfObjects<PlacementRequest>()
+            .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
 
           assertThat(result.map { it.id }).containsExactlyInAnyOrder(
             unmatchedPlacementRequest.id,
@@ -237,10 +475,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = matchedOffender.otherIds.crn,
             isWithdrawn = true,
           ) { placementRequest, _ ->
-            givenACas1SpaceBooking(
-              crn = placementRequest.application.crn,
-              placementRequest = placementRequest,
-            )
+            createSpaceBooking(placementRequest)
           }
 
           val (placementRequestWithSpaceBooking) = givenAPlacementRequest(
@@ -249,10 +484,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
-            givenACas1SpaceBooking(
-              crn = placementRequest.application.crn,
-              placementRequest = placementRequest,
-            )
+            createSpaceBooking(placementRequest)
           }
 
           val (placementRequestPreviouslyUnableToMatchNowHasSpaceBooking) = givenAPlacementRequest(
@@ -262,19 +494,16 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = matchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            givenACas1SpaceBooking(
-              crn = placementRequest.application.crn,
-              placementRequest = placementRequest,
-            )
+            createSpaceBooking(placementRequest)
           }
 
           val result = webTestClient.get()
-            .uri("/placement-requests/dashboard?status=matched")
+            .uri("/cas1/placement-requests?status=matched")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .bodyAsListOfObjects<PlacementRequest>()
+            .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
 
           assertThat(result.map { it.id }).containsExactlyInAnyOrder(
             placementRequestWithBooking.id,
@@ -345,10 +574,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            givenACas1SpaceBooking(
-              crn = placementRequest.application.crn,
-              placementRequest = placementRequest,
-            )
+            createSpaceBooking(placementRequest)
           }
 
           val (hasCancelledSpaceBookingPlacementRequest) = givenAPlacementRequest(
@@ -358,21 +584,18 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            val spaceBooking = givenACas1SpaceBooking(
-              crn = placementRequest.application.crn,
-              placementRequest = placementRequest,
-            )
+            val spaceBooking = createSpaceBooking(placementRequest)
             spaceBooking.cancellationOccurredAt = LocalDate.now()
             cas1SpaceBookingRepository.save(spaceBooking)
           }
 
           val result = webTestClient.get()
-            .uri("/placement-requests/dashboard?status=unableToMatch")
+            .uri("/cas1/placement-requests?status=unableToMatch")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .bodyAsListOfObjects<PlacementRequest>()
+            .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
 
           assertThat(result.map { it.id }).containsExactlyInAnyOrder(
             unableToMatchPlacementRequest.id,
@@ -390,7 +613,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val placementRequest = createPlacementRequest(offenderDetails, user)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1")
+            .uri("/cas1/placement-requests?page=1")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -403,7 +626,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     placementRequest,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -428,7 +651,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createPlacementRequest(otherOffenderDetails, user)
 
             webTestClient.get()
-              .uri("/placement-requests/dashboard?crnOrName=john")
+              .uri("/cas1/placement-requests?crnOrName=john")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -437,7 +660,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    placementRequestTransformer.transformJpaToApi(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                     ),
@@ -458,7 +681,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createPlacementRequest(otherOffenderDetails, user)
 
             webTestClient.get()
-              .uri("/placement-requests/dashboard?crnOrName=${offenderDetails.otherIds.crn}")
+              .uri("/cas1/placement-requests?crnOrName=${offenderDetails.otherIds.crn}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -467,7 +690,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    placementRequestTransformer.transformJpaToApi(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                     ),
@@ -488,7 +711,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val placementRequest10thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-04")
+            .uri("/cas1/placement-requests?arrivalDateStart=2022-01-04")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -497,11 +720,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     placementRequest5thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     placementRequest10thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -521,7 +744,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?arrivalDateEnd=2022-01-09")
+            .uri("/cas1/placement-requests?arrivalDateEnd=2022-01-09")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -530,11 +753,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     placementRequest1stJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     placementRequest5thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -554,7 +777,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a2)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?tier=A1")
+            .uri("/cas1/placement-requests?tier=A1")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -563,40 +786,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(
-                    placementRequestA1,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              ),
-            )
-        }
-      }
-    }
-
-    @Test
-    fun `It searches by AP Area ID where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-
-          val apArea1 = givenAnApArea()
-          val apArea2 = givenAnApArea()
-
-          createPlacementRequest(offenderDetails, user, apArea = apArea1)
-          val placementRequestA1 = createPlacementRequest(offenderDetails, user, apArea = apArea2)
-          createPlacementRequest(offenderDetails, user, apArea = apArea1)
-
-          webTestClient.get()
-            .uri("/placement-requests/dashboard?apAreaId=${apArea2.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     placementRequestA1,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -620,7 +810,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea1)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?cruManagementAreaId=${cruArea2.id}")
+            .uri("/cas1/placement-requests?cruManagementAreaId=${cruArea2.id}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -629,7 +819,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     placementRequestA1,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -648,7 +838,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val standardRelease = createPlacementRequest(offenderDetails, user, isParole = false)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?requestType=${PlacementRequestRequestType.standardRelease.name}")
+            .uri("/cas1/placement-requests?requestType=${PlacementRequestRequestType.standardRelease.name}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -657,7 +847,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     standardRelease,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -676,7 +866,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val parole = createPlacementRequest(offenderDetails, user, isParole = true)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?requestType=${PlacementRequestRequestType.parole.name}")
+            .uri("/cas1/placement-requests?requestType=${PlacementRequestRequestType.parole.name}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -685,54 +875,13 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  placementRequestTransformer.transformJpaToApi(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                     parole,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
                 ),
               ),
             )
-        }
-      }
-    }
-
-    @Deprecated("Can be removed when apAreaId is removed from search filter in the front end.")
-    @Test
-    fun `It searches using multiple criteria where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offender1Details, inmate1Details ->
-          givenAnOffender { offender2Details, _ ->
-
-            val apArea1 = givenAnApArea()
-            val apArea2 = givenAnApArea()
-
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
-            val placementOffender1On5thJanTierA2Parole =
-              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea1)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = false)
-            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
-
-            webTestClient.get()
-              .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}&tier=A2&requestType=parole&apAreaId=${apArea1.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    placementRequestTransformer.transformJpaToApi(
-                      placementOffender1On5thJanTierA2Parole,
-                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
-                    ),
-                  ),
-                ),
-              )
-          }
         }
       }
     }
@@ -757,7 +906,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
             webTestClient.get()
               .uri(
-                "/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}" +
+                "/cas1/placement-requests?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}" +
                   "&tier=A2&requestType=parole&cruManagementAreaId=${cruArea1.id}",
               )
               .header("Authorization", "Bearer $jwt")
@@ -768,7 +917,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    placementRequestTransformer.transformJpaToApi(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
                       placementOffender1On5thJanTierA2Parole,
                       PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
                     ),
@@ -789,7 +938,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val placementRequestWithTwelveDayDuration = createPlacementRequest(offenderDetails, user, duration = 12)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=duration")
+            .uri("/cas1/placement-requests?page=1&sortBy=duration")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -800,7 +949,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .jsonPath("$[2].id").isEqualTo(placementRequestWithTwelveDayDuration.id.toString())
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=duration&sortDirection=desc")
+            .uri("/cas1/placement-requests?page=1&sortBy=duration&sortDirection=desc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -824,7 +973,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(30))
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=expected_arrival")
+            .uri("/cas1/placement-requests?page=1&sortBy=expected_arrival")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -835,7 +984,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .jsonPath("$[2].id").isEqualTo(placementRequestWithExpectedArrivalInThirtyDays.id.toString())
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=expected_arrival&sortDirection=desc")
+            .uri("/cas1/placement-requests?page=1&sortBy=expected_arrival&sortDirection=desc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -856,7 +1005,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val placementRequest2WithStatusStandard = createPlacementRequest(offenderDetails, user, isParole = false)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=request_type&sortDirection=asc")
+            .uri("/cas1/placement-requests?page=1&sortBy=request_type&sortDirection=asc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -866,7 +1015,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .jsonPath("$[1].id").isEqualTo(placementRequest2WithStatusStandard.id.toString())
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=request_type&sortDirection=desc")
+            .uri("/cas1/placement-requests?page=1&sortBy=request_type&sortDirection=desc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -908,7 +1057,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
         val placementRequestHarryHarrisonDetails = createPlacementRequest(offenderHarryHarrisonDetails, user)
 
         webTestClient.get()
-          .uri("/placement-requests/dashboard?page=1&sortBy=person_name&sortDirection=asc")
+          .uri("/cas1/placement-requests?page=1&sortBy=person_name&sortDirection=asc")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -919,7 +1068,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           .jsonPath("$[2].id").isEqualTo(placementRequestZakeryZoikes.id.toString())
 
         webTestClient.get()
-          .uri("/placement-requests/dashboard?page=1&sortBy=person_name&sortDirection=desc")
+          .uri("/cas1/placement-requests?page=1&sortBy=person_name&sortDirection=desc")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -940,7 +1089,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           val placementRequest3TierA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=person_risks_tier&sortDirection=asc")
+            .uri("/cas1/placement-requests?page=1&sortBy=person_risks_tier&sortDirection=asc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -951,7 +1100,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .jsonPath("$[2].id").isEqualTo(placementRequest1TierB1.id.toString())
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=person_risks_tier&sortDirection=desc")
+            .uri("/cas1/placement-requests?page=1&sortBy=person_risks_tier&sortDirection=desc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -975,7 +1124,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(30))
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=created_at")
+            .uri("/cas1/placement-requests?page=1&sortBy=created_at")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -986,7 +1135,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .jsonPath("$[2].id").isEqualTo(placementRequestCreatedToday.id.toString())
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=created_at&sortDirection=desc")
+            .uri("/cas1/placement-requests?page=1&sortBy=created_at&sortDirection=desc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -1010,7 +1159,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(30))
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=application_date")
+            .uri("/cas1/placement-requests?page=1&sortBy=application_date")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -1021,7 +1170,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             .jsonPath("$[2].id").isEqualTo(placementRequestWithApplicationCreatedToday.id.toString())
 
           webTestClient.get()
-            .uri("/placement-requests/dashboard?page=1&sortBy=application_date&sortDirection=desc")
+            .uri("/cas1/placement-requests?page=1&sortBy=application_date&sortDirection=desc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -1128,7 +1277,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @Test
     fun `Without a JWT returns 401`() {
       webTestClient.get()
-        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f")
+        .uri("/cas1/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -1146,7 +1295,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
+                .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1154,10 +1303,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
+                    placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      listOf(),
                     ),
                   ),
                 )
@@ -1183,7 +1331,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
+                .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1219,7 +1367,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               )
 
               webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
+                .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1227,10 +1375,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
+                    placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      listOf(),
                     ),
                   ),
                 )
@@ -1256,7 +1403,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
+                .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1264,10 +1411,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
+                    placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      listOf(),
                     ),
                   ),
                 )
@@ -1317,7 +1463,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
+                .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1325,10 +1471,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
+                    placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       placementRequestRepository.findByIdOrNull(placementRequest.id)!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      cancellations,
                     ),
                   ),
                 )
@@ -1340,380 +1485,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class CreateBookingFromPlacementRequest {
-    @Test
-    fun `Create a Booking from PR without a JWT returns 401`() {
-      webTestClient.post()
-        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/booking")
-        .bodyValue(
-          NewPlacementRequestBooking(
-            arrivalDate = LocalDate.parse("2023-03-29"),
-            departureDate = LocalDate.parse("2023-04-01"),
-            bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e"),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Create a Booking from a PR creates a domain event and sends booking made emails`() {
-      givenAUser { user, jwt ->
-        givenAUser { applicant, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = applicant) {
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = applicant,
-                createdByUser = applicant,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
-
-                val room = roomEntityFactory.produceAndPersist {
-                  withPremises(premises)
-                }
-
-                val bed = bedEntityFactory.produceAndPersist {
-                  withRoom(room)
-                }
-
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/booking")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    NewPlacementRequestBooking(
-                      arrivalDate = LocalDate.parse("2023-03-29"),
-                      departureDate = LocalDate.parse("2023-04-01"),
-                      bedId = bed.id,
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-
-                domainEventAsserter.assertDomainEventOfTypeStored(
-                  placementRequest.application.id,
-                  DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-                )
-
-                emailAsserter.assertEmailsRequestedCount(2)
-                emailAsserter.assertEmailRequested(
-                  applicant.email!!,
-                  Cas1NotifyTemplates.BOOKING_MADE,
-                )
-                emailAsserter.assertEmailRequested(
-                  premises.emailAddress!!,
-                  Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
-                )
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create a Booking from a PR linked to a placement application creates a domain event and sends booking made emails`() {
-      givenAUser { user, jwt ->
-        givenAUser { applicant, _ ->
-          givenAUser { placementApplicationCreator, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              givenAnApplication(createdByUser = applicant) {
-                givenAPlacementApplication(createdByUser = placementApplicationCreator) { placementApplication ->
-                  givenAPlacementRequest(
-                    placementRequestAllocatedTo = user,
-                    assessmentAllocatedTo = applicant,
-                    createdByUser = applicant,
-                    crn = offenderDetails.otherIds.crn,
-                    placementApplication = placementApplication,
-                  ) { placementRequest, _ ->
-                    val premises = approvedPremisesEntityFactory.produceAndPersist {
-                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion { probationRegion }
-                    }
-
-                    val room = roomEntityFactory.produceAndPersist {
-                      withPremises(premises)
-                    }
-
-                    val bed = bedEntityFactory.produceAndPersist {
-                      withRoom(room)
-                    }
-
-                    webTestClient.post()
-                      .uri("/placement-requests/${placementRequest.id}/booking")
-                      .header("Authorization", "Bearer $jwt")
-                      .bodyValue(
-                        NewPlacementRequestBooking(
-                          arrivalDate = LocalDate.parse("2023-03-29"),
-                          departureDate = LocalDate.parse("2023-04-01"),
-                          bedId = bed.id,
-                        ),
-                      )
-                      .exchange()
-                      .expectStatus()
-                      .isOk
-
-                    domainEventAsserter.assertDomainEventOfTypeStored(
-                      placementRequest.application.id,
-                      DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-                    )
-
-                    emailAsserter.assertEmailsRequestedCount(3)
-                    emailAsserter.assertEmailRequested(
-                      applicant.email!!,
-                      Cas1NotifyTemplates.BOOKING_MADE,
-                    )
-                    emailAsserter.assertEmailRequested(
-                      placementApplicationCreator.email!!,
-                      Cas1NotifyTemplates.BOOKING_MADE,
-                    )
-                    emailAsserter.assertEmailRequested(
-                      premises.emailAddress!!,
-                      Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
-                    )
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create a Booking from a PR allocated to another user without 'CAS1_BOOKING_CREATE' permission returns a 403`() {
-      givenAUser(
-        roles = UserRole.entries.filter {
-          it != UserRole.CAS1_CRU_MEMBER && it != UserRole.CAS1_WORKFLOW_MANAGER && it != UserRole.CAS1_JANITOR
-        },
-      ) { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/booking")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    NewPlacementRequestBooking(
-                      arrivalDate = LocalDate.parse("2023-03-29"),
-                      departureDate = LocalDate.parse("2023-04-01"),
-                      bedId = UUID.fromString("d5dfd808-b8f4-4cc0-a0ac-fdce7144126e"),
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isForbidden
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create a Booking from a PR for bed id returns a 200`() {
-      givenAUser { user, jwt ->
-        givenAUser { applicant, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = applicant) {
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = applicant,
-                createdByUser = applicant,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
-
-                val room = roomEntityFactory.produceAndPersist {
-                  withPremises(premises)
-                }
-
-                val bed = bedEntityFactory.produceAndPersist {
-                  withRoom(room)
-                }
-
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/booking")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    NewPlacementRequestBooking(
-                      arrivalDate = LocalDate.parse("2023-03-29"),
-                      departureDate = LocalDate.parse("2023-04-01"),
-                      bedId = bed.id,
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create a Booking from a PR for premises id returns a 200`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
-
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/booking")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    NewPlacementRequestBooking(
-                      arrivalDate = LocalDate.parse("2023-03-29"),
-                      departureDate = LocalDate.parse("2023-04-01"),
-                      bedId = null,
-                      premisesId = premises.id,
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(
-      value = UserRole::class,
-      mode = EnumSource.Mode.INCLUDE,
-      names = ["CAS1_CRU_MEMBER", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR"],
-    )
-    fun `Create a Booking from a PR allocated to other user and current user has the 'CAS1_BOOKING_CREATE' permission returns a 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
-
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/booking")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    NewPlacementRequestBooking(
-                      arrivalDate = LocalDate.parse("2023-03-29"),
-                      departureDate = LocalDate.parse("2023-04-01"),
-                      bedId = null,
-                      premisesId = premises.id,
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class CreateBookingNotMadeFromPlacementRequest {
-    @Test
-    fun `Create a Booking Not Made from a Placement Request without a JWT returns 401`() {
-      webTestClient.post()
-        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/booking-not-made")
-        .bodyValue(
-          NewBookingNotMade(
-            notes = "some notes",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA"], mode = EnumSource.Mode.INCLUDE)
-    fun `Create a Booking Not Made from a Placement Request returns 200 and creates a domain event`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/booking-not-made")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    NewBookingNotMade(
-                      notes = "some notes",
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .jsonPath("$.placementRequestId").isEqualTo(placementRequest.id.toString())
-                  .jsonPath("$.notes").isEqualTo("some notes")
-
-                domainEventAsserter.assertDomainEventOfTypeStored(
-                  placementRequest.application.id,
-                  DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
-                )
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Note - Withdrawal cascading is tested in [WithdrawalTest]
-   */
-  @Nested
   inner class WithdrawPlacementRequest {
     @Test
     fun `Withdraw Placement Request without a JWT returns 401`() {
       webTestClient.post()
-        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
+        .uri("/cas1/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -1732,7 +1508,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
                 webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/withdrawal")
+                  .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
                   .header("Authorization", "Bearer $jwt")
                   .bodyValue(
                     WithdrawPlacementRequest(
@@ -1764,7 +1540,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
           ) { placementRequest, _ ->
 
             webTestClient.post()
-              .uri("/placement-requests/${placementRequest.id}/withdrawal")
+              .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
               .bodyValue(
                 WithdrawPlacementRequest(
                   reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
