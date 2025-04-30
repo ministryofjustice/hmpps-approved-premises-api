@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ld
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Team
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -40,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -101,6 +99,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         .withCrn("THECRN")
         .withCreatedByUser(user)
         .withSubmittedAt(null)
+        .withApType(ApprovedPremisesType.NORMAL)
         .produce()
         .apply {
           schemaUpToDate = true
@@ -215,10 +214,9 @@ class Cas1ApplicationCas1DomainEventServiceTest {
               data.mappa == "CAT C1/LEVEL L1" &&
               data.sentenceLengthInMonths == null &&
               data.offenceId == application.offenceId &&
-              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE].equals("reason for short notice") &&
-              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER].equals("reason for short notice other") &&
-              enumValueOf<ApprovedPremisesType>(it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].toString()).asApiType()
-                .toString() == ApType.normal.value
+              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE]!!.contains("reason for short notice") &&
+              it.metadata[MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER]!!.contains("reason for short notice other") &&
+              it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE]!!.contains(ApprovedPremisesType.NORMAL.name)
           },
         )
       }

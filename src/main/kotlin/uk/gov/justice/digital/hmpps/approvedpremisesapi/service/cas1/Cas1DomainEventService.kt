@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventMetadataEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
@@ -366,7 +367,17 @@ class Cas1DomainEventService(
         triggerSource = domainEvent.triggerSource,
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
         nomsNumber = domainEvent.nomsNumber,
-        metadata = domainEvent.metadata,
+        metadata = domainEvent.metadata.entries.flatMap {
+          val key = it.key
+          val values = it.value
+          values.map { value ->
+            DomainEventMetadataEntity(
+              id = UUID.randomUUID(),
+              name = key,
+              value = value,
+            )
+          }
+        },
         schemaVersion = domainEvent.schemaVersion,
       ),
     )
@@ -448,7 +459,7 @@ data class SaveCas1DomainEvent<T>(
   val nomsNumber: String?,
   val occurredAt: Instant,
   val data: T,
-  val metadata: Map<MetaDataName, String?> = emptyMap(),
+  val metadata: Map<MetaDataName, List<String?>> = emptyMap(),
   val schemaVersion: Int? = null,
   val triggerSource: TriggerSourceType? = null,
   val emit: Boolean = true,
@@ -466,7 +477,7 @@ data class SaveCas1DomainEventWithPayload(
   val nomsNumber: String?,
   val occurredAt: Instant,
   val data: Cas1DomainEventPayload,
-  val metadata: Map<MetaDataName, String?> = emptyMap(),
+  val metadata: Map<MetaDataName, List<String?>> = emptyMap(),
   val schemaVersion: Int? = null,
   val triggerSource: TriggerSourceType? = null,
   val emit: Boolean = true,

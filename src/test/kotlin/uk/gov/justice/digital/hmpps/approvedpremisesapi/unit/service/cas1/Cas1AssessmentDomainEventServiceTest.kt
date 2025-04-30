@@ -275,7 +275,7 @@ class Cas1AssessmentDomainEventServiceTest {
       assertThat(eventDetails.assessedBy).isEqualTo(expectedAssessor)
       assertThat(eventDetails.decision).isEqualTo("ACCEPTED")
       assertThat(eventDetails.decisionRationale).isNull()
-      assertThat(domainEvent.metadata).containsEntry(MetaDataName.CAS1_REQUESTED_AP_TYPE, "NORMAL")
+      assertThat(domainEvent.metadata).containsEntry(MetaDataName.CAS1_REQUESTED_AP_TYPE, listOf("NORMAL"))
     }
   }
 

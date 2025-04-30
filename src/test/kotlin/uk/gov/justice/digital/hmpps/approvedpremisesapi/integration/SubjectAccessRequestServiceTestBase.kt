@@ -419,7 +419,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
       withTriggeredByUserId(userId)
       withMetadata(
         mapOf(
-          MetaDataName.CAS1_REQUESTED_AP_TYPE to ApprovedPremisesType.NORMAL.toString(),
+          MetaDataName.CAS1_REQUESTED_AP_TYPE to listOf(ApprovedPremisesType.NORMAL.toString()),
         ),
       )
     }
