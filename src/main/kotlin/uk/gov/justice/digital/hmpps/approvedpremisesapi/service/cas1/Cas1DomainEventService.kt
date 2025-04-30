@@ -42,7 +42,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAccepted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
@@ -214,12 +213,6 @@ class Cas1DomainEventService(
   fun saveAssessmentAppealedEvent(domainEvent: SaveCas1DomainEvent<AssessmentAppealedEnvelope>) = saveAndEmitForEnvelope(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
-  )
-
-  @Transactional
-  fun savePlacementAppealAccepted(domainEvent: SaveCas1DomainEvent<PlacementAppealAcceptedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED,
   )
 
   @Transactional

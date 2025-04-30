@@ -7968,18 +7968,10 @@ components:
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
-        premises:
-          $ref: '#/components/schemas/NamedId'
-        expectedArrival:
-          type: string
-          format: date
-        expectedDeparture:
-          type: string
-          format: date
+        booking:
+          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
       required:
-        - premises
-        - expectedArrival
-        - expectedDeparture
+        - booking
     Cas1PlacementAppealRejectedPayload:
       type: object
       allOf:
