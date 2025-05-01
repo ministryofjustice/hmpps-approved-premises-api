@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -238,7 +239,7 @@ class Cas1DomainEventServiceTest {
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
       val domainEventAndJson = domainEventsFactory.createEnvelopeLatestVersion(type, occurredAt = occurredAt, id = id)
-      val metadata = mapOf(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to "value1")
+      val metadata = mapOf(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to listOf("value1", "value2"))
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -260,22 +261,31 @@ class Cas1DomainEventServiceTest {
 
       domainEventService.save(domainEventToSave)
 
+      val domainEventArgument = slot<DomainEventEntity>()
+
       verify(exactly = 1) {
         domainEventRepositoryMock.save(
-          withArg {
-            assertThat(it.id).isEqualTo(id)
-            assertThat(it.type).isEqualTo(type)
-            assertThat(it.crn).isEqualTo(crn)
-            assertThat(it.nomsNumber).isEqualTo(nomsNumber)
-            assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
-            assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
-            assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
-            assertThat(it.metadata).isEqualTo(metadata)
-            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
-          },
+          capture(domainEventArgument),
         )
       }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.id).isEqualTo(id)
+      assertThat(domainEvent.type).isEqualTo(type)
+      assertThat(domainEvent.crn).isEqualTo(crn)
+      assertThat(domainEvent.nomsNumber).isEqualTo(nomsNumber)
+      assertThat(domainEvent.occurredAt.toInstant()).isEqualTo(occurredAt)
+      assertThat(domainEvent.data).isEqualTo(domainEventAndJson.persistedJson)
+      assertThat(domainEvent.triggeredByUserId).isEqualTo(user.id)
+      assertThat(domainEvent.bookingId).isEqualTo(bookingId)
+      assertThat(domainEvent.triggerSource).isEqualTo(TriggerSourceType.USER)
+
+      assertThat(domainEvent.metadata).hasSize(2)
+      assertThat(domainEvent.metadata[0].name).isEqualTo(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER)
+      assertThat(domainEvent.metadata[0].value).isEqualTo("value1")
+      assertThat(domainEvent.metadata[1].name).isEqualTo(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER)
+      assertThat(domainEvent.metadata[1].value).isEqualTo("value2")
 
       verify(exactly = 1) {
         domainEventWorkerMock.emitEvent(
@@ -463,7 +473,7 @@ class Cas1DomainEventServiceTest {
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
       val domainEventAndJson = domainEventsFactory.createEnvelopeLatestVersion(type)
-      val metadata = mapOf(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to "value1")
+      val metadata = mapOf(MetaDataName.CAS1_SPACE_BOOKING_ID to listOf("value1", "value2"))
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -484,22 +494,30 @@ class Cas1DomainEventServiceTest {
 
       domainEventService.saveAndEmitForEnvelope(domainEventToSave, type)
 
+      val domainEventArgument = slot<DomainEventEntity>()
+
       verify(exactly = 1) {
         domainEventRepositoryMock.save(
-          withArg {
-            assertThat(it.id).isEqualTo(id)
-            assertThat(it.type).isEqualTo(type)
-            assertThat(it.crn).isEqualTo(crn)
-            assertThat(it.nomsNumber).isEqualTo(nomsNumber)
-            assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
-            assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
-            assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
-            assertThat(it.metadata).isEqualTo(metadata)
-            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
-          },
+          capture(domainEventArgument),
         )
       }
+
+      val domainEvent = domainEventArgument.captured
+      assertThat(domainEvent.id).isEqualTo(id)
+      assertThat(domainEvent.type).isEqualTo(type)
+      assertThat(domainEvent.crn).isEqualTo(crn)
+      assertThat(domainEvent.nomsNumber).isEqualTo(nomsNumber)
+      assertThat(domainEvent.occurredAt.toInstant()).isEqualTo(occurredAt)
+      assertThat(domainEvent.data).isEqualTo(domainEventAndJson.persistedJson)
+      assertThat(domainEvent.triggeredByUserId).isEqualTo(user.id)
+      assertThat(domainEvent.bookingId).isEqualTo(bookingId)
+      assertThat(domainEvent.triggerSource).isEqualTo(TriggerSourceType.USER)
+
+      assertThat(domainEvent.metadata).hasSize(2)
+      assertThat(domainEvent.metadata[0].name).isEqualTo(MetaDataName.CAS1_SPACE_BOOKING_ID)
+      assertThat(domainEvent.metadata[0].value).isEqualTo("value1")
+      assertThat(domainEvent.metadata[1].name).isEqualTo(MetaDataName.CAS1_SPACE_BOOKING_ID)
+      assertThat(domainEvent.metadata[1].value).isEqualTo("value2")
 
       verify(exactly = 1) {
         domainEventWorkerMock.emitEvent(

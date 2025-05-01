@@ -1,16 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import io.hypersistence.utils.hibernate.type.json.JsonType
-import jakarta.persistence.CollectionTable
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
-import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.MapKeyColumn
-import jakarta.persistence.MapKeyEnumerated
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
@@ -163,12 +161,9 @@ data class DomainEventEntity(
   val triggerSource: TriggerSourceType? = null,
   val triggeredByUserId: UUID?,
   val nomsNumber: String?,
-  @ElementCollection
-  @MapKeyColumn(name = "name")
-  @MapKeyEnumerated(EnumType.STRING)
-  @Column(name = "value")
-  @CollectionTable(name = "domain_events_metadata", joinColumns = [ JoinColumn(name = "domain_event_id") ])
-  val metadata: Map<MetaDataName, String?> = emptyMap(),
+  @OneToMany(cascade = [CascadeType.ALL])
+  @JoinColumn(name = "domain_event_id", nullable = false)
+  val metadata: List<DomainEventMetadataEntity> = emptyList(),
   /**
    * Use to track the schema version used for the [data] property. The schema version
    * will be specific to the corresponding [type]. This version number relates to
@@ -185,16 +180,6 @@ data class DomainEventEntity(
 )
 
 enum class TriggerSourceType { USER, SYSTEM }
-
-enum class MetaDataName {
-  CAS1_APP_REASON_FOR_SHORT_NOTICE,
-  CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER,
-  CAS1_PLACEMENT_APPLICATION_ID,
-  CAS1_REQUESTED_AP_TYPE,
-  CAS1_PLACEMENT_REQUEST_ID,
-  CAS1_CANCELLATION_ID,
-  CAS1_SPACE_BOOKING_ID,
-}
 
 enum class DomainEventCas {
   CAS1,

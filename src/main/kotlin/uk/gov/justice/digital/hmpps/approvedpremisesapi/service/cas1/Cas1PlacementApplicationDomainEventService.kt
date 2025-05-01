@@ -133,7 +133,7 @@ class Cas1PlacementApplicationDomainEventService(
           eventDetails = eventDetails,
         ),
         metadata = mapOf(
-          MetaDataName.CAS1_PLACEMENT_APPLICATION_ID to placementApplication.id.toString(),
+          MetaDataName.CAS1_PLACEMENT_APPLICATION_ID to listOf(placementApplication.id.toString()),
         ),
       ),
     )
@@ -229,7 +229,7 @@ class Cas1PlacementApplicationDomainEventService(
           eventDetails = requestPlacementApplicationAssessed,
         ),
         metadata = mapOf(
-          MetaDataName.CAS1_PLACEMENT_APPLICATION_ID to placementApplication.id.toString(),
+          MetaDataName.CAS1_PLACEMENT_APPLICATION_ID to listOf(placementApplication.id.toString()),
         ),
       ),
     )

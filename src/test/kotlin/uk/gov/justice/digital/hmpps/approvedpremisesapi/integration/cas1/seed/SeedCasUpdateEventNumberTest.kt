@@ -180,7 +180,6 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
             sentenceLengthInMonths = null,
           ),
         ),
-        metadata = mapOf(),
       ),
     )
 

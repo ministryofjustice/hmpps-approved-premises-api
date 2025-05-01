@@ -175,7 +175,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.situation).isEqualTo(application.situation)
       assertThat(data.characteristics).isEqualTo(listOf(SpaceCharacteristic.hasEnSuite))
 
-      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to listOf(placementRequest.id.toString())))
     }
   }
 
@@ -293,7 +293,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.situation).isEqualTo(application.situation)
       assertThat(data.characteristics).isNull()
 
-      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to listOf(placementRequest.id.toString())))
     }
   }
 
@@ -572,7 +572,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.attemptedBy.staffMember!!.staffCode).isEqualTo("the staff code")
       assertThat(data.failureDescription).isEqualTo("the notes")
 
-      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
+      assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to listOf(placementRequest.id.toString())))
     }
   }
 

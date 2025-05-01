@@ -6,6 +6,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventMetadataEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
@@ -31,7 +32,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var triggerSource: Yielded<TriggerSourceType?> = { null }
   private var triggeredByUserId: Yielded<UUID?> = { null }
   private var nomsNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(8) }
-  private var metadata: Yielded<Map<MetaDataName, String?>> = { emptyMap() }
+  private var metadata: Yielded<List<DomainEventMetadataEntity>> = { emptyList() }
   private var schemaVersion: Yielded<Int?> = { null }
   private var applicationOrigin: Yielded<ApplicationOrigin?> = { null }
 
@@ -102,8 +103,19 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.nomsNumber = { nomsNumber }
   }
 
-  fun withMetadata(metadata: Map<MetaDataName, String>) = apply {
-    this.metadata = { metadata }
+  fun withMetadata(metadata: Map<MetaDataName, List<String>>) = apply {
+    this.metadata = {
+      metadata.entries.flatMap {
+        val key = it.key
+        it.value.map { value ->
+          DomainEventMetadataEntity(
+            id = UUID.randomUUID(),
+            name = key,
+            value = value,
+          )
+        }
+      }
+    }
   }
 
   fun withSchemaVersion(schemaVersion: Int?) = apply {

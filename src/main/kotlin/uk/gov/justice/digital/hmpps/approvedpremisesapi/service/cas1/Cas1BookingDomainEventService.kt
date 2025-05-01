@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -132,8 +131,8 @@ class Cas1BookingDomainEventService(
             failureDescription = notes,
           ),
         ),
-        metadata = mapOfNonNullValues(
-          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString(),
+        metadata = mapOf(
+          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to listOf(placementRequest.id.toString()),
         ),
         cas1PlacementRequestId = placementRequest.id,
       ),
@@ -381,9 +380,11 @@ class Cas1BookingDomainEventService(
             characteristics = bookingInfo.characteristics,
           ),
         ),
-        metadata = mapOfNonNullValues(
-          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
-        ),
+        metadata = buildMap {
+          placementRequestId?.toString()?.let {
+            put(MetaDataName.CAS1_PLACEMENT_REQUEST_ID, listOf(it))
+          }
+        },
         cas1PlacementRequestId = placementRequestId,
       ),
     )
@@ -457,9 +458,11 @@ class Cas1BookingDomainEventService(
             cancellationRecordedAt = now.toInstant(),
           ),
         ),
-        metadata = mapOfNonNullValues(
-          MetaDataName.CAS1_CANCELLATION_ID to cancellationInfo.cancellationId?.toString(),
-        ),
+        metadata = buildMap {
+          cancellationInfo.cancellationId?.toString()?.let {
+            put(MetaDataName.CAS1_CANCELLATION_ID, listOf(it))
+          }
+        },
       ),
     )
   }
