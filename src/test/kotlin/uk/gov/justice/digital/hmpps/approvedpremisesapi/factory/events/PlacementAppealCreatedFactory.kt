@@ -4,8 +4,10 @@ import io.github.bluegroundltd.kfactory.Factory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventCodedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
+import java.util.UUID
 
 class PlacementAppealCreatedFactory : Factory<PlacementAppealCreated> {
+  private var changeRequestId = { UUID.randomUUID() }
   private var booking = { EventBookingSummaryFactory().produce() }
   private var requestedBy = { StaffMemberFactory().produce() }
   private var reason = { Cas1DomainEventCodedIdFactory().produce() }
@@ -19,6 +21,7 @@ class PlacementAppealCreatedFactory : Factory<PlacementAppealCreated> {
   }
 
   override fun produce(): PlacementAppealCreated = PlacementAppealCreated(
+    changeRequestId = changeRequestId(),
     booking = booking(),
     requestedBy = requestedBy(),
     reason = reason(),

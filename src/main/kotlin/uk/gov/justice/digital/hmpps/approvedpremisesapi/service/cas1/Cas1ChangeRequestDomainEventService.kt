@@ -40,6 +40,7 @@ class Cas1ChangeRequestDomainEventService(
         bookingId = null,
         schemaVersion = null,
         data = PlacementAppealAccepted(
+          changeRequestId = changeRequest.id,
           booking = spaceBooking.toEventBookingSummary(),
           acceptedBy = getStaffDetailsByUsername(changeRequest.decisionMadeByUser!!.deliusUsername).toStaffMember(),
         ),
@@ -65,6 +66,7 @@ class Cas1ChangeRequestDomainEventService(
         bookingId = null,
         schemaVersion = null,
         data = PlacementAppealCreated(
+          changeRequestId = changeRequest.id,
           booking = spaceBooking.toEventBookingSummary(),
           requestedBy = getStaffDetailsByUsername(requestingUser.deliusUsername).toStaffMember(),
           reason = Cas1DomainEventCodedId(
@@ -94,6 +96,7 @@ class Cas1ChangeRequestDomainEventService(
         bookingId = null,
         schemaVersion = null,
         data = PlacementAppealRejected(
+          changeRequestId = changeRequest.id,
           booking = spaceBooking.toEventBookingSummary(),
           rejectedBy = getStaffDetailsByUsername(rejectingUser.deliusUsername).toStaffMember(),
           reason = Cas1DomainEventCodedId(

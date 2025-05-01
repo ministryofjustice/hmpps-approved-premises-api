@@ -87,6 +87,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
       val data = domainEvent.data
 
+      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.booking.id).isEqualTo(spaceBooking.id)
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
@@ -136,6 +137,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
       val data = domainEvent.data
 
+      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
       assertThat(data.requestedBy.username).isEqualTo(requestingUser.deliusUsername)
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.booking.id).isEqualTo(spaceBooking.id)
@@ -190,6 +192,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
       val data = domainEvent.data
 
+      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.rejectedBy.username).isEqualTo(requestingUser.deliusUsername)
       assertThat(data.booking.id).isEqualTo(spaceBooking.id)
@@ -249,6 +252,8 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       assertThat(data.acceptedBy.username).isEqualTo(requestingUser.deliusUsername)
 
+      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
+
       assertThat(data.from.id).isEqualTo(from.id)
       assertThat(data.from.premises.name).isEqualTo("frompremises")
       assertThat(data.from.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 7))
@@ -294,6 +299,8 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.nomsNumber).isEqualTo(changeRequest.placementRequest.application.nomsNumber)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
       val data = domainEvent.data
+
+      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
 
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.booking.id).isEqualTo(spaceBooking.id)
@@ -348,6 +355,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
       assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
 
+      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
       assertThat(data.rejectedBy.username).isEqualTo(requestingUser.deliusUsername)
       assertThat(data.reason.id).isEqualTo(changeRequest.rejectionReason!!.id)
     }
