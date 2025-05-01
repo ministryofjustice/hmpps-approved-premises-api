@@ -1954,12 +1954,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "doesNotExist"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "doesNotExist")
     }
 
     @Test
@@ -1983,12 +1978,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "This Booking is cancelled and as such cannot be modified"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "This Booking is cancelled and as such cannot be modified")
     }
 
     @Test
@@ -2012,12 +2002,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "hasDepartedOrNonArrival"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "hasDepartedOrNonArrival")
     }
 
     @Test
@@ -2041,12 +2026,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "hasDepartedOrNonArrival"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "hasDepartedOrNonArrival")
     }
 
     @Test
@@ -2065,12 +2045,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "premisesMismatch"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesMismatch")
     }
 
     @Test
@@ -2193,7 +2168,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
@@ -2253,7 +2228,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(updateSpaceBookingDetails.arrivalDate)
@@ -2308,7 +2283,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.criteria).isEmpty()
@@ -2359,7 +2334,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.criteria).isEmpty()
@@ -2408,7 +2383,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.criteria).isEmpty()
