@@ -218,7 +218,7 @@ class Cas1SpaceBookingTransformerTest {
         SpaceBookingAction.APPEAL_CREATE,
       )
 
-      every { cas1ChangeRequestTransformer.transformToChangeRequestSummaries(any(), any(), any()) } returns changeRequests
+      every { cas1ChangeRequestTransformer.transformToChangeRequestSummaries(any(), any()) } returns changeRequests
 
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings, emptyList())
 
@@ -351,7 +351,7 @@ class Cas1SpaceBookingTransformerTest {
         SpaceBookingAction.APPEAL_CREATE,
       )
 
-      every { cas1ChangeRequestTransformer.transformToChangeRequestSummaries(any(), any(), any()) } returns emptyList()
+      every { cas1ChangeRequestTransformer.transformToChangeRequestSummaries(any(), any()) } returns emptyList()
 
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, emptyList(), emptyList())
 

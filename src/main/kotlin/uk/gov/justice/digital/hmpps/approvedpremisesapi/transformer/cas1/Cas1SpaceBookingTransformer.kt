@@ -59,7 +59,7 @@ class Cas1SpaceBookingTransformer(
         jpa.nonArrivalConfirmedAt?.toLocalDateTime(),
       ),
     )
-    val openChangeRequests = cas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, person, jpa)
+    val openChangeRequests = cas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, person)
     return Cas1SpaceBooking(
       id = jpa.id,
       applicationId = applicationId,

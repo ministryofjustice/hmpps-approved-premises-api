@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
@@ -43,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -1294,6 +1296,27 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
+
+              val premises = givenAnApprovedPremises(emailAddress = "premises@test.com")
+
+              val application = placementRequest.application
+
+              val spaceBooking = givenACas1SpaceBooking(
+                crn = application.crn,
+                application = application,
+                placementRequest = placementRequest,
+                canonicalArrivalDate = LocalDate.of(2024, 6, 1),
+                canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+                premises = premises,
+              )
+
+              val changeRequest = givenACas1ChangeRequest(
+                type = ChangeRequestType.PLACEMENT_APPEAL,
+                spaceBooking = spaceBooking,
+                decisionJson = "{\"test\": 1}",
+
+              )
+
               webTestClient.get()
                 .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
@@ -1304,8 +1327,9 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 .json(
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
-                      placementRequest,
+                      spaceBooking.placementRequest!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      listOf(changeRequest),
                     ),
                   ),
                 )
@@ -1366,6 +1390,26 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 user.deliusUsername,
               )
 
+              val premises = givenAnApprovedPremises(emailAddress = "premises@test.com")
+
+              val application = placementRequest.application
+
+              val spaceBooking = givenACas1SpaceBooking(
+                crn = application.crn,
+                application = application,
+                placementRequest = placementRequest,
+                canonicalArrivalDate = LocalDate.of(2024, 6, 1),
+                canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+                premises = premises,
+              )
+
+              val changeRequest = givenACas1ChangeRequest(
+                type = ChangeRequestType.PLACEMENT_APPEAL,
+                spaceBooking = spaceBooking,
+                decisionJson = "{\"test\": 1}",
+
+              )
+
               webTestClient.get()
                 .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
@@ -1376,8 +1420,9 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 .json(
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
-                      placementRequest,
+                      spaceBooking.placementRequest!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      listOf(changeRequest),
                     ),
                   ),
                 )
@@ -1402,6 +1447,26 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
+
+              val premises = givenAnApprovedPremises(emailAddress = "premises@test.com")
+
+              val application = placementRequest.application
+
+              val spaceBooking = givenACas1SpaceBooking(
+                crn = application.crn,
+                application = application,
+                placementRequest = placementRequest,
+                canonicalArrivalDate = LocalDate.of(2024, 6, 1),
+                canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+                premises = premises,
+              )
+
+              val changeRequest = givenACas1ChangeRequest(
+                type = ChangeRequestType.PLACEMENT_APPEAL,
+                spaceBooking = spaceBooking,
+                decisionJson = "{\"test\": 1}",
+
+              )
               webTestClient.get()
                 .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
@@ -1412,8 +1477,9 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 .json(
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
-                      placementRequest,
+                      spaceBooking.placementRequest!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      listOf(changeRequest),
                     ),
                   ),
                 )
@@ -1457,11 +1523,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 withApplication(placementRequest.application)
               }
 
-              val cancellations = cancellationEntityFactory.produceAndPersistMultiple(2) {
-                withBooking(booking)
-                withReason(cancellationReasonEntityFactory.produceAndPersist())
-              }
-
               webTestClient.get()
                 .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
@@ -1474,6 +1535,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       placementRequestRepository.findByIdOrNull(placementRequest.id)!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      emptyList(),
                     ),
                   ),
                 )
