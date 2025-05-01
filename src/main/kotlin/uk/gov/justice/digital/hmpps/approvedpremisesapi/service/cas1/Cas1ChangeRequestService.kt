@@ -142,12 +142,10 @@ class Cas1ChangeRequestService(
   fun approvedPlannedTransfer(
     changeRequest: Cas1ChangeRequestEntity,
     user: UserEntity,
-    to: Cas1SpaceBookingEntity,
-    from: Cas1SpaceBookingEntity,
   ) {
     approveChangeRequest(changeRequest, user)
 
-    cas1ChangeRequestDomainEventService.plannedTransferRequestAccepted(changeRequest, user, to, from)
+    cas1ChangeRequestDomainEventService.plannedTransferRequestAccepted(changeRequest)
   }
 
   @Transactional

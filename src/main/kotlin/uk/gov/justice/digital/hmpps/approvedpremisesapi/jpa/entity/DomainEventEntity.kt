@@ -35,14 +35,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDeparted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAccepted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestAccepted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
@@ -457,70 +454,37 @@ enum class DomainEventType(
       emittable = false,
     ),
   ),
-  APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED(
+  APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED(
     DomainEventCas.CAS1,
-    Cas1EventType.placementAppealCreated.value,
-    "A placement appeal has been created",
+    Cas1EventType.placementChangeRequestCreated.value,
+    "A placement change request has been created",
     cas1Info = Cas1DomainEventTypeInfo(
-      Cas1TimelineEventType.placementAppealCreated,
+      Cas1TimelineEventType.placementChangeRequestCreated,
       emittable = false,
-      payloadType = PlacementAppealCreated::class,
-      apiType = Cas1EventType.placementAppealCreated,
+      payloadType = PlacementChangeRequestCreated::class,
+      apiType = Cas1EventType.placementChangeRequestCreated,
     ),
   ),
-  APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED(
+  APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED(
     DomainEventCas.CAS1,
-    Cas1EventType.placementAppealAccepted.value,
-    "A placement appeal has been accepted",
+    Cas1EventType.placementChangeRequestAccepted.value,
+    "A placement change request has been accepted",
     cas1Info = Cas1DomainEventTypeInfo(
-      Cas1TimelineEventType.placementAppealAccepted,
+      Cas1TimelineEventType.placementChangeRequestAccepted,
       emittable = false,
-      apiType = Cas1EventType.placementAppealAccepted,
-      payloadType = PlacementAppealAccepted::class,
+      apiType = Cas1EventType.placementChangeRequestAccepted,
+      payloadType = PlacementChangeRequestAccepted::class,
     ),
   ),
-  APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED(
+  APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED(
     DomainEventCas.CAS1,
-    Cas1EventType.placementAppealRejected.value,
-    "A placement appeal has been rejected",
+    Cas1EventType.placementChangeRequestRejected.value,
+    "A placement change request has been rejected",
     cas1Info = Cas1DomainEventTypeInfo(
-      Cas1TimelineEventType.placementAppealRejected,
+      Cas1TimelineEventType.placementChangeRequestRejected,
       emittable = false,
-      apiType = Cas1EventType.placementAppealRejected,
-      payloadType = PlacementAppealRejected::class,
-    ),
-  ),
-  APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED(
-    DomainEventCas.CAS1,
-    Cas1EventType.plannedTransferRequestAccepted.value,
-    "A planned transfer request has been accepted",
-    cas1Info = Cas1DomainEventTypeInfo(
-      timelineEventType = Cas1TimelineEventType.plannedTransferRequestAccepted,
-      emittable = false,
-      payloadType = PlannedTransferRequestAccepted::class,
-      apiType = Cas1EventType.plannedTransferRequestAccepted,
-    ),
-  ),
-  APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_CREATED(
-    DomainEventCas.CAS1,
-    Cas1EventType.plannedTransferRequestCreated.value,
-    "A planned transfer request has been created",
-    cas1Info = Cas1DomainEventTypeInfo(
-      timelineEventType = Cas1TimelineEventType.plannedTransferRequestCreated,
-      emittable = false,
-      payloadType = PlannedTransferRequestCreated::class,
-      apiType = Cas1EventType.plannedTransferRequestCreated,
-    ),
-  ),
-  APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_REJECTED(
-    DomainEventCas.CAS1,
-    Cas1EventType.plannedTransferRequestRejected.value,
-    "A planned transfer request has been rejected",
-    cas1Info = Cas1DomainEventTypeInfo(
-      timelineEventType = Cas1TimelineEventType.plannedTransferRequestRejected,
-      emittable = false,
-      payloadType = PlannedTransferRequestRejected::class,
-      apiType = Cas1EventType.plannedTransferRequestRejected,
+      apiType = Cas1EventType.placementChangeRequestRejected,
+      payloadType = PlacementChangeRequestRejected::class,
     ),
   ),
   CAS2_APPLICATION_SUBMITTED(

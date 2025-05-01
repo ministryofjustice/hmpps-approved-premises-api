@@ -12,7 +12,7 @@ class Cas1DomainEventEnvelopeFactory<T : Cas1DomainEventPayload> : Factory<Cas1D
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var timestamp: Yielded<Instant> = { Instant.now() }
   private var type: Yielded<EventType> = { EventType.plannedTransferRequestCreated }
-  private var details: Yielded<T> = { PlannedTransferRequestCreatedFactory().produce() as T }
+  private var details: Yielded<T> = { PlacementChangeRequestCreatedFactory().produce() as T }
 
   fun withDetails(details: T) = apply { this.details = { details } }
 

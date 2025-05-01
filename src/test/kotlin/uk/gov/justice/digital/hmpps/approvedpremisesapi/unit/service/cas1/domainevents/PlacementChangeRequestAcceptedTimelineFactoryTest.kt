@@ -7,33 +7,32 @@ import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventCodedIdFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventBookingSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementAppealRejectedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementChangeRequestAcceptedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.PlacementAppealRejectedTimelineFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.PlacementChangeRequestAcceptedTimelineFactory
 import java.time.LocalDate
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class PlacementAppealRejectedTimelineFactoryTest {
+class PlacementChangeRequestAcceptedTimelineFactoryTest {
   @MockK
   lateinit var domainEventService: Cas1DomainEventService
 
   @InjectMockKs
-  lateinit var service: PlacementAppealRejectedTimelineFactory
+  lateinit var service: PlacementChangeRequestAcceptedTimelineFactory
 
   @Test
   fun produce() {
     val id = UUID.randomUUID()
 
     every {
-      domainEventService.get(id, PlacementAppealRejected::class)
+      domainEventService.get(id, PlacementChangeRequestAccepted::class)
     } returns buildDomainEvent(
-      data = PlacementAppealRejectedFactory()
+      data = PlacementChangeRequestAcceptedFactory()
         .withBooking(
           EventBookingSummaryFactory()
             .withPremises(EventPremisesFactory().withName("The Premises Name").produce())
@@ -41,13 +40,12 @@ class PlacementAppealRejectedTimelineFactoryTest {
             .withDepartureOn(LocalDate.of(2015, 12, 2))
             .produce(),
         )
-        .withReason(Cas1DomainEventCodedIdFactory().withCode("The appeal name").produce())
         .produce(),
     )
 
     val result = service.produce(id)
 
-    assertThat(result.type).isEqualTo(Cas1TimelineEventType.placementAppealRejected)
+    assertThat(result.type).isEqualTo(Cas1TimelineEventType.placementChangeRequestAccepted)
     assertThat(result.booking.premises.name).isEqualTo("The Premises Name")
     assertThat(result.booking.arrivalDate).isEqualTo(LocalDate.of(2015, 12, 1))
     assertThat(result.booking.departureDate).isEqualTo(LocalDate.of(2015, 12, 2))

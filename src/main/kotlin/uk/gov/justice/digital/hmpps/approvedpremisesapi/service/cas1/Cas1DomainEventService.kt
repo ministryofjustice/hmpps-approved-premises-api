@@ -41,9 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAccepted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
@@ -99,9 +96,6 @@ class Cas1DomainEventService(
   fun getBookingKeyWorkerAssignedEvent(id: UUID) = get(id, BookingKeyWorkerAssigned::class)
   fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawn::class)
   fun getApplicationExpiredEvent(id: UUID) = get(id, ApplicationExpired::class)
-  fun getPlacementAppealAcceptedEvent(id: UUID) = get(id, PlacementAppealAccepted::class)
-  fun getPlacementAppealCreatedEvent(id: UUID) = get(id, PlacementAppealCreated::class)
-  fun getPlacementAppealRejectedEvent(id: UUID) = get(id, PlacementAppealRejected::class)
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawn::class)
   fun getPlacementApplicationAllocatedEvent(id: UUID) = get(id, PlacementApplicationAllocated::class)
   fun getMatchRequestWithdrawnEvent(id: UUID) = get(id, MatchRequestWithdrawn::class)

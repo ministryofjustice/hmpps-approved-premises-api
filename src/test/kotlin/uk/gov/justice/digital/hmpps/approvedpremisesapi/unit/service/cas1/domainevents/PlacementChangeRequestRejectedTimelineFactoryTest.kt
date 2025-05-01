@@ -7,33 +7,33 @@ import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventCodedIdFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventBookingSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlannedTransferRequestCreatedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementChangeRequestRejectedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.PlannedTransferRequestCreatedTimelineFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.PlacementChangeRequestRejectedTimelineFactory
 import java.time.LocalDate
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class PlannedTransferRequestCreatedTimelineFactoryTest {
+class PlacementChangeRequestRejectedTimelineFactoryTest {
   @MockK
   lateinit var domainEventService: Cas1DomainEventService
 
   @InjectMockKs
-  lateinit var service: PlannedTransferRequestCreatedTimelineFactory
+  lateinit var service: PlacementChangeRequestRejectedTimelineFactory
 
   @Test
   fun produce() {
     val id = UUID.randomUUID()
 
     every {
-      domainEventService.get(id, PlannedTransferRequestCreated::class)
+      domainEventService.get(id, PlacementChangeRequestRejected::class)
     } returns buildDomainEvent(
-      data = PlannedTransferRequestCreatedFactory()
+      data = PlacementChangeRequestRejectedFactory()
         .withBooking(
           EventBookingSummaryFactory()
             .withPremises(EventPremisesFactory().withName("The Premises Name").produce())
@@ -47,7 +47,7 @@ class PlannedTransferRequestCreatedTimelineFactoryTest {
 
     val result = service.produce(id)
 
-    assertThat(result.type).isEqualTo(Cas1TimelineEventType.plannedTransferRequestCreated)
+    assertThat(result.type).isEqualTo(Cas1TimelineEventType.placementChangeRequestRejected)
     assertThat(result.booking.premises.name).isEqualTo("The Premises Name")
     assertThat(result.booking.arrivalDate).isEqualTo(LocalDate.of(2015, 12, 1))
     assertThat(result.booking.departureDate).isEqualTo(LocalDate.of(2015, 12, 2))
