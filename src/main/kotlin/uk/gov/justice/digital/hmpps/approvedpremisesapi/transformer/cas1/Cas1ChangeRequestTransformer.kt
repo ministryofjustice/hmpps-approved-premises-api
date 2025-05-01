@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -39,7 +40,7 @@ class Cas1ChangeRequestTransformer(
     entity: Cas1ChangeRequestEntity,
   ) = Cas1ChangeRequest(
     id = entity.id,
-    type = Cas1ChangeRequestType.valueOf(entity.type.name),
+    type = entity.type.toApiType(),
     createdAt = entity.createdAt.toInstant(),
     requestReason = NamedId(
       id = entity.requestReason.id,
@@ -79,3 +80,5 @@ class Cas1ChangeRequestTransformer(
     }
   }
 }
+
+fun ChangeRequestType.toApiType() = Cas1ChangeRequestType.valueOf(this.name)

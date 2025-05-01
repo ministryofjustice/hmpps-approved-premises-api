@@ -460,7 +460,7 @@ class Cas1SpaceBookingService(
       ),
     )
 
-    return CasResult.Success(
+    return Success(
       SearchResultContainer(
         results = page.toList(),
         paginationMetadata = getMetadata(page, pageCriteria),

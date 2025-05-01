@@ -10,3 +10,5 @@ fun String.kebabCaseToPascalCase(): String {
 fun String.javaConstantNameToSentence(): String = replace("_", " ")
   .lowercase()
   .replaceFirstChar { it.uppercase() }
+
+fun String?.commaSeparatedToList() = this?.split(",")?.filter { it.isNotBlank() } ?: emptyList()

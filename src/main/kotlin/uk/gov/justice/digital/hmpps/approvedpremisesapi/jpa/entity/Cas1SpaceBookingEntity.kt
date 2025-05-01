@@ -38,6 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.commaSeparatedToList
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -80,8 +82,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
           WHERE sbc.space_booking_id = b.id 
           GROUP BY sbc.space_booking_id
-        ) AS characteristicsPropertyNames,
-              EXISTS (
+        ) AS characteristicsPropertyNamesCsv,
+        EXISTS (
               SELECT 1
               FROM cas1_change_requests c1
               WHERE c1.cas1_space_booking_id = b.id
@@ -94,7 +96,12 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
               WHERE c2.cas1_space_booking_id = b.id
                 AND c2.type = 'PLACEMENT_APPEAL'
                 AND c2.resolved = false
-        ) AS appealRequested
+        ) AS appealRequested,
+        (
+          SELECT STRING_AGG(DISTINCT change_requests.type, ',')
+          FROM cas1_change_requests change_requests
+          WHERE change_requests.cas1_space_booking_id = b.id AND change_requests.resolved = false
+        ) AS openChangeRequestTypeNamesCsv
     """
 
     private const val SPACE_BOOKING_SUMMARY_WHERE_CLAUSE = """
@@ -311,12 +318,19 @@ interface Cas1SpaceBookingSearchResult {
   val keyWorkerStaffCode: String?
   val keyWorkerAssignedAt: Instant?
   val keyWorkerName: String?
-  val characteristicsPropertyNames: String?
+  val characteristicsPropertyNamesCsv: String?
   val deliusEventNumber: String?
   val cancelled: Boolean
   val plannedTransferRequested: Boolean
   val appealRequested: Boolean
+  val openChangeRequestTypeNamesCsv: String?
 }
+
+fun Cas1SpaceBookingSearchResult.getCharacteristicPropertyNames() = characteristicsPropertyNamesCsv.commaSeparatedToList()
+
+fun Cas1SpaceBookingSearchResult.getOpenChangeRequestTypes() = openChangeRequestTypeNamesCsv
+  .commaSeparatedToList()
+  .map { propertyName -> ChangeRequestType.entries.first { it.name == propertyName } }
 
 interface Cas1SpaceBookingAtPremises {
   val id: UUID

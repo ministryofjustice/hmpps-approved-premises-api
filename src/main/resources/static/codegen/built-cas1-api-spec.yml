@@ -6715,9 +6715,17 @@ components:
         isCancelled:
           type: boolean
         plannedTransferRequested:
+          deprecated: true
+          description: Use 'openChangeRequestTypes'
           type: boolean
         appealRequested:
+          deprecated: true
+          description: Use 'openChangeRequestTypes'
           type: boolean
+        openChangeRequestTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1ChangeRequestType'
       required:
         - id
         - person
@@ -6730,6 +6738,17 @@ components:
         - isCancelled
         - plannedTransferRequested
         - appealRequested
+        - openChangeRequestTypes
+    Cas1ChangeRequestType:
+      type: string
+      enum:
+        - placementAppeal
+        - placementExtension
+        - plannedTransfer
+      x-enum-varnames:
+        - PLACEMENT_APPEAL
+        - PLACEMENT_EXTENSION
+        - PLANNED_TRANSFER
     Cas1KeyWorkerAllocation:
       type: object
       properties:
@@ -8163,16 +8182,6 @@ components:
       x-enum-varnames:
         - APPROVED
         - REJECTED
-    Cas1ChangeRequestType:
-      type: string
-      enum:
-        - placementAppeal
-        - placementExtension
-        - plannedTransfer
-      x-enum-varnames:
-        - PLACEMENT_APPEAL
-        - PLACEMENT_EXTENSION
-        - PLANNED_TRANSFER
     Cas1ChangeRequest:
       type: object
       properties:

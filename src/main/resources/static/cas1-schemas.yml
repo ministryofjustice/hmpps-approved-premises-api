@@ -1389,7 +1389,7 @@ components:
           type: string
           format: uuid
         type:
-          $ref: '#/components/schemas/Cas1ChangeRequestType'
+          $ref: '_shared.yml#/components/schemas/Cas1ChangeRequestType'
         requestJson:
           type: object
           $ref: '_shared.yml#/components/schemas/Unit'
@@ -1409,16 +1409,6 @@ components:
       x-enum-varnames:
         - APPROVED
         - REJECTED
-    Cas1ChangeRequestType:
-      type: string
-      enum:
-        - placementAppeal
-        - placementExtension
-        - plannedTransfer
-      x-enum-varnames:
-        - PLACEMENT_APPEAL
-        - PLACEMENT_EXTENSION
-        - PLANNED_TRANSFER
     Cas1ChangeRequest:
       type: object
       properties:
@@ -1426,7 +1416,7 @@ components:
           type: string
           format: uuid
         type:
-          $ref: '#/components/schemas/Cas1ChangeRequestType'
+          $ref: '_shared.yml#/components/schemas/Cas1ChangeRequestType'
         createdAt:
           type: string
           format: date-time
@@ -1469,7 +1459,7 @@ components:
         person:
           $ref: "_shared.yml#/components/schemas/PersonSummary"
         type:
-          $ref: '#/components/schemas/Cas1ChangeRequestType'
+          $ref: '_shared.yml#/components/schemas/Cas1ChangeRequestType'
         createdAt:
           type: string
           format: date-time
