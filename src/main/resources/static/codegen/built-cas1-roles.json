@@ -101,6 +101,7 @@
       "cas1_change_request_view",
       "cas1_placement_appeal_assess",
       "cas1_placement_appeal_create",
+      "cas1_space_booking_shorten",
       "cas1_transfer_assess",
       "cas1_transfer_create"
     ]
@@ -175,6 +176,7 @@
       "cas1_space_booking_record_departure",
       "cas1_space_booking_record_keyworker",
       "cas1_space_booking_record_non_arrival",
+      "cas1_space_booking_shorten",
       "cas1_space_booking_view",
       "cas1_space_booking_withdraw",
       "cas1_tasks_list",

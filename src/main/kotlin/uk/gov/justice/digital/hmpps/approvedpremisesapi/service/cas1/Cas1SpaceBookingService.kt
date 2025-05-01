@@ -616,6 +616,32 @@ class Cas1SpaceBookingService(
   }
 
   @Transactional
+  fun shortenSpaceBooking(
+    shortenedBookingDetails: ShortenSpaceBookingDetails,
+  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
+    val existingBooking = cas1SpaceBookingRepository.findByIdOrNull(shortenedBookingDetails.bookingId)
+
+    validateShortenedSpaceBooking(shortenedBookingDetails, existingBooking)
+
+    val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+      bookingId = shortenedBookingDetails.bookingId,
+      premisesId = shortenedBookingDetails.premisesId,
+      arrivalDate = null,
+      departureDate = shortenedBookingDetails.departureDate,
+      characteristics = null,
+      updatedBy = shortenedBookingDetails.updatedBy,
+    )
+
+    validateUpdateSpaceBooking(updateSpaceBookingDetails)
+
+    if (validationErrors.any()) return fieldValidationError
+
+    val updatedBooking = updateExistingSpaceBooking(existingBooking!!, updateSpaceBookingDetails)
+
+    success(updatedBooking)
+  }
+
+  @Transactional
   @Suppress("ReturnCount")
   fun emergencyTransfer(
     premisesId: UUID,
@@ -796,6 +822,27 @@ class Cas1SpaceBookingService(
     }
   }
 
+  private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateShortenedSpaceBooking(
+    shortenedBookingDetails: ShortenSpaceBookingDetails,
+    existingSpaceBooking: Cas1SpaceBookingEntity?,
+  ) {
+    val newDepartureDate = shortenedBookingDetails.departureDate
+
+    if (newDepartureDate.isBefore(LocalDate.now())) {
+      "$.departureDate" hasValidationError "The departure date is in the past."
+    }
+
+    existingSpaceBooking?.let {
+      if (newDepartureDate.isAfter(existingSpaceBooking.expectedDepartureDate)) {
+        "$.departureDate" hasValidationError "The departure date is after the current expected departure date."
+      }
+
+      if (newDepartureDate.isEqual(existingSpaceBooking.expectedDepartureDate)) {
+        "$.departureDate" hasValidationError "The departure date is the same as the current expected departure date."
+      }
+    }
+  }
+
   private fun updateExistingSpaceBooking(
     bookingToUpdate: Cas1SpaceBookingEntity,
     updateSpaceBookingDetails: UpdateSpaceBookingDetails,
@@ -898,6 +945,14 @@ class Cas1SpaceBookingService(
     val arrivalDate: LocalDate?,
     val departureDate: LocalDate?,
     val characteristics: List<CharacteristicEntity>?,
+    val updatedBy: UserEntity,
+  )
+
+  data class ShortenSpaceBookingDetails(
+    val bookingId: UUID,
+    val premisesId: UUID,
+    val departureDate: LocalDate,
+    val reason: String,
     val updatedBy: UserEntity,
   )
 }

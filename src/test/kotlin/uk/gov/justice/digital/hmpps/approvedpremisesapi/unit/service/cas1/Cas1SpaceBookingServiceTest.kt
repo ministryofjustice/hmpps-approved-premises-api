@@ -75,6 +75,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -1953,12 +1954,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "doesNotExist"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "doesNotExist")
     }
 
     @Test
@@ -1982,12 +1978,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "This Booking is cancelled and as such cannot be modified"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "This Booking is cancelled and as such cannot be modified")
     }
 
     @Test
@@ -2011,12 +2002,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "hasDepartedOrNonArrival"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "hasDepartedOrNonArrival")
     }
 
     @Test
@@ -2040,12 +2026,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "hasDepartedOrNonArrival"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "hasDepartedOrNonArrival")
     }
 
     @Test
@@ -2064,12 +2045,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.bookingId" && value == "premisesMismatch"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesMismatch")
     }
 
     @Test
@@ -2192,7 +2168,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
@@ -2252,7 +2228,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(updateSpaceBookingDetails.arrivalDate)
@@ -2307,7 +2283,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.criteria).isEmpty()
@@ -2358,7 +2334,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.criteria).isEmpty()
@@ -2407,7 +2383,7 @@ class Cas1SpaceBookingServiceTest {
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.criteria).isEmpty()
@@ -2424,6 +2400,267 @@ class Cas1SpaceBookingServiceTest {
       }
 
       verify { cas1BookingEmailService wasNot Called }
+    }
+  }
+
+  @Nested
+  inner class ShortenSpaceBooking {
+
+    private val newDepartureDate = LocalDate.now().plusDays(1)
+
+    private val user = UserEntityFactory()
+      .withDefaults()
+      .produce()
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withId(PREMISES_ID)
+      .produce()
+
+    private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withPremises(premises)
+      .withExpectedArrivalDate(LocalDate.now().minusDays(7))
+      .withActualArrivalDate(LocalDate.now().minusDays(7))
+      .withExpectedDepartureDate(LocalDate.now().plusDays(7))
+      .produce()
+
+    @Test
+    fun `should return validation error if no premises exist with the given premisesId`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = PREMISES_ID,
+          departureDate = newDepartureDate,
+          reason = "valid reason",
+          updatedBy = user,
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotExist")
+    }
+
+    @Test
+    fun `should return validation error if no space booking exist with the given bookingId`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = PREMISES_ID,
+          departureDate = newDepartureDate,
+          reason = "valid reason",
+          updatedBy = user,
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "doesNotExist")
+    }
+
+    @Test
+    fun `should return validation error when booking status is cancelled`() {
+      val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(LocalDate.now().minusWeeks(2))
+        .withPremises(premises)
+        .produce()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = PREMISES_ID,
+          departureDate = newDepartureDate,
+          updatedBy = user,
+          reason = "valid reason",
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "This Booking is cancelled and as such cannot be modified")
+    }
+
+    @Test
+    fun `should return validation error when booking status is departed`() {
+      val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualDepartureDate(LocalDate.now().minusWeeks(2))
+        .withPremises(premises)
+        .produce()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = PREMISES_ID,
+          departureDate = newDepartureDate,
+          reason = "valid reason",
+          updatedBy = user,
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "hasDepartedOrNonArrival")
+    }
+
+    @Test
+    fun `should return validation error when booking status is nonArrival`() {
+      val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withNonArrivalConfirmedAt(Instant.now())
+        .withPremises(premises)
+        .produce()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = PREMISES_ID,
+          departureDate = newDepartureDate,
+          updatedBy = user,
+          reason = "valid reason",
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "hasDepartedOrNonArrival")
+    }
+
+    @Test
+    fun `should return validation error when premisesId does not match the existing booking`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = UUID.randomUUID(),
+          departureDate = newDepartureDate,
+          reason = "valid reason",
+          updatedBy = user,
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesMismatch")
+    }
+
+    @Test
+    fun `should return validation error when new departure date is before today`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = UUID.randomUUID(),
+          departureDate = LocalDate.now().minusDays(1),
+          reason = "valid reason",
+          updatedBy = user,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "The departure date is in the past.")
+    }
+
+    @Test
+    fun `should return validation error if new departure date is after expected departure date`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = UUID.randomUUID(),
+          departureDate = LocalDate.now().plusDays(8),
+          reason = "valid reason",
+          updatedBy = user,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "The departure date is after the current expected departure date.")
+    }
+
+    @Test
+    fun `should return validation error if new departure date is equal to expected departure date`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = UUID.randomUUID(),
+          departureDate = LocalDate.now().plusDays(7),
+          reason = "valid reason",
+          updatedBy = user,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "The departure date is the same as the current expected departure date.")
+    }
+
+    @Test
+    fun `should update departure date when status is hasArrival`() {
+      val shortenSpaceBookingDetails = ShortenSpaceBookingDetails(
+        bookingId = UUID.randomUUID(),
+        premisesId = PREMISES_ID,
+        departureDate = LocalDate.now().plusDays(1),
+        reason = "valid reason",
+        updatedBy = user,
+      )
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+
+      val result = service.shortenSpaceBooking(shortenSpaceBookingDetails)
+
+      assertThatCasResult(result).isSuccess()
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
+      assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
+    }
+
+    @Test
+    fun `should update departure date when status is hasArrival and new departure date and actual arrival date are today`() {
+      existingSpaceBooking.actualArrivalDate = LocalDate.now()
+
+      val shortenSpaceBookingDetails = ShortenSpaceBookingDetails(
+        bookingId = UUID.randomUUID(),
+        premisesId = PREMISES_ID,
+        departureDate = LocalDate.now(),
+        reason = "valid reason",
+        updatedBy = user,
+      )
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+
+      val result = service.shortenSpaceBooking(shortenSpaceBookingDetails)
+
+      assertThatCasResult(result).isSuccess()
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
+      assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
     }
   }
 

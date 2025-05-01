@@ -62,6 +62,7 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_SPACE_BOOKING_RECORD_KEYWORKER(ApprovedPremisesUserPermission.spaceBookingRecordKeyworker),
   CAS1_SPACE_BOOKING_VIEW(ApprovedPremisesUserPermission.spaceBookingView),
   CAS1_SPACE_BOOKING_WITHDRAW(ApprovedPremisesUserPermission.spaceBookingWithdraw),
+  CAS1_SPACE_BOOKING_SHORTEN(ApprovedPremisesUserPermission.spaceBookingShorten),
 
   CAS1_PREMISES_CAPACITY_REPORT_VIEW(ApprovedPremisesUserPermission.premisesCapacityReportView),
   CAS1_PREMISES_VIEW(ApprovedPremisesUserPermission.premisesView),
