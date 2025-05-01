@@ -5058,6 +5058,11 @@ components:
             assignmentDate:
               type: string
               format: date
+            applicationOrigin:
+              $ref: "#/components/schemas/ApplicationOrigin"
+            bailHearingDate:
+              type: string
+              format: date
           required:
             - createdBy
             - schemaVersion
