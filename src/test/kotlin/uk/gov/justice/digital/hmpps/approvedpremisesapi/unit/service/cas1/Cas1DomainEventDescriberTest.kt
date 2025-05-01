@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -16,9 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Da
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -35,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
@@ -86,6 +81,7 @@ class Cas1DomainEventDescriberTest {
     mockAssessmentClarificationNoteRepository,
     mockBookingRepository,
     mockSpaceBookingRepository,
+    emptyList(),
     emptyList(),
   )
 
@@ -507,182 +503,6 @@ class Cas1DomainEventDescriberTest {
       cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Space Booking ID $spaceBookingId does not have a cancellation")
-  }
-
-  @Nested
-  inner class BookingChanged {
-
-    @Test
-    fun `Schema version is null`() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-
-      val arrivalDate = LocalDate.of(2024, 1, 1)
-      val departureDate = LocalDate.of(2024, 4, 1)
-
-      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent {
-        Cas1DomainEventEnvelope(
-          id = it,
-          timestamp = Instant.now(),
-          eventType = EventType.bookingChanged,
-          eventDetails = BookingChangedFactory()
-            .withArrivalOn(arrivalDate)
-            .withDepartureOn(departureDate)
-            .withPremises(
-              EventPremisesFactory()
-                .withName("The Premises Name")
-                .produce(),
-            )
-            .produce(),
-        )
-      }
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
-      assertThat(result.payload).isNull()
-    }
-
-    @Test
-    fun `Schema version is 2 and only previous arrival date is present`() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-
-      val arrivalDate = LocalDate.of(2025, 4, 5)
-      val departureDate = LocalDate.of(2025, 6, 1)
-      val previousArrivalOn = LocalDate.of(2025, 4, 1)
-
-      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
-        builder =
-        {
-          Cas1DomainEventEnvelope(
-            id = it,
-            timestamp = Instant.now(),
-            eventType = EventType.bookingChanged,
-            eventDetails = BookingChangedFactory()
-              .withArrivalOn(arrivalDate)
-              .withPreviousArrivalOn(null)
-              .withDepartureOn(departureDate)
-              .withPreviousArrivalOn(previousArrivalOn)
-              .withPremises(
-                EventPremisesFactory()
-                  .withName("The Premises Name")
-                  .produce(),
-              )
-              .withCharacteristics(listOf(SpaceCharacteristic.hasEnSuite))
-              .withPreviousCharacteristics(null)
-              .produce(),
-          )
-        },
-        schemaVersion = 2,
-      )
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025")
-
-      val contentPayload = result.payload as Cas1BookingChangedContentPayload
-      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
-      assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
-      assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
-      assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
-      assertThat(contentPayload.previousExpectedDeparture).isNull()
-      assertThat(contentPayload.characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.hasEnSuite))
-      assertThat(contentPayload.previousCharacteristics).isNull()
-    }
-
-    @Test
-    fun `Schema version is 2 and only previous departure date is present`() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-
-      val arrivalDate = LocalDate.of(2025, 4, 5)
-      val departureDate = LocalDate.of(2025, 6, 10)
-      val previousDepartureOn = LocalDate.of(2025, 6, 1)
-
-      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
-        builder =
-        {
-          Cas1DomainEventEnvelope(
-            id = it,
-            timestamp = Instant.now(),
-            eventType = EventType.bookingChanged,
-            eventDetails = BookingChangedFactory()
-              .withArrivalOn(arrivalDate)
-              .withPreviousArrivalOn(null)
-              .withDepartureOn(departureDate)
-              .withPreviousDepartureOn(previousDepartureOn)
-              .withPremises(
-                EventPremisesFactory()
-                  .withName("The Premises Name")
-                  .produce(),
-              )
-              .withCharacteristics(listOf(SpaceCharacteristic.hasEnSuite))
-              .withPreviousCharacteristics(null)
-              .produce(),
-          )
-        },
-        schemaVersion = 2,
-      )
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isEqualTo("A placement at The Premises Name had its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
-
-      val contentPayload = result.payload as Cas1BookingChangedContentPayload
-      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
-      assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
-      assertThat(contentPayload.previousExpectedArrival).isNull()
-      assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
-      assertThat(contentPayload.previousExpectedDeparture).isEqualTo(previousDepartureOn)
-      assertThat(contentPayload.characteristics).containsExactly(Cas1SpaceCharacteristic.hasEnSuite)
-      assertThat(contentPayload.previousCharacteristics).isNull()
-    }
-
-    @Test
-    fun `Schema version is 2 and previous arrival, departure dates and characteristics are present`() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-
-      val arrivalDate = LocalDate.of(2025, 4, 5)
-      val departureDate = LocalDate.of(2025, 6, 10)
-      val previousArrivalOn = LocalDate.of(2025, 4, 1)
-      val previousDepartureOn = LocalDate.of(2025, 6, 1)
-
-      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
-        builder =
-        {
-          Cas1DomainEventEnvelope(
-            id = it,
-            timestamp = Instant.now(),
-            eventType = EventType.bookingChanged,
-            eventDetails = BookingChangedFactory()
-              .withArrivalOn(arrivalDate)
-              .withDepartureOn(departureDate)
-              .withPreviousArrivalOn(previousArrivalOn)
-              .withPreviousDepartureOn(previousDepartureOn)
-              .withCharacteristics(listOf(SpaceCharacteristic.hasEnSuite))
-              .withPreviousCharacteristics(listOf(SpaceCharacteristic.isArsonSuitable))
-              .withPremises(
-                EventPremisesFactory()
-                  .withName("The Premises Name")
-                  .produce(),
-              )
-              .produce(),
-          )
-        },
-        schemaVersion = 2,
-      )
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025, its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
-
-      val contentPayload = result.payload as Cas1BookingChangedContentPayload
-      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
-      assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
-      assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
-      assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
-      assertThat(contentPayload.previousExpectedDeparture).isEqualTo(previousDepartureOn)
-      assertThat(contentPayload.characteristics).containsExactly(Cas1SpaceCharacteristic.hasEnSuite)
-      assertThat(contentPayload.previousCharacteristics).containsExactly(Cas1SpaceCharacteristic.isArsonSuitable)
-    }
   }
 
   @Test

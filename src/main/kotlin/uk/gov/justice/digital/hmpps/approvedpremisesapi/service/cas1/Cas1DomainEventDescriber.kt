@@ -6,18 +6,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.LegacyTimelineFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.TimelineFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.javaConstantNameToSentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
@@ -37,6 +34,7 @@ class Cas1DomainEventDescriber(
   private val bookingRepository: BookingRepository,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val payloadFactories: List<TimelineFactory<*>>,
+  private val legacyPayloadFactories: List<LegacyTimelineFactory<*>>,
 ) {
 
   data class BookingCancellationDetail(val premisesName: String, val cancellationReason: String, val arrivalDate: String, val departureDate: String)
@@ -46,18 +44,22 @@ class Cas1DomainEventDescriber(
    * UI should be responsible for rendering a suitable message using
    * the payload
    */
-  data class EventDescriptionAndPayload(
+  data class EventDescriptionAndPayload<T : Cas1TimelineEventContentPayload>(
     val description: String?,
-    val payload: Cas1TimelineEventContentPayload?,
+    val payload: T?,
   )
 
   @SuppressWarnings("CyclomaticComplexMethod")
-  fun getDescriptionAndPayload(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  fun getDescriptionAndPayload(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     payloadFactories.firstOrNull { it.forType() == domainEventSummary.type }?.let {
       return EventDescriptionAndPayload(
         description = null,
         payload = it.produce(domainEventSummary.id()),
       )
+    }
+
+    legacyPayloadFactories.firstOrNull { it.forType() == domainEventSummary.type }?.let {
+      return it.produce(domainEventSummary.id())
     }
 
     // Do _not_ add to this list! Instead, create an implementation of [TimelineFactory]
@@ -74,7 +76,6 @@ class Cas1DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> buildBookingChangedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> buildBookingKeyWorkerAssignedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> buildApplicationExpiredDescription(domainEventSummary)
@@ -91,11 +92,7 @@ class Cas1DomainEventDescriber(
     }
   }
 
-  private fun convertToCas1SpaceCharacteristics(spaceCharacteristics: List<SpaceCharacteristic>?): List<Cas1SpaceCharacteristic>? = spaceCharacteristics?.map { spaceCharacteristic ->
-    Cas1SpaceCharacteristic.valueOf(spaceCharacteristic.value)
-  }
-
-  private fun buildInfoRequestDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildInfoRequestDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getFurtherInformationRequestMadeEvent(domainEventSummary.id())
 
     val description = event.describe { data ->
@@ -110,7 +107,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getApplicationWithdrawnEvent(domainEventSummary.id())
 
     val description = event.describe { data ->
@@ -122,17 +119,17 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildApplicationExpiredDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildApplicationExpiredDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getApplicationExpiredEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(event.describe { "The application has expired." }, null)
   }
 
-  private fun buildApplicationAssessedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildApplicationAssessedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getApplicationAssessedDomainEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(event.describe { "The application was assessed and ${it.eventDetails.decision.lowercase()}" }, null)
   }
 
-  private fun buildBookingMadeDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildBookingMadeDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getBookingMadeEvent(domainEventSummary.id())
     val description = event.describe {
       "A placement at ${it.eventDetails.premises.name} was booked for " +
@@ -143,71 +140,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildBookingChangedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
-    val domainEvent = domainEventService.getBookingChangedEvent(domainEventSummary.id())!!
-
-    if (domainEvent.schemaVersion == null) {
-      val descirption = domainEvent.describe {
-        "A placement at ${it.eventDetails.premises.name} had its arrival and/or departure date changed to " +
-          "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
-      }
-
-      return EventDescriptionAndPayload(descirption, null)
-    }
-
-    if (domainEvent.schemaVersion == 2) {
-      val eventDetails = domainEvent.data.eventDetails
-      val previousArrival = eventDetails.previousArrivalOn
-      val previousDeparture = eventDetails.previousDepartureOn
-      val changes = mutableListOf<String>()
-
-      fun addDateChangeMessage(previousDate: LocalDate, newDate: LocalDate, changeType: String) {
-        changes.add(
-          "its $changeType date changed from ${previousDate.toUiFormat()} to ${newDate.toUiFormat()}",
-        )
-      }
-
-      if (previousArrival != null) {
-        addDateChangeMessage(previousArrival, eventDetails.arrivalOn, "arrival")
-      }
-
-      if (previousDeparture != null) {
-        addDateChangeMessage(previousDeparture, eventDetails.departureOn, "departure")
-      }
-
-      val description = if (changes.isNotEmpty()) {
-        domainEvent.describe {
-          "A placement at ${it.eventDetails.premises.name} had ${changes.joinToString(", ")}"
-        }
-      } else {
-        null
-      }
-      return EventDescriptionAndPayload(description, getBookingChangedContentPayLoad(domainEventSummary))
-    }
-
-    return EventDescriptionAndPayload(null, null)
-  }
-
-  fun getBookingChangedContentPayLoad(domainEventSummary: DomainEventSummary): Cas1BookingChangedContentPayload? {
-    val domainEvent = domainEventService.getBookingChangedEvent(domainEventSummary.id())!!
-    val eventDetails = domainEvent.data.eventDetails
-    return Cas1BookingChangedContentPayload(
-      type = domainEventSummary.type.cas1Info!!.timelineEventType,
-      premises = NamedId(
-        id = eventDetails.premises.id,
-        name = eventDetails.premises.name,
-      ),
-      schemaVersion = domainEvent.schemaVersion!!,
-      previousExpectedArrival = domainEvent.data.eventDetails.previousArrivalOn,
-      expectedArrival = eventDetails.arrivalOn,
-      previousExpectedDeparture = eventDetails.previousDepartureOn,
-      expectedDeparture = eventDetails.departureOn,
-      characteristics = convertToCas1SpaceCharacteristics(eventDetails.characteristics),
-      previousCharacteristics = convertToCas1SpaceCharacteristics(eventDetails.previousCharacteristics),
-    )
-  }
-
-  private fun buildBookingKeyWorkerAssignedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildBookingKeyWorkerAssignedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getBookingKeyWorkerAssignedEvent(domainEventSummary.id())
     val keyWorkersDetail = event?.data?.eventDetails?.previousKeyWorkerName?.let {
       "changes from $it to ${event.data.eventDetails.assignedKeyWorkerName}"
@@ -218,7 +151,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildPersonArrivedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildPersonArrivedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPersonArrivedEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(
       event.describe { "The person moved into the premises on ${LocalDateTime.ofInstant(it.eventDetails.arrivedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" },
@@ -226,7 +159,7 @@ class Cas1DomainEventDescriber(
     )
   }
 
-  private fun buildPersonNotArrivedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildPersonNotArrivedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPersonNotArrivedEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(
       event.describe { "The person was due to move into the premises on ${it.eventDetails.expectedArrivalOn.toUiFormat()} but did not arrive" },
@@ -234,12 +167,12 @@ class Cas1DomainEventDescriber(
     )
   }
 
-  private fun buildPersonDepartedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildPersonDepartedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPersonDepartedEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(event.describe { "The person moved out of the premises on ${LocalDateTime.ofInstant(it.eventDetails.departedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" }, null)
   }
 
-  private fun buildBookingNotMadeDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildBookingNotMadeDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getBookingNotMadeEvent(domainEventSummary.id())
     val failureReason = event?.data?.eventDetails?.failureDescription?.let {
       " The reason was: $it"
@@ -247,7 +180,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(event.describe { "A placement was not made for the placement request.$failureReason" }, null)
   }
 
-  private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
     val bookingId = event!!.data.eventDetails.bookingId
 
@@ -263,12 +196,12 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getAssessmentAppealedEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(event.describe { "The assessment was appealed and ${it.eventDetails.decision.value}. The reason was: ${it.eventDetails.decisionDetail}" }, null)
   }
 
-  private fun buildAssessmentAllocatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildAssessmentAllocatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getAssessmentAllocatedEvent(domainEventSummary.id())
     val description = event.describe { ev ->
       val eventDetails = ev.eventDetails
@@ -281,7 +214,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPlacementApplicationWithdrawnEvent(domainEventSummary.id())
 
     val description = event.describe { data ->
@@ -299,7 +232,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildPlacementApplicationAllocatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildPlacementApplicationAllocatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPlacementApplicationAllocatedEvent(domainEventSummary.id())
 
     val description = event.describe { data ->
@@ -312,7 +245,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildMatchRequestWithdrawnDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildMatchRequestWithdrawnDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getMatchRequestWithdrawnEvent(domainEventSummary.id())
 
     /**
@@ -329,7 +262,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildRequestForPlacementCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildRequestForPlacementCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getRequestForPlacementCreatedEvent(domainEventSummary.id())
 
     val description = event.describe { data ->
@@ -348,7 +281,7 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(description, null)
   }
 
-  private fun buildRequestForPlacementAssessedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+  private fun buildRequestForPlacementAssessedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getRequestForPlacementAssessedEvent(domainEventSummary.id())
 
     val description = event.describe { data ->
@@ -424,7 +357,6 @@ class Cas1DomainEventDescriber(
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
   private fun <T> GetCas1DomainEvent<T>?.describe(describe: (T) -> String?): String? = this?.let { describe(it.data) }
-  private fun <T> GetCas1DomainEvent<T>?.toPayload(toPayload: (T) -> Cas1TimelineEventContentPayload): Cas1TimelineEventContentPayload? = this?.let { toPayload(it.data) }
   private val StaffMember.name: String
     get() = "${this.forenames} ${this.surname}".trim()
 }
