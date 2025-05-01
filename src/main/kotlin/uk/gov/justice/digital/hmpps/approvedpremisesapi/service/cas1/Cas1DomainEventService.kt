@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawn
@@ -43,11 +42,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAccepted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejectedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
@@ -172,12 +168,6 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveEmergencyTransferCreatedEvent(domainEvent: SaveCas1DomainEvent<EmergencyTransferCreatedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED,
-  )
-
-  @Transactional
   fun savePersonArrivedEvent(domainEvent: SaveCas1DomainEvent<PersonArrivedEnvelope>) = saveAndEmitForEnvelope(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
@@ -223,24 +213,6 @@ class Cas1DomainEventService(
   fun saveAssessmentAppealedEvent(domainEvent: SaveCas1DomainEvent<AssessmentAppealedEnvelope>) = saveAndEmitForEnvelope(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
-  )
-
-  @Transactional
-  fun savePlacementAppealAccepted(domainEvent: SaveCas1DomainEvent<PlacementAppealAcceptedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED,
-  )
-
-  @Transactional
-  fun savePlacementAppealCreated(domainEvent: SaveCas1DomainEvent<PlacementAppealCreatedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED,
-  )
-
-  @Transactional
-  fun savePlacementAppealRejected(domainEvent: SaveCas1DomainEvent<PlacementAppealRejectedEnvelope>) = saveAndEmitForEnvelope(
-    domainEvent = domainEvent,
-    eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED,
   )
 
   @Transactional
@@ -303,7 +275,7 @@ class Cas1DomainEventService(
 
   private fun getAllDomainEventsById(applicationId: UUID? = null, spaceBookingId: UUID? = null) = domainEventRepository.findAllTimelineEventsByIds(applicationId, spaceBookingId).distinctBy { it.id }
 
-  fun save(saveWithPayload: SaveCas1DomainEventWithPayload) {
+  fun save(saveWithPayload: SaveCas1DomainEventWithPayload<*>) {
     val id = saveWithPayload.id
     val type = saveWithPayload.type
     val expectedPayloadType = type.cas1Info!!.payloadType
@@ -454,7 +426,7 @@ data class SaveCas1DomainEvent<T>(
   val emit: Boolean = true,
 )
 
-data class SaveCas1DomainEventWithPayload(
+data class SaveCas1DomainEventWithPayload<T : Cas1DomainEventPayload>(
   val id: UUID = UUID.randomUUID(),
   val type: DomainEventType,
   val applicationId: UUID? = null,
@@ -465,7 +437,7 @@ data class SaveCas1DomainEventWithPayload(
   val crn: String,
   val nomsNumber: String?,
   val occurredAt: Instant,
-  val data: Cas1DomainEventPayload,
+  val data: T,
   val metadata: Map<MetaDataName, String?> = emptyMap(),
   val schemaVersion: Int? = null,
   val triggerSource: TriggerSourceType? = null,

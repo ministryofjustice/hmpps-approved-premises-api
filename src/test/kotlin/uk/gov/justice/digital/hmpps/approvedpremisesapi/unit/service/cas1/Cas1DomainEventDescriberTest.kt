@@ -18,12 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1EmergencyTransferCreatedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -44,24 +39,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCh
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventCodedIdFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EmergencyTransferCreatedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventBookingSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementAppealAcceptedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementAppealCreatedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementAppealRejectedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -694,199 +682,6 @@ class Cas1DomainEventDescriberTest {
       assertThat(contentPayload.previousExpectedDeparture).isEqualTo(previousDepartureOn)
       assertThat(contentPayload.characteristics).containsExactly(Cas1SpaceCharacteristic.hasEnSuite)
       assertThat(contentPayload.previousCharacteristics).containsExactly(Cas1SpaceCharacteristic.isArsonSuitable)
-    }
-  }
-
-  @Nested
-  inner class PlacementAppealAccepted {
-
-    @Test
-    fun success() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED)
-
-      every { mockDomainEventService.getPlacementAppealAcceptedEvent(any()) } returns buildDomainEvent(
-        builder =
-        {
-          Cas1DomainEventEnvelope(
-            id = it,
-            timestamp = Instant.now(),
-            eventType = EventType.placementAppealAccepted,
-            eventDetails = PlacementAppealAcceptedFactory()
-              .withPremises(
-                EventPremisesFactory()
-                  .withName("The Premises Name")
-                  .produce(),
-              )
-              .withBookingId(UUID.randomUUID())
-              .withArrivalOn(LocalDate.of(2015, 12, 1))
-              .withDepartureOn(LocalDate.of(2015, 12, 2))
-              .produce(),
-          )
-        },
-        schemaVersion = null,
-      )
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isNull()
-
-      val contentPayload = result.payload as Cas1PlacementAppealAcceptedPayload
-      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.placementAppealAccepted)
-      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
-      assertThat(contentPayload.expectedArrival).isEqualTo(LocalDate.of(2015, 12, 1))
-      assertThat(contentPayload.expectedDeparture).isEqualTo(LocalDate.of(2015, 12, 2))
-    }
-  }
-
-  @Nested
-  inner class PlacementAppealCreated {
-
-    @Test
-    fun success() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED)
-
-      every { mockDomainEventService.getPlacementAppealCreatedEvent(any()) } returns buildDomainEvent(
-        builder =
-        {
-          Cas1DomainEventEnvelope(
-            id = it,
-            timestamp = Instant.now(),
-            eventType = EventType.placementAppealCreated,
-            eventDetails = PlacementAppealCreatedFactory()
-              .withPremises(
-                EventPremisesFactory()
-                  .withName("The Premises Name")
-                  .produce(),
-              )
-              .withBookingId(UUID.randomUUID())
-              .withAppealReason(
-                Cas1DomainEventCodedIdFactory()
-                  .withCode("The appeal name")
-                  .produce(),
-              )
-              .withArrivalOn(LocalDate.of(2015, 12, 1))
-              .withDepartureOn(LocalDate.of(2015, 12, 2))
-              .produce(),
-          )
-        },
-        schemaVersion = null,
-      )
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isNull()
-
-      val contentPayload = result.payload as Cas1PlacementAppealCreatedPayload
-      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.placementAppealCreated)
-      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
-      assertThat(contentPayload.expectedArrival).isEqualTo(LocalDate.of(2015, 12, 1))
-      assertThat(contentPayload.expectedDeparture).isEqualTo(LocalDate.of(2015, 12, 2))
-    }
-  }
-
-  @Nested
-  inner class PlacementAppealRejected {
-
-    @Test
-    fun success() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED)
-
-      every { mockDomainEventService.getPlacementAppealRejectedEvent(any()) } returns buildDomainEvent(
-        builder =
-        {
-          Cas1DomainEventEnvelope(
-            id = it,
-            timestamp = Instant.now(),
-            eventType = EventType.placementAppealRejected,
-            eventDetails = PlacementAppealRejectedFactory()
-              .withPremises(
-                EventPremisesFactory()
-                  .withName("The Premises Name")
-                  .produce(),
-              )
-              .withBookingId(UUID.randomUUID())
-              .withArrivalOn(LocalDate.of(2015, 12, 1))
-              .withDepartureOn(LocalDate.of(2015, 12, 2))
-              .withRejectionReason(Cas1DomainEventCodedIdFactory().withCode("The rejection code").produce())
-              .produce(),
-          )
-        },
-        schemaVersion = null,
-      )
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isNull()
-
-      val contentPayload = result.payload as Cas1PlacementAppealRejectedPayload
-      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.placementAppealRejected)
-      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
-      assertThat(contentPayload.rejectionReason.name).isEqualTo("The rejection code")
-      assertThat(contentPayload.expectedArrival).isEqualTo(LocalDate.of(2015, 12, 1))
-      assertThat(contentPayload.expectedDeparture).isEqualTo(LocalDate.of(2015, 12, 2))
-    }
-  }
-
-  @Nested
-  inner class EmergencyBookingCreated {
-
-    @Test
-    fun success() {
-      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED)
-
-      every { mockDomainEventService.getEmergencyTransferCreatedEvent(any()) } returns buildDomainEvent(
-        builder =
-        {
-          Cas1DomainEventEnvelope(
-            id = it,
-            timestamp = Instant.now(),
-            eventType = EventType.emergencyTransferCreated,
-            eventDetails = EmergencyTransferCreatedFactory()
-              .withFrom(
-                EventBookingSummaryFactory()
-                  .withPremises(
-                    EventPremisesFactory()
-                      .withName("from premises")
-                      .produce(),
-                  )
-                  .withBookingId(UUID.randomUUID())
-                  .withArrivalOn(LocalDate.of(2010, 1, 1))
-                  .withDepartureOn(LocalDate.of(2010, 2, 2))
-                  .produce(),
-              )
-              .withTo(
-                EventBookingSummaryFactory()
-                  .withPremises(
-                    EventPremisesFactory()
-                      .withName("to premises")
-                      .produce(),
-                  )
-                  .withBookingId(UUID.randomUUID())
-                  .withArrivalOn(LocalDate.of(2011, 1, 1))
-                  .withDepartureOn(LocalDate.of(2011, 2, 2))
-                  .produce(),
-              ).produce(),
-          )
-        },
-        schemaVersion = null,
-      )
-
-      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-      assertThat(result.description).isNull()
-
-      val contentPayload = result.payload as Cas1EmergencyTransferCreatedContentPayload
-      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.emergencyTransferCreated)
-
-      assertThat(contentPayload.from.bookingId).isNotNull()
-      assertThat(contentPayload.from.premises.name).isEqualTo("from premises")
-      assertThat(contentPayload.from.arrivalDate).isEqualTo(LocalDate.of(2010, 1, 1))
-      assertThat(contentPayload.from.departureDate).isEqualTo(LocalDate.of(2010, 2, 2))
-
-      assertThat(contentPayload.from.bookingId).isNotNull()
-      assertThat(contentPayload.to.premises.name).isEqualTo("to premises")
-      assertThat(contentPayload.to.arrivalDate).isEqualTo(LocalDate.of(2011, 1, 1))
-      assertThat(contentPayload.to.departureDate).isEqualTo(LocalDate.of(2011, 2, 2))
     }
   }
 

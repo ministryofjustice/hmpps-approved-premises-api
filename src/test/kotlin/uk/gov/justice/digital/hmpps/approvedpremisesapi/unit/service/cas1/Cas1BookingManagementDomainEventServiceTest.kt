@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
@@ -37,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventServiceConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
@@ -580,7 +580,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         StaffDetailFactory.staffDetail(deliusUsername = "thecreator"),
       )
 
-      every { domainEventService.saveEmergencyTransferCreatedEvent(any()) } returns Unit
+      every { domainEventService.save(any()) } returns Unit
 
       val from = Cas1SpaceBookingEntityFactory()
         .withPremises(ApprovedPremisesEntityFactory().withDefaults().withName("frompremises").produce())
@@ -600,32 +600,30 @@ class Cas1BookingManagementDomainEventServiceTest {
         to = to,
       )
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<EmergencyTransferCreatedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated>>()
 
       verify(exactly = 1) {
-        domainEventService.saveEmergencyTransferCreatedEvent(
+        domainEventService.save(
           capture(domainEventArgument),
         )
       }
 
       val domainEvent = domainEventArgument.captured
 
-      assertThat(domainEvent.data.eventType).isEqualTo(EventType.emergencyTransferCreated)
-      assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(from.id)
       assertThat(domainEvent.schemaVersion).isNull()
       assertThat(domainEvent.crn).isEqualTo("APPLICATIONCRN")
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.createdBy.username).isEqualTo("thecreator")
-      assertThat(data.from.bookingId).isEqualTo(from.id)
+      assertThat(data.from.id).isEqualTo(from.id)
       assertThat(data.from.premises.name).isEqualTo("frompremises")
       assertThat(data.from.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 7))
       assertThat(data.from.departureDate).isEqualTo(LocalDate.of(2019, 8, 8))
-      assertThat(data.to.bookingId).isEqualTo(to.id)
+      assertThat(data.to.id).isEqualTo(to.id)
       assertThat(data.to.premises.name).isEqualTo("topremises")
       assertThat(data.to.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 8))
       assertThat(data.to.departureDate).isEqualTo(LocalDate.of(2019, 8, 9))

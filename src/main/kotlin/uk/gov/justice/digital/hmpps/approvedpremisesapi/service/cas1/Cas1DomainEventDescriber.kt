@@ -4,20 +4,13 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1EmergencyTransferCreatedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventPayloadBookingSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -76,7 +69,6 @@ class Cas1DomainEventDescriber(
 
       DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> buildApplicationAssessedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> buildBookingMadeDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED -> buildEmergencyTransferCreatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> buildPersonArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> buildPersonNotArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
@@ -94,9 +86,6 @@ class Cas1DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> buildRequestForPlacementAssessedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED -> buildPlacementAppealAcceptedDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> buildPlacementAppealCreatedDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED -> buildPlacementAppealRejectedDescription(domainEventSummary)
 
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
@@ -152,35 +141,6 @@ class Cas1DomainEventDescriber(
     }
 
     return EventDescriptionAndPayload(description, null)
-  }
-
-  private fun buildEmergencyTransferCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
-    val event = domainEventService.getEmergencyTransferCreatedEvent(domainEventSummary.id())
-
-    fun toPayloadBooking(booking: EventBookingSummary) = Cas1TimelineEventPayloadBookingSummary(
-      bookingId = booking.bookingId,
-      premises = NamedId(
-        booking.premises.id,
-        booking.premises.name,
-      ),
-      arrivalDate = booking.arrivalDate,
-      departureDate = booking.departureDate,
-    )
-
-    val payload = event.toPayload {
-      val details = it.eventDetails
-
-      Cas1EmergencyTransferCreatedContentPayload(
-        from = toPayloadBooking(details.from),
-        to = toPayloadBooking(details.to),
-        type = Cas1TimelineEventType.emergencyTransferCreated,
-      )
-    }
-
-    return EventDescriptionAndPayload(
-      description = null,
-      payload = payload,
-    )
   }
 
   private fun buildBookingChangedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
@@ -367,86 +327,6 @@ class Cas1DomainEventDescriber(
     }
 
     return EventDescriptionAndPayload(description, null)
-  }
-
-  private fun buildPlacementAppealAcceptedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
-    val event = domainEventService.getPlacementAppealAcceptedEvent(domainEventSummary.id())
-
-    val payload = event.toPayload {
-      val details = it.eventDetails
-
-      Cas1PlacementAppealAcceptedPayload(
-        premises = NamedId(
-          id = details.premises.id,
-          name = details.premises.name,
-        ),
-        expectedArrival = details.arrivalOn,
-        expectedDeparture = details.departureOn,
-        type = Cas1TimelineEventType.placementAppealAccepted,
-        schemaVersion = event?.schemaVersion,
-      )
-    }
-
-    return EventDescriptionAndPayload(
-      description = null,
-      payload = payload,
-    )
-  }
-
-  private fun buildPlacementAppealCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
-    val event = domainEventService.getPlacementAppealCreatedEvent(domainEventSummary.id())
-
-    val payload = event.toPayload {
-      val details = it.eventDetails
-
-      Cas1PlacementAppealCreatedPayload(
-        premises = NamedId(
-          id = details.premises.id,
-          name = details.premises.name,
-        ),
-        expectedArrival = details.arrivalOn,
-        expectedDeparture = details.departureOn,
-        type = Cas1TimelineEventType.placementAppealCreated,
-        schemaVersion = event?.schemaVersion,
-        appealReason = NamedId(
-          id = details.appealReason.id,
-          name = details.appealReason.code,
-        ),
-      )
-    }
-
-    return EventDescriptionAndPayload(
-      description = null,
-      payload = payload,
-    )
-  }
-
-  private fun buildPlacementAppealRejectedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
-    val event = domainEventService.getPlacementAppealRejectedEvent(domainEventSummary.id())
-
-    val payload = event.toPayload {
-      val details = it.eventDetails
-
-      Cas1PlacementAppealRejectedPayload(
-        premises = NamedId(
-          id = details.premises.id,
-          name = details.premises.name,
-        ),
-        expectedArrival = details.arrivalOn,
-        expectedDeparture = details.departureOn,
-        type = Cas1TimelineEventType.placementAppealRejected,
-        schemaVersion = event?.schemaVersion,
-        rejectionReason = NamedId(
-          id = details.rejectionReason.id,
-          name = details.rejectionReason.code,
-        ),
-      )
-    }
-
-    return EventDescriptionAndPayload(
-      description = null,
-      payload = payload,
-    )
   }
 
   private fun buildRequestForPlacementCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
