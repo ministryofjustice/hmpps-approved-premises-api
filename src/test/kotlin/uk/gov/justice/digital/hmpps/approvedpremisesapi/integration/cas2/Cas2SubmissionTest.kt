@@ -7,6 +7,7 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -371,10 +372,11 @@ class Cas2SubmissionTest(
     }
 
     @Test
-    fun `Assessor can view single submitted application`() {
+    fun `Assessor can view single submitted application (transferred)`() {
       givenACas2Assessor { assessor, jwt ->
         givenACas2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
+            val omuEmail = "test@test.com"
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -446,6 +448,8 @@ class Cas2SubmissionTest(
             statusUpdateDetail.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
             realStatusUpdateDetailRepository.save(statusUpdateDetail)
 
+            val assignmentDate = OffsetDateTime.now().minusDays(5)
+
             val newPom = nomisUserEntityFactory.produceAndPersist()
             applicationEntity.applicationAssignments.addAll(
               mutableListOf(
@@ -468,7 +472,7 @@ class Cas2SubmissionTest(
                   application = applicationEntity,
                   prisonCode = "PBI",
                   allocatedPomUser = newPom,
-                  createdAt = OffsetDateTime.now().minusDays(5),
+                  createdAt = assignmentDate,
                 ),
               ),
             )
@@ -480,6 +484,12 @@ class Cas2SubmissionTest(
 
             val prisonPbi = Agency(agencyId = "PBI", description = "HMP Peterborough (Male)", agencyType = "prison")
             prisonAPIMockSuccessfulAgencyDetailsCall(prisonPbi)
+
+            offenderManagementUnitEntityFactory.produceAndPersist {
+              withPrisonName(prisonPbi.description)
+              withPrisonCode(prisonPbi.agencyId)
+              withEmail(omuEmail)
+            }
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/submissions/${applicationEntity.id}")
@@ -501,7 +511,7 @@ class Cas2SubmissionTest(
                 .createdByUser,
             )
 
-            Assertions.assertThat(responseBody).matches {
+            assertThat(responseBody).matches {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
@@ -514,19 +524,19 @@ class Cas2SubmissionTest(
                 assessmentEntity.nacroReferralId == it.assessment.nacroReferralId
             }
 
-            Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
+            assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
 
-            Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
+            assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
 
-            Assertions.assertThat(
+            assertThat(
               responseBody.assessment.statusUpdates!!.first().statusUpdateDetails!!
                 .map { detail -> detail.label },
             )
               .isEqualTo(listOf("Detail on 3rd update"))
 
-            Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
+            assertThat(responseBody.timelineEvents.map { event -> event.label })
               .isEqualTo(
                 listOf(
                   "3rd update",
@@ -537,6 +547,13 @@ class Cas2SubmissionTest(
                   "Application submitted",
                 ),
               )
+
+            assertThat(responseBody.allocatedPomEmailAddress).isEqualTo(newPom.email)
+            assertThat(responseBody.allocatedPomName).isEqualTo(newPom.name)
+            assertThat(responseBody.assignmentDate).isEqualTo(assignmentDate.toLocalDate())
+            assertThat(responseBody.currentPrisonName).isEqualTo(prisonPbi.description)
+            assertThat(responseBody.isTransferredApplication).isTrue()
+            assertThat(responseBody.omuEmailAddress).isEqualTo(omuEmail)
           }
         }
       }
@@ -577,7 +594,7 @@ class Cas2SubmissionTest(
     @Nested
     inner class ControlsOnCas2Admin {
       @Test
-      fun `Admin can view single submitted application`() {
+      fun `Admin can view single submitted application (not transferred)`() {
         givenACas2Assessor { assessor, _ ->
           givenACas2Admin { admin, jwt ->
             givenACas2PomUser { user, _ ->
@@ -592,10 +609,17 @@ class Cas2SubmissionTest(
                     )
                   }
 
+                val omu = offenderManagementUnitEntityFactory.produceAndPersist {
+                  withPrisonName("PRISON")
+                  withPrisonCode("PRI")
+                  withEmail("test@test.com")
+                }
+
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                   withApplicationSchema(newestJsonSchema)
                   withCrn(offenderDetails.otherIds.crn)
                   withCreatedByUser(user)
+                  withReferringPrisonCode("PRI")
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                   withData(
                     """
@@ -642,6 +666,18 @@ class Cas2SubmissionTest(
                 update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
                 realStatusUpdateRepository.save(update3)
 
+                applicationEntity.applicationAssignments.add(
+                  Cas2ApplicationAssignmentEntity(
+                    id = UUID.randomUUID(),
+                    application = applicationEntity,
+                    prisonCode = "PRI",
+                    allocatedPomUser = user,
+                    createdAt = applicationEntity.submittedAt!!,
+                  ),
+                )
+
+                realApplicationRepository.save(applicationEntity)
+
                 val rawResponseBody = webTestClient.get()
                   .uri("/cas2/submissions/${applicationEntity.id}")
                   .header("Authorization", "Bearer $jwt")
@@ -662,7 +698,7 @@ class Cas2SubmissionTest(
                     .createdByUser,
                 )
 
-                Assertions.assertThat(responseBody).matches {
+                assertThat(responseBody).matches {
                   applicationEntity.id == it.id &&
                     applicationEntity.crn == it.person.crn &&
                     applicationEntity.createdAt.toInstant() == it.createdAt &&
@@ -673,11 +709,18 @@ class Cas2SubmissionTest(
                     !it.outdatedSchema
                 }
 
-                Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
+                assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
                   .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
 
-                Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
+                assertThat(responseBody.timelineEvents.map { event -> event.label })
                   .isEqualTo(listOf("3rd update", "2nd update", "1st update", "Application submitted"))
+
+                assertThat(responseBody.allocatedPomEmailAddress).isEqualTo(user.email)
+                assertThat(responseBody.allocatedPomName).isEqualTo(user.name)
+                assertThat(responseBody.assignmentDate).isEqualTo(applicationEntity.submittedAt?.toLocalDate())
+                assertThat(responseBody.currentPrisonName).isEqualTo(omu.prisonName)
+                assertThat(responseBody.isTransferredApplication).isFalse()
+                assertThat(responseBody.omuEmailAddress).isEqualTo(omu.email)
               }
             }
           }

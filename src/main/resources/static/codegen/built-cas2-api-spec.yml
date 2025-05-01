@@ -5087,6 +5087,19 @@ components:
             $ref: '#/components/schemas/Cas2TimelineEvent'
         assessment:
           $ref: '#/components/schemas/Cas2Assessment'
+        allocatedPomName:
+          type: string
+        currentPrisonName:
+          type: string
+        allocatedPomEmailAddress:
+          type: string
+        omuEmailAddress:
+          type: string
+        isTransferredApplication:
+          type: boolean
+        assignmentDate:
+          type: string
+          format: date
       required:
         - id
         - person
@@ -5097,6 +5110,7 @@ components:
         - status
         - timelineEvents
         - assessment
+        - isTransferredApplication
     Cas2ApplicationSummary:
       type: object
       properties:
