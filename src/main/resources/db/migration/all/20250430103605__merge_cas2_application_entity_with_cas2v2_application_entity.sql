@@ -1,7 +1,13 @@
-ALTER TABLE cas_2_applications
-ADD application_origin TEXT DEFAULT 'homeDetentionCurfew' NOT NULL,
-ADD bail_hearing_date TIMESTAMP WITH TIME ZONE;
+-- First, drop the dependent views
+DROP VIEW IF EXISTS cas_2_application_live_summary;
+DROP VIEW IF EXISTS cas_2_application_summary;
 
+-- Then alter the table
+ALTER TABLE cas_2_applications
+    ADD application_origin TEXT DEFAULT 'homeDetentionCurfew' NOT NULL,
+    ADD bail_hearing_date TIMESTAMP WITH TIME ZONE;
+
+-- Recreate the views
 CREATE OR REPLACE VIEW cas_2_application_summary AS
 SELECT a.id,
        a.crn,
