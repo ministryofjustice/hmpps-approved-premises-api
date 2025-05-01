@@ -50,13 +50,57 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   fun findByPlacementRequestId(placementRequestId: UUID): List<Cas1SpaceBookingEntity>
 
   companion object {
-    private const val SPACE_BOOKING_SUMMARY_JOIN_CLAUSE = """
-      FROM cas1_space_bookings b
-      LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
-      LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
+
+    private const val SPACE_BOOKING_SELECT = """
+      SELECT 
+        CAST(b.id AS varchar) AS id,
+        b.crn AS crn,
+        b.canonical_arrival_date AS canonicalArrivalDate,
+        b.canonical_departure_date AS canonicalDepartureDate,
+        b.expected_arrival_date AS expectedArrivalDate,
+        b.expected_departure_date AS expectedDepartureDate,
+        b.actual_arrival_date AS actualArrivalDate,
+        b.actual_arrival_time AS actualArrivalTime,
+        b.actual_departure_date AS actualDepartureDate,
+        b.actual_departure_time AS actualDepartureTime,
+        b.non_arrival_confirmed_at AS nonArrivalConfirmedAtDateTime,
+        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tier,
+        b.key_worker_staff_code AS keyWorkerStaffCode,
+        b.key_worker_assigned_at AS keyWorkerAssignedAt,
+        b.key_worker_name AS keyWorkerName,
+        CASE 
+          WHEN apa.id IS NOT NULL THEN apa.name
+          ELSE offline_app.name
+        END AS personName,
+        b.delius_event_number AS deliusEventNumber,
+        b.cancellation_occurred_at IS NOT NULL AS cancelled,
+        (
+          SELECT STRING_AGG(characteristics.property_name, ',')
+          FROM cas1_space_bookings_criteria sbc
+          LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+          WHERE sbc.space_booking_id = b.id 
+          GROUP BY sbc.space_booking_id
+        ) AS characteristicsPropertyNames,
+              EXISTS (
+              SELECT 1
+              FROM cas1_change_requests c1
+              WHERE c1.cas1_space_booking_id = b.id
+                AND c1.type = 'PLANNED_TRANSFER'
+                AND c1.resolved = false
+        ) AS plannedTransferRequested,
+        EXISTS (
+              SELECT 1
+              FROM cas1_change_requests c2
+              WHERE c2.cas1_space_booking_id = b.id
+                AND c2.type = 'PLACEMENT_APPEAL'
+                AND c2.resolved = false
+        ) AS appealRequested
     """
 
     private const val SPACE_BOOKING_SUMMARY_WHERE_CLAUSE = """
+      FROM cas1_space_bookings b
+      LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
+      LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       WHERE 
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 
@@ -103,66 +147,13 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       )
     """
 
-    private const val SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY = """
-        (
-          SELECT STRING_AGG(characteristics.property_name, ',')
-          FROM cas1_space_bookings_criteria sbc
-          LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
-          WHERE sbc.space_booking_id = b.id 
-          GROUP BY sbc.space_booking_id
-        ) AS characteristicsPropertyNames,
-      """
-
-    private const val CHANGE_REQUESTS_INFO_SUBQUERY =
-      """
-      EXISTS (
-              SELECT 1
-              FROM cas1_change_requests c1
-              WHERE c1.cas1_space_booking_id = b.id
-                AND c1.type = 'PLANNED_TRANSFER'
-                AND c1.resolved = false
-          ) AS plannedTransferRequested,
-       EXISTS (
-              SELECT 1
-              FROM cas1_change_requests c2
-              WHERE c2.cas1_space_booking_id = b.id
-                AND c2.type = 'PLACEMENT_APPEAL'
-                AND c2.resolved = false
-          ) AS appealRequested
-      """
-
     private const val SPACE_BOOKING_SUMMARY_SELECT_QUERY = """
-        SELECT 
-        CAST(b.id AS varchar) AS id,
-        b.crn AS crn,
-        b.canonical_arrival_date AS canonicalArrivalDate,
-        b.canonical_departure_date AS canonicalDepartureDate,
-        b.expected_arrival_date AS expectedArrivalDate,
-        b.expected_departure_date AS expectedDepartureDate,
-        b.actual_arrival_date AS actualArrivalDate,
-        b.actual_arrival_time AS actualArrivalTime,
-        b.actual_departure_date AS actualDepartureDate,
-        b.actual_departure_time AS actualDepartureTime,
-        b.non_arrival_confirmed_at AS nonArrivalConfirmedAtDateTime,
-        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tier,
-        b.key_worker_staff_code AS keyWorkerStaffCode,
-        b.key_worker_assigned_at AS keyWorkerAssignedAt,
-        b.key_worker_name AS keyWorkerName,
-        CASE 
-          WHEN apa.id IS NOT NULL THEN apa.name
-          ELSE offline_app.name
-        END AS personName,
-        b.delius_event_number AS deliusEventNumber,
-        b.cancellation_occurred_at IS NOT NULL AS cancelled,
-        $SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY
-        $CHANGE_REQUESTS_INFO_SUBQUERY
-        $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
+        $SPACE_BOOKING_SELECT
         $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
       """
 
     private const val SPACE_BOOKING_SUMMARY_COUNT_QUERY = """
       SELECT COUNT(*)
-      $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
       $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
     """
   }
