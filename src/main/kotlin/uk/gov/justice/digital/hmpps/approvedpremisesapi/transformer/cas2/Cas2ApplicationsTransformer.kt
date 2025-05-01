@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
@@ -76,6 +77,12 @@ class Cas2ApplicationsTransformer(
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
     personName = personName,
+    applicationOrigin = when (jpaSummary.applicationOrigin) {
+      "courtBail" -> ApplicationOrigin.courtBail
+      "prisonBail" -> ApplicationOrigin.prisonBail
+      else -> ApplicationOrigin.homeDetentionCurfew
+    },
+    bailHearingDate = jpaSummary.bailHearingDate,
   )
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
@@ -90,7 +97,4 @@ class Cas2ApplicationsTransformer(
     summary.submittedAt != null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }
-
-
-
 }
