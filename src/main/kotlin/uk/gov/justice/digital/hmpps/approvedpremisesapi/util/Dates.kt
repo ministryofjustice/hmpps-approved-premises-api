@@ -148,6 +148,18 @@ fun Instant.minusRandomSeconds(maxOffset: Long): Instant {
 
 fun LocalDateTime.toInstant(): Instant = this.atZone(ZoneId.systemDefault()).toInstant()
 
+fun OffsetDateTime.roundNanosecondsToNearestMillisecond(): OffsetDateTime = this.withNano(roundToNearestMillisecond(this.nano.toLong()))
+
+@SuppressWarnings("MagicNumber")
+private fun roundToNearestMillisecond(nano: Long): Int {
+  val milliseconds = nano / 1000000
+  return if (nano % 1000000 >= 500000) {
+    ((milliseconds + 1) * 1000000).toInt()
+  } else {
+    (milliseconds * 1000000).toInt()
+  }
+}
+
 @SuppressWarnings("TooManyFunctions")
 object DatesConstant {
   val DEFAULT_CAS_TIMEZONE: ZoneId = ZoneId.of("Europe/London")

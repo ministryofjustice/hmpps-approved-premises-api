@@ -11,10 +11,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -29,7 +33,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -41,9 +47,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementReq
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class PlacementRequestDetailTransformerTest {
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
@@ -52,6 +61,7 @@ class PlacementRequestDetailTransformerTest {
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockCas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
+  private val mockCas1ChangeRequestTransformer = mockk<Cas1ChangeRequestTransformer>()
 
   private val placementRequestDetailTransformer = PlacementRequestDetailTransformer(
     mockPlacementRequestTransformer,
@@ -60,6 +70,7 @@ class PlacementRequestDetailTransformerTest {
     mockApplicationsTransformer,
     mockPersonTransformer,
     mockCas1SpaceBookingTransformer,
+    mockCas1ChangeRequestTransformer,
   )
 
   private val mockCancellation = mockk<Cancellation>()
@@ -78,6 +89,8 @@ class PlacementRequestDetailTransformerTest {
   private val mockApplicationEntity = mockk<ApprovedPremisesApplicationEntity>()
   private val mockApplication = mockk<Application>()
   private val mockCas1Application = mockk<Cas1Application>()
+  private val mockCas1ChangeRequestEntity = mockk<Cas1ChangeRequestEntity>()
+  private val mockCas1SpaceBookingEntity = mockk<Cas1SpaceBookingEntity>()
 
   @BeforeEach
   fun setup() {
@@ -257,6 +270,24 @@ class PlacementRequestDetailTransformerTest {
   fun `transforms correctly to Cas1PlacementRequestDetail`() {
     val transformedPlacementRequest = getTransformedPlacementRequest()
 
+    val changeRequests = listOf(
+      Cas1ChangeRequestSummary(
+        id = UUID.randomUUID(),
+        person = FullPersonSummary(
+          crn = "CRN1",
+          name = "NAME",
+          isRestricted = false,
+          personType = PersonSummaryDiscriminator.fullPersonSummary,
+        ),
+        type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
+        createdAt = Instant.now(),
+        lengthOfStayDays = 30,
+        tier = "TierA",
+        expectedArrivalDate = LocalDate.parse("2023-01-01"),
+        actualArrivalDate = LocalDate.parse("2023-01-01"),
+      ),
+    )
+
     every { mockPlacementRequestEntity.booking } returns null
     every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf()
     every { mockPlacementRequestEntity.isParole } returns false
@@ -266,8 +297,14 @@ class PlacementRequestDetailTransformerTest {
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
     every { mockApplicationsTransformer.transformJpaToCas1Application(mockApplicationEntity, mockPersonInfoResult) } returns mockCas1Application
     every { mockPersonTransformer.personInfoResultToPersonSummaryInfoResult(mockPersonInfoResult) } returns mockPersonSummaryInfoResult
+    every { mockCas1ChangeRequestTransformer.transformToChangeRequestSummaries(listOf(mockCas1ChangeRequestEntity), mockPersonInfoResult) } returns changeRequests
+    every { mockCas1ChangeRequestEntity.spaceBooking } returns mockCas1SpaceBookingEntity
 
-    val result = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(mockPlacementRequestEntity, mockPersonInfoResult)
+    val result = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
+      mockPlacementRequestEntity,
+      mockPersonInfoResult,
+      listOf(mockCas1ChangeRequestEntity),
+    )
     assertThat(result).isInstanceOf(Cas1PlacementRequestDetail::class.java)
 
     assertThat(result.id).isEqualTo(transformedPlacementRequest.id)
@@ -296,6 +333,8 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.isWithdrawn).isEqualTo(true)
     assertThat(result.isParole).isEqualTo(false)
     assertThat(result.application).isEqualTo(mockCas1Application)
+    assertThat(result.openChangeRequests.size).isEqualTo(1)
+    assertThat(result.openChangeRequests[0]).isEqualTo(changeRequests[0])
 
     verify(exactly = 1) {
       mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult)

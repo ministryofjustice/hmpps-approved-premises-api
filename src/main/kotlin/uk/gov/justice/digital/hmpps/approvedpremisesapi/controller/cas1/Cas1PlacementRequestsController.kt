@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -38,6 +39,7 @@ class Cas1PlacementRequestsController(
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderService: OffenderService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
+  private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
 ) : PlacementRequestsCas1Delegate {
 
   override fun search(
@@ -144,9 +146,12 @@ class Cas1PlacementRequestsController(
       forUser.cas1LaoStrategy(),
     )
 
+    val changeRequests = cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequestEntity)
+
     return placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
       placementRequestEntity,
       personInfo,
+      changeRequests,
     )
   }
 }

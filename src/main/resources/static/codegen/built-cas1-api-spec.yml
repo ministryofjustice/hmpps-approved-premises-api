@@ -8569,9 +8569,14 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cas1SpaceBookingSummary'
+            openChangeRequests:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas1ChangeRequestSummary'
           required:
             - application
             - spaceBookings
+            - openChangeRequests
     Cas1WithdrawPlacementRequest:
       type: object
       properties:
