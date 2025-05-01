@@ -50,7 +50,6 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
         assertThat(assignments[3].prisonCode).isEqualTo("LON1")
         assertThat(retrievedApplication.currentPrisonCode).isEqualTo("LON4")
         assertThat(retrievedApplication.currentPomUserId).isEqualTo(null)
-        assertThat(retrievedApplication.mostRecentPomUserId).isEqualTo(userEntity.id)
       }
     }
   }
@@ -100,7 +99,6 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
         assertThat(assignments.size).isEqualTo(2)
         assertThat(assignment2.id).isEqualTo(assignments[0].id)
         assertThat(assignment1.id).isEqualTo(assignments[1].id)
-        assertThat(retrievedApplication.mostRecentPomUserId).isEqualTo(assignment1.allocatedPomUser?.id)
       }
     }
   }

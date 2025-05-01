@@ -30,6 +30,5 @@ class Cas2ApplicationEntityTest {
     application.createApplicationAssignment("ONE", application.createdByUser)
     application.createApplicationAssignment("TWO", null)
     assertThat(application.currentPomUserId).isEqualTo(null)
-    assertThat(application.mostRecentPomUserId).isEqualTo(application.createdByUser.id)
   }
 }

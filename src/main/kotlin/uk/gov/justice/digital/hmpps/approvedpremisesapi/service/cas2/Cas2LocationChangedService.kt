@@ -4,7 +4,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.categoriesChanged
@@ -19,7 +21,14 @@ class Cas2LocationChangedService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  private fun isNewPrison(currentPrisonCode: String, prisonCodeToCheck: String) = currentPrisonCode != prisonCodeToCheck
+  fun getMostRecentLocationAssignment(application: Cas2ApplicationEntity) = application.applicationAssignments.firstOrNull { it.allocatedPomUser == null }
+  fun isFirstValidLocationChangedAssigment(application: Cas2ApplicationEntity, prisoner: Prisoner) = getMostRecentLocationAssignment(application) == null && prisoner.prisonId != application.referringPrisonCode
+  fun isValidLocationChangedAssignment(application: Cas2ApplicationEntity, prisoner: Prisoner): Boolean {
+    val mostRecentLocationAssignment = getMostRecentLocationAssignment(application)
+    return mostRecentLocationAssignment != null && prisoner.prisonId != mostRecentLocationAssignment.prisonCode
+  }
+
+  fun isNewPrison(application: Cas2ApplicationEntity, prisoner: Prisoner) = isFirstValidLocationChangedAssigment(application, prisoner) || isValidLocationChangedAssignment(application, prisoner)
 
   @Transactional
   fun process(event: HmppsDomainEvent) {
@@ -38,15 +47,16 @@ class Cas2LocationChangedService(
           is ClientResult.Failure -> throw result.toException()
         }
 
-        if (isNewPrison(application.currentPrisonCode!!, prisoner.prisonId)) {
+        if (isNewPrison(application, prisoner)) {
           application.createApplicationAssignment(
             prisonCode = prisoner.prisonId,
             allocatedPomUser = null,
           )
+
           applicationRepository.save(application)
           log.info("Added application assignment for prisoner: {}", nomsNumber)
 
-          emailService.sendLocationChangedEmails(application = application, oldPomUserId = application.mostRecentPomUserId, prisoner)
+          emailService.sendLocationChangedEmails(application = application, prisoner = prisoner)
         } else {
           log.info("Prisoner {} prison location not changed, no action required", nomsNumber)
         }

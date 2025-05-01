@@ -23,8 +23,9 @@ class Cas2EmailService(
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
 
-  fun sendLocationChangedEmails(application: Cas2ApplicationEntity, oldPomUserId: UUID, prisoner: Prisoner) {
+  fun sendLocationChangedEmails(application: Cas2ApplicationEntity, prisoner: Prisoner) {
     val oldPrisonCode = getOldPrisonCode(application, prisoner.prisonId) ?: error("Old prison code not found.")
+    val oldPomUserId = getOldPomUserId(application, prisoner) ?: error("Old POM user ID not found.")
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       val oldOmu = offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) ?: error("No OMU found for old prison code $oldPrisonCode.")
       val newOmu = offenderManagementUnitRepository.findByPrisonCode(prisoner.prisonId) ?: error("No OMU found for new prison code ${prisoner.prisonId}.")
@@ -96,6 +97,6 @@ class Cas2EmailService(
   }
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
-
+  fun getOldPomUserId(application: Cas2ApplicationEntity, prisoner: Prisoner) = application.applicationAssignments.firstOrNull { it.allocatedPomUser != null && it.prisonCode != prisoner.prisonId }?.allocatedPomUser?.id
   fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String? = application.applicationAssignments.firstOrNull { it.prisonCode != newPrisonCode }?.prisonCode
 }
