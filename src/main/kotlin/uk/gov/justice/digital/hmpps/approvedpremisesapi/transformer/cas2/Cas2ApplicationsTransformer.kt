@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
 
-@Component("Cas2ApplicationsTransformer")
-class ApplicationsTransformer(
+@Component()
+class Cas2ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
@@ -50,6 +50,8 @@ class ApplicationsTransformer(
       isTransferredApplication = jpa.currentPrisonCode != jpa.referringPrisonCode,
       assignmentDate = jpa.currentAssignmentDate,
       omuEmailAddress = omu?.email,
+      applicationOrigin = jpa.applicationOrigin,
+      bailHearingDate = jpa.bailHearingDate,
     )
   }
 
@@ -88,4 +90,7 @@ class ApplicationsTransformer(
     summary.submittedAt != null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }
+
+
+
 }
