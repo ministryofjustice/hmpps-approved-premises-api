@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -118,7 +118,7 @@ class Cas2ApplicationsTransformerTest {
         "isTransferredApplication",
         "omuEmailAddress",
         "applicationOrigin",
-        "bailHearingDate"
+        "bailHearingDate",
       )
 
       assertThat(result.id).isEqualTo(application.id)
@@ -230,8 +230,8 @@ class Cas2ApplicationsTransformerTest {
           application,
           newPrison.prisonCode,
           null,
-          OffsetDateTime.now()
-        )
+          OffsetDateTime.now(),
+        ),
       )
 
       val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
@@ -253,7 +253,6 @@ class Cas2ApplicationsTransformerTest {
 
     @Test
     fun `check bail fields transformed correctly`() {
-
       val now = OffsetDateTime.now().toLocalDate()
       val application = cas2ApplicationFactory
         .withSubmittedAt(null)
@@ -285,7 +284,7 @@ class Cas2ApplicationsTransformerTest {
         "isTransferredApplication",
         "omuEmailAddress",
         "applicationOrigin",
-        "bailHearingDate"
+        "bailHearingDate",
       )
 
       assertThat(result.id).isEqualTo(application.id)
@@ -350,6 +349,8 @@ class Cas2ApplicationsTransformerTest {
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
       assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+      assertThat(result.bailHearingDate).isNull()
     }
 
     @Test
@@ -404,6 +405,41 @@ class Cas2ApplicationsTransformerTest {
       )
 
       assertThat(result.currentPrisonName).isEqualTo(application.currentPrisonCode)
+    }
+
+    @Test
+    fun `check bail fields transformed correctly`() {
+      every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns null
+
+      val now = OffsetDateTime.now().toLocalDate()
+      val applicationSummary = Cas2ApplicationSummaryEntity(
+        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+        crn = "CRNNUM",
+        nomsNumber = "NOMNUM",
+        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userName = "first last",
+        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
+        latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
+        latestStatusUpdateLabel = "my latest status update",
+        prisonCode = "BRI",
+        allocatedPomUserId = UUID.randomUUID(),
+        allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
+        currentPrisonCode = "BRI",
+        assignmentDate = OffsetDateTime.now(),
+        applicationOrigin = ApplicationOrigin.prisonBail.toString(),
+        bailHearingDate = now,
+      )
+
+      val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
+        applicationSummary,
+        "firstName surname",
+      )
+
+      assertThat(result.id).isEqualTo(applicationSummary.id)
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+      assertThat(result.bailHearingDate).isEqualTo(now)
     }
   }
 }
