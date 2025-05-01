@@ -350,38 +350,7 @@ class Cas1DomainEventService(
     domainEvent: SaveCas1DomainEvent<*>,
     eventType: DomainEventType,
   ) {
-    val domainEventEntity = domainEventRepository.save(
-      DomainEventEntity(
-        id = domainEvent.id,
-        applicationId = domainEvent.applicationId,
-        assessmentId = domainEvent.assessmentId,
-        bookingId = domainEvent.bookingId,
-        cas1SpaceBookingId = domainEvent.cas1SpaceBookingId,
-        cas1PlacementRequestId = domainEvent.cas1PlacementRequestId,
-        crn = domainEvent.crn,
-        type = eventType,
-        occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
-        createdAt = OffsetDateTime.now(),
-        data = objectMapper.writeValueAsString(domainEvent.data),
-        service = "CAS1",
-        triggerSource = domainEvent.triggerSource,
-        triggeredByUserId = userService.getUserForRequestOrNull()?.id,
-        nomsNumber = domainEvent.nomsNumber,
-        metadata = domainEvent.metadata.entries.flatMap {
-          val key = it.key
-          val values = it.value
-          values.map { value ->
-            DomainEventMetadataEntity(
-              id = UUID.randomUUID(),
-              name = key,
-              value = value,
-            )
-          }
-        },
-        schemaVersion = domainEvent.schemaVersion,
-      ),
-    )
-
+    val domainEventEntity = domainEventRepository.save(buildEntity(domainEvent, eventType))
     val emittable = eventType.cas1Info!!.emittable
 
     if (emittable && domainEvent.emit) {
@@ -390,6 +359,39 @@ class Cas1DomainEventService(
       log.debug("Not emitting domain event of type $eventType. Type emittable? $emittable. Emit? ${domainEvent.emit}")
     }
   }
+
+  fun buildEntity(
+    domainEvent: SaveCas1DomainEvent<*>,
+    eventType: DomainEventType,
+  ) = DomainEventEntity(
+      id = domainEvent.id,
+      applicationId = domainEvent.applicationId,
+      assessmentId = domainEvent.assessmentId,
+      bookingId = domainEvent.bookingId,
+      cas1SpaceBookingId = domainEvent.cas1SpaceBookingId,
+      cas1PlacementRequestId = domainEvent.cas1PlacementRequestId,
+      crn = domainEvent.crn,
+      type = eventType,
+      occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
+      createdAt = OffsetDateTime.now(),
+      data = objectMapper.writeValueAsString(domainEvent.data),
+      service = "CAS1",
+      triggerSource = domainEvent.triggerSource,
+      triggeredByUserId = userService.getUserForRequestOrNull()?.id,
+      nomsNumber = domainEvent.nomsNumber,
+      metadata = domainEvent.metadata.entries.flatMap {
+        val key = it.key
+        val values = it.value
+        values.map { value ->
+          DomainEventMetadataEntity(
+            id = UUID.randomUUID(),
+            name = key,
+            value = value,
+          )
+        }
+      },
+      schemaVersion = domainEvent.schemaVersion,
+    )
 
   fun replay(domainEventId: UUID) {
     val domainEventEntity = domainEventRepository.findByIdOrNull(domainEventId)
