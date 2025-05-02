@@ -28,14 +28,19 @@ class DomainEventAsserter(
   fun assertDomainEventOfTypeStored(applicationId: UUID, eventType: DomainEventType): DomainEventEntity {
     assertThat(
       domainEventRepository
-        .findAllTimelineEventsByIds(
-          applicationId = applicationId,
-          spaceBookingId = null,
-        )
+        .findAllTimelineEventsByIds(applicationId = applicationId)
         .map { it.type },
     ).contains(eventType)
 
-    return domainEventRepository.findByApplicationId(applicationId).first { it.type == eventType }
+    return domainEventRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId).first { it.type == eventType }
+  }
+
+  fun assertDomainEventsStoredInSpecificOrder(applicationId: UUID, vararg eventTypes: DomainEventType) {
+    val allDomainEvents = domainEventRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId)
+    allDomainEvents.forEachIndexed { index, actualDomainEvent ->
+      val expectedType = eventTypes[index]
+      assertThat(actualDomainEvent.type).isEqualTo(eventTypes[index]).withFailMessage("Expected event of type $expectedType as index $index, was ${actualDomainEvent.type}")
+    }
   }
 
   fun assertDomainEventsOfTypeStored(applicationId: UUID, eventType: DomainEventType, expectedCount: Int) {
