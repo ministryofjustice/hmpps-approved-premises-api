@@ -4802,8 +4802,6 @@ components:
         - expectedArrivalDate
         - expectedDepartureDate
         - isCancelled
-        - plannedTransferRequested
-        - appealRequested
         - openChangeRequestTypes
     Cas1ChangeRequestType:
       type: string

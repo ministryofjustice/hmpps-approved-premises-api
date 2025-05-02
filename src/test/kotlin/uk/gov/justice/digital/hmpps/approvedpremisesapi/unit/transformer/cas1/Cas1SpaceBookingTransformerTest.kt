@@ -458,7 +458,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isEqualTo(cancelled)
       assertThat(result.plannedTransferRequested).isFalse()
-      assertThat(result.appealRequested).isTrue()
+      assertThat(result.appealRequested).isFalse()
       assertThat(result.openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
     }
   }
@@ -501,8 +501,6 @@ class Cas1SpaceBookingTransformerTest {
           characteristicsPropertyNamesCsv = "hasTurningSpace,isCatered",
           deliusEventNumber = "event8",
           cancelled = true,
-          plannedTransferRequested = true,
-          appealRequested = false,
           openChangeRequestTypeNamesCsv = "PLANNED_TRANSFER,PLACEMENT_EXTENSION",
         ),
         premises,
@@ -531,7 +529,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isTrue()
-      assertThat(result.plannedTransferRequested).isTrue()
+      assertThat(result.plannedTransferRequested).isFalse()
       assertThat(result.appealRequested).isFalse()
       assertThat(result.openChangeRequestTypes).containsExactly(
         Cas1ChangeRequestType.PLANNED_TRANSFER,
@@ -572,8 +570,6 @@ class Cas1SpaceBookingTransformerTest {
           characteristicsPropertyNamesCsv = null,
           deliusEventNumber = "event8",
           cancelled = false,
-          plannedTransferRequested = false,
-          appealRequested = true,
           openChangeRequestTypeNamesCsv = "",
         ),
         premises = ApprovedPremisesEntityFactory().withDefaults().produce(),
@@ -584,7 +580,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation).isNull()
       assertThat(result.isCancelled).isFalse()
       assertThat(result.plannedTransferRequested).isFalse()
-      assertThat(result.appealRequested).isTrue()
+      assertThat(result.appealRequested).isFalse()
     }
   }
 }
@@ -608,8 +604,6 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val characteristicsPropertyNamesCsv: String?,
   override val deliusEventNumber: String?,
   override val cancelled: Boolean,
-  override val plannedTransferRequested: Boolean,
-  override val appealRequested: Boolean,
   override val openChangeRequestTypeNamesCsv: String,
 ) : Cas1SpaceBookingSearchResult
 

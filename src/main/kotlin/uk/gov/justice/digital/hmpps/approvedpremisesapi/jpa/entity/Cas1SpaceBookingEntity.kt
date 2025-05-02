@@ -83,20 +83,6 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           WHERE sbc.space_booking_id = b.id 
           GROUP BY sbc.space_booking_id
         ) AS characteristicsPropertyNamesCsv,
-        EXISTS (
-              SELECT 1
-              FROM cas1_change_requests c1
-              WHERE c1.cas1_space_booking_id = b.id
-                AND c1.type = 'PLANNED_TRANSFER'
-                AND c1.resolved = false
-        ) AS plannedTransferRequested,
-        EXISTS (
-              SELECT 1
-              FROM cas1_change_requests c2
-              WHERE c2.cas1_space_booking_id = b.id
-                AND c2.type = 'PLACEMENT_APPEAL'
-                AND c2.resolved = false
-        ) AS appealRequested,
         (
           SELECT STRING_AGG(DISTINCT change_requests.type, ',')
           FROM cas1_change_requests change_requests
@@ -321,8 +307,6 @@ interface Cas1SpaceBookingSearchResult {
   val characteristicsPropertyNamesCsv: String?
   val deliusEventNumber: String?
   val cancelled: Boolean
-  val plannedTransferRequested: Boolean
-  val appealRequested: Boolean
   val openChangeRequestTypeNamesCsv: String?
 }
 

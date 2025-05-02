@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getCharacteristicPropertyNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getOpenChangeRequestTypes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -206,8 +205,8 @@ class Cas1SpaceBookingTransformer(
       },
       deliusEventNumber = spaceBooking.deliusEventNumber,
       isCancelled = spaceBooking.isCancelled(),
-      plannedTransferRequested = openChangeRequestsForBooking.any { it.type == ChangeRequestType.PLANNED_TRANSFER },
-      appealRequested = openChangeRequestsForBooking.any { it.type == ChangeRequestType.PLACEMENT_APPEAL },
+      plannedTransferRequested = false,
+      appealRequested = false,
       openChangeRequestTypes = openChangeRequestsForBooking.map { it.type.toApiType() },
     )
   }
@@ -259,8 +258,8 @@ class Cas1SpaceBookingTransformer(
     },
     deliusEventNumber = searchResult.deliusEventNumber,
     isCancelled = searchResult.cancelled,
-    plannedTransferRequested = searchResult.plannedTransferRequested,
-    appealRequested = searchResult.appealRequested,
+    plannedTransferRequested = false,
+    appealRequested = false,
     openChangeRequestTypes = searchResult.getOpenChangeRequestTypes().map { it.toApiType() },
   )
 
