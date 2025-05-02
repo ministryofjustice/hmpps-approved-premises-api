@@ -48,11 +48,11 @@ class Cas1BookingDomainEventService(
 ) {
 
   fun spaceBookingMade(
-    application: ApprovedPremisesApplicationEntity,
     booking: Cas1SpaceBookingEntity,
     user: UserEntity,
-    placementRequest: PlacementRequestEntity,
   ) {
+    val placementRequest = booking.placementRequest!!
+    val application = placementRequest.application
     bookingMade(
       applicationId = application.id,
       eventNumber = application.eventNumber,

@@ -92,7 +92,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
         )
     """,
   )
-  fun findAllTimelineEventsByIds(applicationId: UUID?, spaceBookingId: UUID?): List<DomainEventSummary>
+  fun findAllTimelineEventsByIds(applicationId: UUID?, spaceBookingId: UUID? = null): List<DomainEventSummary>
 
   @Query(
     "SELECT * FROM domain_events domain_event " +
@@ -102,7 +102,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
   )
   fun findAllCreatedInMonth(month: Int, year: Int): List<DomainEventEntity>
 
-  fun findByApplicationId(applicationId: UUID): List<DomainEventEntity>
+  fun findByApplicationIdOrderByCreatedAtAsc(applicationId: UUID): List<DomainEventEntity>
 
   fun findByType(type: DomainEventType): List<DomainEventEntity>
 

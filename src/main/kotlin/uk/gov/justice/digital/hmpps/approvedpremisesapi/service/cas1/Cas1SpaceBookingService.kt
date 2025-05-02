@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
@@ -122,11 +121,8 @@ class Cas1SpaceBookingService(
       return placementRequestId hasConflictError "A Space Booking already exists for this placement request"
     }
 
-    val application = placementRequest.application
-
-    val spaceBooking = createSpaceBookingEntity(
+    val spaceBooking = createSpaceBooking(
       premises = premises,
-      application = application,
       placementRequest = placementRequest,
       expectedArrivalDate = arrivalDate,
       expectedDepartureDate = departureDate,
@@ -134,17 +130,6 @@ class Cas1SpaceBookingService(
       characteristics = characteristics,
       transferType = null,
     )
-
-    cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
-
-    cas1BookingDomainEventService.spaceBookingMade(
-      application = application,
-      booking = spaceBooking,
-      user = createdBy,
-      placementRequest = placementRequest,
-    )
-
-    cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
     success(spaceBooking)
   }
@@ -475,7 +460,7 @@ class Cas1SpaceBookingService(
     val premises: ApprovedPremisesEntity,
   )
 
-  fun getBooking(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
+  fun getBookingForPremisesAndId(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
     if (!cas1PremisesService.premiseExistsById(premisesId)) return CasResult.NotFound("premises", premisesId.toString())
 
     return getBooking(bookingId)
@@ -484,7 +469,7 @@ class Cas1SpaceBookingService(
   fun getBooking(bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
     val booking = cas1SpaceBookingRepository.findByIdOrNull(bookingId) ?: return CasResult.NotFound("booking", bookingId.toString())
 
-    return CasResult.Success(booking)
+    return Success(booking)
   }
 
   fun getBookingsForPremisesAndCrn(premisesId: UUID, crn: String) = cas1SpaceBookingRepository.findByPremisesIdAndCrn(
@@ -516,7 +501,7 @@ class Cas1SpaceBookingService(
     withdrawalContext: WithdrawalContext,
   ): CasResult<Unit> {
     if (spaceBooking.isCancelled()) {
-      return CasResult.Success(Unit)
+      return Success(Unit)
     }
 
     val resolvedReasonId = toCas1CancellationReason(withdrawalContext, userProvidedReasonId)
@@ -554,7 +539,7 @@ class Cas1SpaceBookingService(
       )
     }
 
-    return CasResult.Success(Unit)
+    return Success(Unit)
   }
 
   data class SpaceBookingFilterCriteria(
@@ -643,7 +628,7 @@ class Cas1SpaceBookingService(
 
   @Transactional
   @Suppress("ReturnCount")
-  fun emergencyTransfer(
+  fun createEmergencyTransfer(
     premisesId: UUID,
     bookingId: UUID,
     user: UserEntity,
@@ -674,30 +659,31 @@ class Cas1SpaceBookingService(
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val emergencyTransferSpaceBooking = createSpaceBookingEntity(
+    val emergencyTransferSpaceBooking = createSpaceBooking(
       premises = destinationPremises,
-      application = placementRequest.application,
       placementRequest = placementRequest,
       expectedArrivalDate = cas1NewEmergencyTransfer.arrivalDate,
       expectedDepartureDate = cas1NewEmergencyTransfer.departureDate,
       createdBy = user,
       characteristics = existingCas1SpaceBooking.criteria,
       transferType = TransferType.EMERGENCY,
+      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+        cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
+          user,
+          existingCas1SpaceBooking,
+          createdSpaceBooking,
+        )
+      },
     )
 
-    updateSpaceBookingForTransfer(existingCas1SpaceBooking, emergencyTransferSpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
+    updateTransferredSpaceBooking(existingCas1SpaceBooking, emergencyTransferSpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
 
-    cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
-      user,
-      existingCas1SpaceBooking,
-      emergencyTransferSpaceBooking,
-    )
     return Success(emergencyTransferSpaceBooking)
   }
 
   @Transactional
   @Suppress("ReturnCount")
-  fun plannedTransfer(
+  fun createPlannedTransfer(
     bookingId: UUID,
     user: UserEntity,
     cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
@@ -725,30 +711,30 @@ class Cas1SpaceBookingService(
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val plannedTransferSpaceBooking = createSpaceBookingEntity(
+    val plannedTransferSpaceBooking = createSpaceBooking(
       premises = destinationPremises,
-      application = placementRequest.application,
       placementRequest = placementRequest,
       expectedArrivalDate = cas1NewPlannedTransfer.arrivalDate,
       expectedDepartureDate = cas1NewPlannedTransfer.departureDate,
       createdBy = user,
       characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
       transferType = TransferType.PLANNED,
+      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+        cas1ChangeRequestService.approvedPlannedTransfer(
+          changeRequest = changeRequest,
+          user = user,
+          from = existingCas1SpaceBooking,
+          to = createdSpaceBooking,
+        )
+      },
     )
 
-    updateSpaceBookingForTransfer(existingCas1SpaceBooking, plannedTransferSpaceBooking, cas1NewPlannedTransfer.arrivalDate)
-
-    cas1ChangeRequestService.approvedPlannedTransfer(
-      changeRequest = changeRequest,
-      user = user,
-      from = existingCas1SpaceBooking,
-      to = plannedTransferSpaceBooking,
-    )
+    updateTransferredSpaceBooking(existingCas1SpaceBooking, plannedTransferSpaceBooking, cas1NewPlannedTransfer.arrivalDate)
 
     return Success(Unit)
   }
 
-  private fun updateSpaceBookingForTransfer(
+  private fun updateTransferredSpaceBooking(
     existingSpaceBooking: Cas1SpaceBookingEntity,
     transferredSpaceBooking: Cas1SpaceBookingEntity,
     departureDate: LocalDate,
@@ -890,54 +876,66 @@ class Cas1SpaceBookingService(
     ServiceName.approvedPremises,
   )
 
-  fun createSpaceBookingEntity(
+  private fun createSpaceBooking(
     premises: ApprovedPremisesEntity,
-    application: ApprovedPremisesApplicationEntity,
     placementRequest: PlacementRequestEntity,
     expectedArrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
     createdBy: UserEntity,
     characteristics: List<CharacteristicEntity>,
     transferType: TransferType?,
-  ): Cas1SpaceBookingEntity = cas1SpaceBookingRepository.saveAndFlush(
-    Cas1SpaceBookingEntity(
-      id = UUID.randomUUID(),
-      premises = premises,
-      application = application,
-      offlineApplication = null,
-      placementRequest = placementRequest,
-      createdBy = createdBy,
-      createdAt = OffsetDateTime.now(clock),
-      expectedArrivalDate = expectedArrivalDate,
-      expectedDepartureDate = expectedDepartureDate,
-      actualArrivalDate = null,
-      actualArrivalTime = null,
-      actualDepartureDate = null,
-      actualDepartureTime = null,
-      canonicalArrivalDate = expectedArrivalDate,
-      canonicalDepartureDate = expectedDepartureDate,
-      crn = placementRequest.application.crn,
-      keyWorkerStaffCode = null,
-      keyWorkerName = null,
-      keyWorkerAssignedAt = null,
-      cancellationOccurredAt = null,
-      cancellationRecordedAt = null,
-      cancellationReason = null,
-      cancellationReasonNotes = null,
-      departureMoveOnCategory = null,
-      departureReason = null,
-      departureNotes = null,
-      criteria = characteristics.toMutableList(),
-      nonArrivalConfirmedAt = null,
-      nonArrivalNotes = null,
-      nonArrivalReason = null,
-      deliusEventNumber = application.eventNumber,
-      migratedManagementInfoFrom = null,
-      transferredTo = null,
-      transferType = transferType,
-      deliusId = null,
-    ),
-  )
+    beforeBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
+  ): Cas1SpaceBookingEntity {
+    val application = placementRequest.application
+    val spaceBooking = cas1SpaceBookingRepository.saveAndFlush(
+      Cas1SpaceBookingEntity(
+        id = UUID.randomUUID(),
+        premises = premises,
+        application = application,
+        offlineApplication = null,
+        placementRequest = placementRequest,
+        createdBy = createdBy,
+        createdAt = OffsetDateTime.now(clock),
+        expectedArrivalDate = expectedArrivalDate,
+        expectedDepartureDate = expectedDepartureDate,
+        actualArrivalDate = null,
+        actualArrivalTime = null,
+        actualDepartureDate = null,
+        actualDepartureTime = null,
+        canonicalArrivalDate = expectedArrivalDate,
+        canonicalDepartureDate = expectedDepartureDate,
+        crn = placementRequest.application.crn,
+        keyWorkerStaffCode = null,
+        keyWorkerName = null,
+        keyWorkerAssignedAt = null,
+        cancellationOccurredAt = null,
+        cancellationRecordedAt = null,
+        cancellationReason = null,
+        cancellationReasonNotes = null,
+        departureMoveOnCategory = null,
+        departureReason = null,
+        departureNotes = null,
+        criteria = characteristics.toMutableList(),
+        nonArrivalConfirmedAt = null,
+        nonArrivalNotes = null,
+        nonArrivalReason = null,
+        deliusEventNumber = application.eventNumber,
+        migratedManagementInfoFrom = null,
+        transferredTo = null,
+        transferType = transferType,
+        deliusId = null,
+      ),
+    )
+
+    cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
+
+    beforeBookingMadeDomainEvent(spaceBooking)
+
+    cas1BookingDomainEventService.spaceBookingMade(spaceBooking, createdBy)
+    cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
+
+    return spaceBooking
+  }
 
   data class UpdateSpaceBookingDetails(
     val bookingId: UUID,

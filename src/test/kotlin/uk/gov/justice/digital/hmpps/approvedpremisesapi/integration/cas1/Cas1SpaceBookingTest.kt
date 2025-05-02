@@ -2712,7 +2712,15 @@ class Cas1SpaceBookingTest {
       assertThat(emergencyTransferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
       assertThat(emergencyTransferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
 
-      domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED)
+      domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
+        application.id,
+        DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED,
+        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+      )
+
+      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
+      emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
     }
   }
 
@@ -2853,7 +2861,15 @@ class Cas1SpaceBookingTest {
       assertThat(updatedChangedRequest.resolved).isTrue
       assertThat(updatedChangedRequest.decision).isEqualTo(ChangeRequestDecision.APPROVED)
 
-      domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED)
+      domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
+        application.id,
+        DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED,
+        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+      )
+
+      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
+      emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
     }
   }
 }

@@ -96,7 +96,7 @@ class Cas1UpdateEventNumberSeedJob(
   }
 
   private fun updateDomainEvents(applicationId: UUID, updatedEventNumber: Int) {
-    val domainEvents = domainEventRepository.findByApplicationId(applicationId)
+    val domainEvents = domainEventRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId)
 
     domainEvents.filter {
       it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
