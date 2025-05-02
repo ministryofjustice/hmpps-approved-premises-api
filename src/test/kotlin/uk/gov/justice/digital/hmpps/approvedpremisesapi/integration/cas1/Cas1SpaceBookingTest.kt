@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPlacementAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
@@ -590,15 +591,18 @@ class Cas1SpaceBookingTest {
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
       assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[3].appealRequested).isTrue
+      assertThat(response[3].appealRequested).isFalse
       assertThat(response[3].plannedTransferRequested).isFalse
+      assertThat(response[3].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[5].appealRequested).isFalse
-      assertThat(response[5].plannedTransferRequested).isTrue
+      assertThat(response[5].plannedTransferRequested).isFalse
+      assertThat(response[5].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLANNED_TRANSFER)
       assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
       assertThat(response[6].appealRequested).isFalse
       assertThat(response[6].plannedTransferRequested).isFalse
+      assertThat(response[6].openChangeRequestTypes).isEmpty()
       assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
       assertThat(response[8].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
@@ -1075,7 +1079,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Success`() {
+    fun success() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()

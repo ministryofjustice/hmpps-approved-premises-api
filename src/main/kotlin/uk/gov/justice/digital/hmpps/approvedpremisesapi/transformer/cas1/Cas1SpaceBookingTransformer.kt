@@ -20,7 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getCharacteristicPropertyNames
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getOpenChangeRequestTypes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
@@ -173,7 +174,7 @@ class Cas1SpaceBookingTransformer(
     spaceBooking: Cas1SpaceBookingEntity,
     personSummaryInfo: PersonSummaryInfoResult,
   ): Cas1SpaceBookingSummary {
-    val changeRequestsForBooking = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking)
+    val openChangeRequestsForBooking = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking)
     return Cas1SpaceBookingSummary(
       id = spaceBooking.id,
       person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
@@ -204,8 +205,9 @@ class Cas1SpaceBookingTransformer(
       },
       deliusEventNumber = spaceBooking.deliusEventNumber,
       isCancelled = spaceBooking.isCancelled(),
-      plannedTransferRequested = changeRequestsForBooking.any { it.type == ChangeRequestType.PLANNED_TRANSFER },
-      appealRequested = changeRequestsForBooking.any { it.type == ChangeRequestType.PLACEMENT_APPEAL },
+      plannedTransferRequested = false,
+      appealRequested = false,
+      openChangeRequestTypes = openChangeRequestsForBooking.map { it.type.toApiType() },
     )
   }
 
@@ -251,13 +253,14 @@ class Cas1SpaceBookingTransformer(
         searchResult.nonArrivalConfirmedAtDateTime,
       ),
     ),
-    characteristics = searchResult.characteristicsPropertyNames?.split(",")?.mapNotNull { propertyName ->
+    characteristics = searchResult.getCharacteristicPropertyNames().mapNotNull { propertyName ->
       Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
-    } ?: listOf(),
+    },
     deliusEventNumber = searchResult.deliusEventNumber,
     isCancelled = searchResult.cancelled,
-    plannedTransferRequested = searchResult.plannedTransferRequested,
-    appealRequested = searchResult.appealRequested,
+    plannedTransferRequested = false,
+    appealRequested = false,
+    openChangeRequestTypes = searchResult.getOpenChangeRequestTypes().map { it.toApiType() },
   )
 
   companion object {
@@ -265,7 +268,7 @@ class Cas1SpaceBookingTransformer(
 
     fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() = this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
 
-    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() = Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
+    private fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() = Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
       log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
       null
     }

@@ -368,7 +368,7 @@ class Cas1SpaceBookingTransformerTest {
   }
 
   @Nested
-  inner class TransformToSummary {
+  inner class TransformJpaToSummary {
 
     @ParameterizedTest
     @CsvSource("true,false")
@@ -458,7 +458,8 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isEqualTo(cancelled)
       assertThat(result.plannedTransferRequested).isFalse()
-      assertThat(result.appealRequested).isTrue()
+      assertThat(result.appealRequested).isFalse()
+      assertThat(result.openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
     }
   }
 
@@ -497,11 +498,10 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = "the staff code",
           keyWorkerAssignedAt = LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC),
           keyWorkerName = "the keyworker name",
-          characteristicsPropertyNames = "hasTurningSpace,isCatered",
+          characteristicsPropertyNamesCsv = "hasTurningSpace,isCatered",
           deliusEventNumber = "event8",
           cancelled = true,
-          plannedTransferRequested = true,
-          appealRequested = false,
+          openChangeRequestTypeNamesCsv = "PLANNED_TRANSFER,PLACEMENT_EXTENSION",
         ),
         premises,
         personSummaryInfo,
@@ -529,8 +529,12 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isTrue()
-      assertThat(result.plannedTransferRequested).isTrue()
+      assertThat(result.plannedTransferRequested).isFalse()
       assertThat(result.appealRequested).isFalse()
+      assertThat(result.openChangeRequestTypes).containsExactly(
+        Cas1ChangeRequestType.PLANNED_TRANSFER,
+        Cas1ChangeRequestType.PLACEMENT_EXTENSION,
+      )
     }
 
     @Test
@@ -563,11 +567,10 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = null,
           keyWorkerAssignedAt = null,
           keyWorkerName = null,
-          characteristicsPropertyNames = null,
+          characteristicsPropertyNamesCsv = null,
           deliusEventNumber = "event8",
           cancelled = false,
-          plannedTransferRequested = false,
-          appealRequested = true,
+          openChangeRequestTypeNamesCsv = "",
         ),
         premises = ApprovedPremisesEntityFactory().withDefaults().produce(),
         personSummaryInfo,
@@ -577,7 +580,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation).isNull()
       assertThat(result.isCancelled).isFalse()
       assertThat(result.plannedTransferRequested).isFalse()
-      assertThat(result.appealRequested).isTrue()
+      assertThat(result.appealRequested).isFalse()
     }
   }
 }
@@ -598,11 +601,10 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val keyWorkerStaffCode: String?,
   override val keyWorkerAssignedAt: Instant?,
   override val keyWorkerName: String?,
-  override val characteristicsPropertyNames: String?,
+  override val characteristicsPropertyNamesCsv: String?,
   override val deliusEventNumber: String?,
   override val cancelled: Boolean,
-  override val plannedTransferRequested: Boolean,
-  override val appealRequested: Boolean,
+  override val openChangeRequestTypeNamesCsv: String,
 ) : Cas1SpaceBookingSearchResult
 
 data class Cas1SpaceBookingAtPremisesImpl(
