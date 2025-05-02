@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import java.time.LocalDate
@@ -22,6 +23,8 @@ fun ApprovedPremisesApplicationEntity.interestedPartiesEmailAddresses(): Set<Str
 fun PlacementApplicationEntity.interestedPartiesEmailAddresses(): Set<String> = application.interestedPartiesEmailAddresses() +
   setOfNotNull(createdByUser.email)
 
+fun PlacementRequestEntity.requestingUsersEmailAddresses() = application.interestedPartiesEmailAddresses() +
+  (placementApplication?.interestedPartiesEmailAddresses() ?: emptySet())
 
 fun Cas1SpaceBookingEntity.toEmailBookingInfo(
   application: ApprovedPremisesApplicationEntity,

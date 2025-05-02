@@ -39,6 +39,20 @@ class MockCas1EmailNotificationService : Cas1EmailNotifier {
     assertThat(requestedEmails).hasSize(expectedCount)
   }
 
+  fun assertEmailsRequested(
+    recipientEmailAddresses: Set<String>,
+    templateId: String,
+    personalisationSubSet: Map<String, Any>,
+    application: ApprovedPremisesApplicationEntity,
+  ) = recipientEmailAddresses.forEach { recipientEmailAddress ->
+    assertEmailRequested(
+      recipientEmailAddress,
+      templateId,
+      personalisationSubSet,
+      application,
+    )
+  }
+
   fun assertEmailRequested(
     recipientEmailAddress: String,
     templateId: String,

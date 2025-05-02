@@ -41,8 +41,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedCas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -59,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
@@ -72,6 +75,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1SpaceBookingSummaryStatusTestHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.TestCaseForSpaceBookingSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -316,7 +320,7 @@ class Cas1SpaceBookingTest {
           emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
           emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
           emailAsserter.assertEmailRequested(
-            placementRequest.application.caseManagerUserDetails?.email!!,
+            placementRequest.application.caseManagerUserDetails!!.email!!,
             Cas1NotifyTemplates.BOOKING_MADE,
           )
 
@@ -1346,7 +1350,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording arrival returns OK, creates and emits a domain event`() {
+    fun `Recording arrival returns OK, creates and emits a domain event and no emails`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val (user) = givenAUser()
@@ -1369,6 +1373,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerStaffCode(user.deliusStaffCode)
         withKeyworkerAssignedAt(Instant.now())
         withDeliusEventNumber("25")
+        withTransferType(null)
       }
 
       webTestClient.post()
@@ -1389,6 +1394,79 @@ class Cas1SpaceBookingTest {
         spaceBooking.application!!.id,
         DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
       )
+
+      emailAsserter.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `Recording arrival for emergency transfer returns OK, creates and emits a domain event and emails`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val cruManagementArea = givenACas1CruManagementArea(emailAddress = "theCru@test.com")
+
+      val application = givenASubmittedCas1Application(
+        offender = offender.asCaseSummary(),
+        caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+          withEmailAddress("caseManager@test.com")
+        },
+        cruManagementArea = cruManagementArea,
+      )
+      val placementApplication = givenAPlacementApplication(application = application)
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        application = application,
+        placementApplication = placementApplication,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("25")
+        withTransferType(TransferType.EMERGENCY)
+      }
+
+      // transferredFrom
+      givenACas1SpaceBooking(
+        application = application,
+        placementRequest = placementRequest,
+        transferredTo = spaceBooking,
+      )
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            arrivalDate = LocalDate.now().minusDays(1),
+            arrivalTime = "12:00:00",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+      )
+
+      emailAsserter.assertEmailsRequestedCount(4)
+      emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.TRANSFER_COMPLETE)
+      emailAsserter.assertEmailRequested("caseManager@test.com", Cas1NotifyTemplates.TRANSFER_COMPLETE)
+      emailAsserter.assertEmailRequested(placementApplication.createdByUser.email!!, Cas1NotifyTemplates.TRANSFER_COMPLETE)
+      emailAsserter.assertEmailRequested("theCru@test.com", Cas1NotifyTemplates.TRANSFER_COMPLETE_EMERGENCY_FOR_CRU)
     }
 
     @Test

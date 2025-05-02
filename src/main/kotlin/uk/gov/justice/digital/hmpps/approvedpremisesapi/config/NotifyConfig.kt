@@ -48,6 +48,8 @@ object Cas1NotifyTemplates {
   const val PLACEMENT_REQUEST_SUBMITTED = "deb11bc6-d424-4370-bbe5-41f6a823d292"
   const val PLACEMENT_REQUEST_SUBMITTED_V2 = "e7e5b481-aca8-4930-bf4e-b3098834e840"
   const val PLACEMENT_REQUEST_WITHDRAWN_V2 = "58bda3a6-c091-4d78-a533-de5991777300"
+  const val TRANSFER_COMPLETE = "cf813a40-8135-4123-b9bb-2234d10f01ae"
+  const val TRANSFER_COMPLETE_EMERGENCY_FOR_CRU = "dae982a8-6afe-413e-b23d-12e195c2d947"
 }
 
 class NotifyTemplates {

@@ -207,6 +207,14 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.transferredTo = { transferredBooking }
   }
 
+  fun withTransferredFrom(transferredBooking: Cas1SpaceBookingEntity?) = apply {
+    this.transferredFrom = { transferredBooking }
+  }
+
+  fun withTransferType(transferType: TransferType?) = apply {
+    this.transferType = { transferType }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),

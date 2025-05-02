@@ -16,11 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedCas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -255,7 +255,7 @@ class Cas1ChangeRequestTest {
 
       val placementRequest1 = givenAPlacementRequest(
         createdByUser = user,
-        application = givenACas1Application(
+        application = givenASubmittedCas1Application(
           createdByUser = user,
           offender = givenAnOffender(
             offenderDetailsConfigBlock = {
@@ -298,7 +298,7 @@ class Cas1ChangeRequestTest {
 
       val placementRequest2 = givenAPlacementRequest(
         createdByUser = user,
-        application = givenACas1Application(
+        application = givenASubmittedCas1Application(
           createdByUser = user,
           offender = givenAnOffender(
             offenderDetailsConfigBlock = {
@@ -326,7 +326,7 @@ class Cas1ChangeRequestTest {
 
       val placementRequest3 = givenAPlacementRequest(
         createdByUser = user,
-        application = givenACas1Application(
+        application = givenASubmittedCas1Application(
           createdByUser = user,
           offender = givenAnOffender(
             offenderDetailsConfigBlock = {
@@ -603,7 +603,7 @@ class Cas1ChangeRequestTest {
 
       cruManagementArea = givenACas1CruManagementArea(emailAddress = "cru@test.com")
 
-      application = givenACas1Application(
+      application = givenASubmittedCas1Application(
         createdByUser = user,
         offender = givenAnOffender(
           offenderDetailsConfigBlock = {
@@ -636,7 +636,7 @@ class Cas1ChangeRequestTest {
 
       placementRequest2 = givenAPlacementRequest(
         createdByUser = user,
-        application = givenACas1Application(
+        application = givenASubmittedCas1Application(
           createdByUser = user,
           offender = givenAnOffender(
             offenderDetailsConfigBlock = {
@@ -772,7 +772,7 @@ class Cas1ChangeRequestTest {
 
       placementRequest1 = givenAPlacementRequest(
         createdByUser = user,
-        application = givenACas1Application(
+        application = givenASubmittedCas1Application(
           createdByUser = user,
           offender = givenAnOffender(
             offenderDetailsConfigBlock = {

@@ -31,6 +31,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   actualArrivalDate: LocalDate? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
+  transferredTo: Cas1SpaceBookingEntity? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -62,5 +63,6 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withCriteria(criteria?.toMutableList() ?: emptyList<CharacteristicEntity>().toMutableList())
     withNonArrivalConfirmedAt(nonArrivalConfirmedAt)
     withCancellationOccurredAt(cancellationOccurredAt)
+    withTransferredTo(transferredTo)
   }
 }
