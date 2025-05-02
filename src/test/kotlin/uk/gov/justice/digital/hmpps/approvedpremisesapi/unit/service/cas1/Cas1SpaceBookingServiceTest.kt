@@ -556,13 +556,13 @@ class Cas1SpaceBookingServiceTest {
   }
 
   @Nested
-  inner class GetBooking {
+  inner class GetBookingForPremisesAndId {
 
     @Test
     fun `Returns not found error if premises with the given ID doesn't exist`() {
       every { cas1PremisesService.premiseExistsById(any()) } returns false
 
-      val result = service.getBooking(UUID.randomUUID(), UUID.randomUUID())
+      val result = service.getBookingForPremisesAndId(UUID.randomUUID(), UUID.randomUUID())
 
       assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
       assertThat((result as CasResult.NotFound).entityType).isEqualTo("premises")
@@ -577,7 +577,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.premiseExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
-      val result = service.getBooking(premises.id, UUID.randomUUID())
+      val result = service.getBookingForPremisesAndId(premises.id, UUID.randomUUID())
 
       assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
       assertThat((result as CasResult.NotFound).entityType).isEqualTo("booking")
@@ -595,7 +595,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.premiseExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(spaceBooking.id) } returns spaceBooking
 
-      val result = service.getBooking(premises.id, spaceBooking.id)
+      val result = service.getBookingForPremisesAndId(premises.id, spaceBooking.id)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       assertThat((result as CasResult.Success).value).isEqualTo(spaceBooking)
@@ -2665,7 +2665,7 @@ class Cas1SpaceBookingServiceTest {
   }
 
   @Nested
-  inner class EmergencyTransfer {
+  inner class CreateEmergencyTransfer {
 
     private val user = UserEntityFactory()
       .withDefaults()
@@ -2695,7 +2695,7 @@ class Cas1SpaceBookingServiceTest {
 
       val destinationPremisesId = UUID.randomUUID()
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2718,7 +2718,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2741,7 +2741,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2766,7 +2766,7 @@ class Cas1SpaceBookingServiceTest {
 
       val bookingId = UUID.randomUUID()
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         bookingId,
         user,
@@ -2790,7 +2790,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         anotherPremisesId,
         existingSpaceBooking.id,
         user,
@@ -2817,7 +2817,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2844,7 +2844,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2871,7 +2871,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2898,7 +2898,7 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2931,7 +2931,7 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
-      val result = service.emergencyTransfer(
+      val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
@@ -2971,7 +2971,7 @@ class Cas1SpaceBookingServiceTest {
   }
 
   @Nested
-  inner class PlannedTransfer {
+  inner class CreatePlannedTransfer {
 
     private val user = UserEntityFactory()
       .withDefaults()
@@ -3006,7 +3006,7 @@ class Cas1SpaceBookingServiceTest {
 
       val destinationPremisesId = UUID.randomUUID()
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
         Cas1NewPlannedTransfer(
@@ -3032,7 +3032,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
         Cas1NewPlannedTransfer(
@@ -3058,7 +3058,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
         Cas1NewPlannedTransfer(
@@ -3084,7 +3084,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
         Cas1NewPlannedTransfer(
@@ -3119,7 +3119,7 @@ class Cas1SpaceBookingServiceTest {
 
       val bookingId = UUID.randomUUID()
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         bookingId,
         user,
         Cas1NewPlannedTransfer(
@@ -3161,7 +3161,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
         Cas1NewPlannedTransfer(
@@ -3202,7 +3202,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
         Cas1NewPlannedTransfer(
@@ -3238,7 +3238,7 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
-      val result = service.plannedTransfer(
+      val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
         Cas1NewPlannedTransfer(
