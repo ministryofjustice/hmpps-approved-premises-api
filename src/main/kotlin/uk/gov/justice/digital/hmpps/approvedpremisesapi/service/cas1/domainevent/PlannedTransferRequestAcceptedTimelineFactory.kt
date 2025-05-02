@@ -20,7 +20,6 @@ class PlannedTransferRequestAcceptedTimelineFactory(val domainEventService: Cas1
       type = Cas1TimelineEventType.plannedTransferRequestAccepted,
       from = details.from.toTimelinePayloadSummary(),
       to = details.to.toTimelinePayloadSummary(),
-      schemaVersion = event.schemaVersion,
     )
   }
 

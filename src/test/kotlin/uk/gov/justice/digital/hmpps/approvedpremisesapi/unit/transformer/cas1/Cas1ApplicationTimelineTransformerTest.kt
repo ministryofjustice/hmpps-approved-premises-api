@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
 import io.mockk.every
 import io.mockk.mockk
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -57,6 +56,7 @@ class Cas1ApplicationTimelineTransformerTest {
     override val cas1SpaceBookingId: UUID?,
     override val triggerSource: TriggerSourceType?,
     override val triggeredByUser: UserEntity?,
+    override val schemaVersion: Int?,
   ) : DomainEventSummary
 
   @ParameterizedTest
@@ -76,6 +76,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = userJpa,
+      schemaVersion = 1,
     )
 
     val userApi = mockk<ApprovedPremisesUser>()
@@ -91,6 +92,7 @@ class Cas1ApplicationTimelineTransformerTest {
     assertThat(result.content).isEqualTo("Some event")
     assertThat(result.createdBy).isEqualTo(userApi)
     assertThat(result.triggerSource).isEqualTo(null)
+    assertThat(result.schemaVersion).isEqualTo(1)
   }
 
   @Test
@@ -108,13 +110,14 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = userJpa,
+      schemaVersion = null,
     )
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     val exception = assertThrows<RuntimeException> {
       applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
     }
-    Assertions.assertThat(exception.message).isEqualTo("Cannot map CAS2_APPLICATION_SUBMITTED, only CAS1 is currently supported")
+    assertThat(exception.message).isEqualTo("Cannot map CAS2_APPLICATION_SUBMITTED, only CAS1 is currently supported")
   }
 
   @Test
@@ -132,6 +135,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -166,6 +170,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -205,6 +210,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -238,6 +244,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = spaceBookingId,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -270,6 +277,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -304,6 +312,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -338,6 +347,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -379,6 +389,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -414,6 +425,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = triggerSource,
       triggeredByUser = null,
+      schemaVersion = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -442,6 +454,7 @@ class Cas1ApplicationTimelineTransformerTest {
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = userJpa,
+      schemaVersion = null,
     )
 
     val userApi = mockk<ApprovedPremisesUser>()

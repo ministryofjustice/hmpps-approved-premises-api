@@ -67,6 +67,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
         d.assessmentId as assessmentId,
         d.bookingId as bookingId,
         d.triggerSource as triggerSource,
+        d.schemaVersion as schemaVersion,
         CASE
             WHEN b.id IS NOT NULL THEN b.premises.id
             WHEN sb.id IS NOT NULL THEN sb.premises.id

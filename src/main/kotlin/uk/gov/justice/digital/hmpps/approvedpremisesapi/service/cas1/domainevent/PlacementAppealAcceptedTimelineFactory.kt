@@ -19,7 +19,6 @@ class PlacementAppealAcceptedTimelineFactory(val domainEventService: Cas1DomainE
     return Cas1PlacementAppealAcceptedPayload(
       type = Cas1TimelineEventType.placementAppealAccepted,
       booking = details.booking.toTimelinePayloadSummary(),
-      schemaVersion = event.schemaVersion,
     )
   }
 

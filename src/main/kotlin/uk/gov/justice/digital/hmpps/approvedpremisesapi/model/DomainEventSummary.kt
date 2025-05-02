@@ -18,4 +18,5 @@ interface DomainEventSummary {
   val cas1SpaceBookingId: UUID?
   val triggerSource: TriggerSourceType?
   val triggeredByUser: UserEntity?
+  val schemaVersion: Int?
 }

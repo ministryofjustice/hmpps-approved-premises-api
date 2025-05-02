@@ -22,7 +22,6 @@ class PlacementAppealRejectedTimelineFactory(val domainEventService: Cas1DomainE
       type = Cas1TimelineEventType.placementAppealRejected,
       booking = details.booking.toTimelinePayloadSummary(),
       reason = NamedId(reason.id, reason.code),
-      schemaVersion = event.schemaVersion,
     )
   }
 

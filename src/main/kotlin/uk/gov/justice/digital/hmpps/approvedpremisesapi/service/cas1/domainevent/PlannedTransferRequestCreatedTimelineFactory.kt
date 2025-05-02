@@ -22,7 +22,6 @@ class PlannedTransferRequestCreatedTimelineFactory(val domainEventService: Cas1D
       type = Cas1TimelineEventType.plannedTransferRequestCreated,
       booking = details.booking.toTimelinePayloadSummary(),
       reason = NamedId(reason.id, reason.code),
-      schemaVersion = event.schemaVersion,
     )
   }
 

@@ -22,7 +22,6 @@ class PlacementAppealCreatedTimelineFactory(val domainEventService: Cas1DomainEv
       type = Cas1TimelineEventType.placementAppealCreated,
       booking = details.booking.toTimelinePayloadSummary(),
       reason = NamedId(reason.id, reason.code),
-      schemaVersion = event.schemaVersion,
     )
   }
 
