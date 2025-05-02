@@ -627,21 +627,24 @@ class Cas1SpaceBookingService(
   }
 
   @Transactional
-  @Suppress("ReturnCount")
+  @Suppress("ReturnCount", "MagicNumber")
   fun createEmergencyTransfer(
     premisesId: UUID,
     bookingId: UUID,
     user: UserEntity,
-    cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
+    requirements: Cas1NewEmergencyTransfer,
   ): CasResult<Cas1SpaceBookingEntity> {
-    val destinationPremises = cas1PremisesService.findPremiseById(cas1NewEmergencyTransfer.destinationPremisesId)
-      ?: return CasResult.NotFound("Premises", cas1NewEmergencyTransfer.destinationPremisesId.toString())
+    val destinationPremises = cas1PremisesService.findPremiseById(requirements.destinationPremisesId)
+      ?: return CasResult.NotFound("Premises", requirements.destinationPremisesId.toString())
 
-    if (cas1NewEmergencyTransfer.arrivalDate != LocalDate.now()) {
-      return GeneralValidationError("The provided arrival date must be today's date")
+    val arrivalDate = requirements.arrivalDate
+    val departureDate = requirements.departureDate
+
+    if (arrivalDate.isAfter(LocalDate.now()) || arrivalDate.isBefore(LocalDate.now().minusDays(7))) {
+      return GeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
-    if (cas1NewEmergencyTransfer.arrivalDate >= cas1NewEmergencyTransfer.departureDate) {
+    if (arrivalDate >= departureDate) {
       return GeneralValidationError("The provided departure date must be after the arrival date")
     }
 
@@ -662,8 +665,8 @@ class Cas1SpaceBookingService(
     val emergencyTransferSpaceBooking = createSpaceBooking(
       premises = destinationPremises,
       placementRequest = placementRequest,
-      expectedArrivalDate = cas1NewEmergencyTransfer.arrivalDate,
-      expectedDepartureDate = cas1NewEmergencyTransfer.departureDate,
+      expectedArrivalDate = arrivalDate,
+      expectedDepartureDate = departureDate,
       createdBy = user,
       characteristics = existingCas1SpaceBooking.criteria,
       transferType = TransferType.EMERGENCY,
@@ -676,7 +679,7 @@ class Cas1SpaceBookingService(
       },
     )
 
-    updateTransferredSpaceBooking(existingCas1SpaceBooking, emergencyTransferSpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
+    updateTransferredSpaceBooking(existingCas1SpaceBooking, emergencyTransferSpaceBooking, arrivalDate)
 
     return Success(emergencyTransferSpaceBooking)
   }
