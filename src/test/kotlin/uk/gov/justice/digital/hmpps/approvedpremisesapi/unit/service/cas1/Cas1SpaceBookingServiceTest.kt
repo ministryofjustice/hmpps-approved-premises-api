@@ -349,10 +349,8 @@ class Cas1SpaceBookingServiceTest {
 
       every {
         cas1BookingDomainEventService.spaceBookingMade(
-          application,
           any(),
           user,
-          placementRequest,
         )
       } returns Unit
 
@@ -450,10 +448,8 @@ class Cas1SpaceBookingServiceTest {
 
       every {
         cas1BookingDomainEventService.spaceBookingMade(
-          application,
           any(),
           user,
-          placementRequest,
         )
       } returns Unit
 

@@ -91,17 +91,19 @@ class Cas1BookingCas1DomainEventServiceTest {
 
     val createdAt = OffsetDateTime.now()
 
+    val placementRequest = PlacementRequestEntityFactory()
+      .withDefaults()
+      .withApplication(application)
+      .produce()
+
     val spaceBooking = Cas1SpaceBookingEntityFactory()
       .withCrn("THEBOOKINGCRN")
+      .withPlacementRequest(placementRequest)
       .withCanonicalArrivalDate(LocalDate.of(2025, 12, 11))
       .withCanonicalDepartureDate(LocalDate.of(2025, 12, 12))
       .withPremises(premises)
       .withCreatedAt(createdAt)
       .withCriteria(CharacteristicEntityFactory().withModelScope("room").withPropertyName("hasEnSuite").produce())
-      .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withDefaults()
       .produce()
 
     @BeforeEach
@@ -132,7 +134,7 @@ class Cas1BookingCas1DomainEventServiceTest {
 
     @Test
     fun `bookingMade saves domain event`() {
-      service.spaceBookingMade(application, spaceBooking, user, placementRequest)
+      service.spaceBookingMade(spaceBooking, user)
 
       val domainEventArgument = slot<SaveCas1DomainEvent<BookingMadeEnvelope>>()
 
