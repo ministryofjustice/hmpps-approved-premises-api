@@ -508,7 +508,7 @@ class Cas1ChangeRequestServiceTest {
       val placementRequest = PlacementRequestEntityFactory().withDefaults().produce()
       every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns null
 
-      val result = service.getChangeRequest(placementRequest.id, UUID.randomUUID())
+      val result = service.getChangeRequestForPlacementId(placementRequest.id, UUID.randomUUID())
 
       assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
       assertThat((result as CasResult.NotFound).entityType).isEqualTo("Change Request")
@@ -521,7 +521,7 @@ class Cas1ChangeRequestServiceTest {
 
       every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns cas1ChangeRequest
 
-      val result = service.getChangeRequest(UUID.randomUUID(), cas1ChangeRequest.id)
+      val result = service.getChangeRequestForPlacementId(UUID.randomUUID(), cas1ChangeRequest.id)
 
       assertThat(result).isInstanceOf(CasResult.GeneralValidationError::class.java)
       assertThatCasResult(result).isGeneralValidationError("The change request does not belong to the specified placement request")
@@ -534,7 +534,7 @@ class Cas1ChangeRequestServiceTest {
 
       every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns cas1ChangeRequest
 
-      val result = service.getChangeRequest(placementRequest.id, cas1ChangeRequest.id)
+      val result = service.getChangeRequestForPlacementId(placementRequest.id, cas1ChangeRequest.id)
 
       assertThatCasResult(result).isSuccess()
 

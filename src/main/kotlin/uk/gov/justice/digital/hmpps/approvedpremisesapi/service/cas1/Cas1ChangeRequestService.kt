@@ -45,19 +45,19 @@ class Cas1ChangeRequestService(
 ) {
 
   @Transactional
-  fun createChangeRequest(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): CasResult<Unit> = validatedCasResult {
+  fun createChangeRequest(placementRequestId: UUID, requirements: Cas1NewChangeRequest): CasResult<Unit> = validatedCasResult {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return CasResult.NotFound("Placement Request", placementRequestId.toString())
 
-    val requestReason = cas1ChangeRequestReasonRepository.findByIdOrNull(cas1NewChangeRequest.reasonId)
-      ?: return CasResult.NotFound("Change Request Reason", cas1NewChangeRequest.reasonId.toString())
+    val requestReason = cas1ChangeRequestReasonRepository.findByIdOrNull(requirements.reasonId)
+      ?: return CasResult.NotFound("Change Request Reason", requirements.reasonId.toString())
 
-    val spaceBooking = cas1SpaceBookingRepository.findByIdOrNull(cas1NewChangeRequest.spaceBookingId)
-      ?: return CasResult.NotFound("Space Booking", cas1NewChangeRequest.spaceBookingId.toString())
+    val spaceBooking = cas1SpaceBookingRepository.findByIdOrNull(requirements.spaceBookingId)
+      ?: return CasResult.NotFound("Space Booking", requirements.spaceBookingId.toString())
 
     if (!placementRequest.spaceBookings.contains(spaceBooking)) return CasResult.NotFound("Placement Request with Space Booking", spaceBooking.id.toString())
 
-    val requiredAction = when (cas1NewChangeRequest.type) {
+    val requiredAction = when (requirements.type) {
       Cas1ChangeRequestType.PLACEMENT_APPEAL -> SpaceBookingAction.APPEAL_CREATE
       Cas1ChangeRequestType.PLACEMENT_EXTENSION -> error("to be implemented")
       Cas1ChangeRequestType.PLANNED_TRANSFER -> SpaceBookingAction.PLANNED_TRANSFER_REQUEST
@@ -74,8 +74,8 @@ class Cas1ChangeRequestService(
         id = UUID.randomUUID(),
         placementRequest = placementRequest,
         spaceBooking = spaceBooking,
-        type = ChangeRequestType.valueOf(cas1NewChangeRequest.type.name),
-        requestJson = cas1NewChangeRequest.requestJson.toString(),
+        type = ChangeRequestType.valueOf(requirements.type.name),
+        requestJson = requirements.requestJson.toString(),
         requestReason = requestReason,
         decisionJson = null,
         decision = null,
@@ -88,7 +88,7 @@ class Cas1ChangeRequestService(
       ),
     )
 
-    when (cas1NewChangeRequest.type) {
+    when (requirements.type) {
       Cas1ChangeRequestType.PLACEMENT_APPEAL -> {
         cas1ChangeRequestEmailService.placementAppealCreated(createdChangeRequest)
         cas1ChangeRequestDomainEventService.placementAppealCreated(
@@ -96,7 +96,7 @@ class Cas1ChangeRequestService(
           requestingUser = userService.getUserForRequest(),
         )
       }
-      Cas1ChangeRequestType.PLACEMENT_EXTENSION -> Unit
+      Cas1ChangeRequestType.PLACEMENT_EXTENSION -> error("to be implemented")
       Cas1ChangeRequestType.PLANNED_TRANSFER -> {
         cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(
           changeRequest = createdChangeRequest,
@@ -126,14 +126,13 @@ class Cas1ChangeRequestService(
   @Transactional
   fun approvePlacementAppeal(changeRequestId: UUID, user: UserEntity): CasResult<Unit> = validatedCasResult {
     val changeRequest = findChangeRequest(changeRequestId)
+      ?: return CasResult.NotFound("change request", changeRequestId.toString())
 
-    if (changeRequest == null) {
-      return CasResult.NotFound("change request", changeRequestId.toString())
-    } else if (changeRequest.resolved) {
+    if (changeRequest.resolved) {
       return GeneralValidationError("This change request is already resolved")
-    } else {
-      approveChangeRequest(changeRequest, user)
     }
+
+    approveChangeRequest(changeRequest, user)
 
     cas1ChangeRequestEmailService.placementAppealAccepted(changeRequest)
     cas1ChangeRequestDomainEventService.placementAppealAccepted(changeRequest)
@@ -141,6 +140,7 @@ class Cas1ChangeRequestService(
     return Success(Unit)
   }
 
+  @Transactional
   fun approvedPlannedTransfer(
     changeRequest: Cas1ChangeRequestEntity,
     user: UserEntity,
@@ -156,16 +156,17 @@ class Cas1ChangeRequestService(
     changeRequestId: UUID,
     cas1RejectChangeRequest: Cas1RejectChangeRequest,
   ): CasResult<Unit> = validatedCasResult {
-    lockableCas1ChangeRequestEntityRepository.acquirePessimisticLock(changeRequestId)
+    val changeRequest = findChangeRequest(changeRequestId)
+      ?: return CasResult.NotFound("change request", changeRequestId.toString())
 
-    val changeRequestWithLock = findChangeRequest(changeRequestId)!!
-
-    if (changeRequestWithLock.placementRequest.id != placementRequestId) {
+    if (changeRequest.placementRequest.id != placementRequestId) {
       return GeneralValidationError("The change request does not belong to the specified placement request")
     }
 
-    if (changeRequestWithLock.decision != null) {
-      return if (changeRequestWithLock.decision == ChangeRequestDecision.REJECTED) {
+    lockableCas1ChangeRequestEntityRepository.acquirePessimisticLock(changeRequestId)
+
+    if (changeRequest.decision != null) {
+      return if (changeRequest.decision == ChangeRequestDecision.REJECTED) {
         Success(Unit)
       } else {
         GeneralValidationError("A decision has already been made for the change request")
@@ -175,23 +176,23 @@ class Cas1ChangeRequestService(
     val changeRequestRejectReason = cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(cas1RejectChangeRequest.rejectionReasonId)
       ?: return GeneralValidationError("The change request reject reason not found")
 
-    changeRequestWithLock.decision = ChangeRequestDecision.REJECTED
-    changeRequestWithLock.rejectionReason = changeRequestRejectReason
-    changeRequestWithLock.resolve()
-    cas1ChangeRequestRepository.save(changeRequestWithLock)
+    changeRequest.decision = ChangeRequestDecision.REJECTED
+    changeRequest.rejectionReason = changeRequestRejectReason
+    changeRequest.resolve()
+    cas1ChangeRequestRepository.save(changeRequest)
 
-    when (changeRequestWithLock.type) {
+    when (changeRequest.type) {
       ChangeRequestType.PLACEMENT_APPEAL -> {
-        cas1ChangeRequestEmailService.placementAppealRejected(changeRequestWithLock)
+        cas1ChangeRequestEmailService.placementAppealRejected(changeRequest)
         cas1ChangeRequestDomainEventService.placementAppealRejected(
-          changeRequestWithLock,
+          changeRequest,
           userService.getUserForRequest(),
         )
       }
       ChangeRequestType.PLACEMENT_EXTENSION -> Unit
       ChangeRequestType.PLANNED_TRANSFER -> {
         cas1ChangeRequestDomainEventService.plannedTransferRequestRejected(
-          changeRequestWithLock,
+          changeRequest,
           userService.getUserForRequest(),
         )
       }
@@ -200,14 +201,14 @@ class Cas1ChangeRequestService(
     return Success(Unit)
   }
 
-  fun getChangeRequest(
+  fun getChangeRequestForPlacementId(
     placementRequestId: UUID,
     changeRequestId: UUID,
   ): CasResult<Cas1ChangeRequestEntity> {
     val changeRequest = findChangeRequest(changeRequestId) ?: return CasResult.NotFound("Change Request", changeRequestId.toString())
 
     if (changeRequest.placementRequest.id != placementRequestId) {
-      return CasResult.GeneralValidationError("The change request does not belong to the specified placement request")
+      return GeneralValidationError("The change request does not belong to the specified placement request")
     }
 
     return Success(changeRequest)
