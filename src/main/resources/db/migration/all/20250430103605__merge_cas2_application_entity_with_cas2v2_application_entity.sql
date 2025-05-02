@@ -7,31 +7,44 @@ ALTER TABLE cas_2_applications
     ADD application_origin TEXT DEFAULT 'homeDetentionCurfew' NOT NULL,
     ADD bail_hearing_date TIMESTAMP WITH TIME ZONE;
 
--- Recreate the views
+-- Adding the most recent assignment data from the cas_2_application_assignments view
 CREATE OR REPLACE VIEW cas_2_application_summary AS
 SELECT a.id,
        a.crn,
        a.noms_number,
-       CAST(a.created_by_user_id AS TEXT),
+       a.created_by_user_id::text AS created_by_user_id,
        nu.name,
        a.created_at,
        a.submitted_at,
        a.hdc_eligibility_date,
        asu.label,
-       CAST(asu.status_id AS TEXT),
+       asu.status_id::text        AS status_id,
        a.referring_prison_code,
        a.conditional_release_date,
-       asu.created_at AS status_created_at,
-       a.abandoned_at,
+       a.bail_hearing_date,
        a.application_origin,
-       a.bail_hearing_date
+       asu.created_at             AS status_created_at,
+       a.abandoned_at,
+       aa.allocated_pom_user_id,
+       nu2.name as allocated_pom_name,
+       aa.created_at  as assignment_date,
+       aa.prison_code as current_prison_code
 FROM cas_2_applications a
-         LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
-                    FROM cas_2_status_updates su
-                    ORDER BY su.application_id, su.created_at DESC) as asu
-                   ON a.id = asu.application_id
-         JOIN nomis_users nu ON nu.id = a.created_by_user_id;
+         LEFT JOIN (SELECT DISTINCT ON (aa.application_id) *
+                    FROM cas_2_application_assignments aa
+                    ORDER BY aa.application_id, created_at DESC) aa ON a.id = aa.application_id
 
+         LEFT JOIN (SELECT DISTINCT ON (su.application_id) su.application_id,
+                                                           su.label,
+                                                           su.status_id,
+                                                           su.created_at
+                    FROM cas_2_status_updates su
+                    ORDER BY su.application_id, su.created_at DESC) asu ON a.id = asu.application_id
+         JOIN nomis_users nu ON nu.id = a.created_by_user_id
+         LEFT JOIN nomis_users nu2 ON nu2.id = aa.allocated_pom_user_id;
+
+
+-- Adding the most recent assignment data from the cas_2_application_live_assignments view
 CREATE OR REPLACE VIEW cas_2_application_live_summary AS
 SELECT a.id,
        a.crn,
@@ -45,18 +58,20 @@ SELECT a.id,
        a.status_id,
        a.referring_prison_code,
        a.abandoned_at,
-       a.application_origin,
-       a.bail_hearing_date
+       a.allocated_pom_user_id,
+       a.allocated_pom_name,
+       a.assignment_date,
+       a.current_prison_code,
+       a.bail_hearing_date,
+       a.application_origin
 FROM cas_2_application_summary a
-WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
-    AND a.abandoned_at IS NULL
-    AND a.status_id IS NULL
-   OR (a.status_id = '004e2419-9614-4c1e-a207-a8418009f23d' AND
-       a.status_created_at > (current_date - INTERVAL '32 DAY')) -- Referral withdrawn
-   OR (a.status_id = 'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9' AND
-       a.status_created_at > (current_date - INTERVAL '32 DAY')) -- Referral cancelled
-   OR (a.status_id = '89458555-3219-44a2-9584-c4f715d6b565' AND
-       a.status_created_at > (current_date - INTERVAL '32 DAY')) -- Awaiting arrival
-   OR (a.status_id NOT IN ('004e2419-9614-4c1e-a207-a8418009f23d',
-                           'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9',
-                           '89458555-3219-44a2-9584-c4f715d6b565'));
+WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= CURRENT_DATE) AND a.abandoned_at IS NULL AND
+      a.status_id IS NULL
+   OR a.status_id = '004e2419-9614-4c1e-a207-a8418009f23d'::text AND
+      a.status_created_at > (CURRENT_DATE - '32 days'::interval)
+   OR a.status_id = 'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9'::text AND
+      a.status_created_at > (CURRENT_DATE - '32 days'::interval)
+   OR a.status_id = '89458555-3219-44a2-9584-c4f715d6b565'::text AND
+      a.status_created_at > (CURRENT_DATE - '32 days'::interval)
+   OR (a.status_id <> ALL
+       (ARRAY ['004e2419-9614-4c1e-a207-a8418009f23d'::text, 'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9'::text, '89458555-3219-44a2-9584-c4f715d6b565'::text]))
