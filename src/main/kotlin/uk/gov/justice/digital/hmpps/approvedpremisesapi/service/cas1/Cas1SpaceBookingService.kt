@@ -627,7 +627,7 @@ class Cas1SpaceBookingService(
   }
 
   @Transactional
-  @Suppress("ReturnCount")
+  @Suppress("ReturnCount", "MagicNumber")
   fun createEmergencyTransfer(
     premisesId: UUID,
     bookingId: UUID,
@@ -640,8 +640,8 @@ class Cas1SpaceBookingService(
     val arrivalDate = requirements.arrivalDate
     val departureDate = requirements.departureDate
 
-    if (arrivalDate != LocalDate.now()) {
-      return GeneralValidationError("The provided arrival date must be today's date")
+    if (arrivalDate.isAfter(LocalDate.now()) || arrivalDate.isBefore(LocalDate.now().minusDays(7))) {
+      return GeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
     if (arrivalDate >= departureDate) {

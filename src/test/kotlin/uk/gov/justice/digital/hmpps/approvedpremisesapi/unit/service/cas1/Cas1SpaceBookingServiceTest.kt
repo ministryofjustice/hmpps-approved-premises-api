@@ -2698,7 +2698,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `should return validation error if arrivalDate is not today's date`() {
+    fun `should return validation error if arrivalDate is in the future`() {
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
@@ -2711,13 +2711,36 @@ class Cas1SpaceBookingServiceTest {
         user,
         Cas1NewEmergencyTransfer(
           destinationPremisesId = DESTINATION_PREMISES_ID,
-          arrivalDate = LocalDate.now().minusDays(1),
+          arrivalDate = LocalDate.now().plusDays(1),
           departureDate = LocalDate.now().plusMonths(2),
         ),
       )
 
       assertThatCasResult(result)
-        .isGeneralValidationError("The provided arrival date must be today's date")
+        .isGeneralValidationError("The provided arrival date must be today, or within the last 7 days")
+    }
+
+    @Test
+    fun `should return validation error if arrivalDate is more than 7 days ago`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.createEmergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now().minusDays(8),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isGeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
     @Test
@@ -2903,8 +2926,9 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
     }
 
-    @Test
-    fun `should successfully create an emergency booking and update the existing booking`() {
+    @ParameterizedTest
+    @CsvSource("0", "1", "2", "3", "4", "5", "6", "7")
+    fun `create an emergency booking and update the existing booking if arrival date within last 7 days`(daysAgo: Long) {
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
@@ -2923,14 +2947,17 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
+      val transferDate = LocalDate.now().minusDays(daysAgo)
+      val departureDate = LocalDate.now().plusMonths(2)
+
       val result = service.createEmergencyTransfer(
         PREMISES_ID,
         existingSpaceBooking.id,
         user,
         Cas1NewEmergencyTransfer(
           destinationPremisesId = DESTINATION_PREMISES_ID,
-          arrivalDate = LocalDate.now(),
-          departureDate = LocalDate.now().plusMonths(2),
+          arrivalDate = transferDate,
+          departureDate = departureDate,
         ),
       )
 
@@ -2944,12 +2971,12 @@ class Cas1SpaceBookingServiceTest {
       existingSpaceBooking = capturedBookings.last()
 
       assertThat(existingSpaceBooking.transferredTo).isEqualTo(emergencyBooking)
-      assertThat(existingSpaceBooking.expectedDepartureDate).isEqualTo(emergencyBooking.expectedArrivalDate)
-      assertThat(existingSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyBooking.expectedArrivalDate)
+      assertThat(existingSpaceBooking.expectedDepartureDate).isEqualTo(transferDate)
+      assertThat(existingSpaceBooking.canonicalDepartureDate).isEqualTo(transferDate)
 
       assertThat(emergencyBooking.premises.id).isEqualTo(DESTINATION_PREMISES_ID)
-      assertThat(emergencyBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
-      assertThat(emergencyBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(2))
+      assertThat(emergencyBooking.expectedArrivalDate).isEqualTo(transferDate)
+      assertThat(emergencyBooking.expectedDepartureDate).isEqualTo(departureDate)
       assertThat(emergencyBooking.transferType).isEqualTo(TransferType.EMERGENCY)
 
       verify {
@@ -3217,7 +3244,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `should successfully create an transferred booking and update the existing booking`() {
+    fun `successfully create an transferred booking and update the existing booking`() {
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
