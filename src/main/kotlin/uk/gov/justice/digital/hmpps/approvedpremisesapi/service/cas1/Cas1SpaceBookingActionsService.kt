@@ -25,14 +25,16 @@ class Cas1SpaceBookingActionsService(
 
   private fun appealCreate(spaceBooking: Cas1SpaceBookingEntity): ActionOutcome {
     val requiredPermission = UserPermission.CAS1_PLACEMENT_APPEAL_CREATE
+    fun unavailable(reason: String) = Unavailable(APPEAL_CREATE, reason)
+
     return if (!userAccessService.currentUserHasPermission(requiredPermission)) {
-      Unavailable(APPEAL_CREATE, "User must have permission '$requiredPermission'")
+      unavailable("User must have permission '$requiredPermission'")
     } else if (spaceBooking.hasArrival()) {
-      Unavailable(APPEAL_CREATE, "Space booking has been marked as arrived")
+      unavailable("Space booking has been marked as arrived")
     } else if (spaceBooking.hasNonArrival()) {
-      Unavailable(APPEAL_CREATE, "Space booking has been marked as non arrived")
+      unavailable("Space booking has been marked as non arrived")
     } else if (spaceBooking.isCancelled()) {
-      Unavailable(APPEAL_CREATE, "Space booking has been cancelled")
+      unavailable("Space booking has been cancelled")
     } else {
       Available(APPEAL_CREATE)
     }
@@ -40,16 +42,18 @@ class Cas1SpaceBookingActionsService(
 
   private fun transferCreate(spaceBooking: Cas1SpaceBookingEntity): ActionOutcome {
     val requiredPermission = UserPermission.CAS1_TRANSFER_CREATE
+    fun unavailable(reason: String) = Unavailable(TRANSFER_CREATE, reason)
+
     return if (!userAccessService.currentUserHasPermission(requiredPermission)) {
-      Unavailable(TRANSFER_CREATE, "User must have permission '$requiredPermission'")
+      unavailable("User must have permission '$requiredPermission'")
     } else if (!spaceBooking.hasArrival()) {
-      Unavailable(TRANSFER_CREATE, "Space booking has not been marked as arrived")
+      unavailable("Space booking has not been marked as arrived")
     } else if (spaceBooking.hasNonArrival()) {
-      Unavailable(TRANSFER_CREATE, "Space booking has been marked as non arrived")
+      unavailable("Space booking has been marked as non arrived")
     } else if (spaceBooking.hasDeparted()) {
-      Unavailable(TRANSFER_CREATE, "Space booking has been marked as departed")
+      unavailable("Space booking has been marked as departed")
     } else if (spaceBooking.isCancelled()) {
-      Unavailable(TRANSFER_CREATE, "Space booking has been cancelled")
+      unavailable("Space booking has been cancelled")
     } else {
       Available(TRANSFER_CREATE)
     }
