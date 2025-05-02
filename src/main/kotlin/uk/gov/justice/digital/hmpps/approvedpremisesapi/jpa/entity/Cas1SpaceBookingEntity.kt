@@ -495,14 +495,7 @@ data class Cas1SpaceBookingEntity(
     !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
-  fun hasBeenTransferred() = transferredTo != null
   fun hasNonCancelledTransfer() = transferredTo?.isNotCancelled() ?: false
-  fun isEligibleForEmergencyTransfer(): Boolean = !(
-    this.hasDeparted() ||
-      this.hasBeenTransferred() ||
-      this.isCancelled() ||
-      this.hasNonArrival()
-    )
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

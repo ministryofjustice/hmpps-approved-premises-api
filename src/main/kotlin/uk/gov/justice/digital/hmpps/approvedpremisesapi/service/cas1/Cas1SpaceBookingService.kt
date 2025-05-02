@@ -76,6 +76,7 @@ class Cas1SpaceBookingService(
   private val userService: UserService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val characteristicService: CharacteristicService,
+  private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
   private val clock: Clock,
 ) {
   @Transactional
@@ -656,9 +657,10 @@ class Cas1SpaceBookingService(
       return ConflictError(existingCas1SpaceBooking.premises.id, "The booking is not associated with the specified premises $premisesId")
     }
 
-    if (!existingCas1SpaceBooking.isEligibleForEmergencyTransfer()) {
-      return ConflictError(existingCas1SpaceBooking.id, "The booking is not eligible for an emergency transfer")
-    }
+    cas1SpaceBookingActionsService.determineActions(existingCas1SpaceBooking)
+      .unavailableReason(SpaceBookingAction.TRANSFER_CREATE)?.let {
+        return GeneralValidationError(it)
+      }
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
