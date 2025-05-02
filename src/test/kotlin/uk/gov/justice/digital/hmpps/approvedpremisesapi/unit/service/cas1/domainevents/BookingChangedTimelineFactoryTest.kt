@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
@@ -50,7 +49,15 @@ class BookingChangedTimelineFactoryTest {
 
     assertThat(result.description)
       .isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
-    assertThat(result.payload).isNull()
+
+    val contentPayload = result.payload!!
+    assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
+    assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
+    assertThat(contentPayload.previousExpectedArrival).isNull()
+    assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
+    assertThat(contentPayload.previousExpectedDeparture).isNull()
+    assertThat(contentPayload.characteristics).isNull()
+    assertThat(contentPayload.previousCharacteristics).isNull()
   }
 
   @Test
@@ -81,7 +88,7 @@ class BookingChangedTimelineFactoryTest {
     assertThat(result.description)
       .isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025")
 
-    val contentPayload = result.payload as Cas1BookingChangedContentPayload
+    val contentPayload = result.payload!!
     assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
     assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
     assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
@@ -119,7 +126,7 @@ class BookingChangedTimelineFactoryTest {
     assertThat(result.description)
       .isEqualTo("A placement at The Premises Name had its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
 
-    val contentPayload = result.payload as Cas1BookingChangedContentPayload
+    val contentPayload = result.payload!!
     assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
     assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
     assertThat(contentPayload.previousExpectedArrival).isNull()
@@ -161,7 +168,7 @@ class BookingChangedTimelineFactoryTest {
           "its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025",
       )
 
-    val contentPayload = result.payload as Cas1BookingChangedContentPayload
+    val contentPayload = result.payload!!
     assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
     assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
     assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)

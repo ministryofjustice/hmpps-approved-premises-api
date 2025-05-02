@@ -31,3 +31,8 @@ fun EventBookingSummary.toTimelinePayloadSummary() = Cas1TimelineEventPayloadBoo
   arrivalDate = this.arrivalDate,
   departureDate = this.departureDate,
 )
+
+fun Premises.toNamedId() = NamedId(
+  id = this.id,
+  name = this.name,
+)
