@@ -136,10 +136,8 @@ class Cas1SpaceBookingService(
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
 
     cas1BookingDomainEventService.spaceBookingMade(
-      application = application,
       booking = spaceBooking,
       user = createdBy,
-      placementRequest = placementRequest,
     )
 
     cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
