@@ -56,6 +56,10 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
     this.type = { type }
   }
 
+  fun withRequestJson(requestJson: String) = apply {
+    this.requestJson = { requestJson }
+  }
+
   fun withDecision(decision: ChangeRequestDecision?) = apply {
     this.decision = { decision }
   }

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
@@ -42,8 +43,10 @@ class Cas1ChangeRequestService(
   private val cas1ChangeRequestDomainEventService: Cas1ChangeRequestDomainEventService,
   private val userService: UserService,
   private val spaceBookingActionsService: Cas1SpaceBookingActionsService,
+  private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
 ) {
 
+  @SuppressWarnings("CyclomaticComplexMethod", "ComplexCondition")
   @Transactional
   fun createChangeRequest(placementRequestId: UUID, requirements: Cas1NewChangeRequest): CasResult<Unit> = validatedCasResult {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
@@ -56,6 +59,21 @@ class Cas1ChangeRequestService(
       ?: return CasResult.NotFound("Space Booking", requirements.spaceBookingId.toString())
 
     if (!placementRequest.spaceBookings.contains(spaceBooking)) return CasResult.NotFound("Placement Request with Space Booking", spaceBooking.id.toString())
+
+    lockablePlacementRequestRepository.acquirePessimisticLock(placementRequestId)
+
+    val type = ChangeRequestType.valueOf(requirements.type.name)
+    val requestJson = requirements.requestJson.toString()
+
+    if (cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest).any {
+        it.type == type &&
+          it.requestReason == requestReason &&
+          it.requestJson == requestJson &&
+          it.spaceBooking == spaceBooking
+      }
+    ) {
+      return Success(Unit)
+    }
 
     val requiredAction = when (requirements.type) {
       Cas1ChangeRequestType.PLACEMENT_APPEAL -> SpaceBookingAction.APPEAL_CREATE
@@ -74,7 +92,7 @@ class Cas1ChangeRequestService(
         id = UUID.randomUUID(),
         placementRequest = placementRequest,
         spaceBooking = spaceBooking,
-        type = ChangeRequestType.valueOf(requirements.type.name),
+        type = type,
         requestJson = requirements.requestJson.toString(),
         requestReason = requestReason,
         decisionJson = null,
@@ -88,16 +106,16 @@ class Cas1ChangeRequestService(
       ),
     )
 
-    when (requirements.type) {
-      Cas1ChangeRequestType.PLACEMENT_APPEAL -> {
+    when (type) {
+      ChangeRequestType.PLACEMENT_APPEAL -> {
         cas1ChangeRequestEmailService.placementAppealCreated(createdChangeRequest)
         cas1ChangeRequestDomainEventService.placementAppealCreated(
           changeRequest = createdChangeRequest,
           requestingUser = userService.getUserForRequest(),
         )
       }
-      Cas1ChangeRequestType.PLACEMENT_EXTENSION -> error("to be implemented")
-      Cas1ChangeRequestType.PLANNED_TRANSFER -> {
+      ChangeRequestType.PLACEMENT_EXTENSION -> error("to be implemented")
+      ChangeRequestType.PLANNED_TRANSFER -> {
         cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(
           changeRequest = createdChangeRequest,
           requestingUser = userService.getUserForRequest(),

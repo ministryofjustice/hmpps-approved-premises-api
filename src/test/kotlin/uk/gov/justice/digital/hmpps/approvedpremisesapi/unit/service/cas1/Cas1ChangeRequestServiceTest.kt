@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1NewChangeRequestFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
@@ -77,6 +79,9 @@ class Cas1ChangeRequestServiceTest {
 
   @MockK
   lateinit var cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService
+
+  @MockK
+  lateinit var lockablePlacementRequestRepository: LockablePlacementRequestRepository
 
   @InjectMockKs
   lateinit var service: Cas1ChangeRequestService
@@ -165,6 +170,8 @@ class Cas1ChangeRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
+      every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
       every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.APPEAL_CREATE)
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
@@ -215,6 +222,8 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
       every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
+      every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
       every { cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(any(), any()) } returns Unit
@@ -233,6 +242,45 @@ class Cas1ChangeRequestServiceTest {
           requestingUser = any(),
         )
       }
+    }
+
+    @Test
+    fun `returns success if identical open change request already exists`() {
+      val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withSpaceBookings(mutableListOf(cas1SpaceBooking))
+        .produce()
+
+      val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
+
+      val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
+        .withType(Cas1ChangeRequestType.PLANNED_TRANSFER)
+        .withReasonId(cas1ChangeRequestReason.id)
+        .withSpaceBookingId(cas1SpaceBooking.id)
+        .withRequestJson("{ test: 2 }")
+        .produce()
+
+      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
+      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+      every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
+      every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
+      every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns listOf(
+        Cas1ChangeRequestEntityFactory()
+          .withType(ChangeRequestType.PLANNED_TRANSFER)
+          .withChangeRequestReason(cas1ChangeRequestReason)
+          .withSpaceBooking(cas1SpaceBooking)
+          .withRequestJson("{ test: 2 }")
+          .produce(),
+      )
+
+      val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
+
+      assertThatCasResult(result).isSuccess()
     }
 
     @Test
@@ -255,6 +303,9 @@ class Cas1ChangeRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
+      every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
+      every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
       every {
         cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking)
       } returns ActionsResult.forUnavailableAction(SpaceBookingAction.APPEAL_CREATE, "appeal create not allowed!")
@@ -285,6 +336,9 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
       every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forUnavailableAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST, "transfer not allowed")
+      every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
+      every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returns null
 
