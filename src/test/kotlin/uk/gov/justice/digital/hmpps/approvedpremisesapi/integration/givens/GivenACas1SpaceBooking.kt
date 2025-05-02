@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -27,6 +29,8 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   nonArrivalConfirmedAt: Instant? = null,
   cancellationOccurredAt: LocalDate? = null,
   actualArrivalDate: LocalDate? = null,
+  caseManager: Cas1ApplicationUserDetailsEntity? = null,
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -35,6 +39,8 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
       assessmentAllocatedTo = user,
       createdByUser = user,
       application = application,
+      caseManager = caseManager,
+      cruManagementArea = cruManagementArea,
     ).first
   } else {
     null
