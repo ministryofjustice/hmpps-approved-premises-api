@@ -54,6 +54,8 @@ class Cas1SpaceBookingActionsService(
       unavailable("Space booking has been marked as departed")
     } else if (spaceBooking.isCancelled()) {
       unavailable("Space booking has been cancelled")
+    } else if (spaceBooking.hasNonCancelledTransfer()) {
+      unavailable("Space booking has already been transferred")
     } else {
       Available(TRANSFER_CREATE)
     }

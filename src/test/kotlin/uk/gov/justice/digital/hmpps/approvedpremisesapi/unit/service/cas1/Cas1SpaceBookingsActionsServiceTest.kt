@@ -107,6 +107,15 @@ class Cas1SpaceBookingsActionsServiceTest {
     }
 
     @Test
+    fun `success if has existing cancelled transfer`() {
+      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.TRANSFER_CREATE)
+    }
+
+    @Test
     fun `unavailable if user does not have correct permission`() {
       userDoesntHavePermission(UserPermission.CAS1_TRANSFER_CREATE)
 
@@ -158,6 +167,19 @@ class Cas1SpaceBookingsActionsServiceTest {
         .assertUnavailable(
           action = SpaceBookingAction.TRANSFER_CREATE,
           message = "Space booking has been cancelled",
+        )
+    }
+
+    @Test
+    fun `unavailable if has a non cancelled transfer already`() {
+      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .produce()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.TRANSFER_CREATE,
+          message = "Space booking has already been transferred",
         )
     }
   }
