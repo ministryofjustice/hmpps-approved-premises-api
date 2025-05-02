@@ -170,7 +170,7 @@ class Cas1SpaceBookingController(
   override fun getSpaceBookingByPremiseAndId(premisesId: UUID, bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
     userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_VIEW)
 
-    val booking = extractEntityFromCasResult(spaceBookingService.getBooking(premisesId, bookingId))
+    val booking = extractEntityFromCasResult(spaceBookingService.getBookingForPremisesAndId(premisesId, bookingId))
 
     return ResponseEntity
       .ok()
@@ -324,7 +324,7 @@ class Cas1SpaceBookingController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW)
 
     val spaceBooking = extractEntityFromCasResult(
-      cas1SpaceBookingService.getBooking(premisesId, bookingId),
+      cas1SpaceBookingService.getBookingForPremisesAndId(premisesId, bookingId),
     )
 
     return ResponseEntity
@@ -346,7 +346,7 @@ class Cas1SpaceBookingController(
   override fun appeal(premisesId: UUID, bookingId: UUID, body: Cas1ApprovedPlacementAppeal): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS)
     val spaceBooking = extractEntityFromCasResult(
-      cas1SpaceBookingService.getBooking(premisesId, bookingId),
+      cas1SpaceBookingService.getBookingForPremisesAndId(premisesId, bookingId),
     )
 
     ensureEntityFromCasResultIsSuccess(
@@ -401,7 +401,7 @@ class Cas1SpaceBookingController(
     val user = userService.getUserForRequest()
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.emergencyTransfer(premisesId, bookingId, user, cas1NewEmergencyTransfer),
+      cas1SpaceBookingService.createEmergencyTransfer(premisesId, bookingId, user, cas1NewEmergencyTransfer),
     )
 
     return ResponseEntity(HttpStatus.OK)
@@ -417,7 +417,7 @@ class Cas1SpaceBookingController(
     val user = userService.getUserForRequest()
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.plannedTransfer(bookingId, user, cas1NewPlannedTransfer),
+      cas1SpaceBookingService.createPlannedTransfer(bookingId, user, cas1NewPlannedTransfer),
     )
 
     return ResponseEntity(HttpStatus.OK)
