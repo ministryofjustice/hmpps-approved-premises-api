@@ -487,6 +487,7 @@ data class Cas1SpaceBookingEntity(
   @Deprecated("The definition of active is ambiguous, use !isCancelled() instead")
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
+  fun isNotCancelled() = !isCancelled()
   fun hasDeparted() = actualDepartureDate != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDate != null
@@ -494,13 +495,7 @@ data class Cas1SpaceBookingEntity(
     !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
-  fun hasBeenTransferred() = transferredTo != null
-  fun isEligibleForEmergencyTransfer(): Boolean = !(
-    this.hasDeparted() ||
-      this.hasBeenTransferred() ||
-      this.isCancelled() ||
-      this.hasNonArrival()
-    )
+  fun hasNonCancelledTransfer() = transferredTo?.isNotCancelled() ?: false
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

@@ -64,18 +64,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionsResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
@@ -109,6 +112,7 @@ class Cas1SpaceBookingServiceTest {
   private val userService = mockk<UserService>()
   private val cas1ChangeRequestService = mockk<Cas1ChangeRequestService>()
   private val characteristicService = mockk<CharacteristicService>()
+  private val cas1SpaceBookingActionsService = mockk<Cas1SpaceBookingActionsService>()
 
   private val service = Cas1SpaceBookingService(
     cas1PremisesService,
@@ -128,6 +132,7 @@ class Cas1SpaceBookingServiceTest {
     userService,
     cas1ChangeRequestService,
     characteristicService,
+    cas1SpaceBookingActionsService,
     Clock.systemDefaultZone(),
   )
 
@@ -2693,8 +2698,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result)
-        .isNotFound("Premises", destinationPremisesId)
+      assertThatCasResult(result).isNotFound("Premises", destinationPremisesId)
     }
 
     @Test
@@ -2739,8 +2743,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result)
-        .isGeneralValidationError("The provided arrival date must be today, or within the last 7 days")
+      assertThatCasResult(result).isGeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
     @Test
@@ -2762,8 +2765,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result)
-        .isGeneralValidationError("The provided departure date must be after the arrival date")
+      assertThatCasResult(result).isGeneralValidationError("The provided departure date must be after the arrival date")
     }
 
     @Test
@@ -2787,8 +2789,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result)
-        .isNotFound("Space Booking", bookingId)
+      assertThatCasResult(result).isNotFound("Space Booking", bookingId)
     }
 
     @Test
@@ -2811,21 +2812,22 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.premises.id)
-      assertThat(result.message).contains("The booking is not associated with the specified premises $anotherPremisesId")
+      assertThatCasResult(result).isConflictError()
+        .hasEntityId(existingSpaceBooking.premises.id)
+        .hasMessage("The booking is not associated with the specified premises $anotherPremisesId")
     }
 
     @Test
-    fun `should return a conflict error when attempting an emergency transfer for a person who has already departed the premises`() {
+    fun `should return a general validation error when action not allowed for transfer`() {
       existingSpaceBooking.actualDepartureDate = LocalDate.now()
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+      } returns ActionsResult.forUnavailableAction(SpaceBookingAction.TRANSFER_CREATE, "nope")
 
       val result = service.createEmergencyTransfer(
         PREMISES_ID,
@@ -2838,92 +2840,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
-      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
-    }
-
-    @Test
-    fun `should return a conflict error when attempting an emergency transfer for a booking that has already transferred`() {
-      existingSpaceBooking.transferredTo = Cas1SpaceBookingEntityFactory().produce()
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
-      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
-        existingSpaceBooking.id,
-      )
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-
-      val result = service.createEmergencyTransfer(
-        PREMISES_ID,
-        existingSpaceBooking.id,
-        user,
-        Cas1NewEmergencyTransfer(
-          destinationPremisesId = DESTINATION_PREMISES_ID,
-          arrivalDate = LocalDate.now(),
-          departureDate = LocalDate.now().plusMonths(2),
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
-      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
-    }
-
-    @Test
-    fun `should return a conflict error when attempting an emergency transfer for a booking that has already been canceled`() {
-      existingSpaceBooking.cancellationOccurredAt = LocalDate.now()
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
-      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
-        existingSpaceBooking.id,
-      )
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-
-      val result = service.createEmergencyTransfer(
-        PREMISES_ID,
-        existingSpaceBooking.id,
-        user,
-        Cas1NewEmergencyTransfer(
-          destinationPremisesId = DESTINATION_PREMISES_ID,
-          arrivalDate = LocalDate.now(),
-          departureDate = LocalDate.now().plusMonths(2),
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
-      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
-    }
-
-    @Test
-    fun `should return a conflict error when attempting an emergency transfer for a booking that has a confirmed non-arrival`() {
-      existingSpaceBooking.nonArrivalConfirmedAt = Instant.now()
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
-      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
-        existingSpaceBooking.id,
-      )
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-
-      val result = service.createEmergencyTransfer(
-        PREMISES_ID,
-        existingSpaceBooking.id,
-        user,
-        Cas1NewEmergencyTransfer(
-          destinationPremisesId = DESTINATION_PREMISES_ID,
-          arrivalDate = LocalDate.now(),
-          departureDate = LocalDate.now().plusMonths(2),
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
-      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
+      assertThatCasResult(result).isGeneralValidationError("nope")
     }
 
     @ParameterizedTest
@@ -2936,6 +2853,10 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
+
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+      } returns ActionsResult.forAllowedAction(SpaceBookingAction.TRANSFER_CREATE)
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
@@ -2961,7 +2882,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       verify(exactly = 2) { spaceBookingRepository.saveAndFlush(any()) }
 

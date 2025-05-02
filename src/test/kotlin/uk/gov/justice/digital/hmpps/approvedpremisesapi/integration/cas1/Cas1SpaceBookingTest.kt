@@ -2658,6 +2658,7 @@ class Cas1SpaceBookingTest {
         withApplication(placementRequest.application)
         withCreatedBy(user)
         withExpectedArrivalDate(LocalDate.parse("2025-02-05"))
+        withActualArrivalDate(LocalDate.parse("2025-02-05"))
         withExpectedDepartureDate(LocalDate.parse("2025-06-29"))
       }
     }
