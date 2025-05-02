@@ -121,9 +121,7 @@ class Cas1SpaceBookingService(
       return placementRequestId hasConflictError "A Space Booking already exists for this placement request"
     }
 
-    val application = placementRequest.application
-
-    val spaceBooking = createSpaceBookingEntity(
+    val spaceBooking = createSpaceBooking(
       premises = premises,
       placementRequest = placementRequest,
       expectedArrivalDate = arrivalDate,
@@ -132,15 +130,6 @@ class Cas1SpaceBookingService(
       characteristics = characteristics,
       transferType = null,
     )
-
-    cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
-
-    cas1BookingDomainEventService.spaceBookingMade(
-      booking = spaceBooking,
-      user = createdBy,
-    )
-
-    cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
     success(spaceBooking)
   }
@@ -670,7 +659,7 @@ class Cas1SpaceBookingService(
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val emergencyTransferSpaceBooking = createSpaceBookingEntity(
+    val emergencyTransferSpaceBooking = createSpaceBooking(
       premises = destinationPremises,
       placementRequest = placementRequest,
       expectedArrivalDate = cas1NewEmergencyTransfer.arrivalDate,
@@ -678,15 +667,17 @@ class Cas1SpaceBookingService(
       createdBy = user,
       characteristics = existingCas1SpaceBooking.criteria,
       transferType = TransferType.EMERGENCY,
+      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+        cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
+          user,
+          existingCas1SpaceBooking,
+          createdSpaceBooking,
+        )
+      },
     )
 
     updateTransferredSpaceBooking(existingCas1SpaceBooking, emergencyTransferSpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
 
-    cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
-      user,
-      existingCas1SpaceBooking,
-      emergencyTransferSpaceBooking,
-    )
     return Success(emergencyTransferSpaceBooking)
   }
 
@@ -720,7 +711,7 @@ class Cas1SpaceBookingService(
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val plannedTransferSpaceBooking = createSpaceBookingEntity(
+    val plannedTransferSpaceBooking = createSpaceBooking(
       premises = destinationPremises,
       placementRequest = placementRequest,
       expectedArrivalDate = cas1NewPlannedTransfer.arrivalDate,
@@ -728,16 +719,17 @@ class Cas1SpaceBookingService(
       createdBy = user,
       characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
       transferType = TransferType.PLANNED,
+      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+        cas1ChangeRequestService.approvedPlannedTransfer(
+          changeRequest = changeRequest,
+          user = user,
+          from = existingCas1SpaceBooking,
+          to = createdSpaceBooking,
+        )
+      },
     )
 
     updateTransferredSpaceBooking(existingCas1SpaceBooking, plannedTransferSpaceBooking, cas1NewPlannedTransfer.arrivalDate)
-
-    cas1ChangeRequestService.approvedPlannedTransfer(
-      changeRequest = changeRequest,
-      user = user,
-      from = existingCas1SpaceBooking,
-      to = plannedTransferSpaceBooking,
-    )
 
     return Success(Unit)
   }
@@ -884,7 +876,7 @@ class Cas1SpaceBookingService(
     ServiceName.approvedPremises,
   )
 
-  private fun createSpaceBookingEntity(
+  private fun createSpaceBooking(
     premises: ApprovedPremisesEntity,
     placementRequest: PlacementRequestEntity,
     expectedArrivalDate: LocalDate,
@@ -892,6 +884,7 @@ class Cas1SpaceBookingService(
     createdBy: UserEntity,
     characteristics: List<CharacteristicEntity>,
     transferType: TransferType?,
+    beforeBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
   ): Cas1SpaceBookingEntity {
     val application = placementRequest.application
     val spaceBooking = cas1SpaceBookingRepository.saveAndFlush(
@@ -933,6 +926,14 @@ class Cas1SpaceBookingService(
         deliusId = null,
       ),
     )
+
+    cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
+
+    beforeBookingMadeDomainEvent(spaceBooking)
+
+    cas1BookingDomainEventService.spaceBookingMade(spaceBooking, createdBy)
+    cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
+
     return spaceBooking
   }
 

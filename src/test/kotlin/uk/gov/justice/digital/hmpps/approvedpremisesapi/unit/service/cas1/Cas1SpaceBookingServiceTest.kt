@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
-import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
@@ -93,7 +91,6 @@ import java.time.ZoneOffset
 import java.util.UUID
 import java.util.stream.Stream
 
-@ExtendWith(MockKExtension::class)
 class Cas1SpaceBookingServiceTest {
   private val cas1PremisesService = mockk<Cas1PremisesService>()
   private val placementRequestService = mockk<PlacementRequestService>()
@@ -346,14 +343,7 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-
-      every {
-        cas1BookingDomainEventService.spaceBookingMade(
-          any(),
-          user,
-        )
-      } returns Unit
-
+      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
@@ -398,6 +388,8 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(persistedBooking, user) }
+      verify { cas1BookingEmailService.spaceBookingMade(persistedBooking, application) }
     }
 
     @Test
@@ -443,7 +435,6 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
-
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
 
       every {
@@ -2923,7 +2914,12 @@ class Cas1SpaceBookingServiceTest {
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
+      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
+
+      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
@@ -2963,6 +2959,12 @@ class Cas1SpaceBookingServiceTest {
           to = emergencyBooking,
         )
       }
+
+      val placementRequest = existingSpaceBooking.placementRequest!!
+      val application = placementRequest.application
+      verify { cas1ApplicationStatusService.spaceBookingMade(emergencyBooking) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(emergencyBooking, user) }
+      verify { cas1BookingEmailService.spaceBookingMade(emergencyBooking, application) }
     }
   }
 
@@ -3226,6 +3228,10 @@ class Cas1SpaceBookingServiceTest {
 
       every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
 
+      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
@@ -3272,6 +3278,12 @@ class Cas1SpaceBookingServiceTest {
           to = transferredBooking,
         )
       }
+
+      val placementRequest = existingSpaceBooking.placementRequest!!
+      val application = placementRequest.application
+      verify { cas1ApplicationStatusService.spaceBookingMade(transferredBooking) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(transferredBooking, user) }
+      verify { cas1BookingEmailService.spaceBookingMade(transferredBooking, application) }
     }
   }
 
