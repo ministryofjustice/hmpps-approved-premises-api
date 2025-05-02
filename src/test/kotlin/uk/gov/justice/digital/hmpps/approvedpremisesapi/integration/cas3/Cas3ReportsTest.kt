@@ -20,7 +20,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
@@ -71,8 +70,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Transiti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -88,12 +85,6 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas3ReportsTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var bookingTransformer: BookingTransformer
-
-  @Autowired
-  lateinit var cas3ReportService: Cas3ReportService
-
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report for all regions returns 403 Forbidden if user does not have all regions access`(reportType: Cas3ReportType) {
