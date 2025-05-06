@@ -9,6 +9,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -17,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
@@ -27,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
+import java.util.stream.Stream
 
 @ExtendWith(MockKExtension::class)
 class Cas2LocationChangedServiceTest {
@@ -140,129 +145,44 @@ class Cas2LocationChangedServiceTest {
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
   }
 
-  @Test
-  fun `mostRecentLocationAssignment returns the most recent assignment that has null allocatedPomUser`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = "NEW"
+  @ParameterizedTest
+  @MethodSource(
+    "getIsLocationChangedApplicationAssignmentRequiredArguments",
+  )
+  @SuppressWarnings("LongParameterList")
+  fun isLocationChangedApplicationAssignmentRequired(
+    oldPrisonCode: String,
+    newPrisonCode: String,
+    baseUser: NomisUserEntity,
+    optionalUser: NomisUserEntity?,
+    prisoner: Prisoner,
+    expected: Boolean,
+  ) {
+    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(baseUser).produce()
 
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = null)
+    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = baseUser)
+    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = optionalUser)
     application.applicationAssignments.sortByDescending { it.createdAt }
 
-    assertThat(locationChangedService.getMostRecentLocationAssignment(application)!!.prisonCode).isEqualTo(newPrisonCode)
+    assertThat(locationChangedService.isLocationChangedApplicationAssignmentRequired(application, prisoner.prisonId)).isEqualTo(expected)
   }
 
-  @Test
-  fun `mostRecentLocationAssignment returns null if there aren't anny assignments with allocatedPomUser as null`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = "NEW"
+  private companion object {
+    @JvmStatic
+    fun getIsLocationChangedApplicationAssignmentRequiredArguments(): Stream<Arguments> {
+      val user = NomisUserEntityFactory().produce()
+      val oldPrisonCode = "OLD"
+      val newPrisonCode = "NEW"
+      val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "LONDON")
 
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = user)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.getMostRecentLocationAssignment(application)).isNull()
-  }
-
-  @Test
-  fun `isValidLocationChangedAssignment returns true if location is different`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = "NEW"
-
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isValidLocationChangedAssignment(application, prisoner)).isTrue()
-  }
-
-  @Test
-  fun `isValidLocationChangedAssignment returns false if location is the same`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = prisoner.prisonId
-
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isValidLocationChangedAssignment(application, prisoner)).isFalse()
-  }
-
-  @Test
-  fun `isValidLocationChangedAssignment returns false if no previous location events`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = "NEW"
-
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = user)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isValidLocationChangedAssignment(application, prisoner)).isFalse()
-  }
-
-  @Test
-  fun `isFirstValidLocationChangedAssigment returns true if it is the first location event that's different`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = "NEW"
-
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = user)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isFirstValidLocationChangedAssigment(application, prisoner)).isTrue()
-  }
-
-  @Test
-  fun `isFirstValidLocationChangedAssigment returns false if it is the first location event but it's the same location`() {
-    val oldPrisonCode = prisoner.prisonId
-    val newPrisonCode = "NEW"
-
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = user)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isFirstValidLocationChangedAssigment(application, prisoner)).isFalse()
-  }
-
-  @Test
-  fun `isNewPrison returns true if it is the first different location`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = "NEW"
-
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = user)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isNewPrison(application, prisoner)).isTrue()
-  }
-
-  @Test
-  fun `isNewPrison returns true if it is a second different location event`() {
-    val oldPrisonCode = "OLD"
-    val newPrisonCode = "NEW"
-
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(user).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = user)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isNewPrison(application, prisoner)).isTrue()
+      return Stream.of(
+        Arguments.of(oldPrisonCode, newPrisonCode, user, user, prisoner, true),
+        Arguments.of(oldPrisonCode, newPrisonCode, user, null, prisoner, true),
+        Arguments.of(prisoner.prisonId, newPrisonCode, user, user, prisoner, false),
+        Arguments.of(prisoner.prisonId, newPrisonCode, user, null, prisoner, true),
+        Arguments.of(oldPrisonCode, prisoner.prisonId, user, user, prisoner, true),
+        Arguments.of(oldPrisonCode, prisoner.prisonId, user, null, prisoner, false),
+      )
+    }
   }
 }

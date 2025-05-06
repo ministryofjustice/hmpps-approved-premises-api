@@ -4,7 +4,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -21,14 +20,20 @@ class Cas2LocationChangedService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getMostRecentLocationAssignment(application: Cas2ApplicationEntity) = application.applicationAssignments.firstOrNull { it.allocatedPomUser == null }
-  fun isFirstValidLocationChangedAssigment(application: Cas2ApplicationEntity, prisoner: Prisoner) = getMostRecentLocationAssignment(application) == null && prisoner.prisonId != application.referringPrisonCode
-  fun isValidLocationChangedAssignment(application: Cas2ApplicationEntity, prisoner: Prisoner): Boolean {
-    val mostRecentLocationAssignment = getMostRecentLocationAssignment(application)
-    return mostRecentLocationAssignment != null && prisoner.prisonId != mostRecentLocationAssignment.prisonCode
-  }
+  fun isLocationChangedApplicationAssignmentRequired(application: Cas2ApplicationEntity, prisonCode: String): Boolean {
+    println("isLocationChangedApplicationAssignmentRequired")
+    println("new location prisonCode: $prisonCode")
+    println("application.hasLocationChangedAssignment: ${application.hasLocationChangedAssignment}")
+    println("referringPrisonCode: ${application.referringPrisonCode}")
+    val isFirstValidLocationChangedAssigment = !application.hasLocationChangedAssignment && prisonCode != application.referringPrisonCode
+    println("isFirstValidLocationChangedAssigment: $isFirstValidLocationChangedAssigment")
 
-  fun isNewPrison(application: Cas2ApplicationEntity, prisoner: Prisoner) = isFirstValidLocationChangedAssigment(application, prisoner) || isValidLocationChangedAssignment(application, prisoner)
+    val isValidLocationChangedAssignment = application.hasLocationChangedAssignment && prisonCode != application.mostRecentLocationAssignment?.prisonCode
+    println("application.mostRecentLocationAssignment: ${application.mostRecentLocationAssignment}")
+    println("isValidLocationChangedAssignment: $isValidLocationChangedAssignment")
+    println(isFirstValidLocationChangedAssigment || isValidLocationChangedAssignment)
+    return isFirstValidLocationChangedAssigment || isValidLocationChangedAssignment
+  }
 
   @Transactional
   fun process(event: HmppsDomainEvent) {
@@ -47,7 +52,7 @@ class Cas2LocationChangedService(
           is ClientResult.Failure -> throw result.toException()
         }
 
-        if (isNewPrison(application, prisoner)) {
+        if (isLocationChangedApplicationAssignmentRequired(application, prisoner.prisonId)) {
           application.createApplicationAssignment(
             prisonCode = prisoner.prisonId,
             allocatedPomUser = null,
@@ -56,7 +61,7 @@ class Cas2LocationChangedService(
           applicationRepository.save(application)
           log.info("Added application assignment for prisoner: {}", nomsNumber)
 
-          emailService.sendLocationChangedEmails(application = application, prisoner = prisoner)
+          emailService.sendLocationChangedEmails(application, prisoner)
         } else {
           log.info("Prisoner {} prison location not changed, no action required", nomsNumber)
         }
