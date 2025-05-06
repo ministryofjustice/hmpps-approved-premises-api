@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
@@ -69,6 +70,7 @@ class Cas1SpaceBookingController(
   private val cas1TimelineService: Cas1TimelineService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
+  private val cas1BookingManagementService: Cas1BookingManagementService,
 ) : SpaceBookingsCas1Delegate {
 
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
@@ -249,7 +251,7 @@ class Cas1SpaceBookingController(
     }
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.recordArrivalForBooking(
+      cas1BookingManagementService.recordArrivalForBooking(
         premisesId,
         bookingId,
         arrivalDate = arrivalDateAndTime.first,
@@ -284,7 +286,7 @@ class Cas1SpaceBookingController(
     }
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.recordDepartureForBooking(
+      cas1BookingManagementService.recordDepartureForBooking(
         premisesId,
         bookingId,
         DepartureInfo(
@@ -307,7 +309,7 @@ class Cas1SpaceBookingController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER)
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.recordKeyWorkerAssignedForBooking(
+      cas1BookingManagementService.recordKeyWorkerAssignedForBooking(
         premisesId,
         bookingId,
         cas1AssignKeyWorker,
@@ -381,7 +383,7 @@ class Cas1SpaceBookingController(
     val user = userService.getUserForRequest()
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.recordNonArrivalForBooking(
+      cas1BookingManagementService.recordNonArrivalForBooking(
         premisesId,
         bookingId,
         cas1NonArrival,
