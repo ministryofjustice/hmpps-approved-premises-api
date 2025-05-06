@@ -2553,6 +2553,8 @@ class Cas1SpaceBookingTest {
         expectedArrivalDate = LocalDate.now().minusDays(7),
         actualArrivalDate = LocalDate.now().minusDays(7),
         expectedDepartureDate = LocalDate.now().plusDays(7),
+        caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist(),
+        cruManagementArea = cas1CruManagementAreaEntityFactory.produceAndPersist(),
       )
     }
 
@@ -2575,7 +2577,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Update space booking returns OK, and correctly update departure date`() {
+    fun `Update space booking returns OK, correctly updates departure date and sends emails`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
 
       val today = LocalDate.now()
@@ -2596,6 +2598,28 @@ class Cas1SpaceBookingTest {
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
 
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(today)
+
+      emailAsserter.assertEmailsRequestedCount(4)
+      emailAsserter.assertEmailRequested(
+        spaceBooking.application!!.createdByUser.email!!,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
+      )
+      emailAsserter.assertEmailRequested(
+        spaceBooking.application!!.caseManagerUserDetails!!.email!!,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
+      )
+      emailAsserter.assertEmailRequested(
+        spaceBooking.placementRequest!!.application.createdByUser.email!!,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
+      )
+      emailAsserter.assertEmailRequested(
+        spaceBooking.premises.emailAddress!!,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
+      )
+      emailAsserter.assertEmailRequested(
+        spaceBooking.application!!.cruManagementArea!!.emailAddress!!,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
+      )
     }
   }
 

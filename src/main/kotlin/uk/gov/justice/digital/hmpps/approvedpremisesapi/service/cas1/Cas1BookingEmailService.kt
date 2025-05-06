@@ -123,6 +123,13 @@ class Cas1BookingEmailService(
     spaceBooking.toBookingInfo(application),
   )
 
+  fun spaceBookingShortened(
+    spaceBooking: Cas1SpaceBookingEntity,
+    application: ApprovedPremisesApplicationEntity,
+  ) = bookingShortened(
+    spaceBooking.toBookingInfo(application),
+  )
+
   fun bookingAmended(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
@@ -139,6 +146,26 @@ class Cas1BookingEmailService(
       (
         application.interestedPartiesEmailAddresses() +
           setOfNotNull(bookingInfo.premises.emailAddress)
+        ).toSet()
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = interestedParties,
+      templateId = Cas1NotifyTemplates.BOOKING_AMENDED,
+      personalisation = emailPersonalisation,
+      application = application,
+    )
+  }
+
+  private fun bookingShortened(bookingInfo: BookingInfo) {
+    val application = bookingInfo.application
+    val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
+
+    val interestedParties =
+      (
+        application.interestedPartiesEmailAddresses() +
+          setOfNotNull(bookingInfo.premises.emailAddress) +
+          setOfNotNull(application.cruManagementArea?.emailAddress) +
+          setOfNotNull(bookingInfo.placementApplication?.createdByUser?.email)
         ).toSet()
 
     emailNotifier.sendEmails(

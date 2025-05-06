@@ -1520,7 +1520,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `should update departure date when status is hasArrival`() {
+    fun `should update departure date when status is hasArrival and send emails`() {
       val shortenSpaceBookingDetails = ShortenSpaceBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
@@ -1534,6 +1534,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1BookingEmailService.spaceBookingShortened(any(), any()) } returns Unit
 
       val result = service.shortenSpaceBooking(shortenSpaceBookingDetails)
 
@@ -1544,6 +1545,13 @@ class Cas1SpaceBookingServiceTest {
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
+
+      verify(exactly = 1) {
+        cas1BookingEmailService.spaceBookingShortened(
+          spaceBooking = updatedSpaceBookingCaptor.captured,
+          application = updatedSpaceBookingCaptor.captured.application!!,
+        )
+      }
     }
 
     @Test
@@ -1563,6 +1571,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1BookingEmailService.spaceBookingShortened(any(), any()) } returns Unit
 
       val result = service.shortenSpaceBooking(shortenSpaceBookingDetails)
 
@@ -1573,6 +1582,13 @@ class Cas1SpaceBookingServiceTest {
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
+
+      verify(exactly = 1) {
+        cas1BookingEmailService.spaceBookingShortened(
+          spaceBooking = updatedSpaceBookingCaptor.captured,
+          application = updatedSpaceBookingCaptor.captured.application!!,
+        )
+      }
     }
   }
 

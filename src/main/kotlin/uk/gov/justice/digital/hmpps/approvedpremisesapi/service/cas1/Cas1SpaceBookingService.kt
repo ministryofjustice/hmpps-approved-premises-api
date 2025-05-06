@@ -328,7 +328,16 @@ class Cas1SpaceBookingService(
 
     if (validationErrors.any()) return fieldValidationError
 
+    val previousDepartureDate = existingBooking!!.expectedDepartureDate
+
     val updatedBooking = updateExistingSpaceBooking(existingBooking!!, updateSpaceBookingDetails)
+
+    updatedBooking.application?.let { application ->
+      cas1BookingEmailService.spaceBookingShortened(
+        spaceBooking = updatedBooking,
+        application = application,
+      )
+    }
 
     success(updatedBooking)
   }
