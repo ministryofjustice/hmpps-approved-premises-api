@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
@@ -23,7 +25,6 @@ class Cas2AllocationChangedService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Suppress("TooGenericExceptionThrown")
   @Transactional
   fun process(event: HmppsDomainEvent) {
     val nomsNumber = event.personReference.findNomsNumber()
@@ -39,19 +40,32 @@ class Cas2AllocationChangedService(
       when (val pomAllocation = getAllocationResponse(detailUrl)) {
         is PomAllocation -> {
           val allocatedUser = nomisUserService.getUserByStaffId(staffId = pomAllocation.manager.code)
-          if (isNewAllocation(application.currentPomUserId, allocatedUser.id)) {
-            application.createApplicationAssignment(
-              prisonCode = pomAllocation.prison.code,
-              allocatedPomUser = allocatedUser,
-            )
-            applicationRepository.save(application)
-            emailService.sendAllocationChangedEmails(application = application, newPom = allocatedUser, newPrisonCode = pomAllocation.prison.code)
-          }
+          addApplicationAssignment(application, pomAllocation.prison.code, allocatedUser)
         }
+
         else -> {
           log.info("No POM allocated.")
         }
       }
+    }
+  }
+
+  private fun sendEmails(oldPrisonCode: String, newPrisonCode: String, application: Cas2ApplicationEntity, allocatedUser: NomisUserEntity) {
+    val hasMovedPrison = oldPrisonCode != newPrisonCode
+    if (hasMovedPrison) {
+      emailService.sendAllocationChangedEmails(application = application, newPom = allocatedUser, newPrisonCode = newPrisonCode)
+    }
+  }
+
+  private fun addApplicationAssignment(application: Cas2ApplicationEntity, newPrisonCode: String, allocatedUser: NomisUserEntity) {
+    if (isNewAllocation(application.currentPomUserId, allocatedUser.id)) {
+      val oldPrisonCode = application.currentPrisonCode!!
+      application.createApplicationAssignment(
+        prisonCode = newPrisonCode,
+        allocatedPomUser = allocatedUser,
+      )
+      applicationRepository.save(application)
+      sendEmails(oldPrisonCode, newPrisonCode, application, allocatedUser)
     }
   }
 
@@ -63,6 +77,7 @@ class Cas2AllocationChangedService(
       HttpStatus.NOT_FOUND -> log.info("No POM allocated")
       else -> result.throwException()
     }
+
     is ClientResult.Failure -> result.throwException()
   }
 }
