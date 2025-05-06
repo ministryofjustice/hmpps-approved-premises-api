@@ -135,8 +135,10 @@ data class Cas2ApplicationEntity(
     get() = applicationAssignments.maxByOrNull { it.createdAt }?.allocatedPomUser?.id
   val currentAssignmentDate: LocalDate?
     get() = applicationAssignments.maxByOrNull { it.createdAt }?.createdAt?.toLocalDate()
-  val mostRecentPomUserId: UUID
-    get() = applicationAssignments.first { it.allocatedPomUser?.id != null }.allocatedPomUser?.id!!
+  val mostRecentLocationAssignment: Cas2ApplicationAssignmentEntity?
+    get() = applicationAssignments.firstOrNull { it.allocatedPomUser == null }
+  val hasLocationChangedAssignment: Boolean
+    get() = mostRecentLocationAssignment != null
 
   fun isTransferredApplication() = applicationAssignments.map { it.prisonCode }.distinct().size > 1
   fun createApplicationAssignment(prisonCode: String, allocatedPomUser: NomisUserEntity?) {
