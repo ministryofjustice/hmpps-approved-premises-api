@@ -290,8 +290,6 @@ class Cas1BookingManagementServiceTest {
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
       val arrivalInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.ArrivalInfo>()
-      every { cas1ChangeRequestService.spaceBookingHasArrival(capture(updatedSpaceBookingCaptor)) } returns Unit
-
       every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(capture(arrivalInfoCaptor)) } returns Unit
       every { userService.getUserForRequest() } returns user
 
@@ -304,8 +302,6 @@ class Cas1BookingManagementServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
-
-      verify { cas1ChangeRequestService.spaceBookingHasArrival(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)

@@ -83,8 +83,6 @@ class Cas1BookingManagementService(
 
     val updatedSpaceBooking = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
-    cas1ChangeRequestService.spaceBookingHasArrival(updatedSpaceBooking)
-
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
       Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
         updatedSpaceBooking,
