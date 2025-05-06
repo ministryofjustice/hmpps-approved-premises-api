@@ -20,7 +20,6 @@ class EmergencyTransferCreatedTimelineFactory(val domainEventService: Cas1Domain
       type = Cas1TimelineEventType.emergencyTransferCreated,
       from = details.from.toTimelinePayloadSummary(),
       to = details.to.toTimelinePayloadSummary(),
-      schemaVersion = event.schemaVersion,
     )
   }
 

@@ -31,6 +31,7 @@ class Cas1ApplicationTimelineTransformer(
     return Cas1TimelineEvent(
       id = domainEventSummary.id,
       type = domainEventSummary.type.cas1Info?.timelineEventType ?: throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported"),
+      schemaVersion = domainEventSummary.schemaVersion,
       occurredAt = domainEventSummary.occurredAt.toInstant(),
       associatedUrls = associatedUrls,
       content = descriptionAndPayload.description,

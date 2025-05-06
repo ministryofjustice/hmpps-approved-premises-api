@@ -986,17 +986,14 @@ class Cas1DomainEventDescriberTest {
 
   private fun <T> buildDomainEvent(
     builder: (UUID) -> T,
-    schemaVersion: Int? = null,
   ): GetCas1DomainEvent<T> {
     val id = UUID.randomUUID()
     return GetCas1DomainEvent(
       id = id,
       data = builder(id),
-      schemaVersion = schemaVersion,
+      schemaVersion = null,
     )
   }
-
-  private fun <T> buildDomainEvent(builder: (UUID) -> T): GetCas1DomainEvent<T> = buildDomainEvent(builder, null)
 }
 
 data class DomainEventSummaryImpl(
@@ -1011,6 +1008,7 @@ data class DomainEventSummaryImpl(
   override val cas1SpaceBookingId: UUID?,
   override val triggerSource: TriggerSourceType?,
   override val triggeredByUser: UserEntity?,
+  override val schemaVersion: Int? = null,
 ) : DomainEventSummary {
   companion object {
     fun ofType(type: DomainEventType) = DomainEventSummaryImpl(

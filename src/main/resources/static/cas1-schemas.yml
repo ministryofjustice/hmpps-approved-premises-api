@@ -1078,6 +1078,8 @@ components:
         triggerSource:
           type: string
           $ref: '#/components/schemas/Cas1TriggerSourceType'
+        schemaVersion:
+          type: integer
       required:
         - type
         - id
@@ -1194,8 +1196,6 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/Cas1TimelineEventType'
-        schemaVersion:
-          type: integer
       required:
         - type
       discriminator:
@@ -1239,6 +1239,10 @@ components:
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
+        schemaVersion:
+          description: This is deprecated, use the schema version information on the enclosing Cas1TimelineEvent
+          deprecated: true
+          type: integer
       required:
         - premises
         - expectedArrival

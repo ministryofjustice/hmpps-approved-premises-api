@@ -22,7 +22,6 @@ class PlannedTransferRequestRejectedTimelineFactory(val domainEventService: Cas1
       type = Cas1TimelineEventType.plannedTransferRequestRejected,
       booking = details.booking.toTimelinePayloadSummary(),
       reason = NamedId(reason.id, reason.code),
-      schemaVersion = event.schemaVersion,
     )
   }
 
