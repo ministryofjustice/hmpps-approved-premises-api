@@ -7223,10 +7223,12 @@ components:
       type: string
       enum:
         - appealCreate
-        - transferCreate
+        - plannedTransferRequest
+        - emergencyTransferCreate
       x-enum-varnames:
         - APPEAL_CREATE
-        - TRANSFER_CREATE
+        - PLANNED_TRANSFER_REQUEST
+        - EMERGENCY_TRANSFER_CREATE
     Cas1SpaceBookingSummarySortField:
       type: string
       enum:

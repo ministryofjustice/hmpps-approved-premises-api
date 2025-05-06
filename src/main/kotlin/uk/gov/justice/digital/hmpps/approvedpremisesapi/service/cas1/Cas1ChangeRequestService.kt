@@ -58,7 +58,7 @@ class Cas1ChangeRequestService(
     val requiredAction = when (cas1NewChangeRequest.type) {
       Cas1ChangeRequestType.PLACEMENT_APPEAL -> SpaceBookingAction.APPEAL_CREATE
       Cas1ChangeRequestType.PLACEMENT_EXTENSION -> error("to be implemented")
-      Cas1ChangeRequestType.PLANNED_TRANSFER -> SpaceBookingAction.TRANSFER_CREATE
+      Cas1ChangeRequestType.PLANNED_TRANSFER -> SpaceBookingAction.PLANNED_TRANSFER_REQUEST
     }
 
     spaceBookingActionsService.determineActions(spaceBooking).unavailableReason(requiredAction)?.let {

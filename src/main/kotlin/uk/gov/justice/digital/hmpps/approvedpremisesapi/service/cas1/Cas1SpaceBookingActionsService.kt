@@ -8,7 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionOutcome.Available
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionOutcome.Unavailable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.APPEAL_CREATE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.TRANSFER_CREATE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.EMERGENCY_TRANSFER_CREATE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.PLANNED_TRANSFER_REQUEST
 
 @Service
 class Cas1SpaceBookingActionsService(
@@ -17,7 +18,8 @@ class Cas1SpaceBookingActionsService(
   fun determineActions(spaceBooking: Cas1SpaceBookingEntity): ActionsResult {
     val outcomes = listOf(
       appealCreate(spaceBooking),
-      transferCreate(spaceBooking),
+      plannedTransferRequest(spaceBooking),
+      emergencyTransferCreate(spaceBooking),
     )
 
     return ActionsResult(outcomes)
@@ -40,10 +42,13 @@ class Cas1SpaceBookingActionsService(
     }
   }
 
-  private fun transferCreate(spaceBooking: Cas1SpaceBookingEntity): ActionOutcome {
-    val requiredPermission = UserPermission.CAS1_TRANSFER_CREATE
-    fun unavailable(reason: String) = Unavailable(TRANSFER_CREATE, reason)
+  private fun emergencyTransferCreate(spaceBooking: Cas1SpaceBookingEntity) = commonTransferChecks(spaceBooking, EMERGENCY_TRANSFER_CREATE)
 
+  private fun plannedTransferRequest(spaceBooking: Cas1SpaceBookingEntity) = commonTransferChecks(spaceBooking, PLANNED_TRANSFER_REQUEST)
+
+  private fun commonTransferChecks(spaceBooking: Cas1SpaceBookingEntity, action: SpaceBookingAction): ActionOutcome {
+    val requiredPermission = UserPermission.CAS1_TRANSFER_CREATE
+    fun unavailable(reason: String) = Unavailable(action, reason)
     return if (!userAccessService.currentUserHasPermission(requiredPermission)) {
       unavailable("User must have permission '$requiredPermission'")
     } else if (!spaceBooking.hasArrival()) {
@@ -57,7 +62,7 @@ class Cas1SpaceBookingActionsService(
     } else if (spaceBooking.hasNonCancelledTransfer()) {
       unavailable("Space booking has already been transferred")
     } else {
-      Available(TRANSFER_CREATE)
+      Available(action)
     }
   }
 }
@@ -88,5 +93,6 @@ enum class SpaceBookingAction(
   val apiType: Cas1SpaceBookingAction,
 ) {
   APPEAL_CREATE(Cas1SpaceBookingAction.APPEAL_CREATE),
-  TRANSFER_CREATE(Cas1SpaceBookingAction.APPEAL_CREATE),
+  PLANNED_TRANSFER_REQUEST(Cas1SpaceBookingAction.PLANNED_TRANSFER_REQUEST),
+  EMERGENCY_TRANSFER_CREATE(Cas1SpaceBookingAction.EMERGENCY_TRANSFER_CREATE),
 }

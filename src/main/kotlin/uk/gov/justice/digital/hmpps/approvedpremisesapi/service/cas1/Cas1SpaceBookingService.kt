@@ -364,7 +364,7 @@ class Cas1SpaceBookingService(
     }
 
     cas1SpaceBookingActionsService.determineActions(existingCas1SpaceBooking)
-      .unavailableReason(SpaceBookingAction.TRANSFER_CREATE)?.let {
+      .unavailableReason(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)?.let {
         return GeneralValidationError(it)
       }
 

@@ -92,7 +92,7 @@ class Cas1SpaceBookingsActionsServiceTest {
   }
 
   @Nested
-  inner class TransferCreate {
+  inner class EmergencyTransferRequest {
 
     val spaceBooking = Cas1SpaceBookingEntityFactory()
       .withActualArrivalDate(LocalDate.now())
@@ -103,7 +103,7 @@ class Cas1SpaceBookingsActionsServiceTest {
 
     @Test
     fun success() {
-      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.TRANSFER_CREATE)
+      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.EMERGENCY_TRANSFER_CREATE)
     }
 
     @Test
@@ -112,7 +112,7 @@ class Cas1SpaceBookingsActionsServiceTest {
         .withCancellationOccurredAt(LocalDate.now())
         .produce()
 
-      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.TRANSFER_CREATE)
+      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.EMERGENCY_TRANSFER_CREATE)
     }
 
     @Test
@@ -121,7 +121,7 @@ class Cas1SpaceBookingsActionsServiceTest {
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
-          action = SpaceBookingAction.TRANSFER_CREATE,
+          action = SpaceBookingAction.EMERGENCY_TRANSFER_CREATE,
           message = "User must have permission 'CAS1_TRANSFER_CREATE'",
         )
     }
@@ -132,7 +132,7 @@ class Cas1SpaceBookingsActionsServiceTest {
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
-          action = SpaceBookingAction.TRANSFER_CREATE,
+          action = SpaceBookingAction.EMERGENCY_TRANSFER_CREATE,
           message = "Space booking has not been marked as arrived",
         )
     }
@@ -143,7 +143,7 @@ class Cas1SpaceBookingsActionsServiceTest {
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
-          action = SpaceBookingAction.TRANSFER_CREATE,
+          action = SpaceBookingAction.EMERGENCY_TRANSFER_CREATE,
           message = "Space booking has been marked as non arrived",
         )
     }
@@ -154,7 +154,7 @@ class Cas1SpaceBookingsActionsServiceTest {
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
-          action = SpaceBookingAction.TRANSFER_CREATE,
+          action = SpaceBookingAction.EMERGENCY_TRANSFER_CREATE,
           message = "Space booking has been marked as departed",
         )
     }
@@ -165,7 +165,7 @@ class Cas1SpaceBookingsActionsServiceTest {
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
-          action = SpaceBookingAction.TRANSFER_CREATE,
+          action = SpaceBookingAction.EMERGENCY_TRANSFER_CREATE,
           message = "Space booking has been cancelled",
         )
     }
@@ -178,7 +178,100 @@ class Cas1SpaceBookingsActionsServiceTest {
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
-          action = SpaceBookingAction.TRANSFER_CREATE,
+          action = SpaceBookingAction.EMERGENCY_TRANSFER_CREATE,
+          message = "Space booking has already been transferred",
+        )
+    }
+  }
+
+  @Nested
+  inner class PlannedTransferRequest {
+
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withActualArrivalDate(LocalDate.now())
+      .withActualDepartureDate(null)
+      .withNonArrivalConfirmedAt(null)
+      .withCancellationOccurredAt(null)
+      .produce()
+
+    @Test
+    fun success() {
+      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
+    }
+
+    @Test
+    fun `success if has existing cancelled transfer`() {
+      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
+    }
+
+    @Test
+    fun `unavailable if user does not have correct permission`() {
+      userDoesntHavePermission(UserPermission.CAS1_TRANSFER_CREATE)
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
+          message = "User must have permission 'CAS1_TRANSFER_CREATE'",
+        )
+    }
+
+    @Test
+    fun `unavailable if does not have arrival`() {
+      spaceBooking.actualArrivalDate = null
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
+          message = "Space booking has not been marked as arrived",
+        )
+    }
+
+    @Test
+    fun `unavailable if has non arrival`() {
+      spaceBooking.nonArrivalConfirmedAt = Instant.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
+          message = "Space booking has been marked as non arrived",
+        )
+    }
+
+    @Test
+    fun `unavailable if has departure`() {
+      spaceBooking.actualDepartureDate = LocalDate.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
+          message = "Space booking has been marked as departed",
+        )
+    }
+
+    @Test
+    fun `unavailable if has cancellation`() {
+      spaceBooking.cancellationOccurredAt = LocalDate.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
+          message = "Space booking has been cancelled",
+        )
+    }
+
+    @Test
+    fun `unavailable if has a non cancelled transfer already`() {
+      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .produce()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
           message = "Space booking has already been transferred",
         )
     }
