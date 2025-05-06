@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.LocalDate
 import java.util.UUID
 
@@ -305,15 +307,14 @@ class Cas1SimpleApiClient {
     placementRequestId: UUID,
     managerJwt: String,
     body: Cas1NewSpaceBooking,
-  ) {
-    integrationTestBase.webTestClient.post()
-      .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
-      .header("Authorization", "Bearer $managerJwt")
-      .bodyValue(body)
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
+  ) = integrationTestBase.webTestClient.post()
+    .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
+    .header("Authorization", "Bearer $managerJwt")
+    .bodyValue(body)
+    .exchange()
+    .expectStatus()
+    .isOk
+    .bodyAsObject<Cas1SpaceBooking>()
 
   fun spaceBookingCancel(
     integrationTestBase: IntegrationTestBase,

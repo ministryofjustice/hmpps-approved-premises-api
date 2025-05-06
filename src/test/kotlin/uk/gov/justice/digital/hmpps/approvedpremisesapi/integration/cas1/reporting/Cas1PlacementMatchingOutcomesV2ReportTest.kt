@@ -251,6 +251,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.first_successful_match_attempt_premises_name).isNull()
       assertThat(row.last_successful_match_attempt_date_time).isNull()
       assertThat(row.last_successful_match_attempt_premises_name).isNull()
+      assertThat(row.last_successful_match_placement_id).isNull()
     }
   }
 
@@ -274,6 +275,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   inner class StandardRFPMatched {
     lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var latestBookingId: UUID
 
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
@@ -283,7 +285,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       clock.setNow(LocalDateTime.of(2030, 1, 2, 3, 4, 5))
 
-      createBooking(
+      latestBookingId = createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER1",
         matcherApAreaName = "MATCHER1CRU",
@@ -308,6 +310,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
+      assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
   }
 
@@ -352,6 +355,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   inner class StandardRFPNotMatchedAndThenMatched {
     lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var latestBookingId: UUID
 
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
@@ -368,7 +372,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       clock.setNow(LocalDateTime.of(2030, 2, 3, 4, 5, 6))
 
-      createBooking(
+      latestBookingId = createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER13",
         matcherApAreaName = "MATCHER13CRU",
@@ -393,11 +397,13 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-02-03T04:05:06Z")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
+      assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
   }
 
   inner class StandardRFPMultipleTransfers {
     lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var latestBookingId: UUID
 
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
@@ -428,7 +434,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       clock.setNow(LocalDateTime.of(2032, 1, 2, 3, 4, 5))
 
-      createBooking(
+      latestBookingId = createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER6",
         matcherApAreaName = "MATCHER6CRU",
@@ -452,11 +458,13 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPMultipleTransfers premise 1")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2032-01-02T03:04:05Z")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMultipleTransfers premise 3")
+      assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
   }
 
   inner class PlacementAppMatched {
     lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var latestBookingId: UUID
 
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
@@ -477,7 +485,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       clock.setNow(LocalDateTime.of(2031, 8, 7, 6, 5, 6))
 
-      createBooking(
+      latestBookingId = createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER10",
         matcherApAreaName = "MATCHER10CRU",
@@ -501,6 +509,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
+      assertThat(row.last_successful_match_placement_id).isEqualTo(latestBookingId.toString())
     }
   }
 
@@ -565,7 +574,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     matcherUsername: String,
     matcherApAreaName: String,
     premisesName: String = randomStringMultiCaseWithNumbers(8),
-  ) {
+  ): UUID {
     val managerJwt = givenAUser(
       roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA),
       staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "Jeff", surname = "Jefferson"), deliusUsername = matcherUsername),
@@ -579,7 +588,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       withSupportsSpaceBookings(true)
     }
 
-    cas1SimpleApiClient.spaceBookingForPlacementRequest(
+    return cas1SimpleApiClient.spaceBookingForPlacementRequest(
       integrationTestBase = this,
       placementRequestId = placementRequestId,
       managerJwt = managerJwt,
@@ -589,7 +598,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         premisesId = premises.id,
         characteristics = emptyList(),
       ),
-    )
+    ).id
   }
 
   private fun createBookingNotMade(
@@ -827,5 +836,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val first_successful_match_attempt_premises_name: String?,
     val last_successful_match_attempt_date_time: String?,
     val last_successful_match_attempt_premises_name: String?,
+    val last_successful_match_placement_id: String?,
   )
 }

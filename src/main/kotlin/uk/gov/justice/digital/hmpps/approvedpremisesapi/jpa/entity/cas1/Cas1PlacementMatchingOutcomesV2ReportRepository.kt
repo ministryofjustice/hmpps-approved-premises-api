@@ -46,6 +46,10 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
         first_match_event.data -> 'eventDetails' -> 'premises' ->> 'name' as first_successful_match_attempt_premises_name,
         to_char(latest_match_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as last_successful_match_attempt_date_time,
         latest_match_event.data -> 'eventDetails' -> 'premises' ->> 'name' as last_successful_match_attempt_premises_name,
+        CASE
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN  latest_match_event.data -> 'eventDetails' ->> 'bookingId'
+          ELSE ''
+        END as last_successful_match_placement_id,
         
         rfp.* 
       FROM raw_requests_for_placements rfp
