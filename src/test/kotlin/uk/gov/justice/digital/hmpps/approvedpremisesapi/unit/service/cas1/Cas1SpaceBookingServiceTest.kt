@@ -1747,7 +1747,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every {
         cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
-      } returns ActionsResult.forUnavailableAction(SpaceBookingAction.TRANSFER_CREATE, "nope")
+      } returns ActionsResult.forUnavailableAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST, "nope")
 
       val result = service.createEmergencyTransfer(
         PREMISES_ID,
@@ -1776,7 +1776,7 @@ class Cas1SpaceBookingServiceTest {
 
       every {
         cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
-      } returns ActionsResult.forAllowedAction(SpaceBookingAction.TRANSFER_CREATE)
+      } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit

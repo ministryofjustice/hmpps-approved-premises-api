@@ -214,7 +214,7 @@ class Cas1ChangeRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-      every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.TRANSFER_CREATE)
+      every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
       every { cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(any(), any()) } returns Unit
@@ -284,7 +284,7 @@ class Cas1ChangeRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-      every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forUnavailableAction(SpaceBookingAction.TRANSFER_CREATE, "transfer not allowed")
+      every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forUnavailableAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST, "transfer not allowed")
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returns null
 
