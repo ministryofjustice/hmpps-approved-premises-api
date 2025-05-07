@@ -1,11 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
-import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import io.mockk.just
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
@@ -39,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringEventPublisher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService
@@ -54,7 +52,6 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.util.UUID
 import java.util.stream.Stream
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 @ExtendWith(MockKExtension::class)
 class Cas1BookingManagementServiceTest {
@@ -90,7 +87,7 @@ class Cas1BookingManagementServiceTest {
   lateinit var cas1ChangeRequestService: Cas1ChangeRequestService
 
   @MockK
-  lateinit var applicationEventPublisher: ApplicationEventPublisher
+  lateinit var springEventPublisher: SpringEventPublisher
 
   @InjectMockKs
   lateinit var service: Cas1BookingManagementService
@@ -111,7 +108,7 @@ class Cas1BookingManagementServiceTest {
 
     @BeforeEach
     fun before() {
-      every { applicationEventPublisher.publishEvent(any(JvmType.Object::class)) } just Runs
+      every { springEventPublisher.publishEvent(any()) } returns Unit
     }
 
     @Test
@@ -315,7 +312,7 @@ class Cas1BookingManagementServiceTest {
       assertThat(arrivalInfo.actualArrivalTime).isEqualTo(LocalTime.of(3, 4, 5))
       assertThat(arrivalInfo.recordedBy).isEqualTo(user)
 
-      verify { applicationEventPublisher.publishEvent(ArrivalRecorded(updatedSpaceBooking)) }
+      verify { springEventPublisher.publishEvent(ArrivalRecorded(updatedSpaceBooking)) }
     }
   }
 

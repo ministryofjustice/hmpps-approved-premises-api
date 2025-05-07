@@ -8,6 +8,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
@@ -34,13 +36,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringEventPublisher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionsResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.util.UUID
@@ -69,12 +75,6 @@ class Cas1ChangeRequestServiceTest {
   lateinit var lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository
 
   @MockK
-  lateinit var cas1ChangeRequestEmailService: Cas1ChangeRequestEmailService
-
-  @MockK
-  lateinit var cas1ChangeRequestDomainEventService: Cas1ChangeRequestDomainEventService
-
-  @MockK
   lateinit var userService: UserService
 
   @MockK
@@ -83,11 +83,25 @@ class Cas1ChangeRequestServiceTest {
   @MockK
   lateinit var lockablePlacementRequestRepository: LockablePlacementRequestRepository
 
+  @MockK
+  lateinit var springEventPublisher: SpringEventPublisher
+
   @InjectMockKs
   lateinit var service: Cas1ChangeRequestService
 
+  lateinit var user: UserEntity
+
+  @BeforeEach
+  fun setupCommonMocks() {
+    user = UserEntityFactory().withDefaults().produce()
+    every { userService.getUserForRequest() } returns user
+
+    every { springEventPublisher.publishEvent(any()) } returns Unit
+  }
+
   @Nested
   inner class CreateChangeRequest {
+
     @Test
     fun `throws not found error when placement request is not found`() {
       val placementRequest = PlacementRequestEntityFactory().withDefaults().produce()
@@ -166,7 +180,6 @@ class Cas1ChangeRequestServiceTest {
         .withSpaceBookingId(cas1SpaceBooking.id)
         .produce()
 
-      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
@@ -175,8 +188,6 @@ class Cas1ChangeRequestServiceTest {
       every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.APPEAL_CREATE)
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
-      every { cas1ChangeRequestEmailService.placementAppealCreated(any()) } returns Unit
-      every { cas1ChangeRequestDomainEventService.placementAppealCreated(any(), any()) } returns Unit
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
@@ -186,18 +197,7 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.type).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
       assertThat(savedChangeRequest.resolved).isEqualTo(false)
 
-      verify {
-        cas1ChangeRequestEmailService.placementAppealCreated(
-          changeRequest = savedChangeRequest,
-        )
-      }
-
-      verify {
-        cas1ChangeRequestDomainEventService.placementAppealCreated(
-          changeRequest = savedChangeRequest,
-          requestingUser = any(),
-        )
-      }
+      verify { springEventPublisher.publishEvent(PlacementAppealCreated(savedChangeRequest, user)) }
     }
 
     @Test
@@ -217,7 +217,6 @@ class Cas1ChangeRequestServiceTest {
         .withSpaceBookingId(cas1SpaceBooking.id)
         .produce()
 
-      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
@@ -226,7 +225,6 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
-      every { cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(any(), any()) } returns Unit
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
@@ -236,12 +234,7 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.type).isEqualTo(ChangeRequestType.PLANNED_TRANSFER)
       assertThat(savedChangeRequest.resolved).isEqualTo(false)
 
-      verify {
-        cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(
-          changeRequest = savedChangeRequest,
-          requestingUser = any(),
-        )
-      }
+      verify { springEventPublisher.publishEvent(PlannedTransferRequestCreated(savedChangeRequest, user)) }
     }
 
     @Test
@@ -350,6 +343,7 @@ class Cas1ChangeRequestServiceTest {
 
   @Nested
   inner class RejectChangeRequest {
+
     @Test
     fun `throw validation error when change request associated with different placement request`() {
       val placementRequest = PlacementRequestEntityFactory()
@@ -428,10 +422,6 @@ class Cas1ChangeRequestServiceTest {
       val rejectionReason = Cas1ChangeRequestRejectionReasonEntityFactory().produce()
       every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
       every { cas1ChangeRequestRepository.save(any()) } returns changeRequest
-      every { cas1ChangeRequestEmailService.placementAppealRejected(any()) } returns Unit
-
-      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
-      every { cas1ChangeRequestDomainEventService.placementAppealRejected(any(), any()) } returns Unit
 
       val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
 
@@ -443,14 +433,7 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.resolved).isTrue()
       assertThat(savedChangeRequest.resolvedAt).isNotNull()
 
-      verify { cas1ChangeRequestEmailService.placementAppealRejected(savedChangeRequest) }
-
-      verify {
-        cas1ChangeRequestDomainEventService.placementAppealRejected(
-          changeRequest = savedChangeRequest,
-          rejectingUser = any(),
-        )
-      }
+      verify { springEventPublisher.publishEvent(PlacementAppealRejected(savedChangeRequest, user)) }
     }
 
     @Test
@@ -473,9 +456,6 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
       every { cas1ChangeRequestRepository.save(any()) } returns changeRequest
 
-      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
-      every { cas1ChangeRequestDomainEventService.plannedTransferRequestRejected(any(), any()) } returns Unit
-
       val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
 
       assertThatCasResult(result).isSuccess()
@@ -486,12 +466,7 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.resolved).isTrue()
       assertThat(savedChangeRequest.resolvedAt).isNotNull()
 
-      verify {
-        cas1ChangeRequestDomainEventService.plannedTransferRequestRejected(
-          changeRequest = savedChangeRequest,
-          rejectingUser = any(),
-        )
-      }
+      verify { springEventPublisher.publishEvent(PlannedTransferRequestRejected(savedChangeRequest, user)) }
     }
   }
 
@@ -543,14 +518,12 @@ class Cas1ChangeRequestServiceTest {
 
       every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
       every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
-      every { cas1ChangeRequestDomainEventService.placementAppealAccepted(any()) } returns Unit
-      every { cas1ChangeRequestEmailService.placementAppealAccepted(any()) } returns Unit
 
       val result = service.approvePlacementAppeal(changeRequest.id, user)
 
       assertThatCasResult(result).isSuccess()
 
-      verify { cas1ChangeRequestEmailService.placementAppealAccepted(changeRequest) }
+      verify { springEventPublisher.publishEvent(PlacementAppealAccepted(changeRequest)) }
     }
   }
 

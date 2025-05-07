@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventCodedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
@@ -14,6 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import java.time.OffsetDateTime
 
 @Service
@@ -21,31 +28,23 @@ class Cas1ChangeRequestDomainEventService(
   private val cas1DomainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
-  fun placementAppealAccepted(
-    changeRequest: Cas1ChangeRequestEntity,
-  ) = saveChangeRequestAcceptedDomainEvent(changeRequest)
+  @EventListener
+  fun placementAppealAccepted(placementAppealAccepted: PlacementAppealAccepted) = saveChangeRequestAcceptedDomainEvent(placementAppealAccepted.changeRequest)
 
-  fun placementAppealCreated(
-    changeRequest: Cas1ChangeRequestEntity,
-    requestingUser: UserEntity,
-  ) = saveChangeRequestCreated(changeRequest, requestingUser)
+  @EventListener
+  fun placementAppealCreated(placementAppealCreated: PlacementAppealCreated) = saveChangeRequestCreated(placementAppealCreated.changeRequest, placementAppealCreated.requestingUser)
 
-  fun placementAppealRejected(
-    changeRequest: Cas1ChangeRequestEntity,
-    rejectingUser: UserEntity,
-  ) = saveChangeRequestRejected(changeRequest, rejectingUser)
+  @EventListener
+  fun placementAppealRejected(placementAppealRejected: PlacementAppealRejected) = saveChangeRequestRejected(placementAppealRejected.changeRequest, placementAppealRejected.rejectingUser)
 
-  fun plannedTransferRequestCreated(
-    changeRequest: Cas1ChangeRequestEntity,
-    requestingUser: UserEntity,
-  ) = saveChangeRequestCreated(changeRequest, requestingUser)
+  @EventListener
+  fun plannedTransferRequestCreated(plannedTransferRequestCreated: PlannedTransferRequestCreated) = saveChangeRequestCreated(plannedTransferRequestCreated.changeRequest, plannedTransferRequestCreated.requestingUser)
 
-  fun plannedTransferRequestRejected(
-    changeRequest: Cas1ChangeRequestEntity,
-    rejectingUser: UserEntity,
-  ) = saveChangeRequestRejected(changeRequest, rejectingUser)
+  @EventListener
+  fun plannedTransferRequestRejected(plannedTransferRequestRejected: PlannedTransferRequestRejected) = saveChangeRequestRejected(plannedTransferRequestRejected.changeRequest, plannedTransferRequestRejected.rejectingUser)
 
-  fun plannedTransferRequestAccepted(changeRequest: Cas1ChangeRequestEntity) = saveChangeRequestAcceptedDomainEvent(changeRequest)
+  @EventListener
+  fun plannedTransferRequestAccepted(plannedTransferRequestAccepted: PlannedTransferRequestAccepted) = saveChangeRequestAcceptedDomainEvent(plannedTransferRequestAccepted.changeRequest)
 
   fun saveChangeRequestCreated(
     changeRequest: Cas1ChangeRequestEntity,

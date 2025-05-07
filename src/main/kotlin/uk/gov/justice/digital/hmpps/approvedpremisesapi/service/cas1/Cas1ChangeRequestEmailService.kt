@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Service
@@ -13,7 +17,9 @@ class Cas1ChangeRequestEmailService(
   @Value("\${url-templates.frontend.cas1.cru-dashboard}") private val cruDashboardUrlTemplate: UrlTemplate,
 ) {
 
-  fun placementAppealCreated(changeRequest: Cas1ChangeRequestEntity) {
+  @EventListener
+  fun placementAppealCreated(placementAppealCreated: PlacementAppealCreated) {
+    val changeRequest = placementAppealCreated.changeRequest
     val application = changeRequest.placementRequest.application
 
     emailNotifier.sendEmails(
@@ -24,7 +30,9 @@ class Cas1ChangeRequestEmailService(
     )
   }
 
-  fun placementAppealAccepted(changeRequest: Cas1ChangeRequestEntity) {
+  @EventListener
+  fun placementAppealAccepted(placementAppealAccepted: PlacementAppealAccepted) {
+    val changeRequest = placementAppealAccepted.changeRequest
     val application = changeRequest.placementRequest.application
 
     val personalisation = commonPersonalisation(changeRequest)
@@ -48,7 +56,9 @@ class Cas1ChangeRequestEmailService(
     )
   }
 
-  fun placementAppealRejected(changeRequest: Cas1ChangeRequestEntity) {
+  @EventListener
+  fun placementAppealRejected(placementAppealRejected: PlacementAppealRejected) {
+    val changeRequest = placementAppealRejected.changeRequest
     val application = changeRequest.placementRequest.application
 
     emailNotifier.sendEmails(

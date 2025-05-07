@@ -28,6 +28,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 
@@ -44,7 +50,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
   lateinit var service: Cas1ChangeRequestDomainEventService
 
   @Nested
-  inner class PlacementAppealAccepted {
+  inner class PlacementAppealAcceptedTest {
 
     @Test
     fun success() {
@@ -68,7 +74,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
         .withSpaceBooking(spaceBooking)
         .produce()
 
-      service.placementAppealAccepted(changeRequest)
+      service.placementAppealAccepted(PlacementAppealAccepted(changeRequest))
 
       val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted>>()
 
@@ -100,7 +106,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
   }
 
   @Nested
-  inner class PlacementAppealCreated {
+  inner class PlacementAppealCreatedTest {
 
     @Test
     fun success() {
@@ -122,7 +128,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
         .produce()
       val requestingUser = UserEntityFactory().withDefaults().withDeliusUsername("theusername").produce()
 
-      service.placementAppealCreated(changeRequest, requestingUser)
+      service.placementAppealCreated(PlacementAppealCreated(changeRequest, requestingUser))
 
       val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestCreated>>()
 
@@ -155,7 +161,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
   }
 
   @Nested
-  inner class PlacementAppealRejected {
+  inner class PlacementAppealRejectedTest {
 
     @Test
     fun success() {
@@ -179,7 +185,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       val requestingUser = UserEntityFactory().withDefaults().withDeliusUsername("theusername").produce()
 
-      service.placementAppealRejected(changeRequest, requestingUser)
+      service.placementAppealRejected(PlacementAppealRejected(changeRequest, requestingUser))
 
       val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected>>()
 
@@ -212,7 +218,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
   }
 
   @Nested
-  inner class PlannedTransferRequestAccepted {
+  inner class PlannedTransferRequestAcceptedTest {
 
     @Test
     fun success() {
@@ -237,7 +243,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
         .withSpaceBooking(spaceBooking)
         .produce()
 
-      service.plannedTransferRequestAccepted(changeRequest)
+      service.plannedTransferRequestAccepted(PlannedTransferRequestAccepted(changeRequest))
 
       val domainEvent = getSavedDomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted>()
 
@@ -264,7 +270,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
   }
 
   @Nested
-  inner class PlannedTransferRequestCreated {
+  inner class PlannedTransferRequestCreatedTest {
 
     @Test
     fun success() {
@@ -286,7 +292,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
         .produce()
       val requestingUser = UserEntityFactory().withDefaults().withDeliusUsername("theusername").produce()
 
-      service.plannedTransferRequestCreated(changeRequest, requestingUser)
+      service.plannedTransferRequestCreated(PlannedTransferRequestCreated(changeRequest, requestingUser))
 
       val domainEvent = getSavedDomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestCreated>()
 
@@ -314,7 +320,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
   }
 
   @Nested
-  inner class PlannedTransferRequestRejected {
+  inner class PlannedTransferRequestRejectedTest {
 
     @Test
     fun success() {
@@ -338,7 +344,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       val requestingUser = UserEntityFactory().withDefaults().withDeliusUsername("theusername").produce()
 
-      service.plannedTransferRequestRejected(changeRequest, requestingUser)
+      service.plannedTransferRequestRejected(PlannedTransferRequestRejected(changeRequest, requestingUser))
 
       val domainEvent = getSavedDomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected>()
 
