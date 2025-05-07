@@ -100,7 +100,7 @@ class Cas1ChangeRequestsController(
   ): ResponseEntity<Cas1ChangeRequest> {
     userAccessService.ensureCurrentUserHasPermission(CAS1_CHANGE_REQUEST_VIEW)
 
-    val result = extractEntityFromCasResult(cas1ChangeRequestService.getChangeRequest(placementRequestId, changeRequestId))
+    val result = extractEntityFromCasResult(cas1ChangeRequestService.getChangeRequestForPlacementId(placementRequestId, changeRequestId))
 
     return ResponseEntity.ok(
       cas1ChangeRequestTransformer.transformEntityToCas1ChangeRequest(
