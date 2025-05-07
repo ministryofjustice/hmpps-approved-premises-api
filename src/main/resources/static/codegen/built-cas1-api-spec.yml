@@ -7973,8 +7973,9 @@ components:
       discriminator:
         propertyName: "type"
         mapping:
-          booking_made: '#/components/schemas/Cas1BookingMadeContentPayload'
+          booking_cancelled: '#/components/schemas/Cas1BookingCancelledContentPayload'
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
+          booking_made: '#/components/schemas/Cas1BookingMadeContentPayload'
           emergency_transfer_created: '#/components/schemas/Cas1EmergencyTransferCreatedContentPayload'
           placement_change_request_accepted: '#/components/schemas/Cas1PlacementChangeRequestAcceptedPayload'
           placement_change_request_created: '#/components/schemas/Cas1PlacementChangeRequestCreatedPayload'
@@ -8017,6 +8018,18 @@ components:
         - premises
         - expectedArrival
         - expectedDeparture
+    Cas1BookingCancelledContentPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
+      properties:
+        booking:
+          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
+        cancellationReason:
+          type: string
+      required:
+        - booking
+        - cancellationReason
     Cas1BookingMadeContentPayload:
       type: object
       allOf:

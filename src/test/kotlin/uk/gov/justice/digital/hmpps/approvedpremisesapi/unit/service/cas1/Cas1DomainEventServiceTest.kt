@@ -177,6 +177,8 @@ class Cas1DomainEventServiceTest {
         occurredAt = occurredAt.toInstant(),
       )
 
+      val spaceBookingId = UUID.randomUUID()
+
       every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
         .withId(id)
         .withApplicationId(applicationId)
@@ -186,6 +188,7 @@ class Cas1DomainEventServiceTest {
         .withData(domainEventAndJson.persistedJson)
         .withOccurredAt(occurredAt)
         .withSchemaVersion(domainEventAndJson.schemaVersion.versionNo)
+        .withCas1SpaceBookingId(spaceBookingId)
         .produce()
 
       val event = method.invoke(id)
@@ -195,6 +198,7 @@ class Cas1DomainEventServiceTest {
           id = id,
           data = domainEventAndJson.envelope,
           schemaVersion = domainEventAndJson.schemaVersion.versionNo,
+          spaceBookingId = spaceBookingId,
         ),
       )
     }

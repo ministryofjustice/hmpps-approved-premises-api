@@ -140,6 +140,7 @@ class Cas1DomainEventService(
       id = entity.id,
       data = data,
       schemaVersion = entity.schemaVersion,
+      spaceBookingId = entity.cas1SpaceBookingId,
     )
   }
 
@@ -399,7 +400,8 @@ class Cas1DomainEventService(
 data class GetCas1DomainEvent<T>(
   val id: UUID,
   val data: T,
-  val schemaVersion: Int? = null,
+  val schemaVersion: Int?,
+  val spaceBookingId: UUID?,
 )
 
 @Deprecated("Use [SaveCas1DomainEventWithPayload]")
