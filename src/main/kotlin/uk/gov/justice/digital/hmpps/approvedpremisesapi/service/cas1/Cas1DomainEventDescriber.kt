@@ -63,6 +63,7 @@ class Cas1DomainEventDescriber(
     }
 
     // Do _not_ add to this list! Instead, create an implementation of [TimelineFactory]
+    // If migrating code from here into a [TimelineFactory], use a [LegacyTimelineFactory]
     return when (domainEventSummary.type) {
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> EventDescriptionAndPayload(
         "The application was submitted",
@@ -70,7 +71,6 @@ class Cas1DomainEventDescriber(
       )
 
       DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> buildApplicationAssessedDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> buildBookingMadeDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> buildPersonArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> buildPersonNotArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
@@ -127,17 +127,6 @@ class Cas1DomainEventDescriber(
   private fun buildApplicationAssessedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getApplicationAssessedDomainEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(event.describe { "The application was assessed and ${it.eventDetails.decision.lowercase()}" }, null)
-  }
-
-  private fun buildBookingMadeDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
-    val event = domainEventService.getBookingMadeEvent(domainEventSummary.id())
-    val description = event.describe {
-      "A placement at ${it.eventDetails.premises.name} was booked for " +
-        "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()} " +
-        "against Delius Event Number ${it.eventDetails.deliusEventNumber}"
-    }
-
-    return EventDescriptionAndPayload(description, null)
   }
 
   private fun buildBookingKeyWorkerAssignedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {

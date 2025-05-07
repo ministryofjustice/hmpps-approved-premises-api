@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
@@ -113,35 +112,6 @@ class Cas1DomainEventDescriberTest {
     val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The application was assessed and $decision")
-  }
-
-  @Test
-  fun `Returns expected description for booking made event`() {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
-    val arrivalDate = LocalDate.of(2024, 1, 1)
-    val departureDate = LocalDate.of(2024, 4, 1)
-
-    every { mockDomainEventService.getBookingMadeEvent(any()) } returns buildDomainEvent {
-      Cas1DomainEventEnvelope(
-        id = it,
-        timestamp = Instant.now(),
-        eventType = EventType.bookingMade,
-        eventDetails = BookingMadeFactory()
-          .withArrivalOn(arrivalDate)
-          .withDepartureOn(departureDate)
-          .withPremises(
-            EventPremisesFactory()
-              .withName("The Premises Name")
-              .produce(),
-          )
-          .withDeliusEventNumber("989")
-          .produce(),
-      )
-    }
-
-    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
-
-    assertThat(result.description).isEqualTo("A placement at The Premises Name was booked for Monday 1 January 2024 to Monday 1 April 2024 against Delius Event Number 989")
   }
 
   @ParameterizedTest

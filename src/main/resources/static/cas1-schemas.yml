@@ -1202,6 +1202,7 @@ components:
       discriminator:
         propertyName: "type"
         mapping:
+          booking_made: '#/components/schemas/Cas1BookingMadeContentPayload'
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
           emergency_transfer_created: '#/components/schemas/Cas1EmergencyTransferCreatedContentPayload'
           placement_change_request_accepted: '#/components/schemas/Cas1PlacementChangeRequestAcceptedPayload'
@@ -1245,6 +1246,15 @@ components:
         - premises
         - expectedArrival
         - expectedDeparture
+    Cas1BookingMadeContentPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
+      properties:
+        booking:
+          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
+      required:
+        - booking
     Cas1PlacementChangeRequestCreatedPayload:
       type: object
       allOf:

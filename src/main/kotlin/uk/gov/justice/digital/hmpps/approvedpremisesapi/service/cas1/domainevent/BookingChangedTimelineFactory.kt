@@ -94,8 +94,6 @@ class BookingChangedTimelineFactory(val domainEventService: Cas1DomainEventServi
     )
   }
 
-  private fun <T> GetCas1DomainEvent<T>?.describe(describe: (T) -> String?): String? = this?.let { describe(it.data) }
-
   private fun convertToCas1SpaceCharacteristics(spaceCharacteristics: List<SpaceCharacteristic>?): List<Cas1SpaceCharacteristic>? = spaceCharacteristics?.map { spaceCharacteristic ->
     Cas1SpaceCharacteristic.valueOf(spaceCharacteristic.value)
   }
