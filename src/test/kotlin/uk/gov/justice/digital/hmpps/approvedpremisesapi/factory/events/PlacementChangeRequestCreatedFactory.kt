@@ -3,11 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 import io.github.bluegroundltd.kfactory.Factory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventCodedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventBookingSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestCreated
 import java.util.UUID
 
-class PlacementAppealCreatedFactory : Factory<PlacementAppealCreated> {
+class PlacementChangeRequestCreatedFactory : Factory<PlacementChangeRequestCreated> {
   private var changeRequestId = { UUID.randomUUID() }
+  private var changeRequestType = { EventChangeRequestType.PLACEMENT_APPEAL }
   private var booking = { EventBookingSummaryFactory().produce() }
   private var requestedBy = { StaffMemberFactory().produce() }
   private var reason = { Cas1DomainEventCodedIdFactory().produce() }
@@ -20,8 +22,9 @@ class PlacementAppealCreatedFactory : Factory<PlacementAppealCreated> {
     this.reason = { reason }
   }
 
-  override fun produce(): PlacementAppealCreated = PlacementAppealCreated(
+  override fun produce(): PlacementChangeRequestCreated = PlacementChangeRequestCreated(
     changeRequestId = changeRequestId(),
+    changeRequestType = changeRequestType(),
     booking = booking(),
     requestedBy = requestedBy(),
     reason = reason(),

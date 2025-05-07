@@ -2267,7 +2267,7 @@ class Cas1SpaceBookingTest {
 
         emailAsserter.assertEmailsRequestedCount(4)
 
-        domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED)
+        domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED)
       }
     }
   }
@@ -2888,7 +2888,7 @@ class Cas1SpaceBookingTest {
 
       domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
         application.id,
-        DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED,
+        DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED,
         DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
       )
 

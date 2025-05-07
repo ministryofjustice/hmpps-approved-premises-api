@@ -1997,7 +1997,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
-      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
 
       val bookingId = UUID.randomUUID()
 
@@ -2041,7 +2041,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
-      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
 
       val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
@@ -2082,7 +2082,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
-      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
 
       val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
@@ -2120,7 +2120,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
 
-      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
@@ -2158,8 +2158,6 @@ class Cas1SpaceBookingServiceTest {
         cas1ChangeRequestService.approvedPlannedTransfer(
           changeRequest = existingChangeRequest,
           user = user,
-          from = existingSpaceBooking,
-          to = transferredBooking,
         )
       }
 

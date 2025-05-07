@@ -1113,14 +1113,11 @@ components:
         - information_request
         - assessment_appealed
         - assessment_allocated
-        - placement_appeal_accepted
-        - placement_appeal_created
-        - placement_appeal_rejected
+        - placement_change_request_accepted
+        - placement_change_request_created
+        - placement_change_request_rejected
         - placement_application_withdrawn
         - placement_application_allocated
-        - planned_transfer_request_accepted
-        - planned_transfer_request_created
-        - planned_transfer_request_rejected
         - match_request_withdrawn
         - request_for_placement_created
         - request_for_placement_assessed
@@ -1203,12 +1200,9 @@ components:
         mapping:
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
           emergency_transfer_created: '#/components/schemas/Cas1EmergencyTransferCreatedContentPayload'
-          placement_appeal_accepted: '#/components/schemas/Cas1PlacementAppealAcceptedPayload'
-          placement_appeal_created: '#/components/schemas/Cas1PlacementAppealCreatedPayload'
-          placement_appeal_rejected: '#/components/schemas/Cas1PlacementAppealRejectedPayload'
-          planned_transfer_request_accepted: '#/components/schemas/Cas1PlannedTransferRequestAcceptedPayload'
-          planned_transfer_request_created: '#/components/schemas/Cas1PlannedTransferRequestCreatedPayload'
-          planned_transfer_request_rejected: '#/components/schemas/Cas1PlannedTransferRequestRejectedPayload'
+          placement_change_request_accepted: '#/components/schemas/Cas1PlacementChangeRequestAcceptedPayload'
+          placement_change_request_created: '#/components/schemas/Cas1PlacementChangeRequestCreatedPayload'
+          placement_change_request_rejected: '#/components/schemas/Cas1PlacementChangeRequestRejectedPayload'
     Cas1BookingChangedContentPayload:
       type: object
       allOf:
@@ -1247,7 +1241,7 @@ components:
         - premises
         - expectedArrival
         - expectedDeparture
-    Cas1PlacementAppealCreatedPayload:
+    Cas1PlacementChangeRequestCreatedPayload:
       type: object
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
@@ -1259,7 +1253,7 @@ components:
       required:
         - booking
         - reason
-    Cas1PlacementAppealAcceptedPayload:
+    Cas1PlacementChangeRequestAcceptedPayload:
       type: object
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
@@ -1268,43 +1262,7 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
       required:
         - booking
-    Cas1PlacementAppealRejectedPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        booking:
-          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
-        reason:
-          $ref: '_shared.yml#/components/schemas/NamedId'
-      required:
-        - booking
-        - reason
-    Cas1PlannedTransferRequestCreatedPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        booking:
-          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
-        reason:
-          $ref: '_shared.yml#/components/schemas/NamedId'
-      required:
-        - booking
-        - reason
-    Cas1PlannedTransferRequestAcceptedPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        from:
-          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
-        to:
-          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
-      required:
-        - from
-        - to
-    Cas1PlannedTransferRequestRejectedPayload:
+    Cas1PlacementChangeRequestRejectedPayload:
       type: object
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"

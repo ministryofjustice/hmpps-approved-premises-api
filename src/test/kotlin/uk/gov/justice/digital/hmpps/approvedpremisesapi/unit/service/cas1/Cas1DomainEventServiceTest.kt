@@ -135,18 +135,19 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
         .withId(id)
-        .withData(domainEventsFactory.createEnvelopeLatestVersion(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED).persistedJson)
+        .withType(DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED)
+        .withData(domainEventsFactory.createEnvelopeLatestVersion(DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED).persistedJson)
         .produce()
 
       assertThatThrownBy(
         {
-          domainEventService.getPlacementAppealRejectedEvent(id)
+          domainEventService.getApplicationAssessedDomainEvent(id)
         },
       ).hasMessage(
-        "Entity with id 0adab8a6-14a6-4c41-a56e-7f0bb76d3d02 has type APPROVED_PREMISES_APPLICATION_SUBMITTED, " +
-          "which contains data of type class uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted. " +
+        "Entity with id 0adab8a6-14a6-4c41-a56e-7f0bb76d3d02 has type APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED, " +
+          "which contains data of type class uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected. " +
           "This is incompatible with the requested payload type class " +
-          "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected.",
+          "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed.",
       )
     }
 
@@ -214,8 +215,6 @@ class Cas1DomainEventServiceTest {
       DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED to domainEventService::getApplicationExpiredEvent,
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent,
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to domainEventService::getAssessmentAllocatedEvent,
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED to domainEventService::getPlacementAppealAcceptedEvent,
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED to domainEventService::getPlacementAppealCreatedEvent,
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to domainEventService::getPlacementApplicationWithdrawnEvent,
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to domainEventService::getPlacementApplicationAllocatedEvent,
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to domainEventService::getMatchRequestWithdrawnEvent,

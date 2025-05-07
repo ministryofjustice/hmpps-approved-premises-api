@@ -443,8 +443,6 @@ class Cas1SpaceBookingService(
         cas1ChangeRequestService.approvedPlannedTransfer(
           changeRequest = changeRequest,
           user = user,
-          from = existingCas1SpaceBooking,
-          to = createdSpaceBooking,
         )
       },
     )
