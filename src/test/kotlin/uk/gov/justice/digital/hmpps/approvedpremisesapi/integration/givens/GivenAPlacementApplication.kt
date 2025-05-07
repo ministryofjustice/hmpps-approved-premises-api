@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
@@ -36,6 +37,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   isWithdrawn: Boolean = false,
   placementDates: List<PlacementDateEntity> = mutableListOf(),
+  application: ApprovedPremisesApplicationEntity? = null,
 ): PlacementApplicationEntity {
   val userApArea = givenAnApArea()
 
@@ -52,7 +54,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     withApArea(userApArea)
   }
 
-  val (_, application) = givenAnAssessmentForApprovedPremises(
+  val application = application ?: givenAnAssessmentForApprovedPremises(
     decision = assessmentDecision,
     submittedAt = OffsetDateTime.now(),
     crn = crn,
@@ -63,7 +65,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     name = name,
     requiredQualification = requiredQualification,
     noticeType = noticeType,
-  )
+  ).second
 
   return placementApplicationFactory.produceAndPersist {
     withCreatedByUser(createdByUser)
@@ -90,7 +92,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenAPlacementApplication(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
-  createdByUser: UserEntity,
+  createdByUser: UserEntity = givenAUser().first,
   schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity? = null,
   crn: String = randomStringMultiCaseWithNumbers(8),
   allocatedToUser: UserEntity? = null,
@@ -100,7 +102,8 @@ fun IntegrationTestBase.givenAPlacementApplication(
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   placementDates: MutableList<PlacementDateEntity> = mutableListOf(),
-  block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
+  application: ApprovedPremisesApplicationEntity? = null,
+  block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit = { },
 ): PlacementApplicationEntity {
   val placementApplication = givenAPlacementApplication(
     assessmentDecision = assessmentDecision,
@@ -116,6 +119,8 @@ fun IntegrationTestBase.givenAPlacementApplication(
     placementType = placementType,
     dueAt = dueAt,
     placementDates = placementDates,
+    application = application,
+    isWithdrawn = false,
   )
   block(placementApplication)
   return placementApplication

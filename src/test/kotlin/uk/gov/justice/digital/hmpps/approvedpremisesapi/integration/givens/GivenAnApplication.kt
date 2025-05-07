@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -15,22 +16,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-fun IntegrationTestBase.givenACas1Application(
-  createdByUser: UserEntity,
+fun IntegrationTestBase.givenASubmittedCas1Application(
+  createdByUser: UserEntity = givenAUser().first,
   offender: CaseSummary,
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   tier: String? = null,
+  caseManager: Cas1ApplicationUserDetailsEntity? = null,
 ) = givenACas1Application(
   createdByUser = createdByUser,
   crn = offender.crn,
   cruManagementArea = cruManagementArea,
   name = "${offender.name.forename} ${offender.name.surname}",
   tier = tier,
+  caseManager = caseManager,
+  submittedAt = OffsetDateTime.now(),
 )
 
 @Suppress("LongParameterList")
 fun IntegrationTestBase.givenACas1Application(
-  createdByUser: UserEntity,
+  createdByUser: UserEntity = givenAUser().first,
   crn: String = randomStringMultiCaseWithNumbers(8),
   submittedAt: OffsetDateTime? = null,
   eventNumber: String = randomInt(1, 9).toString(),
@@ -38,8 +42,20 @@ fun IntegrationTestBase.givenACas1Application(
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   name: String = "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}",
   tier: String? = null,
+  caseManager: Cas1ApplicationUserDetailsEntity? = null,
   block: (application: ApplicationEntity) -> Unit = {},
-) = givenAnApplication(createdByUser, crn, submittedAt, eventNumber, isWomensApplication, cruManagementArea, name, tier, block)
+) = givenAnApplication(
+  createdByUser,
+  crn,
+  submittedAt,
+  eventNumber,
+  isWomensApplication,
+  cruManagementArea,
+  name,
+  tier,
+  caseManager,
+  block,
+)
 
 @Suppress("LongParameterList")
 fun IntegrationTestBase.givenAnApplication(
@@ -51,6 +67,7 @@ fun IntegrationTestBase.givenAnApplication(
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   name: String = "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}",
   tier: String? = null,
+  caseManager: Cas1ApplicationUserDetailsEntity? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -71,6 +88,8 @@ fun IntegrationTestBase.givenAnApplication(
     withIsWomensApplication(isWomensApplication)
     withName(name)
     withRiskRatings(riskRatings)
+    withCaseManagerUserDetails(caseManager)
+    withCaseManagerIsNotApplicant(caseManager != null)
   }
 
   block(application)

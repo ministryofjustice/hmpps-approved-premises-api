@@ -33,7 +33,7 @@ import java.time.OffsetDateTime
 fun IntegrationTestBase.givenAPlacementRequest(
   placementRequestAllocatedTo: UserEntity? = null,
   assessmentAllocatedTo: UserEntity? = null,
-  createdByUser: UserEntity,
+  createdByUser: UserEntity = givenAUser().first,
   crn: String? = null,
   name: String? = null,
   reallocated: Boolean = false,

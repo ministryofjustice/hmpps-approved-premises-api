@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import jakarta.transaction.Transactional
+import org.springframework.context.event.EventListener
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSortField
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -216,7 +218,8 @@ class Cas1ChangeRequestService(
 
   fun spaceBookingWithdrawn(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, ChangeRequestType.entries.toList())
 
-  fun spaceBookingHasArrival(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, listOf(ChangeRequestType.PLACEMENT_APPEAL))
+  @EventListener
+  fun spaceBookingHasArrival(arrivalRecorded: ArrivalRecorded) = resolveAllChangeRequestsForSpaceBookingAndType(arrivalRecorded.spaceBooking, listOf(ChangeRequestType.PLACEMENT_APPEAL))
 
   fun spaceBookingMarkedAsNonArrival(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, listOf(ChangeRequestType.PLACEMENT_APPEAL))
 

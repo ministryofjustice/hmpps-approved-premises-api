@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.time.LocalTime
@@ -37,6 +39,7 @@ class Cas1BookingManagementService(
   private val lockableCas1SpaceBookingEntityRepository: LockableCas1SpaceBookingEntityRepository,
   private val userService: UserService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
+  private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
 
   @Transactional
@@ -78,20 +81,20 @@ class Cas1BookingManagementService(
     existingCas1SpaceBooking.actualArrivalDate = arrivalDate
     existingCas1SpaceBooking.actualArrivalTime = arrivalTime
 
-    val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
-
-    cas1ChangeRequestService.spaceBookingHasArrival(existingCas1SpaceBooking)
+    val updatedSpaceBooking = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
       Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
-        existingCas1SpaceBooking,
+        updatedSpaceBooking,
         actualArrivalDate = arrivalDate,
         actualArrivalTime = arrivalTime,
         recordedBy = userService.getUserForRequest(),
       ),
     )
 
-    success(result)
+    applicationEventPublisher.publishEvent(ArrivalRecorded(updatedSpaceBooking))
+
+    success(updatedSpaceBooking)
   }
 
   @Transactional

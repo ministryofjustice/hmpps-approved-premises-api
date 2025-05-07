@@ -4,15 +4,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
-import java.time.LocalDate
-import java.util.UUID
 
 object Constants {
   const val DAYS_IN_WEEK = 7
@@ -30,7 +25,7 @@ class Cas1BookingEmailService(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
   ) = bookingMade(
-    spaceBooking.toBookingInfo(application),
+    spaceBooking.toEmailBookingInfo(application),
   )
 
   fun bookingMade(
@@ -38,14 +33,14 @@ class Cas1BookingEmailService(
     booking: BookingEntity,
     placementApplication: PlacementApplicationEntity?,
   ) = bookingMade(
-    booking.toBookingInfo(application, placementApplication),
+    booking.toEmailBookingInfo(application, placementApplication),
   )
 
-  private fun bookingMade(bookingInfo: BookingInfo) {
-    val application = bookingInfo.application
-    val placementApplication = bookingInfo.placementApplication
+  private fun bookingMade(emailBookingInfo: EmailBookingInfo) {
+    val application = emailBookingInfo.application
+    val placementApplication = emailBookingInfo.placementApplication
 
-    val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
+    val emailPersonalisation = buildCommonPersonalisation(emailBookingInfo)
 
     val recipientEmailAddresses = (
       application.interestedPartiesEmailAddresses() +
@@ -59,9 +54,9 @@ class Cas1BookingEmailService(
       application = application,
     )
 
-    if (bookingInfo.premises.emailAddress != null) {
+    if (emailBookingInfo.premises.emailAddress != null) {
       emailNotifier.sendEmail(
-        recipientEmailAddress = bookingInfo.premises.emailAddress!!,
+        recipientEmailAddress = emailBookingInfo.premises.emailAddress!!,
         templateId = Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
         personalisation = emailPersonalisation,
         application = application,
@@ -75,7 +70,7 @@ class Cas1BookingEmailService(
     placementApplication: PlacementApplicationEntity?,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) = bookingWithdrawn(
-    booking.toBookingInfo(application, placementApplication),
+    booking.toEmailBookingInfo(application, placementApplication),
     withdrawalTriggeredBy,
   )
 
@@ -84,27 +79,27 @@ class Cas1BookingEmailService(
     application: ApprovedPremisesApplicationEntity,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) = bookingWithdrawn(
-    spaceBooking.toBookingInfo(application),
+    spaceBooking.toEmailBookingInfo(application),
     withdrawalTriggeredBy,
   )
 
   private fun bookingWithdrawn(
-    bookingInfo: BookingInfo,
+    emailBookingInfo: EmailBookingInfo,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) {
-    val application = bookingInfo.application
+    val application = emailBookingInfo.application
 
     val allPersonalisation =
-      buildCommonPersonalisation(bookingInfo).toMutableMap()
+      buildCommonPersonalisation(emailBookingInfo).toMutableMap()
 
-    allPersonalisation += "region" to bookingInfo.premises.probationRegion.name
+    allPersonalisation += "region" to emailBookingInfo.premises.probationRegion.name
     allPersonalisation["withdrawnBy"] = withdrawalTriggeredBy.getName()
 
     val interestedParties =
       (
         application.interestedPartiesEmailAddresses() +
-          setOfNotNull(bookingInfo.placementApplication?.createdByUser?.email) +
-          setOfNotNull(bookingInfo.premises.emailAddress) +
+          setOfNotNull(emailBookingInfo.placementApplication?.createdByUser?.email) +
+          setOfNotNull(emailBookingInfo.premises.emailAddress) +
           setOfNotNull(application.cruManagementArea?.emailAddress)
         ).toSet()
 
@@ -120,14 +115,14 @@ class Cas1BookingEmailService(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
   ) = bookingAmended(
-    spaceBooking.toBookingInfo(application),
+    spaceBooking.toEmailBookingInfo(application),
   )
 
   fun spaceBookingShortened(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
   ) = bookingShortened(
-    spaceBooking.toBookingInfo(application),
+    spaceBooking.toEmailBookingInfo(application),
   )
 
   fun bookingAmended(
@@ -135,17 +130,17 @@ class Cas1BookingEmailService(
     booking: BookingEntity,
     placementApplication: PlacementApplicationEntity?,
   ) = bookingAmended(
-    booking.toBookingInfo(application, placementApplication),
+    booking.toEmailBookingInfo(application, placementApplication),
   )
 
-  private fun bookingAmended(bookingInfo: BookingInfo) {
-    val application = bookingInfo.application
-    val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
+  private fun bookingAmended(emailBookingInfo: EmailBookingInfo) {
+    val application = emailBookingInfo.application
+    val emailPersonalisation = buildCommonPersonalisation(emailBookingInfo)
 
     val interestedParties =
       (
         application.interestedPartiesEmailAddresses() +
-          setOfNotNull(bookingInfo.premises.emailAddress)
+          setOfNotNull(emailBookingInfo.premises.emailAddress)
         ).toSet()
 
     emailNotifier.sendEmails(
@@ -156,7 +151,7 @@ class Cas1BookingEmailService(
     )
   }
 
-  private fun bookingShortened(bookingInfo: BookingInfo) {
+  private fun bookingShortened(bookingInfo: EmailBookingInfo) {
     val application = bookingInfo.application
     val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
 
@@ -176,60 +171,26 @@ class Cas1BookingEmailService(
     )
   }
 
-  private fun Cas1SpaceBookingEntity.toBookingInfo(
-    application: ApprovedPremisesApplicationEntity,
-  ) = BookingInfo(
-    bookingId = id,
-    arrivalDate = canonicalArrivalDate,
-    departureDate = canonicalDepartureDate,
-    premises = premises,
-    application = application,
-    placementApplication = placementRequest?.placementApplication,
-  )
+  private fun buildCommonPersonalisation(emailBookingInfo: EmailBookingInfo): Map<String, Any> {
+    val application = emailBookingInfo.application
 
-  private fun BookingEntity.toBookingInfo(
-    application: ApprovedPremisesApplicationEntity,
-    placementApplication: PlacementApplicationEntity?,
-  ) = BookingInfo(
-    bookingId = id,
-    arrivalDate = arrivalDate,
-    departureDate = departureDate,
-    premises = premises as ApprovedPremisesEntity,
-    application = application,
-    placementApplication = placementApplication,
-  )
-
-  private data class BookingInfo(
-    val bookingId: UUID,
-    val arrivalDate: LocalDate,
-    val departureDate: LocalDate,
-    val premises: ApprovedPremisesEntity,
-    val application: ApprovedPremisesApplicationEntity,
-    val placementApplication: PlacementApplicationEntity?,
-  )
-
-  private fun buildCommonPersonalisation(bookingInfo: BookingInfo): Map<String, Any> {
-    val application = bookingInfo.application
-
-    val lengthOfStayDays = bookingInfo.arrivalDate.getDaysUntilInclusive(bookingInfo.departureDate).size
-    val lengthOfStayWeeks = lengthOfStayDays.toDouble() / DAYS_IN_WEEK
-    val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % DAYS_IN_WEEK) == 0.0
+    val values = emailBookingInfo.personalisationValues()
 
     return mapOf(
-      "apName" to bookingInfo.premises.name,
+      "apName" to values.premisesName,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
       "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
       "bookingUrl" to bookingUrlTemplate.resolve(
         mapOf(
-          "premisesId" to bookingInfo.premises.id.toString(),
-          "bookingId" to bookingInfo.bookingId.toString(),
+          "premisesId" to emailBookingInfo.premises.id.toString(),
+          "bookingId" to emailBookingInfo.bookingId.toString(),
         ),
       ),
-      "crn" to application.crn,
-      "startDate" to bookingInfo.arrivalDate.toString(),
-      "endDate" to bookingInfo.departureDate.toString(),
-      "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
-      "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
+      "crn" to values.crn,
+      "startDate" to values.startDate,
+      "endDate" to values.endDate,
+      "lengthStay" to values.lengthOfStay,
+      "lengthStayUnit" to values.lengthOfStayUnit,
     )
   }
 }

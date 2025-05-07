@@ -1,7 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import io.mockk.Runs
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.just
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -9,9 +13,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
@@ -40,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -47,31 +54,46 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.util.UUID
 import java.util.stream.Stream
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
+@ExtendWith(MockKExtension::class)
 class Cas1BookingManagementServiceTest {
-  private val cas1PremisesService = mockk<Cas1PremisesService>()
-  private val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
-  private val cas1SpaceBookingManagementDomainEventService = mockk<Cas1SpaceBookingManagementDomainEventService>()
-  private val moveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
-  private val departureReasonRepository = mockk<DepartureReasonRepository>()
-  private val staffMemberService = mockk<StaffMemberService>()
-  private val nonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
-  private val lockableCas1SpaceBookingRepository = mockk<LockableCas1SpaceBookingEntityRepository>()
-  private val userService = mockk<UserService>()
-  private val cas1ChangeRequestService = mockk<Cas1ChangeRequestService>()
 
-  private val service = Cas1BookingManagementService(
-    cas1PremisesService,
-    spaceBookingRepository,
-    cas1SpaceBookingManagementDomainEventService,
-    departureReasonRepository,
-    moveOnCategoryRepository,
-    staffMemberService,
-    nonArrivalReasonRepository,
-    lockableCas1SpaceBookingRepository,
-    userService,
-    cas1ChangeRequestService,
-  )
+  @MockK
+  lateinit var cas1PremisesService: Cas1PremisesService
+
+  @MockK
+  lateinit var spaceBookingRepository: Cas1SpaceBookingRepository
+
+  @MockK
+  lateinit var cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService
+
+  @MockK
+  lateinit var moveOnCategoryRepository: MoveOnCategoryRepository
+
+  @MockK
+  lateinit var departureReasonRepository: DepartureReasonRepository
+
+  @MockK
+  lateinit var staffMemberService: StaffMemberService
+
+  @MockK
+  lateinit var nonArrivalReasonRepository: NonArrivalReasonRepository
+
+  @MockK
+  lateinit var lockableCas1SpaceBookingRepository: LockableCas1SpaceBookingEntityRepository
+
+  @MockK
+  lateinit var userService: UserService
+
+  @MockK
+  lateinit var cas1ChangeRequestService: Cas1ChangeRequestService
+
+  @MockK
+  lateinit var applicationEventPublisher: ApplicationEventPublisher
+
+  @InjectMockKs
+  lateinit var service: Cas1BookingManagementService
 
   @Nested
   inner class RecordArrival {
@@ -86,6 +108,11 @@ class Cas1BookingManagementServiceTest {
     private val premises = ApprovedPremisesEntityFactory()
       .withDefaults()
       .produce()
+
+    @BeforeEach
+    fun before() {
+      every { applicationEventPublisher.publishEvent(any(JvmType.Object::class)) } just Runs
+    }
 
     @Test
     fun `Returns validation error if no premises with the given premisesId exists`() {
@@ -249,7 +276,7 @@ class Cas1BookingManagementServiceTest {
     }
 
     @Test
-    fun `Updates space booking with arrival information and raises domain event`() {
+    fun `Updates space booking with arrival information, raises domain event and email`() {
       val user = UserEntityFactory().withDefaults().produce()
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
@@ -263,8 +290,6 @@ class Cas1BookingManagementServiceTest {
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
       val arrivalInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.ArrivalInfo>()
-      every { cas1ChangeRequestService.spaceBookingHasArrival(capture(updatedSpaceBookingCaptor)) } returns Unit
-
       every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(capture(arrivalInfoCaptor)) } returns Unit
       every { userService.getUserForRequest() } returns user
 
@@ -278,8 +303,6 @@ class Cas1BookingManagementServiceTest {
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
 
-      verify { cas1ChangeRequestService.spaceBookingHasArrival(any()) }
-
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.actualArrivalDate).isEqualTo(LocalDate.of(2024, 1, 2))
@@ -291,6 +314,8 @@ class Cas1BookingManagementServiceTest {
       assertThat(arrivalInfo.actualArrivalDate).isEqualTo(LocalDate.of(2024, 1, 2))
       assertThat(arrivalInfo.actualArrivalTime).isEqualTo(LocalTime.of(3, 4, 5))
       assertThat(arrivalInfo.recordedBy).isEqualTo(user)
+
+      verify { applicationEventPublisher.publishEvent(ArrivalRecorded(updatedSpaceBooking)) }
     }
   }
 
