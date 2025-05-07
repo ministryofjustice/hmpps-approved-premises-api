@@ -1068,7 +1068,11 @@ components:
         content:
           type: string
         createdBy:
+          deprecated: true
+          description: Use createdBySummary
           $ref: '_shared.yml#/components/schemas/User'
+        createdBySummary:
+          $ref: '_shared.yml#/components/schemas/UserSummary'
         payload:
           $ref: '#/components/schemas/Cas1TimelineEventContentPayload'
         associatedUrls:

@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
@@ -81,6 +82,8 @@ class Cas1ApplicationTimelineTransformerTest {
 
     val userApi = mockk<ApprovedPremisesUser>()
     every { mockUserTransformer.transformJpaToApi(userJpa, ServiceName.approvedPremises) } returns userApi
+    val userSummaryApi = mockk<UserSummary>()
+    every { mockUserTransformer.transformJpaToSummaryApi(userJpa) } returns userSummaryApi
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
@@ -91,6 +94,7 @@ class Cas1ApplicationTimelineTransformerTest {
     assertThat(result.associatedUrls).isEmpty()
     assertThat(result.content).isEqualTo("Some event")
     assertThat(result.createdBy).isEqualTo(userApi)
+    assertThat(result.createdBySummary).isEqualTo(userSummaryApi)
     assertThat(result.triggerSource).isEqualTo(null)
     assertThat(result.schemaVersion).isEqualTo(1)
   }
@@ -457,7 +461,6 @@ class Cas1ApplicationTimelineTransformerTest {
       schemaVersion = null,
     )
 
-    val userApi = mockk<ApprovedPremisesUser>()
     val payload = Cas1BookingChangedContentPayload(
       expectedArrival = LocalDate.now(),
       expectedDeparture = LocalDate.now(),
@@ -468,7 +471,10 @@ class Cas1ApplicationTimelineTransformerTest {
       previousCharacteristics = listOf(Cas1SpaceCharacteristic.isGroundFloor),
     )
 
+    val userApi = mockk<ApprovedPremisesUser>()
     every { mockUserTransformer.transformJpaToApi(userJpa, ServiceName.approvedPremises) } returns userApi
+    val userSummaryApi = mockk<UserSummary>()
+    every { mockUserTransformer.transformJpaToSummaryApi(userJpa) } returns userSummaryApi
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", payload)
 
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
@@ -479,6 +485,7 @@ class Cas1ApplicationTimelineTransformerTest {
     assertThat(result.associatedUrls).isEmpty()
     assertThat(result.content).isEqualTo("Some event")
     assertThat(result.createdBy).isEqualTo(userApi)
+    assertThat(result.createdBySummary).isEqualTo(userSummaryApi)
     assertThat(result.triggerSource).isEqualTo(null)
     assertThat(result.payload).isInstanceOf(Cas1BookingChangedContentPayload::class.java)
     assertThat(payload.premises.id).isEqualTo(premisesId)
