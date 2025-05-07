@@ -37,6 +37,7 @@ class Cas1ApplicationTimelineTransformer(
       content = descriptionAndPayload.description,
       payload = descriptionAndPayload.payload,
       createdBy = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+      createdBySummary = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToSummaryApi(it) },
       triggerSource = when (domainEventSummary.triggerSource) {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.USER -> Cas1TriggerSourceType.user
         uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.SYSTEM -> Cas1TriggerSourceType.system

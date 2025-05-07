@@ -7839,7 +7839,11 @@ components:
         content:
           type: string
         createdBy:
+          deprecated: true
+          description: Use createdBySummary
           $ref: '#/components/schemas/User'
+        createdBySummary:
+          $ref: '#/components/schemas/UserSummary'
         payload:
           $ref: '#/components/schemas/Cas1TimelineEventContentPayload'
         associatedUrls:
