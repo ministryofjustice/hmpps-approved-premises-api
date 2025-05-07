@@ -10,7 +10,10 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionsResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
@@ -19,10 +22,13 @@ import java.time.Instant
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
-class Cas1SpaceBookingsActionsServiceTest {
+class Cas1SpaceBookingActionsServiceTest {
 
   @MockK
   private lateinit var userAccessService: UserAccessService
+
+  @MockK
+  private lateinit var changeRequestRepository: Cas1ChangeRequestRepository
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingActionsService
@@ -30,6 +36,7 @@ class Cas1SpaceBookingsActionsServiceTest {
   @BeforeEach
   fun before() {
     every { userAccessService.currentUserHasPermission(any()) } returns true
+    every { changeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns emptyList()
   }
 
   @Nested
@@ -87,6 +94,19 @@ class Cas1SpaceBookingsActionsServiceTest {
         .assertUnavailable(
           action = SpaceBookingAction.APPEAL_CREATE,
           message = "Space booking has been cancelled",
+        )
+    }
+
+    @Test
+    fun `unavailable if already have open change request`() {
+      every { changeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns listOf(
+        Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce(),
+      )
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.APPEAL_CREATE,
+          message = "There is an existing open change request of this type",
         )
     }
   }
@@ -273,6 +293,19 @@ class Cas1SpaceBookingsActionsServiceTest {
         .assertUnavailable(
           action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
           message = "Space booking has already been transferred",
+        )
+    }
+
+    @Test
+    fun `unavailable if already have open change request`() {
+      every { changeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns listOf(
+        Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLANNED_TRANSFER).produce(),
+      )
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.PLANNED_TRANSFER_REQUEST,
+          message = "There is an existing open change request of this type",
         )
     }
   }
