@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -774,7 +775,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) } returns Unit
       every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingCancelled(any()) } returns Unit
       every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
 
       val result = service.withdraw(
@@ -798,7 +799,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
 
       verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) }
+      verify { cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason)) }
       verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
       verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }
     }

@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -814,11 +815,13 @@ class Cas1BookingCas1DomainEventServiceTest {
       )
 
       service.spaceBookingCancelled(
-        spaceBooking = spaceBooking,
-        user = user,
-        reason = CancellationReasonEntityFactory()
-          .withName("the reason name")
-          .produce(),
+        Cas1BookingCancelledEvent(
+          booking = spaceBooking,
+          user = user,
+          reason = CancellationReasonEntityFactory()
+            .withName("the reason name")
+            .produce(),
+        ),
       )
 
       val domainEventArgument = slot<SaveCas1DomainEvent<BookingCancelledEnvelope>>()
@@ -903,11 +906,13 @@ class Cas1BookingCas1DomainEventServiceTest {
       )
 
       service.spaceBookingCancelled(
-        spaceBooking = spaceBooking,
-        user = user,
-        reason = CancellationReasonEntityFactory()
-          .withName("the reason name")
-          .produce(),
+        Cas1BookingCancelledEvent(
+          booking = spaceBooking,
+          user = user,
+          reason = CancellationReasonEntityFactory()
+            .withName("the reason name")
+            .produce(),
+        ),
       )
 
       val domainEventArgument = slot<SaveCas1DomainEvent<BookingCancelledEnvelope>>()
