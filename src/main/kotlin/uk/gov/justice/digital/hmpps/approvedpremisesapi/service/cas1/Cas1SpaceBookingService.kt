@@ -274,16 +274,32 @@ class Cas1SpaceBookingService(
     updateSpaceBookingDetails: UpdateSpaceBookingDetails,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
     validateUpdateSpaceBooking(updateSpaceBookingDetails)
-
     if (validationErrors.any()) return fieldValidationError
 
+    doUpdateSpaceBooking(updateSpaceBookingDetails)
+  }
+
+  private fun doUpdateSpaceBooking(
+    updateSpaceBookingDetails: UpdateSpaceBookingDetails,
+  ): CasResult<Cas1SpaceBookingEntity> {
     val bookingToUpdate = cas1SpaceBookingRepository.findByIdOrNull(updateSpaceBookingDetails.bookingId)!!
 
     val previousArrivalDate = bookingToUpdate.expectedArrivalDate
     val previousDepartureDate = bookingToUpdate.expectedDepartureDate
     val previousCharacteristics = bookingToUpdate.criteria.toList()
 
-    val updatedBooking = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
+    if (bookingToUpdate.hasArrival()) {
+      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
+    } else {
+      bookingToUpdate.updateArrivalDates(updateSpaceBookingDetails)
+      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
+    }
+
+    if (updateSpaceBookingDetails.characteristics != null) {
+      updateRoomCharacteristics(bookingToUpdate, updateSpaceBookingDetails.characteristics)
+    }
+
+    val updatedBooking = cas1SpaceBookingRepository.save(bookingToUpdate)
 
     val previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null
     val previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null
@@ -310,7 +326,7 @@ class Cas1SpaceBookingService(
       }
     }
 
-    success(updatedBooking)
+    return Success(updatedBooking)
   }
 
   @Transactional
@@ -538,24 +554,6 @@ class Cas1SpaceBookingService(
         "$.departureDate" hasValidationError "The departure date is the same as the current expected departure date."
       }
     }
-  }
-
-  private fun updateExistingSpaceBooking(
-    bookingToUpdate: Cas1SpaceBookingEntity,
-    updateSpaceBookingDetails: UpdateSpaceBookingDetails,
-  ): Cas1SpaceBookingEntity {
-    if (bookingToUpdate.hasArrival()) {
-      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
-    } else {
-      bookingToUpdate.updateArrivalDates(updateSpaceBookingDetails)
-      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
-    }
-
-    if (updateSpaceBookingDetails.characteristics != null) {
-      updateRoomCharacteristics(bookingToUpdate, updateSpaceBookingDetails.characteristics)
-    }
-
-    return cas1SpaceBookingRepository.save(bookingToUpdate)
   }
 
   private fun updateRoomCharacteristics(
