@@ -67,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -1855,7 +1856,21 @@ class Cas1SpaceBookingServiceTest {
       val placementRequest = existingSpaceBooking.placementRequest!!
       val application = placementRequest.application
       verify { cas1ApplicationStatusService.spaceBookingMade(emergencyBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(emergencyBooking, user)) }
+
+      verify {
+        cas1BookingDomainEventService.spaceBookingMade(
+          Cas1BookingCreatedEvent(
+            emergencyBooking,
+            user,
+            transferInfo = TransferInfo(
+              type = TransferType.EMERGENCY,
+              changeRequestId = null,
+              booking = existingSpaceBooking,
+            ),
+          ),
+        )
+      }
+
       verify { cas1BookingEmailService.spaceBookingMade(emergencyBooking, application) }
     }
   }
@@ -2172,7 +2187,21 @@ class Cas1SpaceBookingServiceTest {
       val placementRequest = existingSpaceBooking.placementRequest!!
       val application = placementRequest.application
       verify { cas1ApplicationStatusService.spaceBookingMade(transferredBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(transferredBooking, user)) }
+
+      verify {
+        cas1BookingDomainEventService.spaceBookingMade(
+          Cas1BookingCreatedEvent(
+            transferredBooking,
+            user,
+            transferInfo = TransferInfo(
+              type = TransferType.PLANNED,
+              changeRequestId = existingChangeRequest.id,
+              booking = existingSpaceBooking,
+            ),
+          ),
+        )
+      }
+
       verify { cas1BookingEmailService.spaceBookingMade(transferredBooking, application) }
     }
   }

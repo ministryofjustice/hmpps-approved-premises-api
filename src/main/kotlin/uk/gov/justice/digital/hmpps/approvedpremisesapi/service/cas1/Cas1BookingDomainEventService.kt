@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
@@ -27,14 +29,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.LocalDate
@@ -65,6 +70,7 @@ class Cas1BookingDomainEventService(
       sentenceType = application.sentenceType,
       situation = application.situation,
       placementRequestId = placementRequest.id,
+      transferInfo = cas1BookingCreatedEvent.transferInfo,
     )
   }
 
@@ -304,6 +310,7 @@ class Cas1BookingDomainEventService(
     releaseType: String?,
     situation: String?,
     placementRequestId: UUID?,
+    transferInfo: TransferInfo? = null,
   ) {
     val domainEventId = UUID.randomUUID()
     val crn = bookingInfo.crn
@@ -372,10 +379,21 @@ class Cas1BookingDomainEventService(
             sentenceType = sentenceType,
             situation = situation,
             characteristics = bookingInfo.characteristics,
+            transferredFrom = transferInfo?.let {
+              EventTransferInfo(
+                type = when (it.type) {
+                  TransferType.PLANNED -> EventTransferType.PLANNED
+                  TransferType.EMERGENCY -> EventTransferType.EMERGENCY
+                },
+                changeRequestId = it.changeRequestId,
+                booking = it.booking.toEventBookingSummary(),
+              )
+            },
           ),
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
+          MetaDataName.CAS1_CHANGE_REQUEST_ID to transferInfo?.changeRequestId?.toString(),
         ),
         cas1PlacementRequestId = placementRequestId,
       ),

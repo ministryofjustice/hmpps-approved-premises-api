@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -35,7 +36,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
@@ -44,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1Dom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -181,6 +185,48 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.characteristics).isEqualTo(listOf(SpaceCharacteristic.hasEnSuite))
 
       assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
+    }
+
+    @Test
+    fun `bookingMade saves transfer information, if provided`() {
+      val changeRequest = Cas1ChangeRequestEntityFactory().produce()
+      val transferredToBooking = Cas1SpaceBookingEntityFactory()
+        .withPremises(ApprovedPremisesEntityFactory().withDefaults().withName("Transferred from premises").produce())
+        .withCanonicalArrivalDate(LocalDate.of(2012, 9, 1))
+        .withCanonicalDepartureDate(LocalDate.of(2013, 9, 1))
+        .produce()
+
+      service.spaceBookingMade(
+        Cas1BookingCreatedEvent(
+          spaceBooking,
+          user,
+          transferInfo = TransferInfo(
+            type = TransferType.PLANNED,
+            booking = transferredToBooking,
+            changeRequestId = changeRequest.id,
+          ),
+        ),
+      )
+
+      val domainEventArgument = slot<SaveCas1DomainEvent<BookingMadeEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveBookingMadeDomainEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+      val transferredFrom = domainEvent.data.eventDetails.transferredFrom!!
+      assertThat(transferredFrom.type).isEqualTo(EventTransferType.PLANNED)
+      assertThat(transferredFrom.changeRequestId).isEqualTo(changeRequest.id)
+
+      assertThat(transferredFrom.booking.id).isEqualTo(transferredToBooking.id)
+      assertThat(transferredFrom.booking.premises.name).isEqualTo("Transferred from premises")
+      assertThat(transferredFrom.booking.arrivalDate).isEqualTo(LocalDate.of(2012, 9, 1))
+      assertThat(transferredFrom.booking.departureDate).isEqualTo(LocalDate.of(2013, 9, 1))
+
+      assertThat(domainEvent.metadata).containsEntry(MetaDataName.CAS1_CHANGE_REQUEST_ID, changeRequest.id.toString())
     }
   }
 

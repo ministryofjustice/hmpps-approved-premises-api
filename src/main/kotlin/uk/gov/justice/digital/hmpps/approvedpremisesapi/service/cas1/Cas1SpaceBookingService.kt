@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.Clock
@@ -117,7 +118,6 @@ class Cas1SpaceBookingService(
       expectedDepartureDate = departureDate,
       createdBy = createdBy,
       characteristics = characteristics,
-      transferType = null,
     )
 
     success(spaceBooking)
@@ -391,8 +391,12 @@ class Cas1SpaceBookingService(
       expectedDepartureDate = departureDate,
       createdBy = user,
       characteristics = existingCas1SpaceBooking.criteria,
-      transferType = TransferType.EMERGENCY,
-      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+      transferInfo = BookingTransferInfo(
+        type = TransferType.EMERGENCY,
+        booking = existingCas1SpaceBooking,
+        changeRequest = null,
+      ),
+      beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
         cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
           user,
           existingCas1SpaceBooking,
@@ -443,8 +447,12 @@ class Cas1SpaceBookingService(
       expectedDepartureDate = cas1NewPlannedTransfer.departureDate,
       createdBy = user,
       characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
-      transferType = TransferType.PLANNED,
-      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+      transferInfo = BookingTransferInfo(
+        type = TransferType.PLANNED,
+        booking = existingCas1SpaceBooking,
+        changeRequest = changeRequest,
+      ),
+      beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
         cas1ChangeRequestService.approvedPlannedTransfer(
           changeRequest = changeRequest,
           user = user,
@@ -606,8 +614,8 @@ class Cas1SpaceBookingService(
     expectedDepartureDate: LocalDate,
     createdBy: UserEntity,
     characteristics: List<CharacteristicEntity>,
-    transferType: TransferType?,
-    beforeBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
+    transferInfo: BookingTransferInfo? = null,
+    beforeRaisingBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
   ): Cas1SpaceBookingEntity {
     val application = placementRequest.application
     val spaceBooking = cas1SpaceBookingRepository.saveAndFlush(
@@ -644,21 +652,41 @@ class Cas1SpaceBookingService(
         nonArrivalReason = null,
         deliusEventNumber = application.eventNumber,
         migratedManagementInfoFrom = null,
+        // this is populated on retrieval from the origin space booking
         transferredTo = null,
-        transferType = transferType,
+        transferType = transferInfo?.type,
         deliusId = null,
       ),
     )
 
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
 
-    beforeBookingMadeDomainEvent(spaceBooking)
+    beforeRaisingBookingMadeDomainEvent(spaceBooking)
 
-    cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(spaceBooking, createdBy))
+    cas1BookingDomainEventService.spaceBookingMade(
+      Cas1BookingCreatedEvent(
+        booking = spaceBooking,
+        createdBy = createdBy,
+        transferInfo = transferInfo?.let {
+          TransferInfo(
+            type = it.type,
+            changeRequestId = it.changeRequest?.id,
+            booking = it.booking,
+          )
+        },
+      ),
+    )
+
     cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
     return spaceBooking
   }
+
+  private data class BookingTransferInfo(
+    val type: TransferType,
+    val booking: Cas1SpaceBookingEntity,
+    val changeRequest: Cas1ChangeRequestEntity? = null,
+  )
 
   data class UpdateSpaceBookingDetails(
     val bookingId: UUID,
