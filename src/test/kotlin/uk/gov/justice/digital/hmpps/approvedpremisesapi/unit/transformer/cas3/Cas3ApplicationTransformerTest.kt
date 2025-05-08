@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -280,6 +281,32 @@ class Cas3ApplicationTransformerTest {
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.risks).isNotNull
+  }
+
+  @Test
+  fun `transformJpaToApiSummary transforms application with rejected assessment correctly`() {
+    val application = object : TemporaryAccommodationApplicationSummary {
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+      override fun getCreatedAt() = Instant.parse("2025-04-19T13:25:00+01:00")
+      override fun getSubmittedAt() = Instant.parse("2025-04-19T13:25:30+01:00")
+      override fun getLatestAssessmentSubmittedAt() = Instant.parse("2025-04-23T09:01:31+05:00")
+      override fun getLatestAssessmentDecision() = AssessmentDecision.REJECTED
+      override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
+      override fun getHasBooking() = false
+    }
+
+    val result = cas3ApplicationsTransformer.transformDomainToCas3ApplicationSummary(
+      application,
+      mockk(),
+    )
+
+    assertThat(result.id).isEqualTo(application.getId())
+    assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
+    assertThat(result.status).isEqualTo(ApplicationStatus.rejected)
     assertThat(result.risks).isNotNull
   }
 }
