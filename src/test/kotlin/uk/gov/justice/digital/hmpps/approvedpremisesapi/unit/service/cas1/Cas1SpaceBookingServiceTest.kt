@@ -324,7 +324,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
-      every { spaceBookingRepository.saveAndFlush(capture(persistedBookingCaptor)) } returnsArgument 0
+      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -338,8 +338,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
+      assertThatCasResult(result).isSuccess()
 
       val persistedBooking = persistedBookingCaptor.captured
       assertThat(persistedBooking.premises).isEqualTo(premises)
@@ -419,7 +418,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
-      every { spaceBookingRepository.saveAndFlush(capture(persistedBookingCaptor)) } returnsArgument 0
+      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -433,8 +432,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
+      assertThatCasResult(result).isSuccess()
 
       val persistedBooking = persistedBookingCaptor.captured
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
@@ -1850,13 +1848,15 @@ class Cas1SpaceBookingServiceTest {
 
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
 
-      every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
+      every { spaceBookingRepository.save(capture(capturedBookings)) } answers { firstArg() }
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } returns Unit
+      every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
@@ -1876,7 +1876,7 @@ class Cas1SpaceBookingServiceTest {
 
       assertThatCasResult(result).isSuccess()
 
-      verify(exactly = 2) { spaceBookingRepository.saveAndFlush(any()) }
+      verify(exactly = 2) { spaceBookingRepository.save(any()) }
 
       assertEquals(2, capturedBookings.size)
 
@@ -2176,6 +2176,7 @@ class Cas1SpaceBookingServiceTest {
 
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
 
+      every { spaceBookingRepository.save(capture(capturedBookings)) } answers { firstArg() }
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
 
       every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
@@ -2196,7 +2197,8 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
-      verify(exactly = 2) { spaceBookingRepository.saveAndFlush(any()) }
+      verify(exactly = 1) { spaceBookingRepository.save(any()) }
+      verify(exactly = 1) { spaceBookingRepository.saveAndFlush(any()) }
 
       assertEquals(2, capturedBookings.size)
 
