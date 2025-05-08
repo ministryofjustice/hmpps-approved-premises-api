@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -1001,12 +1002,14 @@ class Cas1BookingCas1DomainEventServiceTest {
       )
 
       service.spaceBookingChanged(
-        booking,
-        changedBy,
-        bookingChangedAt = createdAt,
-        previousArrivalDateIfChanged = LocalDate.of(2025, 2, 12),
-        previousDepartureDateIfChanged = null,
-        previousCharacteristicsIfChanged = null,
+        Cas1BookingChangedEvent(
+          booking,
+          changedBy,
+          bookingChangedAt = createdAt,
+          previousArrivalDateIfChanged = LocalDate.of(2025, 2, 12),
+          previousDepartureDateIfChanged = null,
+          previousCharacteristicsIfChanged = null,
+        ),
       )
 
       verify(exactly = 1) {
@@ -1077,12 +1080,14 @@ class Cas1BookingCas1DomainEventServiceTest {
       )
 
       service.spaceBookingChanged(
-        booking,
-        changedBy,
-        bookingChangedAt = createdAt,
-        previousArrivalDateIfChanged = LocalDate.of(2025, 2, 12),
-        previousDepartureDateIfChanged = LocalDate.of(2025, 4, 11),
-        previousCharacteristicsIfChanged = listOf(previousRoomCharacteristic),
+        Cas1BookingChangedEvent(
+          booking,
+          changedBy,
+          bookingChangedAt = createdAt,
+          previousArrivalDateIfChanged = LocalDate.of(2025, 2, 12),
+          previousDepartureDateIfChanged = LocalDate.of(2025, 4, 11),
+          previousCharacteristicsIfChanged = listOf(previousRoomCharacteristic),
+        ),
       )
 
       verify(exactly = 1) {

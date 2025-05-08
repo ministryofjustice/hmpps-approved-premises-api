@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MutableClockConfiguration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
@@ -55,7 +55,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
       expectedAllocation: String,
     ) {
       val assessmentRule = EmergencyAndShortNoticeAssessmentRule(
-        MutableClockConfiguration.MutableClock(
+        ClockConfiguration.MutableClock(
           date.atTime(12, 0, 0).toInstant(ZoneOffset.UTC),
         ),
       )
@@ -200,7 +200,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
     @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
     fun `Returns Skip with when no user is configured for the cru management area on the given day`(noticeType: Cas1ApplicationTimelinessCategory) {
       val assessmentRule = EmergencyAndShortNoticeAssessmentRule(
-        MutableClockConfiguration.MutableClock(
+        ClockConfiguration.MutableClock(
           // Wednesday
           LocalDate.parse("2024-07-03").atTime(12, 0, 0).toInstant(ZoneOffset.UTC),
         ),

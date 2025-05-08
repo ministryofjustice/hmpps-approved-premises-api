@@ -12,7 +12,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 
 @Configuration
-class MutableClockConfiguration {
+class ClockConfiguration {
 
   val clock: MutableClock
     @Bean
@@ -24,7 +24,9 @@ class MutableClockConfiguration {
     clock.reset()
   }
 
-  class MutableClock(time: Instant? = null) : Clock() {
+  class FixedClock : MutableClock(Instant.now())
+
+  open class MutableClock(time: Instant? = null) : Clock() {
     var fixedTime: Instant? = time
 
     fun reset() = run { fixedTime = null }

@@ -109,8 +109,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.Dom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.EmailNotificationAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.IntegrationTestDbManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.TestPropertiesInitializer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MockFeatureFlagService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MutableClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.NoOpSentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
@@ -567,7 +567,7 @@ abstract class IntegrationTestBase {
   lateinit var domainEventAsserter: DomainEventAsserter
 
   @Autowired
-  lateinit var clock: MutableClockConfiguration.MutableClock
+  lateinit var clock: ClockConfiguration.MutableClock
 
   @Autowired
   lateinit var mockSentryService: NoOpSentryService

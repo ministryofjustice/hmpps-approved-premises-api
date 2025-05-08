@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Confli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -288,12 +289,14 @@ class Cas1SpaceBookingService(
     val previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null
 
     cas1BookingDomainEventService.spaceBookingChanged(
-      booking = updatedBooking,
-      changedBy = updateSpaceBookingDetails.updatedBy,
-      bookingChangedAt = OffsetDateTime.now(),
-      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
-      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
-      previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
+      Cas1BookingChangedEvent(
+        booking = updatedBooking,
+        changedBy = updateSpaceBookingDetails.updatedBy,
+        bookingChangedAt = OffsetDateTime.now(clock),
+        previousArrivalDateIfChanged = previousArrivalDateIfChanged,
+        previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+        previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
+      ),
     )
 
     if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
