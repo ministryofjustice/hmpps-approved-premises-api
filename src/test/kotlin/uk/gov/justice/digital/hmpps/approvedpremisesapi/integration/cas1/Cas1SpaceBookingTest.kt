@@ -2698,6 +2698,11 @@ class Cas1SpaceBookingTest {
         spaceBooking.application!!.cruManagementArea!!.emailAddress!!,
         Cas1NotifyTemplates.BOOKING_AMENDED,
       )
+
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+      )
     }
   }
 

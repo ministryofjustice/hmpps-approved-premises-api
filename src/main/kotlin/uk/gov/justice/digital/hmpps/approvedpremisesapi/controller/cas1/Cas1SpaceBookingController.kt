@@ -204,6 +204,7 @@ class Cas1SpaceBookingController(
           departureDate = cas1UpdateSpaceBooking.departureDate,
           characteristics = characteristics,
           updatedBy = user,
+          shortened = false,
         ),
       ),
     )

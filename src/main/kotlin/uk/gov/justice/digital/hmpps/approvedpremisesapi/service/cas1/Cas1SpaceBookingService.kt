@@ -305,6 +305,7 @@ class Cas1SpaceBookingService(
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedBooking,
           application = application,
+          shortened = updateSpaceBookingDetails.shortened,
         )
       }
     }
@@ -319,6 +320,7 @@ class Cas1SpaceBookingService(
     val existingBooking = cas1SpaceBookingRepository.findByIdOrNull(shortenedBookingDetails.bookingId)
 
     validateShortenedSpaceBooking(shortenedBookingDetails, existingBooking)
+    if (validationErrors.any()) return fieldValidationError
 
     val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
       bookingId = shortenedBookingDetails.bookingId,
@@ -327,24 +329,10 @@ class Cas1SpaceBookingService(
       departureDate = shortenedBookingDetails.departureDate,
       characteristics = null,
       updatedBy = shortenedBookingDetails.updatedBy,
+      shortened = true,
     )
 
-    validateUpdateSpaceBooking(updateSpaceBookingDetails)
-
-    if (validationErrors.any()) return fieldValidationError
-
-    val previousDepartureDate = existingBooking!!.expectedDepartureDate
-
-    val updatedBooking = updateExistingSpaceBooking(existingBooking!!, updateSpaceBookingDetails)
-
-    updatedBooking.application?.let { application ->
-      cas1BookingEmailService.spaceBookingShortened(
-        spaceBooking = updatedBooking,
-        application = application,
-      )
-    }
-
-    success(updatedBooking)
+    return updateSpaceBooking(updateSpaceBookingDetails)
   }
 
   @Transactional
@@ -392,7 +380,7 @@ class Cas1SpaceBookingService(
       createdBy = user,
       characteristics = existingCas1SpaceBooking.criteria,
       transferType = TransferType.EMERGENCY,
-      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+      beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
         cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
           user,
           existingCas1SpaceBooking,
@@ -444,7 +432,7 @@ class Cas1SpaceBookingService(
       createdBy = user,
       characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
       transferType = TransferType.PLANNED,
-      beforeBookingMadeDomainEvent = { createdSpaceBooking ->
+      beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
         cas1ChangeRequestService.approvedPlannedTransfer(
           changeRequest = changeRequest,
           user = user,
@@ -607,7 +595,7 @@ class Cas1SpaceBookingService(
     createdBy: UserEntity,
     characteristics: List<CharacteristicEntity>,
     transferType: TransferType?,
-    beforeBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
+    beforeRaisingBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
   ): Cas1SpaceBookingEntity {
     val application = placementRequest.application
     val spaceBooking = cas1SpaceBookingRepository.saveAndFlush(
@@ -652,9 +640,10 @@ class Cas1SpaceBookingService(
 
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
 
-    beforeBookingMadeDomainEvent(spaceBooking)
+    beforeRaisingBookingMadeDomainEvent(spaceBooking)
 
     cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(spaceBooking, createdBy))
+
     cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
     return spaceBooking
@@ -667,6 +656,7 @@ class Cas1SpaceBookingService(
     val departureDate: LocalDate?,
     val characteristics: List<CharacteristicEntity>?,
     val updatedBy: UserEntity,
+    val shortened: Boolean,
   )
 
   data class ShortenSpaceBookingDetails(
