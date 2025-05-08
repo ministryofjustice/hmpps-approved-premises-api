@@ -63,12 +63,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -316,7 +316,7 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
@@ -361,7 +361,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(persistedBooking, user) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user)) }
       verify { cas1BookingEmailService.spaceBookingMade(persistedBooking, application) }
     }
 
@@ -410,12 +410,7 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
 
-      every {
-        cas1BookingDomainEventService.spaceBookingMade(
-          any(),
-          user,
-        )
-      } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
 
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
@@ -1799,7 +1794,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
@@ -1847,7 +1842,7 @@ class Cas1SpaceBookingServiceTest {
       val placementRequest = existingSpaceBooking.placementRequest!!
       val application = placementRequest.application
       verify { cas1ApplicationStatusService.spaceBookingMade(emergencyBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(emergencyBooking, user) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(emergencyBooking, user)) }
       verify { cas1BookingEmailService.spaceBookingMade(emergencyBooking, application) }
     }
   }
@@ -2113,7 +2108,7 @@ class Cas1SpaceBookingServiceTest {
       every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
@@ -2164,19 +2159,8 @@ class Cas1SpaceBookingServiceTest {
       val placementRequest = existingSpaceBooking.placementRequest!!
       val application = placementRequest.application
       verify { cas1ApplicationStatusService.spaceBookingMade(transferredBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(transferredBooking, user) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(transferredBooking, user)) }
       verify { cas1BookingEmailService.spaceBookingMade(transferredBooking, application) }
     }
   }
-
-  data class TestCaseForDeparture(
-    val newReasonId: UUID,
-    val newMoveOnCategoryId: UUID,
-    val newDepartureDate: LocalDate,
-    val newDepartureTime: LocalTime,
-    val existingReasonId: UUID,
-    val existingMoveOnCategoryId: UUID,
-    val existingDepartureDate: LocalDate,
-    val existingDepartureTime: LocalTime,
-  )
 }

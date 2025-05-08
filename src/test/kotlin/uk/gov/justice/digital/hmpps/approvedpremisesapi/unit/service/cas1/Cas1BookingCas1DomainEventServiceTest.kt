@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -134,7 +135,7 @@ class Cas1BookingCas1DomainEventServiceTest {
 
     @Test
     fun `bookingMade saves domain event`() {
-      service.spaceBookingMade(spaceBooking, user)
+      service.spaceBookingMade(Cas1BookingCreatedEvent(spaceBooking, user))
 
       val domainEventArgument = slot<SaveCas1DomainEvent<BookingMadeEnvelope>>()
 

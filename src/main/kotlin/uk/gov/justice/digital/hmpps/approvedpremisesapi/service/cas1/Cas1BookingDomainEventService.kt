@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.LocalDate
@@ -47,10 +48,9 @@ class Cas1BookingDomainEventService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
-  fun spaceBookingMade(
-    booking: Cas1SpaceBookingEntity,
-    user: UserEntity,
-  ) {
+  fun spaceBookingMade(cas1BookingCreatedEvent: Cas1BookingCreatedEvent) {
+    val booking = cas1BookingCreatedEvent.booking
+    val user = cas1BookingCreatedEvent.createdBy
     val placementRequest = booking.placementRequest!!
     val application = placementRequest.application
     bookingMade(
