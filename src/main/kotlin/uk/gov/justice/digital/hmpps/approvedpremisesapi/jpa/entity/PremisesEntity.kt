@@ -19,6 +19,7 @@ import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import java.util.UUID
@@ -60,6 +61,40 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?): List<TemporaryAccommodationPremisesSummary>
+
+  @Query(
+    """
+      SELECT
+          p.id as id,
+          p.name as name,
+          p.address_line1 as addressLine1,
+          p.address_line2 as addressLine2,
+          p.postcode as postcode,
+          pdu.name as pdu,
+          p.status as status,
+          la.name as localAuthorityAreaName,
+          beds.id as bedspacesId,
+          rooms.name as bedspacesReference,
+          CASE WHEN beds.end_date <= CURRENT_DATE THEN 'archived' ELSE 'online' END as bedspacesStatus
+      FROM
+          temporary_accommodation_premises tap
+          INNER JOIN premises p on tap.premises_id = p.id
+          INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
+          INNER JOIN probation_delivery_units pdu ON tap.probation_delivery_unit_id = pdu.id
+          LEFT JOIN local_authority_areas la ON p.local_authority_area_id = la.id
+          LEFT JOIN rooms on rooms.premises_id = tap.premises_id
+          LEFT JOIN beds ON rooms.id = beds.room_id
+      WHERE pr.id = :regionId
+        AND (:postcodeOrAddress is null
+          OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
+          )
+          ORDER BY p.id
+      """,
+    nativeQuery = true,
+  )
+  fun findFlatAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?): List<FlatTemporaryAccommodationPremisesSummary>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
@@ -303,6 +338,20 @@ interface TemporaryAccommodationPremisesSummary {
   val status: PropertyStatus
   val bedCount: Int
   val localAuthorityAreaName: String?
+}
+
+interface FlatTemporaryAccommodationPremisesSummary {
+  val id: UUID
+  val name: String
+  val addressLine1: String
+  val addressLine2: String?
+  val postcode: String
+  val pdu: String
+  val status: PropertyStatus
+  val localAuthorityAreaName: String?
+  val bedspacesId: UUID?
+  val bedspacesReference: String?
+  val bedspacesStatus: Cas3BedspaceSummary.Status?
 }
 
 data class ApprovedPremisesBasicSummary(
