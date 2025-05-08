@@ -1922,6 +1922,7 @@ class Cas1SpaceBookingServiceTest {
 
     private val destinationPremises = ApprovedPremisesEntityFactory()
       .withDefaults()
+      .withSupportsSpaceBookings(true)
       .withId(DESTINATION_PREMISES_ID)
       .produce()
 
@@ -1934,6 +1935,11 @@ class Cas1SpaceBookingServiceTest {
       .withSpaceBooking(existingSpaceBooking)
       .produce()
 
+    @BeforeEach
+    fun commonMocks() {
+      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
+    }
+
     @Test
     fun `should throw validation error when destination premises not exist`() {
       every { cas1PremisesService.findPremiseById(any()) } returns null
@@ -1942,6 +1948,10 @@ class Cas1SpaceBookingServiceTest {
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
+      every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
+
+      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+
       val destinationPremisesId = UUID.randomUUID()
 
       val result = service.createPlannedTransfer(
@@ -1949,15 +1959,14 @@ class Cas1SpaceBookingServiceTest {
         user,
         Cas1NewPlannedTransfer(
           destinationPremisesId = destinationPremisesId,
-          arrivalDate = LocalDate.now(),
+          arrivalDate = LocalDate.now().plusDays(1),
           departureDate = LocalDate.now().plusMonths(2),
           changeRequestId = UUID.randomUUID(),
           characteristics = emptyList(),
         ),
       )
 
-      assertThatCasResult(result)
-        .isNotFound("Premises", destinationPremisesId)
+      assertThatCasResult(result).isFieldValidationError().hasMessage("\$.premisesId", "doesNotExist")
     }
 
     @Test
@@ -1996,6 +2005,8 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
 
+      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+
       val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
         user,
@@ -2008,8 +2019,7 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result)
-        .isGeneralValidationError("The provided departure date (${LocalDate.now().plusWeeks(1)}) must be after the arrival date (${LocalDate.now().plusWeeks(2)})")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("\$.departureDate", "shouldBeAfterArrivalDate")
     }
 
     @Test
@@ -2116,47 +2126,6 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Should return validation error when given space booking has no recorded arrival date`() {
-      existingSpaceBooking = Cas1SpaceBookingEntityFactory()
-        .withPremises(currentPremises)
-        .withActualArrivalDate(null)
-        .produce()
-
-      existingChangeRequest = Cas1ChangeRequestEntityFactory()
-        .withSpaceBooking(existingSpaceBooking)
-        .produce()
-
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
-      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
-        existingSpaceBooking.id,
-      )
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-
-      every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
-
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
-
-      every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
-
-      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
-
-      val result = service.createPlannedTransfer(
-        existingSpaceBooking.id,
-        user,
-        Cas1NewPlannedTransfer(
-          destinationPremisesId = destinationPremises.id,
-          arrivalDate = LocalDate.now().plusDays(2),
-          departureDate = LocalDate.now().plusWeeks(1),
-          changeRequestId = existingChangeRequest.id,
-          characteristics = emptyList(),
-        ),
-      )
-
-      assertThatCasResult(result)
-        .isGeneralValidationError("Arrival must be recorded for the associated space booking")
-    }
-
-    @Test
     fun `successfully create an transferred booking and update the existing booking`() {
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
@@ -2168,16 +2137,15 @@ class Cas1SpaceBookingServiceTest {
 
       every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
 
-      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
-
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } returns Unit
+      every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
 
       every { spaceBookingRepository.save(capture(capturedBookings)) } answers { firstArg() }
-      every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
 
       every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
 
@@ -2197,8 +2165,7 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
-      verify(exactly = 1) { spaceBookingRepository.save(any()) }
-      verify(exactly = 1) { spaceBookingRepository.saveAndFlush(any()) }
+      verify(exactly = 2) { spaceBookingRepository.save(any()) }
 
       assertEquals(2, capturedBookings.size)
 

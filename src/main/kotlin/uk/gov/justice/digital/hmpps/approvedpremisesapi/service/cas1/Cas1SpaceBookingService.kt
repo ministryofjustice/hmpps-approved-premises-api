@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -399,16 +398,13 @@ class Cas1SpaceBookingService(
     user: UserEntity,
     cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
   ): CasResult<Unit> {
-    lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
+    val arrivalDate = cas1NewPlannedTransfer.arrivalDate
+    val departureDate = cas1NewPlannedTransfer.departureDate
 
-    val destinationPremises = cas1PremisesService.findPremiseById(cas1NewPlannedTransfer.destinationPremisesId)
-      ?: return CasResult.NotFound("Premises", cas1NewPlannedTransfer.destinationPremisesId.toString())
+    lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
 
     val changeRequest = cas1ChangeRequestService.findChangeRequest(cas1NewPlannedTransfer.changeRequestId)
       ?: return CasResult.NotFound("Change Request", cas1NewPlannedTransfer.changeRequestId.toString())
-
-    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
-      ?: return CasResult.NotFound("Space Booking", bookingId.toString())
 
     if (changeRequest.resolved) {
       return if (changeRequest.decision == ChangeRequestDecision.APPROVED) {
@@ -418,20 +414,40 @@ class Cas1SpaceBookingService(
       }
     }
 
-    validatePlannedTransferDetails(cas1NewPlannedTransfer, existingCas1SpaceBooking, changeRequest)?.let { return it }
+    if (!arrivalDate.isAfter(LocalDate.now())) {
+      return GeneralValidationError("The provided arrival date ($arrivalDate) must be in the future")
+    }
+
+    if (changeRequest.spaceBooking.id != bookingId) {
+      return GeneralValidationError("The booking is not associated with the specified change request ${changeRequest.id}")
+    }
+
+    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
+      ?: return CasResult.NotFound("Space Booking", bookingId.toString())
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val plannedTransferSpaceBooking = doCreateBooking(
-      CreateSpaceBookingDetails(
-        premisesId = destinationPremises.id,
-        placementRequestId = placementRequest.id,
-        expectedArrivalDate = cas1NewPlannedTransfer.arrivalDate,
-        expectedDepartureDate = cas1NewPlannedTransfer.departureDate,
-        createdBy = user,
-        characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
-        transferType = TransferType.PLANNED,
-      ),
+    val createSpaceBookingDetails = CreateSpaceBookingDetails(
+      premisesId = cas1NewPlannedTransfer.destinationPremisesId,
+      placementRequestId = placementRequest.id,
+      expectedArrivalDate = arrivalDate,
+      expectedDepartureDate = departureDate,
+      createdBy = user,
+      characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
+      transferType = TransferType.PLANNED,
+    )
+    validateCreateBookingCommon(createSpaceBookingDetails).ifError { return it.reviseType() }
+
+    val updateExistingBookingDetails = UpdateSpaceBookingDetails(
+      bookingId = bookingId,
+      premisesId = existingCas1SpaceBooking.premises.id,
+      departureDate = arrivalDate,
+      updatedBy = user,
+    )
+    validateUpdateBookingCommon(updateExistingBookingDetails).ifError { return it.reviseType() }
+
+    val newSpaceBooking = doCreateBooking(
+      createSpaceBookingDetails,
       beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
         cas1ChangeRequestService.approvedPlannedTransfer(
           changeRequest = changeRequest,
@@ -440,47 +456,9 @@ class Cas1SpaceBookingService(
       },
     )
 
-    updateTransferredSpaceBooking(existingCas1SpaceBooking, plannedTransferSpaceBooking, cas1NewPlannedTransfer.arrivalDate)
+    doUpdateBooking(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
 
     return Success(Unit)
-  }
-
-  @Deprecated("Use doUpdateBooking")
-  private fun updateTransferredSpaceBooking(
-    existingSpaceBooking: Cas1SpaceBookingEntity,
-    transferredSpaceBooking: Cas1SpaceBookingEntity,
-    departureDate: LocalDate,
-  ): Cas1SpaceBookingEntity {
-    existingSpaceBooking.transferredTo = transferredSpaceBooking
-    existingSpaceBooking.expectedDepartureDate = departureDate
-    existingSpaceBooking.canonicalDepartureDate = departureDate
-
-    return cas1SpaceBookingRepository.saveAndFlush(existingSpaceBooking)
-  }
-
-  @Suppress("ReturnCount")
-  private fun validatePlannedTransferDetails(
-    plannedTransfer: Cas1NewPlannedTransfer,
-    booking: Cas1SpaceBookingEntity,
-    changeRequest: Cas1ChangeRequestEntity,
-  ): CasResult<Unit>? {
-    if (!plannedTransfer.arrivalDate.isAfter(LocalDate.now())) {
-      return GeneralValidationError("The provided arrival date (${plannedTransfer.arrivalDate}) must be in the future")
-    }
-
-    if (plannedTransfer.arrivalDate >= plannedTransfer.departureDate) {
-      return GeneralValidationError("The provided departure date (${plannedTransfer.departureDate}) must be after the arrival date (${plannedTransfer.arrivalDate})")
-    }
-
-    if (changeRequest.spaceBooking.id != booking.id) {
-      return GeneralValidationError("The booking is not associated with the specified change request ${changeRequest.id}")
-    }
-
-    if (!booking.hasArrival()) {
-      return GeneralValidationError("Arrival must be recorded for the associated space booking")
-    }
-
-    return null
   }
 
   private fun validateCreateBookingCommon(
