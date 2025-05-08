@@ -462,10 +462,6 @@ detekt {
   baseline = file("./detekt-baseline.xml")
 }
 
-dependencyCheck {
-  suppressionFile = ".dependencycheckignore"
-}
-
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
   source = source.asFileTree.matching {
     exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
