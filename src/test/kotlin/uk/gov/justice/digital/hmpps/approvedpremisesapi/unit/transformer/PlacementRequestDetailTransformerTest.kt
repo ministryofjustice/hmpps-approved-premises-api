@@ -281,10 +281,10 @@ class PlacementRequestDetailTransformerTest {
         ),
         type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
         createdAt = Instant.now(),
-        lengthOfStayDays = 30,
         tier = "TierA",
         expectedArrivalDate = LocalDate.parse("2023-01-01"),
         actualArrivalDate = LocalDate.parse("2023-01-01"),
+        placementRequestId = UUID.randomUUID(),
       ),
     )
 

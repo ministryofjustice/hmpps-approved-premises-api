@@ -38,11 +38,11 @@ interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, U
           booking.crn as crn,
           cr.type as type,
           cr.created_at as createdAt,
-          (booking.canonical_departure_date - booking.canonical_arrival_date) as lengthOfStayDays,
           apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
           booking.canonical_arrival_date as canonicalArrivalDate,
           booking.expected_arrival_date as expectedArrivalDate,
-          booking.actual_arrival_date as actualArrivalDate
+          booking.actual_arrival_date as actualArrivalDate,
+          pr.id as placementRequestId
         FROM cas1_change_requests cr
         INNER JOIN cas1_space_bookings booking on cr.cas1_space_booking_id = booking.id
         INNER JOIN placement_requests pr on cr.placement_request_id = pr.id
@@ -71,10 +71,10 @@ interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, U
     val crn: String
     val type: String
     val createdAt: java.time.Instant
-    val lengthOfStayDays: Int
     val tier: String
-    val expectedArrivalDate: LocalDate?
+    val expectedArrivalDate: LocalDate
     val actualArrivalDate: LocalDate?
+    val placementRequestId: UUID
   }
 }
 

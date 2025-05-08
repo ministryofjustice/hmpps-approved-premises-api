@@ -136,7 +136,6 @@ class Cas1ChangeRequestService(
         Cas1ChangeRequestSortField.NAME -> "name"
         Cas1ChangeRequestSortField.TIER -> "tier"
         Cas1ChangeRequestSortField.CANONICAL_ARRIVAL_DATE -> "canonicalArrivalDate"
-        Cas1ChangeRequestSortField.LENGTH_OF_STAY_DAYS -> "lengthOfStayDays"
       },
     ),
   )

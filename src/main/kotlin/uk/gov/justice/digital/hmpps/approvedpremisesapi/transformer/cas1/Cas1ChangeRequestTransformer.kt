@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosecondsToNearestMillisecond
 
 @Service
@@ -26,14 +25,14 @@ class Cas1ChangeRequestTransformer(
     result: FindOpenChangeRequestResult,
     person: PersonSummaryInfoResult,
   ) = Cas1ChangeRequestSummary(
-    result.id,
-    personTransformer.personSummaryInfoToPersonSummary(person),
+    id = result.id,
+    person = personTransformer.personSummaryInfoToPersonSummary(person),
     type = Cas1ChangeRequestType.valueOf(result.type),
-    result.createdAt,
-    result.lengthOfStayDays,
-    result.tier,
-    result.expectedArrivalDate,
-    result.actualArrivalDate,
+    createdAt = result.createdAt,
+    tier = result.tier,
+    expectedArrivalDate = result.expectedArrivalDate,
+    actualArrivalDate = result.actualArrivalDate,
+    placementRequestId = result.placementRequestId,
   )
 
   fun transformEntityToCas1ChangeRequest(
@@ -71,11 +70,10 @@ class Cas1ChangeRequestTransformer(
         person = personSummary,
         type = Cas1ChangeRequestType.valueOf(entity.type.name),
         createdAt = entity.createdAt.roundNanosecondsToNearestMillisecond().toInstant(),
-        lengthOfStayDays = booking.canonicalArrivalDate
-          .getDaysUntilInclusive(booking.canonicalDepartureDate).size,
         tier = booking.application?.riskRatings?.tier?.value?.level,
         expectedArrivalDate = booking.expectedArrivalDate,
         actualArrivalDate = booking.actualArrivalDate,
+        placementRequestId = entity.placementRequest.id,
       )
     }
   }
