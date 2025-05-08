@@ -544,41 +544,6 @@ class Cas1ChangeRequestTest {
             )
         }
     }
-
-    @Test
-    fun `sort by length of stay days`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
-
-      webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=lengthOfStayDays&sortDirection=asc")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
-          assertThat(response.map { it.type })
-            .containsExactly(
-              Cas1ChangeRequestType.PLANNED_TRANSFER,
-              Cas1ChangeRequestType.PLACEMENT_EXTENSION,
-              Cas1ChangeRequestType.PLACEMENT_APPEAL,
-            )
-        }
-
-      webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=lengthOfStayDays&sortDirection=desc")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
-          assertThat(response.map { it.type })
-            .containsExactly(
-              Cas1ChangeRequestType.PLACEMENT_APPEAL,
-              Cas1ChangeRequestType.PLACEMENT_EXTENSION,
-              Cas1ChangeRequestType.PLANNED_TRANSFER,
-            )
-        }
-    }
   }
 
   @Nested

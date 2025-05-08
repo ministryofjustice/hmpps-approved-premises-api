@@ -1439,28 +1439,27 @@ components:
         actualArrivalDate:
           type: string
           format: date
-        lengthOfStayDays:
-          description: Current placement's length of stay, using canonical arrival date
-          type: integer
+        placementRequestId:
+          type: string
+          format: uuid
       required:
         - id
         - person
         - type
         - createdAt
         - requestedArrivalDate
-        - lengthOfStayDays
+        - expectedArrivalDate
+        - placementRequestId
     Cas1ChangeRequestSortField:
       type: string
       enum:
         - name
         - tier
         - canonicalArrivalDate
-        - lengthOfStayDays
       x-enum-varnames:
         - NAME
         - TIER
         - CANONICAL_ARRIVAL_DATE
-        - LENGTH_OF_STAY_DAYS
     Cas1PremisesBedSummary:
       type: object
       properties:

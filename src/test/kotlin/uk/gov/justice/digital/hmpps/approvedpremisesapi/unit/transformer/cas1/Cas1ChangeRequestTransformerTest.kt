@@ -65,10 +65,10 @@ class Cas1ChangeRequestTransformerTest {
       override val crn = offenderDetailSummary.otherIds.crn
       override val type = ChangeRequestType.PLACEMENT_APPEAL.name
       override val createdAt = java.time.Instant.now()
-      override val lengthOfStayDays = 30
       override val tier = "TierA"
       override val expectedArrivalDate = LocalDate.of(2025, 1, 1)
       override val actualArrivalDate: LocalDate? = null
+      override val placementRequestId = UUID.randomUUID()
     }
 
     val expected = Cas1ChangeRequestSummary(
@@ -76,10 +76,10 @@ class Cas1ChangeRequestTransformerTest {
       person = personSummary,
       type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
       createdAt = findOpenChangeRequestResult.createdAt,
-      lengthOfStayDays = findOpenChangeRequestResult.lengthOfStayDays,
       tier = findOpenChangeRequestResult.tier,
       expectedArrivalDate = findOpenChangeRequestResult.expectedArrivalDate,
       actualArrivalDate = findOpenChangeRequestResult.actualArrivalDate,
+      placementRequestId = findOpenChangeRequestResult.placementRequestId,
     )
 
     val result = cas1ChangeRequestTransformer.findOpenResultsToChangeRequestSummary(findOpenChangeRequestResult, personInfoResult)
