@@ -43,4 +43,9 @@ class CasResultValidatedScope<EntityType> {
   infix fun UUID.hasConflictError(message: String) = CasResult.ConflictError<EntityType>(this, message)
 }
 
+fun CasResultValidatedScope<Unit>.successOrErrors(): CasResult<Unit> = if (hasErrors()) {
+  errors()
+} else {
+  success(Unit)
+}
 inline fun <EntityType> validatedCasResult(scope: CasResultValidatedScope<EntityType>.() -> CasResult<EntityType>): CasResult<EntityType> = scope(CasResultValidatedScope())

@@ -27,12 +27,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.successOrErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.ConflictError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ifError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
@@ -87,10 +89,7 @@ class Cas1SpaceBookingService(
       transferType = null,
     )
 
-    validateCreateBookingCommon(createSpaceBookingDetails)
-    if (hasErrors()) {
-      return errors()
-    }
+    validateCreateBookingCommon(createSpaceBookingDetails).ifError { return it.reviseType() }
 
     val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
     placementRequest!!.booking?.let {
@@ -255,11 +254,10 @@ class Cas1SpaceBookingService(
   @Transactional
   fun updateSpaceBooking(
     updateSpaceBookingDetails: UpdateSpaceBookingDetails,
-  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    validateUpdateBookingCommon(updateSpaceBookingDetails)
-    if (hasErrors()) return errors()
+  ): CasResult<Cas1SpaceBookingEntity> {
+    validateUpdateBookingCommon(updateSpaceBookingDetails).ifError { return it.reviseType() }
 
-    doUpdateBooking(updateSpaceBookingDetails)
+    return doUpdateBooking(updateSpaceBookingDetails)
   }
 
   private fun doUpdateBooking(
@@ -485,13 +483,13 @@ class Cas1SpaceBookingService(
     return null
   }
 
-  private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateCreateBookingCommon(
+  private fun validateCreateBookingCommon(
     details: CreateSpaceBookingDetails,
-  ) {
+  ): CasResult<Unit> = validatedCasResult {
     val premises = cas1PremisesService.findPremiseById(details.premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
-      return
+      return errors()
     }
 
     val placementRequestId = details.placementRequestId
@@ -507,20 +505,22 @@ class Cas1SpaceBookingService(
     if (details.expectedArrivalDate >= details.expectedDepartureDate) {
       "$.departureDate" hasValidationError "shouldBeAfterArrivalDate"
     }
+
+    return successOrErrors()
   }
 
-  private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateUpdateBookingCommon(
+  private fun validateUpdateBookingCommon(
     updateSpaceBookingDetails: UpdateSpaceBookingDetails,
-  ) {
+  ): CasResult<Unit> = validatedCasResult {
     val premises = cas1PremisesService.findPremiseById(updateSpaceBookingDetails.premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
-      return
+      return errors()
     }
     val bookingToUpdate = cas1SpaceBookingRepository.findByIdOrNull(updateSpaceBookingDetails.bookingId)
     if (bookingToUpdate == null) {
       "$.bookingId" hasValidationError "doesNotExist"
-      return
+      return errors()
     }
 
     if (bookingToUpdate.isCancelled()) {
@@ -544,6 +544,8 @@ class Cas1SpaceBookingService(
     if (effectiveDepartureDate.isBefore(effectiveArrivalDate)) {
       "$.departureDate" hasValidationError "The departure date is before the arrival date."
     }
+
+    return successOrErrors()
   }
 
   private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateShortenedSpaceBooking(

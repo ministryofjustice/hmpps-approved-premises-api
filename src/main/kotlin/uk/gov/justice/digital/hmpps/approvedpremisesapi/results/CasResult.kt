@@ -34,3 +34,9 @@ sealed interface CasResult<SuccessType> {
   data class Unauthorised<SuccessType>(val message: String? = null) : Error<SuccessType>
   data class NotFound<SuccessType>(val entityType: String, val id: String) : Error<SuccessType>
 }
+
+inline fun <T> CasResult<T>.ifError(block: (CasResult.Error<T>) -> Unit) {
+  if (this is CasResult.Error) {
+    block(this)
+  }
+}
