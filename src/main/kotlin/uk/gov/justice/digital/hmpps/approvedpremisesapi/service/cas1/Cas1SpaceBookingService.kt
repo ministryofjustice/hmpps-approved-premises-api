@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.successOrErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.ConflictError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ifError
@@ -260,6 +259,9 @@ class Cas1SpaceBookingService(
     return doUpdateBooking(updateSpaceBookingDetails)
   }
 
+  /**
+   * Any calls to this should first call and validate the response of [validateUpdateBookingCommon]
+   */
   private fun doUpdateBooking(
     updateSpaceBookingDetails: UpdateSpaceBookingDetails,
   ): CasResult<Cas1SpaceBookingEntity> {
@@ -322,9 +324,7 @@ class Cas1SpaceBookingService(
     val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
       bookingId = shortenedBookingDetails.bookingId,
       premisesId = shortenedBookingDetails.premisesId,
-      arrivalDate = null,
       departureDate = shortenedBookingDetails.departureDate,
-      characteristics = null,
       updatedBy = shortenedBookingDetails.updatedBy,
       shortened = true,
     )
@@ -340,45 +340,43 @@ class Cas1SpaceBookingService(
     user: UserEntity,
     requirements: Cas1NewEmergencyTransfer,
   ): CasResult<Cas1SpaceBookingEntity> {
-    val destinationPremises = cas1PremisesService.findPremiseById(requirements.destinationPremisesId)
-      ?: return CasResult.NotFound("Premises", requirements.destinationPremisesId.toString())
-
     val arrivalDate = requirements.arrivalDate
     val departureDate = requirements.departureDate
+
+    lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
 
     if (arrivalDate.isAfter(LocalDate.now()) || arrivalDate.isBefore(LocalDate.now().minusDays(7))) {
       return GeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
-    if (arrivalDate >= departureDate) {
-      return GeneralValidationError("The provided departure date must be after the arrival date")
-    }
+    val updateExistingBookingDetails = UpdateSpaceBookingDetails(
+      bookingId = bookingId,
+      premisesId = premisesId,
+      departureDate = arrivalDate,
+      updatedBy = user,
+    )
+    validateUpdateBookingCommon(updateExistingBookingDetails).ifError { return it.reviseType() }
 
-    lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
-    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
-      ?: return CasResult.NotFound("Space Booking", bookingId.toString())
-
-    if (existingCas1SpaceBooking.premises.id != premisesId) {
-      return ConflictError(existingCas1SpaceBooking.premises.id, "The booking is not associated with the specified premises $premisesId")
-    }
+    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)!!
 
     cas1SpaceBookingActionsService.determineActions(existingCas1SpaceBooking)
       .unavailableReason(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)?.let {
         return GeneralValidationError(it)
       }
 
-    val placementRequest = existingCas1SpaceBooking.placementRequest!!
+    val createNewBookingDetails = CreateSpaceBookingDetails(
+      premisesId = requirements.destinationPremisesId,
+      placementRequestId = existingCas1SpaceBooking.placementRequest!!.id,
+      expectedArrivalDate = arrivalDate,
+      expectedDepartureDate = departureDate,
+      createdBy = user,
+      characteristics = existingCas1SpaceBooking.criteria,
+      transferType = TransferType.EMERGENCY,
+    )
+    validateCreateBookingCommon(createNewBookingDetails).ifError { return it.reviseType() }
 
     val emergencyTransferSpaceBooking = doCreateBooking(
-      CreateSpaceBookingDetails(
-        premisesId = destinationPremises.id,
-        placementRequestId = placementRequest.id,
-        expectedArrivalDate = arrivalDate,
-        expectedDepartureDate = departureDate,
-        createdBy = user,
-        characteristics = existingCas1SpaceBooking.criteria,
-        transferType = TransferType.EMERGENCY,
-      ),
+      createNewBookingDetails,
       beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
         cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
           user,
@@ -608,6 +606,9 @@ class Cas1SpaceBookingService(
     val transferType: TransferType?,
   )
 
+  /**
+   * Any calls to this should first call and validate the response of [validateCreateBookingCommon]
+   */
   private fun doCreateBooking(
     details: CreateSpaceBookingDetails,
     beforeRaisingBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
@@ -671,11 +672,11 @@ class Cas1SpaceBookingService(
   data class UpdateSpaceBookingDetails(
     val bookingId: UUID,
     val premisesId: UUID,
-    val arrivalDate: LocalDate?,
-    val departureDate: LocalDate?,
-    val characteristics: List<CharacteristicEntity>?,
+    val arrivalDate: LocalDate? = null,
+    val departureDate: LocalDate? = null,
+    val characteristics: List<CharacteristicEntity>? = null,
     val updatedBy: UserEntity,
-    val shortened: Boolean,
+    val shortened: Boolean = false,
   )
 
   data class ShortenSpaceBookingDetails(

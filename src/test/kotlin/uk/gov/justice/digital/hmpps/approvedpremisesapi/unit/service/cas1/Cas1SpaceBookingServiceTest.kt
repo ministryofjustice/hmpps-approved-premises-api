@@ -10,6 +10,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -1655,11 +1656,19 @@ class Cas1SpaceBookingServiceTest {
     private val destinationPremises = ApprovedPremisesEntityFactory()
       .withDefaults()
       .withId(DESTINATION_PREMISES_ID)
+      .withSupportsSpaceBookings(true)
       .produce()
 
     private var existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withActualArrivalDate(LocalDate.now().minusWeeks(4))
       .withPremises(currentPremises)
       .produce()
+
+    @BeforeEach
+    fun commonMocks() {
+      every { cas1PremisesService.findPremiseById(DESTINATION_PREMISES_ID) } returns destinationPremises
+      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns currentPremises
+    }
 
     @Test
     fun `should throw validation error when destination premises not exist`() {
@@ -1682,12 +1691,11 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result).isNotFound("Premises", destinationPremisesId)
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotExist")
     }
 
     @Test
     fun `should return validation error if arrivalDate is in the future`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1710,7 +1718,6 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return validation error if arrivalDate is more than 7 days ago`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1732,11 +1739,16 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return validation error if departureDate is not after arrival date`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+      } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
+
+      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
 
       val result = service.createEmergencyTransfer(
         PREMISES_ID,
@@ -1749,12 +1761,11 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result).isGeneralValidationError("The provided departure date must be after the arrival date")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("\$.departureDate", "shouldBeAfterArrivalDate")
     }
 
     @Test
     fun `should return validation error if booking does not exist`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1773,13 +1784,13 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result).isNotFound("Space Booking", bookingId)
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bookingId", "doesNotExist")
     }
 
     @Test
-    fun `Should return a conflict error when attempting an emergency transfer for a booking that does not belong to the given premises`() {
+    fun `Should return a validation error when attempting an emergency transfer for a booking that does not belong to the given premises`() {
       val anotherPremisesId = UUID.randomUUID()
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { cas1PremisesService.findPremiseById(anotherPremisesId) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1796,15 +1807,11 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result).isConflictError()
-        .hasEntityId(existingSpaceBooking.premises.id)
-        .hasMessage("The booking is not associated with the specified premises $anotherPremisesId")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("\$.premisesId", "premisesMismatch")
     }
 
     @Test
     fun `should return a general validation error when action not allowed for transfer`() {
-      existingSpaceBooking.actualDepartureDate = LocalDate.now()
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1830,7 +1837,6 @@ class Cas1SpaceBookingServiceTest {
     @ParameterizedTest
     @CsvSource("0", "1", "2", "3", "4", "5", "6", "7")
     fun `create an emergency booking and update the existing booking if arrival date within last 7 days`(daysAgo: Long) {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
