@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Confli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.Clock
@@ -649,7 +650,7 @@ class Cas1SpaceBookingService(
 
     beforeBookingMadeDomainEvent(spaceBooking)
 
-    cas1BookingDomainEventService.spaceBookingMade(spaceBooking, createdBy)
+    cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(spaceBooking, createdBy))
     cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
     return spaceBooking
