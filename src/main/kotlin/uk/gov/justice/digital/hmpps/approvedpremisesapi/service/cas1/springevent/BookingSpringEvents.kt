@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -18,4 +19,10 @@ data class Cas1BookingChangedEvent(
   val previousArrivalDateIfChanged: LocalDate?,
   val previousDepartureDateIfChanged: LocalDate?,
   val previousCharacteristicsIfChanged: List<CharacteristicEntity>?,
+)
+
+data class Cas1BookingCancelledEvent(
+  val booking: Cas1SpaceBookingEntity,
+  val user: UserEntity,
+  val reason: CancellationReasonEntity,
 )

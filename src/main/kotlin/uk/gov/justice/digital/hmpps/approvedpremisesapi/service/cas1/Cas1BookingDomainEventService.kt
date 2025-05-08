@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -279,20 +280,16 @@ class Cas1BookingDomainEventService(
     ),
   )
 
-  fun spaceBookingCancelled(
-    spaceBooking: Cas1SpaceBookingEntity,
-    user: UserEntity,
-    reason: CancellationReasonEntity,
-  ) = bookingCancelled(
+  fun spaceBookingCancelled(bookingCancelled: Cas1BookingCancelledEvent) = bookingCancelled(
     CancellationInfo(
-      bookingId = spaceBooking.id,
-      applicationFacade = spaceBooking.applicationFacade,
+      bookingId = bookingCancelled.booking.id,
+      applicationFacade = bookingCancelled.booking.applicationFacade,
       cancellationId = null,
-      crn = spaceBooking.crn,
-      cancelledAt = spaceBooking.cancellationOccurredAt!!,
-      reason = reason,
-      cancelledBy = user,
-      premises = spaceBooking.premises,
+      crn = bookingCancelled.booking.crn,
+      cancelledAt = bookingCancelled.booking.cancellationOccurredAt!!,
+      reason = bookingCancelled.reason,
+      cancelledBy = bookingCancelled.user,
+      premises = bookingCancelled.booking.premises,
       isSpaceBooking = true,
     ),
   )
