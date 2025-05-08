@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
@@ -141,27 +142,22 @@ class Cas1BookingDomainEventService(
   }
 
   fun spaceBookingChanged(
-    booking: Cas1SpaceBookingEntity,
-    changedBy: UserEntity,
-    bookingChangedAt: OffsetDateTime,
-    previousArrivalDateIfChanged: LocalDate?,
-    previousDepartureDateIfChanged: LocalDate?,
-    previousCharacteristicsIfChanged: List<CharacteristicEntity>?,
+    bookingChanged: Cas1BookingChangedEvent,
   ) = bookingChanged(
     BookingChangedInfo(
-      bookingId = booking.id,
-      crn = booking.crn,
-      arrivalDate = booking.expectedArrivalDate,
-      departureDate = booking.expectedDepartureDate,
-      applicationFacade = booking.applicationFacade,
-      approvedPremises = booking.premises,
-      changedAt = bookingChangedAt,
-      changedBy = changedBy,
-      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
-      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+      bookingId = bookingChanged.booking.id,
+      crn = bookingChanged.booking.crn,
+      arrivalDate = bookingChanged.booking.expectedArrivalDate,
+      departureDate = bookingChanged.booking.expectedDepartureDate,
+      applicationFacade = bookingChanged.booking.applicationFacade,
+      approvedPremises = bookingChanged.booking.premises,
+      changedAt = bookingChanged.bookingChangedAt,
+      changedBy = bookingChanged.changedBy,
+      previousArrivalDateIfChanged = bookingChanged.previousArrivalDateIfChanged,
+      previousDepartureDateIfChanged = bookingChanged.previousDepartureDateIfChanged,
       isSpaceBooking = true,
-      characteristics = booking.criteria.toSpaceCharacteristics(),
-      previousCharacteristics = previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
+      characteristics = bookingChanged.booking.criteria.toSpaceCharacteristics(),
+      previousCharacteristics = bookingChanged.previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
     ),
   )
 
