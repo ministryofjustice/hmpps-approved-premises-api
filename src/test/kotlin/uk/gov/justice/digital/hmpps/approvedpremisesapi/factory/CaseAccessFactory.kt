@@ -15,6 +15,10 @@ class CaseAccessFactory : Factory<CaseAccess> {
   fun withCrn(crn: String) = apply {
     this.crn = { crn }
   }
+  fun withAccess() = apply {
+    withUserExcluded(false)
+    withUserRestricted(false)
+  }
   fun withUserExcluded(userExcluded: Boolean) = apply {
     this.userExcluded = { userExcluded }
   }
