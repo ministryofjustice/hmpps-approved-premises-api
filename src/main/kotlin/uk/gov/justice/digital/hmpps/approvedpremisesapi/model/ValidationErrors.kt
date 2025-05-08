@@ -31,6 +31,9 @@ inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> Valida
 class CasResultValidatedScope<EntityType> {
   val validationErrors = ValidationErrors()
 
+  fun hasErrors() = validationErrors.any()
+  fun errors() = fieldValidationError
+
   val fieldValidationError: CasResult.FieldValidationError<EntityType> = CasResult.FieldValidationError(validationErrors)
 
   infix fun success(entity: EntityType) = CasResult.Success(entity)

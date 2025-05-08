@@ -1842,6 +1842,8 @@ class Cas1SpaceBookingServiceTest {
         cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
       } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
 
+      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
+
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
@@ -2159,6 +2161,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
 
       every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+
+      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
