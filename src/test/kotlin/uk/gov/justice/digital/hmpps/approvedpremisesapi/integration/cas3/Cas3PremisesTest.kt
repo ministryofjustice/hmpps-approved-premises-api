@@ -9,10 +9,12 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
@@ -237,9 +239,9 @@ class Cas3PremisesTest : IntegrationTestBase() {
   @Nested
   inner class GetPremisesSummary {
     @Test
-    fun `Get all Premises returns OK with correct body`() {
+    fun `Get all Premises returns OK with correct premises sorted`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getPremises(user.probationRegion)
+        val premises = getListPremises(user.probationRegion)
 
         val expectedPremisesSummaries = premises.map { premisesSummaryTransformer(it) }.sortedBy { it.id.toString() }
 
@@ -252,9 +254,198 @@ class Cas3PremisesTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all Premises returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val expectedPremises = getPremises(user.probationRegion)
+
+        // unexpectedCas3Premises that's in a different region
+        temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { givenAProbationRegion() }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withYieldedPremises { expectedPremises }
+        }
+
+        bedEntityFactory.produceAndPersistMultiple(5) {
+          withYieldedRoom { room }
+        }
+
+        webTestClient.get()
+          .uri("/cas3/premises/summary")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(expectedPremises.id.toString())
+          .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+          .jsonPath("$[0].addressLine2").isEqualTo("221B")
+          .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+          .jsonPath("$[0].status").isEqualTo("active")
+          .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
+          .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedPremises.localAuthorityArea!!.name)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(5)
+          .jsonPath("$.length()").isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `Get all Premises returns premises with all bedspaces are archived`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val expectedPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(user.probationRegion)
+          withId(UUID.randomUUID())
+          withAddressLine1("8 Knox Street")
+          withAddressLine2("Flat 1")
+          withPostcode("W1H 1FY")
+          withStatus(PropertyStatus.archived)
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+          }
+          withService("CAS3")
+        }
+
+        var roomPremises1 = roomEntityFactory.produceAndPersist {
+          withYieldedPremises { expectedPremises }
+        }
+
+        bedEntityFactory.produceAndPersist {
+          withYieldedRoom { roomPremises1 }
+          withEndDate { LocalDate.now() }
+        }
+
+        var roomPremises2 = roomEntityFactory.produceAndPersist {
+          withYieldedPremises { expectedPremises }
+        }
+
+        bedEntityFactory.produceAndPersist {
+          withYieldedRoom { roomPremises2 }
+          withEndDate { LocalDate.parse("2024-01-13") }
+        }
+
+        webTestClient.get()
+          .uri("/cas3/premises/summary")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].addressLine1").isEqualTo("8 Knox Street")
+          .jsonPath("$[0].addressLine2").isEqualTo("Flat 1")
+          .jsonPath("$[0].postcode").isEqualTo("W1H 1FY")
+          .jsonPath("$[0].status").isEqualTo("archived")
+          .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
+          .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedPremises.localAuthorityArea!!.name)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(0)
+          .jsonPath("$.length()").isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `Get all Premises returns premises without bedspaces`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val expectedPremises = getPremises(user.probationRegion)
+
+        webTestClient.get()
+          .uri("/cas3/premises/summary")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(expectedPremises.id.toString())
+          .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+          .jsonPath("$[0].addressLine2").isEqualTo("221B")
+          .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+          .jsonPath("$[0].status").isEqualTo("active")
+          .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
+          .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedPremises.localAuthorityArea!!.name)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(0)
+          .jsonPath("$.length()").isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `Get all Premises returns bedspace count as expected when there is an archived bedspace`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val expectedPremises = getPremises(user.probationRegion)
+
+        val room = roomEntityFactory.produceAndPersist {
+          withYieldedPremises { expectedPremises }
+        }
+
+        bedEntityFactory.produceAndPersistMultiple(3) {
+          withYieldedRoom { room }
+        }
+
+        bedEntityFactory.produceAndPersistMultiple(1) {
+          withYieldedRoom { room }
+          withEndDate { LocalDate.now().minusWeeks(1) }
+        }
+
+        webTestClient.get()
+          .uri("/cas3/premises/summary")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(expectedPremises.id.toString())
+          .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+          .jsonPath("$[0].addressLine2").isEqualTo("221B")
+          .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+          .jsonPath("$[0].status").isEqualTo("active")
+          .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(3)
+          .jsonPath("$.length()").isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `Get all Premises returns a bedspace count as expected when beds are active`() {
+      givenAUser { user, jwt ->
+        val expectedPremises = getPremises(user.probationRegion)
+
+        val room = roomEntityFactory.produceAndPersist {
+          withYieldedPremises { expectedPremises }
+        }
+
+        bedEntityFactory.produceAndPersistMultiple(3) {
+          withYieldedRoom { room }
+        }
+
+        bedEntityFactory.produceAndPersistMultiple(1) {
+          withYieldedRoom { room }
+          withEndDate { LocalDate.now().plusWeeks(1) }
+        }
+
+        webTestClient.get()
+          .uri("/cas3/premises/summary")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(expectedPremises.id.toString())
+          .jsonPath("$[0].addressLine1").isEqualTo("221 Baker Street")
+          .jsonPath("$[0].addressLine2").isEqualTo("221B")
+          .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
+          .jsonPath("$[0].status").isEqualTo("active")
+          .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(4)
+          .jsonPath("$.length()").isEqualTo(1)
+      }
+    }
+
+    @Test
     fun `Get all premises filters correctly when a postcode is passed in the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getPremises(user.probationRegion)
+        val premises = getListPremises(user.probationRegion)
 
         // filter premises with full postcode
         val expectedPremisesPostcode = premises.take(2).first()
@@ -305,7 +496,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
     @Test
     fun `Get all premises filters correctly when a premises address is passed in the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getPremises(user.probationRegion)
+        val premises = getListPremises(user.probationRegion)
 
         // filter premises with the full premises address
         val expectedPremisesAddress = premises.take(6).first()
@@ -364,7 +555,23 @@ class Cas3PremisesTest : IntegrationTestBase() {
       return response
     }
 
-    private fun getPremises(probationRegion: ProbationRegionEntity): List<TemporaryAccommodationPremisesEntity> {
+    private fun getPremises(probationRegion: ProbationRegionEntity) = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withProbationRegion(probationRegion)
+      withId(UUID.randomUUID())
+      withAddressLine1("221 Baker Street")
+      withAddressLine2("221B")
+      withPostcode("NW1 6XE")
+      withStatus(PropertyStatus.active)
+      withYieldedProbationDeliveryUnit {
+        probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+        }
+      }
+      withService("CAS3")
+    }
+
+    private fun getListPremises(probationRegion: ProbationRegionEntity): List<TemporaryAccommodationPremisesEntity> {
       val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
       val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
