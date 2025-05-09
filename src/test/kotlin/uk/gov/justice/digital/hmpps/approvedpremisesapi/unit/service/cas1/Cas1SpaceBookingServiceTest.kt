@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -836,7 +837,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = newDepartureDate,
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -861,7 +862,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = newDepartureDate,
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -886,7 +887,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = newDepartureDate,
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -911,7 +912,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = newDepartureDate,
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -936,7 +937,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = newDepartureDate,
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -956,7 +957,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = newDepartureDate,
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -979,7 +980,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = LocalDate.of(2025, 6, 16),
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -1004,7 +1005,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = LocalDate.of(2025, 6, 4),
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -1029,7 +1030,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = null,
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -1055,7 +1056,7 @@ class Cas1SpaceBookingServiceTest {
           departureDate = LocalDate.of(2025, 6, 18),
           updatedBy = user,
           characteristics = null,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         ),
       )
 
@@ -1075,7 +1076,7 @@ class Cas1SpaceBookingServiceTest {
         departureDate = LocalDate.of(2025, 4, 26),
         updatedBy = user,
         characteristics = null,
-        shortened = false,
+        updateType = UpdateType.AMENDMENT,
       )
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
@@ -1113,7 +1114,7 @@ class Cas1SpaceBookingServiceTest {
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedSpaceBookingCaptor.captured,
           application = updatedSpaceBookingCaptor.captured.application!!,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         )
       }
     }
@@ -1137,7 +1138,7 @@ class Cas1SpaceBookingServiceTest {
             .withModelScope("room")
             .produce(),
         ),
-        shortened = false,
+        updateType = UpdateType.AMENDMENT,
       )
 
       existingSpaceBooking.actualArrivalDate = null
@@ -1177,7 +1178,7 @@ class Cas1SpaceBookingServiceTest {
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedSpaceBookingCaptor.captured,
           application = updatedSpaceBookingCaptor.captured.application!!,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         )
       }
     }
@@ -1196,7 +1197,7 @@ class Cas1SpaceBookingServiceTest {
         departureDate = newDepartureDate,
         updatedBy = user,
         characteristics = emptyList(),
-        shortened = false,
+        updateType = UpdateType.AMENDMENT,
       )
 
       assertThat(existingSpaceBooking.criteria).isNotEmpty()
@@ -1233,7 +1234,7 @@ class Cas1SpaceBookingServiceTest {
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedSpaceBookingCaptor.captured,
           application = updatedSpaceBookingCaptor.captured.application!!,
-          shortened = false,
+          updateType = UpdateType.AMENDMENT,
         )
       }
     }
@@ -1252,7 +1253,7 @@ class Cas1SpaceBookingServiceTest {
         departureDate = null,
         updatedBy = user,
         characteristics = emptyList(),
-        shortened = false,
+        updateType = UpdateType.AMENDMENT,
       )
 
       assertThat(existingSpaceBooking.criteria).isNotEmpty()
@@ -1304,7 +1305,7 @@ class Cas1SpaceBookingServiceTest {
         departureDate = null,
         updatedBy = user,
         characteristics = emptyList(),
-        shortened = false,
+        updateType = UpdateType.AMENDMENT,
       )
 
       assertThat(existingSpaceBooking.criteria).isNotEmpty()
@@ -1581,7 +1582,7 @@ class Cas1SpaceBookingServiceTest {
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedSpaceBookingCaptor.captured,
           application = updatedSpaceBookingCaptor.captured.application!!,
-          shortened = true,
+          updateType = UpdateType.SHORTENING,
         )
       }
     }
@@ -1633,7 +1634,7 @@ class Cas1SpaceBookingServiceTest {
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedSpaceBookingCaptor.captured,
           application = updatedSpaceBookingCaptor.captured.application!!,
-          shortened = true,
+          updateType = UpdateType.SHORTENING,
         )
       }
     }

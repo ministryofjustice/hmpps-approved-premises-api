@@ -240,7 +240,7 @@ class Cas1SpaceBookingService(
       premisesId = shortenedBookingDetails.premisesId,
       departureDate = shortenedBookingDetails.departureDate,
       updatedBy = shortenedBookingDetails.updatedBy,
-      shortened = true,
+      updateType = UpdateType.SHORTENING,
     )
     validateUpdateBookingCommon(updateBookingDetails).ifError { return it.reviseType() }
 
@@ -269,6 +269,7 @@ class Cas1SpaceBookingService(
       premisesId = premisesId,
       departureDate = arrivalDate,
       updatedBy = user,
+      updateType = UpdateType.TRANSFER,
     )
     validateUpdateBookingCommon(updateExistingBookingDetails).ifError { return it.reviseType() }
 
@@ -358,6 +359,7 @@ class Cas1SpaceBookingService(
       premisesId = existingCas1SpaceBooking.premises.id,
       departureDate = arrivalDate,
       updatedBy = user,
+      updateType = UpdateType.TRANSFER,
     )
     validateUpdateBookingCommon(updateExistingBookingDetails).ifError { return it.reviseType() }
 
@@ -599,7 +601,7 @@ class Cas1SpaceBookingService(
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedBooking,
           application = application,
-          shortened = details.shortened,
+          updateType = details.updateType,
         )
       }
     }
@@ -641,9 +643,15 @@ class Cas1SpaceBookingService(
     val departureDate: LocalDate? = null,
     val characteristics: List<CharacteristicEntity>? = null,
     val updatedBy: UserEntity,
-    val shortened: Boolean = false,
+    val updateType: UpdateType,
     val transferredTo: Cas1SpaceBookingEntity? = null,
   )
+
+  enum class UpdateType {
+    AMENDMENT,
+    SHORTENING,
+    TRANSFER,
+  }
 
   data class ShortenBookingDetails(
     val bookingId: UUID,

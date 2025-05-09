@@ -114,10 +114,10 @@ class Cas1BookingEmailService(
   fun spaceBookingAmended(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
-    shortened: Boolean,
+    updateType: Cas1SpaceBookingService.UpdateType,
   ) = bookingAmended(
     spaceBooking.toEmailBookingInfo(application),
-    shortened = shortened,
+    shortened = updateType == Cas1SpaceBookingService.UpdateType.SHORTENING,
   )
 
   fun bookingAmended(

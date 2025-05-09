@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
@@ -677,7 +678,7 @@ class Cas1BookingEmailServiceTest {
       service.spaceBookingAmended(
         spaceBooking = booking,
         application = application,
-        shortened = false,
+        updateType = Cas1SpaceBookingService.UpdateType.AMENDMENT,
       )
 
       val expectedPersonalisation = mapOf(
@@ -710,7 +711,7 @@ class Cas1BookingEmailServiceTest {
       service.spaceBookingAmended(
         spaceBooking = booking,
         application = application,
-        shortened = true,
+        updateType = Cas1SpaceBookingService.UpdateType.SHORTENING,
       )
 
       val expectedPersonalisation = mapOf(
