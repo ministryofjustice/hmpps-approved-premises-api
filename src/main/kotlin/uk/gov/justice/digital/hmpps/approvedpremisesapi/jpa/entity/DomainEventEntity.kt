@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
@@ -451,17 +450,6 @@ enum class DomainEventType(
       emittable = false,
       payloadType = PlacementChangeRequestCreated::class,
       apiType = Cas1EventType.placementChangeRequestCreated,
-    ),
-  ),
-  APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED(
-    DomainEventCas.CAS1,
-    Cas1EventType.placementChangeRequestAccepted.value,
-    "A placement change request has been accepted",
-    cas1Info = Cas1DomainEventTypeInfo(
-      Cas1TimelineEventType.placementChangeRequestAccepted,
-      emittable = false,
-      apiType = Cas1EventType.placementChangeRequestAccepted,
-      payloadType = PlacementChangeRequestAccepted::class,
     ),
   ),
   APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED(
