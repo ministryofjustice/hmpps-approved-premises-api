@@ -2822,7 +2822,6 @@ class Cas1SpaceBookingTest {
 
       domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
         application.id,
-        DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED,
         DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
         DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
       )
