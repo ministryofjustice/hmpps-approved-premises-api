@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -63,12 +64,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
-import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -86,6 +88,7 @@ class Cas1SpaceBookingServiceTest {
   private val cas1ChangeRequestService = mockk<Cas1ChangeRequestService>()
   private val characteristicService = mockk<CharacteristicService>()
   private val cas1SpaceBookingActionsService = mockk<Cas1SpaceBookingActionsService>()
+  private val clock = ClockConfiguration.FixedClock()
 
   private val service = Cas1SpaceBookingService(
     cas1PremisesService,
@@ -101,7 +104,7 @@ class Cas1SpaceBookingServiceTest {
     cas1ChangeRequestService,
     characteristicService,
     cas1SpaceBookingActionsService,
-    Clock.systemDefaultZone(),
+    clock,
   )
 
   companion object CONSTANTS {
@@ -316,7 +319,7 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
@@ -361,7 +364,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(persistedBooking, user) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user)) }
       verify { cas1BookingEmailService.spaceBookingMade(persistedBooking, application) }
     }
 
@@ -410,12 +413,7 @@ class Cas1SpaceBookingServiceTest {
         LockablePlacementRequestEntity(placementRequest.id)
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
 
-      every {
-        cas1BookingDomainEventService.spaceBookingMade(
-          any(),
-          user,
-        )
-      } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
 
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
@@ -777,7 +775,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) } returns Unit
       every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingCancelled(any()) } returns Unit
       every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
 
       val result = service.withdraw(
@@ -801,7 +799,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
 
       verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) }
+      verify { cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason)) }
       verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
       verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }
     }
@@ -1075,7 +1073,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
       every { cas1BookingEmailService.spaceBookingAmended(any(), any()) } returns Unit
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
@@ -1090,12 +1088,14 @@ class Cas1SpaceBookingServiceTest {
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
-          booking = updatedSpaceBookingCaptor.captured,
-          changedBy = user,
-          bookingChangedAt = any(),
-          previousArrivalDateIfChanged = null,
-          previousDepartureDateIfChanged = LocalDate.of(2025, 1, 10),
-          previousCharacteristicsIfChanged = null,
+          Cas1BookingChangedEvent(
+            booking = updatedSpaceBookingCaptor.captured,
+            changedBy = user,
+            bookingChangedAt = OffsetDateTime.now(clock),
+            previousArrivalDateIfChanged = null,
+            previousDepartureDateIfChanged = LocalDate.of(2025, 1, 10),
+            previousCharacteristicsIfChanged = null,
+          ),
         )
       }
 
@@ -1135,7 +1135,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
       every { cas1BookingEmailService.spaceBookingAmended(any(), any()) } returns Unit
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
@@ -1150,12 +1150,14 @@ class Cas1SpaceBookingServiceTest {
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
-          booking = updatedSpaceBookingCaptor.captured,
-          changedBy = user,
-          bookingChangedAt = any(),
-          previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
-          previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
-          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          Cas1BookingChangedEvent(
+            booking = updatedSpaceBookingCaptor.captured,
+            changedBy = user,
+            bookingChangedAt = OffsetDateTime.now(clock),
+            previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
+            previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
+            previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          ),
         )
       }
 
@@ -1190,7 +1192,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
       every { cas1BookingEmailService.spaceBookingAmended(any(), any()) } returns Unit
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
@@ -1202,12 +1204,14 @@ class Cas1SpaceBookingServiceTest {
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
-          booking = updatedSpaceBookingCaptor.captured,
-          changedBy = user,
-          bookingChangedAt = any(),
-          previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
-          previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
-          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          Cas1BookingChangedEvent(
+            booking = updatedSpaceBookingCaptor.captured,
+            changedBy = user,
+            bookingChangedAt = OffsetDateTime.now(clock),
+            previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
+            previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
+            previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          ),
         )
       }
 
@@ -1242,7 +1246,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -1253,12 +1257,14 @@ class Cas1SpaceBookingServiceTest {
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
-          booking = updatedSpaceBookingCaptor.captured,
-          changedBy = user,
-          bookingChangedAt = any(),
-          previousArrivalDateIfChanged = null,
-          previousDepartureDateIfChanged = null,
-          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          Cas1BookingChangedEvent(
+            booking = updatedSpaceBookingCaptor.captured,
+            changedBy = user,
+            bookingChangedAt = OffsetDateTime.now(clock),
+            previousArrivalDateIfChanged = null,
+            previousDepartureDateIfChanged = null,
+            previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          ),
         )
       }
 
@@ -1291,7 +1297,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -1302,12 +1308,14 @@ class Cas1SpaceBookingServiceTest {
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
-          booking = updatedSpaceBookingCaptor.captured,
-          changedBy = user,
-          bookingChangedAt = any(),
-          previousArrivalDateIfChanged = null,
-          previousDepartureDateIfChanged = null,
-          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          Cas1BookingChangedEvent(
+            booking = updatedSpaceBookingCaptor.captured,
+            changedBy = user,
+            bookingChangedAt = OffsetDateTime.now(clock),
+            previousArrivalDateIfChanged = null,
+            previousDepartureDateIfChanged = null,
+            previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+          ),
         )
       }
 
@@ -1799,7 +1807,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
@@ -1847,7 +1855,7 @@ class Cas1SpaceBookingServiceTest {
       val placementRequest = existingSpaceBooking.placementRequest!!
       val application = placementRequest.application
       verify { cas1ApplicationStatusService.spaceBookingMade(emergencyBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(emergencyBooking, user) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(emergencyBooking, user)) }
       verify { cas1BookingEmailService.spaceBookingMade(emergencyBooking, application) }
     }
   }
@@ -2113,7 +2121,7 @@ class Cas1SpaceBookingServiceTest {
       every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
@@ -2164,19 +2172,8 @@ class Cas1SpaceBookingServiceTest {
       val placementRequest = existingSpaceBooking.placementRequest!!
       val application = placementRequest.application
       verify { cas1ApplicationStatusService.spaceBookingMade(transferredBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(transferredBooking, user) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(transferredBooking, user)) }
       verify { cas1BookingEmailService.spaceBookingMade(transferredBooking, application) }
     }
   }
-
-  data class TestCaseForDeparture(
-    val newReasonId: UUID,
-    val newMoveOnCategoryId: UUID,
-    val newDepartureDate: LocalDate,
-    val newDepartureTime: LocalTime,
-    val existingReasonId: UUID,
-    val existingMoveOnCategoryId: UUID,
-    val existingDepartureDate: LocalDate,
-    val existingDepartureTime: LocalTime,
-  )
 }

@@ -32,6 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.LocalDate
@@ -47,10 +50,9 @@ class Cas1BookingDomainEventService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
-  fun spaceBookingMade(
-    booking: Cas1SpaceBookingEntity,
-    user: UserEntity,
-  ) {
+  fun spaceBookingMade(cas1BookingCreatedEvent: Cas1BookingCreatedEvent) {
+    val booking = cas1BookingCreatedEvent.booking
+    val user = cas1BookingCreatedEvent.createdBy
     val placementRequest = booking.placementRequest!!
     val application = placementRequest.application
     bookingMade(
@@ -141,27 +143,22 @@ class Cas1BookingDomainEventService(
   }
 
   fun spaceBookingChanged(
-    booking: Cas1SpaceBookingEntity,
-    changedBy: UserEntity,
-    bookingChangedAt: OffsetDateTime,
-    previousArrivalDateIfChanged: LocalDate?,
-    previousDepartureDateIfChanged: LocalDate?,
-    previousCharacteristicsIfChanged: List<CharacteristicEntity>?,
+    bookingChanged: Cas1BookingChangedEvent,
   ) = bookingChanged(
     BookingChangedInfo(
-      bookingId = booking.id,
-      crn = booking.crn,
-      arrivalDate = booking.expectedArrivalDate,
-      departureDate = booking.expectedDepartureDate,
-      applicationFacade = booking.applicationFacade,
-      approvedPremises = booking.premises,
-      changedAt = bookingChangedAt,
-      changedBy = changedBy,
-      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
-      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+      bookingId = bookingChanged.booking.id,
+      crn = bookingChanged.booking.crn,
+      arrivalDate = bookingChanged.booking.expectedArrivalDate,
+      departureDate = bookingChanged.booking.expectedDepartureDate,
+      applicationFacade = bookingChanged.booking.applicationFacade,
+      approvedPremises = bookingChanged.booking.premises,
+      changedAt = bookingChanged.bookingChangedAt,
+      changedBy = bookingChanged.changedBy,
+      previousArrivalDateIfChanged = bookingChanged.previousArrivalDateIfChanged,
+      previousDepartureDateIfChanged = bookingChanged.previousDepartureDateIfChanged,
       isSpaceBooking = true,
-      characteristics = booking.criteria.toSpaceCharacteristics(),
-      previousCharacteristics = previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
+      characteristics = bookingChanged.booking.criteria.toSpaceCharacteristics(),
+      previousCharacteristics = bookingChanged.previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
     ),
   )
 
@@ -283,20 +280,16 @@ class Cas1BookingDomainEventService(
     ),
   )
 
-  fun spaceBookingCancelled(
-    spaceBooking: Cas1SpaceBookingEntity,
-    user: UserEntity,
-    reason: CancellationReasonEntity,
-  ) = bookingCancelled(
+  fun spaceBookingCancelled(bookingCancelled: Cas1BookingCancelledEvent) = bookingCancelled(
     CancellationInfo(
-      bookingId = spaceBooking.id,
-      applicationFacade = spaceBooking.applicationFacade,
+      bookingId = bookingCancelled.booking.id,
+      applicationFacade = bookingCancelled.booking.applicationFacade,
       cancellationId = null,
-      crn = spaceBooking.crn,
-      cancelledAt = spaceBooking.cancellationOccurredAt!!,
-      reason = reason,
-      cancelledBy = user,
-      premises = spaceBooking.premises,
+      crn = bookingCancelled.booking.crn,
+      cancelledAt = bookingCancelled.booking.cancellationOccurredAt!!,
+      reason = bookingCancelled.reason,
+      cancelledBy = bookingCancelled.user,
+      premises = bookingCancelled.booking.premises,
       isSpaceBooking = true,
     ),
   )
