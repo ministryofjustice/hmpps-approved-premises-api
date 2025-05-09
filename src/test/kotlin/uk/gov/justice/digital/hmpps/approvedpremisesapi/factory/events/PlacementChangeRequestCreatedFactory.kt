@@ -14,6 +14,14 @@ class PlacementChangeRequestCreatedFactory : Factory<PlacementChangeRequestCreat
   private var requestedBy = { StaffMemberFactory().produce() }
   private var reason = { Cas1DomainEventCodedIdFactory().produce() }
 
+  fun withChangeRequestId(changeRequestId: UUID) = apply {
+    this.changeRequestId = { changeRequestId }
+  }
+
+  fun withChangeRequestType(changeRequestType: EventChangeRequestType) = apply {
+    this.changeRequestType = { changeRequestType }
+  }
+
   fun withBooking(booking: EventBookingSummary) = apply {
     this.booking = { booking }
   }

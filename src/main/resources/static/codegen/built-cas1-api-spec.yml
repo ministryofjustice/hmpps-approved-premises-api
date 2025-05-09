@@ -8047,13 +8047,20 @@ components:
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
+        changeRequestId:
+          type: string
+          format: uuid
         booking:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
           $ref: '#/components/schemas/NamedId'
+        changeRequestType:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
       required:
+        - changeRequestId
         - booking
         - reason
+        - changeRequestType
     Cas1PlacementChangeRequestAcceptedPayload:
       type: object
       allOf:
@@ -8068,13 +8075,21 @@ components:
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
+        changeRequestId:
+          type: string
+          format: uuid
         booking:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
           $ref: '#/components/schemas/NamedId'
+        changeRequestType:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
       required:
+        - changeRequestId
+        - type
         - booking
         - reason
+        - changeRequestType
     Cas1EmergencyTransferCreatedContentPayload:
       type: object
       allOf:
