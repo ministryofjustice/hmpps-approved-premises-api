@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawn
@@ -86,7 +85,6 @@ class Cas1DomainEventService(
   fun getApplicationSubmittedDomainEvent(id: UUID) = get(id, ApplicationSubmitted::class)
   fun getApplicationAssessedDomainEvent(id: UUID) = get(id, ApplicationAssessed::class)
   fun getBookingMadeEvent(id: UUID) = get(id, BookingMade::class)
-  fun getEmergencyTransferCreatedEvent(id: UUID) = get(id, EmergencyTransferCreated::class)
   fun getPersonArrivedEvent(id: UUID) = get(id, PersonArrived::class)
   fun getPersonNotArrivedEvent(id: UUID) = get(id, PersonNotArrived::class)
   fun getPersonDepartedEvent(id: UUID) = get(id, PersonDeparted::class)

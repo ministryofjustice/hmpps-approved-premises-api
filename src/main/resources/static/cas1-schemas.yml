@@ -1101,7 +1101,6 @@ components:
         - application_submitted
         - application_assessed
         - booking_made
-        - emergency_transfer_created
         - person_arrived
         - person_not_arrived
         - person_departed
@@ -1202,7 +1201,6 @@ components:
           booking_cancelled: '#/components/schemas/Cas1BookingCancelledContentPayload'
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
           booking_made: '#/components/schemas/Cas1BookingMadeContentPayload'
-          emergency_transfer_created: '#/components/schemas/Cas1EmergencyTransferCreatedContentPayload'
           placement_change_request_accepted: '#/components/schemas/Cas1PlacementChangeRequestAcceptedPayload'
           placement_change_request_created: '#/components/schemas/Cas1PlacementChangeRequestCreatedPayload'
           placement_change_request_rejected: '#/components/schemas/Cas1PlacementChangeRequestRejectedPayload'
@@ -1316,18 +1314,6 @@ components:
         - booking
         - reason
         - changeRequestType
-    Cas1EmergencyTransferCreatedContentPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        from:
-          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
-        to:
-          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
-      required:
-        - from
-        - to
     Cas1TimelineEventPayloadBookingSummary:
       type: object
       properties:

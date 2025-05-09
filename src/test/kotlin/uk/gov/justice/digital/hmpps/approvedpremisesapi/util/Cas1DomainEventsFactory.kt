@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCh
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EmergencyTransferCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
@@ -89,7 +88,6 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
       DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED -> PlacementChangeRequestAcceptedFactory().produce()
       DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED -> PlacementChangeRequestCreatedFactory().produce()
       DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED -> PlacementChangeRequestRejectedFactory().produce()
-      DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED -> EmergencyTransferCreatedFactory().produce()
       else -> throw RuntimeException("Domain event type $type not supported")
     }
 

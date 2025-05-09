@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
@@ -441,17 +440,6 @@ enum class DomainEventType(
       Cas1TimelineEventType.requestForPlacementAssessed,
       payloadType = RequestForPlacementAssessed::class,
       apiType = Cas1EventType.requestForPlacementAssessed,
-    ),
-  ),
-  APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED(
-    DomainEventCas.CAS1,
-    Cas1EventType.emergencyTransferCreated.value,
-    "An emergency transfer has been created",
-    cas1Info = Cas1DomainEventTypeInfo(
-      Cas1TimelineEventType.emergencyTransferCreated,
-      payloadType = EmergencyTransferCreated::class,
-      apiType = Cas1EventType.emergencyTransferCreated,
-      emittable = false,
     ),
   ),
   APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED(

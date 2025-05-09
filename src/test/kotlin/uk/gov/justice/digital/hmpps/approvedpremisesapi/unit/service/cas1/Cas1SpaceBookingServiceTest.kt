@@ -53,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService
@@ -77,7 +76,6 @@ class Cas1SpaceBookingServiceTest {
   private val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val cas1BookingEmailService = mockk<Cas1BookingEmailService>()
-  private val cas1SpaceBookingManagementDomainEventService = mockk<Cas1SpaceBookingManagementDomainEventService>()
   private val cas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val cancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
@@ -94,7 +92,6 @@ class Cas1SpaceBookingServiceTest {
     spaceBookingRepository,
     cas1BookingDomainEventService,
     cas1BookingEmailService,
-    cas1SpaceBookingManagementDomainEventService,
     cas1ApplicationStatusService,
     cancellationReasonRepository,
     lockablePlacementRequestRepository,
@@ -845,8 +842,6 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1BookingDomainEventService.spaceBookingChanged(any()) } returns Unit
-      every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
       val validationResult = CasResult.GeneralValidationError<Unit>("common validation failed")
 
@@ -1157,12 +1152,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
-      every {
-        cas1SpaceBookingCreateService.create(
-          details = details,
-          beforeRaisingBookingMadeDomainEvent = any(),
-        )
-      } returns createdSpaceBooking
+      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
@@ -1174,8 +1164,6 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1SpaceBookingUpdateService.validate(updateDetails) } returns CasResult.Success(Unit)
       every { cas1SpaceBookingUpdateService.update(updateDetails.copy(transferredTo = createdSpaceBooking)) } returns existingSpaceBooking
-
-      every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
 
       val result = service.createEmergencyTransfer(
         PREMISES_ID,
@@ -1466,12 +1454,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
-      every {
-        cas1SpaceBookingCreateService.create(
-          details = details,
-          beforeRaisingBookingMadeDomainEvent = any(),
-        )
-      } returns createdSpaceBooking
+      every { cas1SpaceBookingCreateService.create(details, any()) } returns createdSpaceBooking
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
