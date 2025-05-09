@@ -7,32 +7,30 @@ import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
 import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readExcel
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas1OutOfServiceBedReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER_WITH_PII
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
-  private val outOfServiceBedsEndpoint = "/cas1/reports/${Cas1ReportName.outOfServiceBeds.value}"
+class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
+  lateinit var oosbRecordBed1: Cas1OutOfServiceBedEntity
+  lateinit var oosbRecordBed2: Cas1OutOfServiceBedEntity
 
-  @Autowired
-  lateinit var realOutOfServiceBedRepository: Cas1OutOfServiceBedRepository
-
-  @Test
-  fun `Get out-of-service beds report returns OK with correct body`() {
-    givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+  @BeforeAll
+  fun setup() {
+    givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { userEntity, _ ->
       givenAnOffender { _, _ ->
         val premises = givenAnApprovedPremises(
           name = "ap name",
@@ -79,12 +77,12 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
           )
         }
 
-        val oosbRecordBed1 = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        oosbRecordBed1 = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
           withBed(bed1)
         }.apply {
           this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedAt(OffsetDateTime.parse("2020-01-03T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withCreatedBy(userEntity)
             withReferenceNumber("ref1")
             withOutOfServiceBed(this@apply)
@@ -95,15 +93,16 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
                 withName("Reason1")
               },
             )
+            withNotes("Notes on OOSB1 Revision 1")
           }
         }
 
-        val oosbRecordBed2 = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        oosbRecordBed2 = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
           withBed(bed2)
         }.apply {
           this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedAt(OffsetDateTime.parse("2020-12-03T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withCreatedBy(userEntity)
             withReferenceNumber("ref2")
             withOutOfServiceBed(this@apply)
@@ -114,6 +113,7 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
                 withName("Reason2")
               },
             )
+            withNotes("Notes on OOSB2 Revision 1")
           }
         }
 
@@ -151,45 +151,136 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
             withOutOfServiceBed(this@apply)
           }
         }
-
-        webTestClient.get()
-          .uri("$outOfServiceBedsEndpoint?year=2023&month=4")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .consumeWith {
-            val actual = DataFrame
-              .readExcel(it.responseBody!!.inputStream())
-              .convertTo<Cas1OutOfServiceBedReportRow>(ExcessiveColumns.Fail)
-              .sortBy { row -> row["bedName"] }
-
-            val actualRows = actual.toList()
-            assertThat(actualRows).hasSize(2)
-            assertThat(actualRows[0].roomName).isEqualTo("room1")
-            assertThat(actualRows[0].bedName).isEqualTo("bed1")
-            assertThat(actualRows[0].id).isEqualTo(oosbRecordBed1.id.toString())
-            assertThat(actualRows[0].workOrderId).isEqualTo("ref1")
-            assertThat(actualRows[0].region).isEqualTo("the region")
-            assertThat(actualRows[0].ap).isEqualTo("ap name")
-            assertThat(actualRows[0].reason).isEqualTo("Reason1")
-            assertThat(actualRows[0].startDate).isEqualTo(LocalDate.of(2023, 4, 5))
-            assertThat(actualRows[0].endDate).isEqualTo(LocalDate.of(2023, 7, 8))
-            assertThat(actualRows[0].lengthDays).isEqualTo(26)
-
-            assertThat(actualRows[1].roomName).isEqualTo("room2")
-            assertThat(actualRows[1].bedName).isEqualTo("bed2")
-            assertThat(actualRows[1].id).isEqualTo(oosbRecordBed2.id.toString())
-            assertThat(actualRows[1].workOrderId).isEqualTo("ref2")
-            assertThat(actualRows[1].ap).isEqualTo("ap name")
-            assertThat(actualRows[1].reason).isEqualTo("Reason2")
-            assertThat(actualRows[1].startDate).isEqualTo(LocalDate.of(2023, 4, 12))
-            assertThat(actualRows[1].endDate).isEqualTo(LocalDate.of(2023, 7, 5))
-            assertThat(actualRows[1].lengthDays).isEqualTo(19)
-          }
       }
     }
   }
+
+  @Test
+  fun `Get out-of-service beds report without PII requires report viewer role`() {
+    val (_, jwt) = givenAUser(roles = listOf())
+
+    webTestClient.get()
+      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBeds.value}?year=2023&month=4")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Get out-of-service beds report without PII`() {
+    val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER))
+
+    webTestClient.get()
+      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBeds.value}?year=2023&month=4")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .consumeWith {
+        val actual = DataFrame
+          .readExcel(it.responseBody!!.inputStream())
+          .convertTo<Cas1OutOfServiceBedReportRowWithoutPii>(ExcessiveColumns.Fail)
+          .sortBy { row -> row["bedName"] }
+
+        val actualRows = actual.toList()
+        assertThat(actualRows).hasSize(2)
+        assertThat(actualRows[0].roomName).isEqualTo("room1")
+        assertThat(actualRows[0].bedName).isEqualTo("bed1")
+        assertThat(actualRows[0].id).isEqualTo(oosbRecordBed1.id.toString())
+        assertThat(actualRows[0].workOrderId).isEqualTo("ref1")
+        assertThat(actualRows[0].region).isEqualTo("the region")
+        assertThat(actualRows[0].ap).isEqualTo("ap name")
+        assertThat(actualRows[0].reason).isEqualTo("Reason1")
+        assertThat(actualRows[0].startDate).isEqualTo(LocalDate.of(2023, 4, 5))
+        assertThat(actualRows[0].endDate).isEqualTo(LocalDate.of(2023, 7, 8))
+        assertThat(actualRows[0].lengthDays).isEqualTo(26)
+
+        assertThat(actualRows[1].roomName).isEqualTo("room2")
+        assertThat(actualRows[1].bedName).isEqualTo("bed2")
+        assertThat(actualRows[1].id).isEqualTo(oosbRecordBed2.id.toString())
+        assertThat(actualRows[1].workOrderId).isEqualTo("ref2")
+        assertThat(actualRows[1].ap).isEqualTo("ap name")
+        assertThat(actualRows[1].reason).isEqualTo("Reason2")
+        assertThat(actualRows[1].startDate).isEqualTo(LocalDate.of(2023, 4, 12))
+        assertThat(actualRows[1].endDate).isEqualTo(LocalDate.of(2023, 7, 5))
+        assertThat(actualRows[1].lengthDays).isEqualTo(19)
+      }
+  }
+
+  @Test
+  fun `Get out-of-service beds report with PII requires report viewer with PII role`() {
+    val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER))
+
+    webTestClient.get()
+      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBedsWithPii.value}?year=2023&month=4")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isForbidden()
+  }
+
+  @Test
+  fun `Get out-of-service beds report with PII`() {
+    val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER_WITH_PII))
+
+    webTestClient.get()
+      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBedsWithPii.value}?year=2023&month=4")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .consumeWith {
+        val actual = DataFrame
+          .readExcel(it.responseBody!!.inputStream())
+          .convertTo<Cas1OutOfServiceBedReportRowWithPii>(ExcessiveColumns.Fail)
+          .sortBy { row -> row["bedName"] }
+
+        val actualRows = actual.toList()
+        assertThat(actualRows).hasSize(2)
+        assertThat(actualRows[0].notes).isEqualTo(
+          """Date/Time: Friday 3 January 2020
+Reason: Reason1
+Notes: Notes on OOSB1 Revision 1""",
+        )
+        assertThat(actualRows[1].notes).isEqualTo(
+          """Date/Time: Thursday 3 December 2020
+Reason: Reason2
+Notes: Notes on OOSB2 Revision 1""",
+        )
+      }
+  }
 }
+
+data class Cas1OutOfServiceBedReportRowWithoutPii(
+  val roomName: String,
+  val bedName: String,
+  val id: String,
+  val workOrderId: String?,
+  val region: String,
+  val ap: String,
+  val reason: String,
+  val startDate: LocalDate,
+  val endDate: LocalDate,
+  val lengthDays: Int,
+)
+
+data class Cas1OutOfServiceBedReportRowWithPii(
+  val roomName: String,
+  val bedName: String,
+  val id: String,
+  val workOrderId: String?,
+  val region: String,
+  val ap: String,
+  val reason: String,
+  val startDate: LocalDate,
+  val endDate: LocalDate,
+  val lengthDays: Int,
+  val notes: String,
+)

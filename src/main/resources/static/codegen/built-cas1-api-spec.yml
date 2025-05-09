@@ -7576,6 +7576,7 @@ components:
         - applicationsV2WithPii
         - dailyMetrics
         - outOfServiceBeds
+        - outOfServiceBedsWithPii
         - placementMatchingOutcomesV2
         - placementMatchingOutcomesV2WithPii
         - requestsForPlacement

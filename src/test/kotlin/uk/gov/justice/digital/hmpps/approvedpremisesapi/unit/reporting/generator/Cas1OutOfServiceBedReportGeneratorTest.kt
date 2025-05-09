@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas1OutOfServiceBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class Cas1OutOfServiceBedReportGeneratorTest {
   private val outOfServiceBedRepository = mockk<Cas1OutOfServiceBedRepository>()
@@ -238,5 +240,67 @@ class Cas1OutOfServiceBedReportGeneratorTest {
     assertThat(result[0][Cas1OutOfServiceBedReportRow::startDate]).isEqualTo(outOfServiceBed.startDate)
     assertThat(result[0][Cas1OutOfServiceBedReportRow::endDate]).isEqualTo(outOfServiceBed.endDate)
     assertThat(result[0][Cas1OutOfServiceBedReportRow::lengthDays]).isEqualTo(7)
+  }
+
+  @Test
+  fun `Collate revisions into comments`() {
+    val bed = BedEntityFactory()
+      .withRoom(
+        RoomEntityFactory()
+          .withPremises(ApprovedPremisesEntityFactory().withDefaults().produce())
+          .produce(),
+      )
+      .produce()
+
+    val outOfServiceBed = Cas1OutOfServiceBedEntityFactory()
+      .withBed(bed)
+      .produce()
+      .apply {
+        this.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+          .withCreatedAt(OffsetDateTime.parse("2007-12-03T10:15:30+01:00"))
+          .withReason(Cas1OutOfServiceBedReasonEntityFactory().withName("Reason 1").produce())
+          .withNotes("Note 1")
+          .withOutOfServiceBed(this)
+          .withStartDate(LocalDate.parse("2023-04-05"))
+          .withEndDate(LocalDate.parse("2023-04-07"))
+          .produce()
+        this.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+          .withCreatedAt(OffsetDateTime.parse("2007-12-04T10:15:30+01:00"))
+          .withReason(Cas1OutOfServiceBedReasonEntityFactory().withName("Reason 2").produce())
+          .withNotes("Note 2")
+          .withOutOfServiceBed(this)
+          .withStartDate(LocalDate.parse("2023-04-05"))
+          .withEndDate(LocalDate.parse("2023-04-07"))
+          .produce()
+      }
+
+    every {
+      outOfServiceBedRepository.findByBedIdAndOverlappingDate(
+        bed.id,
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        null,
+      )
+    } returns listOf(outOfServiceBed.id.toString())
+
+    every {
+      outOfServiceBedRepository.findAllById(listOf(outOfServiceBed.id))
+    } returns listOf(outOfServiceBed)
+
+    val result = reportGenerator.createReport(
+      listOf(Cas1BedIdentifier(bed.id)),
+      Cas1ReportService.MonthSpecificReportParams(2023, 4),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::notes]).isEqualTo(
+      """Date/Time: Monday 3 December 2007
+Reason: Reason 1
+Notes: Note 1
+
+Date/Time: Tuesday 4 December 2007
+Reason: Reason 2
+Notes: Note 2""",
+    )
   }
 }

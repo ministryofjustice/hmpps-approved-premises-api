@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.time.LocalDate
 import java.util.UUID
 
@@ -32,6 +33,13 @@ class Cas1OutOfServiceBedsReportGenerator(
       val room = bed.room
       val premises = room.premises
 
+      val notes = it.revisionHistory.joinToString("\n\n") { revision ->
+        """Date/Time: ${revision.createdAt.toLocalDate().toUiFormat()}
+          |Reason: ${revision.reason.name}
+          |Notes: ${revision.notes}
+        """.trimMargin()
+      }
+
       Cas1OutOfServiceBedReportRow(
         roomName = room.name,
         bedName = bed.name,
@@ -43,6 +51,7 @@ class Cas1OutOfServiceBedsReportGenerator(
         startDate = it.startDate,
         endDate = it.endDate,
         lengthDays = latestDateOf(startOfMonth, it.startDate).getDaysUntilInclusive(earliestDateOf(endOfMonth, it.endDate)).size,
+        notes = notes,
       )
     }
   }
