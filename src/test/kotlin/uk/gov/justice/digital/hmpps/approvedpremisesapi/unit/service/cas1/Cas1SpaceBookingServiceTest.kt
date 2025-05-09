@@ -56,6 +56,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenBookingDetails
@@ -68,7 +70,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -90,6 +91,7 @@ class Cas1SpaceBookingServiceTest {
   private val cas1ChangeRequestService = mockk<Cas1ChangeRequestService>()
   private val characteristicService = mockk<CharacteristicService>()
   private val cas1SpaceBookingActionsService = mockk<Cas1SpaceBookingActionsService>()
+  private val cas1SpaceBookingCreateService = mockk<Cas1SpaceBookingCreateService>()
   private val clock = ClockConfiguration.FixedClock()
 
   private val service = Cas1SpaceBookingService(
@@ -106,6 +108,7 @@ class Cas1SpaceBookingServiceTest {
     cas1ChangeRequestService,
     characteristicService,
     cas1SpaceBookingActionsService,
+    cas1SpaceBookingCreateService,
     clock,
   )
 
@@ -131,104 +134,23 @@ class Cas1SpaceBookingServiceTest {
       .produce()
 
     @Test
-    fun `Returns validation error if no premises with the given ID exists`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+    fun `Returns error if raised by common validation`() {
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
 
-      val result = service.createNewBooking(
-        premisesId = UUID.randomUUID(),
-        placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
-        createdBy = user,
-        characteristics = emptyList(),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.premisesId" && value == "doesNotExist"
-      }
-    }
-
-    @Test
-    fun `Returns validation error if premises supplied does not support space bookings`() {
-      val premisesDoesntSupportSpaceBookings = ApprovedPremisesEntityFactory()
-        .withSupportsSpaceBookings(false)
-        .withDefaults()
-        .produce()
-
-      every { cas1PremisesService.findPremiseById(any()) } returns premisesDoesntSupportSpaceBookings
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
-        LockablePlacementRequestEntity(placementRequest.id)
-
-      val result = service.createNewBooking(
-        premisesId = premisesDoesntSupportSpaceBookings.id,
-        placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
-        createdBy = user,
-        characteristics = emptyList(),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.premisesId" && value == "doesNotSupportSpaceBookings"
-      }
-    }
-
-    @Test
-    fun `Returns validation error if no placement request with the given ID exists`() {
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
-      every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
-      every { lockablePlacementRequestRepository.acquirePessimisticLock(any()) } returns
-        LockablePlacementRequestEntity(placementRequest.id)
-
-      val result = service.createNewBooking(
-        premisesId = premises.id,
-        placementRequestId = UUID.randomUUID(),
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
-        createdBy = user,
-        characteristics = emptyList(),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.placementRequestId" && value == "doesNotExist"
-      }
-    }
-
-    @Test
-    fun `Returns validation error if the departure date is before the arrival date`() {
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
-        LockablePlacementRequestEntity(placementRequest.id)
+      val commonValidationError = CasResult.GeneralValidationError<Unit>("oh dear")
+      every { cas1SpaceBookingCreateService.validate(any()) } returns commonValidationError
 
       val result = service.createNewBooking(
         premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now().plusDays(1),
-        departureDate = LocalDate.now(),
+        arrivalDate = LocalDate.now(),
+        departureDate = LocalDate.now().plusDays(1),
         createdBy = user,
         characteristics = emptyList(),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.departureDate" && value == "shouldBeAfterArrivalDate"
-      }
+      assertThat(result).isEqualTo(commonValidationError)
     }
 
     @Test
@@ -238,11 +160,11 @@ class Cas1SpaceBookingServiceTest {
         .withPlacementRequest(placementRequest)
         .produce()
 
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-      every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
+      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(Unit)
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -270,7 +192,7 @@ class Cas1SpaceBookingServiceTest {
         booking = legacyBooking,
       )
 
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(Unit)
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequestwithLegacyBooking
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
@@ -292,7 +214,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Creates new booking if all data is valid, updates application status, raises domain event and sends email`() {
+    fun `Creates new booking if all data is valid`() {
       val premises = ApprovedPremisesEntityFactory()
         .withDefaults()
         .withSupportsSpaceBookings(true)
@@ -310,63 +232,42 @@ class Cas1SpaceBookingServiceTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
-      val arrivalDate = LocalDate.now()
-      val durationInDays = 1
-      val departureDate = arrivalDate.plusDays(durationInDays.toLong())
-
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
 
-      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+      val characteristics = listOf(
+        CharacteristicEntityFactory().withName("c1").produce(),
+        CharacteristicEntityFactory().withName("c2").produce(),
+      )
 
-      val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
-      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
+      val details = CreateBookingDetails(
+        premisesId = premises.id,
+        placementRequestId = placementRequest.id,
+        expectedArrivalDate = LocalDate.now(),
+        expectedDepartureDate = LocalDate.now().plusDays(1),
+        createdBy = user,
+        characteristics = characteristics,
+        transferType = null,
+      )
+
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
+      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
 
       val result = service.createNewBooking(
         premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = arrivalDate,
-        departureDate = departureDate,
+        arrivalDate = LocalDate.now(),
+        departureDate = LocalDate.now().plusDays(1),
         createdBy = user,
-        characteristics = listOf(
-          CharacteristicEntityFactory().withName("c1").produce(),
-          CharacteristicEntityFactory().withName("c2").produce(),
-        ),
+        characteristics = characteristics,
       )
 
-      assertThatCasResult(result).isSuccess()
-
-      val persistedBooking = persistedBookingCaptor.captured
-      assertThat(persistedBooking.premises).isEqualTo(premises)
-      assertThat(persistedBooking.placementRequest).isEqualTo(placementRequest)
-      assertThat(persistedBooking.application).isEqualTo(application)
-      assertThat(persistedBooking.createdAt).isWithinTheLastMinute()
-      assertThat(persistedBooking.createdBy).isEqualTo(user)
-      assertThat(persistedBooking.expectedArrivalDate).isEqualTo(arrivalDate)
-      assertThat(persistedBooking.expectedDepartureDate).isEqualTo(departureDate)
-      assertThat(persistedBooking.actualArrivalDate).isNull()
-      assertThat(persistedBooking.actualArrivalTime).isNull()
-      assertThat(persistedBooking.actualDepartureDate).isNull()
-      assertThat(persistedBooking.actualDepartureTime).isNull()
-      assertThat(persistedBooking.canonicalArrivalDate).isEqualTo(arrivalDate)
-      assertThat(persistedBooking.canonicalDepartureDate).isEqualTo(departureDate)
-      assertThat(persistedBooking.crn).isEqualTo(application.crn)
-      assertThat(persistedBooking.keyWorkerStaffCode).isNull()
-      assertThat(persistedBooking.keyWorkerAssignedAt).isNull()
-      assertThat(persistedBooking.criteria).hasSize(2)
-      assertThat(persistedBooking.nonArrivalReason).isNull()
-      assertThat(persistedBooking.nonArrivalNotes).isNull()
-      assertThat(persistedBooking.nonArrivalReason).isNull()
-      assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
-
-      verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user)) }
-      verify { cas1BookingEmailService.spaceBookingMade(persistedBooking, application) }
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(createdSpaceBooking)
+      }
     }
 
     @Test
@@ -403,40 +304,42 @@ class Cas1SpaceBookingServiceTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
-      val arrivalDate = LocalDate.now()
-      val durationInDays = 1
-      val departureDate = arrivalDate.plusDays(durationInDays.toLong())
-
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
-      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
 
-      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
+      val characteristics = listOf(
+        CharacteristicEntityFactory().withName("c1").produce(),
+        CharacteristicEntityFactory().withName("c2").produce(),
+      )
 
-      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+      val details = CreateBookingDetails(
+        premisesId = premises.id,
+        placementRequestId = placementRequest.id,
+        expectedArrivalDate = LocalDate.now(),
+        expectedDepartureDate = LocalDate.now().plusDays(1),
+        createdBy = user,
+        characteristics = characteristics,
+        transferType = null,
+      )
 
-      val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
-      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
+      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
 
       val result = service.createNewBooking(
         premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = arrivalDate,
-        departureDate = departureDate,
+        arrivalDate = LocalDate.now(),
+        departureDate = LocalDate.now().plusDays(1),
         createdBy = user,
-        characteristics = listOf(
-          CharacteristicEntityFactory().withName("c1").produce(),
-          CharacteristicEntityFactory().withName("c2").produce(),
-        ),
+        characteristics = characteristics,
       )
 
-      assertThatCasResult(result).isSuccess()
-
-      val persistedBooking = persistedBookingCaptor.captured
-      verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(createdSpaceBooking)
+      }
     }
   }
 
@@ -1737,33 +1640,6 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `should return validation error if departureDate is not after arrival date`() {
-      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
-        existingSpaceBooking.id,
-      )
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-
-      every {
-        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
-      } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
-
-      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
-
-      val result = service.createEmergencyTransfer(
-        PREMISES_ID,
-        existingSpaceBooking.id,
-        user,
-        Cas1NewEmergencyTransfer(
-          destinationPremisesId = DESTINATION_PREMISES_ID,
-          arrivalDate = LocalDate.now(),
-          departureDate = LocalDate.now().minusMonths(2),
-        ),
-      )
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage("\$.departureDate", "shouldBeAfterArrivalDate")
-    }
-
-    @Test
     fun `should return validation error if booking does not exist`() {
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
@@ -1833,6 +1709,49 @@ class Cas1SpaceBookingServiceTest {
       assertThatCasResult(result).isGeneralValidationError("nope")
     }
 
+    @Test
+    fun `should return an error if raised by common create booking validation`() {
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+      } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
+
+      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
+
+      val transferDate = LocalDate.now().minusDays(1)
+      val departureDate = LocalDate.now().plusMonths(2)
+
+      val details = CreateBookingDetails(
+        premisesId = DESTINATION_PREMISES_ID,
+        placementRequestId = existingSpaceBooking.placementRequest!!.id,
+        expectedArrivalDate = transferDate,
+        expectedDepartureDate = departureDate,
+        createdBy = user,
+        characteristics = existingSpaceBooking.criteria,
+        transferType = TransferType.EMERGENCY,
+      )
+
+      val commonCreateValidationError = CasResult.GeneralValidationError<Unit>("oh no create validation failed")
+      every { cas1SpaceBookingCreateService.validate(details) } returns commonCreateValidationError
+
+      val result = service.createEmergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = transferDate,
+          departureDate = departureDate,
+        ),
+      )
+
+      assertThatCasResult(result).isEqualTo(commonCreateValidationError)
+    }
+
     @ParameterizedTest
     @CsvSource("0", "1", "2", "3", "4", "5", "6", "7")
     fun `create an emergency booking and update the existing booking if arrival date within last 7 days`(daysAgo: Long) {
@@ -1853,9 +1772,6 @@ class Cas1SpaceBookingServiceTest {
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
 
-      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
@@ -1863,6 +1779,25 @@ class Cas1SpaceBookingServiceTest {
 
       val transferDate = LocalDate.now().minusDays(daysAgo)
       val departureDate = LocalDate.now().plusMonths(2)
+
+      val details = CreateBookingDetails(
+        premisesId = DESTINATION_PREMISES_ID,
+        placementRequestId = existingSpaceBooking.placementRequest!!.id,
+        expectedArrivalDate = transferDate,
+        expectedDepartureDate = departureDate,
+        createdBy = user,
+        characteristics = existingSpaceBooking.criteria,
+        transferType = TransferType.EMERGENCY,
+      )
+
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
+      every {
+        cas1SpaceBookingCreateService.create(
+          details = details,
+          beforeRaisingBookingMadeDomainEvent = any(),
+        )
+      } returns createdSpaceBooking
 
       val result = service.createEmergencyTransfer(
         PREMISES_ID,
@@ -1877,35 +1812,15 @@ class Cas1SpaceBookingServiceTest {
 
       assertThatCasResult(result).isSuccess()
 
-      verify(exactly = 2) { spaceBookingRepository.save(any()) }
+      verify(exactly = 1) { spaceBookingRepository.save(any()) }
 
-      assertEquals(2, capturedBookings.size)
+      assertEquals(1, capturedBookings.size)
 
-      val emergencyBooking = capturedBookings.first()
       existingSpaceBooking = capturedBookings.last()
 
-      assertThat(existingSpaceBooking.transferredTo).isEqualTo(emergencyBooking)
+      assertThat(existingSpaceBooking.transferredTo).isEqualTo(createdSpaceBooking)
       assertThat(existingSpaceBooking.expectedDepartureDate).isEqualTo(transferDate)
       assertThat(existingSpaceBooking.canonicalDepartureDate).isEqualTo(transferDate)
-
-      assertThat(emergencyBooking.premises.id).isEqualTo(DESTINATION_PREMISES_ID)
-      assertThat(emergencyBooking.expectedArrivalDate).isEqualTo(transferDate)
-      assertThat(emergencyBooking.expectedDepartureDate).isEqualTo(departureDate)
-      assertThat(emergencyBooking.transferType).isEqualTo(TransferType.EMERGENCY)
-
-      verify {
-        cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
-          createdBy = user,
-          from = existingSpaceBooking,
-          to = emergencyBooking,
-        )
-      }
-
-      val placementRequest = existingSpaceBooking.placementRequest!!
-      val application = placementRequest.application
-      verify { cas1ApplicationStatusService.spaceBookingMade(emergencyBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(emergencyBooking, user)) }
-      verify { cas1BookingEmailService.spaceBookingMade(emergencyBooking, application) }
     }
   }
 
@@ -1942,35 +1857,6 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `should throw validation error when destination premises not exist`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
-      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
-        existingSpaceBooking.id,
-      )
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-
-      every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
-
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
-
-      val destinationPremisesId = UUID.randomUUID()
-
-      val result = service.createPlannedTransfer(
-        existingSpaceBooking.id,
-        user,
-        Cas1NewPlannedTransfer(
-          destinationPremisesId = destinationPremisesId,
-          arrivalDate = LocalDate.now().plusDays(1),
-          departureDate = LocalDate.now().plusMonths(2),
-          changeRequestId = UUID.randomUUID(),
-          characteristics = emptyList(),
-        ),
-      )
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage("\$.premisesId", "doesNotExist")
-    }
-
-    @Test
     fun `should return validation error if arrivalDate is not in the future`() {
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
@@ -1994,33 +1880,6 @@ class Cas1SpaceBookingServiceTest {
 
       assertThatCasResult(result)
         .isGeneralValidationError("The provided arrival date (${LocalDate.now()}) must be in the future")
-    }
-
-    @Test
-    fun `should return validation error if departureDate is not after arrival date`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
-      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
-        existingSpaceBooking.id,
-      )
-      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-
-      every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
-
-      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
-
-      val result = service.createPlannedTransfer(
-        existingSpaceBooking.id,
-        user,
-        Cas1NewPlannedTransfer(
-          destinationPremisesId = destinationPremises.id,
-          arrivalDate = LocalDate.now().plusWeeks(2),
-          departureDate = LocalDate.now().plusWeeks(1),
-          changeRequestId = UUID.randomUUID(),
-          characteristics = emptyList(),
-        ),
-      )
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage("\$.departureDate", "shouldBeAfterArrivalDate")
     }
 
     @Test
@@ -2127,6 +1986,44 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
+    fun `should return an error if raised by common create booking validation`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
+      every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
+
+      val details = CreateBookingDetails(
+        premisesId = DESTINATION_PREMISES_ID,
+        placementRequestId = existingSpaceBooking.placementRequest!!.id,
+        expectedArrivalDate = LocalDate.now().plusDays(2),
+        expectedDepartureDate = LocalDate.now().plusMonths(1),
+        createdBy = user,
+        characteristics = emptyList(),
+        transferType = TransferType.PLANNED,
+      )
+
+      val commonCreateValidationError = CasResult.GeneralValidationError<Unit>("common create validation failed")
+      every { cas1SpaceBookingCreateService.validate(details) } returns commonCreateValidationError
+
+      val result = service.createPlannedTransfer(
+        existingSpaceBooking.id,
+        user,
+        Cas1NewPlannedTransfer(
+          destinationPremisesId = destinationPremises.id,
+          arrivalDate = LocalDate.now().plusDays(2),
+          departureDate = LocalDate.now().plusMonths(1),
+          changeRequestId = existingChangeRequest.id,
+          characteristics = emptyList(),
+        ),
+      )
+
+      assertThat(result).isEqualTo(commonCreateValidationError)
+    }
+
+    @Test
     fun `successfully create an transferred booking and update the existing booking`() {
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
@@ -2138,19 +2035,34 @@ class Cas1SpaceBookingServiceTest {
 
       every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
 
-      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
-
       every { spaceBookingRepository.save(capture(capturedBookings)) } answers { firstArg() }
 
       every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
+
+      val details = CreateBookingDetails(
+        premisesId = DESTINATION_PREMISES_ID,
+        placementRequestId = existingSpaceBooking.placementRequest!!.id,
+        expectedArrivalDate = LocalDate.now().plusDays(2),
+        expectedDepartureDate = LocalDate.now().plusMonths(1),
+        createdBy = user,
+        characteristics = emptyList(),
+        transferType = TransferType.PLANNED,
+      )
+
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
+      every {
+        cas1SpaceBookingCreateService.create(
+          details = details,
+          beforeRaisingBookingMadeDomainEvent = any(),
+        )
+      } returns createdSpaceBooking
 
       val result = service.createPlannedTransfer(
         existingSpaceBooking.id,
@@ -2166,34 +2078,8 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
-      verify(exactly = 2) { spaceBookingRepository.save(any()) }
-
-      assertEquals(2, capturedBookings.size)
-
-      val transferredBooking = capturedBookings.first()
-      existingSpaceBooking = capturedBookings.last()
-
-      assertThat(existingSpaceBooking.transferredTo).isEqualTo(transferredBooking)
-      assertThat(existingSpaceBooking.expectedDepartureDate).isEqualTo(transferredBooking.expectedArrivalDate)
-      assertThat(existingSpaceBooking.canonicalDepartureDate).isEqualTo(transferredBooking.expectedArrivalDate)
-
-      assertThat(transferredBooking.premises.id).isEqualTo(DESTINATION_PREMISES_ID)
-      assertThat(transferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(2))
-      assertThat(transferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
-      assertThat(transferredBooking.transferType).isEqualTo(TransferType.PLANNED)
-
-      verify {
-        cas1ChangeRequestService.approvedPlannedTransfer(
-          changeRequest = existingChangeRequest,
-          user = user,
-        )
-      }
-
-      val placementRequest = existingSpaceBooking.placementRequest!!
-      val application = placementRequest.application
-      verify { cas1ApplicationStatusService.spaceBookingMade(transferredBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(transferredBooking, user)) }
-      verify { cas1BookingEmailService.spaceBookingMade(transferredBooking, application) }
+      assertThat(existingSpaceBooking.transferredTo).isEqualTo(createdSpaceBooking)
+      assertThat(existingSpaceBooking.canonicalDepartureDate).isEqualTo(LocalDate.now().plusDays(2))
     }
   }
 }
