@@ -7884,7 +7884,6 @@ components:
         - information_request
         - assessment_appealed
         - assessment_allocated
-        - placement_change_request_accepted
         - placement_change_request_created
         - placement_change_request_rejected
         - placement_application_withdrawn
@@ -7972,7 +7971,6 @@ components:
           booking_cancelled: '#/components/schemas/Cas1BookingCancelledContentPayload'
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
           booking_made: '#/components/schemas/Cas1BookingMadeContentPayload'
-          placement_change_request_accepted: '#/components/schemas/Cas1PlacementChangeRequestAcceptedPayload'
           placement_change_request_created: '#/components/schemas/Cas1PlacementChangeRequestCreatedPayload'
           placement_change_request_rejected: '#/components/schemas/Cas1PlacementChangeRequestRejectedPayload'
     Cas1BookingChangedContentPayload:
@@ -8056,15 +8054,6 @@ components:
         - booking
         - reason
         - changeRequestType
-    Cas1PlacementChangeRequestAcceptedPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        booking:
-          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
-      required:
-        - booking
     Cas1PlacementChangeRequestRejectedPayload:
       type: object
       allOf:

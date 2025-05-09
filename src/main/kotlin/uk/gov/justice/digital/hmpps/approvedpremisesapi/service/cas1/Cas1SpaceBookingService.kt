@@ -350,17 +350,11 @@ class Cas1SpaceBookingService(
     )
     cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
 
-    val newSpaceBooking = cas1SpaceBookingCreateService.create(
-      createBookingDetails,
-      beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
-        cas1ChangeRequestService.approvedPlannedTransfer(
-          changeRequest = changeRequest,
-          user = user,
-        )
-      },
-    )
+    val newSpaceBooking = cas1SpaceBookingCreateService.create(createBookingDetails)
 
     cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
+
+    cas1ChangeRequestService.approvedPlannedTransfer(changeRequest, user)
 
     return Success(Unit)
   }

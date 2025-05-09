@@ -1454,7 +1454,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
-      every { cas1SpaceBookingCreateService.create(details, any()) } returns createdSpaceBooking
+      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,

@@ -26,7 +26,3 @@ data class PlannedTransferRequestRejected(
   val changeRequest: Cas1ChangeRequestEntity,
   val rejectingUser: UserEntity,
 )
-
-data class PlannedTransferRequestAccepted(
-  val changeRequest: Cas1ChangeRequestEntity,
-)

@@ -31,10 +31,7 @@ class Cas1SpaceBookingCreateService(
   /**
    * Any calls to this should first call and validate the response of [validate]
    */
-  fun create(
-    details: CreateBookingDetails,
-    beforeRaisingBookingMadeDomainEvent: (Cas1SpaceBookingEntity) -> Unit = {},
-  ): Cas1SpaceBookingEntity {
+  fun create(details: CreateBookingDetails): Cas1SpaceBookingEntity {
     val placementRequest = placementRequestService.getPlacementRequestOrNull(details.placementRequestId)!!
     val premises = cas1PremisesService.findPremiseById(details.premisesId)!!
     val createdBy = details.createdBy
@@ -81,8 +78,6 @@ class Cas1SpaceBookingCreateService(
     )
 
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
-
-    beforeRaisingBookingMadeDomainEvent(spaceBooking)
 
     cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(spaceBooking, createdBy))
 

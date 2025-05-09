@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-enum class EventType(@get:JsonValue val value: kotlin.String) {
+enum class EventType(@get:JsonValue val value: String) {
 
   applicationSubmitted("approved-premises.application.submitted"),
   applicationAssessed("approved-premises.application.assessed"),
@@ -20,7 +20,6 @@ enum class EventType(@get:JsonValue val value: kotlin.String) {
   assessmentAppealed("approved-premises.assessment.appealed"),
   assessmentAllocated("approved-premises.assessment.allocated"),
   informationRequestMade("approved-premises.assessment.info-requested"),
-  placementChangeRequestAccepted("approved-premises.placement-change-request.accepted"),
   placementChangeRequestCreated("approved-premises.placement-change-request.created"),
   placementChangeRequestRejected("approved-premises.placement-change-request.rejected"),
   placementApplicationWithdrawn("approved-premises.placement-application.withdrawn"),

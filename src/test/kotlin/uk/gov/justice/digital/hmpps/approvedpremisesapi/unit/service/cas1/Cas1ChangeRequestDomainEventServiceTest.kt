@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -28,10 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -48,62 +45,6 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
   @InjectMockKs
   lateinit var service: Cas1ChangeRequestDomainEventService
-
-  @Nested
-  inner class PlacementAppealAcceptedTest {
-
-    @Test
-    fun success() {
-      every { apDeliusContextApiClient.getStaffDetail("theusername") } returns ClientResult.Success(
-        HttpStatus.OK,
-        StaffDetailFactory.staffDetail(deliusUsername = "theusername"),
-      )
-
-      every { cas1DomainEventService.save(any()) } just Runs
-
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withCanonicalArrivalDate(LocalDate.of(2021, 1, 1))
-        .withCanonicalDepartureDate(LocalDate.of(2021, 12, 1))
-        .produce()
-
-      val acceptingUser = UserEntityFactory().withDefaults().withDeliusUsername("theusername").produce()
-
-      val changeRequest = Cas1ChangeRequestEntityFactory()
-        .withType(ChangeRequestType.PLACEMENT_APPEAL)
-        .withDecisionMadeByUser(acceptingUser)
-        .withSpaceBooking(spaceBooking)
-        .produce()
-
-      service.placementAppealAccepted(PlacementAppealAccepted(changeRequest))
-
-      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted>>()
-
-      verify(exactly = 1) {
-        cas1DomainEventService.save(
-          capture(domainEventArgument),
-        )
-      }
-
-      val domainEvent = domainEventArgument.captured
-
-      assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
-      assertThat(domainEvent.bookingId).isNull()
-      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(changeRequest.spaceBooking.id)
-      assertThat(domainEvent.schemaVersion).isNull()
-      assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
-      assertThat(domainEvent.nomsNumber).isEqualTo(changeRequest.placementRequest.application.nomsNumber)
-      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
-      val data = domainEvent.data
-
-      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
-      assertThat(data.changeRequestType).isEqualTo(EventChangeRequestType.PLACEMENT_APPEAL)
-      assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
-      assertThat(data.booking.id).isEqualTo(spaceBooking.id)
-      assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
-      assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
-      assertThat(data.acceptedBy.username).isEqualTo(acceptingUser.deliusUsername)
-    }
-  }
 
   @Nested
   inner class PlacementAppealCreatedTest {
@@ -214,58 +155,6 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
       assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
       assertThat(data.reason.id).isEqualTo(changeRequest.rejectionReason!!.id)
-    }
-  }
-
-  @Nested
-  inner class PlannedTransferRequestAcceptedTest {
-
-    @Test
-    fun success() {
-      every { apDeliusContextApiClient.getStaffDetail("theusername") } returns ClientResult.Success(
-        HttpStatus.OK,
-        StaffDetailFactory.staffDetail(deliusUsername = "theusername"),
-      )
-
-      every { cas1DomainEventService.save(any()) } just Runs
-
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withPremises(ApprovedPremisesEntityFactory().withDefaults().withName("thepremises").produce())
-        .withCanonicalArrivalDate(LocalDate.of(2021, 1, 1))
-        .withCanonicalDepartureDate(LocalDate.of(2021, 12, 1))
-        .produce()
-
-      val acceptingUser = UserEntityFactory().withDefaults().withDeliusUsername("theusername").produce()
-
-      val changeRequest = Cas1ChangeRequestEntityFactory()
-        .withType(ChangeRequestType.PLANNED_TRANSFER)
-        .withDecisionMadeByUser(acceptingUser)
-        .withSpaceBooking(spaceBooking)
-        .produce()
-
-      service.plannedTransferRequestAccepted(PlannedTransferRequestAccepted(changeRequest))
-
-      val domainEvent = getSavedDomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted>()
-
-      assertThat(domainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED)
-      assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
-      assertThat(domainEvent.bookingId).isNull()
-      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(changeRequest.spaceBooking.id)
-      assertThat(domainEvent.schemaVersion).isNull()
-      assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
-      assertThat(domainEvent.nomsNumber).isEqualTo(changeRequest.placementRequest.application.nomsNumber)
-      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
-      val data = domainEvent.data
-
-      assertThat(data.acceptedBy.username).isEqualTo(acceptingUser.deliusUsername)
-
-      assertThat(data.changeRequestId).isEqualTo(changeRequest.id)
-      assertThat(data.changeRequestType).isEqualTo(EventChangeRequestType.PLANNED_TRANSFER)
-
-      assertThat(data.booking.id).isEqualTo(spaceBooking.id)
-      assertThat(data.booking.premises.name).isEqualTo("thepremises")
-      assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
-      assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
     }
   }
 
