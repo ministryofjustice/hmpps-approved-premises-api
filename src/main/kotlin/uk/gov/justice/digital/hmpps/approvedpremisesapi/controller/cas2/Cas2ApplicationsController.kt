@@ -49,14 +49,13 @@ class Cas2ApplicationsController(
         user,
         pageCriteria,
         assignmentType,
-        forPrison = prisonCode != null,
       )
       return ResponseEntity.ok().headers(
         metadata?.toHeaders(),
       ).body(getPersonNamesAndTransformToSummaries(results))
     }
 
-    val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
+    val (applications, metadata) = applicationService.getApplications(user.activeCaseloadId!!, isSubmitted, user, pageCriteria)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
