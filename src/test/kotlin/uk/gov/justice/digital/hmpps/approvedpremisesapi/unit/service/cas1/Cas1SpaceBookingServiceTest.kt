@@ -55,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
@@ -785,12 +784,12 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.shortenBooking(
-        ShortenBookingDetails(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           departureDate = LocalDate.now().minusDays(1),
-          reason = "valid reason",
           updatedBy = user,
+          updateType = UpdateType.SHORTENING,
         ),
       )
 
@@ -805,12 +804,12 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.shortenBooking(
-        ShortenBookingDetails(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           departureDate = LocalDate.now().plusDays(8),
-          reason = "valid reason",
           updatedBy = user,
+          updateType = UpdateType.SHORTENING,
         ),
       )
 
@@ -825,12 +824,12 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.shortenBooking(
-        ShortenBookingDetails(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           departureDate = LocalDate.now().plusDays(7),
-          reason = "valid reason",
           updatedBy = user,
+          updateType = UpdateType.SHORTENING,
         ),
       )
 
@@ -861,12 +860,12 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1SpaceBookingUpdateService.validate(updateDetails) } returns validationResult
 
-      val shortenBookingDetails = ShortenBookingDetails(
+      val shortenBookingDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
         premisesId = PREMISES_ID,
         departureDate = LocalDate.now().plusDays(1),
-        reason = "valid reason",
         updatedBy = user,
+        updateType = UpdateType.SHORTENING,
       )
 
       val result = service.shortenBooking(shortenBookingDetails)
@@ -889,12 +888,12 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingUpdateService.validate(updateDetails) } returns CasResult.Success(Unit)
       every { cas1SpaceBookingUpdateService.update(updateDetails) } returns existingSpaceBooking
 
-      val shortenBookingDetails = ShortenBookingDetails(
+      val shortenBookingDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
         premisesId = PREMISES_ID,
         departureDate = LocalDate.now().plusDays(1),
-        reason = "valid reason",
         updatedBy = user,
+        updateType = UpdateType.SHORTENING,
       )
 
       val result = service.shortenBooking(shortenBookingDetails)
@@ -919,12 +918,12 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingUpdateService.validate(updateDetails) } returns CasResult.Success(Unit)
       every { cas1SpaceBookingUpdateService.update(updateDetails) } returns existingSpaceBooking
 
-      val shortenBookingDetails = ShortenBookingDetails(
+      val shortenBookingDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
         premisesId = PREMISES_ID,
         departureDate = LocalDate.now(),
-        reason = "valid reason",
         updatedBy = user,
+        updateType = UpdateType.SHORTENING,
       )
 
       val result = service.shortenBooking(shortenBookingDetails)

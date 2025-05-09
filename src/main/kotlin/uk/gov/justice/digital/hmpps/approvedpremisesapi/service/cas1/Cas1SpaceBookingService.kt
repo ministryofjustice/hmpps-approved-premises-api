@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Genera
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ifError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -215,7 +216,7 @@ class Cas1SpaceBookingService(
 
   @Transactional
   fun updateBooking(
-    updateBookingDetails: Cas1SpaceBookingUpdateService.UpdateBookingDetails,
+    updateBookingDetails: UpdateBookingDetails,
   ): CasResult<Cas1SpaceBookingEntity> {
     cas1SpaceBookingUpdateService.validate(updateBookingDetails).ifError { return it.reviseType() }
 
@@ -224,14 +225,14 @@ class Cas1SpaceBookingService(
 
   @Transactional
   fun shortenBooking(
-    shortenedBookingDetails: ShortenBookingDetails,
+    shortenedBookingDetails: UpdateBookingDetails,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
     val existingBooking = cas1SpaceBookingRepository.findByIdOrNull(shortenedBookingDetails.bookingId)
 
     validateShortenedSpaceBooking(shortenedBookingDetails, existingBooking)
     if (hasErrors()) return errors()
 
-    val updateBookingDetails = Cas1SpaceBookingUpdateService.UpdateBookingDetails(
+    val updateBookingDetails = UpdateBookingDetails(
       bookingId = shortenedBookingDetails.bookingId,
       premisesId = shortenedBookingDetails.premisesId,
       departureDate = shortenedBookingDetails.departureDate,
@@ -260,7 +261,7 @@ class Cas1SpaceBookingService(
       return GeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
-    val updateExistingBookingDetails = Cas1SpaceBookingUpdateService.UpdateBookingDetails(
+    val updateExistingBookingDetails = UpdateBookingDetails(
       bookingId = bookingId,
       premisesId = premisesId,
       departureDate = arrivalDate,
@@ -350,7 +351,7 @@ class Cas1SpaceBookingService(
     )
     cas1SpaceBookingCreateService.validate(createBookingDetails).ifError { return it.reviseType() }
 
-    val updateExistingBookingDetails = Cas1SpaceBookingUpdateService.UpdateBookingDetails(
+    val updateExistingBookingDetails = UpdateBookingDetails(
       bookingId = bookingId,
       premisesId = existingCas1SpaceBooking.premises.id,
       departureDate = arrivalDate,
@@ -375,12 +376,12 @@ class Cas1SpaceBookingService(
   }
 
   private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateShortenedSpaceBooking(
-    shortenedBookingDetails: ShortenBookingDetails,
+    shortenedBookingDetails: UpdateBookingDetails,
     existingSpaceBooking: Cas1SpaceBookingEntity?,
   ) {
     val newDepartureDate = shortenedBookingDetails.departureDate
 
-    if (newDepartureDate.isBefore(LocalDate.now())) {
+    if (newDepartureDate!!.isBefore(LocalDate.now())) {
       "$.departureDate" hasValidationError "The departure date is in the past."
     }
 
@@ -422,14 +423,6 @@ class Cas1SpaceBookingService(
     SHORTENING,
     TRANSFER,
   }
-
-  data class ShortenBookingDetails(
-    val bookingId: UUID,
-    val premisesId: UUID,
-    val departureDate: LocalDate,
-    val reason: String,
-    val updatedBy: UserEntity,
-  )
 
   data class SearchResultContainer(
     val results: List<Cas1SpaceBookingSearchResult>,
