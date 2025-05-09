@@ -41,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
@@ -222,12 +221,12 @@ class Cas1SpaceBookingController(
 
     ensureEntityFromCasResultIsSuccess(
       cas1SpaceBookingService.shortenBooking(
-        ShortenBookingDetails(
+        UpdateBookingDetails(
           bookingId = bookingId,
           premisesId = premisesId,
           departureDate = cas1ShortenSpaceBooking.departureDate,
-          reason = cas1ShortenSpaceBooking.reason,
           updatedBy = userService.getUserForRequest(),
+          updateType = UpdateType.SHORTENING,
         ),
       ),
     )

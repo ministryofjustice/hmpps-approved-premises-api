@@ -212,12 +212,8 @@ components:
           type: string
           format: date
           example: 2022-09-30
-        reason:
-          description: Reason for shortening a placement
-          type: string
       required:
         - departureDate
-        - reason
     Cas1SpaceSearchRequirements:
       deprecated: true
       type: object

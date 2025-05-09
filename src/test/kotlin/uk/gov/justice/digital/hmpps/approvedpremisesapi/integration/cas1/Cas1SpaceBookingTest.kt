@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlanned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ShortenSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
@@ -2644,9 +2643,8 @@ class Cas1SpaceBookingTest {
         .uri("/cas1/premises/${spaceBooking.premises.id}/space-bookings/${spaceBooking.id}/shorten")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          Cas1ShortenSpaceBooking(
+          Cas1UpdateSpaceBooking(
             departureDate = LocalDate.now(),
-            reason = "valid reason",
           ),
         )
         .exchange()
@@ -2664,9 +2662,8 @@ class Cas1SpaceBookingTest {
         .uri("/cas1/premises/${spaceBooking.premises.id}/space-bookings/${spaceBooking.id}/shorten")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          Cas1ShortenSpaceBooking(
+          Cas1UpdateSpaceBooking(
             departureDate = today,
-            reason = "valid reason",
           ),
         )
         .exchange()
