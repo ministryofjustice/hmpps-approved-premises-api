@@ -9,7 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.successOrErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
+import java.time.Clock
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 /**
@@ -19,7 +22,63 @@ import java.util.UUID
 class Cas1SpaceBookingUpdateService(
   private val cas1PremisesService: Cas1PremisesService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
+  private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
+  private val cas1BookingEmailService: Cas1BookingEmailService,
+  private val clock: Clock,
 ) {
+
+  /**
+   * Any calls to this should first call and validate the response of [validate]
+   */
+  fun update(details: UpdateBookingDetails): Cas1SpaceBookingEntity {
+    val bookingToUpdate = cas1SpaceBookingRepository.findByIdOrNull(details.bookingId)!!
+
+    val previousArrivalDate = bookingToUpdate.expectedArrivalDate
+    val previousDepartureDate = bookingToUpdate.expectedDepartureDate
+    val previousCharacteristics = bookingToUpdate.criteria.toList()
+
+    details.transferredTo?.let { bookingToUpdate.transferredTo = it }
+
+    if (bookingToUpdate.hasArrival()) {
+      bookingToUpdate.updateDepartureDates(details)
+    } else {
+      bookingToUpdate.updateArrivalDates(details)
+      bookingToUpdate.updateDepartureDates(details)
+    }
+
+    if (details.characteristics != null) {
+      updateRoomCharacteristics(bookingToUpdate, details.characteristics)
+    }
+
+    val updatedBooking = cas1SpaceBookingRepository.save(bookingToUpdate)
+
+    val previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null
+    val previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null
+    val previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null
+
+    cas1BookingDomainEventService.spaceBookingChanged(
+      Cas1BookingChangedEvent(
+        booking = updatedBooking,
+        changedBy = details.updatedBy,
+        bookingChangedAt = OffsetDateTime.now(clock),
+        previousArrivalDateIfChanged = previousArrivalDateIfChanged,
+        previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+        previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
+      ),
+    )
+
+    if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+      updatedBooking.application?.let { application ->
+        cas1BookingEmailService.spaceBookingAmended(
+          spaceBooking = updatedBooking,
+          application = application,
+          updateType = details.updateType,
+        )
+      }
+    }
+
+    return updatedBooking
+  }
 
   fun validate(
     updateBookingDetails: UpdateBookingDetails,
@@ -58,6 +117,30 @@ class Cas1SpaceBookingUpdateService(
     }
 
     return successOrErrors()
+  }
+
+  private fun updateRoomCharacteristics(
+    booking: Cas1SpaceBookingEntity,
+    newRoomCharacteristics: List<CharacteristicEntity>,
+  ) {
+    booking.criteria.apply {
+      retainAll { it.isModelScopePremises() }
+      addAll(newRoomCharacteristics)
+    }
+  }
+
+  private fun Cas1SpaceBookingEntity.updateDepartureDates(updateBookingDetails: UpdateBookingDetails) {
+    if (updateBookingDetails.departureDate != null) {
+      this.expectedDepartureDate = updateBookingDetails.departureDate
+      this.canonicalDepartureDate = updateBookingDetails.departureDate
+    }
+  }
+
+  private fun Cas1SpaceBookingEntity.updateArrivalDates(updateBookingDetails: UpdateBookingDetails) {
+    if (updateBookingDetails.arrivalDate != null) {
+      this.expectedArrivalDate = updateBookingDetails.arrivalDate
+      this.canonicalArrivalDate = updateBookingDetails.arrivalDate
+    }
   }
 
   data class UpdateBookingDetails(

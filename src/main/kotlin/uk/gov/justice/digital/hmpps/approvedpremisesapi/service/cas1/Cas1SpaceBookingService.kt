@@ -34,13 +34,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Succes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ifError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.collections.orEmpty
 import kotlin.collections.toSet
@@ -63,7 +60,6 @@ class Cas1SpaceBookingService(
   private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
   private val cas1SpaceBookingCreateService: Cas1SpaceBookingCreateService,
   private val cas1SpaceBookingUpdateService: Cas1SpaceBookingUpdateService,
-  private val clock: Clock,
 ) {
   @Transactional
   fun createNewBooking(
@@ -223,7 +219,7 @@ class Cas1SpaceBookingService(
   ): CasResult<Cas1SpaceBookingEntity> {
     cas1SpaceBookingUpdateService.validate(updateBookingDetails).ifError { return it.reviseType() }
 
-    return doUpdateBooking(updateBookingDetails)
+    return Success(cas1SpaceBookingUpdateService.update(updateBookingDetails))
   }
 
   @Transactional
@@ -244,7 +240,7 @@ class Cas1SpaceBookingService(
     )
     cas1SpaceBookingUpdateService.validate(updateBookingDetails).ifError { return it.reviseType() }
 
-    return doUpdateBooking(updateBookingDetails)
+    return Success(cas1SpaceBookingUpdateService.update(updateBookingDetails))
   }
 
   @Transactional
@@ -302,7 +298,7 @@ class Cas1SpaceBookingService(
       },
     )
 
-    doUpdateBooking(updateExistingBookingDetails.copy(transferredTo = emergencyTransferSpaceBooking))
+    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = emergencyTransferSpaceBooking))
 
     return Success(emergencyTransferSpaceBooking)
   }
@@ -373,7 +369,7 @@ class Cas1SpaceBookingService(
       },
     )
 
-    doUpdateBooking(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
+    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
 
     return Success(Unit)
   }
@@ -399,87 +395,10 @@ class Cas1SpaceBookingService(
     }
   }
 
-  private fun updateRoomCharacteristics(
-    booking: Cas1SpaceBookingEntity,
-    newRoomCharacteristics: List<CharacteristicEntity>,
-  ) {
-    booking.criteria.apply {
-      retainAll { it.isModelScopePremises() }
-      addAll(newRoomCharacteristics)
-    }
-  }
-
-  private fun Cas1SpaceBookingEntity.updateDepartureDates(updateBookingDetails: Cas1SpaceBookingUpdateService.UpdateBookingDetails) {
-    if (updateBookingDetails.departureDate != null) {
-      this.expectedDepartureDate = updateBookingDetails.departureDate
-      this.canonicalDepartureDate = updateBookingDetails.departureDate
-    }
-  }
-
-  private fun Cas1SpaceBookingEntity.updateArrivalDates(updateBookingDetails: Cas1SpaceBookingUpdateService.UpdateBookingDetails) {
-    if (updateBookingDetails.arrivalDate != null) {
-      this.expectedArrivalDate = updateBookingDetails.arrivalDate
-      this.canonicalArrivalDate = updateBookingDetails.arrivalDate
-    }
-  }
-
   private fun getCharacteristicsEntity(cas1SpaceCharacteristics: List<Cas1SpaceCharacteristic>?): List<CharacteristicEntity> = characteristicService.getCharacteristicsByPropertyNames(
     cas1SpaceCharacteristics.orEmpty().toSet().map { it.value },
     ServiceName.approvedPremises,
   )
-
-  /**
-   * Any calls to this should first call and validate the response of [validateUpdateBookingCommon]
-   */
-  private fun doUpdateBooking(details: Cas1SpaceBookingUpdateService.UpdateBookingDetails): CasResult<Cas1SpaceBookingEntity> {
-    val bookingToUpdate = cas1SpaceBookingRepository.findByIdOrNull(details.bookingId)!!
-
-    val previousArrivalDate = bookingToUpdate.expectedArrivalDate
-    val previousDepartureDate = bookingToUpdate.expectedDepartureDate
-    val previousCharacteristics = bookingToUpdate.criteria.toList()
-
-    details.transferredTo?.let { bookingToUpdate.transferredTo = it }
-
-    if (bookingToUpdate.hasArrival()) {
-      bookingToUpdate.updateDepartureDates(details)
-    } else {
-      bookingToUpdate.updateArrivalDates(details)
-      bookingToUpdate.updateDepartureDates(details)
-    }
-
-    if (details.characteristics != null) {
-      updateRoomCharacteristics(bookingToUpdate, details.characteristics)
-    }
-
-    val updatedBooking = cas1SpaceBookingRepository.save(bookingToUpdate)
-
-    val previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null
-    val previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null
-    val previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null
-
-    cas1BookingDomainEventService.spaceBookingChanged(
-      Cas1BookingChangedEvent(
-        booking = updatedBooking,
-        changedBy = details.updatedBy,
-        bookingChangedAt = OffsetDateTime.now(clock),
-        previousArrivalDateIfChanged = previousArrivalDateIfChanged,
-        previousDepartureDateIfChanged = previousDepartureDateIfChanged,
-        previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
-      ),
-    )
-
-    if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
-      updatedBooking.application?.let { application ->
-        cas1BookingEmailService.spaceBookingAmended(
-          spaceBooking = updatedBooking,
-          application = application,
-          updateType = details.updateType,
-        )
-      }
-    }
-
-    return Success(updatedBooking)
-  }
 
   private fun toCas1CancellationReason(
     withdrawalContext: WithdrawalContext,
