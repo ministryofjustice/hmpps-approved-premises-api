@@ -74,7 +74,14 @@ class Cas1ReportsController(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("out-of-service-beds", year, month, ContentType.XLSX),
       ) { outputStream ->
-        cas1ReportService.createOutOfServiceBedReport(monthSpecificReportParams, outputStream)
+        cas1ReportService.createOutOfServiceBedReport(monthSpecificReportParams, outputStream, includePii = false)
+      }
+      Cas1ReportName.outOfServiceBedsWithPii -> return generateStreamingResponse(
+        contentType = ContentType.XLSX,
+        fileName = createCas1ReportName("out-of-service-beds-with-pii", year, month, ContentType.XLSX),
+      ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        cas1ReportService.createOutOfServiceBedReport(monthSpecificReportParams, outputStream, includePii = true)
       }
       Cas1ReportName.requestsForPlacement -> generateStreamingResponse(
         contentType = ContentType.CSV,

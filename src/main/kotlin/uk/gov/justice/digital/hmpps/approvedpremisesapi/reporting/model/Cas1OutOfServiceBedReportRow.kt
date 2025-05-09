@@ -13,4 +13,5 @@ data class Cas1OutOfServiceBedReportRow(
   val startDate: LocalDate,
   val endDate: LocalDate,
   val lengthDays: Int,
+  val notes: String,
 )

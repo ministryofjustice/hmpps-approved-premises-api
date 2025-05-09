@@ -34,7 +34,7 @@ class Cas1ReportService(
 ) {
 
   companion object {
-    val PII_COLUMN_NAMES = listOf(
+    val CSV_PII_COLUMN_NAMES = listOf(
       "referrer_username",
       "referrer_name",
       "applicant_reason_for_late_application_detail",
@@ -56,7 +56,7 @@ class Cas1ReportService(
     val columnsToExclude = if (includePii) {
       emptyList()
     } else {
-      PII_COLUMN_NAMES
+      CSV_PII_COLUMN_NAMES
     }
 
     CsvJdbcResultSetConsumer(
@@ -93,12 +93,21 @@ class Cas1ReportService(
       )
   }
 
-  fun createOutOfServiceBedReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
+  fun createOutOfServiceBedReport(
+    properties: MonthSpecificReportParams,
+    outputStream: OutputStream,
+    includePii: Boolean,
+  ) {
     Cas1OutOfServiceBedsReportGenerator(cas1OutOfServiceBedRepository)
       .createReport(cas1OutOfServiceBedRepository.findBedIdsWithAtLeastOneOutOfServiceBedRecord().map { Cas1BedIdentifier(it) }, properties)
       .writeExcel(
         outputStream = outputStream,
         factory = WorkbookFactory.create(true),
+        columnsSelector = if (includePii) {
+          { all() }
+        } else {
+          { all().except("notes") }
+        },
       )
   }
 
@@ -110,7 +119,7 @@ class Cas1ReportService(
     val columnsToExclude = if (includePii) {
       emptyList()
     } else {
-      PII_COLUMN_NAMES
+      CSV_PII_COLUMN_NAMES
     }
 
     CsvJdbcResultSetConsumer(
@@ -133,7 +142,7 @@ class Cas1ReportService(
     val columnsToExclude = if (includePii) {
       emptyList()
     } else {
-      PII_COLUMN_NAMES
+      CSV_PII_COLUMN_NAMES
     }
 
     CsvJdbcResultSetConsumer(
@@ -156,7 +165,7 @@ class Cas1ReportService(
     val columnsToExclude = if (includePii) {
       emptyList()
     } else {
-      PII_COLUMN_NAMES
+      CSV_PII_COLUMN_NAMES
     }
 
     CsvJdbcResultSetConsumer(
