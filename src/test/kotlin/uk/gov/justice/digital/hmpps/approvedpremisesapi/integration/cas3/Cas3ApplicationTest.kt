@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -41,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -59,14 +62,13 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         .isUnauthorized
     }
 
+    @SuppressWarnings("CyclomaticComplexMethod")
     @ParameterizedTest
     @CsvSource(
-      "CAS3_REFERRER,/applications",
-      "CAS3_ASSESSOR,/applications",
-      "CAS3_REFERRER,/cas3/applications",
-      "CAS3_ASSESSOR,/cas3/applications",
+      "CAS3_REFERRER",
+      "CAS3_ASSESSOR",
     )
-    fun `Get all applications returns 200 and returns all applications for user`(userRole: UserRole, baseUrl: String) {
+    fun `Get all applications returns 200 and returns all applications for user`(userRole: UserRole) {
       givenAProbationRegion { probationRegion ->
         givenAUser(roles = listOf(userRole), probationRegion = probationRegion) { otherUser, _ ->
           givenAUser(
@@ -81,8 +83,19 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                 withId(UUID.randomUUID())
               }
 
-              val application =
+              val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
+
+              val applicationInProgress =
                 createApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
+
+              val applicationSubmitted =
+                createApplicationEntity(
+                  applicationSchema,
+                  referrerUser,
+                  offenderDetails,
+                  probationRegion,
+                  OffsetDateTime.now().randomDateTimeBefore(5),
+                )
 
               val anotherUsersApplication =
                 createApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
@@ -96,50 +109,124 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                 referrerUser.deliusUsername,
               )
 
-              when (baseUrl) {
-                "/applications" -> {
-                  val responseBody = webTestClient.get()
-                    .uri(baseUrl)
-                    .header("Authorization", "Bearer $jwt")
-                    .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-                    .exchange()
-                    .expectStatus()
-                    .isOk
-                    .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
+              val responseBody = webTestClient.get()
+                .uri("/applications")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
 
-                  assertThat(responseBody).anyMatch {
-                    application.id == it.id &&
-                      application.crn == it.person.crn &&
-                      application.createdAt.toInstant() == it.createdAt &&
-                      application.createdByUser.id == it.createdByUserId &&
-                      application.submittedAt?.toInstant() == it.submittedAt
-                  }
+              assertApplicationSummaryResponse(
+                applicationInProgress,
+                responseBody.firstOrNull { it.id == applicationInProgress.id },
+                ApplicationStatus.inProgress,
+              )
+              assertApplicationSummaryResponse(
+                applicationSubmitted,
+                responseBody.firstOrNull { it.id == applicationSubmitted.id },
+                ApplicationStatus.submitted,
+              )
 
-                  assertThat(responseBody).noneMatch {
-                    anotherUsersApplication.id == it.id
-                  }
-                }
-                else -> {
-                  val responseBody = webTestClient.get()
-                    .uri(baseUrl)
-                    .header("Authorization", "Bearer $jwt")
-                    .exchange()
-                    .expectStatus()
-                    .isOk
-                    .bodyAsListOfObjects<Cas3ApplicationSummary>()
+              assertThat(responseBody).noneMatch {
+                anotherUsersApplication.id == it.id
+              }
+            }
+          }
+        }
+      }
+    }
 
-                  assertThat(responseBody).anyMatch {
-                    application.id == it.id &&
-                      application.crn == it.person.crn &&
-                      application.createdAt.toInstant() == it.createdAt &&
-                      application.createdByUser.id == it.createdByUserId &&
-                      application.submittedAt?.toInstant() == it.submittedAt
-                  }
+    @SuppressWarnings("CyclomaticComplexMethod")
+    @ParameterizedTest
+    @CsvSource(
+      "CAS3_REFERRER",
+      "CAS3_ASSESSOR",
+    )
+    fun `Get all Cas3 applications returns 200 and returns all applications for user`(userRole: UserRole) {
+      givenAProbationRegion { probationRegion ->
+        givenAUser(roles = listOf(userRole), probationRegion = probationRegion) { otherUser, _ ->
+          givenAUser(
+            roles = listOf(UserRole.CAS3_REFERRER),
+            probationRegion = probationRegion,
+          ) { referrerUser, jwt ->
+            givenAnOffender { offenderDetails, _ ->
+              temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-                  assertThat(responseBody).noneMatch {
-                    anotherUsersApplication.id == it.id
-                  }
-                }
+              val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
+
+              val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
+
+              val applicationInProgress =
+                createApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
+
+              val applicationSubmitted =
+                createApplicationEntity(
+                  applicationSchema,
+                  referrerUser,
+                  offenderDetails,
+                  probationRegion,
+                  OffsetDateTime.now().randomDateTimeBefore(5),
+                )
+
+              val applicationRejected =
+                createApplicationEntity(
+                  applicationSchema,
+                  referrerUser,
+                  offenderDetails,
+                  probationRegion,
+                  OffsetDateTime.now().randomDateTimeBefore(15),
+                )
+
+              temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+                withApplication(applicationRejected)
+                withSubmittedAt(OffsetDateTime.now().minusDays(10))
+                withDecision(AssessmentDecision.REJECTED)
+                withAssessmentSchema(assessmentSchema)
+              }
+
+              val anotherUsersApplication =
+                createApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+
+              apDeliusContextAddResponseToUserAccessCall(
+                listOf(
+                  CaseAccessFactory()
+                    .withCrn(offenderDetails.otherIds.crn)
+                    .produce(),
+                ),
+                referrerUser.deliusUsername,
+              )
+
+              val responseBody = webTestClient.get()
+                .uri("/cas3/applications")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .bodyAsListOfObjects<Cas3ApplicationSummary>()
+
+              assertApplicationSummaryResponse(
+                applicationInProgress,
+                responseBody.firstOrNull { it.id == applicationInProgress.id },
+                ApplicationStatus.inProgress,
+              )
+              assertApplicationSummaryResponse(
+                applicationSubmitted,
+                responseBody.firstOrNull { it.id == applicationSubmitted.id },
+                ApplicationStatus.submitted,
+              )
+              assertApplicationSummaryResponse(
+                applicationRejected,
+                responseBody.firstOrNull { it.id == applicationRejected.id },
+                ApplicationStatus.rejected,
+              )
+
+              assertThat(responseBody).noneMatch {
+                anotherUsersApplication.id == it.id
               }
             }
           }
@@ -160,6 +247,34 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       withCrn(offenderDetails.otherIds.crn)
       withData("{}")
       withProbationRegion(probationRegion)
+    }
+
+    private fun assertApplicationSummaryResponse(
+      application: TemporaryAccommodationApplicationEntity,
+      applicationSummary: TemporaryAccommodationApplicationSummary?,
+      status: ApplicationStatus,
+    ) {
+      assertThat(applicationSummary).isNotNull()
+      assertThat(applicationSummary?.id).isEqualTo(application.id)
+      assertThat(applicationSummary?.person?.crn).isEqualTo(application.crn)
+      assertThat(applicationSummary?.createdAt).isEqualTo(application.createdAt.toInstant())
+      assertThat(applicationSummary?.createdByUserId).isEqualTo(application.createdByUser.id)
+      assertThat(applicationSummary?.submittedAt).isEqualTo(application.submittedAt?.toInstant())
+      assertThat(applicationSummary?.status).isEqualTo(status)
+    }
+
+    private fun assertApplicationSummaryResponse(
+      application: TemporaryAccommodationApplicationEntity,
+      applicationSummary: Cas3ApplicationSummary?,
+      status: ApplicationStatus,
+    ) {
+      assertThat(applicationSummary).isNotNull()
+      assertThat(applicationSummary?.id).isEqualTo(application.id)
+      assertThat(applicationSummary?.person?.crn).isEqualTo(application.crn)
+      assertThat(applicationSummary?.createdAt).isEqualTo(application.createdAt.toInstant())
+      assertThat(applicationSummary?.createdByUserId).isEqualTo(application.createdByUser.id)
+      assertThat(applicationSummary?.submittedAt).isEqualTo(application.submittedAt?.toInstant())
+      assertThat(applicationSummary?.status).isEqualTo(status)
     }
   }
 
@@ -1055,6 +1170,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
+    @ParameterizedTest
     @CsvSource("CAS", "CAS3")
     fun `Submit Temporary Accommodation application returns 200 with optional elements in the request`(apiEndpoint: String) {
       givenAUser { submittingUser, jwt ->
