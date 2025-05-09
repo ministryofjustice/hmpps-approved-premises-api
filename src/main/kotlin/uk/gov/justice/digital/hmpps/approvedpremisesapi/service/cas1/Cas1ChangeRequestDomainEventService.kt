@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventCodedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -15,10 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import java.time.OffsetDateTime
@@ -28,9 +25,6 @@ class Cas1ChangeRequestDomainEventService(
   private val cas1DomainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
-  @EventListener
-  fun placementAppealAccepted(placementAppealAccepted: PlacementAppealAccepted) = saveChangeRequestAcceptedDomainEvent(placementAppealAccepted.changeRequest)
-
   @EventListener
   fun placementAppealCreated(placementAppealCreated: PlacementAppealCreated) = saveChangeRequestCreated(placementAppealCreated.changeRequest, placementAppealCreated.requestingUser)
 
@@ -42,9 +36,6 @@ class Cas1ChangeRequestDomainEventService(
 
   @EventListener
   fun plannedTransferRequestRejected(plannedTransferRequestRejected: PlannedTransferRequestRejected) = saveChangeRequestRejected(plannedTransferRequestRejected.changeRequest, plannedTransferRequestRejected.rejectingUser)
-
-  @EventListener
-  fun plannedTransferRequestAccepted(plannedTransferRequestAccepted: PlannedTransferRequestAccepted) = saveChangeRequestAcceptedDomainEvent(plannedTransferRequestAccepted.changeRequest)
 
   fun saveChangeRequestCreated(
     changeRequest: Cas1ChangeRequestEntity,
@@ -89,19 +80,6 @@ class Cas1ChangeRequestDomainEventService(
       ),
     )
   }
-
-  private fun saveChangeRequestAcceptedDomainEvent(
-    changeRequest: Cas1ChangeRequestEntity,
-  ) = save(
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED,
-    changeRequest,
-    PlacementChangeRequestAccepted(
-      changeRequestId = changeRequest.id,
-      changeRequestType = changeRequest.domainEventType(),
-      booking = changeRequest.spaceBooking.toEventBookingSummary(),
-      acceptedBy = getStaffDetailsByUsername(changeRequest.decisionMadeByUser!!.deliusUsername).toStaffMember(),
-    ),
-  )
 
   private fun Cas1ChangeRequestEntity.domainEventType() = when (this.type) {
     ChangeRequestType.PLACEMENT_APPEAL -> EventChangeRequestType.PLACEMENT_APPEAL

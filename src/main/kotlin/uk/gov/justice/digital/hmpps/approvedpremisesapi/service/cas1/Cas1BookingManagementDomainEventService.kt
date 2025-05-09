@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssigned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
@@ -20,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -29,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.DomainEventUtils.mapApprovedPremisesEntityToPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -264,34 +261,6 @@ class Cas1SpaceBookingManagementDomainEventService(
             arrivalDate = updatedCas1SpaceBooking.canonicalArrivalDate.toLocalDateTime().toLocalDate(),
             departureDate = updatedCas1SpaceBooking.canonicalDepartureDate.toLocalDateTime().toLocalDate(),
           ),
-        ),
-      ),
-    )
-  }
-
-  fun emergencyTransferCreated(
-    createdBy: UserEntity,
-    from: Cas1SpaceBookingEntity,
-    to: Cas1SpaceBookingEntity,
-  ) {
-    val eventOccurredAt = OffsetDateTime.now().toInstant()
-    val application = from.application!!
-
-    domainEventService.save(
-      SaveCas1DomainEventWithPayload(
-        type = DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED,
-        applicationId = application.id,
-        crn = application.crn,
-        nomsNumber = application.nomsNumber,
-        occurredAt = OffsetDateTime.now().toInstant(),
-        cas1SpaceBookingId = from.id,
-        schemaVersion = null,
-        data = EmergencyTransferCreated(
-          applicationId = application.id,
-          createdAt = eventOccurredAt,
-          createdBy = getStaffDetailsByUsername(createdBy.deliusUsername).toStaffMember(),
-          from = from.toEventBookingSummary(),
-          to = to.toEventBookingSummary(),
         ),
       ),
     )
