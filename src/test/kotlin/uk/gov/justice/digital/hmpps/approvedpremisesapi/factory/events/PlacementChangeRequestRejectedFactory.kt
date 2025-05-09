@@ -14,6 +14,10 @@ class PlacementChangeRequestRejectedFactory : Factory<PlacementChangeRequestReje
   private var rejectedBy = { StaffMemberFactory().produce() }
   private var reason = { Cas1DomainEventCodedIdFactory().produce() }
 
+  fun withChangeRequestType(changeRequestType: EventChangeRequestType) = apply {
+    this.changeRequestType = { changeRequestType }
+  }
+
   fun withBooking(booking: EventBookingSummary) = apply {
     this.booking = { booking }
   }

@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementChangeRequestRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -22,6 +24,11 @@ class PlacementChangeRequestRejectedTimelineFactory(val domainEventService: Cas1
       type = Cas1TimelineEventType.placementChangeRequestRejected,
       booking = details.booking.toTimelinePayloadSummary(),
       reason = NamedId(reason.id, reason.code),
+      changeRequestType = when (details.changeRequestType) {
+        EventChangeRequestType.PLACEMENT_APPEAL -> Cas1ChangeRequestType.PLACEMENT_APPEAL
+        EventChangeRequestType.PLACEMENT_EXTENSION -> Cas1ChangeRequestType.PLACEMENT_EXTENSION
+        EventChangeRequestType.PLANNED_TRANSFER -> Cas1ChangeRequestType.PLANNED_TRANSFER
+      },
     )
   }
 

@@ -1280,9 +1280,12 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
           $ref: '_shared.yml#/components/schemas/NamedId'
+        changeRequestType:
+          $ref: '_shared.yml#/components/schemas/Cas1ChangeRequestType'
       required:
         - booking
         - reason
+        - changeRequestType
     Cas1PlacementChangeRequestAcceptedPayload:
       type: object
       allOf:
@@ -1301,9 +1304,12 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
           $ref: '_shared.yml#/components/schemas/NamedId'
+        changeRequestType:
+          $ref: '_shared.yml#/components/schemas/Cas1ChangeRequestType'
       required:
         - booking
         - reason
+        - changeRequestType
     Cas1EmergencyTransferCreatedContentPayload:
       type: object
       allOf:

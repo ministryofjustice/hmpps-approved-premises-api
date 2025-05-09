@@ -8051,9 +8051,12 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
           $ref: '#/components/schemas/NamedId'
+        changeRequestType:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
       required:
         - booking
         - reason
+        - changeRequestType
     Cas1PlacementChangeRequestAcceptedPayload:
       type: object
       allOf:
@@ -8072,9 +8075,12 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
           $ref: '#/components/schemas/NamedId'
+        changeRequestType:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
       required:
         - booking
         - reason
+        - changeRequestType
     Cas1EmergencyTransferCreatedContentPayload:
       type: object
       allOf:
