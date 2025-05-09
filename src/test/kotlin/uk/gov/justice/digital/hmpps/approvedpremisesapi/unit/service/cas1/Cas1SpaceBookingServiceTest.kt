@@ -58,8 +58,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenSpaceBookingDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -828,8 +828,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns null
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           arrivalDate = newArrivalDate,
@@ -853,8 +853,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           arrivalDate = newArrivalDate,
@@ -878,8 +878,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           arrivalDate = newArrivalDate,
@@ -903,8 +903,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           arrivalDate = newArrivalDate,
@@ -928,8 +928,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           arrivalDate = newArrivalDate,
@@ -948,8 +948,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           arrivalDate = newArrivalDate,
@@ -971,8 +971,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           arrivalDate = LocalDate.of(2025, 6, 17),
@@ -996,8 +996,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           arrivalDate = null,
@@ -1021,8 +1021,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           arrivalDate = LocalDate.of(2025, 6, 16),
@@ -1047,8 +1047,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      val result = service.updateBooking(
+        UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           arrivalDate = null,
@@ -1068,7 +1068,7 @@ class Cas1SpaceBookingServiceTest {
     fun `should update only departure dates when booking status is hasArrival`() {
       existingSpaceBooking.actualArrivalDate = LocalDate.of(2025, 3, 5)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 1, 10)
-      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+      val updateBookingDetails = UpdateBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         arrivalDate = newArrivalDate,
@@ -1086,15 +1086,15 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
       every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
-      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+      val result = service.updateBooking(updateBookingDetails)
 
       assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
-      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
-      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(updateBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(updateBookingDetails.departureDate)
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
@@ -1125,7 +1125,7 @@ class Cas1SpaceBookingServiceTest {
       val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
-      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+      val updateBookingDetails = UpdateBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         arrivalDate = newArrivalDate,
@@ -1150,15 +1150,15 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
       every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
-      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+      val result = service.updateBooking(updateBookingDetails)
 
       assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
-      assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(updateSpaceBookingDetails.arrivalDate)
-      assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(updateSpaceBookingDetails.arrivalDate)
-      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
-      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(updateBookingDetails.arrivalDate)
+      assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(updateBookingDetails.arrivalDate)
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(updateBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(updateBookingDetails.departureDate)
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
@@ -1189,7 +1189,7 @@ class Cas1SpaceBookingServiceTest {
       val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
-      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+      val updateBookingDetails = UpdateBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         arrivalDate = newArrivalDate,
@@ -1209,7 +1209,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
       every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
-      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+      val result = service.updateBooking(updateBookingDetails)
 
       assertThatCasResult(result).isSuccess()
 
@@ -1245,7 +1245,7 @@ class Cas1SpaceBookingServiceTest {
       val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
-      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+      val updateBookingDetails = UpdateBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         arrivalDate = null,
@@ -1264,7 +1264,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
 
-      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+      val result = service.updateBooking(updateBookingDetails)
 
       assertThatCasResult(result).isSuccess()
 
@@ -1297,7 +1297,7 @@ class Cas1SpaceBookingServiceTest {
       val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
 
-      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+      val updateBookingDetails = UpdateBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         arrivalDate = null,
@@ -1316,7 +1316,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
 
-      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+      val result = service.updateBooking(updateBookingDetails)
 
       assertThatCasResult(result).isSuccess()
 
@@ -1367,8 +1367,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns null
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           departureDate = newDepartureDate,
@@ -1385,8 +1385,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           departureDate = newDepartureDate,
@@ -1405,8 +1405,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           departureDate = newDepartureDate,
@@ -1425,8 +1425,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           departureDate = newDepartureDate,
@@ -1445,8 +1445,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = PREMISES_ID,
           departureDate = newDepartureDate,
@@ -1463,8 +1463,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           departureDate = newDepartureDate,
@@ -1481,8 +1481,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           departureDate = LocalDate.now().minusDays(1),
@@ -1501,8 +1501,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           departureDate = LocalDate.now().plusDays(8),
@@ -1521,8 +1521,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
-      val result = service.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      val result = service.shortenBooking(
+        ShortenBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
           departureDate = LocalDate.now().plusDays(7),
@@ -1538,7 +1538,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should update departure date when status is hasArrival and send emails`() {
-      val shortenSpaceBookingDetails = ShortenSpaceBookingDetails(
+      val shortenBookingDetails = ShortenBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         departureDate = LocalDate.now().plusDays(1),
@@ -1554,15 +1554,15 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
-      val result = service.shortenSpaceBooking(shortenSpaceBookingDetails)
+      val result = service.shortenBooking(shortenBookingDetails)
 
       assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
-      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
-      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenBookingDetails.departureDate)
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(
@@ -1590,7 +1590,7 @@ class Cas1SpaceBookingServiceTest {
     fun `should update departure date when status is hasArrival and new departure date and actual arrival date are today`() {
       existingSpaceBooking.actualArrivalDate = LocalDate.now()
 
-      val shortenSpaceBookingDetails = ShortenSpaceBookingDetails(
+      val shortenBookingDetails = ShortenBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         departureDate = LocalDate.now(),
@@ -1606,15 +1606,15 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingAmended(any(), any(), any()) } returns Unit
 
-      val result = service.shortenSpaceBooking(shortenSpaceBookingDetails)
+      val result = service.shortenBooking(shortenBookingDetails)
 
       assertThatCasResult(result).isSuccess()
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
-      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
-      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenSpaceBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(shortenBookingDetails.departureDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(shortenBookingDetails.departureDate)
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(

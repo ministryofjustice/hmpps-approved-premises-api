@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringEventPublisher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
@@ -320,4 +319,12 @@ class Cas1BookingManagementService(
     date: LocalDate,
     time: LocalTime,
   ) = actualArrivalDate == date && actualArrivalTime == time
+
+  data class DepartureInfo(
+    val departureDate: LocalDate,
+    val departureTime: LocalTime,
+    val reasonId: UUID,
+    val moveOnCategoryId: UUID? = null,
+    val notes: String? = null,
+  )
 }
