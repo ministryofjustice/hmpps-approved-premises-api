@@ -38,12 +38,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenSpaceBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
@@ -196,14 +197,15 @@ class Cas1SpaceBookingController(
       .filter { it.isModelScopeRoom() }
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.updateSpaceBooking(
-        UpdateSpaceBookingDetails(
+      cas1SpaceBookingService.updateBooking(
+        UpdateBookingDetails(
           bookingId = bookingId,
           premisesId = premisesId,
           arrivalDate = cas1UpdateSpaceBooking.arrivalDate,
           departureDate = cas1UpdateSpaceBooking.departureDate,
           characteristics = characteristics,
           updatedBy = user,
+          updateType = UpdateType.AMENDMENT,
         ),
       ),
     )
@@ -219,8 +221,8 @@ class Cas1SpaceBookingController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_SHORTEN)
 
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.shortenSpaceBooking(
-        ShortenSpaceBookingDetails(
+      cas1SpaceBookingService.shortenBooking(
+        ShortenBookingDetails(
           bookingId = bookingId,
           premisesId = premisesId,
           departureDate = cas1ShortenSpaceBooking.departureDate,

@@ -56,6 +56,6 @@ class EmailNotificationAsserter {
   fun formatRequestedEmails() = "\n" + requestedEmails.map { "\n $it" }
 
   fun assertEmailsRequestedCount(expectedCount: Int) {
-    assertThat(requestedEmails.size).isEqualTo(expectedCount)
+    assertThat(requestedEmails.size).withFailMessage("Emails are $requestedEmails").isEqualTo(expectedCount)
   }
 }

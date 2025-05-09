@@ -31,6 +31,9 @@ inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> Valida
 class CasResultValidatedScope<EntityType> {
   val validationErrors = ValidationErrors()
 
+  fun hasErrors() = validationErrors.any()
+  fun errors() = fieldValidationError
+
   val fieldValidationError: CasResult.FieldValidationError<EntityType> = CasResult.FieldValidationError(validationErrors)
 
   infix fun success(entity: EntityType) = CasResult.Success(entity)
@@ -40,4 +43,9 @@ class CasResultValidatedScope<EntityType> {
   infix fun UUID.hasConflictError(message: String) = CasResult.ConflictError<EntityType>(this, message)
 }
 
+fun CasResultValidatedScope<Unit>.successOrErrors(): CasResult<Unit> = if (hasErrors()) {
+  errors()
+} else {
+  success(Unit)
+}
 inline fun <EntityType> validatedCasResult(scope: CasResultValidatedScope<EntityType>.() -> CasResult<EntityType>): CasResult<EntityType> = scope(CasResultValidatedScope())

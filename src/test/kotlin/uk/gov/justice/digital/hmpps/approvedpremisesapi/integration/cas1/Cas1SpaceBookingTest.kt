@@ -2698,6 +2698,11 @@ class Cas1SpaceBookingTest {
         spaceBooking.application!!.cruManagementArea!!.emailAddress!!,
         Cas1NotifyTemplates.BOOKING_AMENDED,
       )
+
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+      )
     }
   }
 
@@ -2819,11 +2824,14 @@ class Cas1SpaceBookingTest {
         application.id,
         DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED,
         DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
       )
 
-      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailsRequestedCount(4)
       emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
       emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
+      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_AMENDED)
+      emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_AMENDED)
     }
   }
 
@@ -2968,11 +2976,14 @@ class Cas1SpaceBookingTest {
         application.id,
         DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED,
         DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
       )
 
-      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailsRequestedCount(4)
       emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
       emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
+      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_AMENDED)
+      emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_AMENDED)
     }
   }
 }

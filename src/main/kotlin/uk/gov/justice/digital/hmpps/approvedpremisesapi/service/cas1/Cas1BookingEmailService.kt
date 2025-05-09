@@ -114,15 +114,10 @@ class Cas1BookingEmailService(
   fun spaceBookingAmended(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
+    updateType: Cas1SpaceBookingService.UpdateType,
   ) = bookingAmended(
     spaceBooking.toEmailBookingInfo(application),
-  )
-
-  fun spaceBookingShortened(
-    spaceBooking: Cas1SpaceBookingEntity,
-    application: ApprovedPremisesApplicationEntity,
-  ) = bookingShortened(
-    spaceBooking.toEmailBookingInfo(application),
+    shortened = updateType == Cas1SpaceBookingService.UpdateType.SHORTENING,
   )
 
   fun bookingAmended(
@@ -131,37 +126,24 @@ class Cas1BookingEmailService(
     placementApplication: PlacementApplicationEntity?,
   ) = bookingAmended(
     booking.toEmailBookingInfo(application, placementApplication),
+    shortened = false,
   )
 
-  private fun bookingAmended(emailBookingInfo: EmailBookingInfo) {
+  private fun bookingAmended(
+    emailBookingInfo: EmailBookingInfo,
+    shortened: Boolean,
+  ) {
     val application = emailBookingInfo.application
     val emailPersonalisation = buildCommonPersonalisation(emailBookingInfo)
 
-    val interestedParties =
-      (
-        application.interestedPartiesEmailAddresses() +
-          setOfNotNull(emailBookingInfo.premises.emailAddress)
-        ).toSet()
-
-    emailNotifier.sendEmails(
-      recipientEmailAddresses = interestedParties,
-      templateId = Cas1NotifyTemplates.BOOKING_AMENDED,
-      personalisation = emailPersonalisation,
-      application = application,
-    )
-  }
-
-  private fun bookingShortened(bookingInfo: EmailBookingInfo) {
-    val application = bookingInfo.application
-    val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
-
-    val interestedParties =
-      (
-        application.interestedPartiesEmailAddresses() +
-          setOfNotNull(bookingInfo.premises.emailAddress) +
-          setOfNotNull(application.cruManagementArea?.emailAddress) +
-          setOfNotNull(bookingInfo.placementApplication?.createdByUser?.email)
-        ).toSet()
+    val interestedParties = buildSet {
+      addAll(application.interestedPartiesEmailAddresses())
+      emailBookingInfo.premises.emailAddress?.let { add(it) }
+      emailBookingInfo.placementApplication?.createdByUser?.email?.let { add(it) }
+      if (shortened) {
+        application.cruManagementArea?.emailAddress?.let { add(it) }
+      }
+    }
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = interestedParties,

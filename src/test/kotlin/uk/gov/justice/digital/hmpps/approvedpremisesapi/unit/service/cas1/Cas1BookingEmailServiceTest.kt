@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
@@ -640,31 +641,44 @@ class Cas1BookingEmailServiceTest {
 
   @Nested
   inner class SpaceBookingAmended {
-    @Test
-    fun `spaceBookingAmended sends email to applicant, premises, case manager when emails are defined`() {
-      val applicant = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .withEmail(APPLICANT_EMAIL)
-        .produce()
+    val applicant = UserEntityFactory()
+      .withDefaults()
+      .withEmail(APPLICANT_EMAIL)
+      .withCruManagementArea(Cas1CruManagementAreaEntityFactory().withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL).produce())
+      .produce()
 
-      val application = createApplication(
-        applicant = applicant,
-        caseManagerNotApplicant = true,
-        cruManagementArea = Cas1CruManagementAreaEntityFactory()
-          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
+    val application = createApplication(
+      applicant = applicant,
+      caseManagerNotApplicant = true,
+      cruManagementArea = Cas1CruManagementAreaEntityFactory()
+        .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
+        .produce(),
+    )
+
+    val booking = Cas1SpaceBookingEntityFactory()
+      .withApplication(application)
+      .withPremises(premises)
+      .withCanonicalArrivalDate(LocalDate.of(2023, 2, 1))
+      .withCanonicalDepartureDate(LocalDate.of(2023, 2, 14))
+      .withPlacementRequest(
+        PlacementRequestEntityFactory()
+          .withPlacementApplication(
+            PlacementApplicationEntityFactory()
+              .withDefaults()
+              .withCreatedByUser(UserEntityFactory().withDefaults().withEmail(PLACEMENT_APPLICATION_CREATOR_EMAIL).produce())
+              .produce(),
+          )
+          .withDefaults()
           .produce(),
       )
+      .produce()
 
-      val booking = createSpaceBooking(
-        application,
-        premises,
-        arrivalDate = LocalDate.of(2023, 2, 1),
-        departureDate = LocalDate.of(2023, 2, 14),
-      )
-
+    @Test
+    fun `spaceBookingAmended sends email to applicant(s), premises, case manager when emails are defined`() {
       service.spaceBookingAmended(
         spaceBooking = booking,
         application = application,
+        updateType = Cas1SpaceBookingService.UpdateType.AMENDMENT,
       )
 
       val expectedPersonalisation = mapOf(
@@ -678,23 +692,48 @@ class Cas1BookingEmailServiceTest {
         "lengthStayUnit" to "weeks",
       )
 
-      mockEmailNotificationService.assertEmailRequestCount(3)
-      mockEmailNotificationService.assertEmailRequested(
-        APPLICANT_EMAIL,
+      mockEmailNotificationService.assertEmailRequestCount(4)
+      mockEmailNotificationService.assertEmailsRequested(
+        setOf(
+          APPLICANT_EMAIL,
+          CASE_MANAGER_EMAIL,
+          PLACEMENT_APPLICATION_CREATOR_EMAIL,
+          PREMISES_EMAIL,
+        ),
         Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,
       )
+    }
 
-      mockEmailNotificationService.assertEmailRequested(
-        CASE_MANAGER_EMAIL,
-        Cas1NotifyTemplates.BOOKING_AMENDED,
-        expectedPersonalisation,
-        application,
+    @Test
+    fun `spaceBookingAmended for shortened space booking sends email to applicant(s), premises, case manager and CRU when emails are defined`() {
+      service.spaceBookingAmended(
+        spaceBooking = booking,
+        application = application,
+        updateType = Cas1SpaceBookingService.UpdateType.SHORTENING,
       )
 
-      mockEmailNotificationService.assertEmailRequested(
-        PREMISES_EMAIL,
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "lengthStay" to 2,
+        "lengthStayUnit" to "weeks",
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(5)
+      mockEmailNotificationService.assertEmailsRequested(
+        setOf(
+          APPLICANT_EMAIL,
+          CASE_MANAGER_EMAIL,
+          PLACEMENT_APPLICATION_CREATOR_EMAIL,
+          PREMISES_EMAIL,
+          CRU_MANAGEMENT_AREA_EMAIL,
+        ),
         Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,

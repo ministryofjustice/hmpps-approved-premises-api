@@ -36,11 +36,8 @@ class DomainEventAsserter(
   }
 
   fun assertDomainEventsStoredInSpecificOrder(applicationId: UUID, vararg eventTypes: DomainEventType) {
-    val allDomainEvents = domainEventRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId)
-    allDomainEvents.forEachIndexed { index, actualDomainEvent ->
-      val expectedType = eventTypes[index]
-      assertThat(actualDomainEvent.type).isEqualTo(eventTypes[index]).withFailMessage("Expected event of type $expectedType as index $index, was ${actualDomainEvent.type}")
-    }
+    val allDomainEventsTypes = domainEventRepository.findByApplicationIdOrderByCreatedAtAsc(applicationId).map { it.type }
+    assertThat(allDomainEventsTypes).isEqualTo(eventTypes.toList())
   }
 
   fun assertDomainEventsOfTypeStored(applicationId: UUID, eventType: DomainEventType, expectedCount: Int) {

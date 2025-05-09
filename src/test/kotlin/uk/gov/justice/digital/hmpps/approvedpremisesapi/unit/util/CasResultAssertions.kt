@@ -16,21 +16,21 @@ class CasResultAssertions<T>(actual: CasResult<T>) :
 
   fun isSuccess(): CasSuccessResultAssertions<T> {
     if (actual !is CasResult.Success) {
-      failWithMessage("Expected CasResult.Success but was <%s>", actual.javaClass.simpleName, actual)
+      failWithMessage("Expected CasResult.Success but was <%s>", actual)
     }
     return CasSuccessResultAssertions(actual as CasResult.Success)
   }
 
   fun isConflictError(): CasResultConflictErrorAssertions<T> {
     if (actual !is CasResult.ConflictError) {
-      failWithMessage("Expected CasResult.ConflictError but was <%s>", actual.javaClass.simpleName, actual)
+      failWithMessage("Expected CasResult.ConflictError but was <%s>", actual)
     }
     return CasResultConflictErrorAssertions(actual as CasResult.ConflictError)
   }
 
   fun isFieldValidationError(): CasResultFieldValidationErrorAssertions<T> {
     if (actual !is CasResult.FieldValidationError) {
-      failWithMessage("Expected CasResult.FieldValidationError but was <%s>", actual.javaClass.simpleName, actual)
+      failWithMessage("Expected CasResult.FieldValidationError but was <%s>", actual)
     }
     return CasResultFieldValidationErrorAssertions(actual as CasResult.FieldValidationError)
   }
@@ -38,7 +38,7 @@ class CasResultAssertions<T>(actual: CasResult<T>) :
   @Deprecated("Use the chained version isFieldValidationError()")
   fun isFieldValidationError(field: String, expectedMessage: String): CasResultAssertions<T> {
     if (actual !is CasResult.FieldValidationError) {
-      failWithMessage("Expected CasResult.FieldValidationError but was <%s>", actual.javaClass.simpleName, actual)
+      failWithMessage("Expected CasResult.FieldValidationError but was <%s>", actual)
     }
     val validationMessages = (actual as CasResult.FieldValidationError<T>).validationMessages
 
@@ -57,7 +57,7 @@ class CasResultAssertions<T>(actual: CasResult<T>) :
 
   fun isUnauthorised(expectedMessage: String? = null): CasResultAssertions<T> {
     if (actual !is CasResult.Unauthorised) {
-      failWithMessage("Expected CasResult.Unauthorised but was <%s>", actual.javaClass.simpleName, actual)
+      failWithMessage("Expected CasResult.Unauthorised but was <%s>", actual)
     }
     val message = (actual as CasResult.Unauthorised<T>).message
     assertThat(message).isEqualTo(expectedMessage)
@@ -66,7 +66,7 @@ class CasResultAssertions<T>(actual: CasResult<T>) :
 
   fun isGeneralValidationError(expectedMessage: String): CasResultAssertions<T> {
     if (actual !is CasResult.GeneralValidationError) {
-      failWithMessage("Expected CasResult.GeneralValidationError but was <%s>", actual.javaClass.simpleName, actual)
+      failWithMessage("Expected CasResult.GeneralValidationError but was <%s>", actual)
     }
     val message = (actual as CasResult.GeneralValidationError<T>).message
     if (message != expectedMessage) {
@@ -81,7 +81,7 @@ class CasResultAssertions<T>(actual: CasResult<T>) :
 
   fun isNotFound(expectedEntityType: String, expectedId: Any) {
     if (actual !is CasResult.NotFound) {
-      failWithMessage("Expected CasResult.NotFound but was <%s>", actual.javaClass.simpleName, actual)
+      failWithMessage("Expected CasResult.NotFound but was <%s>", actual)
     }
     val notFound = actual as CasResult.NotFound
 
