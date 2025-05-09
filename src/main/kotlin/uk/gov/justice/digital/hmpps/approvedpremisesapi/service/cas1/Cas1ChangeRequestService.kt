@@ -25,8 +25,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringEventPublisher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -39,11 +46,10 @@ class Cas1ChangeRequestService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository,
   private val cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
-  private val cas1ChangeRequestEmailService: Cas1ChangeRequestEmailService,
-  private val cas1ChangeRequestDomainEventService: Cas1ChangeRequestDomainEventService,
   private val userService: UserService,
   private val spaceBookingActionsService: Cas1SpaceBookingActionsService,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
+  private val springEventPublisher: SpringEventPublisher,
 ) {
 
   @SuppressWarnings("CyclomaticComplexMethod", "ComplexCondition")
@@ -108,18 +114,11 @@ class Cas1ChangeRequestService(
 
     when (type) {
       ChangeRequestType.PLACEMENT_APPEAL -> {
-        cas1ChangeRequestEmailService.placementAppealCreated(createdChangeRequest)
-        cas1ChangeRequestDomainEventService.placementAppealCreated(
-          changeRequest = createdChangeRequest,
-          requestingUser = userService.getUserForRequest(),
-        )
+        springEventPublisher.publishEvent(PlacementAppealCreated(createdChangeRequest, userService.getUserForRequest()))
       }
       ChangeRequestType.PLACEMENT_EXTENSION -> error("to be implemented")
       ChangeRequestType.PLANNED_TRANSFER -> {
-        cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(
-          changeRequest = createdChangeRequest,
-          requestingUser = userService.getUserForRequest(),
-        )
+        springEventPublisher.publishEvent(PlannedTransferRequestCreated(createdChangeRequest, userService.getUserForRequest()))
       }
     }
 
@@ -151,8 +150,7 @@ class Cas1ChangeRequestService(
 
     approveChangeRequest(changeRequest, user)
 
-    cas1ChangeRequestEmailService.placementAppealAccepted(changeRequest)
-    cas1ChangeRequestDomainEventService.placementAppealAccepted(changeRequest)
+    springEventPublisher.publishEvent(PlacementAppealAccepted(changeRequest))
 
     return Success(Unit)
   }
@@ -164,7 +162,7 @@ class Cas1ChangeRequestService(
   ) {
     approveChangeRequest(changeRequest, user)
 
-    cas1ChangeRequestDomainEventService.plannedTransferRequestAccepted(changeRequest)
+    springEventPublisher.publishEvent(PlannedTransferRequestAccepted(changeRequest))
   }
 
   @Transactional
@@ -200,18 +198,11 @@ class Cas1ChangeRequestService(
 
     when (changeRequest.type) {
       ChangeRequestType.PLACEMENT_APPEAL -> {
-        cas1ChangeRequestEmailService.placementAppealRejected(changeRequest)
-        cas1ChangeRequestDomainEventService.placementAppealRejected(
-          changeRequest,
-          userService.getUserForRequest(),
-        )
+        springEventPublisher.publishEvent(PlacementAppealRejected(changeRequest, userService.getUserForRequest()))
       }
       ChangeRequestType.PLACEMENT_EXTENSION -> Unit
       ChangeRequestType.PLANNED_TRANSFER -> {
-        cas1ChangeRequestDomainEventService.plannedTransferRequestRejected(
-          changeRequest,
-          userService.getUserForRequest(),
-        )
+        springEventPublisher.publishEvent(PlannedTransferRequestRejected(changeRequest, userService.getUserForRequest()))
       }
     }
 

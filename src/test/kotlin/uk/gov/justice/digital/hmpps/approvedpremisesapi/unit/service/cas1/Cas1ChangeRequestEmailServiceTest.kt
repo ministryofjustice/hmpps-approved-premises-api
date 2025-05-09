@@ -14,6 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
@@ -60,7 +63,7 @@ class Cas1ChangeRequestEmailServiceTest {
     .withName(PREMISES_NAME).produce()
 
   @Nested
-  inner class PlacementAppealCreated {
+  inner class PlacementAppealCreatedTest {
 
     @Test
     fun `sends emails to CRU`() {
@@ -78,7 +81,7 @@ class Cas1ChangeRequestEmailServiceTest {
         )
         .produce()
 
-      service.placementAppealCreated(changeRequest)
+      service.placementAppealCreated(PlacementAppealCreated(changeRequest, UserEntityFactory().withDefaults().produce()))
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
@@ -95,7 +98,7 @@ class Cas1ChangeRequestEmailServiceTest {
   }
 
   @Nested
-  inner class PlacementAppealAccepted {
+  inner class PlacementAppealAcceptedTest {
 
     @Test
     fun `sends email to premises and applicants`() {
@@ -121,7 +124,7 @@ class Cas1ChangeRequestEmailServiceTest {
         )
         .produce()
 
-      service.placementAppealAccepted(changeRequest)
+      service.placementAppealAccepted(PlacementAppealAccepted(changeRequest))
 
       mockEmailNotificationService.assertEmailRequestCount(4)
 
@@ -168,7 +171,7 @@ class Cas1ChangeRequestEmailServiceTest {
   }
 
   @Nested
-  inner class PlacementAppealRejected {
+  inner class PlacementAppealRejectedTest {
 
     @Test
     fun `sends emails to CRU and Premises`() {
@@ -186,7 +189,7 @@ class Cas1ChangeRequestEmailServiceTest {
         )
         .produce()
 
-      service.placementAppealRejected(changeRequest)
+      service.placementAppealRejected(PlacementAppealRejected(changeRequest, UserEntityFactory().withDefaults().produce()))
 
       mockEmailNotificationService.assertEmailRequestCount(2)
 

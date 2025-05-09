@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SpringEventPublisher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
@@ -39,7 +39,7 @@ class Cas1BookingManagementService(
   private val lockableCas1SpaceBookingEntityRepository: LockableCas1SpaceBookingEntityRepository,
   private val userService: UserService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
-  private val applicationEventPublisher: ApplicationEventPublisher,
+  private val springEventPublisher: SpringEventPublisher,
 ) {
 
   @Transactional
@@ -92,7 +92,7 @@ class Cas1BookingManagementService(
       ),
     )
 
-    applicationEventPublisher.publishEvent(ArrivalRecorded(updatedSpaceBooking))
+    springEventPublisher.publishEvent(ArrivalRecorded(updatedSpaceBooking))
 
     success(updatedSpaceBooking)
   }
