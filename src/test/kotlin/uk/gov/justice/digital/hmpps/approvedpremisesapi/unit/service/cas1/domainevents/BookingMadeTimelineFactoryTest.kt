@@ -59,5 +59,6 @@ class BookingMadeTimelineFactoryTest {
     assertThat(payload.booking.premises.name).isEqualTo("The Premises Name")
     assertThat(payload.booking.arrivalDate).isEqualTo(LocalDate.of(2024, 1, 1))
     assertThat(payload.booking.departureDate).isEqualTo(LocalDate.of(2024, 4, 1))
+    assertThat(payload.eventNumber).isEqualTo("989")
   }
 }

@@ -1266,8 +1266,11 @@ components:
       properties:
         booking:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
+        eventNumber:
+          type: string
       required:
         - booking
+        - eventNumber
     Cas1PlacementChangeRequestCreatedPayload:
       type: object
       allOf:
