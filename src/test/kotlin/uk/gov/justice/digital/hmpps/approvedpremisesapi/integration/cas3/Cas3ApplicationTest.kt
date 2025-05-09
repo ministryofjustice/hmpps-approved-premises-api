@@ -1170,6 +1170,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
+    @ParameterizedTest
     @CsvSource("CAS", "CAS3")
     fun `Submit Temporary Accommodation application returns 200 with optional elements in the request`(apiEndpoint: String) {
       givenAUser { submittingUser, jwt ->
