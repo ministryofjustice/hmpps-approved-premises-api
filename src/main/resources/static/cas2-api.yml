@@ -62,7 +62,7 @@ paths:
             type: string
         - name: assignmentType
           in: query
-          description: The relationship of the application to the user - created by them, allocated to them, deallocated from them, or unallocated & in the same prison. All applications returned are submitted.
+          description: The relationship of the application to the user - either in progress, allocated to them, deallocated from them, applications in the prison, or unallocated & in the same prison. All applications returned are submitted.
           schema:
             $ref: 'cas2-schemas.yml#/components/schemas/AssignmentType'
       responses:

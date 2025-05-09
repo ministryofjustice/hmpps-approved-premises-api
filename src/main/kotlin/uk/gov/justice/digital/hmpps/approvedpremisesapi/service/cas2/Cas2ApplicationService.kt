@@ -59,7 +59,6 @@ class Cas2ApplicationService(
     user: NomisUserEntity,
     pageCriteria: PageCriteria<String>,
     assignmentType: AssignmentType,
-    forPrison: Boolean = false,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val response = when (assignmentType) {
       AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
@@ -67,8 +66,7 @@ class Cas2ApplicationService(
         getPageableOrAllPages(pageCriteria),
       )
 
-      // CREATED will be removed when the UI is updated.
-      AssignmentType.CREATED, AssignmentType.IN_PROGRESS -> applicationSummaryRepository.findInProgressApplications(
+      AssignmentType.IN_PROGRESS -> applicationSummaryRepository.findInProgressApplications(
         user.id.toString(),
         getPageableOrAllPages(pageCriteria),
       )
@@ -80,14 +78,7 @@ class Cas2ApplicationService(
         )
       }
 
-      // this will be removed when the UI updatss
-      AssignmentType.ALLOCATED -> if (forPrison) {
-        // applications that are submitted and assigned in the same prison as the user
-        applicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
-          user.activeCaseloadId!!,
-          getPageableOrAllPages(pageCriteria),
-        )
-      } else {
+      AssignmentType.ALLOCATED -> {
         applicationSummaryRepository.findApplicationsAssignedToUser(
           user.id,
           getPageableOrAllPages(pageCriteria),
@@ -108,6 +99,7 @@ class Cas2ApplicationService(
     return Pair(response.content, metadata)
   }
 
+  /* the following code will be removed once the UI is fully mirgrated and supplying an AssignmentType argumnet. See CAS-1634 */
   val repositoryUserFunctionMap = mapOf(
     null to applicationSummaryRepository::findByUserId,
     true to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
