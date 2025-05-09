@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
@@ -42,6 +44,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.containsNone
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -83,6 +87,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)
+  }
+
+  fun createApplicationSchema() = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+    withAddedAt(OffsetDateTime.now())
+    withId(UUID.randomUUID())
   }
 
   @Nested
@@ -181,6 +190,294 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isUnauthorized
+    }
+  }
+
+  @Nested
+  inner class GetApplicationSummariesWithAssignmentType {
+
+    lateinit var applicationSchema: Cas2ApplicationJsonSchemaEntity
+
+    @BeforeEach
+    fun setup() {
+      applicationSchema = createApplicationSchema()
+    }
+
+    fun abandonedApplication(userEntity: NomisUserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(applicationSchema)
+      withCreatedByUser(userEntity)
+      withCrn(crn)
+      withData("{}")
+      withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+      withAbandonedAt(OffsetDateTime.now())
+    }
+
+    fun inProgressApplication(userEntity: NomisUserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
+      withSubmittedAt(null)
+      withApplicationSchema(applicationSchema)
+      withCreatedByUser(userEntity)
+      withCrn(crn)
+      withData("{}")
+      withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+      withHdcEligibilityDate(LocalDate.now().plusMonths(3))
+    }
+
+    fun submittedApplication(userEntity: NomisUserEntity, crn: String): Cas2ApplicationEntity {
+      val application = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(userEntity)
+        withCrn(crn)
+        withData("{}")
+        withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+        withSubmittedAt(OffsetDateTime.now())
+        withConditionalReleaseDate(LocalDate.now())
+      }
+      application.createApplicationAssignment(
+        prisonCode = userEntity.activeCaseloadId!!,
+        allocatedPomUser = userEntity,
+      )
+      return realApplicationRepository.save(application)
+    }
+
+    fun oldSubmittedApplication(userEntity: NomisUserEntity, crn: String): Cas2ApplicationEntity {
+      val application = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(userEntity)
+        withCrn(crn)
+        withData("{}")
+        withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+        withSubmittedAt(OffsetDateTime.now())
+        withConditionalReleaseDate(LocalDate.now().minusDays(1))
+      }
+      application.createApplicationAssignment(
+        prisonCode = userEntity.activeCaseloadId!!,
+        allocatedPomUser = userEntity,
+      )
+      return realApplicationRepository.save(application)
+    }
+
+    fun transferredOutApplication(userEntity: NomisUserEntity, crn: String): Cas2ApplicationEntity {
+      val application = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(userEntity)
+        withCrn(crn)
+        withData("{}")
+        withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+        withSubmittedAt(OffsetDateTime.now())
+        withConditionalReleaseDate(LocalDate.now())
+      }
+      application.createApplicationAssignment(
+        prisonCode = userEntity.activeCaseloadId!!,
+        allocatedPomUser = userEntity,
+      )
+      application.createApplicationAssignment(prisonCode = "ZZZ", allocatedPomUser = null)
+      return realApplicationRepository.save(application)
+    }
+
+    fun transferredInApplication(
+      transferredToUser: NomisUserEntity?,
+      transferredFromUser: NomisUserEntity,
+      crn: String,
+      isInternalTransfer: Boolean,
+      prisonCode: String? = null,
+    ): Cas2ApplicationEntity {
+      val application = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(transferredFromUser)
+        withCrn(crn)
+        withData("{}")
+        withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+        withSubmittedAt(OffsetDateTime.now())
+        withConditionalReleaseDate(LocalDate.now())
+      }
+      if (!isInternalTransfer) {
+        application.createApplicationAssignment(
+          prisonCode = transferredToUser?.activeCaseloadId ?: prisonCode!!,
+          allocatedPomUser = null,
+        )
+      }
+      if (transferredToUser != null) {
+        application.createApplicationAssignment(
+          prisonCode = transferredToUser.activeCaseloadId!!,
+          allocatedPomUser = transferredToUser,
+        )
+      }
+
+      return realApplicationRepository.save(application)
+    }
+
+    fun doRequestAndGetResponse(assignmentType: AssignmentType, jwt: String): List<Cas2ApplicationSummary> = webTestClient.get()
+      .uri("/cas2/applications?assignmentType=${assignmentType.name}")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.cas2.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsListOfObjects<Cas2ApplicationSummary>()
+
+    @Test
+    fun `Get all applications with assignmentType returns 200 with correct body`() {
+      val prisonCode = "PRI"
+      val otherPrisonCode = "OTH"
+      givenACas2PomUser(
+        mockCallToGetMe = true,
+        nomisUserDetailsConfigBlock = { withActiveCaseloadId(prisonCode) },
+      ) { userEntity, jwt ->
+        givenACas2PomUser(
+          mockCallToGetMe = false,
+          nomisUserDetailsConfigBlock = { withActiveCaseloadId(prisonCode) },
+        ) { otherUser, _ ->
+          givenACas2PomUser(
+            mockCallToGetMe = false,
+            nomisUserDetailsConfigBlock = { withActiveCaseloadId(otherPrisonCode) },
+          ) { otherPrisonUser, _ ->
+            givenAnOffender { offenderDetails, _ ->
+
+              val abandonedApplication = abandonedApplication(userEntity, offenderDetails.otherIds.crn)
+              val inProgressApplication = inProgressApplication(userEntity, offenderDetails.otherIds.crn)
+              val submittedApplication = submittedApplication(userEntity, offenderDetails.otherIds.crn)
+              val oldSubmittedApplication = oldSubmittedApplication(userEntity, offenderDetails.otherIds.crn)
+              val transferredOutApplication = transferredOutApplication(userEntity, offenderDetails.otherIds.crn)
+              val transferredInApplication =
+                transferredInApplication(
+                  transferredToUser = userEntity,
+                  transferredFromUser = otherPrisonUser,
+                  crn = offenderDetails.otherIds.crn,
+                  isInternalTransfer = false,
+                )
+
+              val transferredInUnallocatedApplication =
+                transferredInApplication(
+                  transferredToUser = null,
+                  transferredFromUser = otherPrisonUser,
+                  crn = offenderDetails.otherIds.crn,
+                  isInternalTransfer = false,
+                  prisonCode = userEntity.activeCaseloadId!!,
+                )
+
+              val internalTransferredApplication = transferredInApplication(
+                transferredToUser = userEntity,
+                transferredFromUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                isInternalTransfer = true,
+              )
+
+              val otherUserSubmittedApplication = submittedApplication(otherUser, offenderDetails.otherIds.crn)
+              val otherUserInProgressApplication = inProgressApplication(otherUser, offenderDetails.otherIds.crn)
+              val otherPrisonUserInProgressApplication =
+                inProgressApplication(otherPrisonUser, offenderDetails.otherIds.crn)
+              val otherPrisonSubmittedApplication = submittedApplication(otherPrisonUser, offenderDetails.otherIds.crn)
+
+              val neverReturnedApplications = listOf(
+                abandonedApplication,
+                oldSubmittedApplication,
+                otherPrisonSubmittedApplication,
+                otherPrisonUserInProgressApplication,
+                otherUserInProgressApplication,
+              )
+
+              val inProgressResponse = doRequestAndGetResponse(AssignmentType.IN_PROGRESS, jwt)
+              assertInProgressApplications(
+                inProgressResponse,
+                expectedApplications = listOf(inProgressApplication),
+              )
+
+              val allocatedResponse = doRequestAndGetResponse(AssignmentType.ALLOCATED, jwt)
+              assertAllocatedApplications(
+                allocatedResponse,
+                expectedApplications = listOf(
+                  submittedApplication,
+                  transferredInApplication,
+                  internalTransferredApplication,
+                ),
+              )
+
+              val deallocatedResponse = doRequestAndGetResponse(AssignmentType.DEALLOCATED, jwt)
+              assertDeallocatedApplications(
+                deallocatedResponse,
+                expectedApplications = listOf(
+                  transferredOutApplication,
+                ),
+              )
+
+              val samePrisonResponse = doRequestAndGetResponse(AssignmentType.PRISON, jwt)
+              assertSamePrisonApplications(
+                samePrisonResponse,
+                expectedApplications = listOf(
+                  submittedApplication,
+                  otherUserSubmittedApplication,
+                  transferredInApplication,
+                  internalTransferredApplication,
+                ),
+              )
+
+              val unallocatedResponse = doRequestAndGetResponse(AssignmentType.UNALLOCATED, jwt)
+              assertUnallocatedApplications(
+                unallocatedResponse,
+                expectedApplications = listOf(
+                  transferredInUnallocatedApplication,
+                ),
+              )
+
+              val returnedIds = listOf(
+                unallocatedResponse.map { it.id },
+                samePrisonResponse.map { it.id },
+                deallocatedResponse.map { it.id },
+                allocatedResponse.map { it.id },
+                inProgressResponse.map { it.id },
+              ).flatten()
+
+              assertThat(returnedIds.containsNone(neverReturnedApplications.map { it.id })).isTrue
+            }
+          }
+        }
+      }
+    }
+
+    private fun assertInProgressApplications(
+      response: List<Cas2ApplicationSummary>,
+      expectedApplications: List<Cas2ApplicationEntity>,
+    ) {
+      assertThat(response.size).isEqualTo(1)
+      assertThat(response.map { it.submittedAt }).containsOnlyNulls()
+      assertThat(response.map { it.id }).containsExactlyInAnyOrderElementsOf(expectedApplications.map { it.id })
+    }
+
+    private fun assertAllocatedApplications(
+      response: List<Cas2ApplicationSummary>,
+      expectedApplications: List<Cas2ApplicationEntity>,
+    ) {
+      assertThat(response.size).isEqualTo(3)
+      val ids = response.map { it.id }
+      assertThat(ids).containsExactlyInAnyOrderElementsOf(expectedApplications.map({ it.id }))
+    }
+
+    private fun assertDeallocatedApplications(
+      response: List<Cas2ApplicationSummary>,
+      expectedApplications: List<Cas2ApplicationEntity>,
+    ) {
+      assertThat(response.size).isEqualTo(1)
+      val ids = response.map { it.id }
+      assertThat(ids).containsExactlyInAnyOrderElementsOf(expectedApplications.map({ it.id }))
+    }
+
+    private fun assertSamePrisonApplications(
+      response: List<Cas2ApplicationSummary>,
+      expectedApplications: List<Cas2ApplicationEntity>,
+    ) {
+      assertThat(response.size).isEqualTo(4)
+      val ids = response.map { it.id }
+      assertThat(ids).containsExactlyInAnyOrderElementsOf(expectedApplications.map({ it.id }))
+    }
+
+    private fun assertUnallocatedApplications(
+      response: List<Cas2ApplicationSummary>,
+      expectedApplications: List<Cas2ApplicationEntity>,
+    ) {
+      assertThat(response.size).isEqualTo(1)
+      assertThat(response.filter { it.submittedAt != null }.size).isEqualTo(1)
+      val ids = response.map { it.id }
+      assertThat(ids).containsExactlyInAnyOrderElementsOf(expectedApplications.map({ it.id }))
     }
   }
 
@@ -291,10 +588,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-            }
+            val applicationSchema = createApplicationSchema()
 
             // abandoned application
             val abandonedApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -410,10 +704,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-            }
+            val applicationSchema = createApplicationSchema()
 
             repeat(12) {
               cas2ApplicationEntityFactory.produceAndPersist {
@@ -755,10 +1046,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-            }
+            val applicationSchema = createApplicationSchema()
 
             val userAPrisonAApplicationIds = mutableListOf<UUID>()
 
