@@ -33,12 +33,14 @@ class PlacementChangeRequestRejectedTimelineFactoryTest {
   @EnumSource(EventChangeRequestType::class)
   fun produce(changeRequestType: EventChangeRequestType) {
     val id = UUID.randomUUID()
+    val changeRequestId = UUID.randomUUID()
 
     every {
       domainEventService.get(id, PlacementChangeRequestRejected::class)
     } returns buildDomainEvent(
       data = PlacementChangeRequestRejectedFactory()
         .withChangeRequestType(changeRequestType)
+        .withChangeRequestId(changeRequestId)
         .withBooking(
           EventBookingSummaryFactory()
             .withPremises(EventPremisesFactory().withName("The Premises Name").produce())
@@ -60,6 +62,7 @@ class PlacementChangeRequestRejectedTimelineFactoryTest {
         EventChangeRequestType.PLANNED_TRANSFER -> Cas1ChangeRequestType.PLANNED_TRANSFER
       },
     )
+    assertThat(result.changeRequestId).isEqualTo(changeRequestId)
     assertThat(result.booking.premises.name).isEqualTo("The Premises Name")
     assertThat(result.booking.arrivalDate).isEqualTo(LocalDate.of(2015, 12, 1))
     assertThat(result.booking.departureDate).isEqualTo(LocalDate.of(2015, 12, 2))

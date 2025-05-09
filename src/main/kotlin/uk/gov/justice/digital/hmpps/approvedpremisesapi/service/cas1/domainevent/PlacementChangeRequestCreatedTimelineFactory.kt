@@ -24,6 +24,7 @@ class PlacementChangeRequestCreatedTimelineFactory(val domainEventService: Cas1D
       type = Cas1TimelineEventType.placementChangeRequestCreated,
       booking = details.booking.toTimelinePayloadSummary(),
       reason = NamedId(reason.id, reason.code),
+      changeRequestId = details.changeRequestId,
       changeRequestType = when (details.changeRequestType) {
         EventChangeRequestType.PLACEMENT_APPEAL -> Cas1ChangeRequestType.PLACEMENT_APPEAL
         EventChangeRequestType.PLACEMENT_EXTENSION -> Cas1ChangeRequestType.PLACEMENT_EXTENSION

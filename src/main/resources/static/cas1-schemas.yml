@@ -1276,6 +1276,9 @@ components:
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
+        changeRequestId:
+          type: string
+          format: uuid
         booking:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
@@ -1283,6 +1286,7 @@ components:
         changeRequestType:
           $ref: '_shared.yml#/components/schemas/Cas1ChangeRequestType'
       required:
+        - changeRequestId
         - booking
         - reason
         - changeRequestType
@@ -1300,6 +1304,9 @@ components:
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
+        changeRequestId:
+          type: string
+          format: uuid
         booking:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         reason:
@@ -1307,6 +1314,8 @@ components:
         changeRequestType:
           $ref: '_shared.yml#/components/schemas/Cas1ChangeRequestType'
       required:
+        - changeRequestId
+        - type
         - booking
         - reason
         - changeRequestType
