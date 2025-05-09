@@ -9,11 +9,13 @@ import java.util.UUID
 fun <T : Cas1DomainEventPayload> buildDomainEvent(
   data: T,
   schemaVersion: Int? = null,
+  spaceBookingId: UUID? = null,
 ): GetCas1DomainEvent<Cas1DomainEventEnvelope<T>> {
   val id = UUID.randomUUID()
   return GetCas1DomainEvent(
     id = id,
     data = Cas1DomainEventEnvelopeFactory<T>().withDetails(data).produce(),
     schemaVersion = schemaVersion,
+    spaceBookingId = spaceBookingId,
   )
 }

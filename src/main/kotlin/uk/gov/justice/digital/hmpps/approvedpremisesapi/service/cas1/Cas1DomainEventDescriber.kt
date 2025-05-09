@@ -2,16 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.LegacyTimelineFactory
@@ -31,13 +26,9 @@ import java.util.UUID
 class Cas1DomainEventDescriber(
   private val domainEventService: Cas1DomainEventService,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
-  private val bookingRepository: BookingRepository,
-  private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val payloadFactories: List<TimelineFactory<*>>,
   private val legacyPayloadFactories: List<LegacyTimelineFactory<*>>,
 ) {
-
-  data class BookingCancellationDetail(val premisesName: String, val cancellationReason: String, val arrivalDate: String, val departureDate: String)
 
   /**
    * For any new domain event only payload should be defined, as the
@@ -63,6 +54,7 @@ class Cas1DomainEventDescriber(
     }
 
     // Do _not_ add to this list! Instead, create an implementation of [TimelineFactory]
+    // If migrating code from here into a [TimelineFactory], use a [LegacyTimelineFactory]
     return when (domainEventSummary.type) {
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> EventDescriptionAndPayload(
         "The application was submitted",
@@ -70,12 +62,10 @@ class Cas1DomainEventDescriber(
       )
 
       DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> buildApplicationAssessedDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> buildBookingMadeDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> buildPersonArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> buildPersonNotArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> buildBookingKeyWorkerAssignedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> buildApplicationExpiredDescription(domainEventSummary)
@@ -129,17 +119,6 @@ class Cas1DomainEventDescriber(
     return EventDescriptionAndPayload(event.describe { "The application was assessed and ${it.eventDetails.decision.lowercase()}" }, null)
   }
 
-  private fun buildBookingMadeDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
-    val event = domainEventService.getBookingMadeEvent(domainEventSummary.id())
-    val description = event.describe {
-      "A placement at ${it.eventDetails.premises.name} was booked for " +
-        "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()} " +
-        "against Delius Event Number ${it.eventDetails.deliusEventNumber}"
-    }
-
-    return EventDescriptionAndPayload(description, null)
-  }
-
   private fun buildBookingKeyWorkerAssignedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getBookingKeyWorkerAssignedEvent(domainEventSummary.id())
     val keyWorkersDetail = event?.data?.eventDetails?.previousKeyWorkerName?.let {
@@ -178,22 +157,6 @@ class Cas1DomainEventDescriber(
       " The reason was: $it"
     } ?: ""
     return EventDescriptionAndPayload(event.describe { "A placement was not made for the placement request.$failureReason" }, null)
-  }
-
-  private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
-    val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
-    val bookingId = event!!.data.eventDetails.bookingId
-
-    val bookingDetail: BookingCancellationDetail = if (domainEventSummary.cas1SpaceBookingId != null) {
-      getSpaceBookingCancellationDetailForEvent(bookingId, event)
-    } else {
-      getBookingCancellationDetailForEvent(bookingId, event)
-    }
-
-    val description = "A placement at ${bookingDetail.premisesName} booked for " +
-      "${bookingDetail.arrivalDate} to ${bookingDetail.departureDate} " +
-      "was cancelled. The reason was: ${bookingDetail.cancellationReason}"
-    return EventDescriptionAndPayload(description, null)
   }
 
   private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
@@ -314,45 +277,6 @@ class Cas1DomainEventDescriber(
   private fun buildRequestForPlacementDescription(expectedArrival: LocalDate, duration: Int, rejected: Boolean = false): String {
     val endDate = expectedArrival.plusDays(duration.toLong())
     return "The placement request ${if (rejected) "was" else "is"} for ${expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(duration)})"
-  }
-
-  @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getSpaceBookingCancellationDetailForEvent(bookingId: UUID, event: GetCas1DomainEvent<Cas1DomainEventEnvelope<BookingCancelled>>): BookingCancellationDetail {
-    val spaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
-      ?: throw RuntimeException("Space Booking ID $bookingId with cancellation not found")
-    if (spaceBooking.cancellationReason == null) {
-      throw RuntimeException("Space Booking ID $bookingId does not have a cancellation")
-    }
-    return BookingCancellationDetail(
-      premisesName = spaceBooking.premises.name,
-      cancellationReason = "'${event.data.eventDetails.cancellationReason}'",
-      arrivalDate = spaceBooking.canonicalArrivalDate.toUiFormat(),
-      departureDate = spaceBooking.canonicalDepartureDate.toUiFormat(),
-    )
-  }
-
-  @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getBookingCancellationDetailForEvent(bookingId: UUID, event: GetCas1DomainEvent<Cas1DomainEventEnvelope<BookingCancelled>>): BookingCancellationDetail {
-    val booking = bookingRepository.findByIdOrNull(bookingId)
-      ?: throw RuntimeException("Booking ID $bookingId with cancellation not found")
-    if (booking.cancellations.count() != 1) {
-      throw RuntimeException("Booking ID $bookingId does not have one cancellation")
-    }
-    val cancellation = booking.cancellations.first()
-    val otherReasonText =
-      if (cancellation.reason.id == CancellationReasonRepository.CAS1_RELATED_OTHER_ID &&
-        !cancellation.otherReason.isNullOrEmpty()
-      ) {
-        ": ${cancellation.otherReason}."
-      } else {
-        ""
-      }
-    return BookingCancellationDetail(
-      premisesName = booking.premises.name,
-      cancellationReason = "'${event.data.eventDetails.cancellationReason}'$otherReasonText",
-      arrivalDate = booking.arrivalDate.toUiFormat(),
-      departureDate = booking.departureDate.toUiFormat(),
-    )
   }
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
