@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.successOrErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -63,6 +62,7 @@ class Cas1SpaceBookingService(
   private val characteristicService: CharacteristicService,
   private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
   private val cas1SpaceBookingCreateService: Cas1SpaceBookingCreateService,
+  private val cas1SpaceBookingUpdateService: Cas1SpaceBookingUpdateService,
   private val clock: Clock,
 ) {
   @Transactional
@@ -219,9 +219,9 @@ class Cas1SpaceBookingService(
 
   @Transactional
   fun updateBooking(
-    updateBookingDetails: UpdateBookingDetails,
+    updateBookingDetails: Cas1SpaceBookingUpdateService.UpdateBookingDetails,
   ): CasResult<Cas1SpaceBookingEntity> {
-    validateUpdateBookingCommon(updateBookingDetails).ifError { return it.reviseType() }
+    cas1SpaceBookingUpdateService.validate(updateBookingDetails).ifError { return it.reviseType() }
 
     return doUpdateBooking(updateBookingDetails)
   }
@@ -235,14 +235,14 @@ class Cas1SpaceBookingService(
     validateShortenedSpaceBooking(shortenedBookingDetails, existingBooking)
     if (hasErrors()) return errors()
 
-    val updateBookingDetails = UpdateBookingDetails(
+    val updateBookingDetails = Cas1SpaceBookingUpdateService.UpdateBookingDetails(
       bookingId = shortenedBookingDetails.bookingId,
       premisesId = shortenedBookingDetails.premisesId,
       departureDate = shortenedBookingDetails.departureDate,
       updatedBy = shortenedBookingDetails.updatedBy,
       updateType = UpdateType.SHORTENING,
     )
-    validateUpdateBookingCommon(updateBookingDetails).ifError { return it.reviseType() }
+    cas1SpaceBookingUpdateService.validate(updateBookingDetails).ifError { return it.reviseType() }
 
     return doUpdateBooking(updateBookingDetails)
   }
@@ -264,14 +264,14 @@ class Cas1SpaceBookingService(
       return GeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
-    val updateExistingBookingDetails = UpdateBookingDetails(
+    val updateExistingBookingDetails = Cas1SpaceBookingUpdateService.UpdateBookingDetails(
       bookingId = bookingId,
       premisesId = premisesId,
       departureDate = arrivalDate,
       updatedBy = user,
       updateType = UpdateType.TRANSFER,
     )
-    validateUpdateBookingCommon(updateExistingBookingDetails).ifError { return it.reviseType() }
+    cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
 
     val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)!!
 
@@ -354,14 +354,14 @@ class Cas1SpaceBookingService(
     )
     cas1SpaceBookingCreateService.validate(createBookingDetails).ifError { return it.reviseType() }
 
-    val updateExistingBookingDetails = UpdateBookingDetails(
+    val updateExistingBookingDetails = Cas1SpaceBookingUpdateService.UpdateBookingDetails(
       bookingId = bookingId,
       premisesId = existingCas1SpaceBooking.premises.id,
       departureDate = arrivalDate,
       updatedBy = user,
       updateType = UpdateType.TRANSFER,
     )
-    validateUpdateBookingCommon(updateExistingBookingDetails).ifError { return it.reviseType() }
+    cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
 
     val newSpaceBooking = cas1SpaceBookingCreateService.create(
       createBookingDetails,
@@ -376,45 +376,6 @@ class Cas1SpaceBookingService(
     doUpdateBooking(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
 
     return Success(Unit)
-  }
-
-  private fun validateUpdateBookingCommon(
-    updateBookingDetails: UpdateBookingDetails,
-  ): CasResult<Unit> = validatedCasResult {
-    val premises = cas1PremisesService.findPremiseById(updateBookingDetails.premisesId)
-    if (premises == null) {
-      "$.premisesId" hasValidationError "doesNotExist"
-      return errors()
-    }
-    val bookingToUpdate = cas1SpaceBookingRepository.findByIdOrNull(updateBookingDetails.bookingId)
-    if (bookingToUpdate == null) {
-      "$.bookingId" hasValidationError "doesNotExist"
-      return errors()
-    }
-
-    if (bookingToUpdate.isCancelled()) {
-      "$.bookingId" hasValidationError "This Booking is cancelled and as such cannot be modified"
-    }
-    if (bookingToUpdate.hasDeparted() || bookingToUpdate.hasNonArrival()) {
-      "$.bookingId" hasValidationError "hasDepartedOrNonArrival"
-    }
-    if (bookingToUpdate.premises.id != updateBookingDetails.premisesId) {
-      "$.premisesId" hasValidationError "premisesMismatch"
-    }
-
-    val effectiveArrivalDate = if (bookingToUpdate.hasArrival()) {
-      bookingToUpdate.actualArrivalDate
-    } else {
-      updateBookingDetails.arrivalDate ?: bookingToUpdate.expectedArrivalDate
-    }
-
-    val effectiveDepartureDate = updateBookingDetails.departureDate ?: bookingToUpdate.expectedDepartureDate
-
-    if (effectiveDepartureDate.isBefore(effectiveArrivalDate)) {
-      "$.departureDate" hasValidationError "The departure date is before the arrival date."
-    }
-
-    return successOrErrors()
   }
 
   private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateShortenedSpaceBooking(
@@ -448,14 +409,14 @@ class Cas1SpaceBookingService(
     }
   }
 
-  private fun Cas1SpaceBookingEntity.updateDepartureDates(updateBookingDetails: UpdateBookingDetails) {
+  private fun Cas1SpaceBookingEntity.updateDepartureDates(updateBookingDetails: Cas1SpaceBookingUpdateService.UpdateBookingDetails) {
     if (updateBookingDetails.departureDate != null) {
       this.expectedDepartureDate = updateBookingDetails.departureDate
       this.canonicalDepartureDate = updateBookingDetails.departureDate
     }
   }
 
-  private fun Cas1SpaceBookingEntity.updateArrivalDates(updateBookingDetails: UpdateBookingDetails) {
+  private fun Cas1SpaceBookingEntity.updateArrivalDates(updateBookingDetails: Cas1SpaceBookingUpdateService.UpdateBookingDetails) {
     if (updateBookingDetails.arrivalDate != null) {
       this.expectedArrivalDate = updateBookingDetails.arrivalDate
       this.canonicalArrivalDate = updateBookingDetails.arrivalDate
@@ -470,7 +431,7 @@ class Cas1SpaceBookingService(
   /**
    * Any calls to this should first call and validate the response of [validateUpdateBookingCommon]
    */
-  private fun doUpdateBooking(details: UpdateBookingDetails): CasResult<Cas1SpaceBookingEntity> {
+  private fun doUpdateBooking(details: Cas1SpaceBookingUpdateService.UpdateBookingDetails): CasResult<Cas1SpaceBookingEntity> {
     val bookingToUpdate = cas1SpaceBookingRepository.findByIdOrNull(details.bookingId)!!
 
     val previousArrivalDate = bookingToUpdate.expectedArrivalDate
@@ -535,17 +496,6 @@ class Cas1SpaceBookingService(
     val residency: Cas1SpaceBookingResidency?,
     val crnOrName: String?,
     val keyWorkerStaffCode: String?,
-  )
-
-  data class UpdateBookingDetails(
-    val bookingId: UUID,
-    val premisesId: UUID,
-    val arrivalDate: LocalDate? = null,
-    val departureDate: LocalDate? = null,
-    val characteristics: List<CharacteristicEntity>? = null,
-    val updatedBy: UserEntity,
-    val updateType: UpdateType,
-    val transferredTo: Cas1SpaceBookingEntity? = null,
   )
 
   enum class UpdateType {

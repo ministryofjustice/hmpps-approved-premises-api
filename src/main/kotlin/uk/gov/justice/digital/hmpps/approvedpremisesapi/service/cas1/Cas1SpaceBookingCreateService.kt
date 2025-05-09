@@ -15,6 +15,9 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+/**
+ * Calls to this service are orchestrated via the [Cas1SpaceBookingService]
+ */
 @Service
 class Cas1SpaceBookingCreateService(
   private val placementRequestService: PlacementRequestService,
