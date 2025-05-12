@@ -307,7 +307,6 @@ class Cas1DomainEventServiceTest {
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
       val cas1SpaceBookingId = UUID.randomUUID()
-      val cas1PlacementRequestId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
@@ -325,7 +324,6 @@ class Cas1DomainEventServiceTest {
         data = domainEventAndJson.envelope.eventDetails,
         bookingId = bookingId,
         cas1SpaceBookingId = cas1SpaceBookingId,
-        cas1PlacementRequestId = cas1PlacementRequestId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         emit = false,
       )
@@ -344,7 +342,6 @@ class Cas1DomainEventServiceTest {
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
             assertThat(it.cas1SpaceBookingId).isEqualTo(cas1SpaceBookingId)
-            assertThat(it.cas1PlacementRequestId).isEqualTo(cas1PlacementRequestId)
           },
         )
       }
@@ -531,7 +528,6 @@ class Cas1DomainEventServiceTest {
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
       val cas1SpaceBookingId = UUID.randomUUID()
-      val cas1PlacementRequestId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
@@ -548,7 +544,6 @@ class Cas1DomainEventServiceTest {
         data = domainEventAndJson.envelope,
         bookingId = bookingId,
         cas1SpaceBookingId = cas1SpaceBookingId,
-        cas1PlacementRequestId = cas1PlacementRequestId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         emit = false,
       )
@@ -567,7 +562,6 @@ class Cas1DomainEventServiceTest {
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
             assertThat(it.cas1SpaceBookingId).isEqualTo(cas1SpaceBookingId)
-            assertThat(it.cas1PlacementRequestId).isEqualTo(cas1PlacementRequestId)
           },
         )
       }

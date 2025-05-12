@@ -137,7 +137,6 @@ class Cas1BookingDomainEventService(
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString(),
         ),
-        cas1PlacementRequestId = placementRequest.id,
       ),
     )
   }
@@ -377,7 +376,6 @@ class Cas1BookingDomainEventService(
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
         ),
-        cas1PlacementRequestId = placementRequestId,
       ),
     )
   }
