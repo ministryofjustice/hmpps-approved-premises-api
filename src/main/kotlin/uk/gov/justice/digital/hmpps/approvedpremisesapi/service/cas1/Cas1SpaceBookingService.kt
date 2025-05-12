@@ -231,6 +231,11 @@ class Cas1SpaceBookingService(
     validateShortenedSpaceBooking(shortenedBookingDetails, existingBooking)
     if (hasErrors()) return errors()
 
+    cas1SpaceBookingActionsService.determineActions(existingBooking!!)
+      .unavailableReason(SpaceBookingAction.SHORTEN)?.let {
+        return GeneralValidationError(it)
+      }
+
     val updateBookingDetails = UpdateBookingDetails(
       bookingId = shortenedBookingDetails.bookingId,
       premisesId = shortenedBookingDetails.premisesId,
