@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_REQUESTING_AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_TARGET_AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_CREATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_REJECTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
@@ -217,16 +219,6 @@ class Cas1ChangeRequestEmailServiceTest {
         ),
         application,
       )
-      mockEmailNotificationService.assertEmailRequested(
-        CRU_MANAGEMENT_AREA_EMAIL,
-        Cas1NotifyTemplates.PLACEMENT_APPEAL_REJECTED,
-        mapOf(
-          "apName" to PREMISES_NAME,
-          "crn" to CRN,
-          "applicationTimelineUrl" to "http://frontend/timeline/${application.id}",
-        ),
-        application,
-      )
     }
   }
 
@@ -268,7 +260,7 @@ class Cas1ChangeRequestEmailServiceTest {
   @Nested
   inner class PlannedTransferRequestAcceptedTest {
 
-    val changeRequest = Cas1ChangeRequestEntityFactory()
+    private val changeRequest = Cas1ChangeRequestEntityFactory()
       .withPlacementRequest(
         PlacementRequestEntityFactory()
           .withDefaults()
@@ -282,7 +274,7 @@ class Cas1ChangeRequestEmailServiceTest {
       )
       .produce()
 
-    val newSpaceBooking = Cas1SpaceBookingEntityFactory()
+    private val newSpaceBooking = Cas1SpaceBookingEntityFactory()
       .withPremises(otherPremises)
       .withCanonicalArrivalDate(LocalDate.of(2023, 2, 1))
       .withCanonicalDepartureDate(LocalDate.of(2023, 2, 14))
@@ -315,6 +307,39 @@ class Cas1ChangeRequestEmailServiceTest {
           "toPlacementLengthStay" to 2,
           "toPlacementLengthStayUnit" to "weeks",
           "toPlacementTimelineUrl" to "http://frontend/premises/${otherPremises.id}/spaceBooking/${newSpaceBooking.id}/timeline",
+        ),
+        application,
+      )
+    }
+  }
+
+  @Nested
+  inner class PlannedTransferRequestRejectedTest {
+
+    @Test
+    fun `sends email to AP`() {
+      val spaceBooking = Cas1SpaceBookingEntityFactory().withPremises(premises).produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withApplication(application)
+            .produce(),
+        )
+        .withSpaceBooking(spaceBooking)
+        .produce()
+
+      service.plannedTransferRequestRejected(PlannedTransferRequestRejected(changeRequest, UserEntityFactory().withDefaults().produce()))
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        PLANNED_TRANSFER_REQUEST_REJECTED,
+        mapOf(
+          "crn" to CRN,
+          "fromPlacementTimelineUrl" to "http://frontend/premises/${premises.id}/spaceBooking/${spaceBooking.id}/timeline",
+          "fromPremisesName" to PREMISES_NAME,
         ),
         application,
       )

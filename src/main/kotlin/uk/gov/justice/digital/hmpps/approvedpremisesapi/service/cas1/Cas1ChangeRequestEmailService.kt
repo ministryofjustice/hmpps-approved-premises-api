@@ -4,12 +4,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Service
@@ -100,6 +102,29 @@ class Cas1ChangeRequestEmailService(
   }
 
   @EventListener
+  fun plannedTransferRequestRejected(plannedTransferRequestRejected: PlannedTransferRequestRejected) {
+    val changeRequest = plannedTransferRequestRejected.changeRequest
+    val application = changeRequest.placementRequest.application
+    val spaceBooking = changeRequest.spaceBooking
+
+    val fromPersonalisation = spaceBooking.toEmailBookingInfo(application).personalisationValues()
+
+    val personalisation =
+      mapOf(
+        "crn" to application.crn,
+        "fromPremisesName" to fromPersonalisation.premisesName,
+        "fromPlacementTimelineUrl" to spaceBooking.getTimelineUrl(),
+      )
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = setOfNotNull(spaceBooking.premises.emailAddress),
+      templateId = Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_REJECTED,
+      personalisation = personalisation,
+      application = application,
+    )
+  }
+
+  @EventListener
   fun plannedTransferRequestAccepted(plannedTransferRequestAccepted: PlannedTransferRequestAccepted) {
     val changeRequest = plannedTransferRequestAccepted.changeRequest
     val application = changeRequest.placementRequest.application
@@ -118,12 +143,7 @@ class Cas1ChangeRequestEmailService(
         "toPlacementEndDate" to toPersonalisation.endDate,
         "toPlacementLengthStay" to toPersonalisation.lengthOfStay,
         "toPlacementLengthStayUnit" to toPersonalisation.lengthOfStayUnit,
-        "toPlacementTimelineUrl" to spaceBookingTimelineUrlTemplate.resolve(
-          mapOf(
-            "premisesId" to newBooking.premises.id.toString(),
-            "bookingId" to newBooking.id.toString(),
-          ),
-        ),
+        "toPlacementTimelineUrl" to newBooking.getTimelineUrl(),
       )
 
     emailNotifier.sendEmails(
@@ -155,4 +175,11 @@ class Cas1ChangeRequestEmailService(
       "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
     )
   }
+
+  fun Cas1SpaceBookingEntity.getTimelineUrl() = spaceBookingTimelineUrlTemplate.resolve(
+    mapOf(
+      "premisesId" to premises.id.toString(),
+      "bookingId" to id.toString(),
+    ),
+  )
 }

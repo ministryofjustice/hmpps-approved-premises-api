@@ -119,8 +119,8 @@ class Cas1ChangeRequestsController(
 
     when (changeRequest.type) {
       ChangeRequestType.PLACEMENT_APPEAL -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS)
-      ChangeRequestType.PLACEMENT_EXTENSION -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_TRANSFER_ASSESS)
-      ChangeRequestType.PLANNED_TRANSFER -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.PLACEMENT_APPEAL}")
+      ChangeRequestType.PLANNED_TRANSFER -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_TRANSFER_ASSESS)
+      ChangeRequestType.PLACEMENT_EXTENSION -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.PLACEMENT_APPEAL}")
     }
 
     val result = cas1ChangeRequestService.rejectChangeRequest(placementRequestId, changeRequestId, cas1RejectChangeRequest)
