@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_CREATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
@@ -27,6 +29,7 @@ class Cas1ChangeRequestEmailServiceTest {
   private val service = Cas1ChangeRequestEmailService(
     mockEmailNotificationService,
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/timeline/#applicationId"),
+    cruOpenChangeRequestsUrlTemplate = UrlTemplate("http://frontend/cruDashboard/changeRequests"),
     cruDashboardUrlTemplate = UrlTemplate("http://frontend/cruDashboard"),
   )
 
@@ -210,6 +213,41 @@ class Cas1ChangeRequestEmailServiceTest {
           "apName" to PREMISES_NAME,
           "crn" to CRN,
           "applicationTimelineUrl" to "http://frontend/timeline/${application.id}",
+        ),
+        application,
+      )
+    }
+  }
+
+  @Nested
+  inner class PlannedTransferRequestCreatedTest {
+
+    @Test
+    fun `sends emails to CRU`() {
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withApplication(application)
+            .produce(),
+        )
+        .withSpaceBooking(
+          Cas1SpaceBookingEntityFactory()
+            .withPremises(premises)
+            .produce(),
+        )
+        .produce()
+
+      service.plannedTransferRequestCreated(PlannedTransferRequestCreated(changeRequest, UserEntityFactory().withDefaults().produce()))
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        CRU_MANAGEMENT_AREA_EMAIL,
+        PLANNED_TRANSFER_REQUEST_CREATED,
+        mapOf(
+          "crn" to CRN,
+          "cruOpenChangeRequestsUrl" to "http://frontend/cruDashboard/changeRequests",
+          "fromPremisesName" to PREMISES_NAME,
         ),
         application,
       )

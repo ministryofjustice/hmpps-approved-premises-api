@@ -8,12 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Service
 class Cas1ChangeRequestEmailService(
   private val emailNotifier: Cas1EmailNotifier,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.cas1.cru-open-change-requests}") private val cruOpenChangeRequestsUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.cas1.cru-dashboard}") private val cruDashboardUrlTemplate: UrlTemplate,
 ) {
 
@@ -25,7 +27,7 @@ class Cas1ChangeRequestEmailService(
     emailNotifier.sendEmails(
       recipientEmailAddresses = setOfNotNull(application.cruManagementArea?.emailAddress),
       templateId = Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED,
-      personalisation = commonPersonalisation(changeRequest),
+      personalisation = commonAppealPersonalisation(changeRequest),
       application = application,
     )
   }
@@ -35,7 +37,7 @@ class Cas1ChangeRequestEmailService(
     val changeRequest = placementAppealAccepted.changeRequest
     val application = changeRequest.placementRequest.application
 
-    val personalisation = commonPersonalisation(changeRequest)
+    val personalisation = commonAppealPersonalisation(changeRequest)
 
     emailNotifier.sendEmails(
       recipientEmailAddresses =
@@ -67,12 +69,35 @@ class Cas1ChangeRequestEmailService(
         application.cruManagementArea?.emailAddress,
       ),
       templateId = Cas1NotifyTemplates.PLACEMENT_APPEAL_REJECTED,
-      personalisation = commonPersonalisation(changeRequest),
+      personalisation = commonAppealPersonalisation(changeRequest),
       application = application,
     )
   }
 
-  private fun commonPersonalisation(changeRequest: Cas1ChangeRequestEntity): Map<String, String> {
+  @EventListener
+  fun plannedTransferRequestCreated(plannedTransferRequestCreated: PlannedTransferRequestCreated) {
+    val changeRequest = plannedTransferRequestCreated.changeRequest
+    val application = changeRequest.placementRequest.application
+
+    val fromPersonalisation = changeRequest.spaceBooking.toEmailBookingInfo(application).personalisationValues()
+
+    val personalisation = mapOf(
+      "fromPremisesName" to fromPersonalisation.premisesName,
+      "crn" to application.crn,
+      "cruOpenChangeRequestsUrl" to cruOpenChangeRequestsUrlTemplate.resolve(),
+    )
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = setOfNotNull(
+        application.cruManagementArea?.emailAddress,
+      ),
+      templateId = Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_CREATED,
+      personalisation = personalisation,
+      application = application,
+    )
+  }
+
+  private fun commonAppealPersonalisation(changeRequest: Cas1ChangeRequestEntity): Map<String, String> {
     val application = changeRequest.placementRequest.application
 
     return mapOf(

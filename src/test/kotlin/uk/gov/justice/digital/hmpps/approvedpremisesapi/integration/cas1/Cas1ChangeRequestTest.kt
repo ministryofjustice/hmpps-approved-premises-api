@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_CREATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
@@ -156,7 +157,7 @@ class Cas1ChangeRequestTest {
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
-          cruManagementArea = givenACas1CruManagementArea(),
+          cruManagementArea = givenACas1CruManagementArea(emailAddress = "cruManagement@test.com"),
         ) { placementRequest, _ ->
           val spaceBooking = givenACas1SpaceBooking(
             crn = placementRequest.application.crn,
@@ -184,12 +185,8 @@ class Cas1ChangeRequestTest {
           assertThat(persistedChangeRequest.requestReason).isEqualTo(changeRequestReason)
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
 
-          emailAsserter.assertEmailRequested(
-            placementRequest.application.cruManagementArea!!.emailAddress!!,
-            Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED,
-          )
-
           domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED)
+          emailAsserter.assertEmailRequested("cruManagement@test.com", Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED)
         }
       }
     }
@@ -201,6 +198,7 @@ class Cas1ChangeRequestTest {
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
+          cruManagementArea = givenACas1CruManagementArea(emailAddress = "cruManagement@test.com"),
         ) { placementRequest, _ ->
           val spaceBooking = givenACas1SpaceBooking(
             crn = placementRequest.application.crn,
@@ -232,6 +230,8 @@ class Cas1ChangeRequestTest {
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
 
           domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED)
+
+          emailAsserter.assertEmailRequested("cruManagement@test.com", PLANNED_TRANSFER_REQUEST_CREATED)
         }
       }
     }
