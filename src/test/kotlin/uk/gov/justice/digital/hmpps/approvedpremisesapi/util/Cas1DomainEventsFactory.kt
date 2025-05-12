@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCh
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKeyWorkerAssignedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EmergencyTransferCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
@@ -24,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementChangeRequestAcceptedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementChangeRequestCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementChangeRequestRejectedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
@@ -86,10 +84,8 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> RequestForPlacementAssessedFactory().produce()
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> FurtherInformationRequestedFactory().withRequestId(requestId).produce()
       DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> ApplicationExpiredFactory().produce()
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_ACCEPTED -> PlacementChangeRequestAcceptedFactory().produce()
       DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED -> PlacementChangeRequestCreatedFactory().produce()
       DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED -> PlacementChangeRequestRejectedFactory().produce()
-      DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED -> EmergencyTransferCreatedFactory().produce()
       else -> throw RuntimeException("Domain event type $type not supported")
     }
 

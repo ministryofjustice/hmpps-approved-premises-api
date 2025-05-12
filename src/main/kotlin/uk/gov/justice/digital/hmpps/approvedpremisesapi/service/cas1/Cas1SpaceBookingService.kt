@@ -51,7 +51,6 @@ class Cas1SpaceBookingService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
-  private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
@@ -288,16 +287,7 @@ class Cas1SpaceBookingService(
     )
     cas1SpaceBookingCreateService.validate(createNewBookingDetails).ifError { return it.reviseType() }
 
-    val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(
-      createNewBookingDetails,
-      beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
-        cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
-          user,
-          existingCas1SpaceBooking,
-          createdSpaceBooking,
-        )
-      },
-    )
+    val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(createNewBookingDetails)
 
     cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = emergencyTransferSpaceBooking))
 
@@ -360,17 +350,11 @@ class Cas1SpaceBookingService(
     )
     cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
 
-    val newSpaceBooking = cas1SpaceBookingCreateService.create(
-      createBookingDetails,
-      beforeRaisingBookingMadeDomainEvent = { createdSpaceBooking ->
-        cas1ChangeRequestService.approvedPlannedTransfer(
-          changeRequest = changeRequest,
-          user = user,
-        )
-      },
-    )
+    val newSpaceBooking = cas1SpaceBookingCreateService.create(createBookingDetails)
 
     cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
+
+    cas1ChangeRequestService.approvedPlannedTransfer(changeRequest, user)
 
     return Success(Unit)
   }
