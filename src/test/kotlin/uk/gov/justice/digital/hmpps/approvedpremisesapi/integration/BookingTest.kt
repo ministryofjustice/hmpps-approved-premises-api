@@ -86,12 +86,9 @@ class BookingTest : IntegrationTestBase() {
         .isUnauthorized
     }
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-    fun `Get a booking returns OK with the correct body when user has one of roles FUTURE_MANAGER, MATCHER`(
-      role: UserRole,
-    ) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
+    @Test
+    fun `Get a booking returns OK with the correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -170,12 +167,9 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-    fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles FUTURE_MANAGER, MATCHER`(
-      role: UserRole,
-    ) {
-      givenAUser(roles = listOf(role)) { userEntity, jwt ->
+    @Test
+    fun `Get a booking for an Approved Premises returns OK with the correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -209,7 +203,7 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
+      givenAUser { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { probationRegion }
@@ -383,8 +377,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-  fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles FUTURE_MANAGER, MATCHER`(
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
+  fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles FUTURE_MANAGER, CAS1_WORKFLOW_MANAGER`(
     role: UserRole,
   ) {
     givenAUser(roles = listOf(role)) { _, jwt ->
@@ -405,8 +399,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-  fun `Get all Bookings returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
+  fun `Get all Bookings returns OK with correct body when user has one of roles FUTURE_MANAGER, CAS1_WORKFLOW_MANAGER`(role: UserRole) {
     givenAUser(roles = listOf(role)) { _, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -469,8 +463,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all Bookings returns OK with correct body when person details for a booking could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
+  fun `Get all Bookings for premises returns OK with correct body when person details for a booking could not be found`() {
+    givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
@@ -505,8 +499,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all Bookings returns OK with correct body when inmate details for a booking could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
+  fun `Get all Bookings for premises returns OK with correct body when inmate details for a booking could not be found`() {
+    givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
       givenAnOffender(mockServerErrorForPrisonApi = true) { offenderDetails, _ ->
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -3456,7 +3450,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
     fun `CAS1 Date Change with correct role returns 200, persists date change and raises domain event`(role: UserRole) {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -3531,8 +3525,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
+  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles FUTURE_MANAGER, WORKFLOW_MANAGER`(
     role: UserRole,
   ) {
     givenAUser(roles = listOf(role)) { userEntity, jwt ->

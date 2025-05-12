@@ -427,7 +427,7 @@ class UserAccessServiceTest {
   inner class UserCanManagePremisesBookings {
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
     fun `userCanManagePremisesBookings returns true if the given premises is a CAS1 premises and the user has either the FUTURE_MANAGER or MATCHER user role`(
       role: UserRole,
     ) {
@@ -560,8 +560,8 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-  fun `currentUserCanManagePremisesBookings returns true if the given premises is an Approved Premises and the current user has either the FUTURE_MANAGER or MATCHER user role`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER" ])
+  fun `currentUserCanManagePremisesBookings returns true if the given premises is an Approved Premises and the current user has the FUTURE_MANAGER role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 
     user.addRoleForUnitTest(role)

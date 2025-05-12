@@ -103,7 +103,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     val assessorDetails = givenAUser(
-      roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
+      roles = listOf(UserRole.CAS1_ASSESSOR),
       qualifications = UserQualification.entries,
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR1"),
     )
