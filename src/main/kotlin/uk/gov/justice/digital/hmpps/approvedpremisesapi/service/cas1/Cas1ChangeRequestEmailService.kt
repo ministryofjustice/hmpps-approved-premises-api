@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
@@ -17,6 +18,7 @@ class Cas1ChangeRequestEmailService(
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.cas1.cru-open-change-requests}") private val cruOpenChangeRequestsUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.cas1.cru-dashboard}") private val cruDashboardUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.cas1.space-booking-timeline}") private val spaceBookingTimelineUrlTemplate: UrlTemplate,
 ) {
 
   @EventListener
@@ -92,6 +94,52 @@ class Cas1ChangeRequestEmailService(
         application.cruManagementArea?.emailAddress,
       ),
       templateId = Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_CREATED,
+      personalisation = personalisation,
+      application = application,
+    )
+  }
+
+  @EventListener
+  fun plannedTransferRequestAccepted(plannedTransferRequestAccepted: PlannedTransferRequestAccepted) {
+    val changeRequest = plannedTransferRequestAccepted.changeRequest
+    val application = changeRequest.placementRequest.application
+    val originalBooking = changeRequest.spaceBooking
+    val newBooking = plannedTransferRequestAccepted.newBooking
+
+    val fromPersonalisation = originalBooking.toEmailBookingInfo(application).personalisationValues()
+    val toPersonalisation = newBooking.toEmailBookingInfo(application).personalisationValues()
+
+    val personalisation =
+      mapOf(
+        "crn" to application.crn,
+        "fromPremisesName" to fromPersonalisation.premisesName,
+        "toPremisesName" to toPersonalisation.premisesName,
+        "toPlacementStartDate" to toPersonalisation.startDate,
+        "toPlacementEndDate" to toPersonalisation.endDate,
+        "toPlacementLengthStay" to toPersonalisation.lengthOfStay,
+        "toPlacementLengthStayUnit" to toPersonalisation.lengthOfStayUnit,
+        "toPlacementTimelineUrl" to spaceBookingTimelineUrlTemplate.resolve(
+          mapOf(
+            "premisesId" to newBooking.premises.id.toString(),
+            "bookingId" to newBooking.id.toString(),
+          ),
+        ),
+      )
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = setOfNotNull(
+        originalBooking.premises.emailAddress,
+      ),
+      templateId = Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_REQUESTING_AP,
+      personalisation = personalisation,
+      application = application,
+    )
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = setOfNotNull(
+        newBooking.premises.emailAddress,
+      ),
+      templateId = Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_TARGET_AP,
       personalisation = personalisation,
       application = application,
     )

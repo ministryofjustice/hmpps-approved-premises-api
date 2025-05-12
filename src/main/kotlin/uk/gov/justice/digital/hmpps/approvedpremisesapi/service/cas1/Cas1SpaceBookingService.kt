@@ -354,7 +354,7 @@ class Cas1SpaceBookingService(
 
     cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
 
-    cas1ChangeRequestService.approvedPlannedTransfer(changeRequest, user)
+    cas1ChangeRequestService.approvedPlannedTransfer(changeRequest, user, newSpaceBooking)
 
     return Success(Unit)
   }

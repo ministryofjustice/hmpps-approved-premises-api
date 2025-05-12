@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_REQUESTING_AP
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_TARGET_AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_CREATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -18,9 +20,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.LocalDate
 
 class Cas1ChangeRequestEmailServiceTest {
 
@@ -31,6 +35,7 @@ class Cas1ChangeRequestEmailServiceTest {
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/timeline/#applicationId"),
     cruOpenChangeRequestsUrlTemplate = UrlTemplate("http://frontend/cruDashboard/changeRequests"),
     cruDashboardUrlTemplate = UrlTemplate("http://frontend/cruDashboard"),
+    spaceBookingTimelineUrlTemplate = UrlTemplate("http://frontend/premises/#premisesId/spaceBooking/#bookingId/timeline"),
   )
 
   companion object {
@@ -41,6 +46,8 @@ class Cas1ChangeRequestEmailServiceTest {
     const val PLACEMENT_APPLICATION_CREATOR_EMAIL = "placementapp@test.com"
     const val PREMISES_NAME = "the premises"
     const val PREMISES_EMAIL = "premises@test.com"
+    const val OTHER_PREMISES_NAME = "the other premises"
+    const val OTHER_PREMISES_EMAIL = "otherpremises@test.com"
   }
 
   val application = ApprovedPremisesApplicationEntityFactory()
@@ -64,6 +71,10 @@ class Cas1ChangeRequestEmailServiceTest {
   val premises = ApprovedPremisesEntityFactory().withDefaults()
     .withEmailAddress(PREMISES_EMAIL)
     .withName(PREMISES_NAME).produce()
+
+  val otherPremises = ApprovedPremisesEntityFactory().withDefaults()
+    .withEmailAddress(OTHER_PREMISES_EMAIL)
+    .withName(OTHER_PREMISES_NAME).produce()
 
   @Nested
   inner class PlacementAppealCreatedTest {
@@ -248,6 +259,62 @@ class Cas1ChangeRequestEmailServiceTest {
           "crn" to CRN,
           "cruOpenChangeRequestsUrl" to "http://frontend/cruDashboard/changeRequests",
           "fromPremisesName" to PREMISES_NAME,
+        ),
+        application,
+      )
+    }
+  }
+
+  @Nested
+  inner class PlannedTransferRequestAcceptedTest {
+
+    val changeRequest = Cas1ChangeRequestEntityFactory()
+      .withPlacementRequest(
+        PlacementRequestEntityFactory()
+          .withDefaults()
+          .withApplication(application)
+          .produce(),
+      )
+      .withSpaceBooking(
+        Cas1SpaceBookingEntityFactory()
+          .withPremises(premises)
+          .produce(),
+      )
+      .produce()
+
+    val newSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withPremises(otherPremises)
+      .withCanonicalArrivalDate(LocalDate.of(2023, 2, 1))
+      .withCanonicalDepartureDate(LocalDate.of(2023, 2, 14))
+      .produce()
+
+    @Test
+    fun `sends email to source and target APs`() {
+      service.plannedTransferRequestAccepted(PlannedTransferRequestAccepted(changeRequest, UserEntityFactory().withDefaults().produce(), newSpaceBooking))
+
+      mockEmailNotificationService.assertEmailRequestCount(2)
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_REQUESTING_AP,
+        mapOf(
+          "fromPremisesName" to PREMISES_NAME,
+          "crn" to CRN,
+        ),
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        OTHER_PREMISES_EMAIL,
+        PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_TARGET_AP,
+        mapOf(
+          "fromPremisesName" to PREMISES_NAME,
+          "toPremisesName" to OTHER_PREMISES_NAME,
+          "crn" to CRN,
+          "toPlacementStartDate" to "2023-02-01",
+          "toPlacementEndDate" to "2023-02-14",
+          "toPlacementLengthStay" to 2,
+          "toPlacementLengthStayUnit" to "weeks",
+          "toPlacementTimelineUrl" to "http://frontend/premises/${otherPremises.id}/spaceBooking/${newSpaceBooking.id}/timeline",
         ),
         application,
       )
