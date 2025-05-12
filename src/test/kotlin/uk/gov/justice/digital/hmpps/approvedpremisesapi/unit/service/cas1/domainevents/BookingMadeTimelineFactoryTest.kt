@@ -8,8 +8,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventBookingSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventTransferInfoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.BookingMadeTimelineFactory
 import java.time.LocalDate
@@ -29,20 +33,34 @@ class BookingMadeTimelineFactoryTest {
   @Test
   fun success() {
     val bookingId = UUID.randomUUID()
-    val arrivalDate = LocalDate.of(2024, 1, 1)
-    val departureDate = LocalDate.of(2024, 4, 1)
+    val transferredFromBookingId = UUID.randomUUID()
+    val transferredFromChangeRequestId = UUID.randomUUID()
 
     every { domainEventService.get(id, BookingMade::class) } returns buildDomainEvent(
       data = BookingMadeFactory()
         .withBookingId(bookingId)
-        .withArrivalOn(arrivalDate)
-        .withDepartureOn(departureDate)
+        .withArrivalOn(LocalDate.of(2024, 1, 1))
+        .withDepartureOn(LocalDate.of(2024, 4, 1))
         .withPremises(
           EventPremisesFactory()
             .withName("The Premises Name")
             .produce(),
         )
         .withDeliusEventNumber("989")
+        .withTransferredFrom(
+          EventTransferInfoFactory()
+            .withType(EventTransferType.EMERGENCY)
+            .withBooking(
+              EventBookingSummaryFactory()
+                .withBookingId(transferredFromBookingId)
+                .withPremises(EventPremisesFactory().withName("From Premises Name").produce())
+                .withArrivalOn(LocalDate.of(2024, 4, 1))
+                .withDepartureOn(LocalDate.of(2024, 5, 1))
+                .produce(),
+            )
+            .withChangeRequestId(transferredFromChangeRequestId)
+            .produce(),
+        )
         .produce(),
     )
 
@@ -60,5 +78,13 @@ class BookingMadeTimelineFactoryTest {
     assertThat(payload.booking.arrivalDate).isEqualTo(LocalDate.of(2024, 1, 1))
     assertThat(payload.booking.departureDate).isEqualTo(LocalDate.of(2024, 4, 1))
     assertThat(payload.eventNumber).isEqualTo("989")
+
+    val transferredFrom = payload.transferredFrom!!
+    assertThat(transferredFrom.type).isEqualTo(Cas1TimelineEventTransferType.EMERGENCY)
+    assertThat(transferredFrom.changeRequestId).isEqualTo(transferredFromChangeRequestId)
+    assertThat(transferredFrom.booking.bookingId).isEqualTo(transferredFromBookingId)
+    assertThat(transferredFrom.booking.arrivalDate).isEqualTo(LocalDate.of(2024, 4, 1))
+    assertThat(transferredFrom.booking.departureDate).isEqualTo(LocalDate.of(2024, 5, 1))
+    assertThat(transferredFrom.booking.premises.name).isEqualTo("From Premises Name")
   }
 }

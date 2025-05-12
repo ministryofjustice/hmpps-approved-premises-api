@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -244,7 +245,6 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusDays(1),
         createdBy = user,
         characteristics = characteristics,
-        transferType = null,
         transferredFrom = null,
       )
 
@@ -318,7 +318,6 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusDays(1),
         createdBy = user,
         characteristics = characteristics,
-        transferType = null,
         transferredFrom = null,
       )
 
@@ -1098,8 +1097,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = departureDate,
         createdBy = user,
         characteristics = existingSpaceBooking.criteria,
-        transferType = TransferType.EMERGENCY,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.EMERGENCY,
+          booking = existingSpaceBooking,
+          changeRequestId = null,
+        ),
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("oh no create validation failed")
@@ -1142,8 +1144,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = departureDate,
         createdBy = user,
         characteristics = existingSpaceBooking.criteria,
-        transferType = TransferType.EMERGENCY,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.EMERGENCY,
+          booking = existingSpaceBooking,
+          changeRequestId = null,
+        ),
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -1200,8 +1205,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = departureDate,
         createdBy = user,
         characteristics = existingSpaceBooking.criteria,
-        transferType = TransferType.EMERGENCY,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.EMERGENCY,
+          booking = existingSpaceBooking,
+          changeRequestId = null,
+        ),
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -1413,8 +1421,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusMonths(1),
         createdBy = user,
         characteristics = emptyList(),
-        transferType = TransferType.PLANNED,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.PLANNED,
+          booking = existingSpaceBooking,
+          changeRequestId = existingChangeRequest.id,
+        ),
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("common create validation failed")
@@ -1452,8 +1463,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusMonths(1),
         createdBy = user,
         characteristics = emptyList(),
-        transferType = TransferType.PLANNED,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.PLANNED,
+          booking = existingSpaceBooking,
+          changeRequestId = existingChangeRequest.id,
+        ),
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -1507,8 +1521,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusMonths(1),
         createdBy = user,
         characteristics = emptyList(),
-        transferType = TransferType.PLANNED,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.PLANNED,
+          booking = existingSpaceBooking,
+          changeRequestId = existingChangeRequest.id,
+        ),
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()

@@ -3,8 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domaineven
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingMadeContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventPayloadBookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventTransferInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -35,6 +38,16 @@ class BookingMadeTimelineFactory(val domainEventService: Cas1DomainEventService)
           departureDate = eventDetails.departureOn,
         ),
         eventNumber = eventDetails.deliusEventNumber,
+        transferredFrom = eventDetails.transferredFrom?.let {
+          Cas1TimelineEventTransferInfo(
+            type = when (it.type) {
+              EventTransferType.PLANNED -> Cas1TimelineEventTransferType.PLANNED
+              EventTransferType.EMERGENCY -> Cas1TimelineEventTransferType.EMERGENCY
+            },
+            booking = it.booking.toTimelinePayloadSummary(),
+            changeRequestId = it.changeRequestId,
+          )
+        },
       ),
     )
   }

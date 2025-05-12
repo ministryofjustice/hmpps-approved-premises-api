@@ -1267,6 +1267,8 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         eventNumber:
           type: string
+        transferredFrom:
+          $ref: '#/components/schemas/Cas1TimelineEventTransferInfo'
       required:
         - booking
         - eventNumber
@@ -1328,6 +1330,27 @@ components:
         - premises
         - arrivalDate
         - departureDate
+    Cas1TimelineEventTransferInfo:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/Cas1TimelineEventTransferType'
+        changeRequestId:
+          type: string
+          format: uuid
+        booking:
+          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
+      required:
+        - type
+        - booking
+    Cas1TimelineEventTransferType:
+      type: string
+      enum:
+        - emergency
+        - planned
+      x-enum-varnames:
+        - EMERGENCY
+        - PLANNED
     Cas1PlacementRequestSummary:
       type: object
       properties:

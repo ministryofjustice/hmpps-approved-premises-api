@@ -23,8 +23,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -78,7 +80,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferType = null,
           transferredFrom = null,
         ),
       )
@@ -110,7 +111,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferType = null,
           transferredFrom = null,
         ),
       )
@@ -137,7 +137,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now().plusDays(1),
           createdBy = user,
           characteristics = emptyList(),
-          transferType = null,
           transferredFrom = null,
         ),
       )
@@ -164,7 +163,6 @@ class Cas1SpaceBookingCreateServiceTest {
           expectedDepartureDate = LocalDate.now(),
           createdBy = user,
           characteristics = emptyList(),
-          transferType = null,
           transferredFrom = null,
         ),
       )
@@ -203,11 +201,17 @@ class Cas1SpaceBookingCreateServiceTest {
       val arrivalDate = LocalDate.now()
       val departureDate = arrivalDate.plusDays(1)
 
+      val transferInfo = TransferInfo(
+        type = TransferType.PLANNED,
+        booking = Cas1SpaceBookingEntityFactory().produce(),
+        changeRequestId = UUID.randomUUID(),
+      )
+
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val result = service.validate(
-        Cas1SpaceBookingCreateService.CreateBookingDetails(
+        CreateBookingDetails(
           premisesId = premises.id,
           placementRequestId = placementRequest.id,
           expectedArrivalDate = arrivalDate,
@@ -217,8 +221,7 @@ class Cas1SpaceBookingCreateServiceTest {
             CharacteristicEntityFactory().withName("c1").produce(),
             CharacteristicEntityFactory().withName("c2").produce(),
           ),
-          transferType = TransferType.PLANNED,
-          transferredFrom = null,
+          transferredFrom = transferInfo,
         ),
       )
 
@@ -278,10 +281,21 @@ class Cas1SpaceBookingCreateServiceTest {
       val persistedBooking = Cas1SpaceBookingEntityFactory().produce()
       every { spaceBookingRepository.save(spaceBookingToCreate) } returns persistedBooking
 
-      service.create(Cas1SpaceBookingCreateService.ValidatedCreateBooking(spaceBookingToCreate))
+      val transferInfo = TransferInfo(
+        type = TransferType.PLANNED,
+        booking = Cas1SpaceBookingEntityFactory().produce(),
+        changeRequestId = UUID.randomUUID(),
+      )
+
+      service.create(
+        Cas1SpaceBookingCreateService.ValidatedCreateBooking(
+          bookingToCreate = spaceBookingToCreate,
+          transferredFrom = transferInfo
+        )
+      )
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user)) }
+      verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user, transferInfo)) }
       verify { cas1BookingEmailService.spaceBookingMade(persistedBooking, application) }
     }
   }

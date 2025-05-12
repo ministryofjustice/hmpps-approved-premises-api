@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeBookedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -22,6 +23,7 @@ class BookingMadeFactory : Factory<BookingMade> {
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var arrivalOn: Yielded<LocalDate> = { LocalDate.now() }
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
+  private var transferredFrom: Yielded<EventTransferInfo?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -63,6 +65,10 @@ class BookingMadeFactory : Factory<BookingMade> {
     this.departureOn = { departureOn }
   }
 
+  fun withTransferredFrom(transferredFrom: EventTransferInfo?) = apply {
+    this.transferredFrom = { transferredFrom }
+  }
+
   override fun produce() = BookingMade(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -74,5 +80,6 @@ class BookingMadeFactory : Factory<BookingMade> {
     premises = this.premises(),
     arrivalOn = this.arrivalOn(),
     departureOn = this.departureOn(),
+    transferredFrom = this.transferredFrom(),
   )
 }

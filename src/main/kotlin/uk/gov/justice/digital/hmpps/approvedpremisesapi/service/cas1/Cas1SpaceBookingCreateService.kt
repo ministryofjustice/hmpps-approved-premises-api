@@ -4,11 +4,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -41,6 +41,14 @@ class Cas1SpaceBookingCreateService(
 
     cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
+    cas1BookingDomainEventService.spaceBookingMade(
+      Cas1BookingCreatedEvent(
+        booking = spaceBooking,
+        createdBy = createdBy,
+        transferredFrom = validatedDetails.transferredFrom,
+      ),
+    )
+
     return spaceBooking
   }
 
@@ -70,7 +78,12 @@ class Cas1SpaceBookingCreateService(
     if (hasErrors()) {
       return errors()
     } else {
-      return success(ValidatedCreateBooking(toSpaceBooking(details)))
+      return success(
+        ValidatedCreateBooking(
+          bookingToCreate = toSpaceBooking(details),
+          transferredFrom = details.transferredFrom,
+        )
+      )
     }
   }
 
@@ -113,15 +126,16 @@ class Cas1SpaceBookingCreateService(
       nonArrivalReason = null,
       deliusEventNumber = application.eventNumber,
       migratedManagementInfoFrom = null,
-      transferredFrom = details.transferredFrom,
+      transferredFrom = details.transferredFrom?.booking,
       transferredTo = null,
-      transferType = details.transferType,
+      transferType = details.transferredFrom?.type,
       deliusId = null,
     )
   }
 
   data class ValidatedCreateBooking(
     val bookingToCreate: Cas1SpaceBookingEntity,
+    val transferredFrom: TransferInfo?
   )
 
   data class CreateBookingDetails(
@@ -131,7 +145,6 @@ class Cas1SpaceBookingCreateService(
     val expectedDepartureDate: LocalDate,
     val createdBy: UserEntity,
     val characteristics: List<CharacteristicEntity>,
-    val transferType: TransferType?,
-    val transferredFrom: Cas1SpaceBookingEntity?,
+    val transferredFrom: TransferInfo?,
   )
 }

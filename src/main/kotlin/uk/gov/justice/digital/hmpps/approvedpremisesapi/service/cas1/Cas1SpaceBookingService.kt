@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.Instant
@@ -82,7 +83,6 @@ class Cas1SpaceBookingService(
           expectedDepartureDate = departureDate,
           createdBy = createdBy,
           characteristics = characteristics,
-          transferType = null,
           transferredFrom = null,
         ),
       )
@@ -298,8 +298,11 @@ class Cas1SpaceBookingService(
           expectedDepartureDate = departureDate,
           createdBy = user,
           characteristics = existingCas1SpaceBooking.criteria,
-          transferType = TransferType.EMERGENCY,
-          transferredFrom = existingCas1SpaceBooking,
+          transferredFrom = TransferInfo(
+            type = TransferType.EMERGENCY,
+            booking = existingCas1SpaceBooking,
+            changeRequestId = null,
+          ),
         ),
       )
     ) {
@@ -359,8 +362,11 @@ class Cas1SpaceBookingService(
           expectedDepartureDate = departureDate,
           createdBy = user,
           characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
-          transferType = TransferType.PLANNED,
-          transferredFrom = existingCas1SpaceBooking,
+          transferredFrom = TransferInfo(
+            type = TransferType.PLANNED,
+            booking = existingCas1SpaceBooking,
+            changeRequestId = changeRequest.id,
+          ),
         ),
       )
     ) {
