@@ -47,18 +47,7 @@ class Cas1BookingManagementEmailServiceTest {
     }
 
     @Test
-    fun `not emergency transfer, do nothing`() {
-      service.arrivalRecorded(
-        Cas1SpaceBookingEntityFactory()
-          .withTransferType(TransferType.PLANNED)
-          .produce(),
-      )
-
-      mockEmailNotificationService.assertNoEmailsRequested()
-    }
-
-    @Test
-    fun `emergency transfer, send email to applicant(s)`() {
+    fun `is emergency transfer, send email to applicant(s) and CRU`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withDefaults()
         .withCrn(CRN)
@@ -121,6 +110,64 @@ class Cas1BookingManagementEmailServiceTest {
           "crn" to CRN,
           "fromPremisesName" to FROM_PREMISES_NAME,
           "toPremisesName" to TO_PREMISES_NAME,
+        ),
+        application,
+      )
+    }
+
+    @Test
+    fun `is planned transfer, send email to applicant(s)`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withCrn(CRN)
+        .withCreatedByUser(UserEntityFactory().withDefaults().withEmail(APPLICANT_EMAIL).produce())
+        .withCaseManagerIsNotApplicant(true)
+        .withCaseManagerUserDetails(Cas1ApplicationUserDetailsEntityFactory().withEmailAddress(CASE_MANAGER_EMAIL).produce())
+        .withCruManagementArea(Cas1CruManagementAreaEntityFactory().withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL).produce())
+        .produce()
+
+      val fromSpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withApplication(application)
+        .withPremises(ApprovedPremisesEntityFactory().withDefaults().withName(FROM_PREMISES_NAME).produce())
+        .produce()
+
+      val toSpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withApplication(application)
+        .withPremises(ApprovedPremisesEntityFactory().withDefaults().withName(TO_PREMISES_NAME).produce())
+        .withTransferType(TransferType.PLANNED)
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withApplication(application)
+            .withPlacementApplication(
+              PlacementApplicationEntityFactory()
+                .withDefaults()
+                .withApplication(application)
+                .withCreatedByUser(UserEntityFactory().withDefaults().withEmail(PLACEMENT_APPLICATION_CREATOR_EMAIL).produce())
+                .produce(),
+            )
+            .produce(),
+        )
+        .withTransferredFrom(fromSpaceBooking)
+        .withCanonicalArrivalDate(LocalDate.of(2025, 1, 2))
+        .withCanonicalDepartureDate(LocalDate.of(2025, 2, 1))
+        .produce()
+
+      service.arrivalRecorded(toSpaceBooking)
+
+      mockEmailNotificationService.assertEmailRequestCount(3)
+
+      mockEmailNotificationService.assertEmailsRequested(
+        setOf(APPLICANT_EMAIL, CASE_MANAGER_EMAIL, PLACEMENT_APPLICATION_CREATOR_EMAIL),
+        Cas1NotifyTemplates.TRANSFER_COMPLETE,
+        personalisationSubSet = mapOf(
+          "crn" to CRN,
+          "fromPremisesName" to FROM_PREMISES_NAME,
+          "toPremisesName" to TO_PREMISES_NAME,
+          "startDate" to "2025-01-02",
+          "endDate" to "2025-02-01",
+          "lengthStay" to 31,
+          "lengthStayUnit" to "days",
         ),
         application,
       )
