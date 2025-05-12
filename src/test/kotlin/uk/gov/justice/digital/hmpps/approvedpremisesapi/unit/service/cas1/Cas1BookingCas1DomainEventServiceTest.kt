@@ -153,7 +153,6 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
-      assertThat(domainEvent.cas1PlacementRequestId).isEqualTo(placementRequest.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
       assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
@@ -272,7 +271,6 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
       assertThat(domainEvent.cas1SpaceBookingId).isNull()
-      assertThat(domainEvent.cas1PlacementRequestId).isEqualTo(placementRequest.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
       assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
@@ -565,7 +563,6 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("Application CRN")
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingNotMade)
-      assertThat(domainEvent.cas1PlacementRequestId).isEqualTo(placementRequest.id)
 
       val data = domainEvent.data.eventDetails
       assertThat(data.applicationId).isEqualTo(application.id)

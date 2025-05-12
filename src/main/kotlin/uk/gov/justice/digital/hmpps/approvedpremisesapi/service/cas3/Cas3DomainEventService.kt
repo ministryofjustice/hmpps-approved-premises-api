@@ -233,7 +233,6 @@ class Cas3DomainEventService(
         triggerSource = triggerSourceType,
         schemaVersion = domainEvent.schemaVersion,
         cas1SpaceBookingId = null,
-        cas1PlacementRequestId = null,
       ),
     )
 
