@@ -1065,6 +1065,7 @@ components:
           type: string
           format: date-time
         content:
+          description: Timeline description. If a value is provided for 'payload', that should be instead be used to build a description
           type: string
         createdBy:
           deprecated: true
@@ -1251,6 +1252,9 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         cancellationReason:
           type: string
+        appealChangeRequestId:
+          type: string
+          format: uuid
       required:
         - booking
         - cancellationReason

@@ -229,6 +229,7 @@ class BookingCancelledTimelineFactoryTest {
     @Test
     fun `Returns expected description and payload`() {
       val spaceBookingId = UUID.randomUUID()
+      val appealChangeRequestId = UUID.randomUUID()
       val premises = ApprovedPremisesEntityFactory()
         .withDefaults()
         .withName("The Premises Name")
@@ -250,6 +251,7 @@ class BookingCancelledTimelineFactoryTest {
         data = BookingCancelledFactory()
           .withBookingId(spaceBookingId)
           .withCancellationReason("reason for cancellation")
+          .withAppealChangeRequestId(appealChangeRequestId)
           .produce(),
         spaceBookingId = spaceBookingId,
       )
@@ -266,6 +268,7 @@ class BookingCancelledTimelineFactoryTest {
       assertThat(payload.booking.premises.name).isEqualTo("The Premises Name")
       assertThat(payload.booking.arrivalDate).isEqualTo(LocalDate.of(2024, 1, 1))
       assertThat(payload.booking.departureDate).isEqualTo(LocalDate.of(2024, 4, 1))
+      assertThat(payload.appealChangeRequestId).isEqualTo(appealChangeRequestId)
     }
 
     @Test

@@ -588,6 +588,7 @@ class Cas1SpaceBookingServiceTest {
           WithdrawableEntityType.SpaceBooking,
           spaceBooking.id,
         ),
+        appealChangeRequestId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
@@ -615,6 +616,7 @@ class Cas1SpaceBookingServiceTest {
           WithdrawableEntityType.SpaceBooking,
           spaceBooking.id,
         ),
+        appealChangeRequestId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -648,6 +650,7 @@ class Cas1SpaceBookingServiceTest {
           WithdrawableEntityType.SpaceBooking,
           spaceBooking.id,
         ),
+        appealChangeRequestId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -664,6 +667,7 @@ class Cas1SpaceBookingServiceTest {
         .produce()
 
       val reasonId = UUID.randomUUID()
+      val appealChangeRequestId = UUID.randomUUID()
 
       val reason = CancellationReasonEntityFactory()
         .withServiceScope(ServiceName.approvedPremises.value)
@@ -685,6 +689,7 @@ class Cas1SpaceBookingServiceTest {
         occurredAt = LocalDate.parse("2022-08-25"),
         userProvidedReasonId = reasonId,
         userProvidedReasonNotes = "the user provided notes",
+        appealChangeRequestId = appealChangeRequestId,
         withdrawalContext = WithdrawalContext(
           WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.SpaceBooking,
@@ -701,7 +706,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
 
       verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason)) }
+      verify { cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason, appealChangeRequestId)) }
       verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
       verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }
     }

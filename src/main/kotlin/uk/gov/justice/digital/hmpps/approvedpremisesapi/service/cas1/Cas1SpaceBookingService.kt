@@ -176,6 +176,7 @@ class Cas1SpaceBookingService(
     occurredAt: LocalDate,
     userProvidedReasonId: UUID?,
     userProvidedReasonNotes: String?,
+    appealChangeRequestId: UUID?,
     withdrawalContext: WithdrawalContext,
   ): CasResult<Unit> {
     if (spaceBooking.isCancelled()) {
@@ -203,7 +204,7 @@ class Cas1SpaceBookingService(
     }
 
     cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking)
-    cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason))
+    cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason, appealChangeRequestId))
     cas1ApplicationStatusService.spaceBookingCancelled(
       spaceBooking,
       isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.SpaceBooking,

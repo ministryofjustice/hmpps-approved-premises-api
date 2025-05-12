@@ -785,6 +785,7 @@ class Cas1WithdrawableServiceTest {
     val cancelledAt = LocalDate.now()
     val userProvidedReason = UUID.randomUUID()
     val otherReason = "Other reason"
+    val appealChangeRequestId = UUID.randomUUID()
 
     val spaceBooking = Cas1SpaceBookingEntityFactory()
       .withApplication(application)
@@ -804,7 +805,7 @@ class Cas1WithdrawableServiceTest {
       every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
 
       every {
-        cas1SpaceBookingService.withdraw(any(), any(), any(), any(), any())
+        cas1SpaceBookingService.withdraw(any(), any(), any(), any(), any(), any())
       } returns CasResult.Success(Unit)
 
       val context = WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.SpaceBooking, spaceBooking.id)
@@ -813,12 +814,12 @@ class Cas1WithdrawableServiceTest {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree.rootNode, context)
       } returns Unit
 
-      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason, appealChangeRequestId)
 
       assertThat(result is CasResult.Success)
 
       verify {
-        cas1SpaceBookingService.withdraw(spaceBooking, cancelledAt, userProvidedReason, otherReason, context)
+        cas1SpaceBookingService.withdraw(spaceBooking, cancelledAt, userProvidedReason, otherReason, appealChangeRequestId, context)
       }
 
       verify {
@@ -839,7 +840,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
 
-      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason, appealChangeRequestId)
 
       assertThat(result is CasResult.Unauthorised).isTrue()
     }
@@ -857,7 +858,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
 
-      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason, appealChangeRequestId)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Space Booking is not in a withdrawable state")
@@ -876,7 +877,7 @@ class Cas1WithdrawableServiceTest {
 
       every { cas1WithdrawableTreeBuilder.treeForSpaceBooking(spaceBooking, user) } returns tree
 
-      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason)
+      val result = cas1WithdrawableService.withdrawSpaceBooking(spaceBooking, user, cancelledAt, userProvidedReason, otherReason, appealChangeRequestId)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Space Booking withdrawal is blocked")
