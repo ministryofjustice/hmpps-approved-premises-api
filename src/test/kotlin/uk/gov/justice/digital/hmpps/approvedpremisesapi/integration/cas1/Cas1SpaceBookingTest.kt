@@ -2976,11 +2976,14 @@ class Cas1SpaceBookingTest {
         DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
       )
 
-      emailAsserter.assertEmailsRequestedCount(4)
+      emailAsserter.assertEmailsRequestedCount(6)
       emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
       emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
       emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_AMENDED)
       emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_AMENDED)
+
+      emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_REQUESTING_AP)
+      emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_TARGET_AP)
     }
   }
 }

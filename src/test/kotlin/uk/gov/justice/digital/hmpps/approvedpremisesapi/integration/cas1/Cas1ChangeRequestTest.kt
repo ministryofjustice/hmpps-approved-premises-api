@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_CREATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED
@@ -38,8 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas1ChangeRequestTest {
@@ -156,7 +156,7 @@ class Cas1ChangeRequestTest {
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
-          cruManagementArea = givenACas1CruManagementArea(),
+          cruManagementArea = givenACas1CruManagementArea(emailAddress = "cruManagement@test.com"),
         ) { placementRequest, _ ->
           val spaceBooking = givenACas1SpaceBooking(
             crn = placementRequest.application.crn,
@@ -184,12 +184,8 @@ class Cas1ChangeRequestTest {
           assertThat(persistedChangeRequest.requestReason).isEqualTo(changeRequestReason)
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
 
-          emailAsserter.assertEmailRequested(
-            placementRequest.application.cruManagementArea!!.emailAddress!!,
-            Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED,
-          )
-
           domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED)
+          emailAsserter.assertEmailRequested("cruManagement@test.com", Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED)
         }
       }
     }
@@ -201,6 +197,7 @@ class Cas1ChangeRequestTest {
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
+          cruManagementArea = givenACas1CruManagementArea(emailAddress = "cruManagement@test.com"),
         ) { placementRequest, _ ->
           val spaceBooking = givenACas1SpaceBooking(
             crn = placementRequest.application.crn,
@@ -232,6 +229,8 @@ class Cas1ChangeRequestTest {
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
 
           domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED)
+
+          emailAsserter.assertEmailRequested("cruManagement@test.com", PLANNED_TRANSFER_REQUEST_CREATED)
         }
       }
     }
@@ -549,18 +548,19 @@ class Cas1ChangeRequestTest {
   @Nested
   inner class RejectChangeRequest : InitialiseDatabasePerClassTestBase() {
 
+    lateinit var premises: ApprovedPremisesEntity
+
     lateinit var application: ApprovedPremisesApplicationEntity
     lateinit var cruManagementArea: Cas1CruManagementAreaEntity
-    lateinit var changeRequest: Cas1ChangeRequestEntity
+    lateinit var placementAppealChangeRequest: Cas1ChangeRequestEntity
 
     lateinit var cruManagementArea2: Cas1CruManagementAreaEntity
-    lateinit var changeRequest1: Cas1ChangeRequestEntity
+    lateinit var alreadyRejectedChangeRequest: Cas1ChangeRequestEntity
 
     lateinit var placementRequest1: PlacementRequestEntity
     lateinit var placementRequest2: PlacementRequestEntity
 
-    lateinit var extensionRejectionReason: Cas1ChangeRequestRejectionReasonEntity
-    lateinit var appealRejectionReason: Cas1ChangeRequestRejectionReasonEntity
+    lateinit var placementAppealRejectionReason: Cas1ChangeRequestRejectionReasonEntity
 
     @BeforeAll
     fun setupChangeRequests() {
@@ -582,9 +582,9 @@ class Cas1ChangeRequestTest {
 
       placementRequest1 = givenAPlacementRequest(createdByUser = user, application = application).first
 
-      val premises = givenAnApprovedPremises(emailAddress = "premises@test.com")
+      premises = givenAnApprovedPremises(emailAddress = "premises@test.com")
 
-      changeRequest = givenACas1ChangeRequest(
+      placementAppealChangeRequest = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_APPEAL,
         spaceBooking = givenACas1SpaceBooking(
           crn = application.crn,
@@ -614,31 +614,10 @@ class Cas1ChangeRequestTest {
         ),
       ).first
 
-      extensionRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
-        .produceAndPersist {
-          withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
-        }
-
-      appealRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
+      placementAppealRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
         .produceAndPersist {
           withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         }
-
-      changeRequest1 = givenACas1ChangeRequest(
-        type = ChangeRequestType.PLACEMENT_EXTENSION,
-        decision = ChangeRequestDecision.REJECTED,
-        resolvedAt = LocalDateTime.of(2025, 3, 1, 15, 30).atOffset(ZoneOffset.UTC),
-        spaceBooking = givenACas1SpaceBooking(
-          crn = placementRequest2.application.crn,
-          application = placementRequest2.application,
-          placementRequest = placementRequest2,
-          canonicalArrivalDate = LocalDate.of(2024, 3, 1),
-          canonicalDepartureDate = LocalDate.of(2024, 3, 10),
-        ),
-        rejectReason = extensionRejectionReason,
-        resolved = true,
-        decisionJson = "{\"test\": 1}",
-      )
     }
 
     @ParameterizedTest
@@ -647,11 +626,11 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1RejectChangeRequest(
-            rejectionReasonId = appealRejectionReason.id,
+            rejectionReasonId = placementAppealRejectionReason.id,
             decisionJson = emptyMap(),
           ),
         )
@@ -663,7 +642,7 @@ class Cas1ChangeRequestTest {
     @Test
     fun `reject change request without JWT returns 401`() {
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -673,15 +652,15 @@ class Cas1ChangeRequestTest {
     fun `return 200 when successfully reject placement appeal change request`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
-      val changeRequestBefore = cas1ChangeRequestRepository.findById(changeRequest.id).get()
+      val changeRequestBefore = cas1ChangeRequestRepository.findById(placementAppealChangeRequest.id).get()
       assertThat(changeRequestBefore.rejectionReason).isNull()
 
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1RejectChangeRequest(
-            rejectionReasonId = appealRejectionReason.id,
+            rejectionReasonId = placementAppealRejectionReason.id,
             decisionJson = emptyMap(),
           ),
         )
@@ -689,7 +668,7 @@ class Cas1ChangeRequestTest {
         .expectStatus()
         .isOk
 
-      val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest.id).get()
+      val changeRequestAfter = cas1ChangeRequestRepository.findById(placementAppealChangeRequest.id).get()
       assertThat(changeRequestAfter.rejectionReason).isNotNull()
       assertThat(changeRequestAfter.rejectionReason?.changeRequestType).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
 
@@ -701,15 +680,33 @@ class Cas1ChangeRequestTest {
     }
 
     @Test
-    fun `return 200 without update anything when change request already rejected`() {
+    fun `return 200 when successfully reject planned transfer change request`() {
+      val changeRequest = givenACas1ChangeRequest(
+        type = ChangeRequestType.PLANNED_TRANSFER,
+        spaceBooking = givenACas1SpaceBooking(
+          crn = application.crn,
+          application = application,
+          placementRequest = placementRequest1,
+          canonicalArrivalDate = LocalDate.of(2024, 6, 1),
+          canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+          premises = premises,
+        ),
+        decisionJson = "{\"test\": 1}",
+      )
+
+      val reason = cas1ChangeRequestRejectionReasonEntityFactory
+        .produceAndPersist {
+          withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+        }
+
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest2.id}/change-requests/${changeRequest1.id}")
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1RejectChangeRequest(
-            rejectionReasonId = extensionRejectionReason.id,
+            rejectionReasonId = reason.id,
             decisionJson = emptyMap(),
           ),
         )
@@ -717,8 +714,13 @@ class Cas1ChangeRequestTest {
         .expectStatus()
         .isOk
 
-      val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest1.id).get()
-      assertThat(changeRequestAfter.resolvedAt).isEqualTo(changeRequest1.resolvedAt)
+      val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest.id).get()
+      assertThat(changeRequestAfter.rejectionReason!!.id).isEqualTo(reason.id)
+
+      emailAsserter.assertEmailsRequestedCount(1)
+      emailAsserter.assertEmailRequested("premises@test.com", Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_REJECTED)
+
+      domainEventAsserter.assertDomainEventOfTypeStored(application.id, APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED)
     }
   }
 
