@@ -4672,16 +4672,6 @@ components:
         - past
         - current
         - future
-    BedSearchAttributes:
-      type: string
-      enum:
-        - isSharedProperty
-        - isSingleOccupancy
-        - isWheelchairAccessible
-      x-enum-varnames:
-        - SHARED_PROPERTY
-        - SINGLE_OCCUPANCY
-        - WHEELCHAIR_ACCESSIBLE
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms
@@ -5037,25 +5027,10 @@ components:
           $ref: '#/components/schemas/PremisesFilters'
         bedspaceFilters:
           $ref: '#/components/schemas/BedspaceFilters'
-        attributes:
-          type: array
-          description: Bedspace and property attributes to filter on
-          items:
-            $ref: "#/components/schemas/BedspaceSearchAttributes"
       required:
         - probationDeliveryUnits
         - startDate
         - durationDays
-    BedspaceSearchAttributes:
-      type: string
-      enum:
-        - isSharedProperty
-        - isSingleOccupancy
-        - isWheelchairAccessible
-      x-enum-varnames:
-        - SHARED_PROPERTY
-        - SINGLE_OCCUPANCY
-        - WHEELCHAIR_ACCESSIBLE
     PremisesFilters:
       type: object
       properties:

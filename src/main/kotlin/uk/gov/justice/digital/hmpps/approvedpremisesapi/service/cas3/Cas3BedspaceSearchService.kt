@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedspaceSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
@@ -71,10 +70,6 @@ class Cas3BedspaceSearchService(
 
     val endDate = searchParams.calculateEndDate()
 
-    if ((searchParams.bedspaceFilters != null || searchParams.premisesFilters != null) && searchParams.attributes != null) {
-      return CasResult.GeneralValidationError("Cannot use both filters and attributes")
-    }
-
     val candidateResults =
       bedSearchRepository.findTemporaryAccommodationBeds(
         probationDeliveryUnits = probationDeliveryUnitIds,
@@ -118,12 +113,6 @@ class Cas3BedspaceSearchService(
     searchParams: Cas3BedspaceSearchParameters,
     results: List<Cas3CandidateBedspace>,
   ): List<Cas3CandidateBedspace> {
-    // use the legacy filters until the UI switches over.
-    val attributes = searchParams.attributes
-    if (attributes != null) {
-      return applyLegacyFilters(attributes, results)
-    }
-
     if (searchParams.bedspaceFilters == null && searchParams.premisesFilters == null) {
       return results
     }
@@ -152,24 +141,6 @@ class Cas3BedspaceSearchService(
           roomCharacteristics.containsNone(roomCharacteristicsToExclude)
       }
   }
-
-  @Deprecated("adding to maintain functionality until the UI switches to use search filters")
-  private fun applyLegacyFilters(
-    attributes: List<BedspaceSearchAttributes>,
-    results: List<Cas3CandidateBedspace>,
-  ): List<Cas3CandidateBedspace> = results
-    .filter { bedspace ->
-      !attributes.contains(BedspaceSearchAttributes.WHEELCHAIR_ACCESSIBLE) ||
-        bedspace.roomCharacteristics.any { it.propertyName == BedspaceSearchAttributes.WHEELCHAIR_ACCESSIBLE.value }
-    }
-    .filter { premises ->
-      !attributes.contains(BedspaceSearchAttributes.SINGLE_OCCUPANCY) ||
-        premises.premisesCharacteristics.any { it.propertyName == BedspaceSearchAttributes.SINGLE_OCCUPANCY.value }
-    }
-    .filter { premises ->
-      !attributes.contains(BedspaceSearchAttributes.SHARED_PROPERTY) ||
-        premises.premisesCharacteristics.any { it.propertyName == BedspaceSearchAttributes.SHARED_PROPERTY.value }
-    }
 
   fun transformBookingToOverlap(
     overlappedBooking: OverlapBookingsSearchResult,
