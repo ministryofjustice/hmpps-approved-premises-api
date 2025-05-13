@@ -7,12 +7,10 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultRoomSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedspaceFilters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedspaceSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSearchResultOverlap
@@ -55,6 +53,14 @@ import java.util.UUID
 class Cas3BedspaceSearchTest : IntegrationTestBase() {
 
   lateinit var probationRegion: ProbationRegionEntity
+
+  companion object Constants {
+    const val PROPERTY_NAME_SINGLE_OCCUPANCY = "isSingleOccupancy"
+    const val PROPERTY_NAME_SHARED_PROPERTY = "isSharedProperty"
+    const val PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE = "isWheelchairAccessible"
+    const val PROPERTY_NAME_MEN_ONLY = "isMenOnly"
+    const val PROPERTY_NAME_WOMEN_ONLY = "isWomenOnly"
+  }
 
   @BeforeEach
   fun before() {
@@ -887,7 +893,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          BedSearchAttributes.SHARED_PROPERTY,
+          PROPERTY_NAME_SHARED_PROPERTY,
         )
 
         val expextedPremisesOneBedOne = beds.first()
@@ -905,7 +911,9 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2024-08-27"),
               durationDays = 84,
               probationDeliveryUnits = listOf(searchPdu.id),
-              attributes = listOf(BedspaceSearchAttributes.SHARED_PROPERTY),
+              premisesFilters = PremisesFilters(
+                includedCharacteristicIds = listOf(getPremisesSharedPropertyCharacteristic()?.id!!),
+              ),
             ),
           )
           .exchange()
@@ -1304,7 +1312,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          BedSearchAttributes.SINGLE_OCCUPANCY,
+          PROPERTY_NAME_SINGLE_OCCUPANCY,
         )
 
         val expextedPremisesOneBedOne = beds.first()
@@ -1322,7 +1330,9 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2024-08-27"),
               durationDays = 84,
               probationDeliveryUnits = listOf(searchPdu.id),
-              attributes = listOf(BedspaceSearchAttributes.SINGLE_OCCUPANCY),
+              premisesFilters = PremisesFilters(
+                includedCharacteristicIds = listOf(getPremisesSingleOccupancyCharacteristic()?.id!!),
+              ),
             ),
           )
           .exchange()
@@ -1414,7 +1424,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          BedSearchAttributes.WHEELCHAIR_ACCESSIBLE,
+          PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE,
         )
 
         val expextedPremisesOneBedOne = beds.first()
@@ -1430,7 +1440,9 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
               startDate = LocalDate.parse("2024-08-27"),
               durationDays = 84,
               probationDeliveryUnits = listOf(searchPdu.id),
-              attributes = listOf(BedspaceSearchAttributes.WHEELCHAIR_ACCESSIBLE),
+              bedspaceFilters = BedspaceFilters(
+                includedCharacteristicIds = listOf(getWheelchairAccessibleCharacteristic()?.id!!),
+              ),
             ),
           )
           .exchange()
@@ -2101,14 +2113,14 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     private fun createPremisesAndBedsWithCharacteristics(
       localAuthorityArea: LocalAuthorityAreaEntity,
       pdu: ProbationDeliveryUnitEntity,
-      bedSearchAttribute: BedSearchAttributes,
+      characteristicPropertyName: String,
     ): List<BedEntity> {
-      val premisesSingleOccupancyCharacteristic = characteristicRepository.findByName("Single occupancy")
-      val premisesSharedPropertyCharacteristic = characteristicRepository.findByName("Shared property")
-      val premisesMenOnlyCharacteristic = characteristicRepository.findByName("Men only")
-      val premisesWomenOnlyCharacteristic = characteristicRepository.findByName("Women only")
-      val premisesPubNearbyCharacteristic = characteristicRepository.findByName("Pub nearby")
-      val wheelchairAccessibleCharacteristic = characteristicRepository.findByName("Wheelchair accessible")
+      val premisesSingleOccupancyCharacteristic = getPremisesSingleOccupancyCharacteristic()
+      val premisesSharedPropertyCharacteristic = getPremisesSharedPropertyCharacteristic()
+      val premisesMenOnlyCharacteristic = getPremisesMenOnlyCharacteristic()
+      val premisesWomenOnlyCharacteristic = getPremisesWomenOnlyCharacteristic()
+      val premisesPubNearbyCharacteristic = getPremisesPubNearByCharacteristic()
+      val wheelchairAccessibleCharacteristic = getWheelchairAccessibleCharacteristic()
       var beds = listOf<BedEntity>()
 
       val premisesSingleOccupancy = createTemporaryAccommodationPremisesWithCharacteristics(
@@ -2199,23 +2211,27 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         listOf(),
       )
 
-      when (bedSearchAttribute) {
-        BedSearchAttributes.SINGLE_OCCUPANCY -> beds = listOf(
+      when (characteristicPropertyName) {
+        PROPERTY_NAME_SINGLE_OCCUPANCY -> beds = listOf(
           singleOccupancyBedOne,
           premisesSingleOccupancyWomenOnlyBedOne,
           premisesSingleOccupancyWheelchairAccessibleBedOne,
         )
 
-        BedSearchAttributes.SHARED_PROPERTY -> beds = listOf(
+        PROPERTY_NAME_SHARED_PROPERTY -> beds = listOf(
           sharedPropertyBedOne,
           premisesSharedPropertyMenOnlyBedOne,
           premisesSharedPropertyWheelchairAccessibleBedOne,
         )
 
-        BedSearchAttributes.WHEELCHAIR_ACCESSIBLE ->
+        PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE ->
           beds =
             listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
+
+        PROPERTY_NAME_MEN_ONLY ->
+          beds = listOf(singleOccupancyBedOne, premisesSharedPropertyWheelchairAccessibleBedOne, premisesMenOnlyBedOne, premisesSharedPropertyMenOnlyBedOne)
       }
+
       return beds
     }
 
@@ -2249,5 +2265,12 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
 
       return Pair(application, assessment)
     }
+
+    private fun getPremisesSingleOccupancyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isSingleOccupancy", ServiceName.temporaryAccommodation.value)
+    private fun getPremisesSharedPropertyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isSharedProperty", ServiceName.temporaryAccommodation.value)
+    private fun getPremisesMenOnlyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isMenOnly", ServiceName.temporaryAccommodation.value)
+    private fun getPremisesWomenOnlyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isWomenOnly", ServiceName.temporaryAccommodation.value)
+    private fun getWheelchairAccessibleCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isWheelchairAccessible", ServiceName.temporaryAccommodation.value)
+    private fun getPremisesPubNearByCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isPubNearBy", ServiceName.temporaryAccommodation.value)
   }
 }
