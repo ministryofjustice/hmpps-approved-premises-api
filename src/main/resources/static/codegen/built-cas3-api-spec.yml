@@ -250,6 +250,11 @@ paths:
           description: postcode Or address to filter premises
           schema:
             type: string
+        - name: propertyStatus
+          in: query
+          description: property status to filter premises
+          schema:
+            $ref: '#/components/schemas/Cas3PropertyStatus'
       responses:
         200:
           description: successful operation
@@ -5183,6 +5188,11 @@ components:
         - pdu
         - bedCount
         - status
+    Cas3PropertyStatus:
+      type: string
+      enum:
+        - online
+        - archived
     Cas3Departure:
       type: object
       properties:
