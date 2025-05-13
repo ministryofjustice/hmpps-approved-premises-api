@@ -5162,7 +5162,6 @@ components:
       type: string
       enum:
         - assessor
-        - matcher
         - future_manager
         - workflow_manager
         - change_request_dev
