@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
@@ -164,7 +164,7 @@ class StatusUpdateServiceTest {
         every {
           mockEmailNotificationService.sendCas2Email(
             recipientEmailAddress = applicant.email!!,
-            templateId = NotifyTemplates.cas2ApplicationStatusUpdated,
+            templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
             personalisation = mapOf(
               "applicationStatus" to cas2StatusUpdateEntity.label,
               "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),
@@ -291,7 +291,7 @@ class StatusUpdateServiceTest {
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = applicant.email!!,
-              templateId = NotifyTemplates.cas2ApplicationStatusUpdated,
+              templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
               personalisation = mapOf(
                 "applicationStatus" to cas2StatusUpdateEntity.label,
                 "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),

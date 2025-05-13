@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
@@ -167,9 +167,9 @@ class Cas2v2StatusUpdateService(
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
       val templateId = when (applicationOrigin) {
-        ApplicationOrigin.courtBail -> NotifyTemplates.cas2v2ApplicationStatusUpdatedCourtBail
-        ApplicationOrigin.prisonBail -> NotifyTemplates.cas2v2ApplicationStatusUpdatedPrisonBail
-        ApplicationOrigin.homeDetentionCurfew -> NotifyTemplates.cas2ApplicationStatusUpdated
+        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.cas2v2ApplicationStatusUpdatedCourtBail
+        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.cas2v2ApplicationStatusUpdatedPrisonBail
+        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.cas2ApplicationStatusUpdated
       }
 
       emailNotificationService.sendCas2Email(

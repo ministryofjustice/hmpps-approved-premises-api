@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -31,7 +31,7 @@ class Cas2EmailService(
       val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: error("StatusUpdate for ${application.id} not found")
       emailNotificationService.sendCas2Email(
         oldPom.email!!,
-        NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
+        Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
           "receivingPrisonName" to prisoner.prisonName,
@@ -39,7 +39,7 @@ class Cas2EmailService(
       )
       emailNotificationService.sendCas2Email(
         oldOmu.email,
-        NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
+        Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
           "receivingPrisonName" to prisoner.prisonName,
@@ -47,7 +47,7 @@ class Cas2EmailService(
       )
       emailNotificationService.sendCas2Email(
         newOmu.email,
-        NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
+        Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
           "transferringPrisonName" to oldOmu.prisonName,
@@ -57,7 +57,7 @@ class Cas2EmailService(
       )
       emailNotificationService.sendCas2Email(
         nacroEmail,
-        NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
+        Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
           "receivingPrisonName" to prisoner.prisonName,
@@ -76,7 +76,7 @@ class Cas2EmailService(
 
     emailNotificationService.sendCas2Email(
       newPom.email!!,
-      NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom,
+      Cas2NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom,
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "transferringPrisonName" to oldOmu.prisonName,
@@ -86,7 +86,7 @@ class Cas2EmailService(
     )
     emailNotificationService.sendCas2Email(
       nacroEmail,
-      NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom,
+      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom,
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "receivingPrisonName" to newOmu.prisonName,

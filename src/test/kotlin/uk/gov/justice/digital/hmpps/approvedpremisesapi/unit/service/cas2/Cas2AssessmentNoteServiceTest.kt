@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
@@ -177,7 +177,7 @@ class Cas2AssessmentNoteServiceTest {
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = "assessors@example.com",
-              templateId = NotifyTemplates.cas2NoteAddedForAssessor,
+              templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor,
               personalisation = mapOf(
                 "nacroReferenceId" to "OH123",
                 "nacroReferenceIdInSubject" to "(OH123)",
@@ -380,7 +380,7 @@ class Cas2AssessmentNoteServiceTest {
         every {
           mockEmailNotificationService.sendCas2Email(
             recipientEmailAddress = referrer.email!!,
-            templateId = NotifyTemplates.cas2NoteAddedForReferrer,
+            templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
             personalisation = mapOf(
               "dateNoteAdded" to noteEntity.createdAt.toLocalDate().toCas2UiFormat(),
               "timeNoteAdded" to noteEntity.createdAt.toCas2UiFormattedHourOfDay(),

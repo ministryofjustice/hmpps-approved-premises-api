@@ -24,8 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2v2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
@@ -1013,7 +1013,7 @@ class Cas2v2ApplicationServiceTest {
       verify(exactly = 1) {
         mockEmailNotificationService.sendEmail(
           "exampleAssessorInbox@example.com",
-          NotifyTemplates.cas2ApplicationSubmitted,
+          Cas2NotifyTemplates.cas2ApplicationSubmitted,
           match {
             it["name"] == user.name &&
               it["email"] == user.email &&

@@ -21,8 +21,8 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
@@ -1096,7 +1096,7 @@ class Cas2ApplicationServiceTest {
         verify(exactly = 1) {
           mockEmailNotificationService.sendEmail(
             "exampleAssessorInbox@example.com",
-            NotifyTemplates.cas2ApplicationSubmitted,
+            Cas2NotifyTemplates.cas2ApplicationSubmitted,
             match {
               it["name"] == user.name &&
                 it["email"] == user.email &&

@@ -56,7 +56,7 @@ object Cas1NotifyTemplates {
 }
 
 @SuppressWarnings("MayBeConst")
-object NotifyTemplates {
+object Cas2NotifyTemplates {
   val cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
   val cas2NoteAddedForReferrer = "debe17a2-9f79-4d26-88a0-690dd73e2a5b"
   val cas2NoteAddedForAssessor = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"

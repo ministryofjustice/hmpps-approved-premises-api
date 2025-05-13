@@ -5,9 +5,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.service.notify.NotificationClient
 import uk.gov.service.notify.NotificationClientException
 import kotlin.reflect.full.memberProperties
@@ -39,8 +39,8 @@ class EmailNotificationService(
 
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
-        val templateName = NotifyTemplates::class.memberProperties
-          .firstOrNull { it.get(NotifyTemplates) == templateId }?.name
+        val templateName = Cas2NotifyTemplates::class.memberProperties
+          .firstOrNull { it.get(Cas2NotifyTemplates) == templateId }?.name
           ?: templateId
         log.info("Email sending is disabled - would have sent template $templateName ($templateId) to user $recipientEmailAddress with replyToId $replyToEmailId")
         return

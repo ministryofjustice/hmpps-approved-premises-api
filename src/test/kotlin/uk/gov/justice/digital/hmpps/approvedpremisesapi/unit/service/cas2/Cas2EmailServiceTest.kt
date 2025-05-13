@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
@@ -105,7 +105,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(newUser.email!!),
-        eq(NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom),
+        eq(Cas2NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -119,7 +119,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom),
+        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -195,7 +195,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(oldUser.email!!),
-        eq(NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -207,7 +207,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(oldOmu.email),
-        eq(NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -219,7 +219,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(newOmu.email),
-        eq(NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -233,7 +233,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
