@@ -46,10 +46,15 @@ class Cas3PremisesService(
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus? = null): List<TemporaryAccommodationPremisesSummary> {
+  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): List<TemporaryAccommodationPremisesSummary> {
     val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
+    val result = premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.transformStatus())
+    return result
+  }
 
-    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.toString())
+  private fun Cas3PropertyStatus.transformStatus() = when (this) {
+    Cas3PropertyStatus.archived -> PropertyStatus.archived.toString()
+    Cas3PropertyStatus.online -> PropertyStatus.active.toString()
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -445,27 +450,31 @@ class Cas3PremisesService(
         onValidationError("$.probationDeliveryUnitId", "empty")
         null
       }
-      else -> probationDeliveryUnitIdentifier.fold({ name ->
-        if (name.isBlank()) {
-          onValidationError("$.pdu", "empty")
-        }
 
-        val result = probationDeliveryUnitRepository.findByNameAndProbationRegionId(name, probationRegionId)
+      else -> probationDeliveryUnitIdentifier.fold(
+        { name ->
+          if (name.isBlank()) {
+            onValidationError("$.pdu", "empty")
+          }
 
-        if (result == null) {
-          onValidationError("$.pdu", "doesNotExist")
-        }
+          val result = probationDeliveryUnitRepository.findByNameAndProbationRegionId(name, probationRegionId)
 
-        result
-      }, { id ->
-        val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(id, probationRegionId)
+          if (result == null) {
+            onValidationError("$.pdu", "doesNotExist")
+          }
 
-        if (result == null) {
-          onValidationError("$.probationDeliveryUnitId", "doesNotExist")
-        }
+          result
+        },
+        { id ->
+          val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(id, probationRegionId)
 
-        result
-      })
+          if (result == null) {
+            onValidationError("$.probationDeliveryUnitId", "doesNotExist")
+          }
+
+          result
+        },
+      )
     }
 
     return probationDeliveryUnit
