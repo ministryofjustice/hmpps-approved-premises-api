@@ -252,7 +252,10 @@ paths:
           in: query
           description: property status to filter premises
           schema:
-            $ref: 'cas3-schemas.yml#/components/schemas/Cas3PropertyStatus'
+            type: string
+            enum:
+              - online
+              - archived
       responses:
         200:
           description: successful operation

@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -34,7 +33,7 @@ class Cas3PremisesController(
   private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val cas3DepartureTransformer: Cas3DepartureTransformer,
 ) : PremisesCas3Delegate {
-  override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): ResponseEntity<List<Cas3PremisesSummary>> {
+  override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: String?): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
     val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus)
     val transformedSummaries = summaries.map(cas3PremisesSummaryTransformer::transformDomainToCas3PremisesSummary)

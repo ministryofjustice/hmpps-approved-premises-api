@@ -346,11 +346,6 @@ components:
         - pdu
         - bedCount
         - status
-    Cas3PropertyStatus:
-      type: string
-      enum:
-        - online
-        - archived
     Cas3Departure:
       type: object
       properties:
