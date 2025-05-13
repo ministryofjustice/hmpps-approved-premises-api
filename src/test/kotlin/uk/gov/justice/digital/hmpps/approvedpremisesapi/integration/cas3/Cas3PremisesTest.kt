@@ -8,7 +8,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -315,7 +314,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
 
         assertUrlReturnsPremises(
           jwt,
-          "/cas3/premises/summary?propertyStatus=${Cas3PropertyStatus.archived}",
+          "/cas3/premises/summary?propertyStatus=archived",
           listOf(expectedPremisesSummaryArchived),
         )
       }
@@ -330,7 +329,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
 
         assertUrlReturnsPremises(
           jwt,
-          "/cas3/premises/summary?propertyStatus=${Cas3PropertyStatus.online}",
+          "/cas3/premises/summary?propertyStatus=online",
           expectedPremisesSummaryOnline,
         )
       }
