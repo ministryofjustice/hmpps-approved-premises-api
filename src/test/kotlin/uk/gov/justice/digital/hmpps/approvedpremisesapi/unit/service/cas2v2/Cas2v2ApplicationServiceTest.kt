@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2v2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
@@ -952,7 +953,6 @@ class Cas2v2ApplicationServiceTest {
         )
       } returns AuthorisableActionResult.Success(inmateDetail)
 
-      every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
       every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
       every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
       every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
@@ -1013,7 +1013,7 @@ class Cas2v2ApplicationServiceTest {
       verify(exactly = 1) {
         mockEmailNotificationService.sendEmail(
           "exampleAssessorInbox@example.com",
-          "abc123",
+          NotifyTemplates.cas2ApplicationSubmitted,
           match {
             it["name"] == user.name &&
               it["email"] == user.email &&

@@ -15,6 +15,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
@@ -138,7 +139,6 @@ class Cas2AssessmentNoteServiceTest {
         every { mockHttpAuthService.getCas2AuthenticatedPrincipalOrThrow() } returns mockPrincipal
         every { mockPrincipal.isExternalUser() } returns false
         every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "assessors@example.com"
-        every { mockNotifyConfig.templates.cas2NoteAddedForAssessor } returns "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"
         every { mockUserService.getUserForRequest() } returns referrer
         every { mockApplicationNoteRepository.save(any()) } answers
           {
@@ -177,7 +177,7 @@ class Cas2AssessmentNoteServiceTest {
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = "assessors@example.com",
-              templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
+              templateId = NotifyTemplates.cas2NoteAddedForAssessor,
               personalisation = mapOf(
                 "nacroReferenceId" to "OH123",
                 "nacroReferenceIdInSubject" to "(OH123)",
@@ -345,7 +345,6 @@ class Cas2AssessmentNoteServiceTest {
         val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
         every { mockHttpAuthService.getCas2AuthenticatedPrincipalOrThrow() } returns mockPrincipal
         every { mockPrincipal.isExternalUser() } returns true
-        every { mockNotifyConfig.templates.cas2NoteAddedForReferrer } returns "abc123"
         every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "assessors@example.com"
         every { mockApplicationNoteRepository.save(any()) } answers
           {
@@ -381,7 +380,7 @@ class Cas2AssessmentNoteServiceTest {
         every {
           mockEmailNotificationService.sendCas2Email(
             recipientEmailAddress = referrer.email!!,
-            templateId = "abc123",
+            templateId = NotifyTemplates.cas2NoteAddedForReferrer,
             personalisation = mapOf(
               "dateNoteAdded" to noteEntity.createdAt.toLocalDate().toCas2UiFormat(),
               "timeNoteAdded" to noteEntity.createdAt.toCas2UiFormattedHourOfDay(),

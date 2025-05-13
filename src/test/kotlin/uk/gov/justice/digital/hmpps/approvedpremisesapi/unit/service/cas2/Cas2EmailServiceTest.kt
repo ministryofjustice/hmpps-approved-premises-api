@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
@@ -28,7 +28,6 @@ import java.util.UUID
 @ExtendWith(MockKExtension::class)
 class Cas2EmailServiceTest {
 
-  private val notifyConfig = mockk<NotifyConfig>()
   private val emailNotificationService = mockk<EmailNotificationService>()
   private val nomisUserRepository = mockk<NomisUserRepository>()
   private val statusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
@@ -38,7 +37,6 @@ class Cas2EmailServiceTest {
 
   private val emailService = Cas2EmailService(
     emailNotificationService,
-    notifyConfig,
     nomisUserRepository,
     statusUpdateRepository,
     offenderManagementUnitRepository,
@@ -61,7 +59,6 @@ class Cas2EmailServiceTest {
 
   private val prisoner = Prisoner(newOmu.prisonCode, newOmu.prisonName)
   private val nomsNumber = "NOMSABC"
-  private val templateId = "SOME ID"
 
   private val application =
     Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
@@ -103,14 +100,12 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOlder)
 
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
-    every { notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPom } returns templateId
-    every { notifyConfig.templates.cas2ToReceivingPomApplicationTransferredToAnotherPom } returns templateId
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every {
       emailNotificationService.sendCas2Email(
         eq(newUser.email!!),
-        eq(templateId),
+        eq(NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -124,7 +119,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(templateId),
+        eq(NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -195,16 +190,12 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
-    every { notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison } returns templateId
-    every { notifyConfig.templates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
-    every { notifyConfig.templates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
-    every { notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPrison } returns templateId
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
 
     every {
       emailNotificationService.sendCas2Email(
         eq(oldUser.email!!),
-        eq(templateId),
+        eq(NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -216,7 +207,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(oldOmu.email),
-        eq(templateId),
+        eq(NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -228,7 +219,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(newOmu.email),
-        eq(templateId),
+        eq(NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -242,7 +233,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(templateId),
+        eq(NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,

@@ -40,7 +40,7 @@ class EmailNotificationService(
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
         val templateName = NotifyTemplates::class.memberProperties
-          .firstOrNull { it.get(notifyConfig.templates) == templateId }?.name
+          .firstOrNull { it.get(NotifyTemplates) == templateId }?.name
           ?: templateId
         log.info("Email sending is disabled - would have sent template $templateName ($templateId) to user $recipientEmailAddress with replyToId $replyToEmailId")
         return

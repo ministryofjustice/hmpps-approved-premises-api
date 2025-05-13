@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteRepository
@@ -83,9 +84,9 @@ class Cas2v2ApplicationNoteService(
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
       val templateId = when (applicationOrigin) {
-        ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2NoteAddedForReferrerCourtBail
-        ApplicationOrigin.prisonBail -> notifyConfig.templates.cas2v2NoteAddedForReferrerPrisonBail
-        ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2NoteAddedForReferrer
+        ApplicationOrigin.courtBail -> NotifyTemplates.cas2v2NoteAddedForReferrerCourtBail
+        ApplicationOrigin.prisonBail -> NotifyTemplates.cas2v2NoteAddedForReferrerPrisonBail
+        ApplicationOrigin.homeDetentionCurfew -> NotifyTemplates.cas2NoteAddedForReferrer
       }
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = application.createdByUser.email!!,
@@ -113,9 +114,9 @@ class Cas2v2ApplicationNoteService(
     val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
     val templateId = when (applicationOrigin) {
-      ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2NoteAddedForAssessorCourtBail
-      ApplicationOrigin.prisonBail -> notifyConfig.templates.cas2v2NoteAddedForAssessorPrisonBail
-      ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2NoteAddedForAssessor
+      ApplicationOrigin.courtBail -> NotifyTemplates.cas2v2NoteAddedForAssessorCourtBail
+      ApplicationOrigin.prisonBail -> NotifyTemplates.cas2v2NoteAddedForAssessorPrisonBail
+      ApplicationOrigin.homeDetentionCurfew -> NotifyTemplates.cas2NoteAddedForAssessor
     }
 
     emailNotificationService.sendCas2Email(

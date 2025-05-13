@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
@@ -380,9 +381,9 @@ class Cas2v2ApplicationService(
     val applicationOrigin = application.applicationOrigin.toString()
 
     val templateId = when (applicationOrigin) {
-      ApplicationOrigin.courtBail.toString() -> notifyConfig.templates.cas2v2ApplicationSubmittedCourtBail
-      ApplicationOrigin.prisonBail.toString() -> notifyConfig.templates.cas2v2ApplicationSubmittedPrisonBail
-      else -> notifyConfig.templates.cas2ApplicationSubmitted
+      ApplicationOrigin.courtBail.toString() -> NotifyTemplates.cas2v2ApplicationSubmittedCourtBail
+      ApplicationOrigin.prisonBail.toString() -> NotifyTemplates.cas2v2ApplicationSubmittedPrisonBail
+      else -> NotifyTemplates.cas2ApplicationSubmitted
     }
 
     emailNotificationService.sendEmail(
