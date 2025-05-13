@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import io.sentry.IScope
+import io.sentry.ScopeType
 import io.sentry.Sentry
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -37,7 +38,7 @@ class MDCHandlerInterceptor(
     }
     MDC.put("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified")
 
-    Sentry.configureScope { scope: IScope -> scope.setTag("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified") }
+    Sentry.configureScope(ScopeType.ISOLATION) { scope: IScope -> scope.setTag("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified") }
 
     MDC.put("request.user", userService.getDeliusUserNameForRequestOrNull() ?: "Anonymous")
   }
