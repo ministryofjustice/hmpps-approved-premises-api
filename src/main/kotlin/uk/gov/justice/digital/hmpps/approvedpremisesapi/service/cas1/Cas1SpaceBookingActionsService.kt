@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionOutco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.APPEAL_CREATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.EMERGENCY_TRANSFER_CREATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.PLANNED_TRANSFER_REQUEST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.SHORTEN
 
 @Service
 class Cas1SpaceBookingActionsService(
@@ -26,6 +27,7 @@ class Cas1SpaceBookingActionsService(
       appealCreate(spaceBooking, openChangeRequests),
       plannedTransferRequest(spaceBooking, openChangeRequests),
       emergencyTransferCreate(spaceBooking),
+      shortenBooking(spaceBooking),
     )
 
     return ActionsResult(outcomes)
@@ -54,6 +56,25 @@ class Cas1SpaceBookingActionsService(
   }
 
   private fun emergencyTransferCreate(spaceBooking: Cas1SpaceBookingEntity) = commonTransferChecks(spaceBooking, EMERGENCY_TRANSFER_CREATE)
+
+  private fun shortenBooking(spaceBooking: Cas1SpaceBookingEntity): ActionOutcome {
+    val requiredPermission = UserPermission.CAS1_SPACE_BOOKING_SHORTEN
+    fun unavailable(reason: String) = Unavailable(SHORTEN, reason)
+
+    return if (!userAccessService.currentUserHasPermission(requiredPermission)) {
+      unavailable("User must have permission '$requiredPermission'")
+    } else if (spaceBooking.hasNonArrival()) {
+      unavailable("Space booking has been marked as non arrived")
+    } else if (spaceBooking.hasDeparted()) {
+      unavailable("Space booking has been marked as departed")
+    } else if (spaceBooking.isCancelled()) {
+      unavailable("Space booking has been cancelled")
+    } else if (spaceBooking.hasNonCancelledTransfer()) {
+      unavailable("Space booking has already been transferred")
+    } else {
+      Available(SHORTEN)
+    }
+  }
 
   private fun plannedTransferRequest(
     spaceBooking: Cas1SpaceBookingEntity,
@@ -115,4 +136,5 @@ enum class SpaceBookingAction(
   APPEAL_CREATE(Cas1SpaceBookingAction.APPEAL_CREATE),
   PLANNED_TRANSFER_REQUEST(Cas1SpaceBookingAction.PLANNED_TRANSFER_REQUEST),
   EMERGENCY_TRANSFER_CREATE(Cas1SpaceBookingAction.EMERGENCY_TRANSFER_CREATE),
+  SHORTEN(Cas1SpaceBookingAction.SHORTEN),
 }

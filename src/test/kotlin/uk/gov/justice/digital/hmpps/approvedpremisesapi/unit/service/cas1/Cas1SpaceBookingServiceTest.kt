@@ -842,6 +842,10 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+          .unavailableReason(SpaceBookingAction.SHORTEN)
+      } returns null
 
       val validationResult = CasResult.GeneralValidationError<Unit>("common validation failed")
 
@@ -869,8 +873,37 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
+    fun `should return a general validation error when action not allowed for shorten`() {
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+      } returns ActionsResult.forUnavailableAction(SpaceBookingAction.SHORTEN, "nope")
+
+      val shortenBookingDetails = UpdateBookingDetails(
+        bookingId = existingSpaceBooking.id,
+        premisesId = PREMISES_ID,
+        departureDate = LocalDate.now().plusDays(1),
+        updatedBy = user,
+        updateType = UpdateType.SHORTENING,
+      )
+
+      val result = service.shortenBooking(shortenBookingDetails)
+
+      assertThatCasResult(result).isGeneralValidationError("nope")
+    }
+
+    @Test
     fun `should update departure date when status is hasArrival and send emails`() {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+          .unavailableReason(SpaceBookingAction.SHORTEN)
+      } returns null
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
@@ -901,6 +934,10 @@ class Cas1SpaceBookingServiceTest {
       existingSpaceBooking.actualArrivalDate = LocalDate.now()
 
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every {
+        cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
+          .unavailableReason(SpaceBookingAction.SHORTEN)
+      } returns null
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,

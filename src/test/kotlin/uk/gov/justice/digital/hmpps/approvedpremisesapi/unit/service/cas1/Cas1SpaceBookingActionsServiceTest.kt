@@ -310,6 +310,89 @@ class Cas1SpaceBookingActionsServiceTest {
     }
   }
 
+  @Nested
+  inner class ShortenPlacementRequest {
+
+    val spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withActualArrivalDate(LocalDate.now())
+      .withActualDepartureDate(null)
+      .withNonArrivalConfirmedAt(null)
+      .withCancellationOccurredAt(null)
+      .produce()
+
+    @Test
+    fun success() {
+      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.SHORTEN)
+    }
+
+    @Test
+    fun `unavailable if user does not have correct permission`() {
+      userDoesntHavePermission(UserPermission.CAS1_SPACE_BOOKING_SHORTEN)
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.SHORTEN,
+          message = "User must have permission 'CAS1_SPACE_BOOKING_SHORTEN'",
+        )
+    }
+
+    @Test
+    fun `success if does not have arrival`() {
+      spaceBooking.actualArrivalDate = null
+
+      service.determineActions(spaceBooking)
+        .assertAvailable(
+          action = SpaceBookingAction.SHORTEN,
+        )
+    }
+
+    @Test
+    fun `unavailable if has non arrival`() {
+      spaceBooking.nonArrivalConfirmedAt = Instant.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.SHORTEN,
+          message = "Space booking has been marked as non arrived",
+        )
+    }
+
+    @Test
+    fun `unavailable if has departure`() {
+      spaceBooking.actualDepartureDate = LocalDate.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.SHORTEN,
+          message = "Space booking has been marked as departed",
+        )
+    }
+
+    @Test
+    fun `unavailable if has cancellation`() {
+      spaceBooking.cancellationOccurredAt = LocalDate.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.SHORTEN,
+          message = "Space booking has been cancelled",
+        )
+    }
+
+    @Test
+    fun `unavailable if has a non cancelled transfer already`() {
+      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .produce()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.SHORTEN,
+          message = "Space booking has already been transferred",
+        )
+    }
+  }
+
   private fun userDoesntHavePermission(permission: UserPermission) {
     every { userAccessService.currentUserHasPermission(permission) } returns false
   }
