@@ -214,18 +214,6 @@ components:
           example: 2022-09-30
       required:
         - departureDate
-    Cas1SpaceSearchRequirements:
-      deprecated: true
-      type: object
-      properties:
-        spaceCharacteristics:
-          deprecated: true
-          description: use Cas1SpaceSearchParameters.spaceCharacteristics
-          type: array
-          items:
-            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
-      required:
-        - gender
     Cas1SpaceSearchParameters:
       type: object
       properties:
@@ -245,9 +233,6 @@ components:
           type: string
           description: The 'target' location, in the form of a postcode district
           example: SE5
-        requirements:
-          deprecated: true
-          $ref: '#/components/schemas/Cas1SpaceSearchRequirements'
         spaceCharacteristics:
           type: array
           items:

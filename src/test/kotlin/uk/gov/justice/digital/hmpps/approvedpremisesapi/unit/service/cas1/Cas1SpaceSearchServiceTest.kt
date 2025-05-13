@@ -20,7 +20,6 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
@@ -63,7 +62,6 @@ class Cas1SpaceSearchServiceTest {
           durationInDays = 14,
           targetPostcodeDistrict = "TB1",
           spaceCharacteristics = Cas1SpaceCharacteristic.entries,
-          requirements = Cas1SpaceSearchRequirements(),
         ),
       )
     }.hasMessage(
@@ -148,9 +146,7 @@ class Cas1SpaceSearchServiceTest {
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,
         targetPostcodeDistrict = "TB1",
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = Cas1SpaceCharacteristic.entries,
-        ),
+        spaceCharacteristics = Cas1SpaceCharacteristic.entries,
       ),
     )
 
@@ -163,12 +159,16 @@ class Cas1SpaceSearchServiceTest {
 
     verify(exactly = 1) {
       applicationRepository.findByIdOrNull(application.id)
+    }
 
+    verify(exactly = 1) {
       characteristicService.getCharacteristicsByPropertyNames(
         Cas1SpaceCharacteristic.entries.map { it.value },
         ServiceName.approvedPremises,
       )
+    }
 
+    verify(exactly = 1) {
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         "TB1",
         isWomensPremises = false,
@@ -257,10 +257,8 @@ class Cas1SpaceSearchServiceTest {
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,
+        spaceCharacteristics = Cas1SpaceCharacteristic.entries,
         targetPostcodeDistrict = "TB1",
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = Cas1SpaceCharacteristic.entries,
-        ),
       ),
     )
 
@@ -360,7 +358,6 @@ class Cas1SpaceSearchServiceTest {
         durationInDays = 14,
         targetPostcodeDistrict = "TB1",
         spaceCharacteristics = spaceCharacteristics,
-        requirements = Cas1SpaceSearchRequirements(),
       ),
     )
 

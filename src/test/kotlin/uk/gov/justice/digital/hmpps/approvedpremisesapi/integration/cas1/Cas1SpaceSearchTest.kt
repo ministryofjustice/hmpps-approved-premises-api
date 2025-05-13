@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -59,9 +58,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = null,
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = null,
-        ),
       )
 
       webTestClient.post()
@@ -137,9 +133,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = null,
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = null,
-        ),
       )
 
       val response = webTestClient.post()
@@ -213,9 +206,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = null,
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = null,
-        ),
       )
 
       val response = webTestClient.post()
@@ -277,9 +267,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = listOf(Cas1SpaceCharacteristic.isPIPE),
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = null,
-        ),
       )
 
       val response = webTestClient.post()
@@ -382,9 +369,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = listOf(characteristic),
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = null,
-        ),
       )
 
       val response = webTestClient.post()
@@ -466,10 +450,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
-        spaceCharacteristics = Cas1SpaceCharacteristic.entries.slice(1..2),
-        requirements = Cas1SpaceSearchRequirements(
-          spaceCharacteristics = listOf(Cas1SpaceCharacteristic.entries[3]),
-        ),
+        spaceCharacteristics = Cas1SpaceCharacteristic.entries.slice(1..3),
       )
 
       val response = webTestClient.post()
