@@ -71,6 +71,7 @@ class Cas1SpaceBookingCreateService(
         nonArrivalReason = null,
         deliusEventNumber = application.eventNumber,
         migratedManagementInfoFrom = null,
+        transferredFrom = details.transferredFrom,
         transferredTo = null,
         transferType = details.transferType,
         deliusId = null,
@@ -120,5 +121,6 @@ class Cas1SpaceBookingCreateService(
     val createdBy: UserEntity,
     val characteristics: List<CharacteristicEntity>,
     val transferType: TransferType?,
+    val transferredFrom: Cas1SpaceBookingEntity?,
   )
 }

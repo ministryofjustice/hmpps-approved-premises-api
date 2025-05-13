@@ -114,7 +114,7 @@ class Cas1SpaceBookingActionsServiceTest {
   @Nested
   inner class EmergencyTransferRequest {
 
-    val spaceBooking = Cas1SpaceBookingEntityFactory()
+    var spaceBooking = Cas1SpaceBookingEntityFactory()
       .withActualArrivalDate(LocalDate.now())
       .withActualDepartureDate(null)
       .withNonArrivalConfirmedAt(null)
@@ -128,8 +128,15 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `success if has existing cancelled transfer`() {
-      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+      val transferredBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .withActualDepartureDate(null)
+        .withNonArrivalConfirmedAt(null)
+        .withTransferredFrom(transferredBooking)
         .produce()
 
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.EMERGENCY_TRANSFER_CREATE)
@@ -192,8 +199,16 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `unavailable if has a non cancelled transfer already`() {
-      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+      val transferredBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
+        .withTransferredFrom(spaceBooking)
+        .produce()
+
+      spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .withActualDepartureDate(null)
+        .withNonArrivalConfirmedAt(null)
+        .withTransferredTo(transferredBooking)
         .produce()
 
       service.determineActions(spaceBooking)
@@ -207,7 +222,7 @@ class Cas1SpaceBookingActionsServiceTest {
   @Nested
   inner class PlannedTransferRequest {
 
-    val spaceBooking = Cas1SpaceBookingEntityFactory()
+    var spaceBooking = Cas1SpaceBookingEntityFactory()
       .withActualArrivalDate(LocalDate.now())
       .withActualDepartureDate(null)
       .withNonArrivalConfirmedAt(null)
@@ -221,8 +236,15 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `success if has existing cancelled transfer`() {
-      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+      val transferredBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .withActualDepartureDate(null)
+        .withNonArrivalConfirmedAt(null)
+        .withTransferredFrom(transferredBooking)
         .produce()
 
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
@@ -285,8 +307,15 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `unavailable if has a non cancelled transfer already`() {
-      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+      val transferredBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
+        .produce()
+
+      spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .withActualDepartureDate(null)
+        .withNonArrivalConfirmedAt(null)
+        .withTransferredTo(transferredBooking)
         .produce()
 
       service.determineActions(spaceBooking)
@@ -313,7 +342,7 @@ class Cas1SpaceBookingActionsServiceTest {
   @Nested
   inner class ShortenPlacementRequest {
 
-    val spaceBooking = Cas1SpaceBookingEntityFactory()
+    var spaceBooking = Cas1SpaceBookingEntityFactory()
       .withActualArrivalDate(LocalDate.now())
       .withActualDepartureDate(null)
       .withNonArrivalConfirmedAt(null)
@@ -381,8 +410,15 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `unavailable if has a non cancelled transfer already`() {
-      spaceBooking.transferredTo = Cas1SpaceBookingEntityFactory()
+      val transferredBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
+        .produce()
+
+      spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .withActualDepartureDate(null)
+        .withNonArrivalConfirmedAt(null)
+        .withTransferredTo(transferredBooking)
         .produce()
 
       service.determineActions(spaceBooking)

@@ -37,8 +37,6 @@ class Cas1SpaceBookingUpdateService(
     val previousDepartureDate = bookingToUpdate.expectedDepartureDate
     val previousCharacteristics = bookingToUpdate.criteria.toList()
 
-    details.transferredTo?.let { bookingToUpdate.transferredTo = it }
-
     if (bookingToUpdate.hasArrival()) {
       bookingToUpdate.updateDepartureDates(details)
     } else {
