@@ -38,13 +38,8 @@ class Cas1SpaceSearchService(
 
   private fun getRequiredCharacteristics(parameters: Cas1SpaceSearchParameters): RequiredCharacteristics {
     val requirements = parameters.requirements
-    val apType = requirements.apType
     return RequiredCharacteristics(
-      apType = if (apType != null) {
-        apType.asApprovedPremisesType()
-      } else {
-        requirements.apTypes?.map { it.asApprovedPremisesType() }?.firstOrNull()
-      },
+      apType = requirements.apTypes?.map { it.asApprovedPremisesType() }?.firstOrNull(),
       groupedCharacteristics = getSpaceCharacteristics(parameters),
     )
   }

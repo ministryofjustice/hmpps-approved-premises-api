@@ -6916,10 +6916,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ApType'
-        apType:
-          deprecated: true
-          description: "Use 'spaceCharacteristics' to filter on premise types"
-          $ref: '#/components/schemas/ApType'
         spaceCharacteristics:
           deprecated: true
           description: use Cas1SpaceSearchParameters.spaceCharacteristics
