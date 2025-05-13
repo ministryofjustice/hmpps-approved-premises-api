@@ -6926,12 +6926,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
-        genders:
-          description: gender is obtained from application's associated gender
-          deprecated: true
-          type: array
-          items:
-            $ref: '#/components/schemas/Gender'
       required:
         - gender
     Cas1SpaceSearchParameters:

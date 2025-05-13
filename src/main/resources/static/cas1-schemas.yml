@@ -234,12 +234,6 @@ components:
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
-        genders:
-          description: gender is obtained from application's associated gender
-          deprecated: true
-          type: array
-          items:
-            $ref: '_shared.yml#/components/schemas/Gender'
       required:
         - gender
     Cas1SpaceSearchParameters:
