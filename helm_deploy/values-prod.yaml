@@ -41,6 +41,7 @@ generic-service:
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
     PREEMPTIVE-CACHE-LOGGING-ENABLED: true
     NOTIFY_MODE: ENABLED
+    NOTIFY_LOG_EMAILS: false
     HMPPS_SQS_USE_WEB_TOKEN: true
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises.hmpps.service.justice.gov.uk/applications/#id
