@@ -218,12 +218,6 @@ components:
       deprecated: true
       type: object
       properties:
-        apTypes:
-          deprecated: true
-          description: "Use 'spaceCharacteristics' to filter on premise types"
-          type: array
-          items:
-            $ref: '_shared.yml#/components/schemas/ApType'
         spaceCharacteristics:
           deprecated: true
           description: use Cas1SpaceSearchParameters.spaceCharacteristics

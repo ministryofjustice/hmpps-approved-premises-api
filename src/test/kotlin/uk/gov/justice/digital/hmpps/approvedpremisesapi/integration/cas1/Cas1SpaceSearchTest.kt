@@ -60,7 +60,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = null,
           spaceCharacteristics = null,
         ),
       )
@@ -139,7 +138,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = null,
           spaceCharacteristics = null,
         ),
       )
@@ -216,7 +214,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = null,
           spaceCharacteristics = null,
         ),
       )
@@ -239,79 +236,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThatResultMatches(results.results[2], expectedPremises[2])
       assertThatResultMatches(results.results[3], expectedPremises[3])
       assertThatResultMatches(results.results[4], expectedPremises[4])
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["normal"])
-  fun `Filtering APs by AP type returns only APs of that type - using multiple ap types option`(apType: ApType) {
-    postCodeDistrictFactory.produceAndPersist {
-      withOutcode("SE1")
-      withLatitude(-0.07)
-      withLongitude(51.48)
-    }
-
-    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
-      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
-
-      val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(listOfNotNull(apType.asCharacteristicEntity()))
-        withSupportsSpaceBookings(true)
-      }
-
-      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(listOfNotNull(ApType.entries.first { it != apType }.asCharacteristicEntity()))
-        withSupportsSpaceBookings(true)
-      }
-
-      val searchParameters = Cas1SpaceSearchParameters(
-        applicationId = application.id,
-        startDate = LocalDate.now(),
-        durationInDays = 14,
-        targetPostcodeDistrict = "SE1",
-        spaceCharacteristics = null,
-        requirements = Cas1SpaceSearchRequirements(
-          apTypes = listOf(apType),
-          spaceCharacteristics = null,
-        ),
-      )
-
-      val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(searchParameters)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
-
-      val results = response.responseBody.blockFirst()!!
-
-      assertThat(results.resultsCount).isEqualTo(5)
-
-      val expectedApType = if (apType == ApType.mhapElliottHouse) {
-        ApType.mhapStJosephs
-      } else {
-        apType
-      }
-
-      assertThatResultMatches(results.results[0], expectedPremises[0], expectedApType)
-      assertThatResultMatches(results.results[1], expectedPremises[1], expectedApType)
-      assertThatResultMatches(results.results[2], expectedPremises[2], expectedApType)
-      assertThatResultMatches(results.results[3], expectedPremises[3], expectedApType)
-      assertThatResultMatches(results.results[4], expectedPremises[4], expectedApType)
     }
   }
 
@@ -354,7 +278,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = listOf(Cas1SpaceCharacteristic.isPIPE),
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = null,
           spaceCharacteristics = null,
         ),
       )
@@ -460,7 +383,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = listOf(characteristic),
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = null,
           spaceCharacteristics = null,
         ),
       )
@@ -546,7 +468,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         targetPostcodeDistrict = "SE1",
         spaceCharacteristics = Cas1SpaceCharacteristic.entries.slice(1..2),
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = null,
           spaceCharacteristics = listOf(Cas1SpaceCharacteristic.entries[3]),
         ),
       )

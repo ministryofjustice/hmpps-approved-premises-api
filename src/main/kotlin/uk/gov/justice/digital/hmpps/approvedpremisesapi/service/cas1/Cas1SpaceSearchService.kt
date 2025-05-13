@@ -8,8 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import java.util.UUID
@@ -29,7 +27,6 @@ class Cas1SpaceSearchService(
 
     return spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
       targetPostcodeDistrict = searchParameters.targetPostcodeDistrict,
-      approvedPremisesType = requiredCharacteristics.apType,
       isWomensPremises = application.isWomensApplication!!,
       premisesCharacteristics = requiredCharacteristics.groupedCharacteristics.premisesCharacteristics,
       roomCharacteristics = requiredCharacteristics.groupedCharacteristics.roomCharacteristics,
@@ -39,7 +36,6 @@ class Cas1SpaceSearchService(
   private fun getRequiredCharacteristics(parameters: Cas1SpaceSearchParameters): RequiredCharacteristics {
     val requirements = parameters.requirements
     return RequiredCharacteristics(
-      apType = requirements.apTypes?.map { it.asApprovedPremisesType() }?.firstOrNull(),
       groupedCharacteristics = getSpaceCharacteristics(parameters),
     )
   }
@@ -65,7 +61,6 @@ class Cas1SpaceSearchService(
 }
 
 data class RequiredCharacteristics(
-  val apType: ApprovedPremisesType?,
   val groupedCharacteristics: GroupedCharacteristics,
 )
 

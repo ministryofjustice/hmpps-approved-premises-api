@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceSearchService
 import java.time.LocalDate
@@ -64,9 +63,7 @@ class Cas1SpaceSearchServiceTest {
           durationInDays = 14,
           targetPostcodeDistrict = "TB1",
           spaceCharacteristics = Cas1SpaceCharacteristic.entries,
-          requirements = Cas1SpaceSearchRequirements(
-            apTypes = ApType.entries,
-          ),
+          requirements = Cas1SpaceSearchRequirements(),
         ),
       )
     }.hasMessage(
@@ -140,7 +137,6 @@ class Cas1SpaceSearchServiceTest {
         any(),
         any(),
         any(),
-        any(),
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
@@ -153,7 +149,6 @@ class Cas1SpaceSearchServiceTest {
         durationInDays = 14,
         targetPostcodeDistrict = "TB1",
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = ApType.entries,
           spaceCharacteristics = Cas1SpaceCharacteristic.entries,
         ),
       ),
@@ -176,116 +171,10 @@ class Cas1SpaceSearchServiceTest {
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         "TB1",
-        ApType.entries.map { it.asApprovedPremisesType() }.firstOrNull(),
         isWomensPremises = false,
         spaceCharacteristics.filter { it.modelMatches("premises") }.map { it.id },
         spaceCharacteristics.filter { it.modelMatches("room") }.map { it.id },
       )
-    }
-
-    confirmVerified()
-  }
-
-  @ParameterizedTest
-  @MethodSource("apTypeArgs")
-  fun `findSpaces uses the correct list of AP types`(apTypes: List<ApType>) {
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withDefaults()
-      .withIsWomensApplication(false)
-      .produce()
-
-    val candidatePremises1 = CandidatePremises(
-      UUID.randomUUID(),
-      1.0f,
-      ApprovedPremisesType.NORMAL,
-      "Some AP",
-      fullAddress = "the full address",
-      "1 The Street",
-      null,
-      "Townsbury",
-      "TB1 2AB",
-      UUID.randomUUID(),
-      "Some AP Area",
-      characteristics = emptyList(),
-    )
-
-    val candidatePremises2 = CandidatePremises(
-      UUID.randomUUID(),
-      2.0f,
-      ApprovedPremisesType.ESAP,
-      "Some Other AP",
-      fullAddress = "the full address",
-      "2 The Street",
-      null,
-      "Townsbury",
-      "TB1 2AB",
-      UUID.randomUUID(),
-      "Some AP Area",
-      characteristics = emptyList(),
-    )
-
-    val candidatePremises3 = CandidatePremises(
-      UUID.randomUUID(),
-      3.0f,
-      ApprovedPremisesType.PIPE,
-      "Some AP",
-      fullAddress = "the full address",
-      "3 The Street",
-      null,
-      "Townsbury",
-      "TB1 2AB",
-      UUID.randomUUID(),
-      "Some AP Area",
-      characteristics = emptyList(),
-    )
-
-    val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
-
-    every { applicationRepository.findByIdOrNull(application.id) } returns application
-
-    every {
-      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
-    } returnsMany listOf(
-      spaceCharacteristics,
-    )
-
-    every {
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
-        any(),
-        any(),
-        any(),
-        any(),
-        any(),
-      )
-    } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
-
-    service.findSpaces(
-      Cas1SpaceSearchParameters(
-        applicationId = application.id,
-        startDate = LocalDate.parse("2024-08-01"),
-        durationInDays = 14,
-        targetPostcodeDistrict = "TB1",
-        requirements = Cas1SpaceSearchRequirements(
-          apTypes = apTypes,
-          spaceCharacteristics = Cas1SpaceCharacteristic.entries,
-        ),
-      ),
-    )
-
-    verify(exactly = 1) {
-      applicationRepository.findByIdOrNull(application.id)
-
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
-        "TB1",
-        apTypes.map { it.asApprovedPremisesType() }.firstOrNull(),
-        any(),
-        any(),
-        any(),
-      )
-    }
-
-    verify {
-      characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
     }
 
     confirmVerified()
@@ -360,7 +249,6 @@ class Cas1SpaceSearchServiceTest {
         any(),
         any(),
         any(),
-        any(),
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
@@ -371,7 +259,6 @@ class Cas1SpaceSearchServiceTest {
         durationInDays = 14,
         targetPostcodeDistrict = "TB1",
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = ApType.entries,
           spaceCharacteristics = Cas1SpaceCharacteristic.entries,
         ),
       ),
@@ -381,7 +268,6 @@ class Cas1SpaceSearchServiceTest {
       applicationRepository.findByIdOrNull(application.id)
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
-        any(),
         any(),
         isWomensPremises = isWomensApplication,
         any(),
@@ -464,7 +350,6 @@ class Cas1SpaceSearchServiceTest {
         any(),
         any(),
         any(),
-        any(),
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
@@ -475,9 +360,7 @@ class Cas1SpaceSearchServiceTest {
         durationInDays = 14,
         targetPostcodeDistrict = "TB1",
         spaceCharacteristics = spaceCharacteristics,
-        requirements = Cas1SpaceSearchRequirements(
-          apTypes = ApType.entries,
-        ),
+        requirements = Cas1SpaceSearchRequirements(),
       ),
     )
 
@@ -490,7 +373,6 @@ class Cas1SpaceSearchServiceTest {
       )
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
-        any(),
         any(),
         any(),
         spaceCharacteristicEntities.filter { it.modelMatches("premises") }.map { it.id },
