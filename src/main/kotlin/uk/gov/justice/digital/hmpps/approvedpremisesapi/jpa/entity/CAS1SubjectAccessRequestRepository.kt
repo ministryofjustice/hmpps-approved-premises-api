@@ -333,19 +333,14 @@ from
              pr.application_id,
              pr.assessment_id,
              pr.id as placement_requirements_id,
-             case 
-                 when pr.gender = '0' then 'MALE'
-                 when pr.gender = '1' then 'FEMALE'
-                 else 'OTHER'
-             end gender,
-               case
-                 when pr.ap_type = '0' then 'NORMAL'
-                 when pr.ap_type = '1' then 'PIPE'
-                 when pr.ap_type = '2' then 'ESAP'
-                 when pr.ap_type = '3' then 'RFAP'
-                 when pr.ap_type = '4' then 'MHAP_ST_JOSEPHS'
-                 when pr.ap_type = '5' then 'MHAP_ELLIOTT_HOUSE'
-                 else 'other'
+             case
+               when pr.ap_type = '0' then 'NORMAL'
+               when pr.ap_type = '1' then 'PIPE'
+               when pr.ap_type = '2' then 'ESAP'
+               when pr.ap_type = '3' then 'RFAP'
+               when pr.ap_type = '4' then 'MHAP_ST_JOSEPHS'
+               when pr.ap_type = '5' then 'MHAP_ELLIOTT_HOUSE'
+               else 'other'
              end ap_type,
              pd.outcode,
              pr.radius,

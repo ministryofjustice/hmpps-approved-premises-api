@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
 import java.time.OffsetDateTime
@@ -15,7 +14,6 @@ import java.util.UUID
 class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> {
 
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var gender: Yielded<JpaGender> = { JpaGender.MALE }
   private var apType: Yielded<JpaApType> = { JpaApType.NORMAL }
   private var postcodeDistrict: Yielded<PostCodeDistrictEntity> = { PostCodeDistrictEntityFactory().produce() }
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
@@ -66,13 +64,8 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
     this.createdAt = { createdAt }
   }
 
-  fun withGender(gender: JpaGender) = apply {
-    this.gender = { gender }
-  }
-
   override fun produce(): PlacementRequirementsEntity = PlacementRequirementsEntity(
     id = this.id(),
-    gender = this.gender(),
     apType = this.apType(),
     postcodeDistrict = this.postcodeDistrict(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an Application"),

@@ -116,7 +116,6 @@ class PlacementRequestDetailTransformerTest {
     val result = placementRequestDetailTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult, mockCancellationEntities)
 
     assertThat(result.id).isEqualTo(transformedPlacementRequest.id)
-    assertThat(result.gender).isEqualTo(transformedPlacementRequest.gender)
     assertThat(result.type).isEqualTo(transformedPlacementRequest.type)
     assertThat(result.expectedArrival).isEqualTo(transformedPlacementRequest.expectedArrival)
     assertThat(result.duration).isEqualTo(transformedPlacementRequest.duration)
@@ -308,7 +307,6 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result).isInstanceOf(Cas1PlacementRequestDetail::class.java)
 
     assertThat(result.id).isEqualTo(transformedPlacementRequest.id)
-    assertThat(result.gender).isEqualTo(transformedPlacementRequest.gender)
     assertThat(result.type).isEqualTo(transformedPlacementRequest.type)
     assertThat(result.expectedArrival).isEqualTo(transformedPlacementRequest.expectedArrival)
     assertThat(result.duration).isEqualTo(transformedPlacementRequest.duration)

@@ -3715,8 +3715,6 @@ components:
     PlacementRequirements:
       type: object
       properties:
-        gender:
-          $ref: '#/components/schemas/Gender'
         type:
           $ref: '#/components/schemas/ApType'
         location:
@@ -3734,7 +3732,6 @@ components:
           items:
             $ref: '#/components/schemas/PlacementCriteria'
       required:
-        - gender
         - type
         - location
         - radius

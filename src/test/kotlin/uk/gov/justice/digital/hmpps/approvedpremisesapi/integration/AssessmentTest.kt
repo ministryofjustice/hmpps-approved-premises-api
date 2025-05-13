@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Reallocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3Rejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
@@ -65,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
@@ -2030,7 +2028,6 @@ class AssessmentTest : IntegrationTestBase() {
       )
 
       val placementRequirements = PlacementRequirements(
-        gender = Gender.male,
         type = ApType.normal,
         location = "B74",
         radius = 50,
@@ -2063,7 +2060,7 @@ class AssessmentTest : IntegrationTestBase() {
           ),
         ),
       ) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2101,7 +2098,6 @@ class AssessmentTest : IntegrationTestBase() {
           )
 
           val placementRequirements = PlacementRequirements(
-            gender = Gender.female,
             type = ApType.normal,
             location = postcodeDistrict.outcode,
             radius = 50,
@@ -2167,7 +2163,6 @@ class AssessmentTest : IntegrationTestBase() {
           val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
 
           assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-          assertThat(persistedPlacementRequirements.gender).isEqualTo(JpaGender.FEMALE)
           assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
           assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
 
@@ -2195,7 +2190,7 @@ class AssessmentTest : IntegrationTestBase() {
           ),
         ),
       ) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -2224,7 +2219,6 @@ class AssessmentTest : IntegrationTestBase() {
             listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
 
           val placementRequirements = PlacementRequirements(
-            gender = Gender.male,
             type = ApType.normal,
             location = postcodeDistrict.outcode,
             radius = 50,
@@ -2275,7 +2269,6 @@ class AssessmentTest : IntegrationTestBase() {
             placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)!!
 
           assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-          assertThat(persistedPlacementRequirements.gender).isEqualTo(JpaGender.MALE)
           assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
           assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
 
@@ -2302,7 +2295,7 @@ class AssessmentTest : IntegrationTestBase() {
           ),
         ),
       ) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -2336,7 +2329,6 @@ class AssessmentTest : IntegrationTestBase() {
           )
 
           val placementRequirements = PlacementRequirements(
-            gender = Gender.male,
             type = ApType.normal,
             location = "SW1",
             radius = 50,
@@ -2433,7 +2425,6 @@ class AssessmentTest : IntegrationTestBase() {
           )
 
           val placementRequirements = PlacementRequirements(
-            gender = Gender.male,
             type = ApType.normal,
             location = postcodeDistrict.outcode,
             radius = 50,

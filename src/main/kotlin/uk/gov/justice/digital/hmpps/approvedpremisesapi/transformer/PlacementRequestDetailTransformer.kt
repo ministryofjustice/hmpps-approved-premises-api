@@ -33,7 +33,6 @@ class PlacementRequestDetailTransformer(
 
     return PlacementRequestDetail(
       id = placementRequest.id,
-      gender = placementRequest.gender,
       type = placementRequest.type,
       expectedArrival = placementRequest.expectedArrival,
       duration = placementRequest.duration,
@@ -78,7 +77,6 @@ class PlacementRequestDetailTransformer(
 
     return Cas1PlacementRequestDetail(
       id = placementRequest.id,
-      gender = placementRequest.gender,
       type = placementRequest.type,
       expectedArrival = placementRequest.expectedArrival,
       duration = placementRequest.duration,

@@ -16,7 +16,6 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -833,7 +832,6 @@ class Cas1AssessmentServiceTest {
         .withData("{\"test\": \"data\"}")
 
       placementRequirements = PlacementRequirements(
-        gender = Gender.male,
         type = ApType.normal,
         location = "AB123",
         radius = 50,

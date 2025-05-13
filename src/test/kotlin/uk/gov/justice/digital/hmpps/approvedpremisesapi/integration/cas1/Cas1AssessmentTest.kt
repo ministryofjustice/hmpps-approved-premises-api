@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -55,7 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1156,7 +1154,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         )
 
         val placementRequirements = PlacementRequirements(
-          gender = Gender.male,
           type = ApType.normal,
           location = "B74",
           radius = 50,
@@ -1227,7 +1224,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             )
 
             val placementRequirements = PlacementRequirements(
-              gender = Gender.female,
               type = ApType.normal,
               location = postcodeDistrict.outcode,
               radius = 50,
@@ -1293,7 +1289,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
 
             assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-            assertThat(persistedPlacementRequirements.gender).isEqualTo(JpaGender.FEMALE)
             assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
             assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
 
@@ -1350,7 +1345,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
 
             val placementRequirements = PlacementRequirements(
-              gender = Gender.male,
               type = ApType.normal,
               location = postcodeDistrict.outcode,
               radius = 50,
@@ -1401,7 +1395,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)!!
 
             assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-            assertThat(persistedPlacementRequirements.gender).isEqualTo(JpaGender.MALE)
             assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
             assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
 
@@ -1462,7 +1455,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             )
 
             val placementRequirements = PlacementRequirements(
-              gender = Gender.male,
               type = ApType.normal,
               location = "SW1",
               radius = 50,
@@ -1559,7 +1551,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             )
 
             val placementRequirements = PlacementRequirements(
-              gender = Gender.male,
               type = ApType.normal,
               location = postcodeDistrict.outcode,
               radius = 50,
