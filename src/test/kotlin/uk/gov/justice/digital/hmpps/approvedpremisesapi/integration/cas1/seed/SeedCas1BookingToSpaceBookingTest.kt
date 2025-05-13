@@ -316,13 +316,49 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       departureDate = LocalDate.of(2025, 8, 5),
     )
 
+    val booking7OfflineHasManagementInfo = givenABookingForAnOfflineApplication(
+      crn = "CRN7",
+      premises = premises,
+      offlineApplication = offlineApplication,
+      arrivalDate = LocalDate.of(2024, 8, 1),
+      departureDate = LocalDate.of(2024, 8, 5),
+    )
+
+    deliusBookingImportRepository.save(
+      Cas1DeliusBookingImportEntity(
+        id = UUID.randomUUID(),
+        bookingId = booking7OfflineHasManagementInfo.id,
+        approvedPremisesReferralId = "Delius Ref Id 7",
+        crn = "irrelevant",
+        eventNumber = "1221",
+        keyWorkerStaffCode = null,
+        keyWorkerForename = null,
+        keyWorkerMiddleName = null,
+        keyWorkerSurname = null,
+        departureReasonCode = null,
+        moveOnCategoryCode = null,
+        moveOnCategoryDescription = null,
+        expectedArrivalDate = LocalDate.of(3000, 1, 1),
+        arrivalDate = null,
+        expectedDepartureDate = LocalDate.of(3001, 2, 2),
+        departureDate = null,
+        nonArrivalDate = null,
+        nonArrivalContactDatetime = null,
+        nonArrivalReasonCode = null,
+        nonArrivalReasonDescription = null,
+        nonArrivalNotes = null,
+        premisesQcode = "hostel code",
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
     seed(
       SeedFileType.approvedPremisesBookingToSpaceBooking,
       rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.qCode))),
     )
 
     val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
-    assertThat(premiseSpaceBookings).hasSize(5)
+    assertThat(premiseSpaceBookings).hasSize(6)
 
     val migratedBooking1 = premiseSpaceBookings[0]
     assertBookingIsDeleted(booking1ManagementInfoFromDelius.id)
@@ -492,10 +528,16 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking5.nonArrivalConfirmedAt).isNull()
     assertThat(migratedBooking5.nonArrivalNotes).isNull()
     assertThat(migratedBooking5.criteria).isEmpty()
-    assertThat(migratedBooking5.deliusEventNumber).isNull()
+    assertThat(migratedBooking5.deliusEventNumber).isEqualTo("75")
     assertThat(migratedBooking5.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     assertBookingIsNotDeleted(booking6DifferentPremise.id)
+
+    val migratedBooking7 = premiseSpaceBookings[5]
+    assertBookingIsDeleted(booking7OfflineHasManagementInfo.id)
+    assertThat(migratedBooking7.id).isEqualTo(booking7OfflineHasManagementInfo.id)
+    assertThat(migratedBooking7.deliusEventNumber).isEqualTo("1221")
+    assertThat(migratedBooking7.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
   }
 
   private fun createBookingMadeDomainEventForAdhocBooking(

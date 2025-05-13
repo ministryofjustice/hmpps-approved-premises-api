@@ -129,7 +129,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalReason = managementInfo.nonArrivalReason,
         nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
         nonArrivalNotes = managementInfo.nonArrivalNotes,
-        deliusEventNumber = bookingMadeDomainEvent?.data?.eventDetails?.deliusEventNumber,
+        deliusEventNumber = bookingMadeDomainEvent?.data?.eventDetails?.deliusEventNumber ?: managementInfo.eventNumber,
         migratedManagementInfoFrom = managementInfo.source,
         deliusId = managementInfo.deliusId,
         transferredTo = null,
