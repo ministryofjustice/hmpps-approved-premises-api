@@ -12,6 +12,7 @@ import org.springframework.web.servlet.HandlerMapping
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.lang.Exception
 import java.util.UUID
 
 @Component
@@ -22,6 +23,17 @@ class MDCHandlerInterceptor(
     appendRequestDiagnosticsToMDC(request)
 
     return super.preHandle(request, response, handler)
+  }
+
+  override fun afterCompletion(
+    request: HttpServletRequest,
+    response: HttpServletResponse,
+    handler: Any,
+    ex: Exception?,
+  ) {
+    MDC.clear()
+
+    super.afterCompletion(request, response, handler, ex)
   }
 
   private fun appendRequestDiagnosticsToMDC(request: HttpServletRequest) {
