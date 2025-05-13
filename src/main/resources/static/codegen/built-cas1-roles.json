@@ -9,10 +9,6 @@
     ]
   },
   {
-    "name" : "matcher",
-    "permissions" : [ ]
-  },
-  {
     "name" : "future_manager",
     "permissions" : [
       "cas1_out_of_service_bed_create",
