@@ -101,7 +101,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     val assessorDetails = givenAUser(
-      roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
+      roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_CRU_MEMBER),
       qualifications = UserQualification.entries,
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR1"),
     )

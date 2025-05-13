@@ -36,13 +36,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ),
   ),
 
-  @Deprecated("This role will be removed in the future. Superseded by CRU_MEMBER")
-  CAS1_MATCHER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.matcher,
-    permissions = emptyList(),
-  ),
-
   CAS1_FUTURE_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.futureManager,

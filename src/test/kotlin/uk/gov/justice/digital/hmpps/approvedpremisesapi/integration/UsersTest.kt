@@ -69,7 +69,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns full list ordered by name`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -87,7 +87,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(requestUser, userWithNoRole, matcher, manager).map {
+                    listOf(requestUser, userWithNoRole, cruMember, manager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
                   ),
@@ -101,7 +101,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by region`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -150,7 +150,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by user's AP area`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -201,7 +201,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by user's CRU management area`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -260,7 +260,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -278,7 +278,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(requestUser, userWithNoRole, matcher, manager).map {
+                    listOf(requestUser, userWithNoRole, cruMember, manager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
                   ),
@@ -292,12 +292,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by roles`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER, UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER)) { future_manager, _ ->
           givenAUser { _, _ ->
             givenAUser(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
-                .uri("/users?roles=matcher,future_manager")
+                .uri("/users?roles=cru_member,future_manager")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -306,7 +306,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(matcher, future_manager).map {
+                    listOf(cruMember, future_manager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
                   ),
@@ -437,7 +437,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET user summary with an approved role returns full list ordered by name`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -455,7 +455,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(requestUser, userWithNoRole, matcher, manager).map {
+                    listOf(requestUser, userWithNoRole, cruMember, manager).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
                   ),
@@ -469,7 +469,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET user summary with an approved role returns list filtered by region`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -516,7 +516,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by user's AP area`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -565,7 +565,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
             givenAUser(roles = listOf(role)) { requestUser, jwt ->
@@ -583,7 +583,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(requestUser, userWithNoRole, matcher, manager).map {
+                    listOf(requestUser, userWithNoRole, cruMember, manager).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
                   ),
@@ -597,12 +597,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by roles`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_MATCHER, UserRole.CAS1_MATCHER)) { matcher, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER)) { future_manager, _ ->
           givenAUser { _, _ ->
             givenAUser(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
-                .uri("/users/summary?roles=matcher,future_manager")
+                .uri("/users/summary?roles=cru_member,future_manager")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -611,7 +611,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(matcher, future_manager).map {
+                    listOf(cruMember, future_manager).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
                   ),
