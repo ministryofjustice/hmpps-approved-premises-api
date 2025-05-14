@@ -205,7 +205,12 @@ tasks.named("openApiGenerate") {
 
 // Skip OpenAPI generation if running tests from intellij
 val entryPointTask = project.gradle.startParameter.taskNames.firstOrNull()?.let {
-  project.tasks.getByName(it.replace(":", ""))
+  // this hack fixes an issue downloading sources in intellij
+  if (it.contains("DownloadArtifact")) {
+    null
+  } else {
+    project.tasks.getByName(it.replace(":", ""))
+  }
 }
 val isTestInvokedFromIntellij = (entryPointTask is Test && System.getProperty("idea.active") !== null)
 if (isTestInvokedFromIntellij) {
