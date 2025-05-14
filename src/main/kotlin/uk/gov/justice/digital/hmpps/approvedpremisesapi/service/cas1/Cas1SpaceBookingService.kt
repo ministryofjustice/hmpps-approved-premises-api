@@ -80,6 +80,7 @@ class Cas1SpaceBookingService(
       createdBy = createdBy,
       characteristics = characteristics,
       transferType = null,
+      transferredFrom = null,
     )
 
     cas1SpaceBookingCreateService.validate(createBookingDetails).ifError { return it.reviseType() }
@@ -289,12 +290,13 @@ class Cas1SpaceBookingService(
       createdBy = user,
       characteristics = existingCas1SpaceBooking.criteria,
       transferType = TransferType.EMERGENCY,
+      transferredFrom = existingCas1SpaceBooking,
     )
     cas1SpaceBookingCreateService.validate(createNewBookingDetails).ifError { return it.reviseType() }
 
-    val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(createNewBookingDetails)
+    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails)
 
-    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = emergencyTransferSpaceBooking))
+    val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(createNewBookingDetails)
 
     return Success(emergencyTransferSpaceBooking)
   }
@@ -343,6 +345,7 @@ class Cas1SpaceBookingService(
       createdBy = user,
       characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
       transferType = TransferType.PLANNED,
+      transferredFrom = existingCas1SpaceBooking,
     )
     cas1SpaceBookingCreateService.validate(createBookingDetails).ifError { return it.reviseType() }
 
@@ -355,9 +358,9 @@ class Cas1SpaceBookingService(
     )
     cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
 
-    val newSpaceBooking = cas1SpaceBookingCreateService.create(createBookingDetails)
+    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails)
 
-    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails.copy(transferredTo = newSpaceBooking))
+    val newSpaceBooking = cas1SpaceBookingCreateService.create(createBookingDetails)
 
     cas1ChangeRequestService.approvedPlannedTransfer(changeRequest, user, newSpaceBooking)
 

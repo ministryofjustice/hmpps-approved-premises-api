@@ -1420,6 +1420,11 @@ class Cas1SpaceBookingTest {
         placementApplication = placementApplication,
       )
 
+      val transferredBooking = givenACas1SpaceBooking(
+        application = application,
+        placementRequest = placementRequest,
+      )
+
       spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withPremises(premises)
@@ -1433,14 +1438,8 @@ class Cas1SpaceBookingTest {
         withKeyworkerAssignedAt(Instant.now())
         withDeliusEventNumber("25")
         withTransferType(TransferType.EMERGENCY)
+        withTransferredFrom(transferredBooking)
       }
-
-      // transferredFrom
-      givenACas1SpaceBooking(
-        application = application,
-        placementRequest = placementRequest,
-        transferredTo = spaceBooking,
-      )
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
@@ -2821,8 +2820,8 @@ class Cas1SpaceBookingTest {
 
       domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
         application.id,
-        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
         DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
       )
 
       emailAsserter.assertEmailsRequestedCount(4)
@@ -2972,8 +2971,8 @@ class Cas1SpaceBookingTest {
 
       domainEventAsserter.assertDomainEventsStoredInSpecificOrder(
         application.id,
-        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
         DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+        DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
       )
 
       emailAsserter.assertEmailsRequestedCount(6)

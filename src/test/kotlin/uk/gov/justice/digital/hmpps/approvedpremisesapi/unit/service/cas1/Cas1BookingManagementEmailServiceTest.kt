@@ -79,9 +79,9 @@ class Cas1BookingManagementEmailServiceTest {
             )
             .produce(),
         )
-        .withTransferredFrom(fromSpaceBooking)
         .withCanonicalArrivalDate(LocalDate.of(2025, 1, 2))
         .withCanonicalDepartureDate(LocalDate.of(2025, 2, 1))
+        .withTransferredFrom(fromSpaceBooking)
         .produce()
 
       service.arrivalRecorded(toSpaceBooking)
@@ -148,9 +148,9 @@ class Cas1BookingManagementEmailServiceTest {
             )
             .produce(),
         )
-        .withTransferredFrom(fromSpaceBooking)
         .withCanonicalArrivalDate(LocalDate.of(2025, 1, 2))
         .withCanonicalDepartureDate(LocalDate.of(2025, 2, 1))
+        .withTransferredFrom(fromSpaceBooking)
         .produce()
 
       service.arrivalRecorded(toSpaceBooking)
