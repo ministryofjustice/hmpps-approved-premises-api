@@ -1808,7 +1808,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @Nested
     inner class Cas2BailFields {
       @Test
-      fun `Create new application for CAS-2 returns 201 with correct body including bail fields and Location header`() {
+      fun `Create new application for CAS-2 returns 201 with correct body - check that although we pass in prisonBail we will get out homeDetentionCurfew as this not written yet`() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val applicationSchema =
@@ -1817,6 +1817,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withId(UUID.randomUUID())
               }
 
+            //we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
+            //in the cas2 application service this to be set so it will default to homeDetentionCurfew/
             val result = webTestClient.post()
               .uri("/cas2/applications")
               .header("Authorization", "Bearer $jwt")
@@ -1824,6 +1826,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .bodyValue(
                 NewApplication(
                   crn = offenderDetails.otherIds.crn,
+                  applicationOrigin = ApplicationOrigin.prisonBail
                 ),
               )
               .exchange()

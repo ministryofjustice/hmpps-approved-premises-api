@@ -2452,6 +2452,8 @@ components:
         offenceId:
           type: string
           example: "M1502750438"
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - crn
     UpdateApplicationType:

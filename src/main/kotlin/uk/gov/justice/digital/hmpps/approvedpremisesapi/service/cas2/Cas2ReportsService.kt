@@ -34,6 +34,8 @@ class Cas2ReportsService(
         submittedAt = row.getSubmittedAt(),
         startedAt = row.getStartedAt(),
         numberOfTransfers = row.getNumberOfTransfers(),
+        applicationOrigin = row.getApplicationOrigin(),
+        bailHearingDate = row.getBailHearingDate(),
       )
     }
 
@@ -74,6 +76,7 @@ class Cas2ReportsService(
         personNoms = row.getPersonNoms(),
         startedBy = row.getStartedBy(),
         startedAt = row.getStartedAt(),
+        applicationOrigin = row.getApplicationOrigin(),
       )
     }
 
