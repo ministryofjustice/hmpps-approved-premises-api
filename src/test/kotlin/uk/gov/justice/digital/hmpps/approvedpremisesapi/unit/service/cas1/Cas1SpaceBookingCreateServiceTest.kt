@@ -2,19 +2,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
@@ -179,34 +178,7 @@ class Cas1SpaceBookingCreateServiceTest {
     }
 
     @Test
-    fun valid() {
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-
-      val result = service.validate(
-        Cas1SpaceBookingCreateService.CreateBookingDetails(
-          premisesId = premises.id,
-          placementRequestId = placementRequest.id,
-          expectedArrivalDate = LocalDate.now(),
-          expectedDepartureDate = LocalDate.now().plusDays(2),
-          createdBy = user,
-          characteristics = listOf(
-            CharacteristicEntityFactory().withName("c1").produce(),
-            CharacteristicEntityFactory().withName("c2").produce(),
-          ),
-          transferType = null,
-          transferredFrom = null,
-        ),
-      )
-
-      assertThatCasResult(result).isSuccess()
-    }
-  }
-
-  @Nested
-  inner class Create {
-    @Test
-    fun `Creates a new booking if data is valid and legacy and space bookings are cancelled`() {
+    fun `valid, return new space booking`() {
       val user = UserEntityFactory()
         .withDefaults()
         .produce()
@@ -229,19 +201,12 @@ class Cas1SpaceBookingCreateServiceTest {
         .produce()
 
       val arrivalDate = LocalDate.now()
-      val durationInDays = 1
-      val departureDate = arrivalDate.plusDays(durationInDays.toLong())
+      val departureDate = arrivalDate.plusDays(1)
 
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
-      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
-      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
-      val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
-      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
-
-      val result = service.create(
+      val result = service.validate(
         Cas1SpaceBookingCreateService.CreateBookingDetails(
           premisesId = premises.id,
           placementRequestId = placementRequest.id,
@@ -257,31 +222,63 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      val persistedBooking = persistedBookingCaptor.captured
-      assertThat(result).isEqualTo(persistedBooking)
+      assertThatCasResult(result).isSuccess().with {
+        val bookingToCreate = it.bookingToCreate
 
-      assertThat(persistedBooking.premises).isEqualTo(premises)
-      assertThat(persistedBooking.placementRequest).isEqualTo(placementRequest)
-      assertThat(persistedBooking.application).isEqualTo(application)
-      assertThat(persistedBooking.createdAt).isWithinTheLastMinute()
-      assertThat(persistedBooking.createdBy).isEqualTo(user)
-      assertThat(persistedBooking.expectedArrivalDate).isEqualTo(arrivalDate)
-      assertThat(persistedBooking.expectedDepartureDate).isEqualTo(departureDate)
-      assertThat(persistedBooking.actualArrivalDate).isNull()
-      assertThat(persistedBooking.actualArrivalTime).isNull()
-      assertThat(persistedBooking.actualDepartureDate).isNull()
-      assertThat(persistedBooking.actualDepartureTime).isNull()
-      assertThat(persistedBooking.canonicalArrivalDate).isEqualTo(arrivalDate)
-      assertThat(persistedBooking.canonicalDepartureDate).isEqualTo(departureDate)
-      assertThat(persistedBooking.crn).isEqualTo(application.crn)
-      assertThat(persistedBooking.keyWorkerStaffCode).isNull()
-      assertThat(persistedBooking.keyWorkerAssignedAt).isNull()
-      assertThat(persistedBooking.criteria).hasSize(2)
-      assertThat(persistedBooking.nonArrivalReason).isNull()
-      assertThat(persistedBooking.nonArrivalNotes).isNull()
-      assertThat(persistedBooking.nonArrivalReason).isNull()
-      assertThat(persistedBooking.deliusEventNumber).isEqualTo("42")
-      assertThat(persistedBooking.transferType).isEqualTo(TransferType.PLANNED)
+        assertThat(bookingToCreate.premises).isEqualTo(premises)
+        assertThat(bookingToCreate.placementRequest).isEqualTo(placementRequest)
+        assertThat(bookingToCreate.application).isEqualTo(application)
+        assertThat(bookingToCreate.createdAt).isWithinTheLastMinute()
+        assertThat(bookingToCreate.createdBy).isEqualTo(user)
+        assertThat(bookingToCreate.expectedArrivalDate).isEqualTo(arrivalDate)
+        assertThat(bookingToCreate.expectedDepartureDate).isEqualTo(departureDate)
+        assertThat(bookingToCreate.actualArrivalDate).isNull()
+        assertThat(bookingToCreate.actualArrivalTime).isNull()
+        assertThat(bookingToCreate.actualDepartureDate).isNull()
+        assertThat(bookingToCreate.actualDepartureTime).isNull()
+        assertThat(bookingToCreate.canonicalArrivalDate).isEqualTo(arrivalDate)
+        assertThat(bookingToCreate.canonicalDepartureDate).isEqualTo(departureDate)
+        assertThat(bookingToCreate.crn).isEqualTo(application.crn)
+        assertThat(bookingToCreate.keyWorkerStaffCode).isNull()
+        assertThat(bookingToCreate.keyWorkerAssignedAt).isNull()
+        assertThat(bookingToCreate.criteria).hasSize(2)
+        assertThat(bookingToCreate.nonArrivalReason).isNull()
+        assertThat(bookingToCreate.nonArrivalNotes).isNull()
+        assertThat(bookingToCreate.nonArrivalReason).isNull()
+        assertThat(bookingToCreate.deliusEventNumber).isEqualTo("42")
+        assertThat(bookingToCreate.transferType).isEqualTo(TransferType.PLANNED)
+      }
+    }
+  }
+
+  @Nested
+  inner class Create {
+    @Test
+    fun `Creates a new booking if data is valid and legacy and space bookings are cancelled`() {
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val spaceBookingToCreate = Cas1SpaceBookingEntityFactory()
+        .withPlacementRequest(placementRequest)
+        .withCreatedBy(user)
+        .produce()
+
+      every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
+      every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
+      every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+
+      val persistedBooking = Cas1SpaceBookingEntityFactory().produce()
+      every { spaceBookingRepository.save(spaceBookingToCreate) } returns persistedBooking
+
+      service.create(Cas1SpaceBookingCreateService.ValidatedCreateBooking(spaceBookingToCreate))
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }
       verify { cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(persistedBooking, user)) }

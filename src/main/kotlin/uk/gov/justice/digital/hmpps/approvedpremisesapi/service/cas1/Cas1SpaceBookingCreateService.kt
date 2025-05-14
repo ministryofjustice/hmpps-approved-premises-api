@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.successOrErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
@@ -28,55 +27,13 @@ class Cas1SpaceBookingCreateService(
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val clock: Clock,
 ) {
-  /**
-   * Any calls to this should first call and validate the response of [validate]
-   */
-  fun create(details: CreateBookingDetails): Cas1SpaceBookingEntity {
-    val placementRequest = placementRequestService.getPlacementRequestOrNull(details.placementRequestId)!!
-    val premises = cas1PremisesService.findPremiseById(details.premisesId)!!
-    val createdBy = details.createdBy
 
-    val application = placementRequest.application
-    val spaceBooking = cas1SpaceBookingRepository.save(
-      Cas1SpaceBookingEntity(
-        id = UUID.randomUUID(),
-        premises = premises,
-        application = application,
-        offlineApplication = null,
-        placementRequest = placementRequest,
-        createdBy = createdBy,
-        createdAt = OffsetDateTime.now(clock),
-        expectedArrivalDate = details.expectedArrivalDate,
-        expectedDepartureDate = details.expectedDepartureDate,
-        actualArrivalDate = null,
-        actualArrivalTime = null,
-        actualDepartureDate = null,
-        actualDepartureTime = null,
-        canonicalArrivalDate = details.expectedArrivalDate,
-        canonicalDepartureDate = details.expectedDepartureDate,
-        crn = placementRequest.application.crn,
-        keyWorkerStaffCode = null,
-        keyWorkerName = null,
-        keyWorkerAssignedAt = null,
-        cancellationOccurredAt = null,
-        cancellationRecordedAt = null,
-        cancellationReason = null,
-        cancellationReasonNotes = null,
-        departureMoveOnCategory = null,
-        departureReason = null,
-        departureNotes = null,
-        criteria = details.characteristics.toMutableList(),
-        nonArrivalConfirmedAt = null,
-        nonArrivalNotes = null,
-        nonArrivalReason = null,
-        deliusEventNumber = application.eventNumber,
-        migratedManagementInfoFrom = null,
-        transferredFrom = details.transferredFrom,
-        transferredTo = null,
-        transferType = details.transferType,
-        deliusId = null,
-      ),
-    )
+  fun create(validatedDetails: ValidatedCreateBooking): Cas1SpaceBookingEntity {
+    val bookingToCreate = validatedDetails.bookingToCreate
+    val createdBy = bookingToCreate.createdBy!!
+    val application = bookingToCreate.placementRequest!!.application
+
+    val spaceBooking = cas1SpaceBookingRepository.save(validatedDetails.bookingToCreate)
 
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
 
@@ -89,7 +46,7 @@ class Cas1SpaceBookingCreateService(
 
   fun validate(
     details: CreateBookingDetails,
-  ): CasResult<Unit> = validatedCasResult {
+  ): CasResult<ValidatedCreateBooking> = validatedCasResult {
     val premises = cas1PremisesService.findPremiseById(details.premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
@@ -110,8 +67,62 @@ class Cas1SpaceBookingCreateService(
       "$.departureDate" hasValidationError "shouldBeAfterArrivalDate"
     }
 
-    return successOrErrors()
+    if (hasErrors()) {
+      return errors()
+    } else {
+      return success(ValidatedCreateBooking(toSpaceBooking(details)))
+    }
   }
+
+  private fun toSpaceBooking(details: CreateBookingDetails): Cas1SpaceBookingEntity {
+    val placementRequest = placementRequestService.getPlacementRequestOrNull(details.placementRequestId)!!
+    val premises = cas1PremisesService.findPremiseById(details.premisesId)!!
+    val createdBy = details.createdBy
+
+    val application = placementRequest.application
+    return Cas1SpaceBookingEntity(
+      id = UUID.randomUUID(),
+      premises = premises,
+      application = application,
+      offlineApplication = null,
+      placementRequest = placementRequest,
+      createdBy = createdBy,
+      createdAt = OffsetDateTime.now(clock),
+      expectedArrivalDate = details.expectedArrivalDate,
+      expectedDepartureDate = details.expectedDepartureDate,
+      actualArrivalDate = null,
+      actualArrivalTime = null,
+      actualDepartureDate = null,
+      actualDepartureTime = null,
+      canonicalArrivalDate = details.expectedArrivalDate,
+      canonicalDepartureDate = details.expectedDepartureDate,
+      crn = placementRequest.application.crn,
+      keyWorkerStaffCode = null,
+      keyWorkerName = null,
+      keyWorkerAssignedAt = null,
+      cancellationOccurredAt = null,
+      cancellationRecordedAt = null,
+      cancellationReason = null,
+      cancellationReasonNotes = null,
+      departureMoveOnCategory = null,
+      departureReason = null,
+      departureNotes = null,
+      criteria = details.characteristics.toMutableList(),
+      nonArrivalConfirmedAt = null,
+      nonArrivalNotes = null,
+      nonArrivalReason = null,
+      deliusEventNumber = application.eventNumber,
+      migratedManagementInfoFrom = null,
+      transferredFrom = details.transferredFrom,
+      transferredTo = null,
+      transferType = details.transferType,
+      deliusId = null,
+    )
+  }
+
+  data class ValidatedCreateBooking(
+    val bookingToCreate: Cas1SpaceBookingEntity,
+  )
 
   data class CreateBookingDetails(
     val premisesId: UUID,
