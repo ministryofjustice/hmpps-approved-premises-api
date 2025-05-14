@@ -56,7 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
 
-class ApplicationsTransformerTest {
+class Cas2ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()

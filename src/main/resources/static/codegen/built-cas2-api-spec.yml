@@ -2387,6 +2387,8 @@ components:
         offenceId:
           type: string
           example: "M1502750438"
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - crn
     UpdateApplicationType:
@@ -4992,6 +4994,11 @@ components:
             assignmentDate:
               type: string
               format: date
+            applicationOrigin:
+              $ref: "#/components/schemas/ApplicationOrigin"
+            bailHearingDate:
+              type: string
+              format: date
           required:
             - createdBy
             - schemaVersion
@@ -5095,6 +5102,11 @@ components:
         currentPrisonName:
           type: string
         assignmentDate:
+          type: string
+          format: date
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
           type: string
           format: date
       required:

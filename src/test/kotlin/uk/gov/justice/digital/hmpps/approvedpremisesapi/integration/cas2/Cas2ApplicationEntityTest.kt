@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -99,6 +101,160 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
         assertThat(assignments.size).isEqualTo(2)
         assertThat(assignment2.id).isEqualTo(assignments[0].id)
         assertThat(assignment1.id).isEqualTo(assignments[1].id)
+      }
+    }
+  }
+
+  @Nested
+  inner class BailFields {
+
+    @Test
+    fun `test application origin persists`() {
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      givenACas2PomUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationHDC = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
+          val applicationCourt = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withApplicationSchema(applicationSchema)
+          }
+          val applicationPrison = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationOrigin(ApplicationOrigin.prisonBail)
+            withApplicationSchema(applicationSchema)
+          }
+
+          cas2ApplicationRepository.save(applicationHDC)
+          cas2ApplicationRepository.save(applicationCourt)
+          cas2ApplicationRepository.save(applicationPrison)
+
+          val retrievedApplicationHDC = cas2ApplicationRepository.findById(applicationHDC.id).get()
+          val retrievedApplicationCourt = cas2ApplicationRepository.findById(applicationCourt.id).get()
+          val retrievedApplicationPrison = cas2ApplicationRepository.findById(applicationPrison.id).get()
+
+          assertThat(retrievedApplicationHDC.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+          assertThat(retrievedApplicationCourt.applicationOrigin).isEqualTo(ApplicationOrigin.courtBail)
+          assertThat(retrievedApplicationPrison.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+        }
+      }
+    }
+
+    @Test
+    fun `test bail hearing is persisted if present`() {
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      val now = OffsetDateTime.now().toLocalDate()
+
+      givenACas2PomUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationNoBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
+
+          val applicationBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+            withBailHearingDate(now)
+          }
+
+          cas2ApplicationRepository.save(applicationNoBailHearingDate)
+          cas2ApplicationRepository.save(applicationBailHearingDate)
+
+          val retrievedApplicationNoBailHearingDate = cas2ApplicationRepository.findById(applicationNoBailHearingDate.id).get()
+          val retrievedApplicationBailHearingDate = cas2ApplicationRepository.findById(applicationBailHearingDate.id).get()
+
+          assertThat(retrievedApplicationNoBailHearingDate.bailHearingDate).isNull()
+          assertThat(retrievedApplicationBailHearingDate.bailHearingDate).isEqualTo(now)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class BailFields {
+
+    @Test
+    fun `test application origin persists`() {
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      givenACas2PomUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationHDC = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
+          val applicationCourt = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withApplicationSchema(applicationSchema)
+          }
+          val applicationPrison = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationOrigin(ApplicationOrigin.prisonBail)
+            withApplicationSchema(applicationSchema)
+          }
+
+          cas2ApplicationRepository.save(applicationHDC)
+          cas2ApplicationRepository.save(applicationCourt)
+          cas2ApplicationRepository.save(applicationPrison)
+
+          val retrievedApplicationHDC = cas2ApplicationRepository.findById(applicationHDC.id).get()
+          val retrievedApplicationCourt = cas2ApplicationRepository.findById(applicationCourt.id).get()
+          val retrievedApplicationPrison = cas2ApplicationRepository.findById(applicationPrison.id).get()
+
+          assertThat(retrievedApplicationHDC.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+          assertThat(retrievedApplicationCourt.applicationOrigin).isEqualTo(ApplicationOrigin.courtBail)
+          assertThat(retrievedApplicationPrison.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+        }
+      }
+    }
+
+    @Test
+    fun `test bail hearing is persisted if present`() {
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      val now = OffsetDateTime.now().toLocalDate()
+
+      givenACas2PomUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationNoBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
+
+          val applicationBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+            withBailHearingDate(now)
+          }
+
+          cas2ApplicationRepository.save(applicationNoBailHearingDate)
+          cas2ApplicationRepository.save(applicationBailHearingDate)
+
+          val retrievedApplicationNoBailHearingDate = cas2ApplicationRepository.findById(applicationNoBailHearingDate.id).get()
+          val retrievedApplicationBailHearingDate = cas2ApplicationRepository.findById(applicationBailHearingDate.id).get()
+
+          assertThat(retrievedApplicationNoBailHearingDate.bailHearingDate).isNull()
+          assertThat(retrievedApplicationBailHearingDate.bailHearingDate).isEqualTo(now)
+        }
       }
     }
   }

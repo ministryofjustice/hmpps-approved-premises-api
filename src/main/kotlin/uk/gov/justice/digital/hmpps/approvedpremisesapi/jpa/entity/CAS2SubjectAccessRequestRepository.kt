@@ -34,7 +34,9 @@ class CAS2SubjectAccessRequestRepository(
         	ca.telephone_number,
         	ca.hdc_eligibility_date,
         	ca.conditional_release_date,
-        	ca.abandoned_at 
+        	ca.abandoned_at,
+          ca.application_origin,
+          CAST( ca.bail_hearing_date as DATE) 
         from
         	cas_2_applications ca
         inner join nomis_users nu on
