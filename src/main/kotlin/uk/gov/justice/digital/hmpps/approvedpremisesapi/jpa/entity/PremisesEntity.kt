@@ -50,24 +50,18 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
           INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
           INNER JOIN probation_delivery_units pdu ON tap.probation_delivery_unit_id = pdu.id
           LEFT JOIN local_authority_areas la ON p.local_authority_area_id = la.id
-          LEFT JOIN rooms ON tap.premises_id = rooms.premises_id
-          LEFT JOIN beds ON rooms.id = beds.room_id
       WHERE pr.id = :regionId
         AND (:postcodeOrAddress is null
           OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
           )
-        AND (:propertyStatus is null
-          OR :propertyStatus = 'online' and (beds.end_date IS NULL OR beds.end_date > CURRENT_DATE)
-          OR :propertyStatus = 'archived' and (beds.end_date <= CURRENT_DATE)
-          )
-          
+        AND (:propertyStatus is null OR p.status = :propertyStatus)
       GROUP BY p.id, p.name, p.address_line1, p.address_line2, p.postcode, pdu.name, p.status, la.name
       """,
     nativeQuery = true,
   )
-  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, propertyStatus: String? = null): List<TemporaryAccommodationPremisesSummary>
+  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, propertyStatus: String?): List<TemporaryAccommodationPremisesSummary>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean

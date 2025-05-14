@@ -497,17 +497,14 @@ class Cas3PremisesTest : IntegrationTestBase() {
     @Test
     fun `Get all premises filters correctly when 'archived' is passed in to the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getPropertyStatusPremises(user.probationRegion)
+        val premises = getListPremises(user.probationRegion)
 
-        // filter premises with archive
-        val expectedPremisesArchived = premises.first()
-
-        val expectedPremisesSummaryArchived = premisesSummaryTransformer(expectedPremisesArchived)
+        val expectedPremisesSummaryArchived = premises.filter { it.status == PropertyStatus.archived }.map { premisesSummaryTransformer(it) }
 
         assertUrlReturnsPremises(
           jwt,
           "/cas3/premises/summary?propertyStatus=${Cas3PropertyStatus.archived}",
-          listOf(expectedPremisesSummaryArchived),
+          expectedPremisesSummaryArchived,
         )
       }
     }
@@ -515,9 +512,9 @@ class Cas3PremisesTest : IntegrationTestBase() {
     @Test
     fun `Get all premises filters correctly when 'online' is passed in to the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getPropertyStatusPremises(user.probationRegion)
+        val premises = getListPremises(user.probationRegion)
 
-        val expectedPremisesSummaryOnline = premises.drop(1).map { premisesSummaryTransformer(it) }.sortedBy { it.id.toString() }
+        val expectedPremisesSummaryOnline = premises.filter { it.status == PropertyStatus.active }.map { premisesSummaryTransformer(it) }
 
         assertUrlReturnsPremises(
           jwt,
@@ -606,65 +603,45 @@ class Cas3PremisesTest : IntegrationTestBase() {
     }
 
     private fun getListPremises(probationRegion: ProbationRegionEntity): List<TemporaryAccommodationPremisesEntity> {
-      val premises = getBasicPremises(probationRegion)
-
-      premises.forEach { premise ->
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premise)
-          withBeds()
-        }.apply { premise.rooms.add(this) }
-
-        bedEntityFactory.produceAndPersist {
-          withRoom(room)
-        }.apply { premise.rooms.first().beds.add(this) }
-      }
-
-      return premises
-    }
-
-    private fun getPropertyStatusPremises(probationRegion: ProbationRegionEntity): List<TemporaryAccommodationPremisesEntity> {
-      val premises = getBasicPremises(probationRegion, 3)
-
-      premises.forEachIndexed { index, premise ->
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premise)
-          withBeds()
-        }.apply { premise.rooms.add(this) }
-
-        bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withEndDate(
-            when (index) {
-              0 -> {
-                LocalDate.now().minusDays(1)
-              }
-
-              1 -> {
-                LocalDate.now().plusDays(1)
-              }
-
-              else -> null
-            },
-          )
-        }.apply { premise.rooms.first().beds.add(this) }
-      }
-
-      return premises
-    }
-
-    private fun getBasicPremises(probationRegion: ProbationRegionEntity, dbSize: Int = 10): List<TemporaryAccommodationPremisesEntity> {
       val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
       val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
 
-      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(dbSize) {
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(8) {
         withProbationRegion(probationRegion)
         withProbationDeliveryUnit(probationDeliveryUnit)
         withLocalAuthorityArea(localAuthorityArea)
       }
 
-      return premises
+      val definitelyArchivedPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+        withProbationDeliveryUnit(probationDeliveryUnit)
+        withLocalAuthorityArea(localAuthorityArea)
+        withStatus(PropertyStatus.archived)
+      }
+
+      val definitelyActivePremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+        withProbationDeliveryUnit(probationDeliveryUnit)
+        withLocalAuthorityArea(localAuthorityArea)
+        withStatus(PropertyStatus.active)
+      }
+
+      val allPremises = premises + definitelyArchivedPremises + definitelyActivePremises
+
+      allPremises.forEach { premise ->
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premise)
+          withBeds()
+        }.apply { premise.rooms.add(this) }
+
+        bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }.apply { premise.rooms.first().beds.add(this) }
+      }
+
+      return allPremises.sortedBy { it.id.toString() }
     }
 
     private fun premisesSummaryTransformer(premises: TemporaryAccommodationPremisesEntity) = Cas3PremisesSummary(
