@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
@@ -28,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -37,7 +38,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class ApplicationsTransformerTest {
+class Cas2ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockNomisTransformer = mockk<NomisUserTransformer>()
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
@@ -52,7 +53,7 @@ class ApplicationsTransformerTest {
     registerKotlinModule()
   }
 
-  private val applicationsTransformer = ApplicationsTransformer(
+  private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
     objectMapper,
     mockPersonTransformer,
     mockNomisTransformer,
@@ -93,7 +94,7 @@ class ApplicationsTransformerTest {
         .withSubmittedAt(null)
         .produce()
 
-      val result = applicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result).hasOnlyFields(
         "id",
@@ -116,6 +117,8 @@ class ApplicationsTransformerTest {
         "currentPrisonName",
         "isTransferredApplication",
         "omuEmailAddress",
+        "applicationOrigin",
+        "bailHearingDate",
       )
 
       assertThat(result.id).isEqualTo(application.id)
@@ -131,6 +134,8 @@ class ApplicationsTransformerTest {
       assertThat(result.currentPrisonName).isNull()
       assertThat(result.isTransferredApplication).isFalse()
       assertThat(result.omuEmailAddress).isNull()
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+      assertThat(result.bailHearingDate).isNull()
     }
 
     @Test
@@ -146,7 +151,7 @@ class ApplicationsTransformerTest {
         .withReferringPrisonCode("PRI")
         .withApplicationAssignments().produce()
 
-      val result = applicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
@@ -161,6 +166,8 @@ class ApplicationsTransformerTest {
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
       assertThat(result.isTransferredApplication).isFalse()
       assertThat(result.omuEmailAddress).isEqualTo(prison.email)
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+      assertThat(result.bailHearingDate).isNull()
     }
 
     @Test
@@ -186,7 +193,7 @@ class ApplicationsTransformerTest {
         .withApplicationAssignments()
         .produce()
 
-      val result = applicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.assessment!!.statusUpdates).hasSize(1).containsExactly(mockStatusUpdate)
@@ -207,7 +214,8 @@ class ApplicationsTransformerTest {
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
       every { nomisUserService.getNomisUserById(any()) } returns user
       val prison = OffenderManagementUnitEntityFactory().produce()
-      val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison").withEmail("test@test.co.uk").produce()
+      val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison")
+        .withEmail("test@test.co.uk").produce()
       every { offenderManagementUnitRepository.findByPrisonCode(eq(prison.prisonCode)) } returns prison
       every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrison.prisonCode)) } returns newPrison
 
@@ -216,9 +224,17 @@ class ApplicationsTransformerTest {
         .withReferringPrisonCode(prison.prisonCode)
         .withApplicationAssignments().produce()
 
-      application.applicationAssignments.add(Cas2ApplicationAssignmentEntity(UUID.randomUUID(), application, newPrison.prisonCode, null, OffsetDateTime.now()))
+      application.applicationAssignments.add(
+        Cas2ApplicationAssignmentEntity(
+          UUID.randomUUID(),
+          application,
+          newPrison.prisonCode,
+          null,
+          OffsetDateTime.now(),
+        ),
+      )
 
-      val result = applicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
@@ -233,6 +249,59 @@ class ApplicationsTransformerTest {
       assertThat(result.currentPrisonName).isEqualTo(newPrison.prisonName)
       assertThat(result.isTransferredApplication).isTrue()
       assertThat(result.omuEmailAddress).isEqualTo(newPrison.email)
+    }
+
+    @Test
+    fun `check bail fields transformed correctly`() {
+      val now = OffsetDateTime.now().toLocalDate()
+      val application = cas2ApplicationFactory
+        .withSubmittedAt(null)
+        .withApplicationOrigin(ApplicationOrigin.courtBail)
+        .withBailHearingDate(now)
+        .produce()
+
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
+
+      assertThat(result).hasOnlyFields(
+        "id",
+        "person",
+        "createdBy",
+        "schemaVersion",
+        "outdatedSchema",
+        "createdAt",
+        "submittedAt",
+        "data",
+        "document",
+        "status",
+        "type",
+        "telephoneNumber",
+        "assessment",
+        "timelineEvents",
+        "allocatedPomEmailAddress",
+        "allocatedPomName",
+        "assignmentDate",
+        "currentPrisonName",
+        "isTransferredApplication",
+        "omuEmailAddress",
+        "applicationOrigin",
+        "bailHearingDate",
+      )
+
+      assertThat(result.id).isEqualTo(application.id)
+      assertThat(result.createdBy.id).isEqualTo(user.id)
+      assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+      assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
+
+      // these are assigned after an application is submitted
+      assertThat(result.submittedAt).isNull()
+      assertThat(result.allocatedPomEmailAddress).isNull()
+      assertThat(result.allocatedPomName).isNull()
+      assertThat(result.assignmentDate).isNull()
+      assertThat(result.currentPrisonName).isNull()
+      assertThat(result.isTransferredApplication).isFalse()
+      assertThat(result.omuEmailAddress).isNull()
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.courtBail)
+      assertThat(result.bailHearingDate).isEqualTo(now)
     }
   }
 
@@ -255,6 +324,8 @@ class ApplicationsTransformerTest {
       allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
       currentPrisonCode = prisonCode,
       assignmentDate = OffsetDateTime.now(),
+      // BAIL-WIP - come back and check application summary view
+      applicationOrigin = ApplicationOrigin.prisonBail.toString(),
     )
 
     @Test
@@ -266,7 +337,7 @@ class ApplicationsTransformerTest {
       val prison = OffenderManagementUnitEntityFactory().produce()
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
-      val result = applicationsTransformer.transformJpaSummaryToSummary(
+      val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
         "firstName surname",
       )
@@ -280,6 +351,8 @@ class ApplicationsTransformerTest {
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
       assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+      assertThat(result.bailHearingDate).isNull()
     }
 
     @Test
@@ -293,7 +366,7 @@ class ApplicationsTransformerTest {
         label = application.latestStatusUpdateLabel!!,
       )
 
-      val result = applicationsTransformer.transformJpaSummaryToSummary(
+      val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
         "firstName surname",
       )
@@ -328,12 +401,47 @@ class ApplicationsTransformerTest {
         label = application.latestStatusUpdateLabel!!,
       )
 
-      val result = applicationsTransformer.transformJpaSummaryToSummary(
+      val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
         "firstName surname",
       )
 
       assertThat(result.currentPrisonName).isEqualTo(application.currentPrisonCode)
+    }
+
+    @Test
+    fun `check bail fields transformed correctly`() {
+      every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns null
+
+      val now = OffsetDateTime.now().toLocalDate()
+      val applicationSummary = Cas2ApplicationSummaryEntity(
+        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+        crn = "CRNNUM",
+        nomsNumber = "NOMNUM",
+        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userName = "first last",
+        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
+        latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
+        latestStatusUpdateLabel = "my latest status update",
+        prisonCode = "BRI",
+        allocatedPomUserId = UUID.randomUUID(),
+        allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
+        currentPrisonCode = "BRI",
+        assignmentDate = OffsetDateTime.now(),
+        applicationOrigin = ApplicationOrigin.prisonBail.toString(),
+        bailHearingDate = now,
+      )
+
+      val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
+        applicationSummary,
+        "firstName surname",
+      )
+
+      assertThat(result.id).isEqualTo(applicationSummary.id)
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+      assertThat(result.bailHearingDate).isEqualTo(now)
     }
   }
 }
