@@ -340,6 +340,7 @@ class Cas1SpaceBookingController(
             cancelledAt = body.occurredAt,
             body.reasonId,
             body.reasonNotes,
+            appealChangeRequestId = null,
           ),
         ),
       )
@@ -369,6 +370,7 @@ class Cas1SpaceBookingController(
             cancelledAt = body.occurredAt,
             userProvidedReason = CancellationReasonRepository.CAS1_BOOKING_SUCCESSFULLY_APPEALED_ID,
             otherReason = body.reasonNotes,
+            appealChangeRequestId = body.placementAppealChangeRequestId,
           ),
         ),
       )

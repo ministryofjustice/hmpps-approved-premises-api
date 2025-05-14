@@ -6,41 +6,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
+import java.util.UUID
 
-/**
- *
- * @param applicationId The UUID of an application for an AP place
- * @param applicationUrl The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
- * @param bookingId The UUID of booking for an AP place
- * @param personReference
- * @param deliusEventNumber Used in Delius to identify the 'event' via the first active conviction's 'index'
- * @param createdAt
- * @param bookedBy
- * @param premises
- * @param arrivalOn
- * @param departureOn
- * @param applicationSubmittedOn
- * @param releaseType
- * @param sentenceType
- * @param situation
- * @param characteristics
- */
 data class BookingMade(
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
-  @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
+  @get:JsonProperty("applicationId", required = true) val applicationId: UUID,
 
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
+  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: String,
 
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
-  @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
+  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
-  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
+  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: String,
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
@@ -61,14 +44,24 @@ data class BookingMade(
   @get:JsonProperty("applicationSubmittedOn") val applicationSubmittedOn: java.time.Instant? = null,
 
   @Schema(example = "null", description = "")
-  @get:JsonProperty("releaseType") val releaseType: kotlin.String? = null,
+  @get:JsonProperty("releaseType") val releaseType: String? = null,
 
   @Schema(example = "null", description = "")
-  @get:JsonProperty("sentenceType") val sentenceType: kotlin.String? = null,
+  @get:JsonProperty("sentenceType") val sentenceType: String? = null,
 
   @Schema(example = "null", description = "")
-  @get:JsonProperty("situation") val situation: kotlin.String? = null,
+  @get:JsonProperty("situation") val situation: String? = null,
 
   @Schema(example = "null", description = "")
-  @get:JsonProperty("characteristics") val characteristics: kotlin.collections.List<SpaceCharacteristic>? = null,
+  @get:JsonProperty("characteristics") val characteristics: List<SpaceCharacteristic>? = null,
+
+  val transferredFrom: EventTransferInfo? = null,
 ) : Cas1DomainEventPayload
+
+data class EventTransferInfo(
+  val type: EventTransferType,
+  val changeRequestId: UUID? = null,
+  val booking: EventBookingSummary,
+)
+
+enum class EventTransferType { PLANNED, EMERGENCY }

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
@@ -27,6 +28,7 @@ class BookingChangedFactory : Factory<BookingChanged> {
   private var previousDepartureOn: Yielded<LocalDate?> = { null }
   private var characteristics: Yielded<List<SpaceCharacteristic>?> = { null }
   private var previousCharacteristics: Yielded<List<SpaceCharacteristic>?> = { null }
+  private var transferredTo: Yielded<EventTransferInfo?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -84,6 +86,10 @@ class BookingChangedFactory : Factory<BookingChanged> {
     this.previousCharacteristics = { previousCharacteristics }
   }
 
+  fun withTransferredTo(transferredTo: EventTransferInfo?) = apply {
+    this.transferredTo = { transferredTo }
+  }
+
   override fun produce() = BookingChanged(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -99,5 +105,6 @@ class BookingChangedFactory : Factory<BookingChanged> {
     previousDepartureOn = this.previousDepartureOn(),
     characteristics = this.characteristics(),
     previousCharacteristics = this.previousCharacteristics(),
+    transferredTo = this.transferredTo(),
   )
 }

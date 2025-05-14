@@ -1065,6 +1065,7 @@ components:
           type: string
           format: date-time
         content:
+          description: Timeline description. If a value is provided for 'payload', that should be instead be used to build a description
           type: string
         createdBy:
           deprecated: true
@@ -1238,6 +1239,8 @@ components:
           description: This is deprecated, use the schema version information on the enclosing Cas1TimelineEvent
           deprecated: true
           type: integer
+        transferredTo:
+          $ref: '#/components/schemas/Cas1TimelineEventTransferInfo'
       required:
         - premises
         - expectedArrival
@@ -1251,6 +1254,9 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         cancellationReason:
           type: string
+        appealChangeRequestId:
+          type: string
+          format: uuid
       required:
         - booking
         - cancellationReason
@@ -1263,6 +1269,8 @@ components:
           $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
         eventNumber:
           type: string
+        transferredFrom:
+          $ref: '#/components/schemas/Cas1TimelineEventTransferInfo'
       required:
         - booking
         - eventNumber
@@ -1324,6 +1332,27 @@ components:
         - premises
         - arrivalDate
         - departureDate
+    Cas1TimelineEventTransferInfo:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/Cas1TimelineEventTransferType'
+        changeRequestId:
+          type: string
+          format: uuid
+        booking:
+          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
+      required:
+        - type
+        - booking
+    Cas1TimelineEventTransferType:
+      type: string
+      enum:
+        - emergency
+        - planned
+      x-enum-varnames:
+        - EMERGENCY
+        - PLANNED
     Cas1PlacementRequestSummary:
       type: object
       properties:

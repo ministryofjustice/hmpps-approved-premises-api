@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -244,7 +245,6 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusDays(1),
         createdBy = user,
         characteristics = characteristics,
-        transferType = null,
         transferredFrom = null,
       )
 
@@ -265,6 +265,8 @@ class Cas1SpaceBookingServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it).isEqualTo(createdSpaceBooking)
       }
+
+      verify { cas1SpaceBookingCreateService.create(validatedCreateBooking) }
     }
 
     @Test
@@ -318,7 +320,6 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusDays(1),
         createdBy = user,
         characteristics = characteristics,
-        transferType = null,
         transferredFrom = null,
       )
 
@@ -588,6 +589,7 @@ class Cas1SpaceBookingServiceTest {
           WithdrawableEntityType.SpaceBooking,
           spaceBooking.id,
         ),
+        appealChangeRequestId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
@@ -615,6 +617,7 @@ class Cas1SpaceBookingServiceTest {
           WithdrawableEntityType.SpaceBooking,
           spaceBooking.id,
         ),
+        appealChangeRequestId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -648,6 +651,7 @@ class Cas1SpaceBookingServiceTest {
           WithdrawableEntityType.SpaceBooking,
           spaceBooking.id,
         ),
+        appealChangeRequestId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -664,6 +668,7 @@ class Cas1SpaceBookingServiceTest {
         .produce()
 
       val reasonId = UUID.randomUUID()
+      val appealChangeRequestId = UUID.randomUUID()
 
       val reason = CancellationReasonEntityFactory()
         .withServiceScope(ServiceName.approvedPremises.value)
@@ -685,6 +690,7 @@ class Cas1SpaceBookingServiceTest {
         occurredAt = LocalDate.parse("2022-08-25"),
         userProvidedReasonId = reasonId,
         userProvidedReasonNotes = "the user provided notes",
+        appealChangeRequestId = appealChangeRequestId,
         withdrawalContext = WithdrawalContext(
           WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.SpaceBooking,
@@ -701,7 +707,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
 
       verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
-      verify { cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason)) }
+      verify { cas1BookingDomainEventService.spaceBookingCancelled(Cas1BookingCancelledEvent(spaceBooking, user, reason, appealChangeRequestId)) }
       verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
       verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }
     }
@@ -1080,9 +1086,6 @@ class Cas1SpaceBookingServiceTest {
         cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
       } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
 
-      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
-      every { cas1SpaceBookingUpdateService.validate(any()) } returns CasResult.Success(Unit)
-
       val transferDate = LocalDate.now().minusDays(1)
       val departureDate = LocalDate.now().plusMonths(2)
 
@@ -1093,8 +1096,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = departureDate,
         createdBy = user,
         characteristics = existingSpaceBooking.criteria,
-        transferType = TransferType.EMERGENCY,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.EMERGENCY,
+          booking = existingSpaceBooking,
+          changeRequestId = null,
+        ),
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("oh no create validation failed")
@@ -1125,24 +1131,18 @@ class Cas1SpaceBookingServiceTest {
         cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
       } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
 
-      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
+      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(mockk())
 
       val transferDate = LocalDate.now().minusDays(1)
       val departureDate = LocalDate.now().plusMonths(2)
 
-      val createDetails = CreateBookingDetails(
-        premisesId = DESTINATION_PREMISES_ID,
-        placementRequestId = existingSpaceBooking.placementRequest!!.id,
-        expectedArrivalDate = transferDate,
-        expectedDepartureDate = departureDate,
-        createdBy = user,
-        characteristics = existingSpaceBooking.criteria,
-        transferType = TransferType.EMERGENCY,
-        transferredFrom = existingSpaceBooking,
+      val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
+      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(
+        ValidatedCreateBooking(
+          bookingToCreate = bookingToCreate,
+          transferredFrom = null,
+        ),
       )
-
-      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
-      every { cas1SpaceBookingCreateService.validate(createDetails) } returns CasResult.Success(validatedCreateBooking)
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
@@ -1150,6 +1150,11 @@ class Cas1SpaceBookingServiceTest {
         departureDate = transferDate,
         updatedBy = user,
         updateType = UpdateType.TRANSFER,
+        transferredTo = TransferInfo(
+          type = TransferType.EMERGENCY,
+          booking = bookingToCreate,
+          changeRequestId = null,
+        ),
       )
 
       val commonUpdateValidationError = CasResult.GeneralValidationError<Unit>("oh no create validation failed")
@@ -1184,23 +1189,28 @@ class Cas1SpaceBookingServiceTest {
         cas1SpaceBookingActionsService.determineActions(existingSpaceBooking)
       } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
 
-      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
+      val transferredFrom = TransferInfo(
+        type = TransferType.EMERGENCY,
+        booking = existingSpaceBooking,
+        changeRequestId = null,
+      )
 
-      assertThat(existingSpaceBooking.transferredTo).isNull()
-
-      val details = CreateBookingDetails(
+      val createBookingDetails = CreateBookingDetails(
         premisesId = DESTINATION_PREMISES_ID,
         placementRequestId = existingSpaceBooking.placementRequest!!.id,
         expectedArrivalDate = transferDate,
         expectedDepartureDate = departureDate,
         createdBy = user,
         characteristics = existingSpaceBooking.criteria,
-        transferType = TransferType.EMERGENCY,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = transferredFrom,
       )
 
-      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
-      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
+      val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
+      val validatedCreateBooking = ValidatedCreateBooking(
+        bookingToCreate = bookingToCreate,
+        transferredFrom = transferredFrom,
+      )
+      every { cas1SpaceBookingCreateService.validate(createBookingDetails) } returns CasResult.Success(validatedCreateBooking)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
       every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
@@ -1210,6 +1220,11 @@ class Cas1SpaceBookingServiceTest {
         departureDate = transferDate,
         updatedBy = user,
         updateType = UpdateType.TRANSFER,
+        transferredTo = TransferInfo(
+          type = TransferType.EMERGENCY,
+          booking = bookingToCreate,
+          changeRequestId = null,
+        ),
       )
 
       every { cas1SpaceBookingUpdateService.validate(updateDetails) } returns CasResult.Success(Unit)
@@ -1226,7 +1241,12 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThatCasResult(result).isSuccess()
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(createdSpaceBooking)
+      }
+
+      verify { cas1SpaceBookingCreateService.create(validatedCreateBooking) }
+      verify { cas1SpaceBookingUpdateService.update(updateDetails) }
     }
   }
 
@@ -1408,8 +1428,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusMonths(1),
         createdBy = user,
         characteristics = emptyList(),
-        transferType = TransferType.PLANNED,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = TransferInfo(
+          type = TransferType.PLANNED,
+          booking = existingSpaceBooking,
+          changeRequestId = existingChangeRequest.id,
+        ),
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("common create validation failed")
@@ -1440,6 +1463,11 @@ class Cas1SpaceBookingServiceTest {
       every { cas1ChangeRequestService.findChangeRequest(any()) } returns existingChangeRequest
       every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns emptyList()
 
+      val transferInfo = TransferInfo(
+        type = TransferType.PLANNED,
+        booking = existingSpaceBooking,
+        changeRequestId = existingChangeRequest.id,
+      )
       val createDetails = CreateBookingDetails(
         premisesId = DESTINATION_PREMISES_ID,
         placementRequestId = existingSpaceBooking.placementRequest!!.id,
@@ -1447,11 +1475,11 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusMonths(1),
         createdBy = user,
         characteristics = emptyList(),
-        transferType = TransferType.PLANNED,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = transferInfo,
       )
 
-      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
+      val validatedCreateBooking = ValidatedCreateBooking(bookingToCreate, transferInfo)
       every { cas1SpaceBookingCreateService.validate(createDetails) } returns CasResult.Success(validatedCreateBooking)
 
       val updateDetails = UpdateBookingDetails(
@@ -1460,6 +1488,11 @@ class Cas1SpaceBookingServiceTest {
         departureDate = LocalDate.now().plusDays(2),
         updatedBy = user,
         updateType = UpdateType.TRANSFER,
+        transferredTo = TransferInfo(
+          booking = bookingToCreate,
+          type = TransferType.PLANNED,
+          changeRequestId = existingChangeRequest.id,
+        ),
       )
 
       val commonUpdateValidationError = CasResult.GeneralValidationError<Unit>("common create validation failed")
@@ -1495,6 +1528,11 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
+      val transferInfo = TransferInfo(
+        type = TransferType.PLANNED,
+        booking = existingSpaceBooking,
+        changeRequestId = existingChangeRequest.id,
+      )
       val details = CreateBookingDetails(
         premisesId = DESTINATION_PREMISES_ID,
         placementRequestId = existingSpaceBooking.placementRequest!!.id,
@@ -1502,11 +1540,14 @@ class Cas1SpaceBookingServiceTest {
         expectedDepartureDate = LocalDate.now().plusMonths(1),
         createdBy = user,
         characteristics = emptyList(),
-        transferType = TransferType.PLANNED,
-        transferredFrom = existingSpaceBooking,
+        transferredFrom = transferInfo,
       )
 
-      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
+      val validatedCreateBooking = ValidatedCreateBooking(
+        bookingToCreate = bookingToCreate,
+        transferredFrom = transferInfo,
+      )
       every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
       every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
@@ -1517,6 +1558,11 @@ class Cas1SpaceBookingServiceTest {
         departureDate = LocalDate.now().plusDays(2),
         updatedBy = user,
         updateType = UpdateType.TRANSFER,
+        transferredTo = TransferInfo(
+          type = TransferType.PLANNED,
+          booking = bookingToCreate,
+          changeRequestId = existingChangeRequest.id,
+        ),
       )
 
       every { cas1SpaceBookingUpdateService.validate(updateDetails) } returns CasResult.Success(Unit)
@@ -1537,6 +1583,8 @@ class Cas1SpaceBookingServiceTest {
       assertThatCasResult(result).isSuccess()
 
       verify { cas1ChangeRequestService.approvedPlannedTransfer(existingChangeRequest, user, createdSpaceBooking) }
+      verify { cas1SpaceBookingCreateService.create(validatedCreateBooking) }
+      verify { cas1SpaceBookingUpdateService.update(updateDetails) }
     }
   }
 }

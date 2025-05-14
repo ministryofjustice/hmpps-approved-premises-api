@@ -25,6 +25,7 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
   private var cancellationReason: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var cancellationRecordedAt: Yielded<Instant> = { Instant.now() }
+  private var appealChangeRequestId: Yielded<UUID?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -78,6 +79,10 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
     this.cancellationRecordedAt = { cancellationRecordedAt }
   }
 
+  fun withAppealChangeRequestId(appealChangeRequestId: UUID) = apply {
+    this.appealChangeRequestId = { appealChangeRequestId }
+  }
+
   override fun produce() = BookingCancelled(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -90,5 +95,6 @@ class BookingCancelledFactory : Factory<BookingCancelled> {
     premises = this.premises(),
     cancellationReason = this.cancellationReason(),
     cancellationRecordedAt = this.cancellationRecordedAt(),
+    appealChangeRequestId = this.appealChangeRequestId(),
   )
 }

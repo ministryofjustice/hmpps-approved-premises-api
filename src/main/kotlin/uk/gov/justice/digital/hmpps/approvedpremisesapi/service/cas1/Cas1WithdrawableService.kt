@@ -179,6 +179,7 @@ class Cas1WithdrawableService(
     cancelledAt: LocalDate,
     userProvidedReason: UUID?,
     otherReason: String?,
+    appealChangeRequestId: UUID?,
   ): CasResult<Unit> {
     val withdrawalContext = WithdrawalContext(
       withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
@@ -196,6 +197,7 @@ class Cas1WithdrawableService(
         userProvidedReasonId = userProvidedReason,
         userProvidedReasonNotes = otherReason,
         withdrawalContext = withdrawalContext,
+        appealChangeRequestId = appealChangeRequestId,
       )
     }
   }

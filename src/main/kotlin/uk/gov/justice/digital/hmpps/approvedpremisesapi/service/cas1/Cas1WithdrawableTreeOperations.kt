@@ -128,6 +128,7 @@ class Cas1WithdrawableTreeOperations(
           occurredAt = LocalDate.now(),
           userProvidedReasonId = null,
           userProvidedReasonNotes = null,
+          appealChangeRequestId = null,
           withdrawalContext = context,
         )
 

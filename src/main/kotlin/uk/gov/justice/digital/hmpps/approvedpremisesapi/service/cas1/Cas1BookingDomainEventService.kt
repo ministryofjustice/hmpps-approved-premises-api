@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
@@ -27,14 +29,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.LocalDate
@@ -65,6 +70,7 @@ class Cas1BookingDomainEventService(
       sentenceType = application.sentenceType,
       situation = application.situation,
       placementRequestId = placementRequest.id,
+      transferredFrom = cas1BookingCreatedEvent.transferredFrom,
     )
   }
 
@@ -84,6 +90,7 @@ class Cas1BookingDomainEventService(
       sentenceType = application.sentenceType,
       situation = application.situation,
       placementRequestId = placementRequest.id,
+      transferredFrom = null,
     )
   }
 
@@ -158,6 +165,7 @@ class Cas1BookingDomainEventService(
       isSpaceBooking = true,
       characteristics = bookingChanged.booking.criteria.toSpaceCharacteristics(),
       previousCharacteristics = bookingChanged.previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
+      transferredTo = bookingChanged.transferredTo,
     ),
   )
 
@@ -254,6 +262,7 @@ class Cas1BookingDomainEventService(
             previousArrivalOn = bookingChangedInfo.previousArrivalDateIfChanged,
             previousDepartureOn = bookingChangedInfo.previousDepartureDateIfChanged,
             previousCharacteristics = bookingChangedInfo.previousCharacteristics,
+            transferredTo = bookingChangedInfo.transferredTo?.toEventTransferInfo(),
           ),
         ),
       ),
@@ -290,6 +299,7 @@ class Cas1BookingDomainEventService(
       cancelledBy = bookingCancelled.user,
       premises = bookingCancelled.booking.premises,
       isSpaceBooking = true,
+      appealChangeRequestId = bookingCancelled.appealChangeRequestId,
     ),
   )
 
@@ -303,6 +313,7 @@ class Cas1BookingDomainEventService(
     releaseType: String?,
     situation: String?,
     placementRequestId: UUID?,
+    transferredFrom: TransferInfo?,
   ) {
     val domainEventId = UUID.randomUUID()
     val crn = bookingInfo.crn
@@ -371,6 +382,7 @@ class Cas1BookingDomainEventService(
             sentenceType = sentenceType,
             situation = situation,
             characteristics = bookingInfo.characteristics,
+            transferredFrom = transferredFrom?.toEventTransferInfo(),
           ),
         ),
         metadata = mapOfNonNullValues(
@@ -379,6 +391,15 @@ class Cas1BookingDomainEventService(
       ),
     )
   }
+
+  private fun TransferInfo.toEventTransferInfo() = EventTransferInfo(
+    type = when (this.type) {
+      TransferType.PLANNED -> EventTransferType.PLANNED
+      TransferType.EMERGENCY -> EventTransferType.EMERGENCY
+    },
+    changeRequestId = this.changeRequestId,
+    booking = this.booking.toEventBookingSummary(),
+  )
 
   private fun bookingCancelled(
     cancellationInfo: CancellationInfo,
@@ -446,6 +467,7 @@ class Cas1BookingDomainEventService(
             cancelledAtDate = cancellationInfo.cancelledAt,
             cancellationReason = cancellationInfo.reason.name,
             cancellationRecordedAt = now.toInstant(),
+            appealChangeRequestId = cancellationInfo.appealChangeRequestId,
           ),
         ),
         metadata = mapOfNonNullValues(
@@ -511,6 +533,7 @@ class Cas1BookingDomainEventService(
     val cancelledAt: LocalDate,
     val reason: CancellationReasonEntity,
     val isSpaceBooking: Boolean,
+    val appealChangeRequestId: UUID? = null,
   )
 
   private data class BookingChangedInfo(
@@ -527,6 +550,7 @@ class Cas1BookingDomainEventService(
     val isSpaceBooking: Boolean,
     val characteristics: List<SpaceCharacteristic>? = null,
     val previousCharacteristics: List<SpaceCharacteristic>? = null,
+    val transferredTo: TransferInfo? = null,
   )
 
   private fun List<CharacteristicEntity>.toSpaceCharacteristics(): List<SpaceCharacteristic> = this.map { it.asSpaceCharacteristic() }
