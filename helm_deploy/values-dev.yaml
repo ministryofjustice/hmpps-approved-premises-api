@@ -53,6 +53,7 @@ generic-service:
     SEED_ON-STARTUP_SCRIPT_PRISON-CODE: MDI
 
     NOTIFY_MODE: TEST_AND_GUEST_LIST
+    NOTIFY_LOG_EMAILS: true
     HMPPS_SQS_USE_WEB_TOKEN: true
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/#id

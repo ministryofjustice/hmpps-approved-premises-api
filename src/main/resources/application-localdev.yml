@@ -66,6 +66,9 @@ log-request-response: true
 refresh-inmate-details-cache:
   logging-enabled: true
 
+notify:
+  log-emails: true
+
 logging:
   level:
     # Log hibernate queries

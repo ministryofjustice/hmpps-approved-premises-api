@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import org.springframework.test.context.event.annotation.BeforeTestMethod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService.Companion.resolveTemplateName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SendEmailRequestedEvent
 
@@ -44,9 +45,11 @@ class EmailNotificationAsserter {
         (replyToEmailId == null || it.replyToEmailId == replyToEmailId)
     }
 
+    val templateName = resolveTemplateName(templateId)
+
     assertThat(match)
       .withFailMessage {
-        "Could not find email request for template $templateId to $toEmailAddress with personalisation $personalisation. Provided email requests are ${formatRequestedEmails()}"
+        "Could not find email request for template $templateName ($templateId) to $toEmailAddress with personalisation $personalisation. Provided email requests are ${formatRequestedEmails()}"
       }
       .isNotNull
 

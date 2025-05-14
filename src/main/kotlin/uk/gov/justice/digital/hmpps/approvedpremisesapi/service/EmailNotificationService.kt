@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
@@ -22,6 +23,13 @@ class EmailNotificationService(
 ) : EmailNotifier {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
+  companion object {
+    fun resolveTemplateName(templateId: String) = Cas2NotifyTemplates::class.memberProperties
+      .firstOrNull { it.get(Cas2NotifyTemplates) == templateId }?.name
+      ?: Cas1NotifyTemplates::class.memberProperties
+        .firstOrNull { it.getter.call() == templateId }?.name
+  }
+
   val errorSuppressionList = listOf(
     // full message is 'Can`t send to this recipient using a team-only API key'. Have excluded part
     // with non-ascii characters to avoid complications
@@ -35,14 +43,16 @@ class EmailNotificationService(
     personalisation: Map<String, *>,
     replyToEmailId: String?,
   ) {
-    applicationEventPublisher.publishEvent(SendEmailRequestedEvent(EmailRequest(recipientEmailAddress, templateId, personalisation, replyToEmailId)))
+    val emailRequest = EmailRequest(recipientEmailAddress, templateId, personalisation, replyToEmailId)
+    applicationEventPublisher.publishEvent(SendEmailRequestedEvent(emailRequest))
+
+    if (notifyConfig.logEmails) {
+      logEmail(emailRequest)
+    }
 
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
-        val templateName = Cas2NotifyTemplates::class.memberProperties
-          .firstOrNull { it.get(Cas2NotifyTemplates) == templateId }?.name
-          ?: templateId
-        log.info("Email sending is disabled - would have sent template $templateName ($templateId) to user $recipientEmailAddress with replyToId $replyToEmailId")
+        log.info("Email sending is disabled")
         return
       }
 
@@ -64,7 +74,8 @@ class EmailNotificationService(
         )
       }
     } catch (notificationClientException: NotificationClientException) {
-      log.error("Unable to send template $templateId to user $recipientEmailAddress", notificationClientException)
+      val templateName = resolveTemplateName(templateId)
+      log.error("Unable to send template $templateName ($templateId) to user $recipientEmailAddress", notificationClientException)
 
       notificationClientException.message?.let { exceptionMessage ->
         val suppress = errorSuppressionList.any { exceptionMessage.lowercase().contains(it.lowercase()) }
@@ -95,6 +106,16 @@ class EmailNotificationService(
     personalisation: Map<String, *>,
     replyToEmailId: String?,
   ) = recipientEmailAddresses.forEach { sendEmail(it, templateId, personalisation, replyToEmailId) }
+
+  private fun logEmail(emailRequest: EmailRequest) {
+    val templateId = emailRequest.templateId
+    val templateName = resolveTemplateName(templateId)
+
+    log.info(
+      "Sending email with template $templateName ($templateId) to user ${emailRequest.email} " +
+        "with replyToId ${emailRequest.replyToEmailId}. Personalisation is ${emailRequest.personalisation}",
+    )
+  }
 }
 
 interface EmailNotifier {

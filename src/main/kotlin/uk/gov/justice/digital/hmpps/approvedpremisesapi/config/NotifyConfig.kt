@@ -14,6 +14,7 @@ class NotifyConfig {
   var apiKey: String? = null
   var guestListApiKey: String? = null
   var emailAddresses: EmailAddressConfig = EmailAddressConfig()
+  var logEmails: Boolean = false
 }
 
 class EmailAddressConfig {

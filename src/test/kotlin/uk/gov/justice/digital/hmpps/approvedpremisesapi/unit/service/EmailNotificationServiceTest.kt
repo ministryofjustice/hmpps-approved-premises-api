@@ -6,16 +6,19 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.slf4j.Logger
 import org.springframework.context.ApplicationEventPublisher
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SendEmailRequestedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.LoggerExtension
 import uk.gov.service.notify.NotificationClient
 import uk.gov.service.notify.NotificationClientException
 
@@ -24,7 +27,9 @@ class EmailNotificationServiceTest {
   private val mockGuestListNotificationClient = mockk<NotificationClient>()
   private val mockApplicationEventPublisher = mockk<ApplicationEventPublisher>()
   private val mockSentryService = mockk<SentryService>()
-  private val logger = mockk<Logger>()
+
+  @RegisterExtension
+  var loggerExtension: LoggerExtension = LoggerExtension()
 
   @Nested
   inner class SendEmail {
@@ -46,6 +51,8 @@ class EmailNotificationServiceTest {
 
       verify { mockGuestListNotificationClient wasNot Called }
       verify { mockNormalNotificationClient wasNot Called }
+
+      loggerExtension.assertContains("Email sending is disabled")
     }
 
     @Test
@@ -161,11 +168,86 @@ class EmailNotificationServiceTest {
     }
 
     @Test
+    fun `log the email if logging is enabled, CAS1`() {
+      val emailNotificationService = createService(NotifyMode.ENABLED, logEmails = true)
+
+      val templateId = Cas1NotifyTemplates.APPLICATION_SUBMITTED
+      val personalisation = mapOf(
+        "name" to "Jim",
+        "assessmentUrl" to "someUrlValue",
+      )
+
+      every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
+      every { mockNormalNotificationClient.sendEmail(any(), any(), any(), any(), any()) } returns mockk()
+
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = "test@here.com",
+        templateId = templateId,
+        personalisation = personalisation,
+        replyToEmailId = "theReplyToId",
+      )
+
+      loggerExtension.assertContains(
+        "Sending email with template APPLICATION_SUBMITTED (c9944bd8-63c4-473c-8dce-b3636e47d3dd) " +
+          "to user test@here.com with replyToId theReplyToId. Personalisation is {name=Jim, assessmentUrl=someUrlValue}",
+      )
+    }
+
+    @Test
+    fun `log the email if logging is enabled, CAS2`() {
+      val emailNotificationService = createService(NotifyMode.ENABLED, logEmails = true)
+
+      val templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor
+      val personalisation = mapOf(
+        "name" to "Jeff",
+        "assessmentUrl" to "aUrlValue",
+      )
+
+      every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
+      every { mockNormalNotificationClient.sendEmail(any(), any(), any(), any(), any()) } returns mockk()
+
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = "test@here.com",
+        templateId = templateId,
+        personalisation = personalisation,
+        replyToEmailId = "theReplyToId",
+      )
+
+      loggerExtension.assertContains(
+        "Sending email with template cas2NoteAddedForAssessor (0d646bf0-d40f-4fe7-aa74-dd28b10d04f1) " +
+          "to user test@here.com with replyToId theReplyToId. Personalisation is {name=Jeff, assessmentUrl=aUrlValue}",
+      )
+    }
+
+    @Test
+    fun `don't log the email if logging disabled`() {
+      val emailNotificationService = createService(NotifyMode.ENABLED, logEmails = false)
+
+      val templateId = Cas1NotifyTemplates.APPLICATION_SUBMITTED
+      val personalisation = mapOf(
+        "name" to "Jim",
+        "assessmentUrl" to "someUrlValue",
+      )
+
+      every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
+      every { mockNormalNotificationClient.sendEmail(any(), any(), any(), any(), any()) } returns mockk()
+
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = "test@here.com",
+        templateId = templateId,
+        personalisation = personalisation,
+        replyToEmailId = "theReplyToId",
+      )
+
+      loggerExtension.assertNoLogs()
+    }
+
+    @Test
     fun `sendEmail logs an error if the notification fails`() {
       val exception = NotificationClientException("oh dear")
       val emailNotificationService = createService(NotifyMode.ENABLED)
 
-      val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
+      val templateId = Cas1NotifyTemplates.BOOKING_MADE
       val personalisation = mapOf(
         "name" to "Jim",
         "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
@@ -174,7 +256,7 @@ class EmailNotificationServiceTest {
       every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
       every {
         mockNormalNotificationClient.sendEmail(
-          "f3d78814-383f-4b5f-a681-9bd3ab912888",
+          Cas1NotifyTemplates.BOOKING_MADE,
           "test@here.com",
           personalisation,
           null,
@@ -183,7 +265,6 @@ class EmailNotificationServiceTest {
       } throws exception
 
       every { mockSentryService.captureException(any()) } returns Unit
-      every { logger.error(any<String>(), any()) } returns Unit
 
       emailNotificationService.sendEmail(
         recipientEmailAddress = "test@here.com",
@@ -191,9 +272,7 @@ class EmailNotificationServiceTest {
         personalisation = personalisation,
       )
 
-      verify {
-        logger.error("Unable to send template $templateId to user test@here.com", exception)
-      }
+      loggerExtension.assertError("Unable to send template BOOKING_MADE (1e3d2ee2-250e-4755-af38-80d24cdc3480) to user test@here.com", exception)
     }
 
     @ParameterizedTest
@@ -232,7 +311,6 @@ class EmailNotificationServiceTest {
       } throws exception
 
       every { mockSentryService.captureException(any()) } returns Unit
-      every { logger.error(any<String>(), any()) } returns Unit
 
       emailNotificationService.sendEmail(
         recipientEmailAddress = "test@here.com",
@@ -381,20 +459,17 @@ class EmailNotificationServiceTest {
     }
   }
 
-  private fun createService(notifyMode: NotifyMode): EmailNotificationService {
+  private fun createService(notifyMode: NotifyMode, logEmails: Boolean = false): EmailNotificationService {
     val service = EmailNotificationService(
       notifyConfig = NotifyConfig().apply {
-        mode = notifyMode
+        this.mode = notifyMode
+        this.logEmails = logEmails
       },
       normalNotificationClient = mockNormalNotificationClient,
       guestListNotificationClient = mockGuestListNotificationClient,
       applicationEventPublisher = mockApplicationEventPublisher,
       sentryService = mockSentryService,
     )
-    service.log = logger
-
-    every { logger.info(any<String>()) } returns Unit
-
     return service
   }
 }

@@ -1,3 +1,8 @@
+#### THIS FILE IS NO LONGER USED AND WILL BE REMOVED IN THE NEAR FUTURE
+####
+#### TO UPDATE LOCAL DEVELOPER CONFIG, use application-localdev.yml
+####
+
 spring:
   datasource:
     username: localdev
