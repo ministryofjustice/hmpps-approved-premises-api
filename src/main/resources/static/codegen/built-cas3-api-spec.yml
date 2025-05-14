@@ -448,44 +448,6 @@ components:
         - probationRegion
         - apArea
         - status
-    PremisesSummary:
-      type: object
-      properties:
-        service:
-          type: string
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: Hope House
-        addressLine1:
-          type: string
-          example: one something street
-        addressLine2:
-          type: string
-          example: Blackmore End
-        postcode:
-          type: string
-          example: LS1 3AD
-        bedCount:
-          type: integer
-          example: 22
-        status:
-          $ref: '#/components/schemas/PropertyStatus'
-      discriminator:
-        propertyName: service
-        mapping:
-          CAS1: '#/components/schemas/ApprovedPremisesSummary'
-          CAS3: '#/components/schemas/TemporaryAccommodationPremisesSummary'
-      required:
-        - service
-        - id
-        - name
-        - addressLine1
-        - postcode
-        - bedCount
-        - status
     ApprovedPremises:
       allOf:
         - $ref: '#/components/schemas/Premises'
@@ -509,33 +471,6 @@ components:
             turnaroundWorkingDayCount:
               type: integer
               example: 2
-      required:
-        - pdu
-    ApprovedPremisesSummary:
-      allOf:
-        - $ref: '#/components/schemas/PremisesSummary'
-        - type: object
-          properties:
-            apCode:
-              type: string
-              example: NEHOPE1
-            probationRegion:
-              type: string
-            apArea:
-              type: string
-      required:
-        - apCode
-        - probationRegion
-        - apArea
-    TemporaryAccommodationPremisesSummary:
-      allOf:
-        - $ref: '#/components/schemas/PremisesSummary'
-        - type: object
-          properties:
-            pdu:
-              type: string
-            localAuthorityAreaName:
-              type: string
       required:
         - pdu
     NewPremises:
@@ -5160,7 +5095,7 @@ components:
         - addressLine1
         - postcode
         - pdu
-        - bedCount
+        - bedspaceCount
         - status
     Cas3PropertyStatus:
       type: string
