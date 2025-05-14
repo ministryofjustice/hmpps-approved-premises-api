@@ -13,7 +13,6 @@ class NotifyConfig {
   var mode: NotifyMode = NotifyMode.DISABLED
   var apiKey: String? = null
   var guestListApiKey: String? = null
-  var templates: NotifyTemplates = NotifyTemplates()
   var emailAddresses: EmailAddressConfig = EmailAddressConfig()
 }
 
@@ -56,7 +55,8 @@ object Cas1NotifyTemplates {
   const val TRANSFER_COMPLETE_EMERGENCY_FOR_CRU = "dae982a8-6afe-413e-b23d-12e195c2d947"
 }
 
-class NotifyTemplates {
+@SuppressWarnings("MayBeConst")
+object Cas2NotifyTemplates {
   val cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
   val cas2NoteAddedForReferrer = "debe17a2-9f79-4d26-88a0-690dd73e2a5b"
   val cas2NoteAddedForAssessor = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"

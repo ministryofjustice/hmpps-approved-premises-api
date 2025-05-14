@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Submitte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
@@ -980,7 +981,7 @@ class Cas2v2SubmissionTest(
         emailAsserter.assertEmailsRequestedCount(1)
         emailAsserter.assertEmailRequested(
           notifyConfig.emailAddresses.cas2Assessors,
-          notifyConfig.templates.cas2ApplicationSubmitted,
+          Cas2NotifyTemplates.cas2ApplicationSubmitted,
           personalisation = mapOf(
             "name" to submittingUser.name,
             "email" to submittingUser.email!!,

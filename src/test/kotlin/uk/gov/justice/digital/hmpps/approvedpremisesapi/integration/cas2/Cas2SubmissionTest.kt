@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
@@ -843,13 +844,13 @@ class Cas2SubmissionTest(
           .isEqualTo(expectedFrontEndUrl)
 
         val persistedAssessment = realAssessmentRepository.findAll().first()
-        Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
+        assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
 
         val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
         emailAsserter.assertEmailsRequestedCount(1)
         emailAsserter.assertEmailRequested(
           notifyConfig.emailAddresses.cas2Assessors,
-          notifyConfig.templates.cas2ApplicationSubmitted,
+          Cas2NotifyTemplates.cas2ApplicationSubmitted,
           personalisation = mapOf(
             "name" to submittingUser.name,
             "email" to submittingUser.email!!,
