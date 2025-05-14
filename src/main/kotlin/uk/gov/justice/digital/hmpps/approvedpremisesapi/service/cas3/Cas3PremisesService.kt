@@ -4,6 +4,7 @@ import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -45,9 +46,10 @@ class Cas3PremisesService(
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?): List<TemporaryAccommodationPremisesSummary> {
+  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus? = null): List<TemporaryAccommodationPremisesSummary> {
     val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
-    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace)
+
+    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.toString())
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")

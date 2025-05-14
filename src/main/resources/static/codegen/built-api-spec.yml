@@ -6081,7 +6081,6 @@ components:
       type: string
       enum:
         - assessor
-        - matcher
         - future_manager
         - workflow_manager
         - change_request_dev
@@ -7520,16 +7519,6 @@ components:
         - past
         - current
         - future
-    BedSearchAttributes:
-      type: string
-      enum:
-        - isSharedProperty
-        - isSingleOccupancy
-        - isWheelchairAccessible
-      x-enum-varnames:
-        - SHARED_PROPERTY
-        - SINGLE_OCCUPANCY
-        - WHEELCHAIR_ACCESSIBLE
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms

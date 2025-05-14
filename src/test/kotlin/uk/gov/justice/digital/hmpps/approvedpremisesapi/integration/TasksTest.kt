@@ -105,7 +105,7 @@ class TasksTest {
 
       @ParameterizedTest
       @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER"])
-      fun `Get all tasks returns 200 when have CAS1_WORKFLOW_MANAGER, CAS1_MATCHER or CAS1_ASSESSOR roles`(role: UserRole) {
+      fun `Get all tasks returns 200 when have CAS1_WORKFLOW_MANAGER or CAS1_CRU_MEMBER roles`(role: UserRole) {
         givenAUser(roles = listOf(role)) { _, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
@@ -1943,14 +1943,14 @@ class TasksTest {
       val (assessor, _) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
       )
-      // inactive matcher
+      // inactive user with correct role
       givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         isActive = false,
       )
-      // matcher
+      // user with incorrect role
       givenAUser(
-        roles = listOf(UserRole.CAS1_MATCHER),
+        roles = listOf(UserRole.CAS1_CRU_MEMBER),
       )
 
       givenAnOffender { offenderDetails, _ ->
@@ -2164,7 +2164,7 @@ class TasksTest {
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { janitor, _ ->
           givenAUser(
-            roles = listOf(UserRole.CAS1_MATCHER),
+            roles = listOf(UserRole.CAS1_CRU_MEMBER),
           ) { _, _ ->
             givenAnOffender { offenderDetails, _ ->
               givenAnAssessmentForApprovedPremises(

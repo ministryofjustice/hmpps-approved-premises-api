@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -91,7 +92,7 @@ class Cas2AssessmentNoteService(
     if (application.createdByUser.email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = application.createdByUser.email!!,
-        templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
+        templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
         personalisation = mapOf(
           "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
           "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
@@ -112,7 +113,7 @@ class Cas2AssessmentNoteService(
   ) {
     emailNotificationService.sendCas2Email(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
-      templateId = notifyConfig.templates.cas2NoteAddedForAssessor,
+      templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor,
       personalisation = mapOf(
         "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(application.assessment!!),
         "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(application.assessment!!),

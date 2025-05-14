@@ -15,7 +15,7 @@ class Cas1BookingManagementEmailService(
   fun arrivalRecorded(arrivalRecorded: ArrivalRecorded) = arrivalRecorded(arrivalRecorded.spaceBooking)
 
   fun arrivalRecorded(spaceBooking: Cas1SpaceBookingEntity) {
-    if (spaceBooking.transferType == TransferType.EMERGENCY) {
+    if (spaceBooking.transferType != null) {
       val application = spaceBooking.application!!
       val recipientEmailAddresses = spaceBooking.placementRequest!!.requestingUsersEmailAddresses()
 
@@ -39,12 +39,14 @@ class Cas1BookingManagementEmailService(
         application = application,
       )
 
-      emailNotifier.sendEmails(
-        recipientEmailAddresses = setOfNotNull(application.cruManagementArea?.emailAddress),
-        templateId = Cas1NotifyTemplates.TRANSFER_COMPLETE_EMERGENCY_FOR_CRU,
-        personalisation = personalisation,
-        application = application,
-      )
+      if (spaceBooking.transferType == TransferType.EMERGENCY) {
+        emailNotifier.sendEmails(
+          recipientEmailAddresses = setOfNotNull(application.cruManagementArea?.emailAddress),
+          templateId = Cas1NotifyTemplates.TRANSFER_COMPLETE_EMERGENCY_FOR_CRU,
+          personalisation = personalisation,
+          application = application,
+        )
+      }
     }
   }
 }

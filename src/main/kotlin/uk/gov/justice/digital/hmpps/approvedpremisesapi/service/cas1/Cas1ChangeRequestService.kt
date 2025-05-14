@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlacementAppealRejected
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -158,8 +159,11 @@ class Cas1ChangeRequestService(
   fun approvedPlannedTransfer(
     changeRequest: Cas1ChangeRequestEntity,
     user: UserEntity,
+    newBooking: Cas1SpaceBookingEntity,
   ) {
     approveChangeRequest(changeRequest, user)
+
+    springEventPublisher.publishEvent(PlannedTransferRequestAccepted(changeRequest, user, newBooking))
   }
 
   @Transactional

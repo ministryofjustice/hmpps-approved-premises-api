@@ -445,11 +445,14 @@ data class Cas1SpaceBookingEntity(
    * purposes
    */
   val deliusId: String?,
+
+  @OneToOne(mappedBy = "transferredFrom", fetch = FetchType.LAZY)
+  val transferredTo: Cas1SpaceBookingEntity?,
+
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "transferred_to", referencedColumnName = "id")
-  var transferredTo: Cas1SpaceBookingEntity?,
-  @OneToOne(mappedBy = "transferredTo", fetch = FetchType.LAZY)
+  @JoinColumn(name = "transferred_from", referencedColumnName = "id")
   val transferredFrom: Cas1SpaceBookingEntity? = null,
+
   /**
    * If [transferredFrom] is not null, this indicates the type of transfer
    */

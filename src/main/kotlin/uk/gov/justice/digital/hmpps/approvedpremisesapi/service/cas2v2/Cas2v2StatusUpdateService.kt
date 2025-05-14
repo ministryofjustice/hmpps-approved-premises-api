@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
@@ -44,7 +44,6 @@ class Cas2v2StatusUpdateService(
   private val cas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val notifyConfig: NotifyConfig,
   private val cas2v2PersistedApplicationStatusFinder: Cas2v2PersistedApplicationStatusFinder,
   private val statusTransformer: ApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
@@ -168,9 +167,9 @@ class Cas2v2StatusUpdateService(
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
       val templateId = when (applicationOrigin) {
-        ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2ApplicationStatusUpdatedCourtBail
-        ApplicationOrigin.prisonBail -> notifyConfig.templates.cas2v2ApplicationStatusUpdatedPrisonBail
-        ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2ApplicationStatusUpdated
+        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.cas2v2ApplicationStatusUpdatedCourtBail
+        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.cas2v2ApplicationStatusUpdatedPrisonBail
+        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.cas2ApplicationStatusUpdated
       }
 
       emailNotificationService.sendCas2Email(

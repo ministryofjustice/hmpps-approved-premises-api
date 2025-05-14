@@ -35,7 +35,7 @@ class DepartureReasonEntityFactory : Factory<DepartureReasonEntity> {
     this.legacyDeliusCategoryCode = { legacyDeliusCategoryCode }
   }
 
-  fun withParentReasonId(parentDepartureReason: DepartureReasonEntity) = apply {
+  fun withParentReason(parentDepartureReason: DepartureReasonEntity) = apply {
     this.parentReasonId = { parentDepartureReason }
   }
 

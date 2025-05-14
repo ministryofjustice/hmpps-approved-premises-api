@@ -80,6 +80,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferType = null,
+          transferredFrom = null,
         ),
       )
 
@@ -111,6 +112,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferType = null,
+          transferredFrom = null,
         ),
       )
 
@@ -137,6 +139,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferType = null,
+          transferredFrom = null,
         ),
       )
 
@@ -163,6 +166,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferType = null,
+          transferredFrom = null,
         ),
       )
 
@@ -191,6 +195,7 @@ class Cas1SpaceBookingCreateServiceTest {
             CharacteristicEntityFactory().withName("c2").produce(),
           ),
           transferType = null,
+          transferredFrom = null,
         ),
       )
 
@@ -248,6 +253,7 @@ class Cas1SpaceBookingCreateServiceTest {
             CharacteristicEntityFactory().withName("c2").produce(),
           ),
           transferType = TransferType.PLANNED,
+          transferredFrom = null,
         ),
       )
 

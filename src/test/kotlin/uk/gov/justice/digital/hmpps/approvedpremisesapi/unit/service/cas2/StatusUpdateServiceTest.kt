@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
@@ -55,7 +55,6 @@ class StatusUpdateServiceTest {
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val mockNotifyConfig = mockk<NotifyConfig>()
 
   private val applicant = NomisUserEntityFactory().produce()
   private val application = Cas2ApplicationEntityFactory()
@@ -75,7 +74,6 @@ class StatusUpdateServiceTest {
     mockStatusUpdateDetailRepository,
     mockDomainEventService,
     mockEmailNotificationService,
-    mockNotifyConfig,
     mockStatusFinder,
     mockStatusTransformer,
     applicationUrlTemplate,
@@ -117,7 +115,6 @@ class StatusUpdateServiceTest {
   fun setup() {
     every { mockStatusFinder.active() } returns activeStatusList
     every { mockStatusTransformer.transformStatusDetailListToDetailItemList(any()) } returns emptyList()
-    every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "fakeReplyToId"
   }
 
   @Nested
@@ -164,12 +161,10 @@ class StatusUpdateServiceTest {
 
         every { mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any()) } answers { }
 
-        every { mockNotifyConfig.templates.cas2ApplicationStatusUpdated } returns "abc123"
-
         every {
           mockEmailNotificationService.sendCas2Email(
             recipientEmailAddress = applicant.email!!,
-            templateId = "abc123",
+            templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
             personalisation = mapOf(
               "applicationStatus" to cas2StatusUpdateEntity.label,
               "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),
@@ -293,12 +288,10 @@ class StatusUpdateServiceTest {
 
           every { mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any()) } answers { }
 
-          every { mockNotifyConfig.templates.cas2ApplicationStatusUpdated } returns "abc123"
-
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = applicant.email!!,
-              templateId = "abc123",
+              templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
               personalisation = mapOf(
                 "applicationStatus" to cas2StatusUpdateEntity.label,
                 "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),

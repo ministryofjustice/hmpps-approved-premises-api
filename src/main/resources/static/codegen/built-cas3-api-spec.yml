@@ -250,6 +250,11 @@ paths:
           description: postcode Or address to filter premises
           schema:
             type: string
+        - name: propertyStatus
+          in: query
+          description: property status to filter premises
+          schema:
+            $ref: '#/components/schemas/Cas3PropertyStatus'
       responses:
         200:
           description: successful operation
@@ -3163,7 +3168,6 @@ components:
       type: string
       enum:
         - assessor
-        - matcher
         - future_manager
         - workflow_manager
         - change_request_dev
@@ -4602,16 +4606,6 @@ components:
         - past
         - current
         - future
-    BedSearchAttributes:
-      type: string
-      enum:
-        - isSharedProperty
-        - isSingleOccupancy
-        - isWheelchairAccessible
-      x-enum-varnames:
-        - SHARED_PROPERTY
-        - SINGLE_OCCUPANCY
-        - WHEELCHAIR_ACCESSIBLE
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms
@@ -4967,25 +4961,10 @@ components:
           $ref: '#/components/schemas/PremisesFilters'
         bedspaceFilters:
           $ref: '#/components/schemas/BedspaceFilters'
-        attributes:
-          type: array
-          description: Bedspace and property attributes to filter on
-          items:
-            $ref: "#/components/schemas/BedspaceSearchAttributes"
       required:
         - probationDeliveryUnits
         - startDate
         - durationDays
-    BedspaceSearchAttributes:
-      type: string
-      enum:
-        - isSharedProperty
-        - isSingleOccupancy
-        - isWheelchairAccessible
-      x-enum-varnames:
-        - SHARED_PROPERTY
-        - SINGLE_OCCUPANCY
-        - WHEELCHAIR_ACCESSIBLE
     PremisesFilters:
       type: object
       properties:
@@ -5118,6 +5097,11 @@ components:
         - pdu
         - bedspaceCount
         - status
+    Cas3PropertyStatus:
+      type: string
+      enum:
+        - online
+        - archived
     Cas3Departure:
       type: object
       properties:

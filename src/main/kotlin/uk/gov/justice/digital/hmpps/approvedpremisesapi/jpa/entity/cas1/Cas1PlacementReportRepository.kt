@@ -29,7 +29,11 @@ class Cas1PlacementReportRepository(
             END AS actual_duration_nights,
             to_char(csb.actual_departure_date, 'YYYY-MM-DD') AS actual_departure_date,
             to_char(csb.actual_departure_time, 'HH24:MI:SS') AS actual_departure_time,
-            dr.name AS departure_reason,
+            CASE
+                WHEN dr_parent.id IS NOT NULL
+                THEN dr_parent.name || ' - ' || dr.name
+                ELSE dr.name
+            END AS departure_reason,
             moc.name AS departure_move_on_category,
             to_char(CAST(csb.non_arrival_confirmed_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS non_arrival_recorded_date_time,
             nar.name AS non_arrival_reason,
@@ -43,6 +47,7 @@ class Cas1PlacementReportRepository(
         LEFT JOIN premises p ON p.id = csb.premises_id
         LEFT JOIN probation_regions pr ON pr.id = p.probation_region_id
         LEFT JOIN departure_reasons dr ON dr.id = csb.departure_reason_id
+        LEFT JOIN departure_reasons dr_parent ON dr_parent.id = dr.parent_reason_id
         LEFT JOIN move_on_categories moc ON moc.id = csb.departure_move_on_category_id
         LEFT JOIN non_arrival_reasons nar ON nar.id = csb.non_arrival_reason_id
         LEFT JOIN cancellation_reasons cr ON cr.id = csb.cancellation_reason_id

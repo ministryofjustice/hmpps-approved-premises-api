@@ -61,7 +61,9 @@ generic-service:
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-dev.hmpps.service.justice.gov.uk/assessments/#id
     URL-TEMPLATES_FRONTEND_BOOKING: https://approved-premises-dev.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
     URL-TEMPLATES_FRONTEND_CAS1_CRU-DASHBOARD: https://approved-premises-dev.hmpps.service.justice.gov.uk/admin/cru-dashboard
+    URL-TEMPLATES_FRONTEND_CAS1_CRU-OPEN-CHANGE-REQUESTS: https://approved-premises-dev.hmpps.service.justice.gov.uk/admin/cru-dashboard/change-requests
     URL-TEMPLATES_FRONTEND_CAS1_SPACE-BOOKING: https://approved-premises-dev.hmpps.service.justice.gov.uk/manage/premises/#premisesId/placements/#bookingId
+    URL-TEMPLATES_FRONTEND_CAS1_SPACE-BOOKING-TIMELINE: https://approved-premises-dev.hmpps.service.justice.gov.uk/manage/premises/#premisesId/placements/#bookingId/timeline
     URL-TEMPLATES_FRONTEND_CAS2_APPLICATION: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_CAS2_APPLICATION-OVERVIEW: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/#id/overview
     URL-TEMPLATES_FRONTEND_CAS2_SUBMITTED-APPLICATION-OVERVIEW: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/assess/applications/#applicationId/overview

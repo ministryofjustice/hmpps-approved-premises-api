@@ -291,7 +291,9 @@ url-templates:
     booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
     cas1:
       cru-dashboard: http://localhost:3000/admin/cru-dashboard
+      cru-open-change-requests: http://localhost:3000/admin/cru-dashboard/change-requests
       space-booking: http://localhost:3000/manage/premises/#premisesId/placements/#bookingId
+      space-booking-timeline: http://localhost:3000/manage/premises/#premisesId/placements/#bookingId/timeline
     cas2:
       application: http://localhost:3000/applications/#id
       application-overview: http://localhost:3000/applications/#id/overview

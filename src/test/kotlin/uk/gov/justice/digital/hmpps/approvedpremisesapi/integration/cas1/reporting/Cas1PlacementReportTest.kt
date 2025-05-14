@@ -103,7 +103,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
     characteristicRepository.deleteAll()
 
     val assessorDetails = givenAUser(
-      roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
+      roles = listOf(UserRole.CAS1_ASSESSOR),
       qualifications = UserQualification.entries,
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR1"),
     )
@@ -362,8 +362,13 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         withName("Move on category")
       }
 
+      val departureReasonParent = departureReasonEntityFactory.produceAndPersist {
+        withName("Parent Reason")
+      }
+
       departureReason = departureReasonEntityFactory.produceAndPersist {
         withName("Departed")
+        withParentReason(departureReasonParent)
       }
 
       booking = cas1SpaceBookingEntityFactory.produceAndPersist {
@@ -402,7 +407,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.actual_duration_nights).isEqualTo("25")
       assertThat(row.expected_duration_nights).isEqualTo("25")
       assertThat(row.criteria?.split(", ")).containsExactlyInAnyOrder("isCatered", "isStepFreeDesignated")
-      assertThat(row.departure_reason).isEqualTo("Departed")
+      assertThat(row.departure_reason).isEqualTo("Parent Reason - Departed")
       assertThat(row.departure_move_on_category).isEqualTo("Move on category")
       assertThat(row.non_arrival_reason).isNull()
       assertThat(row.non_arrival_recorded_date_time).isNull()

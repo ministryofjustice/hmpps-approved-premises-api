@@ -86,7 +86,6 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val (user, jwt) = givenAUser(
       roles = listOf(
         UserRole.CAS1_ASSESSOR,
-        UserRole.CAS1_MATCHER,
         UserRole.CAS1_WORKFLOW_MANAGER,
         UserRole.CAS1_CRU_MEMBER,
         UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
