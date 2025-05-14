@@ -273,15 +273,6 @@ class Cas1SpaceBookingService(
       return GeneralValidationError("The provided arrival date must be today, or within the last 7 days")
     }
 
-    val updateExistingBookingDetails = UpdateBookingDetails(
-      bookingId = bookingId,
-      premisesId = premisesId,
-      departureDate = arrivalDate,
-      updatedBy = user,
-      updateType = UpdateType.TRANSFER,
-    )
-    cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
-
     val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)!!
 
     cas1SpaceBookingActionsService.determineActions(existingCas1SpaceBooking)
@@ -310,16 +301,21 @@ class Cas1SpaceBookingService(
       is Success -> result.value
     }
 
-    cas1SpaceBookingUpdateService.update(
-      updateExistingBookingDetails.copy(
-        transferredTo = TransferInfo(
-          type = TransferType.EMERGENCY,
-          booking = validatedCreateBooking.bookingToCreate,
-          changeRequestId = null,
-        ),
+    val updateExistingBookingDetails = UpdateBookingDetails(
+      bookingId = bookingId,
+      premisesId = premisesId,
+      departureDate = arrivalDate,
+      updatedBy = user,
+      updateType = UpdateType.TRANSFER,
+      transferredTo = TransferInfo(
+        type = TransferType.EMERGENCY,
+        booking = validatedCreateBooking.bookingToCreate,
+        changeRequestId = null,
       ),
     )
+    cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
 
+    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails)
     val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(validatedCreateBooking)
 
     return Success(emergencyTransferSpaceBooking)
