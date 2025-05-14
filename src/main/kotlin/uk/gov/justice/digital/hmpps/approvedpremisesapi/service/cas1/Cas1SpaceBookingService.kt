@@ -310,7 +310,15 @@ class Cas1SpaceBookingService(
       is Success -> result.value
     }
 
-    cas1SpaceBookingUpdateService.update(updateExistingBookingDetails)
+    cas1SpaceBookingUpdateService.update(
+      updateExistingBookingDetails.copy(
+        transferredTo = TransferInfo(
+          type = TransferType.EMERGENCY,
+          booking = validatedCreateBooking.bookingToCreate,
+          changeRequestId = null,
+        ),
+      ),
+    )
 
     val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(validatedCreateBooking)
 
@@ -380,6 +388,11 @@ class Cas1SpaceBookingService(
       departureDate = arrivalDate,
       updatedBy = user,
       updateType = UpdateType.TRANSFER,
+      transferredTo = TransferInfo(
+        type = TransferType.PLANNED,
+        booking = validatedCreateBooking.bookingToCreate,
+        changeRequestId = changeRequest.id,
+      ),
     )
     cas1SpaceBookingUpdateService.validate(updateExistingBookingDetails).ifError { return it.reviseType() }
 

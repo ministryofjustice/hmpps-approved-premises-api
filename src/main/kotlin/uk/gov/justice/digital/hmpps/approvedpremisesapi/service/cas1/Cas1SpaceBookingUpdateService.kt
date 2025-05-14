@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.successOrErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -62,6 +63,7 @@ class Cas1SpaceBookingUpdateService(
         previousArrivalDateIfChanged = previousArrivalDateIfChanged,
         previousDepartureDateIfChanged = previousDepartureDateIfChanged,
         previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
+        transferredTo = details.transferredTo,
       ),
     )
 
@@ -149,6 +151,6 @@ class Cas1SpaceBookingUpdateService(
     val characteristics: List<CharacteristicEntity>? = null,
     val updatedBy: UserEntity,
     val updateType: Cas1SpaceBookingService.UpdateType,
-    val transferredTo: Cas1SpaceBookingEntity? = null,
+    val transferredTo: TransferInfo? = null,
   )
 }

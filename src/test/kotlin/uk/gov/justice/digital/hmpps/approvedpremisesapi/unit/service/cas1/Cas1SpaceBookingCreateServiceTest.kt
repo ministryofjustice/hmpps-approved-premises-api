@@ -290,8 +290,8 @@ class Cas1SpaceBookingCreateServiceTest {
       service.create(
         Cas1SpaceBookingCreateService.ValidatedCreateBooking(
           bookingToCreate = spaceBookingToCreate,
-          transferredFrom = transferInfo
-        )
+          transferredFrom = transferInfo,
+        ),
       )
 
       verify { cas1ApplicationStatusService.spaceBookingMade(persistedBooking) }

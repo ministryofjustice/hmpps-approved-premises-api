@@ -37,10 +37,6 @@ class Cas1SpaceBookingCreateService(
 
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
 
-    cas1BookingDomainEventService.spaceBookingMade(Cas1BookingCreatedEvent(spaceBooking, createdBy))
-
-    cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
-
     cas1BookingDomainEventService.spaceBookingMade(
       Cas1BookingCreatedEvent(
         booking = spaceBooking,
@@ -48,6 +44,8 @@ class Cas1SpaceBookingCreateService(
         transferredFrom = validatedDetails.transferredFrom,
       ),
     )
+
+    cas1BookingEmailService.spaceBookingMade(spaceBooking, application)
 
     return spaceBooking
   }
@@ -82,7 +80,7 @@ class Cas1SpaceBookingCreateService(
         ValidatedCreateBooking(
           bookingToCreate = toSpaceBooking(details),
           transferredFrom = details.transferredFrom,
-        )
+        ),
       )
     }
   }
@@ -135,7 +133,7 @@ class Cas1SpaceBookingCreateService(
 
   data class ValidatedCreateBooking(
     val bookingToCreate: Cas1SpaceBookingEntity,
-    val transferredFrom: TransferInfo?
+    val transferredFrom: TransferInfo?,
   )
 
   data class CreateBookingDetails(

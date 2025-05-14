@@ -1239,6 +1239,8 @@ components:
           description: This is deprecated, use the schema version information on the enclosing Cas1TimelineEvent
           deprecated: true
           type: integer
+        transferredTo:
+          $ref: '#/components/schemas/Cas1TimelineEventTransferInfo'
       required:
         - premises
         - expectedArrival
