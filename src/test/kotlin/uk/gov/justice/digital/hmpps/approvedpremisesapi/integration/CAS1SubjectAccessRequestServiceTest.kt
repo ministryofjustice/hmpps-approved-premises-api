@@ -747,7 +747,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "application_id": "${placementRequirement.application.id}",
         "assessment_id": "${placementRequirement.assessment.id}",
         "placement_requirements_id": "${placementRequirement.id}",
-        "gender": "${placementRequirement.gender.name}",
         "ap_type": "${placementRequirement.apType.name}",
         "outcode": "${placementRequirement.postcodeDistrict.outcode}",
         "radius": ${placementRequirement.radius},

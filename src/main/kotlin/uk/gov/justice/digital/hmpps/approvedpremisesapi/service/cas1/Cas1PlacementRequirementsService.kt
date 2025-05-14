@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
@@ -43,7 +42,6 @@ class Cas1PlacementRequirementsService(
       PlacementRequirementsEntity(
         id = UUID.randomUUID(),
         apType = JpaApType.fromApiType(requirements.type),
-        gender = JpaGender.fromApiType(requirements.gender),
         postcodeDistrict = postcodeDistrict,
         radius = requirements.radius,
         desirableCriteria = desirableCriteria,

@@ -11,7 +11,6 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -25,7 +24,6 @@ interface PlacementRequirementsRepository : JpaRepository<PlacementRequirementsE
 data class PlacementRequirementsEntity(
   @Id
   val id: UUID,
-  val gender: JpaGender,
   val apType: JpaApType,
 
   @ManyToOne
@@ -74,17 +72,5 @@ enum class JpaApType(val apiType: ApType) {
 
   companion object {
     fun fromApiType(apiType: ApType) = entries.first { it.apiType == apiType }
-  }
-}
-
-// Do not re-order these elements as we currently use ordinal enum mapping in hibernate
-// (i.e. they're persisted as index numbers, not enum name strings)
-enum class JpaGender(val apiType: Gender) {
-  MALE(Gender.male),
-  FEMALE(Gender.female),
-  ;
-
-  companion object {
-    fun fromApiType(apiType: Gender) = entries.first { it.apiType == apiType }
   }
 }
