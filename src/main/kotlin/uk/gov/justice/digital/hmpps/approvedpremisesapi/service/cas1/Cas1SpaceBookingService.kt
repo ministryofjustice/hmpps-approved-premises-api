@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Genera
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ifError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -72,18 +73,23 @@ class Cas1SpaceBookingService(
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
     lockablePlacementRequestRepository.acquirePessimisticLock(placementRequestId)
 
-    val createBookingDetails = Cas1SpaceBookingCreateService.CreateBookingDetails(
-      premisesId = premisesId,
-      placementRequestId = placementRequestId,
-      expectedArrivalDate = arrivalDate,
-      expectedDepartureDate = departureDate,
-      createdBy = createdBy,
-      characteristics = characteristics,
-      transferType = null,
-      transferredFrom = null,
-    )
-
-    cas1SpaceBookingCreateService.validate(createBookingDetails).ifError { return it.reviseType() }
+    val validatedCreateBooking = when (
+      val result = cas1SpaceBookingCreateService.validate(
+        CreateBookingDetails(
+          premisesId = premisesId,
+          placementRequestId = placementRequestId,
+          expectedArrivalDate = arrivalDate,
+          expectedDepartureDate = departureDate,
+          createdBy = createdBy,
+          characteristics = characteristics,
+          transferType = null,
+          transferredFrom = null,
+        ),
+      )
+    ) {
+      is CasResult.Error -> return result.reviseType()
+      is Success -> result.value
+    }
 
     val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
     placementRequest!!.booking?.let {
@@ -96,7 +102,7 @@ class Cas1SpaceBookingService(
       return placementRequestId hasConflictError "A Space Booking already exists for this placement request"
     }
 
-    success(cas1SpaceBookingCreateService.create(createBookingDetails))
+    success(cas1SpaceBookingCreateService.create(validatedCreateBooking))
   }
 
   fun search(
@@ -282,21 +288,27 @@ class Cas1SpaceBookingService(
         return GeneralValidationError(it)
       }
 
-    val createNewBookingDetails = Cas1SpaceBookingCreateService.CreateBookingDetails(
-      premisesId = requirements.destinationPremisesId,
-      placementRequestId = existingCas1SpaceBooking.placementRequest!!.id,
-      expectedArrivalDate = arrivalDate,
-      expectedDepartureDate = departureDate,
-      createdBy = user,
-      characteristics = existingCas1SpaceBooking.criteria,
-      transferType = TransferType.EMERGENCY,
-      transferredFrom = existingCas1SpaceBooking,
-    )
-    cas1SpaceBookingCreateService.validate(createNewBookingDetails).ifError { return it.reviseType() }
+    val validatedCreateBooking = when (
+      val result = cas1SpaceBookingCreateService.validate(
+        CreateBookingDetails(
+          premisesId = requirements.destinationPremisesId,
+          placementRequestId = existingCas1SpaceBooking.placementRequest!!.id,
+          expectedArrivalDate = arrivalDate,
+          expectedDepartureDate = departureDate,
+          createdBy = user,
+          characteristics = existingCas1SpaceBooking.criteria,
+          transferType = TransferType.EMERGENCY,
+          transferredFrom = existingCas1SpaceBooking,
+        ),
+      )
+    ) {
+      is CasResult.Error -> return result.reviseType()
+      is Success -> result.value
+    }
 
     cas1SpaceBookingUpdateService.update(updateExistingBookingDetails)
 
-    val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(createNewBookingDetails)
+    val emergencyTransferSpaceBooking = cas1SpaceBookingCreateService.create(validatedCreateBooking)
 
     return Success(emergencyTransferSpaceBooking)
   }
@@ -337,17 +349,23 @@ class Cas1SpaceBookingService(
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val createBookingDetails = Cas1SpaceBookingCreateService.CreateBookingDetails(
-      premisesId = cas1NewPlannedTransfer.destinationPremisesId,
-      placementRequestId = placementRequest.id,
-      expectedArrivalDate = arrivalDate,
-      expectedDepartureDate = departureDate,
-      createdBy = user,
-      characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
-      transferType = TransferType.PLANNED,
-      transferredFrom = existingCas1SpaceBooking,
-    )
-    cas1SpaceBookingCreateService.validate(createBookingDetails).ifError { return it.reviseType() }
+    val validatedCreateBooking = when (
+      val result = cas1SpaceBookingCreateService.validate(
+        CreateBookingDetails(
+          premisesId = cas1NewPlannedTransfer.destinationPremisesId,
+          placementRequestId = placementRequest.id,
+          expectedArrivalDate = arrivalDate,
+          expectedDepartureDate = departureDate,
+          createdBy = user,
+          characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
+          transferType = TransferType.PLANNED,
+          transferredFrom = existingCas1SpaceBooking,
+        ),
+      )
+    ) {
+      is CasResult.Error -> return result.reviseType()
+      is Success -> result.value
+    }
 
     val updateExistingBookingDetails = UpdateBookingDetails(
       bookingId = bookingId,
@@ -360,7 +378,7 @@ class Cas1SpaceBookingService(
 
     cas1SpaceBookingUpdateService.update(updateExistingBookingDetails)
 
-    val newSpaceBooking = cas1SpaceBookingCreateService.create(createBookingDetails)
+    val newSpaceBooking = cas1SpaceBookingCreateService.create(validatedCreateBooking)
 
     cas1ChangeRequestService.approvedPlannedTransfer(changeRequest, user, newSpaceBooking)
 

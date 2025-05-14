@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.ValidatedCreateBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService
@@ -129,7 +130,7 @@ class Cas1SpaceBookingServiceTest {
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
 
-      val commonValidationError = CasResult.GeneralValidationError<Unit>("oh dear")
+      val commonValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("oh dear")
       every { cas1SpaceBookingCreateService.validate(any()) } returns commonValidationError
 
       val result = service.createNewBooking(
@@ -153,7 +154,9 @@ class Cas1SpaceBookingServiceTest {
 
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
-      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(Unit)
+
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(validatedCreateBooking)
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
 
@@ -179,12 +182,13 @@ class Cas1SpaceBookingServiceTest {
         .withPremises(premises)
         .produce()
 
-      val placementRequestwithLegacyBooking = placementRequest.copy(
+      val placementRequestWithLegacyBooking = placementRequest.copy(
         booking = legacyBooking,
       )
 
-      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(Unit)
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequestwithLegacyBooking
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(validatedCreateBooking)
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequestWithLegacyBooking
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
 
@@ -244,9 +248,10 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = null,
       )
 
-      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
-      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
+      every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -317,9 +322,10 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = null,
       )
 
-      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
-      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
+      every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -1091,7 +1097,7 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = existingSpaceBooking,
       )
 
-      val commonCreateValidationError = CasResult.GeneralValidationError<Unit>("oh no create validation failed")
+      val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("oh no create validation failed")
       every { cas1SpaceBookingCreateService.validate(details) } returns commonCreateValidationError
 
       val result = service.createEmergencyTransfer(
@@ -1135,7 +1141,8 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = existingSpaceBooking,
       )
 
-      every { cas1SpaceBookingCreateService.validate(createDetails) } returns CasResult.Success(Unit)
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(createDetails) } returns CasResult.Success(validatedCreateBooking)
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
@@ -1192,9 +1199,10 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = existingSpaceBooking,
       )
 
-      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
-      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
+      every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
@@ -1404,7 +1412,7 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = existingSpaceBooking,
       )
 
-      val commonCreateValidationError = CasResult.GeneralValidationError<Unit>("common create validation failed")
+      val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("common create validation failed")
       every { cas1SpaceBookingCreateService.validate(details) } returns commonCreateValidationError
 
       val result = service.createPlannedTransfer(
@@ -1443,7 +1451,8 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = existingSpaceBooking,
       )
 
-      every { cas1SpaceBookingCreateService.validate(createDetails) } returns CasResult.Success(Unit)
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(createDetails) } returns CasResult.Success(validatedCreateBooking)
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
@@ -1497,9 +1506,10 @@ class Cas1SpaceBookingServiceTest {
         transferredFrom = existingSpaceBooking,
       )
 
-      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(Unit)
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory().produce()
-      every { cas1SpaceBookingCreateService.create(details) } returns createdSpaceBooking
+      every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
       val updateDetails = UpdateBookingDetails(
         bookingId = existingSpaceBooking.id,
