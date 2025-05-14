@@ -87,5 +87,9 @@ data class Cas2ApplicationSummaryEntity(
   val currentPrisonCode: String?,
   @Column(name = "assignment_date")
   val assignmentDate: OffsetDateTime?,
+  @Column(name = "bail_hearing_date")
+  var bailHearingDate: LocalDate? = null,
+  @Column(name = "application_origin")
+  var applicationOrigin: String? = null,
 
 )

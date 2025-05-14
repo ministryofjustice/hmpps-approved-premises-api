@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
@@ -144,6 +145,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withData("{}")
         withSubmittedAt(oldSubmitted)
         withReferringPrisonCode("NEW")
+        withApplicationOrigin(ApplicationOrigin.prisonBail)
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -155,6 +157,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedAt(newerCreated)
         withData("{}")
         withSubmittedAt(newerSubmitted)
+        withApplicationOrigin(ApplicationOrigin.courtBail)
       }
 
       val application1Assignment1 = Cas2ApplicationAssignmentEntity(
@@ -272,6 +275,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
           numberOfTransfers = "0",
+          applicationOrigin = application2.applicationOrigin,
+          bailHearingDate = null,
         ),
         SubmittedApplicationReportRow(
           eventId = event1Id.toString(),
@@ -286,6 +291,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
           numberOfTransfers = "1",
+          applicationOrigin = application1.applicationOrigin,
+          bailHearingDate = null,
         ),
       )
         .toDataFrame()
@@ -533,6 +540,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
+        withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -543,6 +551,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
+        withApplicationOrigin(ApplicationOrigin.prisonBail)
       }
 
       // outside time limit -- should not feature in report
@@ -570,6 +579,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
           startedBy = application2.createdByUser.nomisUsername,
+          applicationOrigin = application2.applicationOrigin,
         ),
         UnsubmittedApplicationsReportRow(
           applicationId = application1.id.toString(),
@@ -577,6 +587,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
           startedBy = application1.createdByUser.nomisUsername,
+          applicationOrigin = application1.applicationOrigin,
         ),
       )
         .toDataFrame()

@@ -73,6 +73,11 @@ components:
             assignmentDate:
               type: string
               format: date
+            applicationOrigin:
+              $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+            bailHearingDate:
+              type: string
+              format: date
           required:
             - createdBy
             - schemaVersion
@@ -176,6 +181,11 @@ components:
         currentPrisonName:
           type: string
         assignmentDate:
+          type: string
+          format: date
+        applicationOrigin:
+          $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
           type: string
           format: date
       required:
