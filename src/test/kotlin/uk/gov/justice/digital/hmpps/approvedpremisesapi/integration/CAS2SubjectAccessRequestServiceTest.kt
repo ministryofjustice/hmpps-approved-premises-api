@@ -288,7 +288,9 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "telephone_number": "${application.telephoneNumber}",
       "hdc_eligibility_date": "$arrivedAtDateOnly",
       "conditional_release_date": "$arrivedAtDateOnly",
-      "abandoned_at": null
+      "abandoned_at": null,
+      "application_origin": "${application.applicationOrigin}",
+      "bail_hearing_date": null,
     }
   """.trimIndent()
 
