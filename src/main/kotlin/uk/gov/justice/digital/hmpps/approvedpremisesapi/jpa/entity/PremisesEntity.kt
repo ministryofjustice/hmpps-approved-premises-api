@@ -19,6 +19,7 @@ import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
@@ -28,7 +29,7 @@ import java.util.UUID
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query(
     """
-      SELECT
+SELECT
           p.id as id,
           p.name as name,
           p.address_line1 as addressLine1,
@@ -36,20 +37,18 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
           p.postcode as postcode,
           pdu.name as pdu,
           p.status as status,
-          CAST(COALESCE((SELECT count(beds.id)
-           FROM temporary_accommodation_premises ap
-           INNER JOIN rooms ON ap.premises_id = rooms.premises_id
-           INNER JOIN beds ON rooms.id = beds.room_id
-           WHERE ap.premises_id = p.id AND (beds.end_date IS NULL OR beds.end_date > CURRENT_DATE)
-           GROUP BY ap.premises_id
-          ),0) as int) as bedCount,
-          la.name as localAuthorityAreaName
+          la.name as localAuthorityAreaName,
+          beds.id as bedspaceId,
+          rooms.name as bedspaceReference,
+          CASE WHEN beds.end_date <= CURRENT_DATE THEN 'archived' ELSE 'online' END as bedspaceStatus
       FROM
           temporary_accommodation_premises tap
           INNER JOIN premises p on tap.premises_id = p.id
           INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
           INNER JOIN probation_delivery_units pdu ON tap.probation_delivery_unit_id = pdu.id
           LEFT JOIN local_authority_areas la ON p.local_authority_area_id = la.id
+          LEFT JOIN rooms on rooms.premises_id = tap.premises_id
+          LEFT JOIN beds ON rooms.id = beds.room_id
       WHERE pr.id = :regionId
         AND (:postcodeOrAddress is null
           OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
@@ -57,7 +56,6 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
           OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
           )
         AND (:propertyStatus is null OR p.status = :propertyStatus)
-      GROUP BY p.id, p.name, p.address_line1, p.address_line2, p.postcode, pdu.name, p.status, la.name
       """,
     nativeQuery = true,
   )
@@ -303,8 +301,10 @@ interface TemporaryAccommodationPremisesSummary {
   val postcode: String
   val pdu: String
   val status: PropertyStatus
-  val bedCount: Int
   val localAuthorityAreaName: String?
+  val bedspaceId: UUID?
+  val bedspaceReference: String?
+  val bedspaceStatus: Cas3BedspaceSummary.Status?
 }
 
 data class ApprovedPremisesBasicSummary(

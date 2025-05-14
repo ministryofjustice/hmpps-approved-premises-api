@@ -36,10 +36,15 @@ class Cas3PremisesController(
 ) : PremisesCas3Delegate {
   override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
-    val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus)
-    val transformedSummaries = summaries.map(cas3PremisesSummaryTransformer::transformDomainToCas3PremisesSummary)
+    val premisesSummariesByPremisesId = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus).groupBy { it.id }
+    val transformedSummaries = premisesSummariesByPremisesId.map { map ->
+      cas3PremisesSummaryTransformer.transformDomainToCas3PremisesSummary(
+        map.value.first(),
+        map.value.filter { it.bedspaceId != null }.map(cas3PremisesSummaryTransformer::transformDomainToCas3BedspaceSummary),
+      )
+    }
 
-    return ResponseEntity.ok(transformedSummaries)
+    return ResponseEntity.ok(transformedSummaries.sortedBy { it.id })
   }
 
   override fun postPremisesBookingDeparture(
