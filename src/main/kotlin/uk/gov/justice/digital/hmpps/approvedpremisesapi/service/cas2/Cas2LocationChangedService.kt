@@ -21,17 +21,8 @@ class Cas2LocationChangedService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun isLocationChangedApplicationAssignmentRequired(application: Cas2ApplicationEntity, prisonCode: String): Boolean {
-    println("isLocationChangedApplicationAssignmentRequired")
-    println("new location prisonCode: $prisonCode")
-    println("application.hasLocationChangedAssignment: ${application.hasLocationChangedAssignment}")
-    println("referringPrisonCode: ${application.referringPrisonCode}")
     val isFirstValidLocationChangedAssigment = !application.hasLocationChangedAssignment && prisonCode != application.referringPrisonCode
-    println("isFirstValidLocationChangedAssigment: $isFirstValidLocationChangedAssigment")
-
     val isValidLocationChangedAssignment = application.hasLocationChangedAssignment && prisonCode != application.mostRecentLocationAssignment?.prisonCode
-    println("application.mostRecentLocationAssignment: ${application.mostRecentLocationAssignment}")
-    println("isValidLocationChangedAssignment: $isValidLocationChangedAssignment")
-    println(isFirstValidLocationChangedAssigment || isValidLocationChangedAssignment)
     return isFirstValidLocationChangedAssigment || isValidLocationChangedAssignment
   }
 
