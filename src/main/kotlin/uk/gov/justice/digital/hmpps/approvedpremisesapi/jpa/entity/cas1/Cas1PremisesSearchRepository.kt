@@ -11,10 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.util.UUID
 
-private const val AP_TYPE_FILTER = """
-  AND result.ap_type=:apType
-"""
-
 private const val PREMISES_CHARACTERISTICS_FILTER = """
   AND (
     SELECT COUNT(distinct pc.characteristic_id)
@@ -78,7 +74,6 @@ FROM
 ) AS result
 WHERE
   1 = 1
-#AP_TYPE_FILTER#
 #PREMISES_CHARACTERISTICS_FILTER#
 #ROOM_CHARACTERISTICS_FILTER#
 ORDER BY result.distance_in_miles
@@ -90,14 +85,12 @@ class Cas1SpaceSearchRepository(
 ) {
   fun findAllPremisesWithCharacteristicsByDistance(
     targetPostcodeDistrict: String,
-    approvedPremisesType: ApprovedPremisesType?,
     isWomensPremises: Boolean,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
   ): List<CandidatePremises> {
     val (query, parameters) = resolveCandidatePremisesQueryTemplate(
       targetPostcodeDistrict,
-      approvedPremisesType,
       isWomensPremises,
       premisesCharacteristics,
       roomCharacteristics,
@@ -128,7 +121,6 @@ class Cas1SpaceSearchRepository(
 
   private fun resolveCandidatePremisesQueryTemplate(
     targetPostcodeDistrict: String,
-    apType: ApprovedPremisesType?,
     isWomensPremises: Boolean,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
@@ -137,21 +129,6 @@ class Cas1SpaceSearchRepository(
     val params = mutableMapOf<String, Any>(
       "outcode" to targetPostcodeDistrict,
     )
-
-    when {
-      (apType == null || apType == ApprovedPremisesType.NORMAL) -> {
-        query = query.replace("#AP_TYPE_FILTER#", "")
-      }
-      else -> {
-        val apTypeName = when (apType) {
-          ApprovedPremisesType.MHAP_ST_JOSEPHS, ApprovedPremisesType.MHAP_ELLIOTT_HOUSE -> "MHAP"
-          else -> apType.name
-        }
-
-        query = query.replace("#AP_TYPE_FILTER#", AP_TYPE_FILTER)
-        params["apType"] = apTypeName
-      }
-    }
 
     when {
       isWomensPremises -> {

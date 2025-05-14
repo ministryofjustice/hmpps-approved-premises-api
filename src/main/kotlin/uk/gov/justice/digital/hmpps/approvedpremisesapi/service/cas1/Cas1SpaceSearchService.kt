@@ -8,8 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import java.util.UUID
@@ -25,37 +23,18 @@ class Cas1SpaceSearchService(
     val application = applicationRepository.findByIdOrNull(searchParameters.applicationId)
       ?: throw NotFoundProblem(applicationId, "Application")
 
-    val requiredCharacteristics = getRequiredCharacteristics(searchParameters)
+    val groupedCharacteristics = getGroupedCharacteristics(searchParameters)
 
     return spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
       targetPostcodeDistrict = searchParameters.targetPostcodeDistrict,
-      approvedPremisesType = requiredCharacteristics.apType,
       isWomensPremises = application.isWomensApplication!!,
-      premisesCharacteristics = requiredCharacteristics.groupedCharacteristics.premisesCharacteristics,
-      roomCharacteristics = requiredCharacteristics.groupedCharacteristics.roomCharacteristics,
+      premisesCharacteristics = groupedCharacteristics.premisesCharacteristics,
+      roomCharacteristics = groupedCharacteristics.roomCharacteristics,
     )
   }
 
-  private fun getRequiredCharacteristics(parameters: Cas1SpaceSearchParameters): RequiredCharacteristics {
-    val requirements = parameters.requirements
-    val apType = requirements.apType
-    return RequiredCharacteristics(
-      apType = if (apType != null) {
-        apType.asApprovedPremisesType()
-      } else {
-        requirements.apTypes?.map { it.asApprovedPremisesType() }?.firstOrNull()
-      },
-      groupedCharacteristics = getSpaceCharacteristics(parameters),
-    )
-  }
-
-  private fun getSpaceCharacteristics(parameters: Cas1SpaceSearchParameters): GroupedCharacteristics {
-    val requirements = parameters.requirements
-    val propertyNames =
-      (
-        (requirements.spaceCharacteristics?.map { it.value } ?: listOf()) +
-          (parameters.spaceCharacteristics?.map { it.value } ?: listOf())
-        ).toSet()
+  private fun getGroupedCharacteristics(parameters: Cas1SpaceSearchParameters): GroupedCharacteristics {
+    val propertyNames = (parameters.spaceCharacteristics?.map { it.value } ?: listOf()).toSet()
     val characteristics = characteristicService.getCharacteristicsByPropertyNames(propertyNames.toList(), ServiceName.approvedPremises)
 
     return GroupedCharacteristics(
@@ -68,11 +47,6 @@ class Cas1SpaceSearchService(
 
   private fun CharacteristicEntity.isRoomCharacteristic(): Boolean = this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("room")
 }
-
-data class RequiredCharacteristics(
-  val apType: ApprovedPremisesType?,
-  val groupedCharacteristics: GroupedCharacteristics,
-)
 
 data class GroupedCharacteristics(
   val premisesCharacteristics: List<UUID>,
