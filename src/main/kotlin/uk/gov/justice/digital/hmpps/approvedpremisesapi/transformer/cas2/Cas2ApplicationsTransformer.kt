@@ -80,7 +80,8 @@ class Cas2ApplicationsTransformer(
     applicationOrigin = when (jpaSummary.applicationOrigin) {
       "courtBail" -> ApplicationOrigin.courtBail
       "prisonBail" -> ApplicationOrigin.prisonBail
-      else -> ApplicationOrigin.homeDetentionCurfew
+      "homeDetentionCurfew" -> ApplicationOrigin.homeDetentionCurfew
+      else -> error("Unexpected original value ${jpaSummary.applicationOrigin}")
     },
     bailHearingDate = jpaSummary.bailHearingDate,
   )
