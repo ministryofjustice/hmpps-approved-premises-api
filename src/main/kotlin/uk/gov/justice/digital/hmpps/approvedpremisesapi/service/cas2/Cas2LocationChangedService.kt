@@ -45,7 +45,7 @@ class Cas2LocationChangedService(
         }
 
         if (prisoner.prisonId == "OUT") {
-          log.info("Prisoner has been released, no action required")
+          log.info("Prisoner $nomsNumber has been released, no action required")
         } else if (isLocationChangedApplicationAssignmentRequired(application, prisoner.prisonId)) {
           application.createApplicationAssignment(
             prisonCode = prisoner.prisonId,
