@@ -26,9 +26,9 @@ class WebClientCache(
 ) {
 
   fun checkPreemptiveCacheStatus(cacheConfig: PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus {
-    val cacheKeySet = CacheKeySet(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
+    val cacheKeyResolver = CacheKeyResolver(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
 
-    val cacheEntryMetadata = getCacheEntryMetadataIfExists(cacheKeySet.metadataKey)
+    val cacheEntryMetadata = getCacheEntryMetadataIfExists(cacheKeyResolver.metadataKey)
       ?: return PreemptiveCacheEntryStatus.MISS
 
     val refreshableAfter = cacheEntryMetadata.refreshableAfter
@@ -124,7 +124,7 @@ class WebClientCache(
   }
 
   private fun <ResponseType : Any> pollCacheWithBlockingWait(
-    cacheKeySet: CacheKeySet,
+    cacheKeyResolver: CacheKeyResolver,
     typeReference: TypeReference<ResponseType>,
     requestBuilder: BaseHMPPSClient.HMPPSRequestConfiguration,
     cacheConfig: PreemptiveCacheConfig,
@@ -132,36 +132,41 @@ class WebClientCache(
     val pollingStart = System.currentTimeMillis()
 
     do {
-      val cacheEntryMetadata = getCacheEntryMetadataIfExists(cacheKeySet.metadataKey)
+      val cacheEntryMetadata = getCacheEntryMetadataIfExists(cacheKeyResolver.metadataKey)
 
       if (cacheEntryMetadata == null) {
         Thread.sleep(POLL_CACHE_WAIT_DURATION_BEFORE_RETRY_MS)
         continue
       }
 
-      return resultFromCacheMetadata(cacheEntryMetadata, cacheKeySet, typeReference)
+      return resultFromCacheMetadata(cacheEntryMetadata, cacheKeyResolver, typeReference)
     } while (System.currentTimeMillis() - pollingStart < requestBuilder.preemptiveCacheTimeoutMs)
 
     return ClientResult.Failure.PreemptiveCacheTimeout(
       cacheConfig.cacheName,
-      cacheKeySet.metadataKey,
+      cacheKeyResolver.metadataKey,
       requestBuilder.preemptiveCacheTimeoutMs,
     )
   }
 
-  private fun getCacheKeySet(requestBuilder: BaseHMPPSClient.HMPPSRequestConfiguration, cacheConfig: PreemptiveCacheConfig): CacheKeySet {
+  private fun getCacheKeySet(requestBuilder: BaseHMPPSClient.HMPPSRequestConfiguration, cacheConfig: PreemptiveCacheConfig): CacheKeyResolver {
     val key = requestBuilder.preemptiveCacheKey ?: throw RuntimeException("Must provide a preemptiveCacheKey")
-    return CacheKeySet(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
+    return CacheKeyResolver(preemptiveCacheKeyPrefix, cacheConfig.cacheName, key)
   }
 
-  private fun writeToRedis(cacheKeySet: CacheKeySet, cacheEntry: PreemptiveCacheMetadata, body: String?, hardTtlSeconds: Long) {
-    redisTemplate.boundValueOps(cacheKeySet.metadataKey).set(
+  private fun writeToRedis(
+    cacheKeyResolver: CacheKeyResolver,
+    cacheEntry: PreemptiveCacheMetadata,
+    body: String?,
+    hardTtlSeconds: Long,
+  ) {
+    redisTemplate.boundValueOps(cacheKeyResolver.metadataKey).set(
       objectMapper.writeValueAsString(cacheEntry),
       Duration.ofSeconds(hardTtlSeconds),
     )
 
     if (body != null) {
-      redisTemplate.boundValueOps(cacheKeySet.dataKey).set(
+      redisTemplate.boundValueOps(cacheKeyResolver.dataKey).set(
         body,
         Duration.ofSeconds(hardTtlSeconds),
       )
@@ -179,10 +184,14 @@ class WebClientCache(
 
   private fun getCacheEntryBody(dataKey: String): String? = redisTemplate.boundValueOps(dataKey).get()
 
-  private fun <ResponseType> resultFromCacheMetadata(cacheEntry: PreemptiveCacheMetadata, cacheKeySet: CacheKeySet, typeReference: TypeReference<ResponseType>): ClientResult<ResponseType> {
+  private fun <ResponseType> resultFromCacheMetadata(
+    cacheEntry: PreemptiveCacheMetadata,
+    cacheKeyResolver: CacheKeyResolver,
+    typeReference: TypeReference<ResponseType>,
+  ): ClientResult<ResponseType> {
     val cachedBody = if (cacheEntry.hasResponseBody) {
-      getCacheEntryBody(cacheKeySet.dataKey) ?: return ClientResult.Failure.CachedValueUnavailable(
-        cacheKey = cacheKeySet.dataKey,
+      getCacheEntryBody(cacheKeyResolver.dataKey) ?: return ClientResult.Failure.CachedValueUnavailable(
+        cacheKey = cacheKeyResolver.dataKey,
       )
     } else {
       null
@@ -236,12 +245,18 @@ class WebClientCache(
 
   )
 
+  /**
+   * This is written into the cache using the key defined by [CacheKeyResolver.metadataKey]
+   */
   @JsonInclude(JsonInclude.Include.NON_NULL)
   data class PreemptiveCacheMetadata(
     val httpStatus: HttpStatus,
     val refreshableAfter: Instant,
     val method: MarshallableHttpMethod?,
     val path: String?,
+    /**
+     * If true, there should be a body cached using the key defined by [CacheKeyResolver.dataKey]
+     */
     val hasResponseBody: Boolean,
     val attempt: Int?,
   )
@@ -269,4 +284,27 @@ enum class MarshallableHttpMethod {
   }
 
   fun toHttpMethod() = HttpMethod.valueOf(this.name)
+}
+
+class CacheKeyResolver(
+  private val prefix: String,
+  private val cacheName: String,
+  private val key: String,
+) {
+
+  /**
+   * Stores an instance of [WebClientCache.PreemptiveCacheMetadata]
+   */
+  val metadataKey: String
+    get() {
+      return "$prefix-$cacheName-$key-metadata"
+    }
+
+  /**
+   * Stores the actual response payload, if [WebClientCache.PreemptiveCacheMetadata.hasResponseBody] is true
+   */
+  val dataKey: String
+    get() {
+      return "$prefix-$cacheName-$key-data"
+    }
 }

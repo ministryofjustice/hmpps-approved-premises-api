@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeyResolver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -211,7 +211,7 @@ class AssessmentTest : IntegrationTestBase() {
           ) { assessment, application ->
             // Simulate https://ministryofjustice.sentry.io/issues/4479884804 by deleting the data key from the cache while
             // preserving the metadata key.
-            val cacheKeys = CacheKeySet(preemptiveCacheKeyPrefix, "inmateDetails", inmateDetails.offenderNo)
+            val cacheKeys = CacheKeyResolver(preemptiveCacheKeyPrefix, "inmateDetails", inmateDetails.offenderNo)
             redisTemplate.delete(cacheKeys.dataKey)
 
             val url = "/assessments"

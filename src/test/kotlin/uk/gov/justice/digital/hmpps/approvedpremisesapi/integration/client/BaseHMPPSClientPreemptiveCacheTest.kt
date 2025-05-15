@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.BaseHMPPSClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeyResolver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
@@ -257,7 +257,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 
     // Simulate https://ministryofjustice.sentry.io/issues/4479884804 by deleting the data key from the cache while
     // preserving the metadata key.
-    val keys = CacheKeySet(preemptiveCacheKeyPrefix, CACHE_NAME, nomsNumber)
+    val keys = CacheKeyResolver(preemptiveCacheKeyPrefix, CACHE_NAME, nomsNumber)
     redisTemplate.delete(keys.dataKey)
 
     val thirdResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
