@@ -19,6 +19,7 @@ class Cas2EmailService(
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
 
@@ -62,7 +63,7 @@ class Cas2EmailService(
           "nomsNumber" to application.nomsNumber,
           "receivingPrisonName" to prisoner.prisonName,
           "transferringPrisonName" to oldOmu.prisonName,
-          "link" to getLink(application.id),
+          "link" to getAssessorLink(application.id),
         ),
       )
     }.orElseThrow()
@@ -90,12 +91,13 @@ class Cas2EmailService(
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "receivingPrisonName" to newOmu.prisonName,
-        "link" to getLink(application.id),
+        "link" to getAssessorLink(application.id),
       ),
     )
   }
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
+  private fun getAssessorLink(applicationId: UUID): String = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
   fun getOldPomUserId(application: Cas2ApplicationEntity, prisoner: Prisoner) = application.applicationAssignments.firstOrNull { it.allocatedPomUser != null && it.prisonCode != prisoner.prisonId }?.allocatedPomUser?.id
   fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String? = application.applicationAssignments.firstOrNull { it.prisonCode != newPrisonCode }?.prisonCode
 }
