@@ -269,6 +269,15 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertThat(thirdResult is ClientResult.Failure.CachedValueUnavailable).isTrue
     assertThat((thirdResult as ClientResult.Failure.CachedValueUnavailable).cacheKey).isEqualTo(keys.dataKey)
     assertCallCount("/api/offenders/$nomsNumber", 1)
+
+    // Ensure the metadata is removed as it refers to data that doesn't exist
+    assertThat(getMetadata(keys.metadataKey)).isNull()
+
+    mockSentryService.assertErrorMessageRaised(
+      "Could not find data entry in cache for key '$preemptiveCacheKeyPrefix-inmateDetails-ABCD1234-data', " +
+        "despite the metadata saying the body was available. " +
+        "Will remove the corrupt metadata entry '$preemptiveCacheKeyPrefix-inmateDetails-ABCD1234-metadata'",
+    )
   }
 
   private fun assertMetadataAttemptCount(

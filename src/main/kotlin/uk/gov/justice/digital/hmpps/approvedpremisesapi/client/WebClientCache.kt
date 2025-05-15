@@ -185,31 +185,44 @@ class WebClientCache(
   private fun getCacheEntryBody(dataKey: String): String? = redisTemplate.boundValueOps(dataKey).get()
 
   private fun <ResponseType> resultFromCacheMetadata(
-    cacheEntry: PreemptiveCacheMetadata,
+    metadataEntry: PreemptiveCacheMetadata,
     cacheKeyResolver: CacheKeyResolver,
     typeReference: TypeReference<ResponseType>,
   ): ClientResult<ResponseType> {
-    val cachedBody = if (cacheEntry.hasResponseBody) {
-      getCacheEntryBody(cacheKeyResolver.dataKey) ?: return ClientResult.Failure.CachedValueUnavailable(
-        cacheKey = cacheKeyResolver.dataKey,
-      )
+    val cachedBody = if (metadataEntry.hasResponseBody) {
+      val dataKey = cacheKeyResolver.dataKey
+      val metadataKey = cacheKeyResolver.metadataKey
+      val cachedBody = getCacheEntryBody(cacheKeyResolver.dataKey)
+
+      if (cachedBody == null) {
+        sentryService.captureErrorMessage(
+          "Could not find data entry in cache for key '$dataKey', despite the metadata saying the body was available. " +
+            "Will remove the corrupt metadata entry '$metadataKey'",
+        )
+        redisTemplate.delete(metadataKey)
+        return ClientResult.Failure.CachedValueUnavailable(
+          cacheKey = cacheKeyResolver.dataKey,
+        )
+      }
+
+      cachedBody
     } else {
       null
     }
 
-    if (cacheEntry.httpStatus.is2xxSuccessful) {
+    if (metadataEntry.httpStatus.is2xxSuccessful) {
       return ClientResult.Success(
-        status = cacheEntry.httpStatus,
+        status = metadataEntry.httpStatus,
         body = objectMapper.readValue(cachedBody!!, typeReference),
         isPreemptivelyCachedResponse = true,
       )
     }
 
     return ClientResult.Failure.StatusCode(
-      status = cacheEntry.httpStatus,
+      status = metadataEntry.httpStatus,
       body = cachedBody,
-      method = cacheEntry.method!!.toHttpMethod(),
-      path = cacheEntry.path!!,
+      method = metadataEntry.method!!.toHttpMethod(),
+      path = metadataEntry.path!!,
       isPreemptivelyCachedResponse = true,
     )
   }
