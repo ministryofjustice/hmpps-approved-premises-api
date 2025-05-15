@@ -225,6 +225,10 @@ sealed interface ClientResult<ResponseType> {
       override fun toException(): Throwable = RuntimeException("Timed out after ${timeoutMs}ms waiting for $cacheKey on pre-emptive cache $cacheName")
     }
 
+    /**
+     * Indicates that [WebClientCache.PreemptiveCacheMetadata.hasResponseBody] was true, but a corresponding
+     * body value couldn't be found in the cache. This should never happen.
+     */
     data class CachedValueUnavailable<ResponseType>(val cacheKey: String) : Failure<ResponseType> {
 
       @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
@@ -247,22 +251,6 @@ sealed interface ClientResult<ResponseType> {
       override fun toException(): Throwable = RuntimeException("Unable to complete $method request to $path", exception)
     }
   }
-}
-
-class CacheKeySet(
-  private val prefix: String,
-  private val cacheName: String,
-  private val key: String,
-) {
-  val metadataKey: String
-    get() {
-      return "$prefix-$cacheName-$key-metadata"
-    }
-
-  val dataKey: String
-    get() {
-      return "$prefix-$cacheName-$key-data"
-    }
 }
 
 enum class PreemptiveCacheEntryStatus {

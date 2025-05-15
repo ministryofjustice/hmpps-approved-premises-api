@@ -4,7 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeyResolver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.client.PreemptiveCacheTest.Companion.CACHE_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -79,7 +79,7 @@ class InmateDetailsCacheRefreshServiceTest : IntegrationTestBase() {
   }
 
   private fun isInmateDetailNowInRedis(inmateDetail: InmateDetail) {
-    val keys = CacheKeySet(preemptiveCacheKeyPrefix, CACHE_NAME, inmateDetail.offenderNo)
+    val keys = CacheKeyResolver(preemptiveCacheKeyPrefix, CACHE_NAME, inmateDetail.offenderNo)
     val cachedResult = objectMapper.readValue<InmateDetail>(
       redisTemplate.boundValueOps(keys.dataKey).get()!!,
     )
