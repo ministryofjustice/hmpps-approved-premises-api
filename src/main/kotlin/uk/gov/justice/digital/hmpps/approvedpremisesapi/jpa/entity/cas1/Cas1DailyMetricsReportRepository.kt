@@ -13,7 +13,14 @@ class Cas1DailyMetricsReportRepository(
   companion object {
 
     const val QUERY = """
-    WITH applications_by_day AS (
+    WITH all_dates AS (
+          SELECT generate_series(
+              :start_date::DATE,
+              :end_date::DATE,
+              '1 day'::INTERVAL
+          )::DATE AS report_date
+      ),
+    applications_by_day AS (
           SELECT
               DATE(application.created_at) AS report_date,
               COUNT(*) AS applications_started,
@@ -49,11 +56,11 @@ class Cas1DailyMetricsReportRepository(
           COALESCE(assessments_completed, 0) AS assessments_completed,
           COALESCE(unique_users_completing_assessments, 0) AS unique_users_completing_assessments,
           COALESCE(bookings_made, 0) AS bookings_made,
-          COALESCE(unique_users_making_bookings, 0) AS unique_users_making_bookings
-      FROM applications_by_day
-      FULL OUTER JOIN domain_events_by_day
-          ON applications_by_day.report_date = domain_events_by_day.report_date
-      ORDER BY report_date
+                  COALESCE(unique_users_making_bookings, 0) AS unique_users_making_bookings
+        FROM all_dates dates
+        LEFT JOIN applications_by_day ON dates.report_date = applications_by_day.report_date
+        LEFT JOIN domain_events_by_day ON dates.report_date = domain_events_by_day.report_date
+        ORDER BY dates.report_date
   """
   }
 

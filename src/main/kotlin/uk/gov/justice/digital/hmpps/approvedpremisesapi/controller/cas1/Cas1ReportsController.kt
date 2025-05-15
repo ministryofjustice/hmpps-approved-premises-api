@@ -54,10 +54,9 @@ class Cas1ReportsController(
 
     // validateMonth(month) TODO()
 
-    // temp fix
     val monthSpecificReportParams = MonthSpecificReportParams(
-      year = reportDateRange.start.year,
-      month = reportDateRange.start.monthValue,
+      year = year ?: startDate.year,
+      month = month ?: startDate.monthValue,
     )
 
     return when (reportName) {
