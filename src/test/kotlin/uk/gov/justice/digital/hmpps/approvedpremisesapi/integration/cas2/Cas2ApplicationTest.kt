@@ -1817,7 +1817,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withId(UUID.randomUUID())
               }
 
-            // we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
+            // BAIL-WIP we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
             // in the cas2 application service this to be set so it will default to homeDetentionCurfew/
             val result = webTestClient.post()
               .uri("/cas2/applications")
