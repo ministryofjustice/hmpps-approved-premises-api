@@ -6934,7 +6934,6 @@ components:
         - startDate
         - durationInDays
         - targetPostcodeDistrict
-        - requirements
     Cas1SpaceSearchResults:
       type: object
       properties:
