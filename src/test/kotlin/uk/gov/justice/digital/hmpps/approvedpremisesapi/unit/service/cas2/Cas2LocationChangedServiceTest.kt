@@ -96,12 +96,28 @@ class Cas2LocationChangedServiceTest {
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
-    every { applicationRepository.save(any()) } returns application
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
+    verify(exactly = 0) { applicationRepository.save(any()) }
+  }
+
+  @Test
+  fun `no action taken when updated prison code is OUT`() {
+    val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
+    application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
+
+    val releasedPrisoner = prisoner.copy(prisonId = "OUT")
+
+    every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, releasedPrisoner)
+    every { applicationService.findApplicationToAssign(any()) } returns application
+
+    locationChangedService.process(locationEvent)
+
+    verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(any()) }
     verify(exactly = 0) { applicationRepository.save(any()) }
   }
 
