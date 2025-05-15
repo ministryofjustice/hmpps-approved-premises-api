@@ -27,7 +27,7 @@ object Cas2ApplicationSummaryEntityFactory {
     referringPrisonCode: String = "LON",
     currentPrisonCode: String = referringPrisonCode,
     assignmentDate: OffsetDateTime = OffsetDateTime.now(),
-    applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew
+    applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
   ) = Cas2ApplicationSummaryEntity(
     id = id,
     crn = crn,
@@ -45,6 +45,6 @@ object Cas2ApplicationSummaryEntityFactory {
     prisonCode = referringPrisonCode,
     currentPrisonCode = currentPrisonCode,
     assignmentDate = assignmentDate,
-    applicationOrigin = applicationOrigin.toString()
+    applicationOrigin = applicationOrigin.toString(),
   )
 }
