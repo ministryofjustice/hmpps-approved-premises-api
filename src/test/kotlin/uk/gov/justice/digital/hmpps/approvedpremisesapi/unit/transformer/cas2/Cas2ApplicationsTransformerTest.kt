@@ -324,6 +324,8 @@ class Cas2ApplicationsTransformerTest {
       allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
       currentPrisonCode = prisonCode,
       assignmentDate = OffsetDateTime.now(),
+      //BAIL-WIP - come back and check application summary view
+      applicationOrigin = ApplicationOrigin.prisonBail.toString()
     )
 
     @Test

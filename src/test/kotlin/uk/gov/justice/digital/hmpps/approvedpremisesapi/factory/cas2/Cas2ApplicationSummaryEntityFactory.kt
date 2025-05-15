@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -26,6 +27,7 @@ object Cas2ApplicationSummaryEntityFactory {
     referringPrisonCode: String = "LON",
     currentPrisonCode: String = referringPrisonCode,
     assignmentDate: OffsetDateTime = OffsetDateTime.now(),
+    applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew
   ) = Cas2ApplicationSummaryEntity(
     id = id,
     crn = crn,
@@ -43,5 +45,6 @@ object Cas2ApplicationSummaryEntityFactory {
     prisonCode = referringPrisonCode,
     currentPrisonCode = currentPrisonCode,
     assignmentDate = assignmentDate,
+    applicationOrigin = applicationOrigin.toString()
   )
 }
