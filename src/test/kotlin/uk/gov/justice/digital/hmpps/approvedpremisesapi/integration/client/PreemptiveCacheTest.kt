@@ -128,10 +128,6 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 
     every { Instant.now() } returns firstCallInstant
 
-    // Call 2 - 404 read from cache
-    //
-    // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds
-    // should return the cached value without making an upstream request
     assertStatusCodeFailure(
       preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
       HttpStatus.NOT_FOUND,
@@ -139,7 +135,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertMetadataAttemptCount("$preemptiveCacheKeyPrefix-inmateDetails-$nomsNumber-metadata", MarshallableHttpMethod.GET, 1)
     assertCallCount("/api/offenders/$nomsNumber", 1)
 
-    // Call 3 - 404 read from cache
+    // Call 2 - 404 read from cache
     //
     // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds
     // should return the cached value without making an upstream request
@@ -156,9 +152,9 @@ class PreemptiveCacheTest : IntegrationTestBase() {
       responseStatus = 400,
     )
 
-    // Call 4 - 400 refresh cache
+    // Call 3 - 400 refresh cache
     //
-    // The next call after successSoftTtlSeconds should make an upstream request and
+    // The next call after failureSoftTtlBackoffSeconds should make an upstream request and
     // replace the original cached value, attempt number in metadata should increase to 2
     every { Instant.now() } returns sixSecondsLaterInstant
 
@@ -169,7 +165,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertMetadataAttemptCount("$preemptiveCacheKeyPrefix-inmateDetails-$nomsNumber-metadata", MarshallableHttpMethod.GET, 2)
     assertCallCount("/api/offenders/$nomsNumber", 2)
 
-    // Call 5 - 400 read from cache
+    // Call 4 - 400 read from cache
     //
     // The next call should not make an upstream request and return the cached value
     assertStatusCodeFailure(
