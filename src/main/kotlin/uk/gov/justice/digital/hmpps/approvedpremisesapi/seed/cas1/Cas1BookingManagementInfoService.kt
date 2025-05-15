@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
@@ -29,6 +30,7 @@ class Cas1BookingManagementInfoService(
 
   fun fromBooking(booking: BookingEntity) = ManagementInfo(
     source = ManagementInfoSource.LEGACY_CAS_1,
+    eventNumber = (booking.application as ApprovedPremisesApplicationEntity?)?.eventNumber ?: (booking.offlineApplication?.eventNumber),
     deliusId = null,
     arrivedAtDate = booking.arrival?.arrivalDateTime?.toLocalDate(),
     arrivedAtTime = booking.arrival?.arrivalDateTime?.toLocalDateTime()?.toLocalTime(),
@@ -46,6 +48,7 @@ class Cas1BookingManagementInfoService(
 
   fun fromDeliusBookingImport(import: Cas1DeliusBookingImportEntity) = ManagementInfo(
     source = ManagementInfoSource.DELIUS,
+    eventNumber = import.eventNumber,
     deliusId = import.approvedPremisesReferralId,
     arrivedAtDate = import.arrivalDate,
     arrivedAtTime = null,
@@ -87,6 +90,7 @@ class Cas1BookingManagementInfoService(
 
 data class ManagementInfo(
   val source: ManagementInfoSource,
+  val eventNumber: String?,
   val deliusId: String?,
   val arrivedAtDate: LocalDate?,
   val arrivedAtTime: LocalTime?,
