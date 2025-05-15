@@ -21,7 +21,8 @@ class Cas2LocationChangedService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun isLocationChangedApplicationAssignmentRequired(application: Cas2ApplicationEntity, prisonCode: String): Boolean {
-    val isFirstValidLocationChangedAssigment = !application.hasLocationChangedAssignment && prisonCode != application.referringPrisonCode
+    val isFirstValidLocationChangedAssigment =
+      !application.hasLocationChangedAssignment && prisonCode != application.referringPrisonCode
     val isValidLocationChangedAssignment = application.hasLocationChangedAssignment && prisonCode != application.mostRecentLocationAssignment?.prisonCode
     return isFirstValidLocationChangedAssigment || isValidLocationChangedAssignment
   }
@@ -43,7 +44,9 @@ class Cas2LocationChangedService(
           is ClientResult.Failure -> throw result.toException()
         }
 
-        if (isLocationChangedApplicationAssignmentRequired(application, prisoner.prisonId)) {
+        if (prisoner.prisonId == "OUT") {
+          log.info("Prisoner has been released, no action required")
+        } else if (isLocationChangedApplicationAssignmentRequired(application, prisoner.prisonId)) {
           application.createApplicationAssignment(
             prisonCode = prisoner.prisonId,
             allocatedPomUser = null,
