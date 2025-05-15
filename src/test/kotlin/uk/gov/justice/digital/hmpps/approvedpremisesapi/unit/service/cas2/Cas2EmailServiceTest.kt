@@ -33,6 +33,7 @@ class Cas2EmailServiceTest {
   private val statusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val applicationUrlTemplate = UrlTemplate("/applications/#id/overview").toString()
+  private val submittedApplicationUrlTemplate = UrlTemplate("/assess/applications/#applicationId/overview").toString()
   private val nacroEmail = "nacro@test.co.uk"
 
   private val emailService = Cas2EmailService(
@@ -41,6 +42,7 @@ class Cas2EmailServiceTest {
     statusUpdateRepository,
     offenderManagementUnitRepository,
     applicationUrlTemplate,
+    submittedApplicationUrlTemplate,
     nacroEmail,
   )
   private val oldUser = NomisUserEntityFactory().produce()
@@ -65,6 +67,7 @@ class Cas2EmailServiceTest {
       .withReferringPrisonCode("PRI")
       .withCreatedByUser(oldUser).produce()
 
+  private val assessorLink = submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString())
   private val link = applicationUrlTemplate.replace("#id", application.id.toString())
   private val applicationAssignmentOlder = Cas2ApplicationAssignmentEntity(
     id = UUID.randomUUID(),
@@ -124,7 +127,7 @@ class Cas2EmailServiceTest {
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to newOmu.prisonName,
-            "link" to link,
+            "link" to assessorLink,
           ),
         ),
       )
@@ -239,7 +242,7 @@ class Cas2EmailServiceTest {
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
             "transferringPrisonName" to oldOmu.prisonName,
-            "link" to link,
+            "link" to assessorLink,
           ),
         ),
       )
