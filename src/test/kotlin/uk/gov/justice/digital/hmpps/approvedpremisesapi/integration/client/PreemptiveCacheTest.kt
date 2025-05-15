@@ -105,6 +105,12 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     wiremockServer.verify(exactly(2), getRequestedFor(urlEqualTo("/api/offenders/$nomsNumber")))
   }
 
+  /**
+   * For this test the pre-emptive cache config is overridden from 'main' at the
+   * bottom of this class
+   *
+   * failureSoftTtlBackoffSeconds = listOf(5, 10, 20),
+   */
   @Test
   fun `Making a request with isPreemptiveCall = true behaves correctly for non-2xx responses`() {
     val firstCallInstant = Instant.parse("2023-04-25T11:35:00+01:00")
@@ -113,14 +119,8 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 
     val nomsNumber = "ABCD1234"
 
-    val offenderDetailsResponseOne = InmateDetailFactory()
-      .withOffenderNo(nomsNumber)
-      .produce()
-
-    val offenderDetailsResponseTwo = InmateDetailFactory()
-      .withOffenderNo(nomsNumber)
-      .produce()
-
+    // Call 1 - 404, add to cache
+    // The first call should make an upstream request, attempt number in metadata should be set to 1
     mockUnsuccessfulGetCall(
       url = "/api/offenders/$nomsNumber",
       responseStatus = 404,
@@ -128,51 +128,81 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 
     every { Instant.now() } returns firstCallInstant
 
-    // The first call should make an upstream request, attempt number in metadata should be set to 1
-    val firstResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
-    assertThat(firstResult is ClientResult.Failure.StatusCode).isTrue
-    assertThat((firstResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
-    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/api/offenders/$nomsNumber")))
-
-    val firstMetadata = objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(
-      redisTemplate.boundValueOps("$preemptiveCacheKeyPrefix-inmateDetails-$nomsNumber-metadata").get()!!,
+    // Call 2 - 404 read from cache
+    //
+    // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds
+    // should return the cached value without making an upstream request
+    assertStatusCodeFailure(
+      preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
+      HttpStatus.NOT_FOUND,
     )
+    assertMetadataAttemptCount("$preemptiveCacheKeyPrefix-inmateDetails-$nomsNumber-metadata", MarshallableHttpMethod.GET, 1)
+    assertCallCount("/api/offenders/$nomsNumber", 1)
 
-    assertThat(firstMetadata.attempt).isEqualTo(1)
-    assertThat(firstMetadata.method).isEqualTo(MarshallableHttpMethod.GET)
-
-    // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds should return the cached value without making an upstream request
+    // Call 3 - 404 read from cache
+    //
+    // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds
+    // should return the cached value without making an upstream request
     every { Instant.now() } returns fourSecondsLaterInstant
 
-    val secondResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
-    assertThat(secondResult is ClientResult.Failure.StatusCode).isTrue
-    assertThat((secondResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
-    wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/api/offenders/$nomsNumber")))
+    assertStatusCodeFailure(
+      preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
+      HttpStatus.NOT_FOUND,
+    )
+    assertCallCount("/api/offenders/$nomsNumber", 1)
 
     mockUnsuccessfulGetCall(
       url = "/api/offenders/$nomsNumber",
-      responseStatus = 500,
+      responseStatus = 400,
     )
 
-    // The next call after successSoftTtlSeconds should make an upstream request and replace the original cached value, attempt number in metadata should increase to 2
+    // Call 4 - 400 refresh cache
+    //
+    // The next call after successSoftTtlSeconds should make an upstream request and
+    // replace the original cached value, attempt number in metadata should increase to 2
     every { Instant.now() } returns sixSecondsLaterInstant
 
-    val thirdResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
-    assertThat(thirdResult is ClientResult.Failure.StatusCode).isTrue
-    assertThat((thirdResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
-    wiremockServer.verify(exactly(2), getRequestedFor(urlEqualTo("/api/offenders/$nomsNumber")))
+    assertStatusCodeFailure(
+      preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
+      HttpStatus.BAD_REQUEST,
+    )
+    assertMetadataAttemptCount("$preemptiveCacheKeyPrefix-inmateDetails-$nomsNumber-metadata", MarshallableHttpMethod.GET, 2)
+    assertCallCount("/api/offenders/$nomsNumber", 2)
 
-    val secondMetadata = objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(
-      redisTemplate.boundValueOps("$preemptiveCacheKeyPrefix-inmateDetails-$nomsNumber-metadata").get()!!,
+    // Call 5 - 400 read from cache
+    //
+    // The next call should not make an upstream request and return the cached value
+    assertStatusCodeFailure(
+      preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
+      HttpStatus.BAD_REQUEST,
     )
 
-    assertThat(secondMetadata.attempt).isEqualTo(2)
+    assertCallCount("/api/offenders/$nomsNumber", 2)
+  }
 
-    // The next call should not make an upstream request and return the second cached value
-    val fourthResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
-    assertThat(fourthResult is ClientResult.Failure.StatusCode).isTrue
-    assertThat((fourthResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
-    wiremockServer.verify(exactly(2), getRequestedFor(urlEqualTo("/api/offenders/$nomsNumber")))
+  private fun assertStatusCodeFailure(result: ClientResult<*>, expectedStatus: HttpStatus) {
+    assertThat(result is ClientResult.Failure.StatusCode).isTrue
+    assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(expectedStatus)
+  }
+
+  private fun assertCallCount(
+    url: String,
+    expectedCount: Int,
+  ) {
+    wiremockServer.verify(exactly(expectedCount), getRequestedFor(urlEqualTo(url)))
+  }
+
+  private fun assertMetadataAttemptCount(
+    key: String,
+    method: MarshallableHttpMethod,
+    attempts: Int,
+  ) {
+    val metadata = objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(
+      redisTemplate.boundValueOps(key).get()!!,
+    )
+
+    assertThat(metadata.attempt).isEqualTo(attempts)
+    assertThat(metadata.method).isEqualTo(method)
   }
 
   @Test
