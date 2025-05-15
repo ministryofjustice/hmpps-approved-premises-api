@@ -2390,6 +2390,9 @@ components:
         #BAIL-WIP - this should be a mandatory field once migration is complete in API & UI
         applicationOrigin:
           $ref: "#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
+          type: string
+          format: date
       required:
         - crn
     UpdateApplicationType:

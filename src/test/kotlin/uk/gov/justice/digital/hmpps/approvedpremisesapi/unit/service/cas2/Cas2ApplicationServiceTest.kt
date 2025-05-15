@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
@@ -423,12 +424,13 @@ class Cas2ApplicationServiceTest {
         it.invocation.args[0] as
           Cas2ApplicationEntity
       }
-
-      val result = applicationService.createApplication(personInfoResult, user)
+      val applicationOrigin = ApplicationOrigin.prisonBail
+      val result = applicationService.createApplication(personInfoResult, user, applicationOrigin)
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.crn).isEqualTo(crn)
         assertThat(it.createdByUser).isEqualTo(user)
+        assertThat(it.applicationOrigin).isEqualTo(applicationOrigin)
       }
     }
   }

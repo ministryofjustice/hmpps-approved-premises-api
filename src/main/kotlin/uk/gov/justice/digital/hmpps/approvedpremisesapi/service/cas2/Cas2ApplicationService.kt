@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiExcep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -181,6 +182,8 @@ class Cas2ApplicationService(
   fun createApplication(
     personInfoResult: PersonInfoResult.Success.Full,
     user: NomisUserEntity,
+    applicationOrigin: ApplicationOrigin,
+    bailHearingDate: LocalDate? = null,
   ): CasResult<Cas2ApplicationEntity> {
     val createdApplication = applicationRepository.save(
       Cas2ApplicationEntity(
@@ -195,6 +198,8 @@ class Cas2ApplicationService(
         schemaUpToDate = true,
         nomsNumber = personInfoResult.offenderDetailSummary.otherIds.nomsNumber!!,
         telephoneNumber = null,
+        applicationOrigin = applicationOrigin,
+        bailHearingDate = bailHearingDate,
       ),
     )
 

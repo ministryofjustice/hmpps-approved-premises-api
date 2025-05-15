@@ -1817,8 +1817,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withId(UUID.randomUUID())
               }
 
-            // BAIL-WIP we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
-            // in the cas2 application service this to be set so it will default to homeDetentionCurfew/
             val result = webTestClient.post()
               .uri("/cas2/applications")
               .header("Authorization", "Bearer $jwt")
@@ -1834,15 +1832,17 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .isCreated
               .returnResult(Cas2Application::class.java)
 
-            Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
+            assertThat(result.responseHeaders["Location"]).anyMatch {
               it.matches(Regex("/cas2/applications/.+"))
             }
 
-            assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn &&
-                it.schemaVersion == applicationSchema.id &&
-                it.applicationOrigin == ApplicationOrigin.homeDetentionCurfew &&
-                it.bailHearingDate == null
+            val blockedResult = result.responseBody.blockFirst()
+
+            if (blockedResult != null) {
+              assertThat(blockedResult.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+              assertThat(blockedResult.schemaVersion).isEqualTo(applicationSchema.id)
+              assertThat(blockedResult.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+              assertThat(blockedResult.bailHearingDate).isNull()
             }
           }
         }

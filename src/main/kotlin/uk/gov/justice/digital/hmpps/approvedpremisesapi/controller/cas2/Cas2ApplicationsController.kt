@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
@@ -73,7 +74,9 @@ class Cas2ApplicationsController(
   override fun createCas2Application(body: NewApplication): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
-    val applicationResult = applicationService.createApplication(personInfo, user)
+    val applicationOrigin = body.applicationOrigin ?: ApplicationOrigin.homeDetentionCurfew
+    val bailHearingDate = body.bailHearingDate
+    val applicationResult = applicationService.createApplication(personInfo, user, applicationOrigin, bailHearingDate)
 
     val application = extractEntityFromCasResult(applicationResult)
 
