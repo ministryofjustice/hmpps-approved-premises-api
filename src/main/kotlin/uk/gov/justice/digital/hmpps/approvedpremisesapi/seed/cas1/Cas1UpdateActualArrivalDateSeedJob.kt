@@ -1,19 +1,27 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import java.time.LocalDate
 import java.util.UUID
 
 @Service
 class Cas1UpdateActualArrivalDateSeedJob(
-  val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
-  val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
+  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val domainEventRepository: DomainEventRepository,
+  private val objectMapper: ObjectMapper,
 ) : SeedJob<Cas1UpdateActualArrivalDateSeedJobCsvRow>(
   requiredHeaders = setOf(
     "space_booking_id",
@@ -51,6 +59,8 @@ class Cas1UpdateActualArrivalDateSeedJob(
 
     cas1SpaceBookingRepository.save(spaceBooking)
 
+    updateDomainEvent(spaceBooking)
+
     spaceBooking.application?.let {
       applicationTimelineNoteService.saveApplicationTimelineNote(
         applicationId = it.id,
@@ -58,6 +68,23 @@ class Cas1UpdateActualArrivalDateSeedJob(
         user = null,
       )
     }
+  }
+
+  fun updateDomainEvent(spaceBooking: Cas1SpaceBookingEntity) {
+    val domainEvents = domainEventRepository.findByCas1SpaceBookingId(spaceBooking.id)
+
+    val actualArrivalDateTime = spaceBooking.actualArrivalDate!!.atTime(spaceBooking.actualArrivalTime).toInstant()
+
+    val arrivalDomainEvent = domainEvents.first {
+      it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED
+    }
+
+    log.info("Updating domain event ${arrivalDomainEvent.id} of type APPROVED_PREMISES_PERSON_ARRIVED")
+    val envelope = objectMapper.readValue(arrivalDomainEvent.data, PersonArrivedEnvelope::class.java)
+    val updatedEnvelope = envelope.copy(
+      eventDetails = envelope.eventDetails.copy(arrivedAt = actualArrivalDateTime),
+    )
+    domainEventRepository.updateData(arrivalDomainEvent.id, objectMapper.writeValueAsString(updatedEnvelope))
   }
 }
 
