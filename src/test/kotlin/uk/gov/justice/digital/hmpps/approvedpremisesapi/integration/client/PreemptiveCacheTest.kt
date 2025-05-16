@@ -272,7 +272,8 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     mockSentryService.assertErrorMessageRaised(
       "Could not find data entry in cache for key '$preemptiveCacheKeyPrefix-inmateDetails-ABCD1234-data', " +
         "despite the metadata saying the body was available. " +
-        "Will remove the corrupt metadata entry '$preemptiveCacheKeyPrefix-inmateDetails-ABCD1234-metadata'",
+        "Will remove the corrupt metadata entry '$preemptiveCacheKeyPrefix-inmateDetails-ABCD1234-metadata'. " +
+        "This is possibly happening due to Redis evicting entries prematurely due to running out of space",
     )
   }
 
