@@ -100,6 +100,8 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByApplicationIdOrderByCreatedAtAsc(applicationId: UUID): List<DomainEventEntity>
 
+  fun findByCas1SpaceBookingId(bookingId: UUID): List<DomainEventEntity>
+
   fun findByType(type: DomainEventType): List<DomainEventEntity>
 
   @Query(

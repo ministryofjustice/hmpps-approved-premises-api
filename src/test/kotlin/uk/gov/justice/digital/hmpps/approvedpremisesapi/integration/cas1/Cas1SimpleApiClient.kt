@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.LocalDate
+import java.time.LocalTime
 import java.util.UUID
 
 @Component
@@ -335,6 +337,29 @@ class Cas1SimpleApiClient {
           occurredAt = LocalDate.now(),
           reasonId = reason.id,
           reasonNotes = "",
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun recordArrival(
+    integrationTestBase: IntegrationTestBase,
+    premisesId: UUID,
+    bookingId: UUID,
+    arrivalDate: LocalDate,
+    arrivalTime: LocalTime,
+  ) {
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)).second
+
+    integrationTestBase.webTestClient.post()
+      .uri("/cas1/premises/$premisesId/space-bookings/$bookingId/arrival")
+      .header("Authorization", "Bearer $managerJwt")
+      .bodyValue(
+        Cas1NewArrival(
+          arrivalDate = arrivalDate,
+          arrivalTime = arrivalTime.toString(),
         ),
       )
       .exchange()
