@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.opencsv.CSVReaderBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
-import org.jetbrains.kotlinx.dataframe.io.readExcel
+import org.jetbrains.kotlinx.dataframe.api.toList
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.DailyMet
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.io.StringReader
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 import java.util.UUID
@@ -237,6 +240,10 @@ class DailyMetricsReportTest : IntegrationTestBase() {
           ),
         )
 
+      val expectedList: List<DailyMetricReportRow> = expectedDataFrame
+        .convertTo<DailyMetricReportRow>(ExcessiveColumns.Remove)
+        .toList()
+
       webTestClient.get()
         .uri("/cas1/reports/dailyMetrics?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
@@ -246,15 +253,20 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         .isOk
         .expectHeader().valuesMatch(
           "content-disposition",
-          "attachment; filename=\"daily-metrics-$year-${month.toString().padStart(2, '0')}-[0-9_]+.xlsx\"",
+          "attachment; filename=\"daily-metrics-$startDate-to-$endDate-\\d{8}_\\d{4}.xlsx\"",
         )
         .expectBody()
-        .consumeWith {
-          val actual = DataFrame
-            .readExcel(it.responseBody!!.inputStream())
-            .convertTo<DailyMetricReportRow>(ExcessiveColumns.Remove)
+        .consumeWith { response ->
+          val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
 
-          assertThat(actual).isEqualTo(expectedDataFrame)
+          val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
+
+          val actual = DataFrame
+            .readCSV(completeCsvString.byteInputStream())
+            .convertTo<DailyMetricReportRow>(ExcessiveColumns.Remove)
+            .toList()
+
+          assertThat(actual).isEqualTo(expectedList)
         }
     }
   }

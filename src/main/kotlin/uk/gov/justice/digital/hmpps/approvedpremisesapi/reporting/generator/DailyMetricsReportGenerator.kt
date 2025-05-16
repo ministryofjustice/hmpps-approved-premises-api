@@ -43,15 +43,15 @@ class DailyMetricsReportGenerator(
 
     listOf(
       DailyMetricReportRow(
-        date = this,
-        applicationsStarted = applicationsCreatedToday.size,
-        uniqueUsersStartingApplications = applicationsCreatedToday.groupBy { application -> application.createdByUserId }.size,
-        applicationsSubmitted = applicationsSubmittedToday.size,
-        uniqueUsersSubmittingApplications = applicationsSubmittedToday.groupBy { domainEvent -> domainEvent.data.eventDetails.submittedBy.staffMember.staffCode }.size,
-        assessmentsCompleted = assessmentsCompletedToday.size,
-        uniqueUsersCompletingAssessments = assessmentsCompletedToday.groupBy { domainEvent -> domainEvent.data.eventDetails.assessedBy.staffMember!!.staffCode }.size,
-        bookingsMade = bookingsMadeToday.size,
-        uniqueUsersMakingBookings = bookingsMadeToday.groupBy { domainEvent -> domainEvent.data.eventDetails.bookedBy }.size,
+        report_date = this,
+        applications_started = applicationsCreatedToday.size,
+        unique_users_starting_applications = applicationsCreatedToday.groupBy { application -> application.createdByUserId }.size,
+        applications_submitted = applicationsSubmittedToday.size,
+        unique_users_submitting_applications = applicationsSubmittedToday.groupBy { domainEvent -> domainEvent.data.eventDetails.submittedBy.staffMember.staffCode }.size,
+        assessments_completed = assessmentsCompletedToday.size,
+        unique_users_completing_assessments = assessmentsCompletedToday.groupBy { domainEvent -> domainEvent.data.eventDetails.assessedBy.staffMember!!.staffCode }.size,
+        bookings_made = bookingsMadeToday.size,
+        unique_users_making_bookings = bookingsMadeToday.groupBy { domainEvent -> domainEvent.data.eventDetails.bookedBy }.size,
       ),
     )
   }
