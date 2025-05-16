@@ -197,7 +197,7 @@ class WebClientCache(
       if (cachedBody == null) {
         sentryService.captureErrorMessage(
           "Could not find data entry in cache for key '$dataKey', despite the metadata saying the body was available. " +
-            "Will remove the corrupt metadata entry '$metadataKey'",
+            "Will remove the corrupt metadata entry '$metadataKey'. This is possibly happening due to Redis evicting entries prematurely due to running out of space",
         )
         redisTemplate.delete(metadataKey)
         return ClientResult.Failure.CachedValueUnavailable(
