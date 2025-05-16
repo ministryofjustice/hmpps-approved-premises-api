@@ -5,7 +5,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationInBatchesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 import java.lang.Boolean.FALSE
 import java.time.LocalDate
 import java.util.UUID
-import kotlin.collections.chunked
 
 @Component
 class Cas1UpdateApprovedPremisesApplicationWithOffenderJob(
@@ -29,38 +28,22 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJob(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val offenderRisksService: OffenderRisksService,
   private val migrationLogger: MigrationLogger,
-  private val transactionTemplate: TransactionTemplate,
+  transactionTemplate: TransactionTemplate,
   private val cas1OffenderService: Cas1OffenderService,
-  override val shouldRunInTransaction: Boolean = FALSE,
-) : MigrationJob() {
+) : MigrationInBatchesJob(migrationLogger, transactionTemplate) {
+
+  override val shouldRunInTransaction: Boolean = FALSE
 
   override fun process(pageSize: Int) {
     migrationLogger.info("Starting migration process...")
     val applicationIds = getAllApplicationIdsWithoutOffender()
-    processInBatches(applicationIds) { batchIds ->
+    processInBatches(applicationIds, batchSize = 500) { batchIds ->
       processApplicationsBatch(batchIds)
     }
     migrationLogger.info("Completed migration process...")
   }
 
   private fun getAllApplicationIdsWithoutOffender(): List<UUID> = approvedPremisesApplicationRepository.findAllIdsByCas1OffenderEntityIsNull()
-
-  @SuppressWarnings("MagicNumber")
-  private fun <T> processInBatches(
-    items: List<T>,
-    batchSize: Int = 500,
-    processBatch: (List<T>) -> Unit,
-  ) {
-    items.chunked(batchSize).forEachIndexed { index, batch ->
-      migrationLogger.info("Processing batch ${index + 1} of ${items.size / batchSize}...")
-      transactionTemplate.executeWithoutResult {
-        processBatch(batch)
-      }
-      if (index < items.chunked(batchSize).lastIndex) {
-        Thread.sleep(1000L)
-      }
-    }
-  }
 
   private fun processApplicationsBatch(applicationIds: List<UUID>) {
     val applicationsBatch = approvedPremisesApplicationRepository.findByIdIn(applicationIds)

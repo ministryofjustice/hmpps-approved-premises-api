@@ -63,6 +63,22 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, propertyStatus: String?): List<TemporaryAccommodationPremisesSummary>
 
+
+  @Query(
+    """
+      SELECT p.id as id
+      FROM temporary_accommodation_premises tap
+      INNER JOIN premises p on tap.premises_id = p.id
+    """,
+    nativeQuery = true,
+  )
+  fun findAllCas3Premises(): List<UUID>
+
+  fun findByIdIn(ids: List<UUID>): List<PremisesEntity>
+
+  @Query("SELECT tap FROM TemporaryAccommodationPremisesEntity tap WHERE tap.id IN :ids")
+  fun findTemporaryAccommodationPremisesIdIn(ids: List<UUID>): List<TemporaryAccommodationPremisesEntity>
+
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
 
