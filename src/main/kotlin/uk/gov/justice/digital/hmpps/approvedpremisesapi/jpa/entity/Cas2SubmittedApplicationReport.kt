@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import java.util.UUID
 
 @Repository
@@ -21,6 +22,8 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         CAST(events.data -> 'eventDetails' ->> 'conditionalReleaseDate' as DATE) AS conditionalReleaseDate,
         TO_CHAR(events.occurred_at,'YYYY-MM-DD"T"HH24:MI:SS') AS submittedAt,
         TO_CHAR(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
+        applications.application_origin as applicationOrigin,
+        CAST(applications.bail_hearing_date as DATE) as bailHearingDate,
         CASE
             WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0
             ELSE COUNT(distinct pom_assignments.id) - 1
@@ -32,7 +35,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
                   ON events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_user_id is NOT NULL
     WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
       AND events.occurred_at  > CURRENT_DATE - 365
-    GROUP BY events.id, events.application_id, events.data, events.data, events.data, events.data, events.data, events.data, events.data, events.occurred_at, applications.created_at 
+    GROUP BY events.id, events.application_id, events.data, events.occurred_at, applications.created_at, applications.application_origin, applications.bail_hearing_date
     ORDER BY submittedAt DESC;
     """,
     nativeQuery = true,
@@ -44,6 +47,8 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
 interface Cas2SubmittedApplicationReportRow {
   fun getId(): String
   fun getApplicationId(): String
+  fun getApplicationOrigin(): ApplicationOrigin
+  fun getBailHearingDate(): String?
   fun getSubmittedBy(): String
   fun getSubmittedAt(): String
   fun getPersonNoms(): String

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
@@ -26,7 +26,7 @@ import java.util.UUID
 @Service
 class Cas2ApplicationsController(
   private val applicationService: Cas2ApplicationService,
-  private val applicationsTransformer: ApplicationsTransformer,
+  private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: Cas2OffenderService,
   private val userService: NomisUserService,
@@ -79,7 +79,7 @@ class Cas2ApplicationsController(
 
     return ResponseEntity
       .created(URI.create("/cas2/applications/${application.id}"))
-      .body(applicationsTransformer.transformJpaToApi(application, personInfo))
+      .body(cas2ApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 
   @Transactional
@@ -114,7 +114,7 @@ class Cas2ApplicationsController(
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      applicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
+      cas2ApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
     }
   }
 
@@ -123,6 +123,6 @@ class Cas2ApplicationsController(
   ): Cas2Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return applicationsTransformer.transformJpaToApi(application, personInfo)
+    return cas2ApplicationsTransformer.transformJpaToApi(application, personInfo)
   }
 }

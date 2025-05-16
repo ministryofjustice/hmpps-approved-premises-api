@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
@@ -19,6 +21,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -127,6 +130,9 @@ data class Cas2ApplicationEntity(
   var hdcEligibilityDate: LocalDate? = null,
   var conditionalReleaseDate: LocalDate? = null,
   var telephoneNumber: String? = null,
+  var bailHearingDate: LocalDate? = null,
+  @Enumerated(EnumType.STRING)
+  var applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
   val currentPrisonCode: String?
