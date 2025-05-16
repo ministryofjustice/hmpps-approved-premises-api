@@ -559,7 +559,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         UnsubmittedApplicationsReportRow(
           applicationId = application2.id.toString(),
           personCrn = application2.crn,
-          applicationOrigin = ApplicationOrigin.prisonBail,
+          applicationOrigin = application2.applicationOrigin,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first() + 'Z',
           startedBy = application2.createdByUser.username,
@@ -570,6 +570,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first() + 'Z',
           startedBy = application1.createdByUser.username,
+          applicationOrigin = application1.applicationOrigin,
         ),
       )
         .toDataFrame()

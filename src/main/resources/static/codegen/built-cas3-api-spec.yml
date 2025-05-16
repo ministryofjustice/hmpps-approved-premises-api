@@ -2234,6 +2234,9 @@ components:
         offenceId:
           type: string
           example: "M1502750438"
+        #BAIL-WIP - this should be a mandatory field once migration is complete in API & UI
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - crn
     UpdateApplicationType:

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import io.mockk.mockk
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
@@ -44,6 +45,9 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
+
+  private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
+  private var bailHearingDate: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -150,6 +154,14 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 
+  fun withApplicationOrigin(applicationOrigin: ApplicationOrigin) = apply {
+    this.applicationOrigin = { applicationOrigin }
+  }
+
+  fun withBailHearingDate(bailHearingDate: LocalDate) = apply {
+    this.bailHearingDate = { bailHearingDate }
+  }
+
   override fun produce(): Cas2ApplicationEntity {
     val application = Cas2ApplicationEntity(
       id = this.id(),
@@ -172,6 +184,8 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       hdcEligibilityDate = this.hdcEligibilityDate(),
       conditionalReleaseDate = this.conditionalReleaseDate(),
       preferredAreas = this.preferredAreas(),
+      applicationOrigin = this.applicationOrigin(),
+      bailHearingDate = this.bailHearingDate(),
     )
     return application
   }

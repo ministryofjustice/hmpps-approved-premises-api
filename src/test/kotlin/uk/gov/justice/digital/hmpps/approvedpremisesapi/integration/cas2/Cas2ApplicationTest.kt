@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
@@ -1805,6 +1806,50 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class PostToCreate {
 
     @Nested
+    inner class Cas2BailFields {
+      @Test
+      fun `Create new application for CAS-2 returns 201 with correct body - check that although we pass in prisonBail we will get out homeDetentionCurfew as this not written yet`() {
+        givenACas2PomUser { userEntity, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val applicationSchema =
+              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
+
+            // BAIL-WIP we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
+            // in the cas2 application service this to be set so it will default to homeDetentionCurfew/
+            val result = webTestClient.post()
+              .uri("/cas2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .bodyValue(
+                NewApplication(
+                  crn = offenderDetails.otherIds.crn,
+                  applicationOrigin = ApplicationOrigin.prisonBail,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isCreated
+              .returnResult(Cas2Application::class.java)
+
+            Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
+              it.matches(Regex("/cas2/applications/.+"))
+            }
+
+            assertThat(result.responseBody.blockFirst()).matches {
+              it.person.crn == offenderDetails.otherIds.crn &&
+                it.schemaVersion == applicationSchema.id &&
+                it.applicationOrigin == ApplicationOrigin.homeDetentionCurfew &&
+                it.bailHearingDate == null
+            }
+          }
+        }
+      }
+    }
+
+    @Nested
     inner class PomUsers {
       @Test
       fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
@@ -1975,6 +2020,56 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class PutToUpdate {
+
+    @Nested
+    inner class BailFields {
+      @Test
+      fun `Update existing CAS2 application returns 200 with correct body and bail fields`() {
+        givenACas2PomUser { submittingUser, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema =
+              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+                withSchema(
+                  schema,
+                )
+              }
+
+            cas2ApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+            }
+
+            val resultBody = webTestClient.put()
+              .uri("/cas2/applications/$applicationId")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateCas2Application(
+                  data = mapOf("thingId" to 123),
+                  type = UpdateApplicationType.CAS2,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(String::class.java)
+              .responseBody
+              .blockFirst()
+
+            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
+
+            assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+            assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+            assertThat(result.bailHearingDate).isNull()
+          }
+        }
+      }
+    }
 
     @Nested
     inner class PomUsers {
