@@ -763,6 +763,7 @@ class Cas1ChangeRequestTest {
           canonicalArrivalDate = LocalDate.of(2024, 6, 1),
           canonicalDepartureDate = LocalDate.of(2024, 6, 15),
         ),
+
       )
     }
 
@@ -809,6 +810,8 @@ class Cas1ChangeRequestTest {
       assertThat(response.updatedAt).isEqualTo(changeRequestEntity.updatedAt.toInstant())
       assertThat(response.decision).isEqualTo(Cas1ChangeRequestDecision.APPROVED)
       assertThat(objectMapper.writeValueAsString(response.decisionJson)).isEqualTo("{\"test\":1}")
+      assertThat(objectMapper.writeValueAsString(response.requestJson)).isEqualTo("\"{}\"")
+      assertThat(response.spaceBookingId).isEqualTo(changeRequestEntity.spaceBooking.id)
     }
   }
 }

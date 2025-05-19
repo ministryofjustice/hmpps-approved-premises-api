@@ -54,6 +54,8 @@ class Cas1ChangeRequestTransformer(
         name = it.code,
       )
     },
+    requestJson = entity.requestJson,
+    spaceBookingId = entity.spaceBooking.id,
   )
 
   fun transformToChangeRequestSummaries(
