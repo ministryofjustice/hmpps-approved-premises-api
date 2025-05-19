@@ -8111,9 +8111,14 @@ components:
         decision:
           $ref: '#/components/schemas/Cas1ChangeRequestDecision'
         decisionJson:
-            $ref: '#/components/schemas/Unit'
+          $ref: '#/components/schemas/Unit'
+        requestJson:
+          $ref: '#/components/schemas/Unit'
         rejectionReason:
           $ref: '#/components/schemas/NamedId'
+        spaceBookingId:
+          type: string
+          format: uuid
         updatedAt:
           type: string
           format: date-time
@@ -8122,6 +8127,8 @@ components:
         - type
         - createdAt
         - requestReason
+        - requestJson
+        - spaceBookingId
         - updatedAt
     Cas1RejectChangeRequest:
       type: object

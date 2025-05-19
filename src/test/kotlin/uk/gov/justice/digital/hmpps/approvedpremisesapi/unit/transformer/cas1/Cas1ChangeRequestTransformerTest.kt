@@ -99,6 +99,8 @@ class Cas1ChangeRequestTransformerTest {
       decision = Cas1ChangeRequestDecision.APPROVED,
       decisionJson = null,
       rejectionReason = null,
+      requestJson = entity.requestJson,
+      spaceBookingId = entity.spaceBooking.id,
     )
 
     val result = cas1ChangeRequestTransformer.transformEntityToCas1ChangeRequest(entity)
