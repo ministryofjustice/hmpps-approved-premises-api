@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AllocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
 
@@ -49,6 +50,9 @@ class Cas2AllocationChangedServiceTest {
   @MockK
   lateinit var cas2EmailService: Cas2EmailService
 
+  @MockK
+  lateinit var cas2LocationChangedService: Cas2LocationChangedService
+
   @InjectMockKs
   lateinit var allocationChangedService: Cas2AllocationChangedService
 
@@ -57,7 +61,7 @@ class Cas2AllocationChangedServiceTest {
   private val nomsNumber = "NOMSABC"
   private val detailUrl = "some/url"
 
-  private val user = NomisUserEntityFactory().produce()
+  private val user = NomisUserEntityFactory().withActiveCaseloadId("ONE").produce()
 
   private val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
 
@@ -72,10 +76,42 @@ class Cas2AllocationChangedServiceTest {
   )
 
   @Test
-  fun `handle Allocation Changed Event and save new allocation to table`() {
+  fun `allocation changed event creates location changed assignment if it doesn't exist, and sends emails`() {
+    val newUser = NomisUserEntityFactory().withActiveCaseloadId("ONE").produce()
+    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(newUser).produce()
+    application.createApplicationAssignment(prisonCode = newUser.activeCaseloadId!!, allocatedPomUser = newUser)
+
+    every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
+    every { applicationService.findApplicationToAssign(any()) } returns application
+    every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
+    every { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
+    every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns NomisUserEntityFactory().produce()
+
+    val applicationWithLocationChangedAssignment = application.copy()
+    applicationWithLocationChangedAssignment.createApplicationAssignment("TWO", null)
+    every {
+      cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(
+        any(),
+        any(),
+      )
+    } returns applicationWithLocationChangedAssignment
+
+    allocationChangedService.process(allocationEvent)
+
+    verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
+    verify(exactly = 1) { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) }
+    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) }
+    verify(exactly = 1) { applicationRepository.save(any()) }
+    verify(exactly = 1) { cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
+  }
+
+  @Test
+  fun `handles Allocation Changed Event and save new allocation, when location changed event already exists`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    val user = NomisUserEntityFactory().produce()
-    application.createApplicationAssignment(prisonCode = "CODE123", allocatedPomUser = user)
+    application.createApplicationAssignment(prisonCode = "CODE", allocatedPomUser = user)
+    application.createApplicationAssignment(prisonCode = pomAllocation.prison.code, null)
+
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
@@ -89,6 +125,7 @@ class Cas2AllocationChangedServiceTest {
     verify(exactly = 1) { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) }
     verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
+    verify(exactly = 0) { cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
   }
 
   @Test
@@ -164,7 +201,7 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `application assignment is not created when POM has not changed`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    application.createApplicationAssignment(prisonCode = "CODE123", allocatedPomUser = user)
+    application.createApplicationAssignment(prisonCode = user.activeCaseloadId!!, allocatedPomUser = user)
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(
       HttpStatus.OK,
