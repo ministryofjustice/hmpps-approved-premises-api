@@ -162,7 +162,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
           assertThat(updatedApplication.currentPomUserId).isNull()
 
-          verifyEmailsSentForPrisonerUpdatedCase(application, userEntity, prisoner)
+          verifyEmailsSentForPrisonerUpdatedCase(application, userEntity, oldOmu, newOmu)
         }
       }
     }
@@ -268,10 +268,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
               pomManagerEmail = newUserEntity.email!!,
             )
 
-            verifyEmailsSentForAllocationChangedCase(
-              application,
-              pomManagerEmail = newUserEntity.email!!,
-            )
+            verifyEmailsSentForPrisonerUpdatedCase(application, oldUserEntity, oldOmu, newOmu)
           }
         }
       }
@@ -389,7 +386,8 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   private fun verifyEmailsSentForPrisonerUpdatedCase(
     application: Cas2ApplicationEntity,
     userEntity: NomisUserEntity,
-    prisoner: Prisoner,
+    oldOmu: OffenderManagementUnitEntity,
+    newOmu: OffenderManagementUnitEntity,
   ) {
     verify(exactly = 1, timeout = 5000) {
       emailNotificationService.sendEmail(
@@ -398,7 +396,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         eq(
           mapOf(
             "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
           ),
         ),
         any(),
@@ -411,7 +409,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         eq(
           mapOf(
             "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
           ),
         ),
         any(),
@@ -439,7 +437,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         eq(
           mapOf(
             "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
             "transferringPrisonName" to oldOmu.prisonName,
             "link" to getAssessorLink(application.id),
           ),
@@ -537,31 +535,6 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
     application.createApplicationAssignment(omu.prisonCode, allocatedPom)
     return cas2ApplicationRepository.save(application)
-  }
-
-  private fun createApplicationAndApplicationAssignments(
-    oldUserEntity: NomisUserEntity,
-    offenderDetails: OffenderDetailSummary,
-  ): Cas2ApplicationEntity {
-    val application = createApplicationAndApplicationAssignmentsWithoutLocationEvent(
-      applicationSchema = applicationJsonSchemaEntity(),
-      offenderDetails = offenderDetails,
-      user = oldUserEntity,
-    )
-
-    val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      prisonCode = newOmu.prisonCode,
-      allocatedPomUser = null,
-      createdAt = OffsetDateTime.parse(OCCURRING_AT),
-    )
-
-    applicationAssignmentRepository.save(
-      oldApplicationAssignment,
-    )
-
-    return application
   }
 
   private fun createApplicationAndApplicationAssignmentsWithoutLocationEvent(
