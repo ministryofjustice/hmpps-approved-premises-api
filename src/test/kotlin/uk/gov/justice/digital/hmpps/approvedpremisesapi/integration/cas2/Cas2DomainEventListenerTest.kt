@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.repository.findByIdOrNull
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
@@ -82,22 +84,24 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         ),
       )
       .build()
+
     domainEventsClient.publish(sendMessageRequest).get()
+  }
+
+  private fun applicationJsonSchemaEntity(): Cas2ApplicationJsonSchemaEntity {
+    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+    return applicationSchema
   }
 
   private val oldOmu = OffenderManagementUnitEntityFactory().withPrisonCode("LIV").withPrisonName("HMP LIVERPOOL").produce()
   private val newOmu = OffenderManagementUnitEntityFactory().withPrisonCode("LON").withPrisonName("HMP LONDON").produce()
 
-  @Test
-  fun `Start to process Allocation Changed Message on Domain Events Topic`() {
-    val eventType = "offender-management.allocation.changed"
-    publishMessageToTopic(eventType)
-    verify(exactly = 1, timeout = 5000) { domainEventListener.processMessage(any()) }
-  }
-
-  @Test
-  fun `Start to process Location Changed Message on Domain Events Topic`() {
-    val eventType = "prisoner-offender-search.prisoner.updated"
+  @ParameterizedTest
+  @ValueSource(strings = ["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"])
+  fun `Start to process messages on Domain Events Topic`(eventType: String) {
     publishMessageToTopic(eventType)
     verify(exactly = 1, timeout = 5000) { domainEventListener.processMessage(any()) }
   }
@@ -110,14 +114,11 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Save new location in assignment table`() {
-    val prisoner = Prisoner(prisonId = "LON", prisonName = "LONDON")
+  fun `Updates current prison code when prisoner changes location`() {
+    val prisoner = Prisoner(prisonId = newOmu.prisonCode, prisonName = newOmu.prisonName)
     val eventType = "prisoner-offender-search.prisoner.updated"
 
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
+    val applicationSchema = applicationJsonSchemaEntity()
     givenACas2PomUser { userEntity, _ ->
       givenACas2Assessor { assessor, _ ->
         givenAnOffender { offenderDetails, _ ->
@@ -131,6 +132,9 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             withConditionalReleaseDate(LocalDate.now().plusDays(1))
           }
 
+          application.createApplicationAssignment(application.referringPrisonCode!!, userEntity)
+          cas2ApplicationRepository.save(application)
+
           cas2StatusUpdateEntityFactory.produceAndPersist {
             withApplication(application)
             withLabel("Status Update")
@@ -139,17 +143,6 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
           val url = "/prisoner/${application.nomsNumber}"
           val detailUrl = prisonerSearchBaseUrl + url
-          val initialApplicationAssignment = Cas2ApplicationAssignmentEntity(
-            id = UUID.randomUUID(),
-            application = application,
-            prisonCode = application.referringPrisonCode!!,
-            allocatedPomUser = userEntity,
-            createdAt = application.submittedAt!!,
-          )
-
-          applicationAssignmentRepository.save(
-            initialApplicationAssignment,
-          )
 
           mockSuccessfulGetCallWithJsonResponse(
             url = url,
@@ -163,109 +156,34 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           publishMessageToTopic(eventType, event)
 
           await().until { applicationAssignmentRepository.count().toInt() == 2 }
-          val locations = applicationAssignmentRepository.findAll()
-          assert(locations.last().prisonCode == prisoner.prisonId)
 
-          verifyEmailsSentForPrisonerUpdatedCase(application, userEntity, prisoner)
+          val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+          assertThat(updatedApplication.applicationAssignments.size).isEqualTo(2)
+          assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
+          assertThat(updatedApplication.currentPomUserId).isNull()
+
+          verifyEmailsSentForPrisonerUpdatedCase(application, userEntity, oldOmu, newOmu)
         }
       }
     }
   }
 
   @Test
-  fun `Save new location in assignment table but allocation event has already occurred`() {
-    val prisoner = Prisoner(prisonId = "LON", prisonName = "LONDON")
-    val eventType = "prisoner-offender-search.prisoner.updated"
-
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
-    givenACas2PomUser { userEntity, _ ->
-      givenACas2PomUser { newUserEntity, _ ->
+  fun `Allocation message is successfully processed when location message has been received first`() {
+    val eventType = "offender-management.allocation.changed"
+    givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId(oldOmu.prisonCode) }) { createdByUser, _ ->
+      givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId(newOmu.prisonCode) }) { newUserEntity, _ ->
         givenACas2Assessor { assessor, _ ->
           givenAnOffender { offenderDetails, _ ->
-            val application = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(userEntity)
-              withReferringPrisonCode(oldOmu.prisonCode)
-              withSubmittedAt(OffsetDateTime.now().minusHours(2))
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedAt(OffsetDateTime.now().minusDays(28))
-              withConditionalReleaseDate(LocalDate.now().plusDays(1))
-            }
-
-            cas2StatusUpdateEntityFactory.produceAndPersist {
-              withApplication(application)
-              withLabel("Status Update")
-              withAssessor(assessor)
-            }
-
-            val url = "/prisoner/${application.nomsNumber}"
-            val detailUrl = prisonerSearchBaseUrl + url
-            val initialApplicationAssignment = Cas2ApplicationAssignmentEntity(
-              id = UUID.randomUUID(),
-              application = application,
-              prisonCode = application.referringPrisonCode!!,
-              allocatedPomUser = userEntity,
-              createdAt = application.submittedAt!!,
-            )
-
-            val allocationEventApplicationAssignment = Cas2ApplicationAssignmentEntity(
-              id = UUID.randomUUID(),
-              application = application,
-              prisonCode = newOmu.prisonCode,
-              allocatedPomUser = newUserEntity,
-              createdAt = OffsetDateTime.now().minusHours(1),
-            )
-
-            applicationAssignmentRepository.save(
-              initialApplicationAssignment,
-            )
-
-            applicationAssignmentRepository.save(
-              allocationEventApplicationAssignment,
-            )
-
-            mockSuccessfulGetCallWithJsonResponse(
-              url = url,
-              responseBody = prisoner,
-            )
-
             offenderManagementUnitRepository.save(oldOmu)
             offenderManagementUnitRepository.save(newOmu)
 
-            val event = stubEvent(eventType, detailUrl, application.nomsNumber)
-            publishMessageToTopic(eventType, event)
+            val application = createApplicationAndInitialAssignment(createdByUser, offenderDetails, oldOmu)
 
-            await().until { applicationAssignmentRepository.count().toInt() == 3 }
-            val locations = applicationAssignmentRepository.findAll()
-            assert(locations.last().prisonCode == prisoner.prisonId)
+            // create the location changed assainment
+            application.createApplicationAssignment(newOmu.prisonCode, null)
+            cas2ApplicationRepository.saveAndFlush(application)
 
-            verifyEmailsSentForPrisonerUpdatedCase(application, userEntity, prisoner)
-          }
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Save new allocation in assignment table`() {
-    val eventType = "offender-management.allocation.changed"
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
-    givenACas2PomUser { oldUserEntity, _ ->
-      givenACas2PomUser { newUserEntity, _ ->
-        givenACas2Assessor { assessor, _ ->
-          givenAnOffender { offenderDetails, _ ->
-
-            val application = createApplicationAndApplicationAssignments(
-              applicationSchema,
-              oldUserEntity,
-              offenderDetails,
-            )
             cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(application)
               withLabel("Status Update")
@@ -280,14 +198,18 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
               responseBody = pomAllocation,
             )
 
-            offenderManagementUnitRepository.save(oldOmu)
-            offenderManagementUnitRepository.save(newOmu)
-
             val event = stubEvent(eventType, detailUrl, application.nomsNumber)
             publishMessageToTopic(eventType, event)
             await().until { applicationAssignmentRepository.count().toInt() == 3 }
-            val locations = applicationAssignmentRepository.findAll()
-            assertThat(locations.last().prisonCode).isEqualTo(pomAllocation.prison.code)
+
+            val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+            assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
+
+            assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
+            assertThat(updatedApplication.applicationAssignments.get(1).prisonCode).isEqualTo(newOmu.prisonCode)
+
+            assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
+            assertThat(updatedApplication.currentPomUserId).isEqualTo(newUserEntity.id)
 
             verifyEmailsSentForAllocationChangedCase(
               application,
@@ -300,12 +222,63 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Save new allocation in assignment table but do not send emails if it does not indicate a change in location`() {
+  fun `POM allocation is processed when location change message has not been received`() {
     val eventType = "offender-management.allocation.changed"
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
+    givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId(oldOmu.prisonCode) }) { oldUserEntity, _ ->
+      givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId(newOmu.prisonCode) }) { newUserEntity, _ ->
+        givenACas2Assessor { assessor, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            offenderManagementUnitRepository.save(oldOmu)
+            offenderManagementUnitRepository.save(newOmu)
+
+            // create application with only initial assignment
+            val application = createApplicationAndInitialAssignment(oldUserEntity, offenderDetails)
+
+            cas2StatusUpdateEntityFactory.produceAndPersist {
+              withApplication(application)
+              withLabel("Status Update")
+              withAssessor(assessor)
+            }
+
+            val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId), Prison(newOmu.prisonCode))
+            val url = "/allocation/${application.nomsNumber}/primary_pom"
+            val detailUrl = managePomCasesBaseUrl + url
+            mockSuccessfulGetCallWithJsonResponse(
+              url = url,
+              responseBody = pomAllocation,
+            )
+
+            val event = stubEvent(eventType, detailUrl, application.nomsNumber)
+            publishMessageToTopic(eventType, event)
+
+            // pom allocation message should create location change assignment, and pom allocation assignment
+            await().until { applicationAssignmentRepository.count().toInt() == 3 }
+
+            val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+            assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
+
+            assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
+            assertThat(updatedApplication.applicationAssignments.get(1).prisonCode).isEqualTo(newOmu.prisonCode)
+
+            assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
+            assertThat(updatedApplication.currentPomUserId).isEqualTo(newUserEntity.id)
+
+            verifyEmailsSentForAllocationChangedCase(
+              application,
+              pomManagerEmail = newUserEntity.email!!,
+            )
+
+            verifyEmailsSentForPrisonerUpdatedCase(application, oldUserEntity, oldOmu, newOmu)
+          }
+        }
+      }
     }
+  }
+
+  @Test
+  fun `Save new allocation in assignment table but do not send emails if same prison`() {
+    val eventType = "offender-management.allocation.changed"
+    val applicationSchema = applicationJsonSchemaEntity()
     givenACas2PomUser { oldUserEntity, _ ->
       givenACas2PomUser { newUserEntity, _ ->
         givenAnOffender { offenderDetails, _ ->
@@ -343,18 +316,13 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["offender-management.allocation.changed"])
   fun `Save new allocation in assignment table where pom allocation manager is not in database`(eventType: String) {
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
-    givenACas2PomUser { oldUserEntity, _ ->
+    givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId(oldOmu.prisonCode) }) { oldUserEntity, _ ->
       givenACas2Assessor { assessor, _ ->
         givenAnOffender { offenderDetails, _ ->
-          val application = createApplicationAndApplicationAssignments(
-            applicationSchema,
-            oldUserEntity,
-            offenderDetails,
-          )
+          offenderManagementUnitRepository.save(oldOmu)
+          offenderManagementUnitRepository.save(newOmu)
+
+          val application = createApplicationAndInitialAssignment(oldUserEntity, offenderDetails)
 
           cas2StatusUpdateEntityFactory.produceAndPersist {
             withApplication(application)
@@ -363,8 +331,10 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           }
 
           val nomisStaffInformationResponse = NomisStaffInformationFactory().produce()
+          val newUserName = nomisStaffInformationResponse.generalAccount.username
           val nomisUserDetailsResponse = NomisUserDetailFactory()
-            .withUsername(nomisStaffInformationResponse.generalAccount.username)
+            .withActiveCaseloadId(newOmu.prisonCode)
+            .withUsername(newUserName)
             .produce()
 
           val pomAllocation = PomAllocation(Manager(code = nomisUserDetailsResponse.staffId), Prison(newOmu.prisonCode))
@@ -375,41 +345,39 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             responseBody = pomAllocation,
           )
 
-          offenderManagementUnitRepository.save(oldOmu)
-          offenderManagementUnitRepository.save(newOmu)
-
           // extra mocks to retrieve pom manager from nomis-user-roles API
           nomisUserRolesMockSuccessfulGetStaffInformationByStaffIdCall(
             staffId = nomisUserDetailsResponse.staffId,
             nomisStaffInformationResponse,
           )
           nomisUserRolesMockSuccessfulGetUserByUsernameCall(
-            username = nomisStaffInformationResponse.generalAccount.username,
+            username = newUserName,
             nomisUserDetailsResponse,
           )
 
-          assertThat(
-            nomisUserRepository.findByNomisUsername(
-              nomisUsername = nomisStaffInformationResponse.generalAccount.username,
-            ),
-          ).isNull()
+          assertThat(nomisUserRepository.findByNomisUsername(nomisUsername = newUserName)).isNull()
 
           val event = stubEvent(eventType, detailUrl, application.nomsNumber)
           publishMessageToTopic(eventType, event)
           await().until { applicationAssignmentRepository.count().toInt() == 3 }
-          val locations = applicationAssignmentRepository.findAll()
-          assertThat(locations.last().prisonCode).isEqualTo(pomAllocation.prison.code)
+
+          val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+          assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
+
+          assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
+          assertThat(updatedApplication.applicationAssignments.get(1).prisonCode).isEqualTo(newOmu.prisonCode)
+
+          assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
+
+          val missingUser = nomisUserRepository.findByNomisUsername(newUserName)
+          assertThat(updatedApplication.currentPomUserId).isEqualTo(missingUser!!.id)
 
           verifyEmailsSentForAllocationChangedCase(
             application,
             pomManagerEmail = nomisUserDetailsResponse.primaryEmail!!,
           )
 
-          assertThat(
-            nomisUserRepository.findByNomisUsername(
-              nomisUsername = nomisStaffInformationResponse.generalAccount.username,
-            ),
-          ).isNotNull
+          assertThat(nomisUserRepository.findByNomisUsername(nomisUsername = newUserName)).isNotNull
         }
       }
     }
@@ -418,7 +386,8 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   private fun verifyEmailsSentForPrisonerUpdatedCase(
     application: Cas2ApplicationEntity,
     userEntity: NomisUserEntity,
-    prisoner: Prisoner,
+    oldOmu: OffenderManagementUnitEntity,
+    newOmu: OffenderManagementUnitEntity,
   ) {
     verify(exactly = 1, timeout = 5000) {
       emailNotificationService.sendEmail(
@@ -427,7 +396,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         eq(
           mapOf(
             "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
           ),
         ),
         any(),
@@ -440,7 +409,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         eq(
           mapOf(
             "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
           ),
         ),
         any(),
@@ -468,7 +437,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         eq(
           mapOf(
             "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
             "transferringPrisonName" to oldOmu.prisonName,
             "link" to getAssessorLink(application.id),
           ),
@@ -550,40 +519,32 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     }
   }
 
-  private fun createApplicationAndApplicationAssignments(
-    applicationSchema: Cas2ApplicationJsonSchemaEntity,
-    oldUserEntity: NomisUserEntity,
+  private fun createApplicationAndInitialAssignment(
+    allocatedPom: NomisUserEntity,
     offenderDetails: OffenderDetailSummary,
+    omu: OffenderManagementUnitEntity = oldOmu,
   ): Cas2ApplicationEntity {
-    val application = createApplicationAndApplicationAssignmentsWithoutLocationEvent(
-      applicationSchema = applicationSchema,
-      offenderDetails = offenderDetails,
-      oldUserEntity = oldUserEntity,
-    )
+    val application = cas2ApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(applicationJsonSchemaEntity())
+      withCreatedByUser(allocatedPom)
+      withSubmittedAt(OffsetDateTime.now())
+      withCrn(offenderDetails.otherIds.crn)
+      withCreatedAt(OffsetDateTime.now().minusDays(28))
+      withConditionalReleaseDate(LocalDate.now().plusDays(1))
+    }
 
-    val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      prisonCode = newOmu.prisonCode,
-      allocatedPomUser = null,
-      createdAt = OffsetDateTime.parse(OCCURRING_AT),
-    )
-
-    applicationAssignmentRepository.save(
-      oldApplicationAssignment,
-    )
-
-    return application
+    application.createApplicationAssignment(omu.prisonCode, allocatedPom)
+    return cas2ApplicationRepository.save(application)
   }
 
   private fun createApplicationAndApplicationAssignmentsWithoutLocationEvent(
     applicationSchema: Cas2ApplicationJsonSchemaEntity,
-    oldUserEntity: NomisUserEntity,
+    user: NomisUserEntity,
     offenderDetails: OffenderDetailSummary,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(applicationSchema)
-      withCreatedByUser(oldUserEntity)
+      withCreatedByUser(user)
       withSubmittedAt(OffsetDateTime.now())
       withCrn(offenderDetails.otherIds.crn)
       withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -594,7 +555,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       id = UUID.randomUUID(),
       application = application,
       prisonCode = oldOmu.prisonCode,
-      allocatedPomUser = oldUserEntity,
+      allocatedPomUser = user,
       createdAt = OffsetDateTime.parse(OCCURRING_AT),
     )
 

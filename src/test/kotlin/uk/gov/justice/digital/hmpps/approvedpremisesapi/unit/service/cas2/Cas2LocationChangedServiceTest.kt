@@ -5,13 +5,11 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -20,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
@@ -31,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
-import java.util.stream.Stream
 
 @ExtendWith(MockKExtension::class)
 class Cas2LocationChangedServiceTest {
@@ -104,12 +100,13 @@ class Cas2LocationChangedServiceTest {
     verify(exactly = 0) { applicationRepository.save(any()) }
   }
 
-  @Test
-  fun `no action taken when updated prison code is OUT`() {
+  @ParameterizedTest
+  @ValueSource(strings = ["OUT", "TRN"])
+  fun `no action taken when updated prison code is $`(ignorableCode: String) {
     val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
     application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
 
-    val releasedPrisoner = prisoner.copy(prisonId = "OUT")
+    val releasedPrisoner = prisoner.copy(prisonId = ignorableCode)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, releasedPrisoner)
     every { applicationService.findApplicationToAssign(any()) } returns application
@@ -159,46 +156,5 @@ class Cas2LocationChangedServiceTest {
 
     verify(exactly = 0) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
-  }
-
-  @ParameterizedTest
-  @MethodSource(
-    "getIsLocationChangedApplicationAssignmentRequiredArguments",
-  )
-  @SuppressWarnings("LongParameterList")
-  fun isLocationChangedApplicationAssignmentRequired(
-    oldPrisonCode: String,
-    newPrisonCode: String,
-    baseUser: NomisUserEntity,
-    optionalUser: NomisUserEntity?,
-    prisoner: Prisoner,
-    expected: Boolean,
-  ) {
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withReferringPrisonCode(oldPrisonCode).withCreatedByUser(baseUser).produce()
-
-    application.createApplicationAssignment(prisonCode = oldPrisonCode, allocatedPomUser = baseUser)
-    application.createApplicationAssignment(prisonCode = newPrisonCode, allocatedPomUser = optionalUser)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    assertThat(locationChangedService.isLocationChangedApplicationAssignmentRequired(application, prisoner.prisonId)).isEqualTo(expected)
-  }
-
-  private companion object {
-    @JvmStatic
-    fun getIsLocationChangedApplicationAssignmentRequiredArguments(): Stream<Arguments> {
-      val user = NomisUserEntityFactory().produce()
-      val oldPrisonCode = "OLD"
-      val newPrisonCode = "NEW"
-      val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "LONDON")
-
-      return Stream.of(
-        Arguments.of(oldPrisonCode, newPrisonCode, user, user, prisoner, true),
-        Arguments.of(oldPrisonCode, newPrisonCode, user, null, prisoner, true),
-        Arguments.of(prisoner.prisonId, newPrisonCode, user, user, prisoner, false),
-        Arguments.of(prisoner.prisonId, newPrisonCode, user, null, prisoner, true),
-        Arguments.of(oldPrisonCode, prisoner.prisonId, user, user, prisoner, true),
-        Arguments.of(oldPrisonCode, prisoner.prisonId, user, null, prisoner, false),
-      )
-    }
   }
 }

@@ -20,12 +20,8 @@ class Cas2LocationChangedService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun isLocationChangedApplicationAssignmentRequired(application: Cas2ApplicationEntity, prisonCode: String): Boolean {
-    val isFirstValidLocationChangedAssigment =
-      !application.hasLocationChangedAssignment && prisonCode != application.referringPrisonCode
-    val isValidLocationChangedAssignment = application.hasLocationChangedAssignment && prisonCode != application.mostRecentLocationAssignment?.prisonCode
-    return isFirstValidLocationChangedAssigment || isValidLocationChangedAssignment
-  }
+  private fun isRelease(prisonCode: String) = prisonCode == "OUT"
+  private fun isTransfer(prisonCode: String) = prisonCode == "TRN"
 
   @Transactional
   fun process(event: HmppsDomainEvent) {
@@ -43,23 +39,30 @@ class Cas2LocationChangedService(
           is ClientResult.Success -> result.body
           is ClientResult.Failure -> throw result.toException()
         }
-
-        if (prisoner.prisonId == "OUT") {
-          log.info("Prisoner $nomsNumber has been released, no action required")
-        } else if (isLocationChangedApplicationAssignmentRequired(application, prisoner.prisonId)) {
-          application.createApplicationAssignment(
-            prisonCode = prisoner.prisonId,
-            allocatedPomUser = null,
-          )
-
-          applicationRepository.save(application)
-          log.info("Added application assignment for prisoner: {}", nomsNumber)
-
-          emailService.sendLocationChangedEmails(application, prisoner)
-        } else {
-          log.info("Prisoner {} prison location not changed, no action required", nomsNumber)
-        }
+        createLocationChangeAssignmentAndSendEmails(application, latestPrisonCode = prisoner.prisonId)
       }
     }
+  }
+
+  fun createLocationChangeAssignmentAndSendEmails(
+    application: Cas2ApplicationEntity,
+    latestPrisonCode: String,
+  ): Cas2ApplicationEntity {
+    if (!application.isLocationChange(latestPrisonCode) ||
+      isRelease(latestPrisonCode) ||
+      isTransfer(latestPrisonCode)
+    ) {
+      log.info("Location change not required for ${application.nomsNumber}. Current prison code: ${application.currentPrisonCode}. Latest prison code: $latestPrisonCode")
+      return application
+    }
+
+    application.createApplicationAssignment(
+      prisonCode = latestPrisonCode,
+      allocatedPomUser = null,
+    )
+
+    val application = applicationRepository.save(application)
+    emailService.sendLocationChangedEmails(application, latestPrisonCode)
+    return application
   }
 }

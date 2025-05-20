@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import java.util.UUID
 
 @Service
 class Cas2AllocationChangedService(
@@ -22,6 +21,7 @@ class Cas2AllocationChangedService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val nomisUserService: NomisUserService,
   private val emailService: Cas2EmailService,
+  private val cas2LocationChangedService: Cas2LocationChangedService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -40,7 +40,20 @@ class Cas2AllocationChangedService(
       when (val pomAllocation = getAllocationResponse(detailUrl)) {
         is PomAllocation -> {
           val allocatedUser = nomisUserService.getUserByStaffId(staffId = pomAllocation.manager.code)
-          addApplicationAssignment(application, pomAllocation.prison.code, allocatedUser)
+          val isSamePOM = allocatedUser.id == application.currentPomUserId
+          if (isSamePOM) {
+            log.info("POM has not changed for $nomsNumber.")
+            return
+          }
+
+          if (application.isLocationChange(pomAllocation.prison.code)) {
+            cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(
+              application,
+              pomAllocation.prison.code,
+            )
+          }
+
+          addApplicationAssignmentAndSendEmails(application, pomAllocation.prison.code, allocatedUser)
         }
 
         else -> {
@@ -50,26 +63,28 @@ class Cas2AllocationChangedService(
     }
   }
 
-  private fun sendEmails(oldPrisonCode: String, newPrisonCode: String, application: Cas2ApplicationEntity, allocatedUser: NomisUserEntity) {
-    val hasMovedPrison = oldPrisonCode != newPrisonCode
-    if (hasMovedPrison) {
-      emailService.sendAllocationChangedEmails(application = application, newPom = allocatedUser, newPrisonCode = newPrisonCode)
-    }
-  }
+  private fun addApplicationAssignmentAndSendEmails(
+    application: Cas2ApplicationEntity,
+    pomAllocationPrisonCode: String,
+    pomAllocatedToOffender: NomisUserEntity,
+  ) {
+    // We don't send emails for same prison allocations, so only send emails on the first allocation.
+    val isFirstPomAllocationAtPrison = application.currentPomUserId == null
 
-  private fun addApplicationAssignment(application: Cas2ApplicationEntity, newPrisonCode: String, allocatedUser: NomisUserEntity) {
-    if (isNewAllocation(application.currentPomUserId, allocatedUser.id)) {
-      val oldPrisonCode = application.currentPrisonCode!!
-      application.createApplicationAssignment(
-        prisonCode = newPrisonCode,
-        allocatedPomUser = allocatedUser,
+    application.createApplicationAssignment(
+      prisonCode = pomAllocationPrisonCode,
+      allocatedPomUser = pomAllocatedToOffender,
+    )
+    applicationRepository.save(application)
+
+    if (isFirstPomAllocationAtPrison) {
+      emailService.sendAllocationChangedEmails(
+        application = application,
+        newPom = pomAllocatedToOffender,
+        newPrisonCode = pomAllocationPrisonCode,
       )
-      applicationRepository.save(application)
-      sendEmails(oldPrisonCode, newPrisonCode, application, allocatedUser)
     }
   }
-
-  private fun isNewAllocation(currentStaffId: UUID?, staffIdToCheck: UUID): Boolean = currentStaffId != staffIdToCheck
 
   private fun getAllocationResponse(detailUrl: String) = when (val result = managePomCasesClient.getPomAllocation(detailUrl)) {
     is ClientResult.Success -> result.body

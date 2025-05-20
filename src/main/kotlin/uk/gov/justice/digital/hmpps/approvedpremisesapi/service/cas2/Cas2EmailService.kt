@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -23,19 +22,20 @@ class Cas2EmailService(
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
 
-  fun sendLocationChangedEmails(application: Cas2ApplicationEntity, prisoner: Prisoner) {
-    val oldPrisonCode = getOldPrisonCode(application, prisoner.prisonId) ?: error("Old prison code not found.")
-    val oldPomUserId = getOldPomUserId(application, prisoner) ?: error("Old POM user ID not found.")
+  fun sendLocationChangedEmails(application: Cas2ApplicationEntity, prisonCode: String) {
+    val oldPrisonCode = getOldPrisonCode(application, prisonCode) ?: error("Old prison code not found.")
+    val oldPomUserId = getOldPomUserId(application, prisonCode) ?: error("Old POM user ID not found.")
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       val oldOmu = offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) ?: error("No OMU found for old prison code $oldPrisonCode.")
-      val newOmu = offenderManagementUnitRepository.findByPrisonCode(prisoner.prisonId) ?: error("No OMU found for new prison code ${prisoner.prisonId}.")
+      val newOmu = offenderManagementUnitRepository.findByPrisonCode(prisonCode)
+        ?: error("No OMU found for new prison code $prisonCode.")
       val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: error("StatusUpdate for ${application.id} not found")
       emailNotificationService.sendCas2Email(
         oldPom.email!!,
         Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
-          "receivingPrisonName" to prisoner.prisonName,
+          "receivingPrisonName" to newOmu.prisonName,
         ),
       )
       emailNotificationService.sendCas2Email(
@@ -43,7 +43,7 @@ class Cas2EmailService(
         Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
-          "receivingPrisonName" to prisoner.prisonName,
+          "receivingPrisonName" to newOmu.prisonName,
         ),
       )
       emailNotificationService.sendCas2Email(
@@ -61,7 +61,7 @@ class Cas2EmailService(
         Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
-          "receivingPrisonName" to prisoner.prisonName,
+          "receivingPrisonName" to newOmu.prisonName,
           "transferringPrisonName" to oldOmu.prisonName,
           "link" to getAssessorLink(application.id),
         ),
@@ -98,6 +98,6 @@ class Cas2EmailService(
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
   private fun getAssessorLink(applicationId: UUID): String = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
-  fun getOldPomUserId(application: Cas2ApplicationEntity, prisoner: Prisoner) = application.applicationAssignments.firstOrNull { it.allocatedPomUser != null && it.prisonCode != prisoner.prisonId }?.allocatedPomUser?.id
+  fun getOldPomUserId(application: Cas2ApplicationEntity, prisonCode: String) = application.applicationAssignments.firstOrNull { it.allocatedPomUser != null && it.prisonCode != prisonCode }?.allocatedPomUser?.id
   fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String? = application.applicationAssignments.firstOrNull { it.prisonCode != newPrisonCode }?.prisonCode
 }
