@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model
 
 import java.time.LocalDate
 
-// Date	Applications Started	Unique Users starting applications	Applications Submitted	Unique Users submitting applications	Assessments completed	Unique Users completing assessments	Bookings made	Unique Users making bookings
-
+@SuppressWarnings("ConstructorParameterNaming")
+@Suppress("MaxLineLength")
 data class DailyMetricReportRow(
   val report_date: LocalDate,
   val applications_started: Int,
@@ -14,5 +14,4 @@ data class DailyMetricReportRow(
   val unique_users_completing_assessments: Int,
   val bookings_made: Int,
   val unique_users_making_bookings: Int,
-
 )

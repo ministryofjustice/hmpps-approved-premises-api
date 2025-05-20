@@ -1,12 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.opencsv.CSVReaderBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.toList
-import org.jetbrains.kotlinx.dataframe.io.readCSV
+import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -26,16 +25,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.DailyMetricReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.io.StringReader
 import java.time.LocalDate
-import java.time.temporal.TemporalAdjusters
 import java.util.UUID
+import java.util.function.Consumer
 
 class DailyMetricsReportTest : IntegrationTestBase() {
 
@@ -83,7 +78,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         withPermissiveSchema()
       }
 
-      val applications = listOf(
+      listOf(
         approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedAt(
             LocalDate.of(year, month, 3).toLocalDateTime(),
@@ -101,7 +96,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         withCreatedByUser(user)
       }
 
-      val domainEvents = listOf(
+      listOf(
         domainEventFactory.produceAndPersist {
           withOccurredAt(
             LocalDate.of(year, month, 1).toLocalDateTime(),
@@ -188,62 +183,6 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
       }
 
-      val startDate = LocalDate.of(year, month, 1)
-      val endDate = startDate.with(TemporalAdjusters.lastDayOfMonth())
-
-      val datesForMonth = listOf(
-        LocalDate.of(year, month, 1),
-        LocalDate.of(year, month, 2),
-        LocalDate.of(year, month, 3),
-        LocalDate.of(year, month, 4),
-        LocalDate.of(year, month, 5),
-        LocalDate.of(year, month, 6),
-        LocalDate.of(year, month, 7),
-        LocalDate.of(year, month, 8),
-        LocalDate.of(year, month, 9),
-        LocalDate.of(year, month, 10),
-        LocalDate.of(year, month, 11),
-        LocalDate.of(year, month, 12),
-        LocalDate.of(year, month, 13),
-        LocalDate.of(year, month, 14),
-        LocalDate.of(year, month, 15),
-        LocalDate.of(year, month, 16),
-        LocalDate.of(year, month, 17),
-        LocalDate.of(year, month, 18),
-        LocalDate.of(year, month, 19),
-        LocalDate.of(year, month, 20),
-        LocalDate.of(year, month, 21),
-        LocalDate.of(year, month, 22),
-        LocalDate.of(year, month, 23),
-        LocalDate.of(year, month, 24),
-        LocalDate.of(year, month, 25),
-        LocalDate.of(year, month, 26),
-        LocalDate.of(year, month, 27),
-        LocalDate.of(year, month, 28),
-        LocalDate.of(year, month, 29),
-        LocalDate.of(year, month, 30),
-      )
-
-      val expectedApplications = applications.map {
-        ApprovedPremisesApplicationMetricsSummaryDto(
-          it.createdAt.toLocalDate(),
-          it.createdByUser.id.toString(),
-        )
-      }
-
-      val expectedDataFrame = DailyMetricsReportGenerator(domainEvents, expectedApplications, domainEventService)
-        .createReport(
-          datesForMonth,
-          MonthSpecificReportParams(
-            year,
-            month,
-          ),
-        )
-
-      val expectedList: List<DailyMetricReportRow> = expectedDataFrame
-        .convertTo<DailyMetricReportRow>(ExcessiveColumns.Remove)
-        .toList()
-
       webTestClient.get()
         .uri("/cas1/reports/dailyMetrics?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
@@ -253,20 +192,61 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         .isOk
         .expectHeader().valuesMatch(
           "content-disposition",
-          "attachment; filename=\"daily-metrics-$startDate-to-$endDate-\\d{8}_\\d{4}.xlsx\"",
+          "attachment; filename=\"daily-metrics-$year-${month.toString().padStart(2, '0')}-[0-9_]+.xlsx\"",
         )
         .expectBody()
-        .consumeWith { response ->
-          val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
-
-          val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
-
+        .consumeWith {
           val actual = DataFrame
-            .readCSV(completeCsvString.byteInputStream())
+            .readExcel(it.responseBody!!.inputStream())
             .convertTo<DailyMetricReportRow>(ExcessiveColumns.Remove)
-            .toList()
 
-          assertThat(actual).isEqualTo(expectedList)
+          val actualRows = actual.toList()
+          assertThat(actualRows).hasSize(30)
+
+          val rowsContainsData = actualRows.filter { it.report_date == LocalDate.of(2023, 4, 1) || it.report_date == LocalDate.of(2023, 4, 3) }
+
+          assertThat(rowsContainsData[0]).satisfies(
+            Consumer { row ->
+              assertThat(row.report_date).isEqualTo(LocalDate.of(2023, 4, 1))
+              assertThat(row.applications_started).isEqualTo(0)
+              assertThat(row.unique_users_starting_applications).isEqualTo(0)
+              assertThat(row.applications_submitted).isEqualTo(1)
+              assertThat(row.unique_users_submitting_applications).isEqualTo(1)
+              assertThat(row.assessments_completed).isEqualTo(1)
+              assertThat(row.unique_users_completing_assessments).isEqualTo(1)
+              assertThat(row.bookings_made).isEqualTo(1)
+              assertThat(row.unique_users_making_bookings).isEqualTo(1)
+            },
+          )
+
+          assertThat(rowsContainsData[1]).satisfies(
+            Consumer { row ->
+              assertThat(row.report_date).isEqualTo(LocalDate.of(2023, 4, 3))
+              assertThat(row.applications_started).isEqualTo(1)
+              assertThat(row.unique_users_starting_applications).isEqualTo(1)
+              assertThat(row.applications_submitted).isEqualTo(0)
+              assertThat(row.unique_users_submitting_applications).isEqualTo(0)
+              assertThat(row.assessments_completed).isEqualTo(0)
+              assertThat(row.unique_users_completing_assessments).isEqualTo(0)
+              assertThat(row.bookings_made).isEqualTo(0)
+              assertThat(row.unique_users_making_bookings).isEqualTo(0)
+            },
+          )
+
+          val rowsWithoutData = actualRows - rowsContainsData
+
+          assertThat(rowsWithoutData).allSatisfy(
+            Consumer { row ->
+              assertThat(row.applications_started).isEqualTo(0)
+              assertThat(row.unique_users_starting_applications).isEqualTo(0)
+              assertThat(row.applications_submitted).isEqualTo(0)
+              assertThat(row.unique_users_submitting_applications).isEqualTo(0)
+              assertThat(row.assessments_completed).isEqualTo(0)
+              assertThat(row.unique_users_completing_assessments).isEqualTo(0)
+              assertThat(row.bookings_made).isEqualTo(0)
+              assertThat(row.unique_users_making_bookings).isEqualTo(0)
+            },
+          )
         }
     }
   }

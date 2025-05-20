@@ -156,25 +156,25 @@ class DailyMetricsReportGeneratorTest {
     val results = generator.createReport(dates, properties)
 
     dates.forEachIndexed { i, date ->
-      assertThat(results[i]["date"]).isEqualTo(date)
-      assertThat(results[i]["applicationsStarted"]).isEqualTo(countEntitiesForDate(applications, date))
-      assertThat(results[i]["uniqueUsersStartingApplications"]).isEqualTo(countUniqueUsersForDate(applications, date))
-      assertThat(results[i]["applicationsSubmitted"]).isEqualTo(countEntitiesForDate(applicationSubmittedEvents, date))
-      assertThat(results[i]["uniqueUsersSubmittingApplications"]).isEqualTo(
+      assertThat(results[i]["report_date"]).isEqualTo(date)
+      assertThat(results[i]["applications_started"]).isEqualTo(countEntitiesForDate(applications, date))
+      assertThat(results[i]["unique_users_starting_applications"]).isEqualTo(countUniqueUsersForDate(applications, date))
+      assertThat(results[i]["applications_submitted"]).isEqualTo(countEntitiesForDate(applicationSubmittedEvents, date))
+      assertThat(results[i]["unique_users_submitting_applications"]).isEqualTo(
         countUniqueUsersForDate(
           applicationSubmittedEvents,
           date,
         ),
       )
-      assertThat(results[i]["assessmentsCompleted"]).isEqualTo(countEntitiesForDate(assessmentCompletedEvents, date))
-      assertThat(results[i]["uniqueUsersCompletingAssessments"]).isEqualTo(
+      assertThat(results[i]["assessments_completed"]).isEqualTo(countEntitiesForDate(assessmentCompletedEvents, date))
+      assertThat(results[i]["unique_users_completing_assessments"]).isEqualTo(
         countUniqueUsersForDate(
           assessmentCompletedEvents,
           date,
         ),
       )
-      assertThat(results[i]["bookingsMade"]).isEqualTo(countEntitiesForDate(bookingMadeEvents, date))
-      assertThat(results[i]["uniqueUsersMakingBookings"]).isEqualTo(countUniqueUsersForDate(bookingMadeEvents, date))
+      assertThat(results[i]["bookings_made"]).isEqualTo(countEntitiesForDate(bookingMadeEvents, date))
+      assertThat(results[i]["unique_users_making_bookings"]).isEqualTo(countUniqueUsersForDate(bookingMadeEvents, date))
     }
   }
 
