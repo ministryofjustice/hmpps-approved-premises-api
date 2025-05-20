@@ -67,6 +67,10 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   private val domainEventsClient by lazy { domainEventsTopic.snsClient }
 
   private fun getLink(applicationId: UUID): String = "http://cas2.frontend/applications/#id/overview".replace("#id", applicationId.toString())
+  private fun getAssessorLink(applicationId: UUID): String = "http://cas2.frontend/assess/applications/#applicationId/overview".replace(
+    "#applicationId",
+    applicationId.toString(),
+  )
 
   private fun publishMessageToTopic(eventType: String, json: String = "{}") {
     val sendMessageRequest = PublishRequest.builder()
@@ -466,7 +470,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             "nomsNumber" to application.nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
             "transferringPrisonName" to oldOmu.prisonName,
-            "link" to getLink(application.id),
+            "link" to getAssessorLink(application.id),
           ),
         ),
         any(),
@@ -486,7 +490,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           mapOf(
             "nomsNumber" to application.nomsNumber,
             "receivingPrisonName" to newOmu.prisonName,
-            "link" to getLink(application.id),
+            "link" to getAssessorLink(application.id),
           ),
         ),
         any(),
@@ -522,7 +526,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           mapOf(
             "nomsNumber" to application.nomsNumber,
             "receivingPrisonName" to newOmu.prisonName,
-            "link" to getLink(application.id),
+            "link" to getAssessorLink(application.id),
           ),
         ),
         any(),
