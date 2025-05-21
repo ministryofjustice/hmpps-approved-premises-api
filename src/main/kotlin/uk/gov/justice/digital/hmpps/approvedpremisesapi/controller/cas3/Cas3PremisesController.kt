@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.PremisesCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3FutureBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
@@ -33,7 +35,19 @@ class Cas3PremisesController(
   private val cas3FutureBookingTransformer: Cas3FutureBookingTransformer,
   private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val cas3DepartureTransformer: Cas3DepartureTransformer,
+  private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
 ) : PremisesCas3Delegate {
+
+  override fun getPremisesBedspaces(premisesId: UUID): ResponseEntity<List<Cas3Bedspace>> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(premises.rooms.mapNotNull(cas3BedspaceTransformer::transformJpaToApi))
+  }
+
   override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
     val premisesSummariesByPremisesId = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus).groupBy { it.id }

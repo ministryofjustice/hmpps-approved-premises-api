@@ -115,7 +115,7 @@ class BedEntityFactory : Factory<BedEntity> {
   }
 
   fun withStartDate(startDate: LocalDate?) = apply {
-    this.endDate = { startDate }
+    this.startDate = { startDate }
   }
 
   fun withEndDate(endDate: LocalDate?) = apply {
