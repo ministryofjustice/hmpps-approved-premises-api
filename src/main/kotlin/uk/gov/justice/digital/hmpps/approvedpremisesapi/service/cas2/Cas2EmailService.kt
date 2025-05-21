@@ -22,6 +22,8 @@ class Cas2EmailService(
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
 
+  fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Submitted"
+
   fun sendLocationChangedEmails(application: Cas2ApplicationEntity, prisonCode: String) {
     val oldPrisonCode = getOldPrisonCode(application, prisonCode) ?: error("Old prison code not found.")
     val oldPomUserId = getOldPomUserId(application, prisonCode) ?: error("Old POM user ID not found.")
@@ -29,7 +31,8 @@ class Cas2EmailService(
       val oldOmu = offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) ?: error("No OMU found for old prison code $oldPrisonCode.")
       val newOmu = offenderManagementUnitRepository.findByPrisonCode(prisonCode)
         ?: error("No OMU found for new prison code $prisonCode.")
-      val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: error("StatusUpdate for ${application.id} not found")
+      // There can be applications without a status
+      val statusUpdate = getApplicationStatusOrDefault(application.id)
       emailNotificationService.sendCas2Email(
         oldPom.email!!,
         Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
@@ -53,7 +56,7 @@ class Cas2EmailService(
           "nomsNumber" to application.nomsNumber,
           "transferringPrisonName" to oldOmu.prisonName,
           "link" to getLink(application.id),
-          "applicationStatus" to statusUpdate.label,
+          "applicationStatus" to statusUpdate,
         ),
       )
       emailNotificationService.sendCas2Email(
