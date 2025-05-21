@@ -35,6 +35,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_MEN_ONLY
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_PUB_NEAR_BY
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_SHARED_PROPERTY
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_SINGLE_OCCUPANCY
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_WOMEN_ONLY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
@@ -55,11 +61,16 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
   lateinit var probationRegion: ProbationRegionEntity
 
   companion object Constants {
-    const val PROPERTY_NAME_SINGLE_OCCUPANCY = "isSingleOccupancy"
-    const val PROPERTY_NAME_SHARED_PROPERTY = "isSharedProperty"
-    const val PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE = "isWheelchairAccessible"
-    const val PROPERTY_NAME_MEN_ONLY = "isMenOnly"
-    const val PROPERTY_NAME_WOMEN_ONLY = "isWomenOnly"
+    const val PREMISES_SINGLE_OCCUPANCY_ID = "007c8237-b4f4-4ee0-a9e6-62dc0d1c6a2c"
+    const val PREMISES_SHARED_PROPERTY_ID = "e7e492d7-7853-48a8-9a98-23f68af92a85"
+    const val PREMISES_MEN_ONLY_ID = "f21a3f74-0538-4541-8b29-3cbdcd240ae4"
+    const val PREMISES_WOMEN_ONLY_ID = "25ff5695-eab1-46ad-9f3f-639edb180672"
+    const val PREMISES_PUB_NEARBY_ID = "6a952536-d88c-4e14-be24-d80eb754d12b"
+    const val PREMISES_SINGLE_OCCUPANCY_MEN_ONLY_ID = "f2a0b5d1-3c4e-4b8c-8f6d-7a9e0b1f2c3d"
+    const val PREMISES_SINGLE_OCCUPANCY_WOMEN_ONLY_ID = "1735874f-ab84-479c-b007-dd49d54ab339"
+    const val PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID = "df702555-6e5e-4e28-8b83-c7bdd8a8db1a"
+    const val PREMISES_SHARED_PROPERTY_MEN_ONLY_ID = "a7540305-dd6e-41f3-8647-c45e7cfe7e0c"
+    const val PREMISES_SHARED_PROPERTY_WOMEN_ONLY_ID = "b2a7306c-7049-41b0-b0d9-fd23bd0f7d42"
   }
 
   @BeforeEach
@@ -135,7 +146,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 1,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premises,
                     room,
                     bed,
@@ -428,7 +439,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                   resultsPremisesCount = 1,
                   resultsBedCount = 1,
                   results = listOf(
-                    createTemporaryAccommodationBedSearchResult(
+                    createBedspaceSearchResult(
                       premises,
                       roomOne,
                       bedOne,
@@ -612,7 +623,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                   resultsPremisesCount = 2,
                   resultsBedCount = 2,
                   results = listOf(
-                    createTemporaryAccommodationBedSearchResult(
+                    createBedspaceSearchResult(
                       premisesOne,
                       roomInPremisesOne,
                       matchingBedInPremisesOne,
@@ -635,7 +646,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                         ),
                       ),
                     ),
-                    createTemporaryAccommodationBedSearchResult(
+                    createBedspaceSearchResult(
                       premisesTwo,
                       roomInPremisesTwo,
                       matchingBedInPremisesTwo,
@@ -731,7 +742,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 2,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premises,
                     roomOne,
                     bedOne,
@@ -742,7 +753,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premises,
                     roomOne,
                     bedTwo,
@@ -847,7 +858,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                   resultsPremisesCount = 1,
                   resultsBedCount = 2,
                   results = listOf(
-                    createTemporaryAccommodationBedSearchResult(
+                    createBedspaceSearchResult(
                       premises,
                       roomOne,
                       bedOne,
@@ -858,7 +869,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                       roomCharacteristics = listOf(),
                       overlaps = listOf(),
                     ),
-                    createTemporaryAccommodationBedSearchResult(
+                    createBedspaceSearchResult(
                       premises,
                       roomOne,
                       bedTwo,
@@ -890,18 +901,18 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val beds = createPremisesAndBedsWithCharacteristics(
+        val premises = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          PROPERTY_NAME_SHARED_PROPERTY,
         )
 
-        val expextedPremisesOneBedOne = beds.first()
-        val expextedPremisesOneRoomOne = expextedPremisesOneBedOne.room
-        val expextedPremisesTwoBedOne = beds.drop(1).first()
-        val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
-        val expextedPremisesThreeBedOne = beds.drop(2).first()
-        val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
+        val expextedPremisesOne = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
+        val expextedPremisesOneRoomOne = expextedPremisesOne.rooms.first()
+        val expextedPremisesOneRoomTwo = expextedPremisesOne.rooms.drop(1).first()
+        val expextedPremisesTwo = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_MEN_ONLY_ID) }
+        val expextedPremisesTwoRoomOne = expextedPremisesTwo.rooms.first()
+        val expextedPremisesThree = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_WOMEN_ONLY_ID) }
+        val expextedPremisesThreeRoomOne = expextedPremisesThree.rooms.first()
 
         webTestClient.post()
           .uri("cas3/bedspaces/search")
@@ -923,63 +934,56 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               Cas3BedspaceSearchResults(
-                resultsRoomCount = 3,
-                resultsPremisesCount = 2,
-                resultsBedCount = 3,
+                resultsRoomCount = 4,
+                resultsPremisesCount = 3,
+                resultsBedCount = 4,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesOneRoomOne.premises,
+                  createBedspaceSearchResult(
+                    expextedPremisesOne,
                     expextedPremisesOneRoomOne,
-                    expextedPremisesOneBedOne,
+                    expextedPremisesOneRoomOne.beds.first(),
                     searchPdu.name,
                     numberOfBeds = 2,
                     numberOfBookedBeds = 0,
-                    premisesCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isSharedProperty",
-                        name = "Shared property",
-                      ),
-                    ),
+                    premisesCharacteristics = listOf(getSharedPropertyCharacteristicPair()),
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesThreeRoomOne.premises,
-                    expextedPremisesThreeRoomOne,
-                    expextedPremisesThreeBedOne,
+                  createBedspaceSearchResult(
+                    expextedPremisesOne,
+                    expextedPremisesOneRoomTwo,
+                    expextedPremisesOneRoomTwo.beds.first(),
                     searchPdu.name,
                     numberOfBeds = 2,
                     numberOfBookedBeds = 0,
-                    premisesCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isSharedProperty",
-                        name = "Shared property",
-                      ),
-                    ),
-                    roomCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isWheelchairAccessible",
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
+                    premisesCharacteristics = listOf(getSharedPropertyCharacteristicPair()),
+                    roomCharacteristics = listOf(getWheelchairAccessibleCharacteristicPair()),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesTwoRoomOne.premises,
+                  createBedspaceSearchResult(
+                    expextedPremisesTwo,
                     expextedPremisesTwoRoomOne,
-                    expextedPremisesTwoBedOne,
+                    expextedPremisesTwoRoomOne.beds.first(),
                     searchPdu.name,
                     numberOfBeds = 1,
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isSharedProperty",
-                        name = "Shared property",
-                      ),
-                      CharacteristicPair(
-                        propertyName = "isMenOnly",
-                        name = "Men only",
-                      ),
+                      getSharedPropertyCharacteristicPair(),
+                      getMenOnlyCharacteristicPair(),
+                    ),
+                    roomCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createBedspaceSearchResult(
+                    expextedPremisesThree,
+                    expextedPremisesThreeRoomOne,
+                    expextedPremisesThreeRoomOne.beds.first(),
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(
+                      getSharedPropertyCharacteristicPair(),
+                      getWomenOnlyCharacteristicPair(),
                     ),
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
@@ -1007,6 +1011,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.premises)
 
         val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises One",
           probationRegion,
           localAuthorityArea,
@@ -1015,6 +1020,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         )
 
         val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises Two",
           probationRegion,
           localAuthorityArea,
@@ -1059,6 +1065,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.premises)
 
         val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises One",
           probationRegion,
           localAuthorityArea,
@@ -1067,6 +1074,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         )
 
         val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises Two",
           probationRegion,
           localAuthorityArea,
@@ -1111,6 +1119,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
 
         val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises One",
           probationRegion,
           localAuthorityArea,
@@ -1154,6 +1163,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
 
         val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises One",
           probationRegion,
           localAuthorityArea,
@@ -1200,6 +1210,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           produceCharacteristic("CharacteristicThree", Characteristic.ModelScope.premises)
 
         val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises One",
           probationRegion,
           localAuthorityArea,
@@ -1208,6 +1219,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         )
 
         val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises Two",
           probationRegion,
           localAuthorityArea,
@@ -1216,6 +1228,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         )
 
         val premisesThree = createTemporaryAccommodationPremisesWithCharacteristics(
+          UUID.randomUUID(),
           "Premises Three",
           probationRegion,
           localAuthorityArea,
@@ -1309,18 +1322,19 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val beds = createPremisesAndBedsWithCharacteristics(
+        val premises = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          PROPERTY_NAME_SINGLE_OCCUPANCY,
         )
 
-        val expextedPremisesOneBedOne = beds.first()
-        val expextedPremisesOneRoomOne = expextedPremisesOneBedOne.room
-        val expextedPremisesTwoBedOne = beds.drop(1).first()
-        val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
-        val expextedPremisesThreeBedOne = beds.drop(2).first()
-        val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
+        val expextedPremisesOne = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_ID) }
+        val expextedPremisesOneRoomOne = expextedPremisesOne.rooms.first()
+        val expextedPremisesTwo = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_MEN_ONLY_ID) }
+        val expextedPremisesTwoRoomOne = expextedPremisesTwo.rooms.first()
+        val expextedPremisesThree = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID) }
+        val expextedPremisesThreeRoomOne = expextedPremisesThree.rooms.first()
+        val expextedPremisesFour = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WOMEN_ONLY_ID) }
+        val expextedPremisesFourRoomOne = expextedPremisesFour.rooms.first()
 
         webTestClient.post()
           .uri("cas3/bedspaces/search")
@@ -1342,63 +1356,56 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               Cas3BedspaceSearchResults(
-                resultsRoomCount = 3,
-                resultsPremisesCount = 2,
-                resultsBedCount = 3,
+                resultsRoomCount = 4,
+                resultsPremisesCount = 4,
+                resultsBedCount = 4,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesOneRoomOne.premises,
+                  createBedspaceSearchResult(
+                    expextedPremisesOne,
                     expextedPremisesOneRoomOne,
-                    expextedPremisesOneBedOne,
+                    expextedPremisesOneRoomOne.beds.first(),
                     searchPdu.name,
-                    numberOfBeds = 2,
+                    numberOfBeds = 1,
                     numberOfBookedBeds = 0,
-                    listOf(
-                      CharacteristicPair(
-                        propertyName = "isSingleOccupancy",
-                        name = "Single occupancy",
-                      ),
+                    premisesCharacteristics = listOf(getSingleOccupancyCharacteristicPair()),
+                    roomCharacteristics = listOf(),
+                    overlaps = listOf(),
+                  ),
+                  createBedspaceSearchResult(
+                    expextedPremisesTwo,
+                    expextedPremisesTwoRoomOne,
+                    expextedPremisesTwoRoomOne.beds.first(),
+                    searchPdu.name,
+                    numberOfBeds = 1,
+                    numberOfBookedBeds = 0,
+                    premisesCharacteristics = listOf(
+                      getSingleOccupancyCharacteristicPair(),
+                      getMenOnlyCharacteristicPair(),
                     ),
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesThreeRoomOne.premises,
+                  createBedspaceSearchResult(
+                    expextedPremisesThree,
                     expextedPremisesThreeRoomOne,
-                    expextedPremisesThreeBedOne,
+                    expextedPremisesThreeRoomOne.beds.first(),
                     searchPdu.name,
-                    numberOfBeds = 2,
+                    numberOfBeds = 1,
                     numberOfBookedBeds = 0,
-                    premisesCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isSingleOccupancy",
-                        name = "Single occupancy",
-                      ),
-                    ),
-                    roomCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isWheelchairAccessible",
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
+                    premisesCharacteristics = listOf(getSingleOccupancyCharacteristicPair()),
+                    roomCharacteristics = listOf(getWheelchairAccessibleCharacteristicPair()),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesTwoRoomOne.premises,
-                    expextedPremisesTwoRoomOne,
-                    expextedPremisesTwoBedOne,
+                  createBedspaceSearchResult(
+                    expextedPremisesFour,
+                    expextedPremisesFourRoomOne,
+                    expextedPremisesFourRoomOne.beds.first(),
                     searchPdu.name,
                     numberOfBeds = 1,
                     numberOfBookedBeds = 0,
                     listOf(
-                      CharacteristicPair(
-                        propertyName = "isWomenOnly",
-                        name = "Women only",
-                      ),
-                      CharacteristicPair(
-                        propertyName = "isSingleOccupancy",
-                        name = "Single occupancy",
-                      ),
+                      getWomenOnlyCharacteristicPair(),
+                      getSingleOccupancyCharacteristicPair(),
                     ),
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
@@ -1421,16 +1428,15 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val beds = createPremisesAndBedsWithCharacteristics(
+        val premises = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE,
         )
 
-        val expextedPremisesOneBedOne = beds.first()
-        val expextedPremisesOneRoomOne = expextedPremisesOneBedOne.room
-        val expextedPremisesTwoBedOne = beds.drop(1).first()
-        val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
+        val expextedPremisesOne = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
+        val expextedPremisesOneRoomOne = expextedPremisesOne.rooms.drop(1).first()
+        val expextedPremisesTwo = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID) }
+        val expextedPremisesTwoRoomOne = expextedPremisesTwo.rooms.first()
 
         webTestClient.post()
           .uri("cas3/bedspaces/search")
@@ -1456,46 +1462,26 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 2,
                 resultsBedCount = 2,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesOneRoomOne.premises,
+                  createBedspaceSearchResult(
+                    expextedPremisesOne,
                     expextedPremisesOneRoomOne,
-                    expextedPremisesOneBedOne,
+                    expextedPremisesOneRoomOne.beds.first(),
                     searchPdu.name,
                     numberOfBeds = 2,
                     numberOfBookedBeds = 0,
-                    premisesCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isSharedProperty",
-                        name = "Shared property",
-                      ),
-                    ),
-                    roomCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isWheelchairAccessible",
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
+                    premisesCharacteristics = listOf(getSharedPropertyCharacteristicPair()),
+                    roomCharacteristics = listOf(getWheelchairAccessibleCharacteristicPair()),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
-                    expextedPremisesTwoRoomOne.premises,
+                  createBedspaceSearchResult(
+                    expextedPremisesTwo,
                     expextedPremisesTwoRoomOne,
-                    expextedPremisesTwoBedOne,
+                    expextedPremisesTwoRoomOne.beds.first(),
                     searchPdu.name,
-                    numberOfBeds = 2,
+                    numberOfBeds = 1,
                     numberOfBookedBeds = 0,
-                    listOf(
-                      CharacteristicPair(
-                        propertyName = "isSingleOccupancy",
-                        name = "Single occupancy",
-                      ),
-                    ),
-                    roomCharacteristics = listOf(
-                      CharacteristicPair(
-                        propertyName = "isWheelchairAccessible",
-                        name = "Wheelchair accessible",
-                      ),
-                    ),
+                    premisesCharacteristics = listOf(getSingleOccupancyCharacteristicPair()),
+                    roomCharacteristics = listOf(getWheelchairAccessibleCharacteristicPair()),
                     overlaps = listOf(),
                   ),
                 ),
@@ -1503,6 +1489,382 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             ),
             true,
           )
+      }
+    }
+
+    @Test
+    fun `Searching for men only bedspaces returns bedspaces suitable for men`() {
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        givenSomeOffenders { offenderSequence ->
+          val offenders = offenderSequence.take(3).toList()
+
+          val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
+          }
+
+          val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+          val premises = createPremisesAndBedsWithCharacteristics(
+            localAuthorityArea,
+            searchPdu,
+          )
+
+          val expextedPremisesOne = premises.first { p -> p.id == UUID.fromString(PREMISES_MEN_ONLY_ID) }
+          val expextedPremisesOneRoomOne = expextedPremisesOne.rooms.first()
+          val expextedPremisesTwo = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
+          val expextedPremisesTwoRoomOne = expextedPremisesTwo.rooms.first()
+          val expextedPremisesThree = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_MEN_ONLY_ID) }
+          val expextedPremisesThreeRoomOne = expextedPremisesThree.rooms.first()
+          val expextedPremisesFour = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_ID) }
+          val expextedPremisesFourRoomOne = expextedPremisesFour.rooms.first()
+          val expextedPremisesFive = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_MEN_ONLY_ID) }
+          val expextedPremisesFiveRoomOne = expextedPremisesFive.rooms.first()
+
+          val offenderDetailsOne = offenders.first().first
+          CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetailsOne)
+            .withGender("Male")
+            .produce()
+
+          val premisesPubNearBy = premises.first { p -> p.id == UUID.fromString(PREMISES_PUB_NEARBY_ID) }
+          val premisesPubNearByRoomOne = premisesPubNearBy.rooms.first()
+          bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premisesPubNearBy)
+            withBed(premisesPubNearByRoomOne.beds.first())
+            withArrivalDate(LocalDate.parse("2025-03-07"))
+            withDepartureDate(LocalDate.parse("2025-06-10"))
+            withCrn(offenderDetailsOne.otherIds.crn)
+          }
+
+          val offenderDetailsTwo = offenders.drop(1).first().first
+          val caseSummaryTwo = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetailsTwo)
+            .withGender("Male")
+            .produce()
+
+          val premisesSharedProperty = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
+          val premisesSharedPropertyRoomTwo = premisesSharedProperty.rooms.drop(1).first()
+          val bookingOffenderTwo = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premisesSharedPropertyRoomTwo.premises)
+            withBed(premisesSharedPropertyRoomTwo.beds.first())
+            withArrivalDate(LocalDate.parse("2025-03-25"))
+            withDepartureDate(LocalDate.parse("2025-04-15"))
+            withCrn(offenderDetailsTwo.otherIds.crn)
+          }
+
+          val offenderDetailsThree = offenders.drop(2).first().first
+          CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetailsThree)
+            .withGender("Female")
+            .produce()
+
+          val premisesSingleOccupancyWheelchairAccessible = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID) }
+          val premisesSingleOccupancyWheelchairAccessibleRoomOne = premisesSingleOccupancyWheelchairAccessible.rooms.first()
+          bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premisesSingleOccupancyWheelchairAccessible)
+            withBed(premisesSingleOccupancyWheelchairAccessibleRoomOne.beds.first())
+            withArrivalDate(LocalDate.parse("2025-03-03"))
+            withDepartureDate(LocalDate.parse("2025-04-27"))
+            withCrn(offenderDetailsThree.otherIds.crn)
+          }
+
+          apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummaryTwo))
+
+          webTestClient.post()
+            .uri("cas3/bedspaces/search")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas3BedspaceSearchParameters(
+                startDate = LocalDate.parse("2025-03-27"),
+                durationDays = 84,
+                probationDeliveryUnits = listOf(searchPdu.id),
+                premisesFilters = PremisesFilters(
+                  includedCharacteristicIds = listOf(getPremisesMenOnlyCharacteristic()?.id!!),
+                ),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                Cas3BedspaceSearchResults(
+                  resultsRoomCount = 5,
+                  resultsPremisesCount = 5,
+                  resultsBedCount = 5,
+                  results = listOf(
+                    createBedspaceSearchResult(
+                      expextedPremisesOne,
+                      expextedPremisesOneRoomOne,
+                      expextedPremisesOneRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(getMenOnlyCharacteristicPair()),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesTwo,
+                      expextedPremisesTwoRoomOne,
+                      expextedPremisesTwoRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 2,
+                      numberOfBookedBeds = 1,
+                      premisesCharacteristics = listOf(getSharedPropertyCharacteristicPair()),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(
+                        Cas3BedspaceSearchResultOverlap(
+                          name = "${offenderDetailsTwo.firstName} ${offenderDetailsTwo.surname}",
+                          crn = offenderDetailsTwo.otherIds.crn,
+                          personType = PersonType.fullPerson,
+                          days = 20,
+                          bookingId = bookingOffenderTwo.id,
+                          roomId = premisesSharedPropertyRoomTwo.id,
+                          isSexualRisk = false,
+                          sex = "Male",
+                          assessmentId = null,
+                        ),
+                      ),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesThree,
+                      expextedPremisesThreeRoomOne,
+                      expextedPremisesThreeRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(
+                        getMenOnlyCharacteristicPair(),
+                        getSharedPropertyCharacteristicPair(),
+                      ),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesFour,
+                      expextedPremisesFourRoomOne,
+                      expextedPremisesFourRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(getSingleOccupancyCharacteristicPair()),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesFive,
+                      expextedPremisesFiveRoomOne,
+                      expextedPremisesFiveRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(
+                        getSingleOccupancyCharacteristicPair(),
+                        getMenOnlyCharacteristicPair(),
+                      ),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                  ),
+                ),
+              ),
+              true,
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `Searching for women only bedspaces returns bedspaces suitable for women`() {
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        givenSomeOffenders { offenderSequence ->
+          val offenders = offenderSequence.take(3).toList()
+
+          val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
+          }
+
+          val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+          val premises = createPremisesAndBedsWithCharacteristics(
+            localAuthorityArea,
+            searchPdu,
+          )
+
+          val expextedPremisesOne = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
+          val expextedPremisesOneRoomOne = expextedPremisesOne.rooms.first()
+          val expextedPremisesTwo = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_WOMEN_ONLY_ID) }
+          val expextedPremisesTwoRoomOne = expextedPremisesTwo.rooms.first()
+          val expextedPremisesThree = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID) }
+          val expextedPremisesThreeRoomOne = expextedPremisesThree.rooms.first()
+          val expextedPremisesFour = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WOMEN_ONLY_ID) }
+          val expextedPremisesFourRoomOne = expextedPremisesFour.rooms.first()
+          val expextedPremisesFive = premises.first { p -> p.id == UUID.fromString(PREMISES_WOMEN_ONLY_ID) }
+          val expextedPremisesFiveRoomOne = expextedPremisesFive.rooms.first()
+
+          val offenderDetailsOne = offenders.first().first
+          CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetailsOne)
+            .withGender("Male")
+            .produce()
+
+          val premisesSingleOccupancy = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_ID) }
+          val premisesSingleOccupancyRoomOne = premisesSingleOccupancy.rooms.first()
+          bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premisesSingleOccupancy)
+            withBed(premisesSingleOccupancyRoomOne.beds.first())
+            withArrivalDate(LocalDate.parse("2025-05-07"))
+            withDepartureDate(LocalDate.parse("2025-06-19"))
+            withCrn(offenderDetailsOne.otherIds.crn)
+          }
+
+          val offenderDetailsTwo = offenders.drop(1).first().first
+          val caseSummaryTwo = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetailsTwo)
+            .withGender("Female")
+            .produce()
+
+          val premisesSharedProperty = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
+          val premisesSharedPropertyRoomTwo = premisesSharedProperty.rooms.drop(1).first()
+          val bookingOffenderTwo = bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premisesSharedProperty)
+            withBed(premisesSharedPropertyRoomTwo.beds.first())
+            withArrivalDate(LocalDate.parse("2025-05-15"))
+            withDepartureDate(LocalDate.parse("2025-07-21"))
+            withCrn(offenderDetailsTwo.otherIds.crn)
+          }
+
+          val offenderDetailsThree = offenders.drop(2).first().first
+          CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetailsThree)
+            .withGender("Female")
+            .produce()
+
+          val premisesPubNearby = premises.first { p -> p.id == UUID.fromString(PREMISES_PUB_NEARBY_ID) }
+          val premisesPubNearbyRoomOne = premisesPubNearby.rooms.first()
+          bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premisesPubNearby)
+            withBed(premisesPubNearbyRoomOne.beds.first())
+            withArrivalDate(LocalDate.parse("2025-05-03"))
+            withDepartureDate(LocalDate.parse("2025-08-27"))
+            withCrn(offenderDetailsThree.otherIds.crn)
+          }
+
+          apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummaryTwo))
+
+          webTestClient.post()
+            .uri("cas3/bedspaces/search")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas3BedspaceSearchParameters(
+                startDate = LocalDate.parse("2025-05-17"),
+                durationDays = 84,
+                probationDeliveryUnits = listOf(searchPdu.id),
+                premisesFilters = PremisesFilters(
+                  includedCharacteristicIds = listOf(getPremisesWomenOnlyCharacteristic()?.id!!),
+                ),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                Cas3BedspaceSearchResults(
+                  resultsRoomCount = 5,
+                  resultsPremisesCount = 5,
+                  resultsBedCount = 5,
+                  results = listOf(
+                    createBedspaceSearchResult(
+                      expextedPremisesOne,
+                      expextedPremisesOneRoomOne,
+                      expextedPremisesOneRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 2,
+                      numberOfBookedBeds = 1,
+                      premisesCharacteristics = listOf(getSharedPropertyCharacteristicPair()),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(
+                        Cas3BedspaceSearchResultOverlap(
+                          name = "${offenderDetailsTwo.firstName} ${offenderDetailsTwo.surname}",
+                          crn = offenderDetailsTwo.otherIds.crn,
+                          personType = PersonType.fullPerson,
+                          days = 66,
+                          bookingId = bookingOffenderTwo.id,
+                          roomId = premisesSharedPropertyRoomTwo.id,
+                          isSexualRisk = false,
+                          sex = "Female",
+                          assessmentId = null,
+                        ),
+                      ),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesTwo,
+                      expextedPremisesTwoRoomOne,
+                      expextedPremisesTwoRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(
+                        getWomenOnlyCharacteristicPair(),
+                        getSharedPropertyCharacteristicPair(),
+                      ),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesThree,
+                      expextedPremisesThreeRoomOne,
+                      expextedPremisesThreeRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(getSingleOccupancyCharacteristicPair()),
+                      roomCharacteristics = listOf(getWheelchairAccessibleCharacteristicPair()),
+                      overlaps = listOf(),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesFour,
+                      expextedPremisesFourRoomOne,
+                      expextedPremisesFourRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(
+                        getSingleOccupancyCharacteristicPair(),
+                        getWomenOnlyCharacteristicPair(),
+                      ),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                    createBedspaceSearchResult(
+                      expextedPremisesFive,
+                      expextedPremisesFiveRoomOne,
+                      expextedPremisesFiveRoomOne.beds.first(),
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(getWomenOnlyCharacteristicPair()),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                  ),
+                ),
+              ),
+              true,
+            )
+        }
       }
     }
 
@@ -1614,7 +1976,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 1,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premises,
                     roomWithoutEndDate,
                     bedWithoutEndDate,
@@ -1684,7 +2046,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 1,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premises,
                     room,
                     bed,
@@ -1812,7 +2174,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 1,
                 resultsBedCount = 2,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premisesOne,
                     roomOne,
                     bedOne,
@@ -1823,7 +2185,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premisesOne,
                     roomTwo,
                     bedTwo,
@@ -1921,7 +2283,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 resultsPremisesCount = 2,
                 resultsBedCount = 3,
                 results = listOf(
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premisesOne,
                     roomOnePremisesOne,
                     bedOnePremisesOne,
@@ -1932,7 +2294,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premisesOne,
                     roomTwoPremisesOne,
                     bedTwoPremisesOne,
@@ -1943,7 +2305,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                     roomCharacteristics = listOf(),
                     overlaps = listOf(),
                   ),
-                  createTemporaryAccommodationBedSearchResult(
+                  createBedspaceSearchResult(
                     premisesThree,
                     roomOnePremisesThree,
                     bedOnePremisesThree,
@@ -1994,13 +2356,16 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         )
     }
 
+    @SuppressWarnings("LongParameterList")
     private fun createTemporaryAccommodationPremisesWithCharacteristics(
+      premisesId: UUID,
       premisesName: String,
       probationRegion: ProbationRegionEntity,
       localAuthorityArea: LocalAuthorityAreaEntity,
       probationDeliveryUnit: ProbationDeliveryUnitEntity,
       characteristics: MutableList<CharacteristicEntity>,
     ): TemporaryAccommodationPremisesEntity = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withId(premisesId)
       withName(premisesName)
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
@@ -2030,6 +2395,9 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         withName(randomStringMultiCaseWithNumbers(10))
         withRoom(room)
       }
+
+      room.beds.add(bed)
+      premises.rooms.add(room)
 
       return Pair(room, bed)
     }
@@ -2074,7 +2442,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @SuppressWarnings("LongParameterList")
-    private fun createTemporaryAccommodationBedSearchResult(
+    private fun createBedspaceSearchResult(
       premises: PremisesEntity,
       room: RoomEntity,
       bed: BedEntity,
@@ -2113,32 +2481,40 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     private fun createPremisesAndBedsWithCharacteristics(
       localAuthorityArea: LocalAuthorityAreaEntity,
       pdu: ProbationDeliveryUnitEntity,
-      characteristicPropertyName: String,
-    ): List<BedEntity> {
+    ): List<PremisesEntity> {
       val premisesSingleOccupancyCharacteristic = getPremisesSingleOccupancyCharacteristic()
       val premisesSharedPropertyCharacteristic = getPremisesSharedPropertyCharacteristic()
       val premisesMenOnlyCharacteristic = getPremisesMenOnlyCharacteristic()
       val premisesWomenOnlyCharacteristic = getPremisesWomenOnlyCharacteristic()
       val premisesPubNearbyCharacteristic = getPremisesPubNearByCharacteristic()
       val wheelchairAccessibleCharacteristic = getWheelchairAccessibleCharacteristic()
-      var beds = listOf<BedEntity>()
 
       val premisesSingleOccupancy = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_SINGLE_OCCUPANCY_ID),
         "Premises Single Occupancy",
         probationRegion,
         localAuthorityArea,
         pdu,
         mutableListOf(premisesSingleOccupancyCharacteristic!!),
       )
+      createBedspace(premisesSingleOccupancy, "Premises Single Occupancy Room One", listOf())
 
-      val (singleOccupancyRoomOne, singleOccupancyBedOne) = createBedspace(premisesSingleOccupancy, "Premises Single Occupancy Room One", listOf())
-      val (premisesSingleOccupancyWheelchairAccessibleRoomOne, premisesSingleOccupancyWheelchairAccessibleBedOne) = createBedspace(
-        premisesSingleOccupancy,
+      val premisesSingleOccupancyWithWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID),
+        "Premises Single Occupancy with Wheelchair Accessible",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesSingleOccupancyCharacteristic!!),
+      )
+      createBedspace(
+        premisesSingleOccupancyWithWheelchairAccessible,
         "Premises Single Occupancy with Wheelchair Accessible Room One",
         listOf(wheelchairAccessibleCharacteristic!!),
       )
 
       val premisesSharedProperty = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_SHARED_PROPERTY_ID),
         "Premises Shared Property",
         probationRegion,
         localAuthorityArea,
@@ -2146,93 +2522,111 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         mutableListOf(premisesSharedPropertyCharacteristic!!),
       )
 
-      val (sharedPropertyRoomOne, sharedPropertyBedOne) = createBedspace(premisesSharedProperty, "Premises Shared Property Room One", listOf())
-      val (premisesSharedPropertyWheelchairAccessibleRoomOne, premisesSharedPropertyWheelchairAccessibleBedOne) = createBedspace(
+      createBedspace(premisesSharedProperty, "Premises Shared Property Room One", listOf())
+      createBedspace(
         premisesSharedProperty,
         "Premises Shared Property with Wheelchair Accessible Room One",
         listOf(wheelchairAccessibleCharacteristic),
       )
 
       val premisesMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_MEN_ONLY_ID),
         "Premises Men Only",
         probationRegion,
         localAuthorityArea,
         pdu,
         mutableListOf(premisesMenOnlyCharacteristic!!),
       )
-
-      val (premisesMenOnlyRoomOne, premisesMenOnlyBedOne) = createBedspace(premisesMenOnly, "Premises Men Only Room One", listOf())
+      createBedspace(premisesMenOnly, "Premises Men Only Room One", listOf())
 
       val premisesWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_WOMEN_ONLY_ID),
         "Premises Women Only",
         probationRegion,
         localAuthorityArea,
         pdu,
         mutableListOf(premisesWomenOnlyCharacteristic!!),
       )
-
-      val (premisesWomenOnlyRoomOne, premisesWomenOnlyBedOne) = createBedspace(premisesWomenOnly, "Premises Women Only Room One", listOf())
+      createBedspace(premisesWomenOnly, "Premises Women Only Room One", listOf())
 
       val premisesPubNearby = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_PUB_NEARBY_ID),
         "Premises Pub Nearby",
         probationRegion,
         localAuthorityArea,
         pdu,
         mutableListOf(premisesPubNearbyCharacteristic!!),
       )
+      createBedspace(premisesPubNearby, "Premises Pub Nearby Room One", listOf())
 
-      val (premisesPubNearbyRoomOne, premisesPubNearbyBedOne) = createBedspace(premisesPubNearby, "Premises Pub Nearby Room One", listOf())
+      val premisesSingleOccupancyMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_SINGLE_OCCUPANCY_MEN_ONLY_ID),
+        "Premises Single Occupancy - Men Only",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesMenOnlyCharacteristic, premisesSingleOccupancyCharacteristic),
+      )
+      createBedspace(
+        premisesSingleOccupancyMenOnly,
+        "Premises Single Occupancy Men Only Room One",
+        listOf(),
+      )
 
       val premisesSingleOccupancyWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WOMEN_ONLY_ID),
         "Premises Single Occupancy - Women Only",
         probationRegion,
         localAuthorityArea,
         pdu,
         mutableListOf(premisesWomenOnlyCharacteristic, premisesSingleOccupancyCharacteristic),
       )
-
-      val (premisesSingleOccupancyWomenOnlyRoomOne, premisesSingleOccupancyWomenOnlyBedOne) = createBedspace(
+      createBedspace(
         premisesSingleOccupancyWomenOnly,
         "Premises Single Occupancy Women Only Room One",
         listOf(),
       )
 
       val premisesSharedPropertyMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_SHARED_PROPERTY_MEN_ONLY_ID),
         "Premises Shared Property - Men Only",
         probationRegion,
         localAuthorityArea,
         pdu,
         mutableListOf(premisesMenOnlyCharacteristic, premisesSharedPropertyCharacteristic),
       )
-
-      val (premisesSharedPropertyMenOnlyRoomOne, premisesSharedPropertyMenOnlyBedOne) = createBedspace(
+      createBedspace(
         premisesSharedPropertyMenOnly,
         "Premises Shared Property Men Only Room One",
         listOf(),
       )
 
-      when (characteristicPropertyName) {
-        PROPERTY_NAME_SINGLE_OCCUPANCY -> beds = listOf(
-          singleOccupancyBedOne,
-          premisesSingleOccupancyWomenOnlyBedOne,
-          premisesSingleOccupancyWheelchairAccessibleBedOne,
-        )
+      val premisesSharedPropertyWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+        UUID.fromString(PREMISES_SHARED_PROPERTY_WOMEN_ONLY_ID),
+        "Premises Shared Property - Women Only",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(premisesWomenOnlyCharacteristic, premisesSharedPropertyCharacteristic),
+      )
+      createBedspace(
+        premisesSharedPropertyWomenOnly,
+        "Premises Shared Property Women Only Room One",
+        listOf(),
+      )
 
-        PROPERTY_NAME_SHARED_PROPERTY -> beds = listOf(
-          sharedPropertyBedOne,
-          premisesSharedPropertyMenOnlyBedOne,
-          premisesSharedPropertyWheelchairAccessibleBedOne,
-        )
-
-        PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE ->
-          beds =
-            listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
-
-        PROPERTY_NAME_MEN_ONLY ->
-          beds = listOf(singleOccupancyBedOne, premisesSharedPropertyWheelchairAccessibleBedOne, premisesMenOnlyBedOne, premisesSharedPropertyMenOnlyBedOne)
-      }
-
-      return beds
+      return listOf(
+        premisesSingleOccupancy,
+        premisesSingleOccupancyMenOnly,
+        premisesSingleOccupancyWomenOnly,
+        premisesSingleOccupancyWithWheelchairAccessible,
+        premisesSharedProperty,
+        premisesSharedPropertyMenOnly,
+        premisesSharedPropertyWomenOnly,
+        premisesMenOnly,
+        premisesWomenOnly,
+        premisesPubNearby,
+      )
     }
 
     private fun createAssessment(user: UserEntity, crn: String, sexualRisk: Boolean? = null): Pair<TemporaryAccommodationApplicationEntity, AssessmentEntity> {
@@ -2266,11 +2660,17 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       return Pair(application, assessment)
     }
 
-    private fun getPremisesSingleOccupancyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isSingleOccupancy", ServiceName.temporaryAccommodation.value)
-    private fun getPremisesSharedPropertyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isSharedProperty", ServiceName.temporaryAccommodation.value)
-    private fun getPremisesMenOnlyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isMenOnly", ServiceName.temporaryAccommodation.value)
-    private fun getPremisesWomenOnlyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isWomenOnly", ServiceName.temporaryAccommodation.value)
-    private fun getWheelchairAccessibleCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isWheelchairAccessible", ServiceName.temporaryAccommodation.value)
-    private fun getPremisesPubNearByCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName("isPubNearBy", ServiceName.temporaryAccommodation.value)
+    private fun getPremisesSingleOccupancyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName(CAS3_PROPERTY_NAME_SINGLE_OCCUPANCY, ServiceName.temporaryAccommodation.value)
+    private fun getPremisesSharedPropertyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName(CAS3_PROPERTY_NAME_SHARED_PROPERTY, ServiceName.temporaryAccommodation.value)
+    private fun getPremisesMenOnlyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName(CAS3_PROPERTY_NAME_MEN_ONLY, ServiceName.temporaryAccommodation.value)
+    private fun getPremisesWomenOnlyCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName(CAS3_PROPERTY_NAME_WOMEN_ONLY, ServiceName.temporaryAccommodation.value)
+    private fun getWheelchairAccessibleCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName(CAS3_PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE, ServiceName.temporaryAccommodation.value)
+    private fun getPremisesPubNearByCharacteristic(): CharacteristicEntity? = characteristicRepository.findByPropertyName(CAS3_PROPERTY_NAME_PUB_NEAR_BY, ServiceName.temporaryAccommodation.value)
+
+    private fun getSharedPropertyCharacteristicPair() = CharacteristicPair(propertyName = CAS3_PROPERTY_NAME_SHARED_PROPERTY, name = "Shared property")
+    private fun getSingleOccupancyCharacteristicPair() = CharacteristicPair(propertyName = CAS3_PROPERTY_NAME_SINGLE_OCCUPANCY, name = "Single occupancy")
+    private fun getMenOnlyCharacteristicPair() = CharacteristicPair(propertyName = CAS3_PROPERTY_NAME_MEN_ONLY, name = "Men only")
+    private fun getWomenOnlyCharacteristicPair() = CharacteristicPair(propertyName = CAS3_PROPERTY_NAME_WOMEN_ONLY, name = "Women only")
+    private fun getWheelchairAccessibleCharacteristicPair() = CharacteristicPair(propertyName = CAS3_PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE, name = "Wheelchair accessible")
   }
 }
