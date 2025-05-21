@@ -186,18 +186,18 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     @Test
     fun `return unexpired cas2v2 applications as a delius user when applications GET is requested`() {
       givenACas2v2DeliusUser { deliusUserEntity, jwt ->
-        returnsCas2V2UnexpiredApplications(deliusUserEntity, jwt)
+        returnsCas2v2UnexpiredApplications(deliusUserEntity, jwt)
       }
     }
 
     @Test
     fun `return unexpired cas2v2 applications as a nomis user when applications GET is requested`() {
       givenACas2v2DeliusUser { deliusUserEntity, jwt ->
-        returnsCas2V2UnexpiredApplications(deliusUserEntity, jwt)
+        returnsCas2v2UnexpiredApplications(deliusUserEntity, jwt)
       }
     }
 
-    private fun returnsCas2V2UnexpiredApplications(userEntity: Cas2v2UserEntity, jwt: String) {
+    private fun returnsCas2v2UnexpiredApplications(userEntity: Cas2v2UserEntity, jwt: String) {
       val unexpiredSubset = setOf(
         Pair("More information requested", UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")),
         Pair("Awaiting decision", UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")),
