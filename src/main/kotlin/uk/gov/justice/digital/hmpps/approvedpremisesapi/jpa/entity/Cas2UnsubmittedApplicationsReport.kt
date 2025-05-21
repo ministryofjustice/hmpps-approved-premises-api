@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import java.util.UUID
 
 @Repository
@@ -14,7 +15,8 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
         applications.crn AS personCrn,
         applications.noms_number AS personNoms,
         to_char(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
-        users.nomis_username AS startedBy
+        users.nomis_username AS startedBy,
+        applications.application_origin AS applicationOrigin
 
       FROM cas_2_applications applications
       JOIN nomis_users users ON users.id = applications.created_by_user_id
@@ -29,6 +31,7 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
 
 interface Cas2UnsubmittedApplicationReportRow {
   fun getApplicationId(): String
+  fun getApplicationOrigin(): ApplicationOrigin
   fun getPersonNoms(): String
   fun getPersonCrn(): String
   fun getStartedBy(): String
