@@ -31,6 +31,13 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
     const val CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED = "isStepFreeDesignated"
     const val CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS = "isSuitedForSexOffenders"
     const val CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED = "isWheelchairDesignated"
+
+    const val CAS3_PROPERTY_NAME_SINGLE_OCCUPANCY = "isSingleOccupancy"
+    const val CAS3_PROPERTY_NAME_SHARED_PROPERTY = "isSharedProperty"
+    const val CAS3_PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE = "isWheelchairAccessible"
+    const val CAS3_PROPERTY_NAME_MEN_ONLY = "isMenOnly"
+    const val CAS3_PROPERTY_NAME_WOMEN_ONLY = "isWomenOnly"
+    const val CAS3_PROPERTY_NAME_PUB_NEAR_BY = "isPubNearBy"
   }
 
   @Query(
