@@ -48,8 +48,7 @@ class Cas3PremisesService(
 
   fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): List<TemporaryAccommodationPremisesSummary> {
     val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
-    val result = premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.transformStatus())
-    return result
+    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.transformStatus())
   }
 
   private fun Cas3PropertyStatus.transformStatus() = when (this) {
