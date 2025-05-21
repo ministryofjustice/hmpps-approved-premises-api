@@ -295,17 +295,10 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `do not send location changed emails and throw error as no application status found`() {
-    application.applicationAssignments.add(applicationAssignmentOld)
-    application.applicationAssignments.add(applicationAssignmentOlder)
-
-    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
-    every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
+  fun `application status defaults to Submitted when no application status found`() {
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
-    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
-
-    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId) }
-    assertThat(exception.message).isEqualTo("StatusUpdate for ${application.id} not found")
+    val result = emailService.getApplicationStatusOrDefault(application.id)
+    assertThat(result).isEqualTo("Submitted")
   }
 
   @Test
