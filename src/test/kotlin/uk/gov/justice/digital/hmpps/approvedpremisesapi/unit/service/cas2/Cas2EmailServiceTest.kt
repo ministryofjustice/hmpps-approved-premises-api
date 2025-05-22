@@ -47,7 +47,6 @@ class Cas2EmailServiceTest {
   )
   private val oldUser = NomisUserEntityFactory().produce()
   private val newUser = NomisUserEntityFactory().produce()
-  private val newerUser = NomisUserEntityFactory().produce()
   private val oldOmu = OffenderManagementUnitEntityFactory()
     .withPrisonCode("LIV")
     .withPrisonName("HMP LIVERPOOL")
@@ -188,8 +187,7 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `send location changed emails`() {
-    application.applicationAssignments.add(applicationAssignmentOld)
-    application.applicationAssignments.add(applicationAssignmentOlder)
+    application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
@@ -248,24 +246,89 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId)
+    emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId, transferringFromPomId = oldUser.id)
 
     verify(exactly = 4) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
-  fun `do not send location changed emails as old prison code not found`() {
+  fun `do not send cas2ToTransferringPomApplicationTransferredToAnotherPrison email when user id not provided`() {
+    every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns oldOmu
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(any()) } returns null
     application.createApplicationAssignment(application.referringPrisonCode!!, null)
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId) }
-    assertThat(exception.message).isEqualTo("Old POM user ID not found.")
+    emailService.sendLocationChangedEmails(
+      application,
+      prisonCode = prisoner.prisonId,
+      transferringFromPomId = null,
+    )
+    verify(exactly = 0) {
+      emailNotificationService.sendCas2Email(
+        recipientEmailAddress = any(),
+        templateId = Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
+        personalisation = any(),
+      )
+    }
+
+    val shouldBeSentEmails = listOf(
+      Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
+    )
+    shouldBeSentEmails.forEach {
+      verify(exactly = 1) {
+        emailNotificationService.sendCas2Email(
+          recipientEmailAddress = any(),
+          templateId = it,
+          personalisation = any(),
+        )
+      }
+    }
+  }
+
+  @Test
+  fun `should send cas2ToTransferringPomApplicationTransferredToAnotherPrison email when user id is provided`() {
+    every { nomisUserRepository.findById(oldUser.id) } returns Optional.of(oldUser)
+    every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns oldOmu
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(any()) } returns null
+    application.createApplicationAssignment(application.referringPrisonCode!!, null)
+
+    emailService.sendLocationChangedEmails(
+      application,
+      prisonCode = prisoner.prisonId,
+      transferringFromPomId = oldUser.id,
+    )
+
+    val shouldBeSentEmails = listOf(
+      Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
+    )
+    shouldBeSentEmails.forEach {
+      verify(exactly = 1) {
+        emailNotificationService.sendCas2Email(
+          recipientEmailAddress = any(),
+          templateId = it,
+          personalisation = any(),
+        )
+      }
+    }
   }
 
   @Test
   fun `do not send location changed emails as old POM not found`() {
     application.applicationAssignments.add(applicationAssignmentOld)
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId) }
+    val exception = assertThrows<IllegalStateException> {
+      emailService.sendLocationChangedEmails(
+        application,
+        prisonCode = prisoner.prisonId,
+        transferringFromPomId = null,
+      )
+    }
     assertThat(exception.message).isEqualTo("Old prison code not found.")
   }
 
@@ -278,7 +341,13 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns null
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId) }
+    val exception = assertThrows<IllegalStateException> {
+      emailService.sendLocationChangedEmails(
+        application,
+        prisonCode = prisoner.prisonId,
+        transferringFromPomId = null,
+      )
+    }
     assertThat(exception.message).isEqualTo("No OMU found for new prison code ${newOmu.prisonCode}.")
   }
 
@@ -290,7 +359,13 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns null
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId) }
+    val exception = assertThrows<IllegalStateException> {
+      emailService.sendLocationChangedEmails(
+        application,
+        prisonCode = prisoner.prisonId,
+        transferringFromPomId = null,
+      )
+    }
     assertThat(exception.message).isEqualTo("No OMU found for old prison code ${oldOmu.prisonCode}.")
   }
 
@@ -302,13 +377,22 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `do not send location changed emails as nomis user not found`() {
-    application.applicationAssignments.add(applicationAssignmentOld)
-    application.applicationAssignments.add(applicationAssignmentOlder)
+  fun `throws when nomis user not found`() {
+    every { offenderManagementUnitRepository.findByPrisonCode(oldOmu.prisonCode) } returns oldOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(newOmu.prisonCode) } returns newOmu
+    every { nomisUserRepository.findById(oldUser.id) } returns Optional.empty()
 
-    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.empty()
+    application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
 
-    assertThrows<NoSuchElementException> { emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId) }
+    val result = assertThrows<IllegalStateException> {
+      emailService.sendLocationChangedEmails(
+        application,
+        prisonCode = prisoner.prisonId,
+        transferringFromPomId = oldUser.id,
+      )
+    }
+
+    assertThat(result.message).isEqualTo("No Nomis User found for id ${oldUser.id}.")
   }
 
   @Test
@@ -320,44 +404,6 @@ class Cas2EmailServiceTest {
     val result = emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode)
 
     assertThat(result).isEqualTo(applicationAssignmentOlder.prisonCode)
-  }
-
-  @Test
-  fun `getOldPomUserId should get created by ID`() {
-    application.createApplicationAssignment(application.referringPrisonCode!!, application.createdByUser)
-    application.createApplicationAssignment(prisoner.prisonId, null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    val result = emailService.getOldPomUserId(application, prisoner.prisonId)
-
-    assertThat(result).isEqualTo(application.createdByUser.id)
-  }
-
-  @Test
-  fun `should get old pom user id`() {
-    application.createApplicationAssignment(application.referringPrisonCode!!, application.createdByUser)
-    application.createApplicationAssignment(oldOmu.prisonCode, null)
-    application.createApplicationAssignment(oldOmu.prisonCode, newUser)
-    application.createApplicationAssignment(prisoner.prisonId, null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    val result = emailService.getOldPomUserId(application, prisoner.prisonId)
-
-    assertThat(result).isEqualTo(newUser.id)
-  }
-
-  @Test
-  fun `should get old pom user id and miss earlier allocation event`() {
-    application.createApplicationAssignment(application.referringPrisonCode!!, application.createdByUser)
-    application.createApplicationAssignment(oldOmu.prisonCode, null)
-    application.createApplicationAssignment(oldOmu.prisonCode, newUser)
-    application.createApplicationAssignment(prisoner.prisonId, newerUser)
-    application.createApplicationAssignment(prisoner.prisonId, null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    val result = emailService.getOldPomUserId(application, prisoner.prisonId)
-
-    assertThat(result).isEqualTo(newUser.id)
   }
 
   @Test

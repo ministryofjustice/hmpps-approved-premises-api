@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import java.util.UUID
+import kotlin.jvm.optionals.getOrElse
 
 @Service
 class Cas2EmailService(
@@ -24,52 +25,58 @@ class Cas2EmailService(
 
   fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Received"
 
-  fun sendLocationChangedEmails(application: Cas2ApplicationEntity, prisonCode: String) {
+  fun sendLocationChangedEmails(
+    application: Cas2ApplicationEntity,
+    prisonCode: String,
+    transferringFromPomId: UUID?,
+  ) {
     val oldPrisonCode = getOldPrisonCode(application, prisonCode) ?: error("Old prison code not found.")
-    val oldPomUserId = getOldPomUserId(application, prisonCode) ?: error("Old POM user ID not found.")
-    nomisUserRepository.findById(oldPomUserId).map { oldPom ->
-      val oldOmu = offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) ?: error("No OMU found for old prison code $oldPrisonCode.")
-      val newOmu = offenderManagementUnitRepository.findByPrisonCode(prisonCode)
-        ?: error("No OMU found for new prison code $prisonCode.")
-      // There can be applications without a status
-      val statusUpdate = getApplicationStatusOrDefault(application.id)
+
+    val oldOmu = offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode)
+      ?: error("No OMU found for old prison code $oldPrisonCode.")
+    val newOmu = offenderManagementUnitRepository.findByPrisonCode(prisonCode)
+      ?: error("No OMU found for new prison code $prisonCode.")
+
+    // only send an email to previous POM if the offender actually has one
+    transferringFromPomId?.let {
+      val transferringFromPom = nomisUserRepository.findById(it).getOrElse { error("No Nomis User found for id $it.") }
       emailNotificationService.sendCas2Email(
-        oldPom.email!!,
+        transferringFromPom.email!!,
         Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
         mapOf(
           "nomsNumber" to application.nomsNumber,
           "receivingPrisonName" to newOmu.prisonName,
         ),
       )
-      emailNotificationService.sendCas2Email(
-        oldOmu.email,
-        Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
-        mapOf(
-          "nomsNumber" to application.nomsNumber,
-          "receivingPrisonName" to newOmu.prisonName,
-        ),
-      )
-      emailNotificationService.sendCas2Email(
-        newOmu.email,
-        Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
-        mapOf(
-          "nomsNumber" to application.nomsNumber,
-          "transferringPrisonName" to oldOmu.prisonName,
-          "link" to getLink(application.id),
-          "applicationStatus" to statusUpdate,
-        ),
-      )
-      emailNotificationService.sendCas2Email(
-        nacroEmail,
-        Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
-        mapOf(
-          "nomsNumber" to application.nomsNumber,
-          "receivingPrisonName" to newOmu.prisonName,
-          "transferringPrisonName" to oldOmu.prisonName,
-          "link" to getAssessorLink(application.id),
-        ),
-      )
-    }.orElseThrow()
+    }
+    emailNotificationService.sendCas2Email(
+      oldOmu.email,
+      Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
+      mapOf(
+        "nomsNumber" to application.nomsNumber,
+        "receivingPrisonName" to newOmu.prisonName,
+      ),
+    )
+    emailNotificationService.sendCas2Email(
+      newOmu.email,
+      Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
+      mapOf(
+        "nomsNumber" to application.nomsNumber,
+        "transferringPrisonName" to oldOmu.prisonName,
+        "link" to getLink(application.id),
+        "applicationStatus" to getApplicationStatusOrDefault(application.id),
+      ),
+    )
+    emailNotificationService.sendCas2Email(
+      nacroEmail,
+      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
+      mapOf(
+        "nomsNumber" to application.nomsNumber,
+        "receivingPrisonName" to newOmu.prisonName,
+        "transferringPrisonName" to oldOmu.prisonName,
+        "link" to getAssessorLink(application.id),
+      ),
+    )
   }
 
   fun sendAllocationChangedEmails(application: Cas2ApplicationEntity, newPom: NomisUserEntity, newPrisonCode: String) {
@@ -101,6 +108,5 @@ class Cas2EmailService(
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
   private fun getAssessorLink(applicationId: UUID): String = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
-  fun getOldPomUserId(application: Cas2ApplicationEntity, prisonCode: String) = application.applicationAssignments.firstOrNull { it.allocatedPomUser != null && it.prisonCode != prisonCode }?.allocatedPomUser?.id
   fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String? = application.applicationAssignments.firstOrNull { it.prisonCode != newPrisonCode }?.prisonCode
 }

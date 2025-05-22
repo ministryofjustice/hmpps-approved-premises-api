@@ -56,13 +56,15 @@ class Cas2LocationChangedService(
       return application
     }
 
+    val transferringFromPomId = application.currentPomUserId
+
     application.createApplicationAssignment(
       prisonCode = latestPrisonCode,
       allocatedPomUser = null,
     )
 
     val application = applicationRepository.save(application)
-    emailService.sendLocationChangedEmails(application, latestPrisonCode)
+    emailService.sendLocationChangedEmails(application, latestPrisonCode, transferringFromPomId)
     return application
   }
 }
