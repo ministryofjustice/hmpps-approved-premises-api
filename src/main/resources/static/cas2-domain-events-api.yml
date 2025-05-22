@@ -253,6 +253,8 @@ components:
         username:
           type: string
           example: SMITHJ_GEN
+        cas2StaffIdentifier:
+          type: string #//BAIL-WIP
         usertype:
           type: string
           enum:

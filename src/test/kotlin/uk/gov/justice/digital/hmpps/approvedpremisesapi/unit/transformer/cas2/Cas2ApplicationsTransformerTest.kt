@@ -74,7 +74,11 @@ class Cas2ApplicationsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockNomisTransformer.transformJpaToApi(any()) } returns NomisUser(
+    every {
+      mockNomisTransformer.transformJpaToApi(
+        user,
+      )
+    } returns NomisUser(
       id = user.id,
       name = user.name,
       nomisUsername = user.nomisUsername,

@@ -58,7 +58,7 @@ class TimelineEventsTransformer(
         type = TimelineEventType.cas2ApplicationSubmitted,
         occurredAt = jpa.submittedAt?.toInstant()!!,
         label = "Application submitted",
-        createdByName = jpa.createdByUser.name,
+        createdByName = jpa.getCreatedByCanonicalName(), // BAIL-WIP
       )
       timelineEvents += submittedAtEvent
     }

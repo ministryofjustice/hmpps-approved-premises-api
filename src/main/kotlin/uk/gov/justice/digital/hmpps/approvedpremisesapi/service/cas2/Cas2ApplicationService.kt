@@ -362,10 +362,10 @@ class Cas2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId,
-                name = application.createdByUser.name,
-                username = application.createdByUser.nomisUsername,
-                usertype = Cas2StaffMember.Usertype.nomis,
+                staffIdentifier = application.createdByUser!!.nomisStaffId, // BAIL-WIP
+                name = application.getCreatedByCanonicalName(),
+                username = application.getCreatedByUsername(),
+                usertype = application.getCreatedByUserType(),
               ),
             ),
             applicationOrigin = ApplicationOrigin.homeDetentionCurfew.toString(),

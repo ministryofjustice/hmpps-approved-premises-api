@@ -117,8 +117,8 @@ class StatusUpdateService(
         ),
       )
     }
-
-    sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
+// BAIL-WIP
+    sendEmailStatusUpdated(assessment.application.createdByUser!!, assessment.application, createdStatusUpdate)
 
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
@@ -175,7 +175,7 @@ class StatusUpdateService(
   }
 
   private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
-    if (application.createdByUser.email != null) {
+    if (application.getCreatedByUserEmail() != null) { // BAIL-WIP
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,
         templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
@@ -189,8 +189,9 @@ class StatusUpdateService(
         ),
       )
     } else {
-      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
+      // BAIL-WIP
+      log.error("Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}")
+      Sentry.captureMessage("Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}")
     }
   }
 }

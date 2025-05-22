@@ -54,7 +54,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication).isNotNull
     assertThat(persistedApplication.crn).isEqualTo("CRN-ABC")
     assertThat(persistedApplication.nomsNumber).isEqualTo("NOMS-123")
-    assertThat(persistedApplication.createdByUser.id).isEqualTo(applicant.id)
+    assertThat(persistedApplication.getCreatedById()).isEqualTo(applicant.id) // BAIL-WIP
     assertThat(persistedApplication.createdAt).isEqualTo(creationTimestamp)
     assertThat(persistedApplication.statusUpdates).isEmpty()
   }

@@ -17,7 +17,7 @@ class Cas2UserAccessService {
         (user.activeCaseloadId != null && user.activeCaseloadId == application.currentPrisonCode) // user is in same prison
     }
 
-    return if (user.id == application.createdByUser.id) {
+    return if (user.id == application.createdByUser!!.id) { // BAIL-WIP
       true
     } else if (application.submittedAt == null) {
       false

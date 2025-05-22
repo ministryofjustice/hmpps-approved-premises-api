@@ -667,10 +667,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               Assertions.assertThat(it.nomsNumber).isEqualTo(firstApplicationEntity.nomsNumber)
               Assertions.assertThat(it.personName).isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
               Assertions.assertThat(it.createdAt).isEqualTo(firstApplicationEntity.createdAt.toInstant())
-              Assertions.assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.createdByUser.id)
+              Assertions.assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.getCreatedById()) // BAIL-WIP
               Assertions.assertThat(it.submittedAt).isEqualTo(firstApplicationEntity.submittedAt?.toInstant())
               Assertions.assertThat(it.hdcEligibilityDate).isEqualTo(firstApplicationEntity.hdcEligibilityDate)
-              Assertions.assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
+              // Assertions.assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
+              Assertions.assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.getCreatedByCanonicalName()) // BAIL-WIP
             }
 
             Assertions.assertThat(responseBody).noneMatch {
@@ -1480,12 +1481,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               rawResponseBody,
               Cas2Application::class.java,
             )
-
+            // BAIL-WIP applicationEntity.getCreatedById() below
             Assertions.assertThat(responseBody).matches {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser.id == it.createdBy.id &&
+                applicationEntity.getCreatedById() == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
                 newestJsonSchema.id == it.schemaVersion &&

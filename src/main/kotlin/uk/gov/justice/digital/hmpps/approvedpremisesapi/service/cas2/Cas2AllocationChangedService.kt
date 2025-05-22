@@ -80,7 +80,7 @@ class Cas2AllocationChangedService(
     if (isFirstPomAllocationAtPrison) {
       emailService.sendAllocationChangedEmails(
         application = application,
-        newPom = pomAllocatedToOffender,
+        emailAddress = pomAllocatedToOffender.email!!, // BAIL-WIP
         newPrisonCode = pomAllocationPrisonCode,
       )
     }

@@ -78,7 +78,11 @@ class SubmissionsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
+    every {
+      mockNomisUserTransformer.transformJpaToApi(
+        user,
+      )
+    } returns mockNomisUser
     every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
     every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
     every { mockOffenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
@@ -98,6 +102,11 @@ class SubmissionsTransformerTest {
       val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
+      every {
+        mockNomisUserTransformer.transformJpaToApi(
+          jpaEntity,
+        )
+      } returns mockNomisUser
 
       val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
 
