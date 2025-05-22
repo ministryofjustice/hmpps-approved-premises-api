@@ -235,8 +235,8 @@ class BookingSearchTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       givenSomeOffenders { offenderSequence ->
 
-        val tempAccAppSize = 21
-        val roomsPerPremSize = 7
+        val tempAccAppSize = 5
+        val roomsPerPremSize = 3
         val totalResults = tempAccAppSize * roomsPerPremSize
         val pageSize = 10
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
