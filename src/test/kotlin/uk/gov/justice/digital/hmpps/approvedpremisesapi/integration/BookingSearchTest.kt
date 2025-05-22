@@ -231,12 +231,12 @@ class BookingSearchTest : IntegrationTestBase() {
     bookingSearchSort: BookingSearchSortField,
     sortOrder: SortOrder,
     bookingStatus: BookingStatus,
-    ) {
+  ) {
     givenAUser { userEntity, jwt ->
       givenSomeOffenders { offenderSequence ->
 
-        val tempAccAppSize = 5
-        val roomsPerPremSize = 3
+        val tempAccAppSize = 21
+        val roomsPerPremSize = 7
         val totalResults = tempAccAppSize * roomsPerPremSize
         val pageSize = 10
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -307,43 +307,51 @@ class BookingSearchTest : IntegrationTestBase() {
         var responseSorted: BookingSearchResults? = null
 
         when (sortOrder) {
-
           SortOrder.ascending -> {
             offendersSorted = offenders.sortedBy { it.first.firstName }
             responseSorted = BookingSearchResults(
               offenders.size,
-              getExpectedResponseList(allBookings, offenders.map { it.first }).results.sortedBy { it.person.name })
+              getExpectedResponseList(allBookings, offenders.map { it.first }).results.sortedBy { it.person.name },
+            )
           }
 
           SortOrder.descending -> {
             offendersSorted = offenders.sortedByDescending { it.first.firstName }
             responseSorted = BookingSearchResults(
               offenders.size,
-              getExpectedResponseList(allBookings, offenders.map { it.first }).results.sortedByDescending { it.person.name })
+              getExpectedResponseList(allBookings, offenders.map { it.first }).results.sortedByDescending { it.person.name },
+            )
           }
         }
 
         val totalPages = (totalResults.toDouble() / pageSize.toDouble()).roundToInt()
 
-        for (page in 1..totalPages ) {
+        for (page in 0..<totalPages) {
+          val currentPageSize = if (totalResults % pageSize == 0) {
+            pageSize
+          } else if (page == totalPages - 1) {
+            totalResults % pageSize
+          } else {
+            pageSize
+          }
 
-          val currentPageSize = if (totalResults % pageSize == 0) pageSize else if (page == totalPages) totalResults % pageSize else pageSize
-
-          apDeliusContextAddListCaseSummaryToBulkResponse(when (sortOrder) {
-            SortOrder.ascending -> offendersSorted.subList((page-1) * pageSize, (page-1) * pageSize + currentPageSize).map { it.first.asCaseSummary()}
-            SortOrder.descending -> offendersSorted.subList((page-1) * pageSize, (page-1) * pageSize + currentPageSize).map { it.first.asCaseSummary()}
-          })
+          apDeliusContextAddListCaseSummaryToBulkResponse(
+            when (sortOrder) {
+              SortOrder.ascending -> offendersSorted.subList(page * pageSize, page * pageSize + currentPageSize).map { it.first.asCaseSummary() }
+              SortOrder.descending -> offendersSorted.subList(page * pageSize, page * pageSize + currentPageSize).map { it.first.asCaseSummary() }
+            },
+          )
 
           // This works because bookings[index].crn == offenders[index].other...crn, hence the correct crn is associated with the correct offender
 
-          val expectedPageResponse = BookingSearchResults(currentPageSize, responseSorted.results.subList((page-1) * pageSize, (page-1) * pageSize + currentPageSize))
+          val expectedPageResponse = BookingSearchResults(currentPageSize, responseSorted.results.subList(page * pageSize, page * pageSize + currentPageSize))
           webTestClient.get()
-            .uri("/bookings/search?sortOrder=${sortOrder}&sortField=${bookingSearchSort.value}&status=departed&page=$page")
+            .uri("/bookings/search?sortOrder=$sortOrder&sortField=${bookingSearchSort.value}&status=departed&page=${page + 1}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .expectHeader().valueEquals("X-Pagination-CurrentPage", page.toLong())
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", page + 1.toLong())
             .expectHeader().valueEquals("X-Pagination-TotalPages", totalPages.toLong())
             .expectHeader().valueEquals("X-Pagination-TotalResults", totalResults.toLong())
             .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
@@ -952,7 +960,6 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
-
   private fun getExpectedResponseList(
     expectedBookings: List<BookingEntity>,
     offenderDetails: List<OffenderDetailSummary>,
@@ -1119,7 +1126,7 @@ class BookingSearchTest : IntegrationTestBase() {
     offenderDetails: OffenderDetailSummary,
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
-    bookingStatus: BookingStatus? = null
+    bookingStatus: BookingStatus? = null,
   ): MutableList<BookingEntity> = createTestTemporaryAccommodationBookings(
     userEntity.probationRegion,
     numberOfPremises,
@@ -1133,7 +1140,7 @@ class BookingSearchTest : IntegrationTestBase() {
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
     crn: String,
-    bookingStatus: BookingStatus? = null
+    bookingStatus: BookingStatus? = null,
   ): MutableList<BookingEntity> {
     val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
       withProbationRegion(probationRegion)
@@ -1196,12 +1203,12 @@ class BookingSearchTest : IntegrationTestBase() {
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     createdAt: OffsetDateTime,
-    bookingStatus: BookingStatus? = null
+    bookingStatus: BookingStatus? = null,
   ): BookingEntity = bookingEntityFactory.produceAndPersist {
     withPremises(bed.room.premises)
     withCrn(crn)
     withBed(bed)
-    withStatus(bookingStatus ?: BookingStatus.provisional )
+    withStatus(bookingStatus ?: BookingStatus.provisional)
     withServiceName(ServiceName.temporaryAccommodation)
     withArrivalDate(arrivalDate)
     withDepartureDate(departureDate)
