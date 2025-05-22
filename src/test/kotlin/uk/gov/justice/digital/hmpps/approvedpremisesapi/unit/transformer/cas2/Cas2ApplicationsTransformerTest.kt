@@ -119,6 +119,7 @@ class Cas2ApplicationsTransformerTest {
         "omuEmailAddress",
         "applicationOrigin",
         "bailHearingDate",
+        "cas2CreatedBy",
       )
 
       assertThat(result.id).isEqualTo(application.id)
@@ -285,6 +286,7 @@ class Cas2ApplicationsTransformerTest {
         "omuEmailAddress",
         "applicationOrigin",
         "bailHearingDate",
+        "cas2CreatedBy",
       )
 
       assertThat(result.id).isEqualTo(application.id)

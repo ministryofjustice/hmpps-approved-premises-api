@@ -4829,6 +4829,36 @@ components:
         - username
         - authSource
         - isActive
+    Cas2User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Roger Smith'
+        username:
+          type: string
+          example: 'SMITHR_GEN'
+        authSource:
+          type: string
+          enum:
+            - nomis
+            - delius
+            - auth
+        email:
+          type: string
+          example: 'Roger.Smith@justice.gov.uk'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - name
+        - username
+        - authSource
+        - isActive
     Cas2v2StatusUpdate:
       type: object
       properties:

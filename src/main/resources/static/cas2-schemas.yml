@@ -38,6 +38,8 @@ components:
           properties:
             createdBy:
               $ref: '_shared.yml#/components/schemas/NomisUser'
+            cas2CreatedBy:
+              $ref: '_shared.yml#/components/schemas/Cas2User'
             schemaVersion:
               type: string
               format: uuid
