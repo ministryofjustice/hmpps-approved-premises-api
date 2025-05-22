@@ -187,7 +187,7 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `send location changed emails`() {
-    application.createApplicationAssignment(oldOmu.prisonCode!!, oldUser)
+    application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
@@ -246,7 +246,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId, transferringFromPomId = null)
+    emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId, transferringFromPomId = oldUser.id)
 
     verify(exactly = 4) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
