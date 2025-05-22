@@ -239,6 +239,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val roomsPerPremSize = 3
         val totalResults = tempAccAppSize * roomsPerPremSize
         val pageSize = 10
+
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -277,9 +278,11 @@ class BookingSearchTest : IntegrationTestBase() {
             withCreatedByUser(userEntity)
             withApplicationSchema(applicationSchema)
           }
+
           temporaryAccommodationApplications += application
 
           val bed = createTestTemporaryAccommodationBedspace(userEntity.probationRegion)
+
           val booking = createBooking(
             bed,
             it.first.otherIds.crn,
@@ -327,13 +330,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val totalPages = (totalResults.toDouble() / pageSize.toDouble()).roundToInt()
 
         for (page in 0..<totalPages) {
-          val currentPageSize = if (totalResults % pageSize == 0) {
-            pageSize
-          } else if (page == totalPages - 1) {
-            totalResults % pageSize
-          } else {
-            pageSize
-          }
+          val currentPageSize = if (page == totalPages - 1) totalResults % pageSize else pageSize
 
           apDeliusContextAddListCaseSummaryToBulkResponse(
             when (sortOrder) {
@@ -343,7 +340,6 @@ class BookingSearchTest : IntegrationTestBase() {
           )
 
           // This works because bookings[index].crn == offenders[index].other...crn, hence the correct crn is associated with the correct offender
-
           val expectedPageResponse = BookingSearchResults(currentPageSize, responseSorted.results.subList(page * pageSize, page * pageSize + currentPageSize))
           webTestClient.get()
             .uri("/bookings/search?sortOrder=$sortOrder&sortField=${bookingSearchSort.value}&status=departed&page=${page + 1}")
