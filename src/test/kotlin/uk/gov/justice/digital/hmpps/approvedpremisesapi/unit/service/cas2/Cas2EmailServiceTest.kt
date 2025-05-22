@@ -298,7 +298,7 @@ class Cas2EmailServiceTest {
   fun `application status defaults to Submitted when no application status found`() {
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
     val result = emailService.getApplicationStatusOrDefault(application.id)
-    assertThat(result).isEqualTo("Submitted")
+    assertThat(result).isEqualTo("Received")
   }
 
   @Test

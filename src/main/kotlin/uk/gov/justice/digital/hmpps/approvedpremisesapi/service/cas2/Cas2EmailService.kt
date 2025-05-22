@@ -22,7 +22,7 @@ class Cas2EmailService(
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
 
-  fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Submitted"
+  fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Received"
 
   fun sendLocationChangedEmails(application: Cas2ApplicationEntity, prisonCode: String) {
     val oldPrisonCode = getOldPrisonCode(application, prisonCode) ?: error("Old prison code not found.")
