@@ -53,12 +53,14 @@ SELECT
         AND (:postcodeOrAddress is null
           OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
           )
         AND (:propertyStatus is null OR p.status = :propertyStatus)
       """,
     nativeQuery = true,
   )
+
   fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, propertyStatus: String?): List<TemporaryAccommodationPremisesSummary>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")

@@ -557,6 +557,35 @@ class Cas3PremisesTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all premises filters correctly when a premises address line 2 is passed in the query parameter`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = getListPremises(user.probationRegion)
+
+        // filter premises with the full premises address
+        val expectedPremisesAddress = premises.take(6).first()
+
+        val expectedPremisesSummaryAddress = premisesSummaryTransformer(expectedPremisesAddress)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesAddress.addressLine2}",
+          listOf(expectedPremisesSummaryAddress),
+        )
+
+        // filter premises with the partial premises address
+        val expectedPremisesPartialAddress = premises.take(6).first()
+
+        val expectedPremisesSummaryPartialAddress = premisesSummaryTransformer(expectedPremisesPartialAddress)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesPartialAddress.addressLine2?.split(" ")?.last()}",
+          listOf(expectedPremisesSummaryPartialAddress),
+        )
+      }
+    }
+
+    @Test
     fun `Get all premises returns successfully with no premises when a postcode or address is passed in the query parameter and doesn't match any premises`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         assertUrlReturnsPremises(
