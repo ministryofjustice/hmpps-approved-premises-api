@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import kotlin.math.roundToInt
 
 @SuppressWarnings("LargeClass")
 class BookingSearchTest : IntegrationTestBase() {
@@ -236,7 +237,7 @@ class BookingSearchTest : IntegrationTestBase() {
 
         val tempAccAppSize = 5
         val roomsPerPremSize = 3
-        val totalSize = tempAccAppSize * roomsPerPremSize
+        val totalResults = tempAccAppSize * roomsPerPremSize
         val pageSize = 10
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -263,7 +264,7 @@ class BookingSearchTest : IntegrationTestBase() {
           }
         }
 
-        val offenders = offenderSequence.take(totalSize).toList()
+        val offenders = offenderSequence.take(totalResults).toList()
         val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
         val allBookings = mutableListOf<BookingEntity>()
 
@@ -299,7 +300,6 @@ class BookingSearchTest : IntegrationTestBase() {
           }
 
           booking.departures.add(departure)
-
           allBookings += booking
         }
 
@@ -323,46 +323,33 @@ class BookingSearchTest : IntegrationTestBase() {
           }
         }
 
-        apDeliusContextAddListCaseSummaryToBulkResponse(when (sortOrder) {
-          SortOrder.ascending -> offendersSorted.take(pageSize).map { it.first.asCaseSummary()}
-          SortOrder.descending -> offendersSorted.take(pageSize).map { it.first.asCaseSummary()}
-        })
+        val totalPages = (totalResults.toDouble() / pageSize.toDouble()).roundToInt()
 
-        // This works because bookings[index].crn == offenders[index].other...crn, hence the correct crn is associated with the correct offender
+        for (page in 1..totalPages ) {
 
-        val expectedFirstPageResponse = BookingSearchResults( pageSize, responseSorted.results.take(pageSize))
-        val expectedSecondPageResponse = BookingSearchResults(5, responseSorted.results.subList(pageSize, responseSorted.results.size))
+          val currentPageSize = if (totalResults % pageSize == 0) pageSize else if (page == totalPages) totalResults % pageSize else pageSize
 
-        webTestClient.get()
-          .uri("/bookings/search?sortOrder=${sortOrder}&sortField=${bookingSearchSort.value}&status=departed&page=1")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
-          .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedFirstPageResponse), true)
+          apDeliusContextAddListCaseSummaryToBulkResponse(when (sortOrder) {
+            SortOrder.ascending -> offendersSorted.subList((page-1) * pageSize, (page-1) * pageSize + currentPageSize).map { it.first.asCaseSummary()}
+            SortOrder.descending -> offendersSorted.subList((page-1) * pageSize, (page-1) * pageSize + currentPageSize).map { it.first.asCaseSummary()}
+          })
 
-        apDeliusContextAddListCaseSummaryToBulkResponse(when (sortOrder) {
-          SortOrder.ascending -> offenders.sortedBy { it.first.firstName }.subList(pageSize, offenders.size) .map { it.first.asCaseSummary()}
-          SortOrder.descending -> offenders.sortedByDescending { it.first.firstName }.subList(pageSize, offenders.size).map { it.first.asCaseSummary()}
-        })
+          // This works because bookings[index].crn == offenders[index].other...crn, hence the correct crn is associated with the correct offender
 
-        webTestClient.get()
-          .uri("/bookings/search?sortOrder=${sortOrder}&sortField=${bookingSearchSort.value}&status=${bookingStatus}&page=2")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
-          .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-          .expectBody()
-          .json(objectMapper.writeValueAsString(expectedSecondPageResponse), true)
+          val expectedPageResponse = BookingSearchResults(currentPageSize, responseSorted.results.subList((page-1) * pageSize, (page-1) * pageSize + currentPageSize))
+          webTestClient.get()
+            .uri("/bookings/search?sortOrder=${sortOrder}&sortField=${bookingSearchSort.value}&status=departed&page=$page")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", page.toLong())
+            .expectHeader().valueEquals("X-Pagination-TotalPages", totalPages.toLong())
+            .expectHeader().valueEquals("X-Pagination-TotalResults", totalResults.toLong())
+            .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
+            .expectBody()
+            .json(objectMapper.writeValueAsString(expectedPageResponse), true)
+        }
       }
     }
   }

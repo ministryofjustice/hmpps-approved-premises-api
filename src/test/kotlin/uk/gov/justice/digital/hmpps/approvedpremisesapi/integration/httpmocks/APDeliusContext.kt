@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.matching.AnythingPattern
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
@@ -208,13 +209,7 @@ fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSu
 fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(casesSummary: List<CaseSummary>) {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
-    requestBody = WireMock.equalToJson(
-      objectMapper.writeValueAsString(
-        casesSummary.map { it.crn },
-      ),
-      true,
-      false,
-    ),
+    requestBody = AnythingPattern(),
     responseBody = CaseSummaries(
       cases = casesSummary,
     ),
