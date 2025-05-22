@@ -7,7 +7,7 @@ info:
 servers:
   - url: /cas1
 paths:
-  /placement-request/change-requests:
+  /placement-requests/change-requests:
     get:
       tags:
         - change requests
@@ -54,7 +54,7 @@ paths:
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
 
-  /placement-request/{placementRequestId}/planned-transfer:
+  /placement-requests/{placementRequestId}/planned-transfer:
     post:
       tags:
         - change requests
@@ -82,7 +82,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
 
-  /placement-request/{placementRequestId}/appeal:
+  /placement-requests/{placementRequestId}/appeal:
     post:
       tags:
         - change requests
@@ -110,7 +110,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
 
-  /placement-request/{placementRequestId}/extension:
+  /placement-requests/{placementRequestId}/extension:
     post:
       tags:
         - change requests
@@ -138,7 +138,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
 
-  /placement-request/{placementRequestId}/change-requests/{changeRequestId}:
+  /placement-requests/{placementRequestId}/change-requests/{changeRequestId}:
     get:
       tags:
         - change requests

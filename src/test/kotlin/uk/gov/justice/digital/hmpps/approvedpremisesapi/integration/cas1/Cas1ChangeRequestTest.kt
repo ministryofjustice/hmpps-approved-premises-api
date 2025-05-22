@@ -50,7 +50,7 @@ class Cas1ChangeRequestTest {
     @Test
     fun `Without JWT returns 401`() {
       webTestClient.post()
-        .uri("/cas1/placement-request/${UUID.randomUUID()}/change-request")
+        .uri("/cas1/placement-requests/${UUID.randomUUID()}/change-request")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -70,7 +70,7 @@ class Cas1ChangeRequestTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/appeal")
+            .uri("/cas1/placement-requests/${placementRequest.id}/appeal")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -101,7 +101,7 @@ class Cas1ChangeRequestTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/planned-transfer")
+            .uri("/cas1/placement-requests/${placementRequest.id}/planned-transfer")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -132,7 +132,7 @@ class Cas1ChangeRequestTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/extension")
+            .uri("/cas1/placement-requests/${placementRequest.id}/extension")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -164,7 +164,7 @@ class Cas1ChangeRequestTest {
           )
           val changeRequestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist()
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/appeal")
+            .uri("/cas1/placement-requests/${placementRequest.id}/appeal")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -208,7 +208,7 @@ class Cas1ChangeRequestTest {
             withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
           }
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/planned-transfer")
+            .uri("/cas1/placement-requests/${placementRequest.id}/planned-transfer")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -355,7 +355,7 @@ class Cas1ChangeRequestTest {
     @Test
     fun `Getting change requests without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests")
+        .uri("/cas1/placement-requests/change-requests")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -367,7 +367,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests")
+        .uri("/cas1/placement-requests/change-requests")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -381,7 +381,7 @@ class Cas1ChangeRequestTest {
       val emptyCruManagementArea = givenACas1CruManagementArea()
 
       val response = webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?cruManagementAreaId=${emptyCruManagementArea.id}")
+        .uri("/cas1/placement-requests/change-requests?cruManagementAreaId=${emptyCruManagementArea.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -396,7 +396,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       val response = webTestClient.get()
-        .uri("/cas1/placement-request/change-requests")
+        .uri("/cas1/placement-requests/change-requests")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -409,7 +409,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       val response = webTestClient.get()
-        .uri("/cas1/placement-request/change-requests")
+        .uri("/cas1/placement-requests/change-requests")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -429,7 +429,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       val response = webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?cruManagementAreaId=${cruManagementArea1.id}")
+        .uri("/cas1/placement-requests/change-requests?cruManagementAreaId=${cruManagementArea1.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -444,7 +444,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=name&sortDirection=asc")
+        .uri("/cas1/placement-requests/change-requests?sortBy=name&sortDirection=asc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -459,7 +459,7 @@ class Cas1ChangeRequestTest {
         }
 
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=name&sortDirection=desc")
+        .uri("/cas1/placement-requests/change-requests?sortBy=name&sortDirection=desc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -479,7 +479,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=tier&sortDirection=asc")
+        .uri("/cas1/placement-requests/change-requests?sortBy=tier&sortDirection=asc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -494,7 +494,7 @@ class Cas1ChangeRequestTest {
         }
 
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=tier&sortDirection=desc")
+        .uri("/cas1/placement-requests/change-requests?sortBy=tier&sortDirection=desc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -514,7 +514,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=canonicalArrivalDate&sortDirection=asc")
+        .uri("/cas1/placement-requests/change-requests?sortBy=canonicalArrivalDate&sortDirection=asc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -529,7 +529,7 @@ class Cas1ChangeRequestTest {
         }
 
       webTestClient.get()
-        .uri("/cas1/placement-request/change-requests?sortBy=canonicalArrivalDate&sortDirection=desc")
+        .uri("/cas1/placement-requests/change-requests?sortBy=canonicalArrivalDate&sortDirection=desc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -626,7 +626,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
+        .uri("/cas1/placement-requests/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1RejectChangeRequest(
@@ -642,7 +642,7 @@ class Cas1ChangeRequestTest {
     @Test
     fun `reject change request without JWT returns 401`() {
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
+        .uri("/cas1/placement-requests/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -656,7 +656,7 @@ class Cas1ChangeRequestTest {
       assertThat(changeRequestBefore.rejectionReason).isNull()
 
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
+        .uri("/cas1/placement-requests/${placementRequest1.id}/change-requests/${placementAppealChangeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1RejectChangeRequest(
@@ -702,7 +702,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       webTestClient.patch()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .uri("/cas1/placement-requests/${placementRequest1.id}/change-requests/${changeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1RejectChangeRequest(
@@ -773,7 +773,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
       webTestClient.get()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .uri("/cas1/placement-requests/${placementRequest1.id}/change-requests/${changeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -783,7 +783,7 @@ class Cas1ChangeRequestTest {
     @Test
     fun `get change request without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .uri("/cas1/placement-requests/${placementRequest1.id}/change-requests/${changeRequest.id}")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -794,7 +794,7 @@ class Cas1ChangeRequestTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       val response = webTestClient.get()
-        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .uri("/cas1/placement-requests/${placementRequest1.id}/change-requests/${changeRequest.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
