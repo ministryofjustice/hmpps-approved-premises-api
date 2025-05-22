@@ -3,34 +3,27 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DailyMetricsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator.Cas1BedIdentifier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.io.OutputStream
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.temporal.TemporalAdjusters
 
 @Service
 class Cas1ReportService(
-  private val applicationRepository: ApplicationRepository,
   private val cas1PlacementMatchingOutcomesV2ReportRepository: Cas1PlacementMatchingOutcomesV2ReportRepository,
   private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
-  private val domainEventRepository: DomainEventRepository,
   private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
-  private val domainEventService: Cas1DomainEventService,
   private val cas1PlacementReportRepository: Cas1PlacementReportRepository,
+  private val cas1DailyMetricsReportRepository: Cas1DailyMetricsReportRepository,
 ) {
 
   companion object {
@@ -71,26 +64,18 @@ class Cas1ReportService(
     }
   }
 
-  fun createDailyMetricsReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
-      ApprovedPremisesApplicationMetricsSummaryDto(
-        it.getCreatedAt().toLocalDate(),
-        it.getCreatedByUserId(),
+  fun createDailyMetricsReport(reportDateRange: ReportDateRange, outputStream: OutputStream) {
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = emptyList(),
+    ).use { consumer ->
+      cas1DailyMetricsReportRepository.generateCas1DailyMetricsReport(
+        startDate = reportDateRange.start,
+        endDate = reportDateRange.end,
+        jdbcResultSetConsumer = consumer,
+
       )
     }
-    val domainEvents = domainEventRepository.findAllCreatedInMonth(properties.month, properties.year)
-
-    val startDate = LocalDate.of(properties.year, properties.month, 1)
-    val endDate = startDate.with(TemporalAdjusters.firstDayOfNextMonth())
-
-    val dates = startDate.datesUntil(endDate).toList()
-
-    DailyMetricsReportGenerator(domainEvents, applications, domainEventService)
-      .createReport(dates, properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
   }
 
   fun createOutOfServiceBedReport(
@@ -180,6 +165,12 @@ class Cas1ReportService(
     }
   }
 
+  data class ReportDateRange(
+    val start: LocalDate,
+    val end: LocalDate,
+  )
+
+  @Deprecated("Will be removed soon", replaceWith = ReplaceWith("ReportDateRange(startDate, endDate)"))
   data class MonthSpecificReportParams(
     val year: Int,
     val month: Int,
