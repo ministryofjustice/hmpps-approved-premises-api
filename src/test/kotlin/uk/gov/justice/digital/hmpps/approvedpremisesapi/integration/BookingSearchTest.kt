@@ -1197,6 +1197,7 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
+  @Suppress("LongParameterList")
   private fun createBooking(
     bed: BedEntity,
     crn: String,
