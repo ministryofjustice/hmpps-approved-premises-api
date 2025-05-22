@@ -14,8 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.ReportDateRange
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 private const val MONTH_MAX = 12
 private const val MONTH_MIN = 1
@@ -31,11 +35,13 @@ class Cas1ReportsController(
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
-  override fun reportsReportNameGet(
+  override fun getReportByName(
     xServiceName: ServiceName,
     reportName: Cas1ReportName,
-    year: Int,
-    month: Int,
+    year: Int?,
+    month: Int?,
+    startDate: LocalDate?,
+    endDate: LocalDate?,
   ): ResponseEntity<StreamingResponseBody> {
     if (xServiceName !== ServiceName.approvedPremises) {
       throw NotAllowedProblem("This endpoint only supports CAS1")
@@ -43,7 +49,13 @@ class Cas1ReportsController(
 
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
 
-    validateMonth(month)
+    validateDateInputs(year, month, startDate, endDate)
+
+    val reportDateRange = computeReportDateRange(year, month, startDate, endDate)
+    val startDate = reportDateRange.start
+    val endDate = reportDateRange.end
+    val year = year ?: startDate.year
+    val month = month ?: startDate.monthValue
 
     val monthSpecificReportParams = MonthSpecificReportParams(
       year = year,
@@ -65,10 +77,10 @@ class Cas1ReportsController(
         cas1ReportService.createApplicationReportV2(monthSpecificReportParams, includePii = true, outputStream)
       }
       Cas1ReportName.dailyMetrics -> generateStreamingResponse(
-        contentType = ContentType.XLSX,
-        fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("daily-metrics", startDate, endDate, ContentType.CSV),
       ) { outputStream ->
-        cas1ReportService.createDailyMetricsReport(monthSpecificReportParams, outputStream)
+        cas1ReportService.createDailyMetricsReport(reportDateRange, outputStream)
       }
       Cas1ReportName.outOfServiceBeds -> return generateStreamingResponse(
         contentType = ContentType.XLSX,
@@ -125,14 +137,98 @@ class Cas1ReportsController(
     }
   }
 
-  private fun validateMonth(month: Int) {
-    if (month < MONTH_MIN || month > MONTH_MAX) {
-      throw BadRequestProblem(errorDetail = "month must be between 1 and 12")
+  @SuppressWarnings("MagicNumber")
+  fun computeReportDateRange(
+    year: Int? = null,
+    month: Int? = null,
+    startDate: LocalDate? = null,
+    endDate: LocalDate? = null,
+  ): ReportDateRange = when {
+    year != null && month != null -> {
+      val start = LocalDate.of(year, month, 1)
+      val end = YearMonth.of(year, month).atEndOfMonth()
+      ReportDateRange(start, end)
     }
+
+    startDate != null && endDate != null -> {
+      val start = startDate
+      val end = endDate
+      ReportDateRange(start, end)
+    }
+    else -> throw IllegalArgumentException("Either year/month or startDate/endDate must be provided")
   }
 
+  @Deprecated("Will be removed soon", replaceWith = ReplaceWith("createCas1ReportName(name, startDate, endDate, contentType)"))
   private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType): String {
     val timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
     return "$name-$year-${month.toString().padStart(2, '0')}-$timestamp.${contentType.extension}"
+  }
+
+  private fun createCas1ReportName(
+    name: String,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    contentType: ContentType,
+  ): String {
+    val timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
+    val startFormatted = startDate.format(DateTimeFormatter.ISO_DATE)
+    val endFormatted = endDate.format(DateTimeFormatter.ISO_DATE)
+
+    return "$name-$startFormatted-to-$endFormatted-$timestamp.${contentType.extension}"
+  }
+
+  @SuppressWarnings("ThrowsCount")
+  fun validateDateInputs(
+    year: Int? = null,
+    month: Int? = null,
+    startDate: LocalDate? = null,
+    endDate: LocalDate? = null,
+  ) {
+    when {
+      areMixedInputs(year, month, startDate, endDate) ->
+        throw BadRequestProblem(errorDetail = "Provide either year/month or startDate/endDate, but not both")
+
+      isYearMonthMode(year, month) -> validateYearAndMonth(year, month)
+
+      isDateRangeMode(startDate, endDate) -> {
+        if (startDate == null) {
+          throw BadRequestProblem(errorDetail = "Start date must be provided")
+        }
+        if (endDate == null) {
+          throw BadRequestProblem(errorDetail = "End date must be provided")
+        }
+
+        validateDateRange(startDate, endDate)
+      }
+
+      else ->
+        throw BadRequestProblem(errorDetail = "Either year/month or startDate/endDate must be provided")
+    }
+  }
+
+  private fun areMixedInputs(year: Int?, month: Int?, startDate: LocalDate?, endDate: LocalDate?) = (year != null || month != null) && (startDate != null || endDate != null)
+
+  private fun isYearMonthMode(year: Int?, month: Int?) = year != null || month != null
+
+  private fun isDateRangeMode(startDate: LocalDate?, endDate: LocalDate?) = startDate != null || endDate != null
+
+  @SuppressWarnings("MagicNumber")
+  private fun validateYearAndMonth(year: Int?, month: Int?) {
+    if (year == null || month == null) {
+      throw BadRequestProblem(errorDetail = "Both year and month must be provided")
+    }
+    if (month !in MONTH_MIN..MONTH_MAX) {
+      throw BadRequestProblem(errorDetail = "Month must be between 1 and 12")
+    }
+  }
+
+  @SuppressWarnings("MagicNumber")
+  private fun validateDateRange(startDate: LocalDate, endDate: LocalDate) {
+    if (startDate.isAfter(endDate)) {
+      throw BadRequestProblem(errorDetail = "Start date cannot be after end date")
+    }
+    if (ChronoUnit.DAYS.between(startDate, endDate) > 366) {
+      throw BadRequestProblem(errorDetail = "The date range must not exceed one year")
+    }
   }
 }
