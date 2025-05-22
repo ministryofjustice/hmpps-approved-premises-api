@@ -75,14 +75,14 @@ class Cas2LocationChangedServiceTest {
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
-    every { cas2EmailService.sendLocationChangedEmails(any(), any()) } returns Unit
+    every { cas2EmailService.sendLocationChangedEmails(any(), any(), any()) } returns Unit
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
-    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmails(any(), any()) }
+    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmails(any(), any(), user.id) }
   }
 
   @Test
