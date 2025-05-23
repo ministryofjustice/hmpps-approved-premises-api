@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_MEN_ONLY
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_WOMEN_ONLY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -125,10 +127,44 @@ class Cas3BedspaceSearchService(
       searchParams.bedspaceFilters?.includedCharacteristicIds?.map { characteristicPropertyNames[it]!! } ?: emptyList()
     val roomCharacteristicsToExclude =
       searchParams.bedspaceFilters?.excludedCharacteristicIds?.map { characteristicPropertyNames[it]!! } ?: emptyList()
-    val premisesCharacteristicsToInclude =
+    var premisesCharacteristicsToInclude =
       searchParams.premisesFilters?.includedCharacteristicIds?.map { characteristicPropertyNames[it]!! } ?: emptyList()
     val premisesCharacteristicsToExclude =
       searchParams.premisesFilters?.excludedCharacteristicIds?.map { characteristicPropertyNames[it]!! } ?: emptyList()
+
+    val excludePremisesIds = when {
+      premisesCharacteristicsToInclude.contains(CAS3_PROPERTY_NAME_MEN_ONLY) -> {
+        // remove isMenOnly characteristic to ensure it is not filtered by later
+        premisesCharacteristicsToInclude = premisesCharacteristicsToInclude.filter { it != CAS3_PROPERTY_NAME_MEN_ONLY }
+
+        // filter properties that have women only characteristic or have female occupants to exclude them
+        results
+          .asSequence()
+          .filter { bedspace ->
+            bedspace.premisesCharacteristics.any { it.propertyName == CAS3_PROPERTY_NAME_WOMEN_ONLY } ||
+              bedspace.overlaps.any { it.sex?.lowercase() == "female" }
+          }
+          .map { it.premisesId }
+          .toList()
+      }
+
+      premisesCharacteristicsToInclude.contains(CAS3_PROPERTY_NAME_WOMEN_ONLY) -> {
+        // remove isWomenOnly characteristic to ensure it is not filtered by later
+        premisesCharacteristicsToInclude = premisesCharacteristicsToInclude.filter { it != CAS3_PROPERTY_NAME_WOMEN_ONLY }
+
+        // filter properties that have men only characteristic or have man occupants to exclude them
+        results
+          .asSequence()
+          .filter { bedspace ->
+            bedspace.premisesCharacteristics.any { it.propertyName == CAS3_PROPERTY_NAME_MEN_ONLY } ||
+              bedspace.overlaps.any { it.sex?.lowercase() == "male" }
+          }
+          .map { it.premisesId }
+          .toList()
+      }
+
+      else -> emptyList()
+    }
 
     return results
       .filter { result ->
@@ -139,6 +175,8 @@ class Cas3BedspaceSearchService(
         val roomCharacteristics = result.roomCharacteristics.map { it.propertyName }
         roomCharacteristics.containsAll(roomCharacteristicsToInclude) &&
           roomCharacteristics.containsNone(roomCharacteristicsToExclude)
+      }.filter { result ->
+        !excludePremisesIds.contains(result.premisesId)
       }
   }
 
