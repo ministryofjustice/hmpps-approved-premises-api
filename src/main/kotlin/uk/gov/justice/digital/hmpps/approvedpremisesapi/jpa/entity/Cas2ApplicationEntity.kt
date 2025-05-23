@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserEntity
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -88,9 +89,14 @@ data class Cas2ApplicationEntity(
 
   val crn: String,
 
+  // BAIL-WIP - When start to create application for delius users, this will need to be nullable, but that creates cas2cade effects whenever we us code like `staffIdentifier = application.createdByUser.nomisStaffId`,`
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: NomisUserEntity,
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_cas2_user_id")
+  val createdByCas2User: Cas2UserEntity? = null,
 
   @Type(JsonType::class)
   var data: String?,
