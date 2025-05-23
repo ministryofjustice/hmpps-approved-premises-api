@@ -7115,11 +7115,13 @@ components:
         - plannedTransferRequest
         - emergencyTransferCreate
         - shorten
+        - extensionRequest
       x-enum-varnames:
         - APPEAL_CREATE
         - PLANNED_TRANSFER_REQUEST
         - EMERGENCY_TRANSFER_CREATE
         - SHORTEN
+        - EXTENSION_REQUEST
     Cas1SpaceBookingSummarySortField:
       type: string
       enum:
