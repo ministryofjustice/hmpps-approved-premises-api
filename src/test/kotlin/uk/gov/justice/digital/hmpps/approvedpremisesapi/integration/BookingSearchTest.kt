@@ -30,11 +30,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import kotlin.math.roundToInt
 
 @SuppressWarnings("LargeClass")
 class BookingSearchTest : IntegrationTestBase() {
@@ -215,6 +218,144 @@ class BookingSearchTest : IntegrationTestBase() {
 
     val booking = createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, it.otherIds.crn)
     allBookings += booking
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      "personName,ascending,departed",
+      "personName,descending,departed",
+    ],
+  )
+  fun `Results for departed offenders are sorted correctly for both ascending and descending order`(
+    bookingSearchSort: BookingSearchSortField,
+    sortOrder: SortOrder,
+    bookingStatus: BookingStatus,
+  ) {
+    givenAUser { userEntity, jwt ->
+      givenSomeOffenders { offenderSequence ->
+
+        val tempAccAppSize = 5
+        val roomsPerPremSize = 3
+        val totalResults = tempAccAppSize * roomsPerPremSize
+        val pageSize = 10
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(tempAccAppSize) {
+          withProbationRegion(userEntity.probationRegion)
+          withYieldedLocalAuthorityArea {
+            localAuthorityEntityFactory.produceAndPersist()
+          }
+        }
+
+        val allBeds = mutableListOf<BedEntity>()
+        allPremises.forEach { premises ->
+          val rooms = roomEntityFactory.produceAndPersistMultiple(roomsPerPremSize) {
+            withPremises(premises)
+          }
+
+          rooms.forEach { room ->
+            val bed = bedEntityFactory.produceAndPersist {
+              withRoom(room)
+            }
+            allBeds += bed
+          }
+        }
+
+        val offenders = offenderSequence.take(totalResults).toList()
+        val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
+        val allBookings = mutableListOf<BookingEntity>()
+
+        offenders.forEach {
+          val offenderName = "${it.first.firstName} ${it.first.surname}"
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withName(offenderName)
+            withCrn(it.first.otherIds.crn)
+            withProbationRegion(userEntity.probationRegion)
+            withCreatedByUser(userEntity)
+            withApplicationSchema(applicationSchema)
+          }
+
+          temporaryAccommodationApplications += application
+
+          val bed = createTestTemporaryAccommodationBedspace(userEntity.probationRegion)
+
+          val booking = createBooking(
+            bed,
+            it.first.otherIds.crn,
+            LocalDate.now().minusDays(randomInt(5, 20).toLong()),
+            LocalDate.now().plusDays(3),
+            LocalDate.now().minusDays(randomInt(10, 20).toLong()).toLocalDateTime(),
+            bookingStatus,
+          )
+
+          val departure = departureEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withYieldedReason {
+              departureReasonEntityFactory.produceAndPersist()
+            }
+            withYieldedMoveOnCategory {
+              moveOnCategoryEntityFactory.produceAndPersist()
+            }
+          }
+
+          booking.departures.add(departure)
+          allBookings += booking
+        }
+
+        var offendersSorted: List<Pair<OffenderDetailSummary, InmateDetail>> = mutableListOf()
+        var responseSorted: BookingSearchResults? = null
+
+        when (sortOrder) {
+          SortOrder.ascending -> {
+            offendersSorted = offenders.sortedBy { it.first.firstName }
+            responseSorted = BookingSearchResults(
+              offenders.size,
+              getExpectedResponseList(allBookings, offenders.map { it.first }).results.sortedBy { it.person.name },
+            )
+          }
+
+          SortOrder.descending -> {
+            offendersSorted = offenders.sortedByDescending { it.first.firstName }
+            responseSorted = BookingSearchResults(
+              offenders.size,
+              getExpectedResponseList(allBookings, offenders.map { it.first }).results.sortedByDescending { it.person.name },
+            )
+          }
+        }
+
+        val totalPages = (totalResults.toDouble() / pageSize.toDouble()).roundToInt()
+
+        for (page in 0..<totalPages) {
+          val currentPageSize = if (page == totalPages - 1) totalResults % pageSize else pageSize
+
+          apDeliusContextAddListCaseSummaryToBulkResponse(
+            when (sortOrder) {
+              SortOrder.ascending -> offendersSorted.subList(page * pageSize, page * pageSize + currentPageSize).map { it.first.asCaseSummary() }
+              SortOrder.descending -> offendersSorted.subList(page * pageSize, page * pageSize + currentPageSize).map { it.first.asCaseSummary() }
+            },
+          )
+
+          // This works because bookings[index].crn == offenders[index].other...crn, hence the correct crn is associated with the correct offender
+          val expectedPageResponse = BookingSearchResults(currentPageSize, responseSorted.results.subList(page * pageSize, page * pageSize + currentPageSize))
+          webTestClient.get()
+            .uri("/bookings/search?sortOrder=$sortOrder&sortField=${bookingSearchSort.value}&status=departed&page=${page + 1}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", page + 1.toLong())
+            .expectHeader().valueEquals("X-Pagination-TotalPages", totalPages.toLong())
+            .expectHeader().valueEquals("X-Pagination-TotalResults", totalResults.toLong())
+            .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
+            .expectBody()
+            .json(objectMapper.writeValueAsString(expectedPageResponse), true)
+        }
+      }
+    }
   }
 
   @Test
@@ -815,49 +956,64 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
+  private fun getExpectedResponseList(
+    expectedBookings: List<BookingEntity>,
+    offenderDetails: List<OffenderDetailSummary>,
+  ): BookingSearchResults = BookingSearchResults(
+    resultsCount = expectedBookings.size,
+    results = expectedBookings.mapIndexed { i, booking ->
+      bookingSearchMapping(offenderDetails[i], booking)
+    },
+  )
+
   private fun getExpectedResponse(
     expectedBookings: List<BookingEntity>,
     offenderDetails: OffenderDetailSummary,
   ): BookingSearchResults = BookingSearchResults(
     resultsCount = expectedBookings.size,
     results = expectedBookings.map { booking ->
-      BookingSearchResult(
-        person = BookingSearchResultPersonSummary(
-          name = "${offenderDetails.firstName} ${offenderDetails.surname}",
-          crn = offenderDetails.otherIds.crn,
-        ),
-        booking = BookingSearchResultBookingSummary(
-          id = booking.id,
-          status = when {
-            booking.cancellation != null -> BookingStatus.cancelled
-            booking.departure != null -> BookingStatus.departed
-            booking.arrival != null -> BookingStatus.arrived
-            booking.nonArrival != null -> BookingStatus.notMinusArrived
-            booking.confirmation != null -> BookingStatus.confirmed
-            else -> BookingStatus.provisional
-          },
-          startDate = booking.arrivalDate,
-          endDate = booking.departureDate,
-          createdAt = booking.createdAt.toInstant(),
-        ),
-        premises = BookingSearchResultPremisesSummary(
-          id = booking.premises.id,
-          name = booking.premises.name,
-          addressLine1 = booking.premises.addressLine1,
-          addressLine2 = booking.premises.addressLine2,
-          town = booking.premises.town,
-          postcode = booking.premises.postcode,
-        ),
-        room = BookingSearchResultRoomSummary(
-          id = booking.bed!!.room.id,
-          name = booking.bed!!.room.name,
-        ),
-        bed = BookingSearchResultBedSummary(
-          id = booking.bed!!.id,
-          name = booking.bed!!.name,
-        ),
-      )
+      bookingSearchMapping(offenderDetails, booking)
     },
+  )
+
+  private fun bookingSearchMapping(
+    offenderDetails: OffenderDetailSummary,
+    booking: BookingEntity,
+  ): BookingSearchResult = BookingSearchResult(
+    person = BookingSearchResultPersonSummary(
+      name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+      crn = offenderDetails.otherIds.crn,
+    ),
+    booking = BookingSearchResultBookingSummary(
+      id = booking.id,
+      status = when {
+        booking.cancellation != null -> BookingStatus.cancelled
+        booking.departure != null -> BookingStatus.departed
+        booking.arrival != null -> BookingStatus.arrived
+        booking.nonArrival != null -> BookingStatus.notMinusArrived
+        booking.confirmation != null -> BookingStatus.confirmed
+        else -> BookingStatus.provisional
+      },
+      startDate = booking.arrivalDate,
+      endDate = booking.departureDate,
+      createdAt = booking.createdAt.toInstant(),
+    ),
+    premises = BookingSearchResultPremisesSummary(
+      id = booking.premises.id,
+      name = booking.premises.name,
+      addressLine1 = booking.premises.addressLine1,
+      addressLine2 = booking.premises.addressLine2,
+      town = booking.premises.town,
+      postcode = booking.premises.postcode,
+    ),
+    room = BookingSearchResultRoomSummary(
+      id = booking.bed!!.room.id,
+      name = booking.bed!!.room.name,
+    ),
+    bed = BookingSearchResultBedSummary(
+      id = booking.bed!!.id,
+      name = booking.bed!!.name,
+    ),
   )
 
   private fun getExpectedResponse(
@@ -966,11 +1122,13 @@ class BookingSearchTest : IntegrationTestBase() {
     offenderDetails: OffenderDetailSummary,
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
+    bookingStatus: BookingStatus? = null,
   ): MutableList<BookingEntity> = createTestTemporaryAccommodationBookings(
     userEntity.probationRegion,
     numberOfPremises,
     numberOfBedsInEachPremises,
     offenderDetails.otherIds.crn,
+    bookingStatus,
   )
 
   private fun createTestTemporaryAccommodationBookings(
@@ -978,6 +1136,7 @@ class BookingSearchTest : IntegrationTestBase() {
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
     crn: String,
+    bookingStatus: BookingStatus? = null,
   ): MutableList<BookingEntity> {
     val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
       withProbationRegion(probationRegion)
@@ -1009,6 +1168,7 @@ class BookingSearchTest : IntegrationTestBase() {
         LocalDate.now().minusDays((60 - index).toLong()),
         LocalDate.now().minusDays((30 - index).toLong()),
         LocalDate.now().minusDays((30 - index).toLong()).toLocalDateTime(),
+        bookingStatus,
       )
 
       allBookings += booking
@@ -1033,17 +1193,19 @@ class BookingSearchTest : IntegrationTestBase() {
     }
   }
 
+  @Suppress("LongParameterList")
   private fun createBooking(
     bed: BedEntity,
     crn: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     createdAt: OffsetDateTime,
+    bookingStatus: BookingStatus? = null,
   ): BookingEntity = bookingEntityFactory.produceAndPersist {
     withPremises(bed.room.premises)
     withCrn(crn)
     withBed(bed)
-    withStatus(BookingStatus.provisional)
+    withStatus(bookingStatus ?: BookingStatus.provisional)
     withServiceName(ServiceName.temporaryAccommodation)
     withArrivalDate(arrivalDate)
     withDepartureDate(departureDate)
