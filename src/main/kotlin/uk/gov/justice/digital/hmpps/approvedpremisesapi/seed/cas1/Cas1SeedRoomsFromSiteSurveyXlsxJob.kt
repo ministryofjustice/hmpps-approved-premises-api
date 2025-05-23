@@ -214,6 +214,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         name = bed.bedName,
         code = bed.bedCode,
         room = room,
+        startDate = null,
         endDate = null,
         createdAt = null,
       ),

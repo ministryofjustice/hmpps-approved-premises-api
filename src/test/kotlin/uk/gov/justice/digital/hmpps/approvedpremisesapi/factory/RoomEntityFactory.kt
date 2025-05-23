@@ -82,6 +82,7 @@ class BedEntityFactory : Factory<BedEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var code: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var room: Yielded<RoomEntity>? = null
+  private var startDate: Yielded<LocalDate?>? = null
   private var endDate: Yielded<LocalDate?>? = null
   private var createdAt: Yielded<OffsetDateTime>? = { OffsetDateTime.now() }
 
@@ -113,6 +114,10 @@ class BedEntityFactory : Factory<BedEntity> {
     this.room = room
   }
 
+  fun withStartDate(startDate: LocalDate?) = apply {
+    this.endDate = { startDate }
+  }
+
   fun withEndDate(endDate: LocalDate?) = apply {
     this.endDate = { endDate }
   }
@@ -131,6 +136,7 @@ class BedEntityFactory : Factory<BedEntity> {
     code = this.code(),
     room = this.room?.invoke() ?: throw java.lang.RuntimeException("Must provide a room"),
     endDate = this.endDate?.invoke(),
+    startDate = this.startDate?.invoke(),
     createdAt = this.createdAt?.invoke(),
   )
 }
