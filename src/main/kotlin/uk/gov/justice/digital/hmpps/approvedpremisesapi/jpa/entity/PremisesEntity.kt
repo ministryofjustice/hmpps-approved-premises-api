@@ -61,6 +61,12 @@ SELECT
   )
   fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, propertyStatus: String?): List<TemporaryAccommodationPremisesSummary>
 
+  @Query("SELECT tap.id FROM TemporaryAccommodationPremisesEntity tap")
+  fun findTemporaryAccommodationPremisesIds(): List<UUID>
+
+  @Query("SELECT tap FROM TemporaryAccommodationPremisesEntity tap WHERE tap.id IN :ids")
+  fun findTemporaryAccommodationPremisesByIds(ids: List<UUID>): List<TemporaryAccommodationPremisesEntity>
+
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
 
