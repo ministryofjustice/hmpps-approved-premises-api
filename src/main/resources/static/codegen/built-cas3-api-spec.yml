@@ -3734,6 +3734,7 @@ components:
         - update_cas1_approved_premises_assessment_report_properties
         - update_cas1_room_codes
         - update_cas1_applications_with_offender
+        - update_cas3_bedspace_model_data
     PlacementDates:
       type: object
       properties:
