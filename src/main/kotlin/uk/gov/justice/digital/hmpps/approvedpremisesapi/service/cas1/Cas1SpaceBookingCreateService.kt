@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 /**
@@ -27,6 +28,10 @@ class Cas1SpaceBookingCreateService(
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val clock: Clock,
 ) {
+
+  companion object {
+    const val MAX_LENGTH_YEARS: Int = 2
+  }
 
   fun create(validatedDetails: ValidatedCreateBooking): Cas1SpaceBookingEntity {
     val bookingToCreate = validatedDetails.bookingToCreate
@@ -71,6 +76,10 @@ class Cas1SpaceBookingCreateService(
 
     if (details.expectedArrivalDate >= details.expectedDepartureDate) {
       "$.departureDate" hasValidationError "shouldBeAfterArrivalDate"
+    }
+
+    if (ChronoUnit.YEARS.between(details.expectedArrivalDate, details.expectedDepartureDate) >= MAX_LENGTH_YEARS) {
+      "$.departureDate" hasValidationError "mustBeLessThan2Years"
     }
 
     if (hasErrors()) {

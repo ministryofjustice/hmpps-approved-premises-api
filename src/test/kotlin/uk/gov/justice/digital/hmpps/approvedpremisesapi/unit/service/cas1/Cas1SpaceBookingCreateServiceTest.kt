@@ -155,6 +155,27 @@ class Cas1SpaceBookingCreateServiceTest {
     }
 
     @Test
+    fun `Error if the departure date is at least two years after the arrival date`() {
+      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      LockablePlacementRequestEntity(placementRequest.id)
+
+      val result = service.validate(
+        CreateBookingDetails(
+          premisesId = premises.id,
+          placementRequestId = placementRequest.id,
+          expectedArrivalDate = LocalDate.now(),
+          expectedDepartureDate = LocalDate.now().plusYears(2),
+          createdBy = user,
+          characteristics = emptyList(),
+          transferredFrom = null,
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.departureDate", "mustBeLessThan2Years")
+    }
+
+    @Test
     fun `valid, return new space booking`() {
       val user = UserEntityFactory()
         .withDefaults()
@@ -178,7 +199,7 @@ class Cas1SpaceBookingCreateServiceTest {
         .produce()
 
       val arrivalDate = LocalDate.now()
-      val departureDate = arrivalDate.plusDays(1)
+      val departureDate = arrivalDate.plusYears(2).minusDays(1)
 
       val transferInfo = TransferInfo(
         type = TransferType.PLANNED,
