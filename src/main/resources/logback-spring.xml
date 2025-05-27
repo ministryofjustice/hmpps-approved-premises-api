@@ -37,6 +37,7 @@
         <appender-ref ref="consoleAppender"/>
     </logger>
 
+    <!-- We use WARN level for flyway because INFO level logs out database connection info/schema name -->
     <logger name="org.flywaydb.core.FlywayExecutor" additivity="false" level="WARN">
         <appender-ref ref="consoleAppender"/>
     </logger>
