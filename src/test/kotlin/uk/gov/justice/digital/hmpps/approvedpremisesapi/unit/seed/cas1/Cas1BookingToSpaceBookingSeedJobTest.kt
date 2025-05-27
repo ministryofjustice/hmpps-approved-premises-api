@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.seed.cas1
 
 import io.mockk.every
 import io.mockk.mockk
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.transaction.support.TransactionTemplate
@@ -16,11 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingManagementInfoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 
 class Cas1BookingToSpaceBookingSeedJobTest {
 
   private val approvedPremisesRepository = mockk<ApprovedPremisesRepository>()
+  private val environmentService = mockk<EnvironmentService>()
 
   private val seedJob = Cas1BookingToSpaceBookingSeedJob(
     approvedPremisesRepository = approvedPremisesRepository,
@@ -33,6 +36,7 @@ class Cas1BookingToSpaceBookingSeedJobTest {
     cas1DeliusBookingImportRepository = mockk<Cas1DeliusBookingImportRepository>(),
     cas1BookingManagementInfoService = mockk<Cas1BookingManagementInfoService>(),
     placementRequestRepository = mockk<PlacementRequestRepository>(),
+    environmentService = environmentService,
   )
 
   @Test
@@ -46,5 +50,21 @@ class Cas1BookingToSpaceBookingSeedJobTest {
     assertThrows<RuntimeException> {
       seedJob.processRow(Cas1BookingToSpaceBookingSeedCsvRow("Q123"))
     }
+  }
+
+  @Test
+  fun `pre-seed fails if in prod`() {
+    every { environmentService.isProd() } returns true
+
+    assertThatThrownBy {
+      seedJob.preSeed()
+    }.hasMessage("Cannot run seed job in prod")
+  }
+
+  @Test
+  fun `pre-seed succeeds if not in prod`() {
+    every { environmentService.isProd() } returns false
+
+    seedJob.preSeed()
   }
 }
