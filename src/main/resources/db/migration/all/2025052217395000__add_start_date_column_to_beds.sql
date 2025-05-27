@@ -1,0 +1,1 @@
+ALTER TABLE beds ADD COLUMN start_date DATE NULL;
