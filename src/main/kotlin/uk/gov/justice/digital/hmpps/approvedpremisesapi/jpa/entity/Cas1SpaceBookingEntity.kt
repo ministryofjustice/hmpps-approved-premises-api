@@ -283,7 +283,7 @@ interface Cas1SpaceBookingDaySummarySearchResult {
   val crn: String
   val canonicalArrivalDate: LocalDate
   val canonicalDepartureDate: LocalDate
-  val tier: String
+  val tier: String?
   val releaseType: String
   val characteristicsPropertyNames: String
 }

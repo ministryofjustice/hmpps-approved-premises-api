@@ -423,7 +423,7 @@ interface OverlapBookingsSearchResult {
   val departureDate: LocalDate
   val premisesId: UUID
   val roomId: UUID
-  val assessmentId: UUID
+  val assessmentId: UUID?
   val sexualRisk: Boolean
 }
 
