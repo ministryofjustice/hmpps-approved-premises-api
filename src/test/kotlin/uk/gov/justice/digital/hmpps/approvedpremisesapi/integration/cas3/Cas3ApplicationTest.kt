@@ -634,6 +634,10 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             withSchema(schemaText())
           }
 
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(submittingUser.probationRegion)
+          }
+
           temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withId(applicationId)
@@ -657,6 +661,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                   val num = 50
                   val text = "Hello world!"
                 },
+                probationDeliveryUnitId = probationDeliveryUnit.id,
               ),
             )
             .exchange()
@@ -1117,6 +1122,10 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               withSchema(schemaText())
             }
 
+            val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(submittingUser.probationRegion)
+            }
+
             temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
@@ -1140,6 +1149,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                   val num = 50
                   val text = "Hello world!"
                 },
+                probationDeliveryUnitId = probationDeliveryUnit.id,
               )
 
               callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
@@ -1153,6 +1163,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                   val num = 50
                   val text = "Hello world!"
                 },
+                probationDeliveryUnitId = probationDeliveryUnit.id,
               )
 
               callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
@@ -1174,7 +1185,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     @CsvSource("CAS", "CAS3")
     fun `Submit Temporary Accommodation application returns 200 with optional elements in the request`(apiEndpoint: String) {
       givenAUser { submittingUser, jwt ->
-        givenAUser { _, _ ->
+        givenAUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
@@ -1184,13 +1195,17 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               withSchema(schemaText())
             }
 
+            val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+
             temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
               withProbationRegion(submittingUser.probationRegion)
-              withPdu("Probation Delivery Unit Test")
+              withProbationDeliveryUnit(probationDeliveryUnit)
               withHasHistoryOfSexualOffence(true)
               withIsConcerningSexualBehaviour(true)
               withIsConcerningArsonBehaviour(true)
@@ -1219,7 +1234,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                   val text = "Hello world!"
                 },
                 personReleaseDate = LocalDate.now(),
-                pdu = "Probation Delivery Unit Test",
                 isHistoryOfSexualOffence = true,
                 isConcerningSexualBehaviour = true,
                 isConcerningArsonBehaviour = true,
@@ -1243,7 +1257,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                   val text = "Hello world!"
                 },
                 personReleaseDate = LocalDate.now(),
-                pdu = "Probation Delivery Unit Test",
                 isHistoryOfSexualOffence = true,
                 isConcerningSexualBehaviour = true,
                 isConcerningArsonBehaviour = true,
@@ -1289,6 +1302,10 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               withSchema(schemaText())
             }
 
+            val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(submittingUser.probationRegion)
+            }
+
             temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
@@ -1312,6 +1329,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                 val num = 50
                 val text = "Hello world!"
               },
+              probationDeliveryUnitId = probationDeliveryUnit.id,
             )
 
             callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
@@ -1328,6 +1346,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                 val num = 50
                 val text = "Hello world!"
               },
+              probationDeliveryUnitId = probationDeliveryUnit.id,
             )
 
             callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)

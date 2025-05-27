@@ -97,7 +97,6 @@ class Cas3ApplicationService(
       eligibilityReason = submitApplication.eligibilityReason
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
       personReleaseDate = submitApplication.personReleaseDate
-      pdu = submitApplication.pdu
       prisonReleaseTypes = submitApplication.prisonReleaseTypes?.joinToString(",")
       probationDeliveryUnit = submitApplication.probationDeliveryUnitId?.let {
         probationDeliveryUnitRepository.findByIdOrNull(it)

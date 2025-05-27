@@ -26,6 +26,10 @@ class AssessmentStateTest : IntegrationTestBase() {
           withAddedAt(OffsetDateTime.now())
         }
 
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(userEntity.probationRegion)
+        }
+
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -38,7 +42,7 @@ class AssessmentStateTest : IntegrationTestBase() {
           )
         }
 
-        val assessment = application.submitAndGetAssessment(jwt)
+        val assessment = application.submitAndGetAssessment(jwt, probationDeliveryUnit.id)
         assessment.assertApiStatus(TemporaryAccommodationAssessmentStatus.unallocated, jwt)
 
         // Happy path: unallocated -> in_review -> ready_to_place -> closed
@@ -84,7 +88,7 @@ class AssessmentStateTest : IntegrationTestBase() {
     }
   }
 
-  private fun TemporaryAccommodationApplicationEntity.submitAndGetAssessment(jwt: String): TemporaryAccommodationAssessmentEntity {
+  private fun TemporaryAccommodationApplicationEntity.submitAndGetAssessment(jwt: String, probationDeliveryUnitId: UUID): TemporaryAccommodationAssessmentEntity {
     webTestClient.post()
       .uri("/applications/${this.id}/submission")
       .header("Authorization", "Bearer $jwt")
@@ -95,6 +99,7 @@ class AssessmentStateTest : IntegrationTestBase() {
           summaryData = {},
           type = "CAS3",
           translatedDocument = {},
+          probationDeliveryUnitId = probationDeliveryUnitId,
         ),
       )
       .exchange()

@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -370,6 +371,10 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
 
   protected fun userEntity(): UserEntity = userEntityFactory.produceAndPersist {
     withProbationRegion(givenAProbationRegion())
+  }
+
+  protected fun probationDeliveryUnitEntity(user: UserEntity): ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
+    withProbationRegion(user.probationRegion)
   }
 
   protected fun personRisks() = PersonRisksFactory()

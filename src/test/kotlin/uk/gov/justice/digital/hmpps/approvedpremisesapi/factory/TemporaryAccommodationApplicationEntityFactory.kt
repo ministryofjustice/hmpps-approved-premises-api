@@ -49,7 +49,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var dutyToReferLocalAuthorityAreaName: Yielded<String?> = { null }
   private var prisonNameAtReferral: Yielded<String?> = { null }
   private var personReleaseDate: Yielded<LocalDate?> = { null }
-  private var pdu: Yielded<String?> = { null }
   private var name: Yielded<String?> = { null }
   private var hasHistoryOfSexualOffence: Yielded<Boolean?> = { null }
   private var isConcerningSexualBehaviour: Yielded<Boolean?> = { null }
@@ -185,10 +184,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.personReleaseDate = { personReleaseDate }
   }
 
-  fun withPdu(pdu: String?) = apply {
-    this.pdu = { pdu }
-  }
-
   fun withName(name: String?) = apply {
     this.name = { name }
   }
@@ -250,7 +245,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     dutyToReferLocalAuthorityAreaName = this.dutyToReferLocalAuthorityAreaName(),
     prisonNameOnCreation = this.prisonNameAtReferral(),
     personReleaseDate = this.personReleaseDate(),
-    pdu = this.pdu(),
     name = this.name(),
     prisonReleaseTypes = this.prisonReleaseTypes(),
     probationDeliveryUnit = this.probationDeliveryUnit(),

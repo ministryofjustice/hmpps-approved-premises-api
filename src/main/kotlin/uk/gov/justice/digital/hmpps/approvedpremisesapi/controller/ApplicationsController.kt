@@ -512,7 +512,6 @@ class ApplicationsController(
     eligibilityReason = submitApplication.eligibilityReason,
     dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName,
     personReleaseDate = submitApplication.personReleaseDate,
-    pdu = submitApplication.pdu,
     probationDeliveryUnitId = submitApplication.probationDeliveryUnitId,
     isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence,
     isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour,

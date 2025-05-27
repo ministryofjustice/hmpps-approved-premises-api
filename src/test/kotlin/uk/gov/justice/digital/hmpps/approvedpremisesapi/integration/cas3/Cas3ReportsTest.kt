@@ -947,6 +947,10 @@ class Cas3ReportsTest : IntegrationTestBase() {
               withAddedAt(OffsetDateTime.now())
             }
 
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+
           val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
           val application =
             temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -984,7 +988,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               }
               withPrisonNameAtReferral("HM Hounslow")
               withPersonReleaseDate(LocalDate.now())
-              withPdu("Probation Delivery Unit Test")
+              withProbationDeliveryUnit(probationDeliveryUnit)
             }
 
           val assessment =
@@ -4249,7 +4253,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.prisonAtReferral).isEqualTo(application.prisonNameOnCreation)
     assertThat(actualReferralReportRow.releaseDate).isEqualTo(application.personReleaseDate)
     assertThat(actualReferralReportRow.updatedReleaseDate).isNull()
-    assertThat(actualReferralReportRow.pdu).isEqualTo(application.pdu)
+    assertThat(actualReferralReportRow.pdu).isEqualTo(application.probationDeliveryUnit?.name)
   }
 
   private fun createTemporaryAccommodationAssessmentForStatus(
