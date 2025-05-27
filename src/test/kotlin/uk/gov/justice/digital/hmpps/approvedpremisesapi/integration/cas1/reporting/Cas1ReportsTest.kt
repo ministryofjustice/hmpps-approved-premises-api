@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
+import java.time.LocalDate
 
 class Cas1ReportsTest : IntegrationTestBase() {
   val cas1Report: String = Cas1ReportName.outOfServiceBeds.value
@@ -25,7 +26,7 @@ class Cas1ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("Missing required query parameter year")
+        .jsonPath("$.detail").isEqualTo("Either year/month or startDate/endDate must be provided")
     }
   }
 
@@ -41,7 +42,7 @@ class Cas1ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("month must be between 1 and 12")
+        .jsonPath("$.detail").isEqualTo("Month must be between 1 and 12")
     }
   }
 
@@ -83,6 +84,76 @@ class Cas1ReportsTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .is5xxServerError
+    }
+  }
+
+  @Test
+  fun `Get report returns 400 if end date is missing`() {
+    val startDate = LocalDate.of(2025, 5, 1)
+
+    givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { _, jwt ->
+      webTestClient.get()
+        .uri("/cas1/reports/$cas1Report?startDate=$startDate")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", approvedPremisesServiceName)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("End date must be provided")
+    }
+  }
+
+  @Test
+  fun `Get report returns 400 if start date is missing`() {
+    val endDate = LocalDate.of(2025, 5, 1)
+
+    givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { _, jwt ->
+      webTestClient.get()
+        .uri("/cas1/reports/$cas1Report?endDate=$endDate")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", approvedPremisesServiceName)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("Start date must be provided")
+    }
+  }
+
+  @Test
+  fun `Get report returns 400 if start date is after end date`() {
+    val startDate = LocalDate.of(2025, 5, 2)
+    val endDate = LocalDate.of(2025, 5, 1)
+
+    givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { _, jwt ->
+      webTestClient.get()
+        .uri("/cas1/reports/$cas1Report?startDate=$startDate&endDate=$endDate")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", approvedPremisesServiceName)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("Start date cannot be after end date")
+    }
+  }
+
+  @Test
+  fun `Get report returns 400 if date range is more than a year`() {
+    val startDate = LocalDate.of(2024, 4, 1)
+    val endDate = LocalDate.of(2025, 5, 1)
+
+    givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { _, jwt ->
+      webTestClient.get()
+        .uri("/cas1/reports/$cas1Report?startDate=$startDate&endDate=$endDate")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", approvedPremisesServiceName)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("The date range must not exceed one year")
     }
   }
 }

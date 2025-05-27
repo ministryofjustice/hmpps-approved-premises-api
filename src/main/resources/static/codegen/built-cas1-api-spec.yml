@@ -1726,7 +1726,7 @@ paths:
       tags:
         - Reports
       summary: Returns a spreadsheet of all data metrics for the 'reportName'.
-      operationId: reportsReportNameGet
+      operationId: getReportByName
       parameters:
         - name: X-Service-Name
           in: header
@@ -1742,16 +1742,30 @@ paths:
             $ref: '#/components/schemas/Cas1ReportName'
         - name: year
           in: query
-          required: true
+          required: false
           description: The report content will reflect that specified by the given year.
           schema:
             type: integer
         - name: month
           in: query
-          required: true
+          required: false
           description: The report content will reflect that specified by the given month.
           schema:
             type: integer
+        - name: startDate
+          in: query
+          description: Start date, inclusive
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date, inclusive
+          required: false
+          schema:
+            type: string
+            format: date
       responses:
         200:
           description: Successfully retrieved the report
