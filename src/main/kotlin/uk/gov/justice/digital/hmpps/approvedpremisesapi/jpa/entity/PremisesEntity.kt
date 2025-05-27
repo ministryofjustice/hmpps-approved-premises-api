@@ -53,6 +53,7 @@ SELECT
         AND (:postcodeOrAddress is null
           OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
           )
         AND (:propertyStatus is null OR p.status = :propertyStatus)

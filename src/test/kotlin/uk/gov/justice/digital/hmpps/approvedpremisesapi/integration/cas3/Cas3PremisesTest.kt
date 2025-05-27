@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
@@ -48,7 +50,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Get future bookings for premises out of user region returns 403`() {
-      givenAUser { user, jwt ->
+      givenAUser { _, jwt ->
         val probationRegion = probationRegionEntityFactory.produceAndPersist()
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -314,7 +316,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
           withService("CAS3")
         }
 
-        var roomPremises1 = roomEntityFactory.produceAndPersist {
+        val roomPremises1 = roomEntityFactory.produceAndPersist {
           withYieldedPremises { expectedPremises }
         }
 
@@ -323,7 +325,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
           withEndDate { LocalDate.now() }
         }
 
-        var roomPremises2 = roomEntityFactory.produceAndPersist {
+        val roomPremises2 = roomEntityFactory.produceAndPersist {
           withYieldedPremises { expectedPremises }
         }
 
@@ -527,8 +529,9 @@ class Cas3PremisesTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get all premises filters correctly when a premises address is passed in the query parameter`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["addressLine1", "addressLine2"])
+    fun `Get all premises filters correctly when a premises address is passed in the query parameter`(addressLineField: String) {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = getListPremises(user.probationRegion)
 
@@ -537,9 +540,15 @@ class Cas3PremisesTest : IntegrationTestBase() {
 
         val expectedPremisesSummaryAddress = premisesSummaryTransformer(expectedPremisesAddress)
 
+        val addressLine = when (addressLineField) {
+          "addressLine1" -> expectedPremisesAddress.addressLine1
+          "addressLine2" -> expectedPremisesAddress.addressLine2
+          else -> error("unexpected value $addressLineField")
+        }
+
         assertUrlReturnsPremises(
           jwt,
-          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesAddress.addressLine1}",
+          "/cas3/premises/summary?postcodeOrAddress=$addressLine",
           listOf(expectedPremisesSummaryAddress),
         )
 
@@ -548,9 +557,15 @@ class Cas3PremisesTest : IntegrationTestBase() {
 
         val expectedPremisesSummaryPartialAddress = premisesSummaryTransformer(expectedPremisesPartialAddress)
 
+        val partialAddressLine = when (addressLineField) {
+          "addressLine1" -> expectedPremisesPartialAddress.addressLine1
+          "addressLine2" -> expectedPremisesPartialAddress.addressLine2!!
+          else -> error("unexpected value $addressLineField")
+        }
+
         assertUrlReturnsPremises(
           jwt,
-          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesPartialAddress.addressLine1.split(" ").last()}",
+          "/cas3/premises/summary?postcodeOrAddress=${partialAddressLine.split(" ").last()}",
           listOf(expectedPremisesSummaryPartialAddress),
         )
       }
@@ -558,7 +573,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Get all premises returns successfully with no premises when a postcode or address is passed in the query parameter and doesn't match any premises`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         assertUrlReturnsPremises(
           jwt,
           "/cas3/premises/summary?postcodeOrAddress=${randomStringMultiCaseWithNumbers(10)}",
