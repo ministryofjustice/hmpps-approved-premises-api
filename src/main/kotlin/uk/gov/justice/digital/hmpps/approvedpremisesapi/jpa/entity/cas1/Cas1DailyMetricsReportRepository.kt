@@ -27,7 +27,7 @@ class Cas1DailyMetricsReportRepository(
                COUNT(DISTINCT CAST(application.created_by_user_id AS TEXT)) AS unique_users_starting_applications
            FROM approved_premises_applications apa
                INNER JOIN applications application ON application.id = apa.id
-           WHERE application.created_at BETWEEN :start_date AND :end_date
+           WHERE DATE(application.created_at) BETWEEN :start_date AND :end_date
            GROUP BY DATE(application.created_at)
          ),
        domain_events_by_day AS (
@@ -43,7 +43,7 @@ class Cas1DailyMetricsReportRepository(
                COUNT(DISTINCT CAST(domain_event.data->'eventDetails'->>'bookedBy' AS TEXT))
                FILTER (WHERE domain_event.type = 'APPROVED_PREMISES_BOOKING_MADE') AS unique_users_making_bookings
            FROM domain_events domain_event
-           WHERE domain_event.occurred_at BETWEEN :start_date AND :end_date
+           WHERE DATE(domain_event.occurred_at) BETWEEN :start_date AND :end_date
            AND domain_event.service='CAS1'
            GROUP BY DATE(domain_event.occurred_at)
         )
