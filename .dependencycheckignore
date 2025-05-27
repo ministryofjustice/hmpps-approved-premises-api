@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes><![CDATA[
+        As we trust the XLSX files we import, we are safe to ignore this vulnerability
+
+        note that there isn't currently a version of dataframe-excel that use a version
+        of POI that resolves this issue. Once there is, we should upgrade to it and
+        remove this suppression
+        ]]></notes>
+        <packageUrl regex="true">^.*org.apache.poi.*$</packageUrl>
+        <vulnerabilityName>CVE-2025-31672</vulnerabilityName>
+    </suppress>
+</suppressions>
