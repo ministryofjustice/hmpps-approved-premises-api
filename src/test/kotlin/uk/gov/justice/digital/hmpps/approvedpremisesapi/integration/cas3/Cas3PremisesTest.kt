@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
@@ -714,6 +715,196 @@ class Cas3PremisesTest : IntegrationTestBase() {
         bedspaceCount = bedspaces.filter { it.status == Cas3BedspaceSummary.Status.online }.size,
         localAuthorityAreaName = premises.localAuthorityArea?.name!!,
       )
+    }
+  }
+
+  @Nested
+  inner class GetPremisesBedspaces {
+    @Test
+    fun `Get all Bedspaces returns OK with correct bedspaces sorted`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premisesId = UUID.randomUUID()
+
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withId(premisesId)
+          withProbationRegion(user.probationRegion)
+          withProbationDeliveryUnit(probationDeliveryUnit)
+          withLocalAuthorityArea(localAuthorityArea)
+        }
+
+        roomEntityFactory.produceAndPersistMultiple(5) {
+          withYieldedPremises { premises }
+        }.apply { premises.rooms.addAll(this) }
+
+        premises.rooms.forEachIndexed { index, room ->
+          val startDate = LocalDate.now().minusDays(index.toLong())
+          bedEntityFactory.produceAndPersist {
+            withRoom(room)
+            withStartDate(startDate)
+            withEndDate(startDate.plusDays(2))
+          }.apply { room.beds.add(this) }
+        }
+
+        val roomWithoutEndDate = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBeds()
+        }.apply { premises.rooms.add(this) }
+
+        bedEntityFactory.produceAndPersist {
+          withRoom(roomWithoutEndDate)
+          withStartDate(LocalDate.now())
+        }.apply { roomWithoutEndDate.beds.add(this) }
+
+        val expectedBedspaces = premises.rooms.map { room ->
+          val bed = room.beds.first()
+          Cas3Bedspace(
+            id = bed.id,
+            reference = room.name,
+            startDate = bed.startDate,
+            characteristics = emptyList(),
+            endDate = bed.endDate,
+            notes = room.notes,
+          )
+        }
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/$premisesId/bedspaces",
+          expectedBedspaces,
+        )
+      }
+    }
+
+    @Test
+    fun `Get all Bedspaces returns OK with rooms with no beds filtered out`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premisesId = UUID.randomUUID()
+
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withId(premisesId)
+          withProbationRegion(user.probationRegion)
+          withProbationDeliveryUnit(probationDeliveryUnit)
+          withLocalAuthorityArea(localAuthorityArea)
+        }
+
+        val room1 = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBeds()
+        }.apply { premises.rooms.add(this) }
+
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBeds()
+        }.apply { premises.rooms.add(this) }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room1)
+          withEndDate(LocalDate.now())
+        }.apply { premises.rooms.first().beds.add(this) }
+
+        val expectedBedspaces = listOf(
+          Cas3Bedspace(
+            id = bed.id,
+            reference = room1.name,
+            startDate = bed.startDate,
+            characteristics = emptyList(),
+            endDate = bed.endDate,
+            notes = room1.notes,
+          ),
+        )
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/$premisesId/bedspaces",
+          expectedBedspaces,
+        )
+      }
+    }
+
+    @Test
+    fun `Get Bedspaces by ID returns Not Found with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
+        val premisesId = UUID.randomUUID().toString()
+
+        webTestClient.get()
+          .uri("/cas3/premises/$premisesId/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectHeader().contentType("application/problem+json")
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("title").isEqualTo("Not Found")
+          .jsonPath("status").isEqualTo(404)
+          .jsonPath("detail").isEqualTo("No Premises with an ID of $premisesId could be found")
+      }
+    }
+
+    @Test
+    fun `Trying to get bedspaces the user is not authorized to view should return 403`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt1 ->
+        givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { user2, _ ->
+
+          val premisesId = UUID.randomUUID()
+
+          val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user2.probationRegion)
+          }
+
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withId(premisesId)
+            withProbationRegion(user2.probationRegion)
+            withProbationDeliveryUnit(probationDeliveryUnit)
+            withLocalAuthorityArea(localAuthorityArea)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/premises/$premisesId/bedspaces")
+            .header("Authorization", "Bearer $jwt1")
+            .exchange()
+            .expectHeader().contentType("application/problem+json")
+            .expectStatus()
+            .isForbidden
+            .expectBody()
+            .jsonPath("title").isEqualTo("Forbidden")
+            .jsonPath("status").isEqualTo(403)
+            .jsonPath("detail").isEqualTo("You are not authorized to access this endpoint")
+        }
+      }
+    }
+
+    private fun assertUrlReturnsPremises(
+      jwt: String,
+      url: String,
+      expectedPremisesSummaries: List<Cas3Bedspace>,
+    ): WebTestClient.ResponseSpec {
+      val response = webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val responseBody = response
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremisesSummaries))
+
+      return response
     }
   }
 }

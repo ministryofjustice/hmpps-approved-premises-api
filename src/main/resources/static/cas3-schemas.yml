@@ -199,6 +199,34 @@ components:
         - probationDeliveryUnits
         - startDate
         - durationDays
+    Cas3Bedspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        startDate:
+          type: string
+          format: date
+          example: 2024-07-30
+          description: Start date of the bedspace availability
+        endDate:
+          type: string
+          format: date
+          example: 2024-12-30
+          description: End date of the bedspace availability
+        notes:
+          type: string
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Characteristic'
+      required:
+        - id
+        - reference
+        - characteristics
     PremisesFilters:
       type: object
       properties:

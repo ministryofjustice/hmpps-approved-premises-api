@@ -342,7 +342,29 @@ paths:
                 type: array
                 items:
                   $ref: 'cas3-schemas.yml#/components/schemas/FutureBooking'
-
+  /premises/{premisesId}/bedspaces:
+    get:
+      tags:
+        - Bedspaces
+      summary: Lists all bedspaces for the given premises
+      operationId: getPremisesBedspaces
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to list the bedspaces for
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas3-schemas.yml#/components/schemas/Cas3Bedspace'
   /bedspaces/search:
     post:
       summary: Searches for available Beds within the given parameters
