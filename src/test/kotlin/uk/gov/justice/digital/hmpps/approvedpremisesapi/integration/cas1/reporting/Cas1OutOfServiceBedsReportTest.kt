@@ -6,7 +6,7 @@ import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
 import org.jetbrains.kotlinx.dataframe.api.toList
-import org.jetbrains.kotlinx.dataframe.io.readExcel
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
@@ -171,18 +171,24 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get out-of-service beds report without PII`() {
     val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER))
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
 
     webTestClient.get()
-      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBeds.value}?year=2023&month=4")
+      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBeds.value}?startDate=$startDate&endDate=$endDate")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
       .expectStatus()
       .isOk
+      .expectHeader().valuesMatch(
+        "content-disposition",
+        "attachment; filename=\"out-of-service-beds-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"",
+      )
       .expectBody()
       .consumeWith {
         val actual = DataFrame
-          .readExcel(it.responseBody!!.inputStream())
+          .readCSV(it.responseBody!!.inputStream())
           .convertTo<Cas1OutOfServiceBedReportRowWithoutPii>(ExcessiveColumns.Fail)
           .sortBy { row -> row["bedName"] }
 
@@ -227,18 +233,24 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get out-of-service beds report with PII`() {
     val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER_WITH_PII))
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
 
     webTestClient.get()
-      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBedsWithPii.value}?year=2023&month=4")
+      .uri("/cas1/reports/${Cas1ReportName.outOfServiceBedsWithPii.value}?startDate=$startDate&endDate=$endDate")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
       .expectStatus()
       .isOk
+      .expectHeader().valuesMatch(
+        "content-disposition",
+        "attachment; filename=\"out-of-service-beds-with-pii-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"",
+      )
       .expectBody()
       .consumeWith {
         val actual = DataFrame
-          .readExcel(it.responseBody!!.inputStream())
+          .readCSV(it.responseBody!!.inputStream())
           .convertTo<Cas1OutOfServiceBedReportRowWithPii>(ExcessiveColumns.Fail)
           .sortBy { row -> row["bedName"] }
 

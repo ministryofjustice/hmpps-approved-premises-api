@@ -112,12 +112,6 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     nativeQuery = true,
   )
   fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): List<String>
-
-  @Query(
-    "SELECT bed_id FROM cas1_out_of_service_beds GROUP by bed_id",
-    nativeQuery = true,
-  )
-  fun findBedIdsWithAtLeastOneOutOfServiceBedRecord(): List<UUID>
 }
 
 @Entity
