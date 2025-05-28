@@ -165,7 +165,7 @@ class Cas1BookingToSpaceBookingSeedJob(
     }
 
     if (shouldExistInDelius && deliusImport == null) {
-      log.warn("Could not retrieve referral details from delius import for booking ${booking.id}")
+      log.warn("Could not retrieve referral details from delius import for booking ${booking.id}, created at ${booking.createdAt}. offline app? ${booking.offlineApplication != null}")
     }
 
     return if (deliusImport != null) {
