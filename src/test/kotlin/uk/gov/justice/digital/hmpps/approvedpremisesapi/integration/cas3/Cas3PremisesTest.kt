@@ -13,23 +13,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3FutureBookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.util.UUID
@@ -772,7 +778,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
           )
         }
 
-        assertUrlReturnsPremises(
+        assertUrlReturnsBedspaces(
           jwt,
           "/cas3/premises/$premisesId/bedspaces",
           expectedBedspaces,
@@ -823,7 +829,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
           ),
         )
 
-        assertUrlReturnsPremises(
+        assertUrlReturnsBedspaces(
           jwt,
           "/cas3/premises/$premisesId/bedspaces",
           expectedBedspaces,
@@ -885,7 +891,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
       }
     }
 
-    private fun assertUrlReturnsPremises(
+    private fun assertUrlReturnsBedspaces(
       jwt: String,
       url: String,
       expectedPremisesSummaries: List<Cas3Bedspace>,
@@ -905,6 +911,155 @@ class Cas3PremisesTest : IntegrationTestBase() {
       assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremisesSummaries))
 
       return response
+    }
+  }
+
+  @Nested
+  inner class GetBedspace {
+    @Autowired
+    lateinit var cas3BedspaceTransformer: Cas3BedspaceTransformer
+
+    @Test
+    fun `Get Bedspace by ID returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+
+        val roomCharacteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.room)
+        val roomCharacteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
+
+        val (premises, bedspace) = createPremisesAndBedspace(
+          user.probationRegion,
+          listOf(roomCharacteristicOne, roomCharacteristicTwo),
+        )
+
+        val expectedBedspace = Cas3Bedspace(
+          id = bedspace.id,
+          reference = bedspace.room.name,
+          startDate = bedspace.startDate,
+          endDate = bedspace.endDate,
+          characteristics = listOf(
+            Characteristic(
+              id = roomCharacteristicOne.id,
+              name = roomCharacteristicOne.name,
+              propertyName = roomCharacteristicOne.propertyName,
+              serviceScope = Characteristic.ServiceScope.temporaryMinusAccommodation,
+              modelScope = Characteristic.ModelScope.room,
+            ),
+            Characteristic(
+              id = roomCharacteristicTwo.id,
+              name = roomCharacteristicTwo.name,
+              propertyName = roomCharacteristicTwo.propertyName,
+              serviceScope = Characteristic.ServiceScope.temporaryMinusAccommodation,
+              modelScope = Characteristic.ModelScope.room,
+            ),
+          ),
+          notes = bedspace.room.notes,
+        )
+
+        val responseBosy = webTestClient.get()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        assertThat(responseBosy).isEqualTo(objectMapper.writeValueAsString(expectedBedspace))
+      }
+    }
+
+    @Test
+    fun `Get Bedspace by ID returns Not Found with correct body when Premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = createPremisesAndBedspace(user.probationRegion, emptyList())
+
+        val unexistPremisesId = UUID.randomUUID().toString()
+
+        webTestClient.get()
+          .uri("/cas3/premises/$unexistPremisesId/bedspaces/${bedspace.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectHeader().contentType("application/problem+json")
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("title").isEqualTo("Not Found")
+          .jsonPath("status").isEqualTo(404)
+          .jsonPath("detail").isEqualTo("No Premises with an ID of $unexistPremisesId could be found")
+      }
+    }
+
+    @Test
+    fun `Get Bedspace by ID returns Not Found with correct body when Bedspace does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = createPremisesAndBedspace(user.probationRegion, emptyList())
+
+        val unexistBedspaceId = UUID.randomUUID().toString()
+
+        webTestClient.get()
+          .uri("/cas3/premises/${premises.id}/bedspaces/$unexistBedspaceId")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectHeader().contentType("application/problem+json")
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("title").isEqualTo("Not Found")
+          .jsonPath("status").isEqualTo(404)
+          .jsonPath("detail").isEqualTo("No Bedspace with an ID of $unexistBedspaceId could be found")
+      }
+    }
+
+    @Test
+    fun `Get Bedspace by ID for a Premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser { _, jwt ->
+        val otherRegion = givenAProbationRegion()
+        val (premises, bedspace) = createPremisesAndBedspace(otherRegion, emptyList())
+
+        webTestClient.get()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    private fun createPremisesAndBedspace(probationRegion: ProbationRegionEntity, roomCharacteristics: List<CharacteristicEntity>): Pair<TemporaryAccommodationPremisesEntity, BedEntity> {
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+        withProbationRegion(probationRegion)
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withName(randomStringMultiCaseWithNumbers(10))
+        withNotes(randomStringLowerCase(100))
+        withCharacteristicsList(roomCharacteristics)
+      }
+
+      val bedspace = bedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.now().minusDays(120))
+        withRoom(room)
+      }
+
+      return Pair(premises, bedspace)
+    }
+
+    private fun produceCharacteristic(
+      propertyName: String,
+      modelScope: Characteristic.ModelScope,
+    ): CharacteristicEntity {
+      val characteristicTwo = characteristicRepository.save(
+        CharacteristicEntityFactory()
+          .withPropertyName(propertyName)
+          .withServiceScope(ServiceName.temporaryAccommodation.value)
+          .withModelScope(modelScope.value)
+          .produce(),
+      )
+      return characteristicTwo
     }
   }
 }
