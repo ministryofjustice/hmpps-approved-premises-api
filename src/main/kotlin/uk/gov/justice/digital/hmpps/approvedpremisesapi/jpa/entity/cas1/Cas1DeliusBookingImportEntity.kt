@@ -15,7 +15,8 @@ interface Cas1DeliusBookingImportRepository : JpaRepository<Cas1DeliusBookingImp
   fun findByBookingId(id: UUID): Cas1DeliusBookingImportEntity?
 
   /**
-   * Returns all active bookings created in delius that were not created in CAS1
+   * Returns all active bookings created in delius that were not created in CAS1, using the data in
+   * the [Cas1DeliusBookingImportEntity] table
    *
    * An active booking is one that:
    *
@@ -27,7 +28,8 @@ interface Cas1DeliusBookingImportRepository : JpaRepository<Cas1DeliusBookingImp
    * most likely because they were created in older versions of delius that did not capture this data
    *
    * Note that the [Cas1DeliusBookingImportEntity] table only includes accepted bookings (i.e. not rejected),
-   * so these are already filtered out
+   * so these are already filtered out. It also doesn't include cancelled bookings, because these are deleted
+   * in delius
    */
   @Query(
     """
