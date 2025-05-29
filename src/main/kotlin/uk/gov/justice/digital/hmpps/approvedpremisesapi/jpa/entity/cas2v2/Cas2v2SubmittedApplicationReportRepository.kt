@@ -48,8 +48,8 @@ interface Cas2v2SubmittedApplicationReportRow {
   fun getPersonNoms(): String
   fun getPersonCrn(): String
   fun getReferringPrisonCode(): String
-  fun getPreferredAreas(): String
-  fun getHdcEligibilityDate(): String
-  fun getConditionalReleaseDate(): String
+  fun getPreferredAreas(): String?
+  fun getHdcEligibilityDate(): String?
+  fun getConditionalReleaseDate(): String?
   fun getStartedAt(): String
 }

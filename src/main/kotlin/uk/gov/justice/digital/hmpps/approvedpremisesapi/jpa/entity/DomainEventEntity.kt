@@ -142,6 +142,9 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 data class DomainEventEntity(
   @Id
   val id: UUID,
+  /**
+   * This is always provided for CAS1 and CAS2 events (e.g service='CAS1|CAS2')
+   */
   val applicationId: UUID?,
   val assessmentId: UUID?,
   val bookingId: UUID?,

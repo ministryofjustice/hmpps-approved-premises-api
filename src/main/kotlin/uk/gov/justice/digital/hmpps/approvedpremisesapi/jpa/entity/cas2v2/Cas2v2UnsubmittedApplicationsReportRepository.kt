@@ -32,7 +32,7 @@ interface Cas2v2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2v2Ap
 interface Cas2v2UnsubmittedApplicationReportRow {
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin
-  fun getPersonNoms(): String
+  fun getPersonNoms(): String?
   fun getPersonCrn(): String
   fun getStartedBy(): String
   fun getStartedAt(): String
