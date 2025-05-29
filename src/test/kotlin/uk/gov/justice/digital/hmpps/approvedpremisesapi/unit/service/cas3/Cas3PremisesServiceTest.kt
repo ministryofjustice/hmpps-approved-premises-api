@@ -560,7 +560,7 @@ class Cas3PremisesServiceTest {
       .produce()
 
     every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
-    every { localAuthorityAreaRepositoryMock.findByIdOrNull(premises.localAuthorityArea?.id) } returns localAuthority
+    every { localAuthorityAreaRepositoryMock.findByIdOrNull(premises.localAuthorityArea!!.id) } returns localAuthority
     every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
     every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit
     every { bookingRepositoryMock.findFutureBookingsByPremisesIdAndStatus(ServiceName.temporaryAccommodation.value, premises.id, any(), any()) } returns listOf(booking)

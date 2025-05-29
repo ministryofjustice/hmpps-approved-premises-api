@@ -459,7 +459,7 @@ class AssessmentService(
     assessment.rejectionRationale = rejectionRationale
 
     if (assessment is TemporaryAccommodationAssessmentEntity) {
-      val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId)
+      val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId ?: error("rejection id must be defined"))
         ?: throw InternalServerErrorProblem("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
 
       assessment.completedAt = null

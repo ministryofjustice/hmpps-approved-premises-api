@@ -384,11 +384,11 @@ interface Cas1PlacementRequestSummary {
   fun getRequestedPlacementArrivalDate(): LocalDate
   fun getId(): UUID
   fun getPersonCrn(): String
-  fun getPersonTier(): String
+  fun getPersonTier(): String?
   fun getApplicationId(): UUID
   fun getPlacementRequestStatus(): PlacementRequestStatus
   fun getApplicationSubmittedDate(): LocalDate
   fun getIsParole(): Boolean
-  fun getBookingPremisesName(): String
-  fun getBookingArrivalDate(): LocalDate
+  fun getBookingPremisesName(): String?
+  fun getBookingArrivalDate(): LocalDate?
 }
