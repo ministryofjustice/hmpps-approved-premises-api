@@ -185,7 +185,7 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
     premisesIds: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
-  ): List<OverlapBookingsSearchResult>
+  ): List<Cas3OverlapBookingsSearchResult>
 
   /*
   This query is to find the closest booking to the start date for the current bedspace search
@@ -279,7 +279,7 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
     probationRegionId: UUID?,
     crnOrName: String?,
     pageable: Pageable?,
-  ): Page<BookingSearchResult>
+  ): Page<Cas3BookingSearchResult>
 }
 
 @Entity
@@ -396,7 +396,7 @@ data class BookingEntity(
 }
 
 @Suppress("TooManyFunctions")
-interface BookingSearchResult {
+interface Cas3BookingSearchResult {
   fun getPersonName(): String?
   fun getPersonCrn(): String
   fun getBookingStatus(): String
@@ -416,7 +416,7 @@ interface BookingSearchResult {
   fun getBedName(): String
 }
 
-interface OverlapBookingsSearchResult {
+interface Cas3OverlapBookingsSearchResult {
   val bookingId: UUID
   val crn: String
   val arrivalDate: LocalDate

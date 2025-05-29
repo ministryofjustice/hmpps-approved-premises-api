@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -12,7 +12,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class TestBookingSearchResult : BookingSearchResult {
+class TestBookingSearchResult : Cas3BookingSearchResult {
   private var personName: String? = null
   private var personCrn: String = randomStringMultiCaseWithNumbers(6)
   private var bookingId: UUID = UUID.randomUUID()
