@@ -9,11 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.successOrErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.Companion.MAX_LENGTH_YEARS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingChangedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 /**
@@ -114,6 +116,10 @@ class Cas1SpaceBookingUpdateService(
 
     if (effectiveDepartureDate.isBefore(effectiveArrivalDate)) {
       "$.departureDate" hasValidationError "The departure date is before the arrival date."
+    }
+
+    if (ChronoUnit.YEARS.between(effectiveArrivalDate, effectiveDepartureDate) >= MAX_LENGTH_YEARS) {
+      "$.departureDate" hasValidationError "mustBeLessThan2Years"
     }
 
     return successOrErrors()

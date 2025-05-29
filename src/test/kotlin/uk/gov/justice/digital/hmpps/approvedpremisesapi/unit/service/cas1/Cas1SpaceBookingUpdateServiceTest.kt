@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
@@ -51,9 +50,6 @@ class Cas1SpaceBookingUpdateServiceTest {
   @Nested
   inner class Validate {
 
-    private val newArrivalDate = LocalDate.of(2025, 1, 2)
-    private val newDepartureDate = LocalDate.now().plusMonths(1)
-
     private val user = UserEntityFactory()
       .withDefaults()
       .produce()
@@ -72,6 +68,9 @@ class Cas1SpaceBookingUpdateServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns null
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
+      val newArrivalDate = LocalDate.of(2025, 1, 2)
+      val newDepartureDate = LocalDate.now().plusMonths(1)
+
       val result = service.validate(
         UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
@@ -84,18 +83,16 @@ class Cas1SpaceBookingUpdateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.premisesId" && value == "doesNotExist"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotExist")
     }
 
     @Test
     fun `should return validation error if no space booking exist with the given bookingId`() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+
+      val newArrivalDate = LocalDate.of(2025, 1, 2)
+      val newDepartureDate = LocalDate.now().plusMonths(1)
 
       val result = service.validate(
         UpdateBookingDetails(
@@ -122,6 +119,9 @@ class Cas1SpaceBookingUpdateServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
+      val newArrivalDate = LocalDate.of(2025, 1, 2)
+      val newDepartureDate = LocalDate.now().plusMonths(1)
+
       val result = service.validate(
         UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
@@ -146,6 +146,9 @@ class Cas1SpaceBookingUpdateServiceTest {
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val newArrivalDate = LocalDate.of(2025, 1, 2)
+      val newDepartureDate = LocalDate.now().plusMonths(1)
 
       val result = service.validate(
         UpdateBookingDetails(
@@ -172,6 +175,9 @@ class Cas1SpaceBookingUpdateServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
+      val newArrivalDate = LocalDate.of(2025, 1, 2)
+      val newDepartureDate = LocalDate.now().plusMonths(1)
+
       val result = service.validate(
         UpdateBookingDetails(
           bookingId = UUID.randomUUID(),
@@ -191,6 +197,9 @@ class Cas1SpaceBookingUpdateServiceTest {
     fun `should return validation error when premisesId does not match the existing booking`() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val newArrivalDate = LocalDate.of(2025, 1, 2)
+      val newDepartureDate = LocalDate.now().plusMonths(1)
 
       val result = service.validate(
         UpdateBookingDetails(
@@ -230,6 +239,33 @@ class Cas1SpaceBookingUpdateServiceTest {
       assertThatCasResult(result)
         .isFieldValidationError()
         .hasMessage("$.departureDate", "The departure date is before the arrival date.")
+    }
+
+    @Test
+    fun `should return validation error before arrival when new departure date creates a booking of two years`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 5)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 15)
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val newArrivalDate = LocalDate.of(2025, 6, 17)
+
+      val result = service.validate(
+        UpdateBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = premises.id,
+          arrivalDate = newArrivalDate,
+          departureDate = newArrivalDate.plusYears(2),
+          updatedBy = user,
+          characteristics = null,
+          updateType = UpdateType.AMENDMENT,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "mustBeLessThan2Years")
     }
 
     @Test
@@ -309,12 +345,42 @@ class Cas1SpaceBookingUpdateServiceTest {
     }
 
     @Test
+    fun `should return validation error after arrival when new departure date creates a booking of two years`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 15)
+      existingSpaceBooking.actualArrivalDate = LocalDate.of(2025, 6, 20)
+      val originalDepartureDate = LocalDate.of(2025, 6, 25)
+      existingSpaceBooking.expectedDepartureDate = originalDepartureDate
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.validate(
+        UpdateBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = premises.id,
+          arrivalDate = null,
+          departureDate = originalDepartureDate.plusYears(2),
+          updatedBy = user,
+          characteristics = null,
+          updateType = UpdateType.AMENDMENT,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "mustBeLessThan2Years")
+    }
+
+    @Test
     fun valid() {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
       val originalRoomCharacteristic =
         CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
       existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
+
+      val newArrivalDate = LocalDate.of(2025, 1, 2)
+      val newDepartureDate = newArrivalDate.plusYears(2).minusDays(1)
 
       val updateBookingDetails = UpdateBookingDetails(
         bookingId = UUID.randomUUID(),
