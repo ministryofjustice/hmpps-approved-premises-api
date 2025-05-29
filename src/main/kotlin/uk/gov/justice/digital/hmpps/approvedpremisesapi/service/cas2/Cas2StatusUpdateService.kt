@@ -174,6 +174,7 @@ class StatusUpdateService(
     )
   }
 
+  // BAIL-WIP - we only use the email address in the function, can we just pass that instead
   private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
     if (application.getCreatedByUserEmail() != null) { // BAIL-WIP
       emailNotificationService.sendCas2Email(
@@ -189,9 +190,9 @@ class StatusUpdateService(
         ),
       )
     } else {
-      // BAIL-WIP
-      log.error("Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}")
+      val msg = "Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}"
+      log.error(msg)
+      Sentry.captureMessage(msg)
     }
   }
 }
