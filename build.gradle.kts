@@ -63,7 +63,7 @@ dependencies {
 
   implementation("io.arrow-kt:arrow-core:1.2.4")
 
-  implementation("com.opencsv:opencsv:5.9")
+  implementation("com.opencsv:opencsv:5.11")
 
   implementation("net.javacrumbs.shedlock:shedlock-spring:5.16.0")
   implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:5.16.0")
