@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserEntity
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID

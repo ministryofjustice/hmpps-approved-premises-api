@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2StatusUpdateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
@@ -48,8 +47,6 @@ class Cas2EmailServiceTest {
   )
   private val oldUser = NomisUserEntityFactory().produce()
   private val newUser = NomisUserEntityFactory().produce()
-  private val newerUser = NomisUserEntityFactory().produce()
-  private val cas2User = Cas2UserEntityFactory().produce()
   private val oldOmu = OffenderManagementUnitEntityFactory()
     .withPrisonCode("LIV")
     .withPrisonName("HMP LIVERPOOL")
@@ -99,7 +96,7 @@ class Cas2EmailServiceTest {
     .produce()
 
   @Test
-  fun `send allocation changed emails newUser`() {
+  fun `send allocation changed emails`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
@@ -135,49 +132,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) // BAIL-WIP
-
-    verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
-  }
-
-  @Test
-  fun `send allocation changed emails cas2User`() {
-    application.applicationAssignments.add(applicationAssignmentNew)
-    application.applicationAssignments.add(applicationAssignmentOld)
-    application.applicationAssignments.add(applicationAssignmentOlder)
-
-    every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
-    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
-    every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
-    every {
-      emailNotificationService.sendCas2Email(
-        eq(cas2User.email!!),
-        eq(Cas2NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom),
-        eq(
-          mapOf(
-            "nomsNumber" to nomsNumber,
-            "transferringPrisonName" to oldOmu.prisonName,
-            "link" to link,
-            "applicationStatus" to cas2StatusUpdateEntity.label,
-          ),
-        ),
-      )
-    } returns Unit
-    every {
-      emailNotificationService.sendCas2Email(
-        eq(nacroEmail),
-        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom),
-        eq(
-          mapOf(
-            "nomsNumber" to nomsNumber,
-            "receivingPrisonName" to newOmu.prisonName,
-            "link" to assessorLink,
-          ),
-        ),
-      )
-    } returns Unit
-
-    emailService.sendAllocationChangedEmails(application, cas2User.email!!, newOmu.prisonCode) // BAIL-WIP
+    emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode)
 
     verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
@@ -219,9 +174,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) } // BAIL-WIP
-    assertThat(exception.message).isEqualTo("StatusUpdate for ${application.id} not found")
-    emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode)
+    emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode)
 
     verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
@@ -235,7 +188,7 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns null
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) } // BAIL-WIP
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) }
     assertThat(exception.message).isEqualTo("No OMU found for new prison code ${newOmu.prisonCode}.")
   }
 
@@ -247,7 +200,7 @@ class Cas2EmailServiceTest {
 
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns null
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) } // BAIL-WIP
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) }
     assertThat(exception.message).isEqualTo("No OMU found for old prison code ${oldOmu.prisonCode}.")
   }
 
@@ -256,7 +209,7 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) } // BAIL-WIP
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) }
     assertThat(exception.message).isEqualTo("Old prison code not found.")
   }
 
@@ -545,44 +498,6 @@ class Cas2EmailServiceTest {
     val result = emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode)
 
     assertThat(result).isEqualTo(applicationAssignmentOlder.prisonCode)
-  }
-
-  @Test
-  fun `getOldPomUserId should get created by ID`() {
-    application.createApplicationAssignment(application.referringPrisonCode!!, application.createdByUser)
-    application.createApplicationAssignment(prisoner.prisonId, null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    val result = emailService.getOldPomUserId(application, prisoner.prisonId)
-
-    assertThat(result).isEqualTo(application.getCreatedById()) // BAIL-WIP
-  }
-
-  @Test
-  fun `should get old pom user id`() {
-    application.createApplicationAssignment(application.referringPrisonCode!!, application.createdByUser)
-    application.createApplicationAssignment(oldOmu.prisonCode, null)
-    application.createApplicationAssignment(oldOmu.prisonCode, newUser)
-    application.createApplicationAssignment(prisoner.prisonId, null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    val result = emailService.getOldPomUserId(application, prisoner.prisonId)
-
-    assertThat(result).isEqualTo(newUser.id)
-  }
-
-  @Test
-  fun `should get old pom user id and miss earlier allocation event`() {
-    application.createApplicationAssignment(application.referringPrisonCode!!, application.createdByUser)
-    application.createApplicationAssignment(oldOmu.prisonCode, null)
-    application.createApplicationAssignment(oldOmu.prisonCode, newUser)
-    application.createApplicationAssignment(prisoner.prisonId, newerUser)
-    application.createApplicationAssignment(prisoner.prisonId, null)
-    application.applicationAssignments.sortByDescending { it.createdAt }
-
-    val result = emailService.getOldPomUserId(application, prisoner.prisonId)
-
-    assertThat(result).isEqualTo(newUser.id)
   }
 
   @Test
