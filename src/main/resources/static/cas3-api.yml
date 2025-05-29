@@ -365,6 +365,38 @@ paths:
                 type: array
                 items:
                   $ref: 'cas3-schemas.yml#/components/schemas/Cas3Bedspace'
+  /premises/{premisesId}/bedspaces/{bedspaceId}:
+    get:
+      summary: Returns a specific bedspace for a premises
+      operationId: getPremisesBedspace
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the bedspace is in
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bedspaceId
+          in: path
+          description: ID of the bedspace to get
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3Bedspace'
+        404:
+          description: invalid premises ID or bedspace ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
   /bedspaces/search:
     post:
       summary: Searches for available Beds within the given parameters

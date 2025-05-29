@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 
@@ -29,4 +30,13 @@ class Cas3BedspaceTransformer(
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
     )
   }
+
+  fun transformJpaToApi(bed: BedEntity) = Cas3Bedspace(
+    id = bed.id,
+    reference = bed.room.name,
+    startDate = bed.startDate,
+    endDate = bed.endDate,
+    notes = bed.room.notes,
+    characteristics = bed.room.characteristics.map(characteristicTransformer::transformJpaToApi),
+  )
 }

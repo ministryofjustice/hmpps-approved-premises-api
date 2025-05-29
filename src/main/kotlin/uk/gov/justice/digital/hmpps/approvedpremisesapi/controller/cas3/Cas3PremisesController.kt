@@ -48,6 +48,18 @@ class Cas3PremisesController(
     return ResponseEntity.ok(premises.rooms.mapNotNull(cas3BedspaceTransformer::transformJpaToApi))
   }
 
+  override fun getPremisesBedspace(premisesId: UUID, bedspaceId: UUID): ResponseEntity<Cas3Bedspace> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val bedspace = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedspaceId } ?: throw NotFoundProblem(bedspaceId, "Bedspace")
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace))
+  }
+
   override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
     val premisesSummariesByPremisesId = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus).groupBy { it.id }
