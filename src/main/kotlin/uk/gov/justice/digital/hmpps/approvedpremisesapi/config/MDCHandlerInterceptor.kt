@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import io.sentry.IScope
+import io.sentry.ScopeType
 import io.sentry.Sentry
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -11,6 +12,7 @@ import org.springframework.web.servlet.HandlerMapping
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.lang.Exception
 import java.util.UUID
 
 @Component
@@ -21,6 +23,17 @@ class MDCHandlerInterceptor(
     appendRequestDiagnosticsToMDC(request)
 
     return super.preHandle(request, response, handler)
+  }
+
+  override fun afterCompletion(
+    request: HttpServletRequest,
+    response: HttpServletResponse,
+    handler: Any,
+    ex: Exception?,
+  ) {
+    MDC.clear()
+
+    super.afterCompletion(request, response, handler, ex)
   }
 
   private fun appendRequestDiagnosticsToMDC(request: HttpServletRequest) {
@@ -37,7 +50,7 @@ class MDCHandlerInterceptor(
     }
     MDC.put("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified")
 
-    Sentry.configureScope { scope: IScope -> scope.setTag("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified") }
+    Sentry.configureScope(ScopeType.ISOLATION) { scope: IScope -> scope.setTag("request.serviceName", request.getHeader("X-Service-Name") ?: "Not specified") }
 
     MDC.put("request.user", userService.getDeliusUserNameForRequestOrNull() ?: "Anonymous")
   }
