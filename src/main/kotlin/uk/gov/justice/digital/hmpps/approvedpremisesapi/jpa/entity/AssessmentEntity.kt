@@ -27,7 +27,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -504,16 +503,4 @@ enum class ReferralHistorySystemNoteType {
   READY_TO_PLACE,
   REJECTED,
   COMPLETED,
-}
-
-interface ReferralsDataResult {
-  fun getTier(): String?
-  fun getIsEsapApplication(): Boolean?
-  fun getIsPipeApplication(): Boolean?
-  fun getDecision(): String?
-  fun getApplicationSubmittedAt(): Timestamp?
-  fun getAssessmentSubmittedAt(): Timestamp?
-  fun getRejectionRationale(): String?
-  fun getReleaseType(): String?
-  fun getClarificationNoteCount(): Int
 }

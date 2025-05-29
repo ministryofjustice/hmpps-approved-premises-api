@@ -30,10 +30,11 @@ class SubmissionsTransformer(
   ): Cas2SubmittedApplication {
     val currentUser = jpa.currentPomUserId?.let { nomisUserService.getNomisUserById(jpa.currentPomUserId!!) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
+
     return Cas2SubmittedApplication(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
+      submittedBy = nomisUserTransformer.transformJpaToApi(jpa),
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),

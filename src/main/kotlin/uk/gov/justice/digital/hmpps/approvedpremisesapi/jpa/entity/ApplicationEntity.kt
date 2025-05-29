@@ -124,27 +124,6 @@ AND (
   fun <T : ApplicationEntity> findAllByCreatedByUserId(id: UUID, type: Class<T>): List<ApplicationEntity>
 
   @Query(
-    "SELECT * FROM approved_premises_applications apa " +
-      "LEFT JOIN applications a ON a.id = apa.id " +
-      "WHERE apa.status IS NULL",
-    nativeQuery = true,
-  )
-  fun findAllWithNullStatus(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
-
-  @Query(
-    "SELECT application.created_at as createdAt, CAST(application.created_by_user_id as TEXT) as createdByUserId FROM approved_premises_applications apa " +
-      "LEFT JOIN applications application ON application.id = apa.id " +
-      "where date_part('month', application.created_at) = :month " +
-      "AND date_part('year', application.created_at) = :year " +
-      "AND application.service = 'approved-premises'",
-    nativeQuery = true,
-  )
-  fun findAllApprovedPremisesApplicationsCreatedInMonth(
-    month: Int,
-    year: Int,
-  ): List<ApprovedPremisesApplicationMetricsSummary>
-
-  @Query(
     value = """
     SELECT 
      CAST(id AS text) as id,
@@ -606,9 +585,4 @@ interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
   fun getLatestAssessmentDecision(): AssessmentDecision?
   fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean
   fun getHasBooking(): Boolean
-}
-
-interface ApprovedPremisesApplicationMetricsSummary {
-  fun getCreatedAt(): Instant
-  fun getCreatedByUserId(): String
 }

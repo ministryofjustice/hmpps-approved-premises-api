@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
@@ -117,8 +116,7 @@ class StatusUpdateService(
         ),
       )
     }
-
-    sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
+    sendEmailStatusUpdated(assessment.application.createdByUser.email, assessment.application, createdStatusUpdate)
 
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
@@ -174,10 +172,11 @@ class StatusUpdateService(
     )
   }
 
-  private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
-    if (application.createdByUser.email != null) {
+  // BAIL-WIP - we only use the email address in the function, can we just pass that instead
+  private fun sendEmailStatusUpdated(email: String?, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
+    if (email != null) { // BAIL-WIP
       emailNotificationService.sendCas2Email(
-        recipientEmailAddress = user.email!!,
+        recipientEmailAddress = email,
         templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
         personalisation = mapOf(
           "applicationStatus" to status.label,
@@ -189,8 +188,9 @@ class StatusUpdateService(
         ),
       )
     } else {
-      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
+      val msg = "Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}"
+      log.error(msg)
+      Sentry.captureMessage(msg)
     }
   }
 }

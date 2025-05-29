@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -26,6 +27,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var createdByUser: Yielded<NomisUserEntity>? = null
+  private var createdByCas2User: Cas2UserEntity? = null // BAIL-WIP - This is not a yield as we need to test for null values here, we don't want a default value
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var applicationSchema: Yielded<JsonSchemaEntity> = {
@@ -63,6 +65,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
 
   fun withCreatedByUser(createdByUser: NomisUserEntity) = apply {
     this.createdByUser = { createdByUser }
+  }
+
+  fun withCreatedByCas2User(createdByCas2User: Cas2UserEntity?) = apply {
+    this.createdByCas2User = createdByCas2User
   }
 
   fun withYieldedCreatedByUser(createdByUser: Yielded<NomisUserEntity>) = apply {
@@ -167,6 +173,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       id = this.id(),
       crn = this.crn(),
       createdByUser = this.createdByUser?.invoke() ?: NomisUserEntityFactory().produce(),
+      createdByCas2User = this.createdByCas2User, // ?.invoke() ?: Cas2UserEntityFactory().produce(),
       data = this.data(),
       document = this.document(),
       schemaVersion = this.applicationSchema(),

@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -79,7 +79,7 @@ class Cas3BookingSearchService(
       }
   }
 
-  private fun mapToBookingSearchResults(findBookings: Page<BookingSearchResult>) = findBookings.content
+  private fun mapToBookingSearchResults(findBookings: Page<Cas3BookingSearchResult>) = findBookings.content
     .mapNotNull { rs ->
       BookingSearchResultDto(
         rs.getPersonName(),

@@ -132,7 +132,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode)
+    emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode)
 
     verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
@@ -174,7 +174,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode)
+    emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode)
 
     verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
@@ -188,7 +188,7 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns null
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode) }
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) }
     assertThat(exception.message).isEqualTo("No OMU found for new prison code ${newOmu.prisonCode}.")
   }
 
@@ -200,7 +200,7 @@ class Cas2EmailServiceTest {
 
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns null
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode) }
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) }
     assertThat(exception.message).isEqualTo("No OMU found for old prison code ${oldOmu.prisonCode}.")
   }
 
@@ -209,7 +209,7 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode) }
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser.email!!, newOmu.prisonCode) }
     assertThat(exception.message).isEqualTo("Old prison code not found.")
   }
 

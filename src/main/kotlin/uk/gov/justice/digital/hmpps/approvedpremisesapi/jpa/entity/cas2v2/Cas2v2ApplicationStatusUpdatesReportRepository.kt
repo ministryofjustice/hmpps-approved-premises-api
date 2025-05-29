@@ -47,6 +47,10 @@ interface Cas2v2ApplicationStatusUpdatedReportRow {
   fun getApplicationOrigin(): ApplicationOrigin
   fun getUpdatedBy(): String
   fun getUpdatedAt(): String
+
+  /*
+  Note that this may be the string value "null", but will never be truly 'null'
+   */
   fun getPersonNoms(): String
   fun getPersonCrn(): String
   fun getNewStatus(): String

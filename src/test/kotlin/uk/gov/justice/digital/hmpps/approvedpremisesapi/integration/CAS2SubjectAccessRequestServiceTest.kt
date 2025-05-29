@@ -273,6 +273,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
   """.trimIndent()
 
+  // BAIL-WIP 284
   private fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
     {
       "id": "${application.id}",
@@ -280,7 +281,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "noms_number": "${application.nomsNumber}",
       "data": ${application.data},
       "document": ${application.document},
-      "created_by_user": "${application.createdByUser.name}",
+      "created_by_user": "${application.createdByUser.name}", 
       "created_at": "$CREATED_AT",
       "submitted_at": "$SUBMITTED_AT",
       "referring_prison_code": "${application.referringPrisonCode}",
