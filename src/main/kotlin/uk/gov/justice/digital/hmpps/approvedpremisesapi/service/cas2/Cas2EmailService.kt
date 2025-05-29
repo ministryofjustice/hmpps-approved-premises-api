@@ -22,9 +22,6 @@ class Cas2EmailService(
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
-
-  fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Received"
-
   fun sendLocationChangedEmails(
     application: Cas2ApplicationEntity,
     prisonCode: String,
@@ -83,7 +80,6 @@ class Cas2EmailService(
     val oldPrisonCode = getOldPrisonCode(application, newPrisonCode) ?: error("Old prison code not found.")
     val oldOmu = offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) ?: error("No OMU found for old prison code $oldPrisonCode.")
     val newOmu = offenderManagementUnitRepository.findByPrisonCode(newPrisonCode) ?: error("No OMU found for new prison code $newPrisonCode.")
-    val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: error("StatusUpdate for ${application.id} not found")
 
     emailNotificationService.sendCas2Email(
       newPom.email!!,
@@ -92,7 +88,7 @@ class Cas2EmailService(
         "nomsNumber" to application.nomsNumber,
         "transferringPrisonName" to oldOmu.prisonName,
         "link" to getLink(application.id),
-        "applicationStatus" to statusUpdate.label,
+        "applicationStatus" to getApplicationStatusOrDefault(application.id),
       ),
     )
     emailNotificationService.sendCas2Email(
@@ -106,6 +102,7 @@ class Cas2EmailService(
     )
   }
 
+  fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Received"
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
   private fun getAssessorLink(applicationId: UUID): String = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
   fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String? = application.applicationAssignments.firstOrNull { it.prisonCode != newPrisonCode }?.prisonCode

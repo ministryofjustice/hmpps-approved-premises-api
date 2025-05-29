@@ -138,17 +138,45 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `do not send allocation changed emails and throw error as no application status found`() {
+  fun `send allocation changed emails with default status`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
 
+    every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
-    every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
+    every {
+      emailNotificationService.sendCas2Email(
+        eq(newUser.email!!),
+        eq(Cas2NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom),
+        eq(
+          mapOf(
+            "nomsNumber" to nomsNumber,
+            "transferringPrisonName" to oldOmu.prisonName,
+            "link" to link,
+            "applicationStatus" to "Received",
+          ),
+        ),
+      )
+    } returns Unit
+    every {
+      emailNotificationService.sendCas2Email(
+        eq(nacroEmail),
+        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom),
+        eq(
+          mapOf(
+            "nomsNumber" to nomsNumber,
+            "receivingPrisonName" to newOmu.prisonName,
+            "link" to assessorLink,
+          ),
+        ),
+      )
+    } returns Unit
 
-    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode) }
-    assertThat(exception.message).isEqualTo("StatusUpdate for ${application.id} not found")
+    emailService.sendAllocationChangedEmails(application, newUser, newOmu.prisonCode)
+
+    verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
@@ -227,6 +255,72 @@ class Cas2EmailServiceTest {
             "transferringPrisonName" to oldOmu.prisonName,
             "link" to link,
             "applicationStatus" to cas2StatusUpdateEntity.label,
+          ),
+        ),
+      )
+    } returns Unit
+    every {
+      emailNotificationService.sendCas2Email(
+        eq(nacroEmail),
+        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison),
+        eq(
+          mapOf(
+            "nomsNumber" to nomsNumber,
+            "receivingPrisonName" to prisoner.prisonName,
+            "transferringPrisonName" to oldOmu.prisonName,
+            "link" to assessorLink,
+          ),
+        ),
+      )
+    } returns Unit
+
+    emailService.sendLocationChangedEmails(application, prisonCode = prisoner.prisonId, transferringFromPomId = oldUser.id)
+
+    verify(exactly = 4) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+  }
+
+  @Test
+  fun `send location changed emails with default status`() {
+    application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
+    every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
+
+    every {
+      emailNotificationService.sendCas2Email(
+        eq(oldUser.email!!),
+        eq(Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison),
+        eq(
+          mapOf(
+            "nomsNumber" to nomsNumber,
+            "receivingPrisonName" to prisoner.prisonName,
+          ),
+        ),
+      )
+    } returns Unit
+    every {
+      emailNotificationService.sendCas2Email(
+        eq(oldOmu.email),
+        eq(Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison),
+        eq(
+          mapOf(
+            "nomsNumber" to nomsNumber,
+            "receivingPrisonName" to prisoner.prisonName,
+          ),
+        ),
+      )
+    } returns Unit
+    every {
+      emailNotificationService.sendCas2Email(
+        eq(newOmu.email),
+        eq(Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison),
+        eq(
+          mapOf(
+            "nomsNumber" to nomsNumber,
+            "transferringPrisonName" to oldOmu.prisonName,
+            "link" to link,
+            "applicationStatus" to "Received",
           ),
         ),
       )
