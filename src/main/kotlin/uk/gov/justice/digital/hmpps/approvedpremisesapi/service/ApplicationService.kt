@@ -415,7 +415,6 @@ class ApplicationService(
     dutyToReferOutcome = null,
     prisonNameOnCreation = prisonName,
     personReleaseDate = null,
-    pdu = null,
     name = "${offenderDetails.firstName} ${offenderDetails.surname}",
     isHistoryOfSexualOffence = null,
     isConcerningSexualBehaviour = null,

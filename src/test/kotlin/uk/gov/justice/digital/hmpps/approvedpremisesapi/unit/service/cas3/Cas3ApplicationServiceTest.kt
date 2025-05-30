@@ -97,6 +97,7 @@ class Cas3ApplicationServiceTest {
         val num = 50
         val text = "Hello world!"
       },
+      probationDeliveryUnitId = UUID.randomUUID(),
     )
 
     private val submitTemporaryAccommodationApplicationWithMiReportingData = Cas3SubmitApplication(
@@ -116,8 +117,8 @@ class Cas3ApplicationServiceTest {
       eligibilityReason = "homelessFromApprovedPremises",
       dutyToReferLocalAuthorityAreaName = "Aberdeen City",
       personReleaseDate = LocalDate.now().plusDays(1),
-      pdu = "Probation Delivery Unit Test",
       isHistoryOfSexualOffence = true,
+      probationDeliveryUnitId = UUID.randomUUID(),
       isConcerningSexualBehaviour = true,
       isConcerningArsonBehaviour = true,
       prisonReleaseTypes = listOf(
@@ -393,7 +394,7 @@ class Cas3ApplicationServiceTest {
       assertThat(persistedApplication.eligibilityReason).isEqualTo("homelessFromApprovedPremises")
       assertThat(persistedApplication.dutyToReferLocalAuthorityAreaName).isEqualTo("Aberdeen City")
       assertThat(persistedApplication.personReleaseDate).isEqualTo(submitTemporaryAccommodationApplicationWithMiReportingData.personReleaseDate)
-      assertThat(persistedApplication.pdu).isEqualTo("Probation Delivery Unit Test")
+      assertThat(persistedApplication.probationDeliveryUnit?.id).isNull()
       assertThat(persistedApplication.name).isEqualTo(user.name)
       assertThat(persistedApplication.isHistoryOfSexualOffence).isEqualTo(true)
       assertThat(persistedApplication.isConcerningSexualBehaviour).isEqualTo(true)

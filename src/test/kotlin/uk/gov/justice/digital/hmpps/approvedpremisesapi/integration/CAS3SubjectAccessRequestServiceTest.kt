@@ -351,7 +351,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "prison_name_on_creation": "${temporaryAccommodationApplication.prisonNameOnCreation}",
         "prison_release_types": "${temporaryAccommodationApplication.prisonReleaseTypes}",
         "person_release_date": "$arrivedAtDateOnly",
-        "pdu": "${temporaryAccommodationApplication.pdu}",
+        "pdu": "${temporaryAccommodationApplication.probationDeliveryUnit?.name}",
         "needs_accessible_property": ${temporaryAccommodationApplication.needsAccessibleProperty},
         "has_history_of_arson": ${temporaryAccommodationApplication.hasHistoryOfArson},
         "is_registered_sex_offender": ${temporaryAccommodationApplication.isRegisteredSexOffender},
@@ -432,10 +432,10 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withIsConcerningArsonBehaviour(false)
       withIsEligible(false)
       withNeedsAccessibleProperty(false)
-      withPdu(randomStringMultiCaseWithNumbers(5))
       withProbationRegion(probationRegionEntity())
       withPrisonReleaseTypes("ANY")
       withPrisonNameAtReferral("HMP Birmingham")
+      withProbationDeliveryUnit(probationDeliveryUnitEntity(user))
     }
   }
 

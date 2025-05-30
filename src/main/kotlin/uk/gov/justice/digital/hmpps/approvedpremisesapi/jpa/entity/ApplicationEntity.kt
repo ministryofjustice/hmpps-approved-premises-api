@@ -522,7 +522,6 @@ class TemporaryAccommodationApplicationEntity(
   var dutyToReferLocalAuthorityAreaName: String?,
   var prisonNameOnCreation: String?,
   var personReleaseDate: LocalDate?,
-  var pdu: String?,
   var name: String?,
   var prisonReleaseTypes: String?,
   @ManyToOne(fetch = FetchType.LAZY)

@@ -38,7 +38,7 @@ class CAS3SubjectAccessRequestRepository(
              taa.prison_name_on_creation,
              taa.prison_release_types,
              taa.person_release_date,
-             taa.pdu,
+             pdu.name as pdu,
              taa.needs_accessible_property,
              taa.has_history_of_arson,
              taa.is_registered_sex_offender,
@@ -47,11 +47,10 @@ class CAS3SubjectAccessRequestRepository(
              taa.is_concerning_arson_behaviour
         from
              temporary_accommodation_applications taa
-        inner join applications a on
-        	a.id = taa.id
-        inner join users u on
-        	u.id = a.created_by_user_id
+        inner join applications a on a.id = taa.id
+        inner join users u on u.id = a.created_by_user_id
         inner join probation_regions pr on pr.id = taa.probation_region_id
+        left join probation_delivery_units pdu on pdu.id = taa.probation_delivery_unit_id
         where
         	(a.crn = :crn
         		or a.noms_number = :noms_number )

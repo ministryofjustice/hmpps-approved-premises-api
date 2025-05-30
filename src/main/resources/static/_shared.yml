@@ -2078,8 +2078,6 @@ components:
               type: string
               format: date
               example: '2024-02-21'
-            pdu:
-              type: string
             probationDeliveryUnitId:
               type: string
               format: uuid
@@ -2097,6 +2095,7 @@ components:
             summaryData:
               $ref: '#/components/schemas/Unit'
           required:
+            - probationDeliveryUnitId
             - arrivalDate
             - summaryData
     ReleaseTypeOption:
