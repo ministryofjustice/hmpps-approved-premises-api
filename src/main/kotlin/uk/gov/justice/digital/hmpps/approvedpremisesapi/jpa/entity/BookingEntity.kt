@@ -308,7 +308,7 @@ data class BookingEntity(
   @OneToOne
   @JoinColumn(name = "offline_application_id")
   var offlineApplication: OfflineApplicationEntity?,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var extensions: MutableList<ExtensionEntity>,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var dateChanges: MutableList<DateChangeEntity>,
