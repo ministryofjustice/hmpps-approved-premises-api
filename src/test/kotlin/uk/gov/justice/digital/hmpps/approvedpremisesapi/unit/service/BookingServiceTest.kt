@@ -87,7 +87,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -1999,7 +1999,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result)
+      assertThatCasResult(result)
         .isConflictError()
         .hasMessageContaining("A Booking already exists")
     }
@@ -2038,7 +2038,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result)
+      assertThatCasResult(result)
         .isConflictError()
         .hasMessageContaining("A Lost Bed already exists")
     }
@@ -2062,7 +2062,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result)
+      assertThatCasResult(result)
         .isFieldValidationError()
         .hasMessage("$.newDepartureDate", "beforeBookingArrivalDate")
     }
@@ -2091,7 +2091,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-16"),
       )
 
-      assertThat(result)
+      assertThatCasResult(result)
         .isFieldValidationError()
         .hasMessage("$.newArrivalDate", "arrivalDateCannotBeChangedOnArrivedBooking")
     }
@@ -2123,7 +2123,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-16"),
       )
 
-      assertThat(result).isGeneralValidationError("This Booking is cancelled and as such cannot be modified")
+      assertThatCasResult(result).isGeneralValidationError("This Booking is cancelled and as such cannot be modified")
     }
 
     @Test
@@ -2152,7 +2152,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-15"),
       )
 
-      assertThat(result).isSuccess()
+      assertThatCasResult(result).isSuccess()
       result as CasResult.Success
 
       verify {
@@ -2200,7 +2200,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-22"),
       )
 
-      assertThat(result).isSuccess()
+      assertThatCasResult(result).isSuccess()
       result as CasResult.Success
 
       verify {
@@ -2260,7 +2260,7 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result).isSuccess()
+      assertThatCasResult(result).isSuccess()
       result as CasResult.Success
 
       verify {
@@ -2337,7 +2337,7 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result).isSuccess()
+      assertThatCasResult(result).isSuccess()
       result as CasResult.Success
 
       verify(exactly = 1) {
@@ -2383,7 +2383,7 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result).isSuccess()
+      assertThatCasResult(result).isSuccess()
       result as CasResult.Success
 
       verify {

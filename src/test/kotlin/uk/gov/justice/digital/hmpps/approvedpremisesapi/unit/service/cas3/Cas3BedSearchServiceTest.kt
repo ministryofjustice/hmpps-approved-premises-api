@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BedspaceSearchService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.util.UUID
@@ -72,7 +72,7 @@ class Cas3BedSearchServiceTest {
       ),
     )
 
-    assertThat(result).isFieldValidationError("$.durationDays", "mustBeAtLeast1")
+    assertThatCasResult(result).isFieldValidationError("$.durationDays", "mustBeAtLeast1")
   }
 
   @Test
@@ -97,7 +97,7 @@ class Cas3BedSearchServiceTest {
         probationDeliveryUnits = probationDeliveryUnitIds,
       ),
     )
-    assertThat(result).isFieldValidationError("$.probationDeliveryUnits", "maxNumberProbationDeliveryUnits")
+    assertThatCasResult(result).isFieldValidationError("$.probationDeliveryUnits", "maxNumberProbationDeliveryUnits")
   }
 
   @Test
@@ -133,7 +133,7 @@ class Cas3BedSearchServiceTest {
         probationDeliveryUnits = probationDeliveryUnitIds,
       ),
     )
-    assertThat(result).isFieldValidationError("$.probationDeliveryUnits[3]", "doesNotExist")
+    assertThatCasResult(result).isFieldValidationError("$.probationDeliveryUnits[3]", "doesNotExist")
   }
 
   @Test
@@ -234,7 +234,7 @@ class Cas3BedSearchServiceTest {
       ),
     )
 
-    assertThat(result).isSuccess().hasValueEqualTo(candidateBedspaces)
+    assertThatCasResult(result).isSuccess().hasValueEqualTo(candidateBedspaces)
   }
 
   @Test
@@ -424,7 +424,7 @@ class Cas3BedSearchServiceTest {
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
       ),
     )
-    assertThat(result).isSuccess().hasValueEqualTo(expectedResults)
+    assertThatCasResult(result).isSuccess().hasValueEqualTo(expectedResults)
   }
 
   @Suppress("LongParameterList")
