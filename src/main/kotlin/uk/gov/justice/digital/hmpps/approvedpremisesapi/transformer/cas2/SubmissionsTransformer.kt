@@ -31,7 +31,7 @@ class SubmissionsTransformer(
     val currentUser = jpa.currentPomUserId?.let { nomisUserService.getNomisUserById(jpa.currentPomUserId!!) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
 
-    val nomisUser = when(jpa.createdByCas2User) {
+    val nomisUser = when (jpa.createdByCas2User) {
       null -> nomisUserTransformer.transformJpaToApi(jpa.createdByUser)
       else -> nomisUserTransformer.transformJpaToApi(jpa.createdByCas2User!!)
     }

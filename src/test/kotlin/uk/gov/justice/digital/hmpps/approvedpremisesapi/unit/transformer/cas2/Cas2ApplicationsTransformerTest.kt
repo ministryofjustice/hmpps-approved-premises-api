@@ -68,8 +68,6 @@ class Cas2ApplicationsTransformerTest {
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
 
-  private val jpa = cas2ApplicationFactory.produce()
-
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
 
