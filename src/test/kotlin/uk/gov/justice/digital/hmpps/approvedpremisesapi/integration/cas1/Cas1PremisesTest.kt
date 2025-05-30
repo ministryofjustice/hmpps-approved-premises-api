@@ -254,11 +254,31 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withSupportsSpaceBookings(true)
       }
+
+      // premises 1 live beds
+      repeat(5) { givenAnApprovedPremisesBed(premises1ManInArea1) }
+      // scheduled for removal in the future
+      givenAnApprovedPremisesBed(
+        premises = premises1ManInArea1,
+        endDate = LocalDate.now().plusDays(5),
+      )
+      // removed bed
+      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now().minusDays(5))
+      // bed scheduled for removal today
+      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now())
+
+      // premises 2 live beds
+      repeat(2) { givenAnApprovedPremisesBed(premises2WomanInArea2) }
+      // Bed scheduled for removal in the future
+      givenAnApprovedPremisesBed(premises2WomanInArea2, endDate = LocalDate.now().plusDays(20))
+
+      // premises 3 live beds
+      repeat(20) { givenAnApprovedPremisesBed(premises3ManInArea2, endDate = LocalDate.now().minusDays(5)) }
     }
 
     @SuppressWarnings("CyclomaticComplexMethod")
     @Test
-    fun `Returns premises summaries with no filters applied`() {
+    fun `No filters applied`() {
       val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
@@ -277,7 +297,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
             it.name == "the premises name 1" &&
             it.apCode == premises1ManInArea1.apCode &&
             it.apArea.name == "the ap area name 1" &&
-            it.bedCount == 0 &&
+            it.bedCount == 6 &&
             it.supportsSpaceBookings == false
         }
         .anyMatch {
@@ -285,7 +305,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
             it.name == "the premises name 2" &&
             it.apCode == premises2WomanInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
-            it.bedCount == 0 &&
+            it.bedCount == 3 &&
             it.supportsSpaceBookings == false
         }
         .anyMatch {
@@ -299,7 +319,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Returns premises summaries where gender is man`() {
+    fun `filter gender is man`() {
       val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
@@ -318,7 +338,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
             it.name == "the premises name 1" &&
             it.apCode == premises1ManInArea1.apCode &&
             it.apArea.name == "the ap area name 1" &&
-            it.bedCount == 0
+            it.bedCount == 6
         }
         .anyMatch {
           it.id == premises3ManInArea2.id &&
@@ -330,7 +350,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Returns premises summaries where gender is woman`() {
+    fun `filter gender is woman`() {
       val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
@@ -347,11 +367,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries[0].name).isEqualTo("the premises name 2")
       assertThat(summaries[0].apCode).isEqualTo(premises2WomanInArea2.apCode)
       assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 2")
-      assertThat(summaries[0].bedCount).isEqualTo(0)
+      assertThat(summaries[0].bedCount).isEqualTo(3)
     }
 
     @Test
-    fun `Returns premises summaries for specified ap area`() {
+    fun `filter ap area`() {
       val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
@@ -368,11 +388,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries[0].name).isEqualTo("the premises name 1")
       assertThat(summaries[0].apCode).isEqualTo(premises1ManInArea1.apCode)
       assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 1")
-      assertThat(summaries[0].bedCount).isEqualTo(0)
+      assertThat(summaries[0].bedCount).isEqualTo(6)
     }
 
     @Test
-    fun `Returns premises summaries for specified gender and ap area`() {
+    fun `filter gender and ap area`() {
       val (_, jwt) = givenAUser()
 
       val summaries = webTestClient.get()
@@ -390,63 +410,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries[0].apCode).isEqualTo(premises3ManInArea2.apCode)
       assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 2")
       assertThat(summaries[0].bedCount).isEqualTo(0)
-    }
-
-    @Test
-    fun `Returns correct bed count for premise summaries`() {
-      val (_, jwt) = givenAUser()
-
-      val premises1ManLiveBeds = listOf(
-        givenAnApprovedPremisesBed(premises1ManInArea1),
-        givenAnApprovedPremisesBed(premises1ManInArea1),
-        givenAnApprovedPremisesBed(premises1ManInArea1),
-        givenAnApprovedPremisesBed(premises1ManInArea1),
-        givenAnApprovedPremisesBed(premises1ManInArea1),
-        // Beds scheduled for removal in the future
-        givenAnApprovedPremisesBed(
-          premises = premises1ManInArea1,
-          endDate = LocalDate.now().plusDays(5),
-        ),
-      )
-      // Removed bed
-      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now().minusDays(5))
-      // Beds scheduled for removal today
-      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now())
-
-      val premises2WomanLiveBeds = listOf(
-        givenAnApprovedPremisesBed(premises2WomanInArea2),
-        givenAnApprovedPremisesBed(premises2WomanInArea2),
-        // Beds scheduled for removal in the future
-        givenAnApprovedPremisesBed(premises2WomanInArea2, endDate = LocalDate.now().plusDays(20)),
-      )
-
-      repeat(20) {
-        givenAnApprovedPremisesBed(premises3ManInArea2, endDate = LocalDate.now().minusDays(5))
-      }
-
-      val summaries = webTestClient.get()
-        .uri("/cas1/premises/summary")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .bodyAsListOfObjects<Cas1PremisesBasicSummary>()
-
-      assertThat(summaries).hasSize(3)
-
-      assertThat(summaries)
-        .anyMatch {
-          it.id == premises1ManInArea1.id &&
-            it.bedCount == premises1ManLiveBeds.count()
-        }
-        .anyMatch {
-          it.id == premises2WomanInArea2.id &&
-            it.bedCount == premises2WomanLiveBeds.count()
-        }
-        .anyMatch {
-          it.id == premises3ManInArea2.id &&
-            it.bedCount == 0
-        }
     }
   }
 
