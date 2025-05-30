@@ -363,9 +363,9 @@ class Cas2ApplicationService(
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
                 staffIdentifier = application.createdByUser.nomisStaffId,
-                name = application.createdByUser.name,
-                username = application.createdByUser.nomisUsername,
-                usertype = Cas2StaffMember.Usertype.nomis,
+                name = application.getCreatedByCanonicalName(),
+                username = application.getCreatedByUsername(),
+                usertype = application.getCreatedByUserType(),
               ),
             ),
             applicationOrigin = ApplicationOrigin.homeDetentionCurfew.toString(),

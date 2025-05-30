@@ -74,7 +74,11 @@ class Cas2ApplicationsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockNomisTransformer.transformJpaToApi(any()) } returns NomisUser(
+    every {
+      mockNomisTransformer.transformJpaToApi(
+        user,
+      )
+    } returns NomisUser(
       id = user.id,
       name = user.name,
       nomisUsername = user.nomisUsername,
@@ -92,6 +96,7 @@ class Cas2ApplicationsTransformerTest {
     fun `transformJpaToApi transforms an in progress CAS-2 application correctly`() {
       val application = cas2ApplicationFactory
         .withSubmittedAt(null)
+        .withCreatedByUser(user)
         .produce()
 
       val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
@@ -215,8 +220,12 @@ class Cas2ApplicationsTransformerTest {
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
       every { nomisUserService.getNomisUserById(any()) } returns user
       val prison = OffenderManagementUnitEntityFactory().produce()
-      val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison")
-        .withEmail("test@test.co.uk").produce()
+      val newPrison = OffenderManagementUnitEntityFactory()
+        .withPrisonCode("NEW")
+        .withPrisonName("New Prison")
+        .withEmail("test@test.co.uk")
+        .produce()
+
       every { offenderManagementUnitRepository.findByPrisonCode(eq(prison.prisonCode)) } returns prison
       every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrison.prisonCode)) } returns newPrison
 
@@ -234,6 +243,17 @@ class Cas2ApplicationsTransformerTest {
           OffsetDateTime.now(),
         ),
       )
+
+//      every {
+//        mockNomisTransformer.transformJpaToApi(
+//          application,
+//        )
+//      } returns NomisUser(
+//        id = user.id,
+//        name = user.name,
+//        nomisUsername = user.nomisUsername,
+//        isActive = user.isActive,
+//      )
 
       val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 

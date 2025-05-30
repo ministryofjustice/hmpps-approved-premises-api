@@ -89,9 +89,10 @@ class Cas2AssessmentNoteService(
   }
 
   private fun sendEmailToReferrer(application: Cas2ApplicationEntity, savedNote: Cas2ApplicationNoteEntity) {
-    if (application.createdByUser.email != null) {
+    val email = application.getCreatedByUserEmail()
+    if (email != null) {
       emailNotificationService.sendCas2Email(
-        recipientEmailAddress = application.createdByUser.email!!,
+        recipientEmailAddress = email, // BAIL-WIP
         templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
         personalisation = mapOf(
           "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
@@ -102,8 +103,9 @@ class Cas2AssessmentNoteService(
         ),
       )
     } else {
-      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
+      val msg = "Email not found for User ${application.getCreatedById()}. Unable to send email for Note ${savedNote.id} on Application ${application.id}"
+      log.error(msg)
+      Sentry.captureMessage(msg)
     }
   }
 
@@ -155,7 +157,7 @@ class Cas2AssessmentNoteService(
     userService.getUserForRequest()
   }
 
-  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean = if (user.id == application.createdByUser.id) {
+  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean = if (user.id == application.getCreatedById()) { // BAIL-WIP
     true
   } else {
     userAccessService.offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeCaseloadId)
