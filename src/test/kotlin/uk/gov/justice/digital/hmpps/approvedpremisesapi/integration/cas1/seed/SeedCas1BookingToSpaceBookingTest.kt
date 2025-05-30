@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.St
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedMoveEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExtensionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABookingForAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
@@ -164,6 +165,11 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       BedMoveEntityFactory()
         .withBooking(booking1ManagementInfoFromDelius)
         .withNewBed(givenAnApprovedPremisesBed())
+        .produce(),
+    )
+    extensionRepository.save(
+      ExtensionEntityFactory()
+        .withBooking(booking1ManagementInfoFromDelius)
         .produce(),
     )
 
