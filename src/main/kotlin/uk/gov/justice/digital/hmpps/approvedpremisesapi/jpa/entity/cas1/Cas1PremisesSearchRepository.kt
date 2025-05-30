@@ -70,6 +70,7 @@ FROM
   LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = rooms.id
   LEFT OUTER JOIN characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
   WHERE 
+    p.status != 'archived' AND
     ap.supports_space_bookings = true AND
     ap.gender = #SPECIFIED_GENDER#
   GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  

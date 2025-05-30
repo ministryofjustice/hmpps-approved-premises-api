@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -249,6 +250,15 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       premises3ManInArea2 = approvedPremisesEntityFactory.produceAndPersist {
         withName("the premises name 3")
+        withGender(ApprovedPremisesGender.MAN)
+        withYieldedProbationRegion { region2 }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withSupportsSpaceBookings(true)
+      }
+
+      approvedPremisesEntityFactory.produceAndPersist {
+        withName("an archived premises")
+        withStatus(PropertyStatus.archived)
         withGender(ApprovedPremisesGender.MAN)
         withYieldedProbationRegion { region2 }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
