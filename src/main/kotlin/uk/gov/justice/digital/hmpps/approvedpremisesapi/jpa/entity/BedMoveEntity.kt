@@ -10,9 +10,19 @@ import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated(
+  "Bed moves were exclusively used by CAS1. There usage ended mid 2024." +
+    "Once all CAS1 bookings have been migrated to space bookings this repo can be removed",
+)
 @Repository
-interface BedMoveRepository : JpaRepository<BedMoveEntity, UUID>
+interface BedMoveRepository : JpaRepository<BedMoveEntity, UUID> {
+  fun deleteByBooking(booking: BookingEntity)
+}
 
+@Deprecated(
+  "Bed moves were exclusively used by CAS1. There usage ended mid 2024." +
+    "Once all CAS1 bookings have been migrated to space bookings this table can be removed",
+)
 @Entity
 @Table(name = "bed_moves")
 data class BedMoveEntity(

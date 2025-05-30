@@ -16,12 +16,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedMoveEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABookingForAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -157,6 +159,12 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       booking1ManagementInfoFromDelius,
       booking1CreatedByUser,
       placementRequest1,
+    )
+    bedMoveRepository.save(
+      BedMoveEntityFactory()
+        .withBooking(booking1ManagementInfoFromDelius)
+        .withNewBed(givenAnApprovedPremisesBed())
+        .produce(),
     )
 
     deliusBookingImportRepository.save(
