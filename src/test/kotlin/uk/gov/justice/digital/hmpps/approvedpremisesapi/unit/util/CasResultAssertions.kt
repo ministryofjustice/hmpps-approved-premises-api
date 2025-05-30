@@ -4,8 +4,6 @@ import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
-fun <T> assertThat(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
-
 fun <T> assertThatCasResult(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
 
 class CasResultAssertions<T>(actual: CasResult<T>) :
