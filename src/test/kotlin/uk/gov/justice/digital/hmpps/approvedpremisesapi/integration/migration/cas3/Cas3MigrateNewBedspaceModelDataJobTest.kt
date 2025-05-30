@@ -5,15 +5,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import java.time.LocalDate
 
 const val NO_OF_PREMISES_TO_MIGRATE = 110
 
-class Cas3MigrateNewBedspaceModelDataJobTest : IntegrationTestBase() {
+class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
 
   @Autowired
   lateinit var migrationJobService: MigrationJobService
@@ -33,24 +36,30 @@ class Cas3MigrateNewBedspaceModelDataJobTest : IntegrationTestBase() {
         )
       }
     }.take(NO_OF_PREMISES_TO_MIGRATE).toList()
+
+    createRoomsWithSingleBedInPremises(
+      temporaryAccommodationPremises,
+      endDate = LocalDate.now().randomDateAfter(30),
+      numOfRoomsPerPremise = randomInt(1, 5),
+    )
   }
 
   @Test
-  fun `should migrate all data required to new cas3 bedspace model tables and running the job twice`() {
+  fun `should migrate all data required to new cas3 bedspace model tables`() {
     migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData, 1)
     val migratedPremises = assertExpectedNumberOfPremisesWereMigrated()
-    assertThatAllCas3PremisesDataWasMigratedSuccessfully(migratedPremises)
+    assertThatAllCas3PremisesDataAndCas3BedspacesDataWasMigratedSuccessfully(migratedPremises)
   }
 
   @Test
   fun `running the migration job twice does not create duplicate rows`() {
     migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData, 1)
     var migratedPremises = assertExpectedNumberOfPremisesWereMigrated()
-    assertThatAllCas3PremisesDataWasMigratedSuccessfully(migratedPremises)
+    assertThatAllCas3PremisesDataAndCas3BedspacesDataWasMigratedSuccessfully(migratedPremises)
 
     migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData, 1)
     migratedPremises = assertExpectedNumberOfPremisesWereMigrated()
-    assertThatAllCas3PremisesDataWasMigratedSuccessfully(migratedPremises)
+    assertThatAllCas3PremisesDataAndCas3BedspacesDataWasMigratedSuccessfully(migratedPremises)
   }
 
   private fun assertExpectedNumberOfPremisesWereMigrated(): List<Cas3PremisesEntity> {
@@ -59,10 +68,14 @@ class Cas3MigrateNewBedspaceModelDataJobTest : IntegrationTestBase() {
     return migratedPremises
   }
 
-  private fun assertThatAllCas3PremisesDataWasMigratedSuccessfully(migratedPremises: List<Cas3PremisesEntity>) {
+  private fun assertThatAllCas3PremisesDataAndCas3BedspacesDataWasMigratedSuccessfully(migratedPremises: List<Cas3PremisesEntity>) {
     migratedPremises.forEach { migratedPremise ->
       val tap = temporaryAccommodationPremises.firstOrNull { it.id == migratedPremise.id }!!
       assertThatPremisesMatch(
+        cas3PremisesEntity = migratedPremise,
+        temporaryAccommodationPremisesEntity = tap,
+      )
+      assertThatBedspacesMatchRoomsAndBeds(
         cas3PremisesEntity = migratedPremise,
         temporaryAccommodationPremisesEntity = tap,
       )
@@ -79,5 +92,22 @@ class Cas3MigrateNewBedspaceModelDataJobTest : IntegrationTestBase() {
     assertThat(cas3PremisesEntity.localAuthorityArea?.id).isEqualTo(temporaryAccommodationPremisesEntity.localAuthorityArea?.id)
     assertThat(cas3PremisesEntity.status).isEqualTo(temporaryAccommodationPremisesEntity.status)
     assertThat(cas3PremisesEntity.notes).isEqualTo(temporaryAccommodationPremisesEntity.notes)
+  }
+
+  private fun assertThatBedspacesMatchRoomsAndBeds(cas3PremisesEntity: Cas3PremisesEntity, temporaryAccommodationPremisesEntity: TemporaryAccommodationPremisesEntity) {
+    assertThat(cas3PremisesEntity.bedspaces.size).isEqualTo(temporaryAccommodationPremisesEntity.rooms.size)
+    cas3PremisesEntity.bedspaces.forEach { bedspace ->
+      val expectedRoomToMatch = temporaryAccommodationPremises
+        .first { it.id == bedspace.premises.id }.rooms
+        .first { room -> room.beds.first().id == bedspace.id }
+      val expectedBedToMatch = expectedRoomToMatch.beds.first()
+
+      assertThat(bedspace.reference).isEqualTo(expectedRoomToMatch.name)
+      assertThat(bedspace.notes).isEqualTo(expectedRoomToMatch.notes)
+
+      assertThat(bedspace.endDate).isEqualTo(expectedBedToMatch.endDate)
+      assertThat(bedspace.startDate).isEqualTo(expectedBedToMatch.startDate)
+      assertThat(bedspace.createdAt).isEqualTo(expectedBedToMatch.createdAt)
+    }
   }
 }
