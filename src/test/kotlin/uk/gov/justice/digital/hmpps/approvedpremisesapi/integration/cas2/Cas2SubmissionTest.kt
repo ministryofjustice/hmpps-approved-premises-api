@@ -304,13 +304,12 @@ class Cas2SubmissionTest(
       expectedSubmittedApplication: Cas2ApplicationEntity,
       offenderDetails: OffenderDetailSummary,
     ) {
-      // BAIL-WIP expectedSubmittedApplication.getCreatedById()
       assertThat(response).matches {
         expectedSubmittedApplication.id == it.id &&
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&
-          expectedSubmittedApplication.getCreatedById() == it.createdByUserId &&
+          expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
 

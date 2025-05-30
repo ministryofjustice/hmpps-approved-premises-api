@@ -9,10 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2User
 @Component
 class NomisUserTransformer {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity): NomisUser = when (jpa.createdByCas2User) {
-    null -> transformJpaToApi(jpa.createdByUser)
-    else -> transformJpaToApi(jpa.createdByCas2User!!)
-  }
+//  fun transformJpaToApi(jpa: Cas2ApplicationEntity): NomisUser = when (jpa.createdByCas2User) {
+//    null -> transformJpaToApi(jpa.createdByUser)
+//    else -> transformJpaToApi(jpa.createdByCas2User!!)
+//  }
 
   fun transformJpaToApi(nomisUserEntity: NomisUserEntity): NomisUser = NomisUser(
     id = nomisUserEntity.id,

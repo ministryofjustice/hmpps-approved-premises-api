@@ -362,8 +362,7 @@ class Cas2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId, // BAIL-WIP ?: 0  when nomis user is nullable
-                cas2StaffIdentifier = application.createdByCas2User!!.deliusStaffCode ?: "",
+                staffIdentifier = application.createdByUser.nomisStaffId,
                 name = application.getCreatedByCanonicalName(),
                 username = application.getCreatedByUsername(),
                 usertype = application.getCreatedByUserType(),

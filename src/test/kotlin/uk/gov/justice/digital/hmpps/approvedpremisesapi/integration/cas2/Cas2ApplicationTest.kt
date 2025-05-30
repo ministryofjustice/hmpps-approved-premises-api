@@ -661,17 +661,16 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             // check transformers were able to return all fields
-            Assertions.assertThat(responseBody).anySatisfy {
-              Assertions.assertThat(it.id).isEqualTo(firstApplicationEntity.id)
-              Assertions.assertThat(it.crn).isEqualTo(firstApplicationEntity.crn)
-              Assertions.assertThat(it.nomsNumber).isEqualTo(firstApplicationEntity.nomsNumber)
-              Assertions.assertThat(it.personName).isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
-              Assertions.assertThat(it.createdAt).isEqualTo(firstApplicationEntity.createdAt.toInstant())
-              Assertions.assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.getCreatedById()) // BAIL-WIP
-              Assertions.assertThat(it.submittedAt).isEqualTo(firstApplicationEntity.submittedAt?.toInstant())
-              Assertions.assertThat(it.hdcEligibilityDate).isEqualTo(firstApplicationEntity.hdcEligibilityDate)
-              // Assertions.assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
-              Assertions.assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.getCreatedByCanonicalName()) // BAIL-WIP
+            assertThat(responseBody).anySatisfy {
+              assertThat(it.id).isEqualTo(firstApplicationEntity.id)
+              assertThat(it.crn).isEqualTo(firstApplicationEntity.crn)
+              assertThat(it.nomsNumber).isEqualTo(firstApplicationEntity.nomsNumber)
+              assertThat(it.personName).isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+              assertThat(it.createdAt).isEqualTo(firstApplicationEntity.createdAt.toInstant())
+              assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.createdByUser.id) // BAIL-WIP
+              assertThat(it.submittedAt).isEqualTo(firstApplicationEntity.submittedAt?.toInstant())
+              assertThat(it.hdcEligibilityDate).isEqualTo(firstApplicationEntity.hdcEligibilityDate)
+              assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
             }
 
             Assertions.assertThat(responseBody).noneMatch {
@@ -1481,12 +1480,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               rawResponseBody,
               Cas2Application::class.java,
             )
-            // BAIL-WIP applicationEntity.getCreatedById() below
-            Assertions.assertThat(responseBody).matches {
+            assertThat(responseBody).matches {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.getCreatedById() == it.createdBy.id &&
+                applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
                 newestJsonSchema.id == it.schemaVersion &&

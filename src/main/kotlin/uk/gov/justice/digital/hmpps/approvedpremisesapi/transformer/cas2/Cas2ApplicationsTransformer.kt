@@ -31,10 +31,15 @@ class Cas2ApplicationsTransformer(
     val currentUser = jpa.currentPomUserId?.let { nomisUserService.getNomisUserById(jpa.currentPomUserId!!) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
 
+    val nomisUser = when(jpa.createdByCas2User) {
+      null -> nomisUserTransformer.transformJpaToApi(jpa.createdByUser)
+      else -> nomisUserTransformer.transformJpaToApi(jpa.createdByCas2User!!)
+    }
+
     return Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      createdBy = nomisUserTransformer.transformJpaToApi(jpa),
+      createdBy = nomisUser,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
