@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -71,7 +72,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Search for Spaces returns OK with correct body, returning only premises supporting space bookings`() {
+  fun `Search for Spaces returns only premises supporting space bookings, ignoring archived`() {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
       withLatitude(-0.07)
@@ -125,6 +126,18 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((-0.01) - 0.08)
         withLongitude((0.01) + 51.49)
         withSupportsSpaceBookings(false)
+      }
+
+      // archived
+      approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { givenAProbationRegion() }
+        withYieldedLocalAuthorityArea {
+          localAuthorityEntityFactory.produceAndPersist()
+        }
+        withLatitude((-0.01) - 0.08)
+        withLongitude((0.01) + 51.49)
+        withSupportsSpaceBookings(true)
+        withStatus(PropertyStatus.archived)
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
