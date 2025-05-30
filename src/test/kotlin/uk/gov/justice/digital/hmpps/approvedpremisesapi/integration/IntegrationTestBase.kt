@@ -272,7 +272,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.Duration
+import java.time.LocalDate
 import java.util.TimeZone
 import java.util.UUID
 
@@ -944,6 +946,39 @@ abstract class IntegrationTestBase {
   }
 
   fun loadPreemptiveCacheForInmateDetails(nomsNumber: String) = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
+
+  protected fun applyRoomsAndBedsToTemporaryAccommodationPremises(
+    premises: List<TemporaryAccommodationPremisesEntity>,
+    endDate: LocalDate? = null,
+    generateNoOfRoomsPerPremiseAtRandom: Boolean = false,
+  ): List<TemporaryAccommodationPremisesEntity> {
+    premises.forEach { premise ->
+      var noOfRoomsToCreate = 1
+      if (generateNoOfRoomsPerPremiseAtRandom) {
+        noOfRoomsToCreate = randomInt(1, 5)
+      }
+      repeat(noOfRoomsToCreate) {
+        createRoomInPremiseWithSingleBed(premise, endDate)
+      }
+    }
+    return premises
+  }
+
+  private fun createRoomInPremiseWithSingleBed(premise: TemporaryAccommodationPremisesEntity, endDate: LocalDate?) {
+    val room = roomEntityFactory.produceAndPersist {
+      withPremises(premise)
+      withBeds()
+    }.apply { premise.rooms.add(this) }
+
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withEndDate(endDate)
+    }.apply {
+      premise.rooms
+        .first { it.id == room.id }
+        .beds.add(this)
+    }
+  }
 }
 
 /**

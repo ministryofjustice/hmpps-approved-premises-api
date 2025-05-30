@@ -126,6 +126,7 @@ class ApprovedPremisesRoomsSeedJob(
         premises = premises,
         characteristics = mutableListOf(),
         notes = row.notes,
+        createdAt = OffsetDateTime.now(),
       ),
     )
     log.info("New room created: ${room.code} (AP: ${row.apCode}) ")
