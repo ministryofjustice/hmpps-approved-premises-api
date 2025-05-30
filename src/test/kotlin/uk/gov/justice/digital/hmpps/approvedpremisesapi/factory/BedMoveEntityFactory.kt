@@ -14,7 +14,7 @@ class BedMoveEntityFactory : Factory<BedMoveEntity> {
 
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var booking: Yielded<BookingEntity>? = null
-  private var previousBed: Yielded<BedEntity>? = null
+  private var previousBed: Yielded<BedEntity?> = { null }
   private var newBed: Yielded<BedEntity>? = null
   private var notes: Yielded<String> = { "TEST NOTES" }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -27,7 +27,7 @@ class BedMoveEntityFactory : Factory<BedMoveEntity> {
     this.booking = { booking }
   }
 
-  fun withPreviousBed(previousBed: BedEntity) = apply {
+  fun withPreviousBed(previousBed: BedEntity?) = apply {
     this.previousBed = { previousBed }
   }
 
@@ -47,7 +47,7 @@ class BedMoveEntityFactory : Factory<BedMoveEntity> {
     id = this.id(),
 
     booking = this.booking?.invoke() ?: throw RuntimeException("Must provide a booking"),
-    previousBed = this.previousBed?.invoke() ?: throw RuntimeException("Must provide previous bed"),
+    previousBed = this.previousBed.invoke(),
     newBed = this.newBed?.invoke() ?: throw RuntimeException("Must provide new bed"),
     notes = this.notes(),
     createdAt = this.createdAt(),

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -31,6 +32,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
   private val bookingRepository: BookingRepository,
+  private val bedMoveRepository: BedMoveRepository,
   private val domainEventRepository: DomainEventRepository,
   private val domainEventService: Cas1DomainEventService,
   private val userRepository: UserRepository,
@@ -150,6 +152,8 @@ class Cas1BookingToSpaceBookingSeedJob(
       it.booking = null
       placementRequestRepository.save(it)
     }
+
+    bedMoveRepository.deleteByBooking(booking)
     bookingRepository.delete(booking)
 
     log.info("Have migrated booking $bookingId to space booking")
