@@ -12,7 +12,7 @@ import java.util.UUID
 
 @Repository
 interface Cas1DeliusBookingImportRepository : JpaRepository<Cas1DeliusBookingImportEntity, UUID> {
-  fun findByBookingId(id: UUID): Cas1DeliusBookingImportEntity?
+  fun findByBookingIdOrderByCreatedAtDesc(id: UUID): List<Cas1DeliusBookingImportEntity>
 
   /**
    * Returns all active bookings created in delius that were not created in CAS1, using the data in

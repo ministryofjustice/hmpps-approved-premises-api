@@ -201,6 +201,35 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       ),
     )
 
+    // add a second older entry which will be ignored
+    deliusBookingImportRepository.save(
+      Cas1DeliusBookingImportEntity(
+        id = UUID.randomUUID(),
+        bookingId = booking1ManagementInfoFromDelius.id,
+        approvedPremisesReferralId = "Delius Ref Id 1-older",
+        crn = "irrelevant",
+        eventNumber = "irrelevant",
+        keyWorkerStaffCode = "kw002",
+        keyWorkerForename = "kay 2",
+        keyWorkerMiddleName = "m 2",
+        keyWorkerSurname = "werker 2",
+        departureReasonCode = "dr2 ",
+        moveOnCategoryCode = "moc2",
+        moveOnCategoryDescription = null,
+        expectedArrivalDate = LocalDate.of(4000, 1, 1),
+        arrivalDate = LocalDate.of(3024, 5, 2),
+        expectedDepartureDate = LocalDate.of(4001, 2, 2),
+        departureDate = LocalDate.of(3024, 5, 4),
+        nonArrivalDate = LocalDate.of(4000, 1, 1),
+        nonArrivalContactDatetime = OffsetDateTime.of(LocalDateTime.of(3024, 2, 1, 9, 58, 23), ZoneOffset.UTC),
+        nonArrivalReasonCode = "narc2",
+        nonArrivalReasonDescription = null,
+        nonArrivalNotes = "the non arrival notes 2",
+        premisesQcode = "hostel code 2",
+        createdAt = OffsetDateTime.now().minusDays(1),
+      ),
+    )
+
     val booking2MinimalManagementInfoFromDelius = givenABooking(
       crn = "CRN1",
       premises = premises,
