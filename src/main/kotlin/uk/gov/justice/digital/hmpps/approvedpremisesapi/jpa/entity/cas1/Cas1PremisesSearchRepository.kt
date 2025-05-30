@@ -44,10 +44,10 @@ FROM
       ap.point::geography
     ) * 0.000621371 AS distance_in_miles,
     CASE
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_PIPE'=ANY(ARRAY_AGG (characteristics.property_name))) THEN 'PIPE'
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_ESAP'=ANY(ARRAY_AGG (characteristics.property_name))) THEN 'ESAP'
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED'=ANY(ARRAY_AGG (characteristics.property_name))) THEN 'RFAP'
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH'=ANY(ARRAY_AGG (characteristics.property_name))) THEN 'MHAP'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_PIPE'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'PIPE'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_ESAP'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'ESAP'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'RFAP'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'MHAP'
       ELSE 'NORMAL'
     END AS ap_type,
     p.name AS name,
@@ -58,15 +58,17 @@ FROM
     p.postcode AS postcode,
     aa.id AS ap_area_id,
     aa.name AS ap_area_name,
-    ARRAY_AGG (DISTINCT characteristics.property_name) as characteristics
+    ARRAY_AGG (DISTINCT premises_chars_resolved.property_name) as premises_characteristics,
+    ARRAY_AGG (DISTINCT room_chars_resolved.property_name) as room_characteristics
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
   INNER JOIN ap_areas aa ON pr.ap_area_id = aa.id
   LEFT OUTER JOIN rooms ON rooms.premises_id = p.id
   LEFT OUTER JOIN premises_characteristics premises_chars ON premises_chars.premises_id = p.id
+  LEFT OUTER JOIN characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
   LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = rooms.id
-  LEFT OUTER JOIN characteristics ON (characteristics.id IN (premises_chars.characteristic_id,room_chars.characteristic_id))
+  LEFT OUTER JOIN characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
   WHERE 
     ap.supports_space_bookings = true AND
     ap.gender = #SPECIFIED_GENDER#
@@ -114,7 +116,10 @@ class Cas1SpaceSearchRepository(
         rs.getString("postcode"),
         rs.getUUID("ap_area_id"),
         rs.getString("ap_area_name"),
-        SqlUtil.toStringList(rs.getArray("characteristics")),
+        characteristics = (
+          SqlUtil.toStringList(rs.getArray("premises_characteristics")) +
+            SqlUtil.toStringList(rs.getArray("room_characteristics"))
+          ),
       )
     }
   }
