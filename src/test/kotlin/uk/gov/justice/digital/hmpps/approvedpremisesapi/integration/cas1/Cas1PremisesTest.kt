@@ -396,51 +396,32 @@ class Cas1PremisesTest : IntegrationTestBase() {
     fun `Returns correct bed count for premise summaries`() {
       val (_, jwt) = givenAUser()
 
-      val premises1ManRoom = roomEntityFactory.produceAndPersist {
-        withYieldedPremises { premises1ManInArea1 }
-      }
-      val premises2WomanRoom = roomEntityFactory.produceAndPersist {
-        withYieldedPremises { premises2WomanInArea2 }
-      }
-      val premises3ManRoom = roomEntityFactory.produceAndPersist {
-        withYieldedPremises { premises3ManInArea2 }
-      }
-
       val premises1ManLiveBeds = listOf(
-        bedEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedRoom { premises1ManRoom }
-        },
+        givenAnApprovedPremisesBed(premises1ManInArea1),
+        givenAnApprovedPremisesBed(premises1ManInArea1),
+        givenAnApprovedPremisesBed(premises1ManInArea1),
+        givenAnApprovedPremisesBed(premises1ManInArea1),
+        givenAnApprovedPremisesBed(premises1ManInArea1),
         // Beds scheduled for removal in the future
-        bedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { premises1ManRoom }
-          withEndDate { LocalDate.now().plusDays(5) }
-        },
-      ).flatten()
-      // Removed beds
-      bedEntityFactory.produceAndPersistMultiple(2) {
-        withYieldedRoom { premises1ManRoom }
-        withEndDate { LocalDate.now().minusDays(5) }
-      }
+        givenAnApprovedPremisesBed(
+          premises = premises1ManInArea1,
+          endDate = LocalDate.now().plusDays(5),
+        ),
+      )
+      // Removed bed
+      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now().minusDays(5))
       // Beds scheduled for removal today
-      bedEntityFactory.produceAndPersistMultiple(3) {
-        withYieldedRoom { premises1ManRoom }
-        withEndDate { LocalDate.now() }
-      }
+      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now())
 
       val premises2WomanLiveBeds = listOf(
-        bedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { premises2WomanRoom }
-        },
+        givenAnApprovedPremisesBed(premises2WomanInArea2),
+        givenAnApprovedPremisesBed(premises2WomanInArea2),
         // Beds scheduled for removal in the future
-        bedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { premises2WomanRoom }
-          withEndDate { LocalDate.now().plusDays(20) }
-        },
-      ).flatten()
+        givenAnApprovedPremisesBed(premises2WomanInArea2, endDate = LocalDate.now().plusDays(20)),
+      )
 
-      bedEntityFactory.produceAndPersistMultiple(20) {
-        withYieldedRoom { premises3ManRoom }
-        withEndDate { LocalDate.now().minusDays(5) }
+      repeat(20) {
+        givenAnApprovedPremisesBed(premises3ManInArea2, endDate = LocalDate.now().minusDays(5))
       }
 
       val summaries = webTestClient.get()
