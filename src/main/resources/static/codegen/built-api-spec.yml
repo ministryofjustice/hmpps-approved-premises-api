@@ -6606,6 +6606,7 @@ components:
         - approved_premises_create_test_applications
         - approved_premises_delete_application_timeline_notes
         - approved_premises_update_actual_arrival_date
+        - approved_premises_update_premises_status
         - temporary_accommodation_referral_rejection
         - approved_premises_remap_bed_codes
         - short_term_accommodation_create_omus

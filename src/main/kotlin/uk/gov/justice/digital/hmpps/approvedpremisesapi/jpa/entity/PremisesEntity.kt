@@ -104,6 +104,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
           LEFT JOIN p.probationRegion region
           LEFT JOIN region.apArea apArea
         WHERE 
+          status != 'archived' AND 
           (:gender IS NULL OR p.gender = :gender)
           AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId) 
           GROUP BY p.id, p.name, p.apCode, apArea.id, apArea.name, p.fullAddress, p.addressLine1, p.addressLine2, p.town, p.postcode
