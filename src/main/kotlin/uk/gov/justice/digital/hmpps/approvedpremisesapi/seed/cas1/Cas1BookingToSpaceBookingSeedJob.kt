@@ -162,18 +162,22 @@ class Cas1BookingToSpaceBookingSeedJob(
   @SuppressWarnings("MagicNumber")
   private fun getManagementInfo(booking: BookingEntity): ManagementInfo {
     val shouldExistInDelius = !booking.isCancelled
-    val deliusImport = if (shouldExistInDelius) {
-      cas1DeliusBookingImportRepository.findByBookingId(booking.id)
+    val deliusImports = if (shouldExistInDelius) {
+      cas1DeliusBookingImportRepository.findByBookingIdOrderByCreatedAtDesc(booking.id)
     } else {
-      null
+      emptyList()
     }
 
-    if (shouldExistInDelius && deliusImport == null) {
+    if (shouldExistInDelius && deliusImports.isEmpty()) {
       log.warn("Could not retrieve referral details from delius import for booking ${booking.id}, created at ${booking.createdAt}. offline app? ${booking.offlineApplication != null}")
     }
 
-    return if (deliusImport != null) {
-      cas1BookingManagementInfoService.fromDeliusBookingImport(deliusImport)
+    return if (deliusImports.isNotEmpty()) {
+      if (deliusImports.size > 1) {
+        log.warn("Found duplicate entries in the delius import for ${booking.id}, will use the newest entry")
+      }
+
+      cas1BookingManagementInfoService.fromDeliusBookingImport(deliusImports.first())
     } else {
       cas1BookingManagementInfoService.fromBooking(booking)
     }
