@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyBedFactory.Cas1SiteSurveyBed
 import java.io.File
+import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.Boolean
 
@@ -167,6 +168,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         characteristics = room.characteristics.toMutableList(),
         notes = null,
         beds = mutableListOf(),
+        createdAt = OffsetDateTime.now(),
       ),
     )
     changesLog.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")

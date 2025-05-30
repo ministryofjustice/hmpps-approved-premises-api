@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import java.time.LocalDate
 
 const val NO_OF_PREMISES_TO_MIGRATE = 110
 
@@ -33,10 +35,16 @@ class Cas3MigrateNewBedspaceModelDataJobTest : IntegrationTestBase() {
         )
       }
     }.take(NO_OF_PREMISES_TO_MIGRATE).toList()
+
+    applyRoomsAndBedsToTemporaryAccommodationPremises(
+      temporaryAccommodationPremises,
+      endDate = LocalDate.now().randomDateAfter(30),
+      generateNoOfRoomsPerPremiseAtRandom = true,
+    )
   }
 
   @Test
-  fun `should migrate all data required to new cas3 bedspace model tables and running the job twice`() {
+  fun `should migrate all data required to new cas3 bedspace model tables`() {
     migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData, 1)
     val migratedPremises = assertExpectedNumberOfPremisesWereMigrated()
     assertThatAllCas3PremisesDataWasMigratedSuccessfully(migratedPremises)
@@ -66,6 +74,10 @@ class Cas3MigrateNewBedspaceModelDataJobTest : IntegrationTestBase() {
         cas3PremisesEntity = migratedPremise,
         temporaryAccommodationPremisesEntity = tap,
       )
+      assertThatBedspacesMatchRoomsAndBeds(
+        cas3PremisesEntity = migratedPremise,
+        temporaryAccommodationPremisesEntity = tap,
+      )
     }
   }
 
@@ -79,5 +91,19 @@ class Cas3MigrateNewBedspaceModelDataJobTest : IntegrationTestBase() {
     assertThat(cas3PremisesEntity.localAuthorityArea?.id).isEqualTo(temporaryAccommodationPremisesEntity.localAuthorityArea?.id)
     assertThat(cas3PremisesEntity.status).isEqualTo(temporaryAccommodationPremisesEntity.status)
     assertThat(cas3PremisesEntity.notes).isEqualTo(temporaryAccommodationPremisesEntity.notes)
+  }
+
+  private fun assertThatBedspacesMatchRoomsAndBeds(cas3PremisesEntity: Cas3PremisesEntity, temporaryAccommodationPremisesEntity: TemporaryAccommodationPremisesEntity) {
+    assertThat(cas3PremisesEntity.bedspaces.size).isEqualTo(temporaryAccommodationPremisesEntity.rooms.size)
+    cas3PremisesEntity.bedspaces.forEach { bedspace ->
+      val expectedRoomToMatch = temporaryAccommodationPremises
+        .first { it.id == bedspace.premises.id }.rooms
+        .first { room -> room.id == bedspace.id }
+      val expectedBedToMatch = expectedRoomToMatch.beds.first()
+      assertThat(bedspace.name).isEqualTo(expectedRoomToMatch.name)
+      assertThat(bedspace.startDate).isEqualTo(expectedBedToMatch.startDate)
+      assertThat(bedspace.endDate).isEqualTo(expectedBedToMatch.endDate)
+      assertThat(bedspace.notes).isEqualTo(expectedRoomToMatch.notes)
+    }
   }
 }

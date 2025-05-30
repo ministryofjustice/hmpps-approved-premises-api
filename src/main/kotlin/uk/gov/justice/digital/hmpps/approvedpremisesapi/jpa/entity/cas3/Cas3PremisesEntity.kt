@@ -8,6 +8,7 @@ import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
@@ -36,6 +37,9 @@ class Cas3PremisesEntity(
   @ManyToOne
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
+
+  @OneToMany(mappedBy = "premises")
+  var bedspaces: MutableList<Cas3BedspacesEntity>,
 
   @Enumerated(value = EnumType.STRING)
   var status: PropertyStatus,

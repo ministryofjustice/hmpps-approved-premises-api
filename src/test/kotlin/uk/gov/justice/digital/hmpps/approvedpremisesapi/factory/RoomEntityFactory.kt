@@ -74,6 +74,7 @@ class RoomEntityFactory : Factory<RoomEntity> {
     beds = this.beds(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a premises"),
     characteristics = this.characteristics(),
+    createdAt = OffsetDateTime.now(),
   )
 }
 

@@ -46,6 +46,7 @@ class RoomService(
       premises = premises,
       beds = mutableListOf(),
       characteristics = mutableListOf(),
+      createdAt = OffsetDateTime.now(),
     )
 
     if (roomName.isEmpty()) {
@@ -135,6 +136,7 @@ class RoomService(
       premises = room.premises,
       beds = room.beds,
       characteristics = characteristicEntities.map { it!! }.toMutableList(),
+      createdAt = OffsetDateTime.now(),
     )
 
     return AuthorisableActionResult.Success(
@@ -171,6 +173,7 @@ class RoomService(
           premises = room.premises,
           beds = room.beds,
           characteristics = room.characteristics,
+          createdAt = OffsetDateTime.now(),
         )
 
         return@validated success(roomRepository.save(updatedRoom))
