@@ -77,12 +77,15 @@ sealed interface LaoStrategy {
 }
 
 /**
- * This strategy is _not_ applied when creating an application. In that case, we always apply [LaoStrategy.CheckUserAccess]
+ * This strategy is _not_ applied when creating an application. In that case, use cas1CreateApplicationLaoStrategy, which
+ * always applies [LaoStrategy.CheckUserAccess]
  */
 fun UserEntity.cas1LaoStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LaoStrategy.NeverRestricted
 } else {
   LaoStrategy.CheckUserAccess(this.deliusUsername)
 }
+
+fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
 
 fun UserEntity.cas3LaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)

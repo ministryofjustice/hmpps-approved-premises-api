@@ -329,9 +329,9 @@ class OffenderService(
     )
   }
 
-  fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn] == true
+  fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn]
 
-  fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
+  fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean?> {
     if (crns.isEmpty()) return emptyMap()
 
     if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
@@ -350,7 +350,7 @@ class OffenderService(
           valueTransform = { crn ->
             val access = crnToAccessResult[crn]
 
-            access?.hasNotLimitedAccess() ?: false
+            access?.hasNotLimitedAccess()
           },
         )
       }

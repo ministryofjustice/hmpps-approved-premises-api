@@ -1,80 +1,64 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
-import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
+import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysNeedsQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer.Companion.sectionToName
 
-@Component
-class NeedsDetailsTransformer {
-
-  companion object {
-    val sectionToName = mapOf(
-      3 to "Accommodation",
-      4 to "Education, Training and Employment",
-      5 to "Finance",
-      6 to "Relationships",
-      7 to "Lifestyle",
-      10 to "Emotional",
-      11 to "Thinking and Behavioural",
-      12 to "Attitude",
-      13 to "Health",
-    )
-  }
+@Service
+class Cas1OASysNeedsQuestionTransformer {
 
   fun transformToApi(needsDetails: NeedsDetails) = listOf(
-    OASysSection(
+    OASysNeedsQuestion(
       section = 3,
       name = sectionToName[3]!!,
+      optional = isOptional(needsDetails.linksToHarm?.accommodationLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.accommodationLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.accommodationLinkedToReOffending,
     ),
-    OASysSection(
-      section = 4,
-      name = sectionToName[4]!!,
-      linkedToHarm = needsDetails.linksToHarm?.educationTrainingEmploymentLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.educationTrainingEmploymentLinkedToReOffending,
-    ),
-    OASysSection(
-      section = 5,
-      name = sectionToName[5]!!,
-      linkedToHarm = needsDetails.linksToHarm?.financeLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.financeLinkedToReOffending,
-    ),
-    OASysSection(
+    OASysNeedsQuestion(
       section = 6,
       name = sectionToName[6]!!,
+      optional = isOptional(needsDetails.linksToHarm?.relationshipLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.relationshipLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.relationshipLinkedToReOffending,
     ),
-    OASysSection(
+    OASysNeedsQuestion(
       section = 7,
       name = sectionToName[7]!!,
+      optional = isOptional(needsDetails.linksToHarm?.lifestyleLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.lifestyleLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending,
     ),
-    OASysSection(
+    OASysNeedsQuestion(
       section = 10,
       name = sectionToName[10]!!,
+      optional = isOptional(needsDetails.linksToHarm?.emotionalLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.emotionalLinkedToReOffending,
     ),
-    OASysSection(
+    OASysNeedsQuestion(
       section = 11,
       name = sectionToName[11]!!,
+      optional = isOptional(needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.thinkingBehaviouralLinkedToReOffending,
     ),
-    OASysSection(
+    OASysNeedsQuestion(
       section = 12,
       name = sectionToName[12]!!,
+      optional = isOptional(needsDetails.linksToHarm?.attitudeLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending,
     ),
-    OASysSection(
+    OASysNeedsQuestion(
       section = 13,
       name = sectionToName[13]!!,
+      optional = true,
       linkedToHarm = null,
       linkedToReOffending = null,
     ),
   )
+
+  private fun isOptional(linkedToHarm: Boolean?) = linkedToHarm != true
 }

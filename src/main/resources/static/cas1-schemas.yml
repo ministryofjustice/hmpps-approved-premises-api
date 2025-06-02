@@ -1850,6 +1850,29 @@ components:
           $ref: '_shared.yml#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
+    OASysNeedsQuestion:
+      type: object
+      properties:
+        section:
+          type: integer
+          example: 10
+          description: The OAsys section that this needs question relates to
+        name:
+          type: string
+          example: Emotional wellbeing
+        optional:
+          type: boolean
+          description: If the user can optionally elect to include this question in an application. If not optional, it will always be included in the application
+        linkedToHarm:
+          type: boolean
+          description: If the response to this question is linked to harm
+        linkedToReOffending:
+          type: boolean
+          description: If the response to this question is linked to re-offending
+      required:
+        - section
+        - name
+        - optional
 
 
 

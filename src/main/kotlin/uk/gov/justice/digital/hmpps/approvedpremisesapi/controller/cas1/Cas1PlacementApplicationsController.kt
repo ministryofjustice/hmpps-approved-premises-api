@@ -61,7 +61,7 @@ class Cas1PlacementApplicationsController(
     val result = placementApplicationService.getApplication(id)
     val placementApplication = extractEntityFromCasResult(result)
 
-    if (!offenderService.canAccessOffender(placementApplication.application.crn, user.cas1LaoStrategy())) {
+    if (offenderService.canAccessOffender(placementApplication.application.crn, user.cas1LaoStrategy()) != true) {
       throw ForbiddenProblem()
     }
 

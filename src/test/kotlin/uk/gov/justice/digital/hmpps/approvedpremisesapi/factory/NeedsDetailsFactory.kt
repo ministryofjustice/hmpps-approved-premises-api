@@ -40,65 +40,61 @@ class NeedsDetailsFactory : AssessmentInfoFactory<NeedsDetails>() {
   private var thinkingBehaviouralIssuesLinkedToHarm: Yielded<Boolean?> = { false }
   private var thinkingBehaviouralIssuesLinkedToReOffending: Yielded<Boolean?> = { false }
 
-  fun withOffenceAnalysisDetails(offenceAnalysisDetails: String?) = apply {
-    this.offenceAnalysisDetails = { offenceAnalysisDetails }
-  }
-
-  fun withEmotionalIssuesDetails(emotionalIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withEmotionalIssuesDetails(emotionalIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.emotionalIssuesDetails = { emotionalIssuesDetails }
     this.emotionalIssuesLinkedToHarm = { linkedToHarm }
     this.emotionalIssuesLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withDrugIssuesDetails(drugIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withDrugIssuesDetails(drugIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.drugIssuesDetails = { drugIssuesDetails }
     this.drugIssuesLinkedToHarm = { linkedToHarm }
     this.drugIssuesLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withAlcoholIssuesDetails(alcoholIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withAlcoholIssuesDetails(alcoholIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.alcoholIssuesDetails = { alcoholIssuesDetails }
     this.alcoholIssuesLinkedToHarm = { linkedToHarm }
     this.alcoholIssuesLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withLifestyleIssuesDetails(lifestyleIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withLifestyleIssuesDetails(lifestyleIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.lifestyleIssuesDetails = { lifestyleIssuesDetails }
     this.lifestyleLinkedToHarm = { linkedToHarm }
     this.lifestyleLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withRelationshipIssuesDetails(relationshipIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withRelationshipIssuesDetails(relationshipIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.relationshipIssuesDetails = { relationshipIssuesDetails }
     this.relationshipIssuesLinkedToHarm = { linkedToHarm }
     this.relationshipIssuesLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withFinanceIssuesDetails(financeIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withFinanceIssuesDetails(financeIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.financeIssuesDetails = { financeIssuesDetails }
     this.financeLinkedToHarm = { linkedToHarm }
     this.financeLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withEducationTrainingEmploymentIssuesDetails(educationTrainingEmploymentIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withEducationTrainingEmploymentIssuesDetails(educationTrainingEmploymentIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.educationTrainingEmploymentIssuesDetails = { educationTrainingEmploymentIssuesDetails }
     this.educationTrainingEmploymentIssuesLinkedToHarm = { linkedToHarm }
     this.educationTrainingEmploymentIssuesLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withAccommodationIssuesDetails(accommodationIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withAccommodationIssuesDetails(accommodationIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.accommodationIssuesDetails = { accommodationIssuesDetails }
     this.accommodationLinkedToHarm = { linkedToHarm }
     this.accommodationLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withAttitudeIssuesDetails(attitudeIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withAttitudeIssuesDetails(attitudeIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.attitudeIssuesDetails = { attitudeIssuesDetails }
     this.attitudeIssuesLinkedToHarm = { linkedToHarm }
     this.attitudeIssuesLinkedToReOffending = { linkedToReoffending }
   }
 
-  fun withThinkingBehaviouralIssuesDetails(thinkingBehaviouralIssuesDetails: String?, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
+  fun withThinkingBehaviouralIssuesDetails(thinkingBehaviouralIssuesDetails: String? = null, linkedToHarm: Boolean?, linkedToReoffending: Boolean?) = apply {
     this.thinkingBehaviouralIssuesDetails = { thinkingBehaviouralIssuesDetails }
     this.thinkingBehaviouralIssuesLinkedToHarm = { linkedToHarm }
     this.thinkingBehaviouralIssuesLinkedToReOffending = { linkedToReoffending }
