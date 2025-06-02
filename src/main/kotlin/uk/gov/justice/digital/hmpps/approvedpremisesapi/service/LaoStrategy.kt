@@ -37,8 +37,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2Off
  *
  * # CAS2
  *
- * Always return an Offender as [PersonInfoResult.Success.Restricted] if a restriction or exclusion exists,
- * regardless of the users it applies to. This is because CAS1 is only used by NOMIS and External users.
+ * If a restriction exists on the offender (regardless of whether it applies to the user), return [PersonInfoResult.Success.Restricted]
+ * If an exclusion exists on the offender, return the full offender info
+ *
+ * This logic has been applied because CAS2 is used by NOMIS and External Users, so we can't always check restrictions.
  *
  * Implemented in [Cas2OffenderService]
  *
@@ -47,7 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2Off
  * If a restriction exists on the offender (regardless of whether it applies to the user), return [PersonInfoResult.Success.Restricted]
  * If an exclusion exists on the offender, return the full offender info
  *
- * This logic has been applied because CAS1 is used by NOMIS, External and Delius users, so we can't always check restrictions.
+ * This logic has been applied because CAS2 is used by NOMIS, External and Delius users, so we can't always check restrictions.
  *
  * We _could_ tighten this up for Delius users
  *

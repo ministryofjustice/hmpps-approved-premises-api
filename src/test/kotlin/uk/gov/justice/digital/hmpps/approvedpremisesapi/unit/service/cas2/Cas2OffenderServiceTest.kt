@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -32,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
@@ -45,12 +42,6 @@ class Cas2OffenderServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
-
-  private val objectMapper = ObjectMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
 
   private val offenderService = Cas2OffenderService(
     mockPrisonsApiClient,
@@ -197,8 +188,10 @@ class Cas2OffenderServiceTest {
     }
 
     @Test
-    fun `returns Forbidden result when the matching offender has exclusion`() {
+    fun `returns Full Person when Probation Offender Search and Prison API returns a matching offender if offender has exclusion`() {
+      val crn = "ABC123"
       val offenderDetails = CaseSummaryFactory()
+        .withCrn(crn)
         .withCurrentExclusion(true)
         .withNomsId(nomsNumber)
         .produce()
@@ -206,7 +199,31 @@ class Cas2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
 
-      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, currentUser) is ProbationOffenderSearchResult.Forbidden).isTrue
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .withAssignedLivingUnit(
+          AssignedLivingUnit(
+            agencyId = "my-prison",
+            agencyName = "My Prison",
+            locationId = 6,
+            description = "",
+          ),
+        )
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = inmateDetail,
+      )
+
+      val result = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
+
+      assertThat(result is ProbationOffenderSearchResult.Success.Full).isTrue
+      result as ProbationOffenderSearchResult.Success.Full
+      assertThat(result.caseSummary.crn).isEqualTo(crn)
+      assertThat(result.caseSummary.nomsId).isEqualTo(offenderDetails.nomsId)
+      assertThat(result.inmateDetail).isEqualTo(inmateDetail)
+      assertThat(result.inmateDetail?.offenderNo).isEqualTo(nomsNumber)
     }
 
     @Test
@@ -438,6 +455,68 @@ class Cas2OffenderServiceTest {
         true,
       )
       assertThrows<NotFoundProblem> { offenderService.getFullInfoForPersonOrThrow(crn) }
+    }
+
+    @Test
+    fun `returns PersonInfoResult-Success-Restricted when LAO is restricted, status 200`() {
+      val crn = "ABC123"
+      val nomsNumber = "NOMSABC"
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .withCurrentRestriction(true)
+        .produce()
+
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = offenderDetails,
+      )
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = inmateDetail,
+      )
+
+      val error = assertThrows<ForbiddenProblem> { offenderService.getFullInfoForPersonOrThrow(crn) }
+      assertThat(error.message).isEqualTo("Forbidden: Offender $crn is Restricted.")
+    }
+
+    @Test
+    fun `returns PersonInfoResult-Success-Full when offender and inmate details are found and LAO is excluded, status 200`() {
+      val crn = "ABC123"
+      val nomsNumber = "NOMSABC"
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .withCurrentExclusion(true)
+        .produce()
+
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = offenderDetails,
+      )
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = inmateDetail,
+      )
+
+      val result = offenderService.getFullInfoForPersonOrThrow(crn)
+
+      assertThat(result is PersonInfoResult.Success.Full).isTrue
+      assertThat(result.crn).isEqualTo(crn)
+      assertThat(result.offenderDetailSummary).isEqualTo(offenderDetails)
+      assertThat(result.inmateDetail).isEqualTo(inmateDetail)
     }
 
     @Test

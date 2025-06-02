@@ -81,8 +81,8 @@ class Cas2OffenderService(
     } else {
       val caseSummary = caseSummaryList[0]
 
-      // check for restrictions or exclusions
-      if (hasRestrictionOrExclusion(caseSummary)) return ProbationOffenderSearchResult.Forbidden(nomsNumber)
+      // check for restrictions (exclusions allowed for LAO referrals)
+      if (caseSummary.currentRestriction) return ProbationOffenderSearchResult.Forbidden(nomsNumber)
 
       // check inmate details from Prison API
       val inmateDetails = getInmateDetailsForProbationOffender(caseSummary)
@@ -99,8 +99,6 @@ class Cas2OffenderService(
   }
 
   fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity) = currentUser.activeCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
-
-  private fun hasRestrictionOrExclusion(caseSummary: CaseSummary): Boolean = caseSummary.currentExclusion == true || caseSummary.currentRestriction == true
 
   private fun getInmateDetailsForProbationOffender(caseSummary: CaseSummary): InmateDetail? = caseSummary.nomsId?.let { nomsNumber ->
     when (val inmateDetailsResult = getInmateDetailByNomsNumber(caseSummary.crn, nomsNumber)) {
@@ -166,7 +164,7 @@ class Cas2OffenderService(
       }
     }
 
-    if (offender.currentExclusion || offender.currentRestriction) {
+    if (offender.currentRestriction) {
       return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
     }
 
