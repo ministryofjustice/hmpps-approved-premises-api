@@ -300,7 +300,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `return false when no access result returned for crn, ReturnRestrictedIfLimitedAccess strategy`() {
+    fun `return null when no access result returned for crn, ReturnRestrictedIfLimitedAccess strategy`() {
       val crn = randomNumberChars(8)
 
       every {
@@ -311,7 +311,7 @@ class OffenderServiceTest {
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
       val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
-      assertThat(result).isFalse()
+      assertThat(result).isNull()
     }
 
     @Test
@@ -401,7 +401,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `return false when no access result returned for crn`() {
+    fun `return null when no access result returned for crn`() {
       val crn = randomNumberChars(8)
 
       every {
@@ -412,7 +412,7 @@ class OffenderServiceTest {
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
       val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
-      assertThat(result[crn]).isFalse()
+      assertThat(result[crn]).isNull()
     }
 
     @Test
@@ -479,7 +479,7 @@ class OffenderServiceTest {
       assertThat(result[crns[1]]).isFalse()
       assertThat(result[crns[2]]).isFalse()
       assertThat(result[crns[3]]).isFalse()
-      assertThat(result[crns[4]]).isFalse()
+      assertThat(result[crns[4]]).isNull()
     }
 
     @ParameterizedTest

@@ -182,7 +182,7 @@ class ApplicationService(
         UserRole.CAS1_ASSESSOR,
         UserRole.CAS1_FUTURE_MANAGER,
       ) &&
-      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
+      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn) == true
     ) {
       return CasResult.Success(applicationEntity)
     }
