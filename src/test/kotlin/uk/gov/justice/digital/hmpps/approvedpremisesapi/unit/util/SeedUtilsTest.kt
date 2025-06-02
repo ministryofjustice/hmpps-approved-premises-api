@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util
 
 import io.mockk.every
 import io.mockk.mockkStatic
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -32,7 +32,7 @@ class SeedUtilsTest {
       val dataJson = JSONObject(output)
       val hdcDates = dataJson.getJSONObject("hdc-licence-dates").getJSONObject("hdc-licence-dates")
 
-      Assertions.assertThat(hdcDates.toString()).isEqualTo(
+      assertThat(hdcDates.toString()).isEqualTo(
         JSONObject(
           mapOf(
             "hdcEligibilityDate" to "2023-11-23",

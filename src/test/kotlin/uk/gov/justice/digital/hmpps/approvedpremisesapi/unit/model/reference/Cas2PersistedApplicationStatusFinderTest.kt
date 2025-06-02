@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.model.reference
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -22,7 +22,7 @@ class Cas2PersistedApplicationStatusFinderTest {
     fun `returns all statuses`() {
       val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
-      Assertions.assertThat(finder.all().map { it.name }).isEqualTo(
+      assertThat(finder.all().map { it.name }).isEqualTo(
         listOf(
           "moreInfoRequested",
           "awaitingDecision",
@@ -38,7 +38,7 @@ class Cas2PersistedApplicationStatusFinderTest {
     fun `returns only the ACTIVE statuses`() {
       val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
-      Assertions.assertThat(finder.active().map { it.name }).isEqualTo(
+      assertThat(finder.active().map { it.name }).isEqualTo(
         listOf(
           "moreInfoRequested",
           "placeOffered",
@@ -53,13 +53,13 @@ class Cas2PersistedApplicationStatusFinderTest {
     fun `returns the matching status regardless of _isActive_ flag`() {
       val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
-      Assertions.assertThat(
+      assertThat(
         finder.getById(UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")).name,
       ).isEqualTo(
         "moreInfoRequested",
       )
 
-      Assertions.assertThat(
+      assertThat(
         finder.getById(UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")).name,
       ).isEqualTo(
         "awaitingDecision",
@@ -74,7 +74,7 @@ class Cas2PersistedApplicationStatusFinderTest {
         finder.getById(UUID.fromString("9887f81e-1a81-49b8-b0a6-5a17b3c9d7d1"))
       }
 
-      Assertions.assertThat(exception.message).isEqualTo(
+      assertThat(exception.message).isEqualTo(
         "Status with id 9887f81e-1a81-49b8-b0a6-5a17b3c9d7d1 not found",
       )
     }
