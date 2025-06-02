@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OAsysCas1Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysNeedsQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysNeedsQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -21,7 +21,7 @@ class Cas1OasysController(
   private val oaSysService: OASysService,
 ) : OAsysCas1Delegate {
 
-  override fun optionalNeeds(crn: String): ResponseEntity<List<OASysNeedsQuestion>> {
+  override fun optionalNeeds(crn: String): ResponseEntity<List<Cas1OASysNeedsQuestion>> {
     when (
       offenderService.canAccessOffender(
         crn = crn,

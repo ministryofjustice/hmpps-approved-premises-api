@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysNeedsQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysNeedsQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
 
@@ -53,13 +53,13 @@ class Cas1OASysNeedsQuestionTransformerTest {
     val result = transformer.transformToApi(needsDetails)
 
     assertThat(result).containsExactlyInAnyOrder(
-      OASysNeedsQuestion(section = 10, name = "Emotional", optional = false, linkedToHarm = true, linkedToReOffending = false),
-      OASysNeedsQuestion(section = 3, name = "Accommodation", optional = false, linkedToHarm = true, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 6, name = "Relationships", optional = false, linkedToHarm = true, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 7, name = "Lifestyle", optional = false, linkedToHarm = true, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 11, name = "Thinking and Behavioural", optional = false, linkedToHarm = true, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 12, name = "Attitude", optional = false, linkedToHarm = true, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 13, name = "Health", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 10, name = "Emotional", optional = false, linkedToHarm = true, linkedToReOffending = false),
+      Cas1OASysNeedsQuestion(section = 3, name = "Accommodation", optional = false, linkedToHarm = true, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 6, name = "Relationships", optional = false, linkedToHarm = true, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 7, name = "Lifestyle", optional = false, linkedToHarm = true, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 11, name = "Thinking and Behavioural", optional = false, linkedToHarm = true, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 12, name = "Attitude", optional = false, linkedToHarm = true, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 13, name = "Health", optional = true, linkedToHarm = null, linkedToReOffending = null),
     )
   }
 
@@ -77,13 +77,13 @@ class Cas1OASysNeedsQuestionTransformerTest {
     val result = transformer.transformToApi(needsDetails)
 
     assertThat(result).containsExactlyInAnyOrder(
-      OASysNeedsQuestion(section = 10, name = "Emotional", optional = true, linkedToHarm = false, linkedToReOffending = false),
-      OASysNeedsQuestion(section = 3, name = "Accommodation", optional = true, linkedToHarm = false, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 6, name = "Relationships", optional = true, linkedToHarm = false, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 7, name = "Lifestyle", optional = true, linkedToHarm = false, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 11, name = "Thinking and Behavioural", optional = true, linkedToHarm = false, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 12, name = "Attitude", optional = true, linkedToHarm = false, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 13, name = "Health", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 10, name = "Emotional", optional = true, linkedToHarm = false, linkedToReOffending = false),
+      Cas1OASysNeedsQuestion(section = 3, name = "Accommodation", optional = true, linkedToHarm = false, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 6, name = "Relationships", optional = true, linkedToHarm = false, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 7, name = "Lifestyle", optional = true, linkedToHarm = false, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 11, name = "Thinking and Behavioural", optional = true, linkedToHarm = false, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 12, name = "Attitude", optional = true, linkedToHarm = false, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 13, name = "Health", optional = true, linkedToHarm = null, linkedToReOffending = null),
     )
   }
 
@@ -101,13 +101,13 @@ class Cas1OASysNeedsQuestionTransformerTest {
     val result = transformer.transformToApi(needsDetails)
 
     assertThat(result).containsExactlyInAnyOrder(
-      OASysNeedsQuestion(section = 10, name = "Emotional", optional = true, linkedToHarm = null, linkedToReOffending = false),
-      OASysNeedsQuestion(section = 3, name = "Accommodation", optional = true, linkedToHarm = null, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 6, name = "Relationships", optional = true, linkedToHarm = null, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 7, name = "Lifestyle", optional = true, linkedToHarm = null, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 11, name = "Thinking and Behavioural", optional = true, linkedToHarm = null, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 12, name = "Attitude", optional = true, linkedToHarm = null, linkedToReOffending = null),
-      OASysNeedsQuestion(section = 13, name = "Health", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 10, name = "Emotional", optional = true, linkedToHarm = null, linkedToReOffending = false),
+      Cas1OASysNeedsQuestion(section = 3, name = "Accommodation", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 6, name = "Relationships", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 7, name = "Lifestyle", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 11, name = "Thinking and Behavioural", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 12, name = "Attitude", optional = true, linkedToHarm = null, linkedToReOffending = null),
+      Cas1OASysNeedsQuestion(section = 13, name = "Health", optional = true, linkedToHarm = null, linkedToReOffending = null),
     )
   }
 }

@@ -2067,7 +2067,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: 'cas1-schemas.yml#/components/schemas/OASysNeedsQuestion'
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysNeedsQuestion'
         404:
           description: invalid CRN
           content:
