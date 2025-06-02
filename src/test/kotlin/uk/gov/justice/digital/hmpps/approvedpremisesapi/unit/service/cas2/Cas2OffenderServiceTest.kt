@@ -197,8 +197,10 @@ class Cas2OffenderServiceTest {
     }
 
     @Test
-    fun `returns Forbidden result when the matching offender has exclusion`() {
+    fun `returns Full Person when Probation Offender Search and Prison API returns a matching offender if offender has exclusion`() {
+      val crn = "ABC123"
       val offenderDetails = CaseSummaryFactory()
+        .withCrn(crn)
         .withCurrentExclusion(true)
         .withNomsId(nomsNumber)
         .produce()
@@ -206,7 +208,31 @@ class Cas2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
 
-      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, currentUser) is ProbationOffenderSearchResult.Forbidden).isTrue
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .withAssignedLivingUnit(
+          AssignedLivingUnit(
+            agencyId = "my-prison",
+            agencyName = "My Prison",
+            locationId = 6,
+            description = "",
+          ),
+        )
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = inmateDetail,
+      )
+
+      val result = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
+
+      assertThat(result is ProbationOffenderSearchResult.Success.Full).isTrue
+      result as ProbationOffenderSearchResult.Success.Full
+      assertThat(result.caseSummary.crn).isEqualTo(crn)
+      assertThat(result.caseSummary.nomsId).isEqualTo(offenderDetails.nomsId)
+      assertThat(result.inmateDetail).isEqualTo(inmateDetail)
+      assertThat(result.inmateDetail?.offenderNo).isEqualTo(nomsNumber)
     }
 
     @Test
