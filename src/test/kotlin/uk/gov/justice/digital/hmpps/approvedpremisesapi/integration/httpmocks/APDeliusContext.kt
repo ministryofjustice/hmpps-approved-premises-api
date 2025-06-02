@@ -70,6 +70,10 @@ fun IntegrationTestBase.apDeliusContextMockUserAccess(caseAccess: CaseAccess, us
   apDeliusContextAddSingleResponseToUserAccessCall(caseAccess, username)
 }
 
+fun IntegrationTestBase.apDeliusContextUserAccessEmptyResponse() {
+  apDeliusContextAddResponseToUserAccessCall(emptyList())
+}
+
 fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(casesAccess: List<CaseAccess>, username: String = ".*") {
   val url = "/users/access"
   val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }

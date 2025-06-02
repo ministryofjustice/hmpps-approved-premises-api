@@ -2048,6 +2048,34 @@ paths:
                 items:
                   $ref: '#/components/schemas/Cas1ApplicationSummary'
 
+  /people/{crn}/oasys/optional-needs-questions:
+    get:
+      tags:
+        - OAsys
+      summary: Returns information about which needs questions & answers can be optionally included in an application (and which are mandatory), for a given CRN
+      operationId: optionalNeeds
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys selection
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OASysNeedsQuestion'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
   /people/{crn}/timeline:
     get:
       tags:
@@ -8590,6 +8618,29 @@ components:
           $ref: '#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
+    OASysNeedsQuestion:
+      type: object
+      properties:
+        section:
+          type: integer
+          example: 10
+          description: The OAsys section that this needs question relates to
+        name:
+          type: string
+          example: Emotional wellbeing
+        optional:
+          type: boolean
+          description: If the user can optionally elect to include this question in an application. If not optional, it will always be included in the application
+        linkedToHarm:
+          type: boolean
+          description: If the response to this question is linked to harm
+        linkedToReOffending:
+          type: boolean
+          description: If the response to this question is linked to re-offending
+      required:
+        - section
+        - name
+        - optional
 
 
 
