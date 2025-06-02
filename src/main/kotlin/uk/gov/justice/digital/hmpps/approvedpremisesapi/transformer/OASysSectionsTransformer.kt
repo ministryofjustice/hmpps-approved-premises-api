@@ -76,12 +76,11 @@ class OASysSectionsTransformer : OASysTransformer() {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    riskToSelf = listOf(
-      oASysQuestionWithSingleAnswer("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
-      oASysQuestionWithSingleAnswer("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
-      oASysQuestionWithSingleAnswer("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
-      oASysQuestionWithSingleAnswer("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
-    ),
+    riskToSelf =
+    riskToSelfAnswers(risksToTheIndividual) +
+      listOf(
+        oASysQuestionWithSingleAnswer("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
+      ),
   )
 
   fun transformRiskOfSeriousHarm(
@@ -92,13 +91,7 @@ class OASysSectionsTransformer : OASysTransformer() {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    rosh = listOf(
-      oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
-      oASysQuestionWithSingleAnswer("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
-      oASysQuestionWithSingleAnswer("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
-      oASysQuestionWithSingleAnswer("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
-      oASysQuestionWithSingleAnswer("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
-    ),
+    rosh = roshSummaryAnswers(roshSummary),
   )
 
   @SuppressWarnings("CyclomaticComplexMethod")
