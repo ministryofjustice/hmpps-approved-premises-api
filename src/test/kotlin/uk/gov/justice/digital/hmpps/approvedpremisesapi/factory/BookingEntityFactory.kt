@@ -53,6 +53,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
   private var status: Yielded<BookingStatus?> = { null }
   private var adhoc: Yielded<Boolean?> = { null }
+  private var offenderName: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -201,6 +202,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.adhoc = { adhoc }
   }
 
+  fun withOffenderName(offenderName: String?) = apply {
+    this.offenderName = { offenderName }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -227,5 +232,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     placementRequest = this.placementRequest(),
     status = this.status.invoke(),
     adhoc = this.adhoc(),
+    offenderName = this.offenderName(),
   )
 }

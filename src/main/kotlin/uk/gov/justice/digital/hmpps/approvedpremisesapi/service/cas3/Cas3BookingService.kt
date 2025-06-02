@@ -162,6 +162,7 @@ class Cas3BookingService(
           turnarounds = mutableListOf(),
           placementRequest = null,
           status = BookingStatus.provisional,
+          offenderName = null,
         ),
       )
 

@@ -53,6 +53,7 @@ class PlacementRequestBookingSummaryTransformerTest {
         nomsNumber = "NOMS123",
         placementRequest = null,
         status = null,
+        offenderName = null,
       )
 
       val result = transformer.transformJpaToApi(booking)

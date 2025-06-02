@@ -351,6 +351,7 @@ class Cas1ApplicationSeedService(
         placementRequest = null,
         status = BookingStatus.confirmed,
         adhoc = true,
+        offenderName = null,
       ),
     )
 

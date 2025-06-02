@@ -202,6 +202,7 @@ class BookingService(
           placementRequest = null,
           status = BookingStatus.confirmed,
           adhoc = false,
+          offenderName = null,
         ),
       )
 
