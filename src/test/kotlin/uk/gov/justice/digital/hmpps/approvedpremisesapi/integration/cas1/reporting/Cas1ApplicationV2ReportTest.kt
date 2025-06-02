@@ -105,15 +105,17 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get application report is empty if no applications`() {
     val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
+    val startDate = LocalDate.of(2019, 2, 1)
+    val endDate = LocalDate.of(2019, 2, 28)
 
     webTestClient.get()
-      .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2019, month = 2))
+      .uri(getReportUrl(Cas1ReportName.applicationsV2, startDate = startDate, endDate = endDate))
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
       .expectStatus()
       .isOk
-      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-2019-02-[0-9_]*.csv\"")
+      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
       .expectBody()
       .consumeWith {
         val actual = DataFrame
@@ -130,7 +132,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
 
     webTestClient.get()
-      .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
+      .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, startDate = LocalDate.of(2019, 2, 1), endDate = LocalDate.of(2019, 2, 28)))
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
@@ -141,15 +143,17 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get application report returns OK with correct applications, including PII`() {
     val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII))
+    val startDate = LocalDate.of(2020, 2, 1)
+    val endDate = LocalDate.of(2020, 2, 29)
 
     webTestClient.get()
-      .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
+      .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, startDate = startDate, endDate = endDate))
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
       .expectStatus()
       .isOk
-      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-with-pii-2020-02-[0-9_]*.csv\"")
+      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-with-pii-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
       .expectBody()
       .consumeWith {
         val actual = DataFrame
@@ -169,15 +173,17 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get application report returns OK with correct applications, excluding PII`() {
     val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
+    val startDate = LocalDate.of(2020, 2, 1)
+    val endDate = LocalDate.of(2020, 2, 29)
 
     webTestClient.get()
-      .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2020, month = 2))
+      .uri(getReportUrl(Cas1ReportName.applicationsV2, startDate = startDate, endDate = endDate))
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .exchange()
       .expectStatus()
       .isOk
-      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-2020-02-[0-9_]*.csv\"")
+      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
       .expectBody()
       .consumeWith { response ->
         val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
@@ -1105,5 +1111,5 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getApplication(applicationId: UUID) = realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getReportUrl(reportName: Cas1ReportName, year: Int, month: Int) = "/cas1/reports/${reportName.value}?year=$year&month=$month"
+  private fun getReportUrl(reportName: Cas1ReportName, startDate: LocalDate, endDate: LocalDate) = "/cas1/reports/${reportName.value}?startDate=$startDate&endDate=$endDate"
 }

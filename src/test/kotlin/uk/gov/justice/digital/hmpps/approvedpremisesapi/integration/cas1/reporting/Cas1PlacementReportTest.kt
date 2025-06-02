@@ -149,15 +149,17 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get report is empty if no space bookings`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+      val startDate = LocalDate.of(2023, 2, 1)
+      val endDate = LocalDate.of(2023, 2, 28)
 
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placements, year = REPORT_YEAR - 1, month = REPORT_MONTH))
+        .uri(getReportUrl(Cas1ReportName.placements, startDate = startDate, endDate = endDate))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placements-2023-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placements-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame
@@ -174,7 +176,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   fun `Permission denied if trying to access report with PII without correct role`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placementsWithPii, year = REPORT_YEAR, month = REPORT_MONTH))
+        .uri(getReportUrl(Cas1ReportName.placementsWithPii, startDate = LocalDate.of(2024, 2, 1), endDate = LocalDate.of(2024, 2, 29)))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -186,15 +188,17 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get report returns OK with correct applications, excluding PII`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+      val startDate = LocalDate.of(2024, 2, 1)
+      val endDate = LocalDate.of(2024, 2, 29)
 
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placements, year = REPORT_YEAR, month = REPORT_MONTH))
+        .uri(getReportUrl(Cas1ReportName.placements, startDate = startDate, endDate = endDate))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placements-2024-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placements-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
         .expectBody()
         .consumeWith { response ->
           val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
@@ -228,15 +232,17 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get report returns OK with correct applications, including PII`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII)) { _, jwt ->
+      val startDate = LocalDate.of(2024, 2, 1)
+      val endDate = LocalDate.of(2024, 2, 29)
 
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placementsWithPii, year = REPORT_YEAR, month = REPORT_MONTH))
+        .uri(getReportUrl(Cas1ReportName.placementsWithPii, startDate = startDate, endDate = endDate))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placements-with-pii-2024-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placements-with-pii-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
         .expectBody()
         .consumeWith { response ->
           val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
@@ -766,7 +772,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getPlacementApplication(application: ApplicationEntity) = getPlacementApplications(application).first()
 
-  private fun getReportUrl(reportName: Cas1ReportName, year: Int, month: Int) = "/cas1/reports/${reportName.value}?year=$year&month=$month"
+  private fun getReportUrl(reportName: Cas1ReportName, startDate: LocalDate, endDate: LocalDate) = "/cas1/reports/${reportName.value}?startDate=$startDate&endDate=$endDate"
 }
 
 @SuppressWarnings("ConstructorParameterNaming")
