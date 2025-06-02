@@ -21,12 +21,11 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
                 CAST(events.data -> 'eventDetails' ->> 'updatedAt' AS TIMESTAMP),
                 'YYYY-MM-DD"T"HH24:MI:SS'
         ) AS updatedAt,
-        CASE
-            WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0
-            ELSE COUNT(distinct pom_assignments.id) - 1
-        END as numberOfTransfers
+        COUNT(distinct location_assignments.id) as numberOfLocationTransfers,
+        CASE WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0 ELSE COUNT(distinct pom_assignments.id) - 1 END as numberOfPomTransfers
     FROM domain_events events
              LEFT JOIN cas_2_application_assignments as pom_assignments on events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_user_id is NOT NULL
+             LEFT JOIN cas_2_application_assignments as location_assignments on events.application_id = location_assignments.application_id and location_assignments.allocated_pom_user_id is NULL
              LEFT JOIN LATERAL jsonb_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
     WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
       AND events.occurred_at  > CURRENT_DATE - 365
@@ -47,5 +46,6 @@ interface Cas2ApplicationStatusUpdatedReportRow {
   fun getPersonCrn(): String
   fun getNewStatus(): String
   fun getStatusDetails(): String
-  fun getNumberOfTransfers(): String
+  fun getNumberOfLocationTransfers(): String
+  fun getNumberOfPomTransfers(): String
 }
