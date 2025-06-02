@@ -57,7 +57,6 @@ class SubmissionsTransformerTest {
   )
 
   private val nomisUserEntity = NomisUserEntityFactory().produce()
-
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(nomisUserEntity)
 
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
