@@ -71,7 +71,7 @@ data class Cas2UserEntity(
   fun staffIdentifier() = when (userType) {
     Cas2UserType.NOMIS -> nomisStaffId?.toString() ?: error("Couldn't resolve nomis ID for user $id")
     Cas2UserType.DELIUS -> deliusStaffCode ?: error("Couldn't resolve delius ID for user $id")
-    Cas2UserType.EXTERNAL -> ""
+    Cas2UserType.EXTERNAL -> "" // BAIL-WIP - this currently needs to be not null - refactor them when we add the user type to cas2 user type
   }
 
   fun isExternal() = userType == Cas2UserType.EXTERNAL

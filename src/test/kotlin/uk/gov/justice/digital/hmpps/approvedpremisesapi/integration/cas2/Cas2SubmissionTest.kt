@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
@@ -195,14 +194,14 @@ class Cas2SubmissionTest(
         .expectStatus()
         .isOk
 
-      Assertions.assertThat(
+      assertThat(
         externalUserRepository.findByUsername(username),
       ).isNotNull
     }
 
     @Test
     fun `Assessor can view ALL submitted applications`() {
-      givenACas2Assessor { _externalUserEntity, jwt ->
+      givenACas2Assessor { _, jwt ->
         givenACas2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
@@ -292,7 +291,7 @@ class Cas2SubmissionTest(
               offenderDetails,
             )
 
-            Assertions.assertThat(responseBody).noneMatch {
+            assertThat(responseBody).noneMatch {
               inProgressCas2ApplicationEntity.id == it.id
             }
           }
@@ -305,7 +304,7 @@ class Cas2SubmissionTest(
       expectedSubmittedApplication: Cas2ApplicationEntity,
       offenderDetails: OffenderDetailSummary,
     ) {
-      Assertions.assertThat(response).matches {
+      assertThat(response).matches {
         expectedSubmittedApplication.id == it.id &&
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
@@ -314,7 +313,7 @@ class Cas2SubmissionTest(
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
 
-      Assertions.assertThat(response.personName)
+      assertThat(response.personName)
         .isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
     }
   }
@@ -367,7 +366,7 @@ class Cas2SubmissionTest(
         .expectStatus()
         .isNotFound
 
-      Assertions.assertThat(
+      assertThat(
         externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
       ).isNotNull
     }
@@ -581,7 +580,7 @@ class Cas2SubmissionTest(
               user,
             )
 
-            val rawResponseBody = webTestClient.get()
+            webTestClient.get()
               .uri("/cas2/submissions/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
@@ -749,7 +748,7 @@ class Cas2SubmissionTest(
                 user,
               )
 
-              val rawResponseBody = webTestClient.get()
+              webTestClient.get()
                 .uri("/cas2/submissions/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
@@ -808,7 +807,7 @@ class Cas2SubmissionTest(
             )
           }
 
-          Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
+          assertThat(realAssessmentRepository.count()).isEqualTo(0)
 
           webTestClient.post()
             .uri("/cas2/submissions")
@@ -831,7 +830,7 @@ class Cas2SubmissionTest(
 
         val applicationAssignment =
           applicationAssignmentRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)
-        Assertions.assertThat(applicationAssignment!!.allocatedPomUser?.id).isEqualTo(submittingUser.id)
+        assertThat(applicationAssignment!!.allocatedPomUser?.id).isEqualTo(submittingUser.id)
 
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
@@ -840,7 +839,7 @@ class Cas2SubmissionTest(
           persistedDomainEvent!!.data,
           Cas2ApplicationSubmittedEvent::class.java,
         )
-        Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
+        assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)
 
         val persistedAssessment = realAssessmentRepository.findAll().first()
@@ -937,8 +936,8 @@ class Cas2SubmissionTest(
             thread
           }.forEach(Thread::join)
 
-          Assertions.assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
-          Assertions.assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
+          assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
+          assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
         }
       }
     }
@@ -973,8 +972,8 @@ class Cas2SubmissionTest(
             )
           }
 
-          Assertions.assertThat(domainEventRepository.count()).isEqualTo(0)
-          Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
+          assertThat(domainEventRepository.count()).isEqualTo(0)
+          assertThat(realAssessmentRepository.count()).isEqualTo(0)
 
           webTestClient.post()
             .uri("/cas2/submissions")
@@ -994,9 +993,9 @@ class Cas2SubmissionTest(
             .expectStatus()
             .isBadRequest
 
-          Assertions.assertThat(domainEventRepository.count()).isEqualTo(0)
-          Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
-          Assertions.assertThat(realApplicationRepository.findById(applicationId).get().submittedAt).isNull()
+          assertThat(domainEventRepository.count()).isEqualTo(0)
+          assertThat(realAssessmentRepository.count()).isEqualTo(0)
+          assertThat(realApplicationRepository.findById(applicationId).get().submittedAt).isNull()
         }
       }
     }
