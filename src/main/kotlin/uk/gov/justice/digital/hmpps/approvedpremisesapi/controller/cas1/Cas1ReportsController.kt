@@ -145,14 +145,14 @@ class Cas1ReportsController(
     endDate: LocalDate? = null,
   ): ReportDateRange = when {
     year != null && month != null -> {
-      val start = LocalDate.of(year, month, 1)
-      val end = YearMonth.of(year, month).atEndOfMonth()
+      val start = LocalDate.of(year, month, 1).atStartOfDay()
+      val end = YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59)
       ReportDateRange(start, end)
     }
 
     startDate != null && endDate != null -> {
-      val start = startDate
-      val end = endDate
+      val start = startDate.atStartOfDay()
+      val end = endDate.atTime(23, 59, 59)
       ReportDateRange(start, end)
     }
     else -> throw IllegalArgumentException("Either year/month or startDate/endDate must be provided")
@@ -166,8 +166,8 @@ class Cas1ReportsController(
 
   private fun createCas1ReportName(
     name: String,
-    startDate: LocalDate,
-    endDate: LocalDate,
+    startDate: LocalDateTime,
+    endDate: LocalDateTime,
     contentType: ContentType,
   ): String {
     val timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)

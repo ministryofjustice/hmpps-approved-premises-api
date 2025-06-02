@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import java.io.OutputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 
 @Service
@@ -70,8 +71,8 @@ class Cas1ReportService(
       columnsToExclude = emptyList(),
     ).use { consumer ->
       cas1DailyMetricsReportRepository.generateCas1DailyMetricsReport(
-        startDate = reportDateRange.start,
-        endDate = reportDateRange.end,
+        startDateTimeInclusive = reportDateRange.start,
+        endDateTimeInclusive = reportDateRange.end,
         jdbcResultSetConsumer = consumer,
 
       )
@@ -166,8 +167,8 @@ class Cas1ReportService(
   }
 
   data class ReportDateRange(
-    val start: LocalDate,
-    val end: LocalDate,
+    val start: LocalDateTime,
+    val end: LocalDateTime,
   )
 
   @Deprecated("Will be removed soon", replaceWith = ReplaceWith("ReportDateRange(startDate, endDate)"))
