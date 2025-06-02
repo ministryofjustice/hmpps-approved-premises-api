@@ -9,9 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Plac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import java.io.OutputStream
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.YearMonth
 
 @Service
 class Cas1ReportService(
@@ -39,7 +37,7 @@ class Cas1ReportService(
   }
 
   fun createApplicationReportV2(
-    properties: MonthSpecificReportParams,
+    reportDateRange: ReportDateRange,
     includePii: Boolean,
     outputStream: OutputStream,
   ) {
@@ -54,8 +52,8 @@ class Cas1ReportService(
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
       cas1ApplicationV2ReportRepository.generateForSubmissionOrWithdrawalDate(
-        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
-        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        startDateTimeInclusive = reportDateRange.start,
+        endDateTimeInclusive = reportDateRange.end,
         jbdcResultSetConsumer = consumer,
       )
     }
@@ -99,7 +97,7 @@ class Cas1ReportService(
   }
 
   fun createRequestForPlacementReport(
-    properties: MonthSpecificReportParams,
+    reportDateRange: ReportDateRange,
     includePii: Boolean,
     outputStream: OutputStream,
   ) {
@@ -114,15 +112,15 @@ class Cas1ReportService(
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
       cas1PlacementRequestReportRepository.generateForSubmissionOrWithdrawalDate(
-        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
-        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        startDateTimeInclusive = reportDateRange.start,
+        endDateTimeInclusive = reportDateRange.end,
         consumer,
       )
     }
   }
 
   fun createPlacementMatchingOutcomesV2Report(
-    properties: MonthSpecificReportParams,
+    reportDateRange: ReportDateRange,
     includePii: Boolean,
     outputStream: OutputStream,
   ) {
@@ -137,15 +135,15 @@ class Cas1ReportService(
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
       cas1PlacementMatchingOutcomesV2ReportRepository.generateForArrivalDateThisMonth(
-        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
-        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        startDateTimeInclusive = reportDateRange.start,
+        endDateTimeInclusive = reportDateRange.end,
         consumer,
       )
     }
   }
 
   fun createPlacementReport(
-    properties: MonthSpecificReportParams,
+    reportDateRange: ReportDateRange,
     includePii: Boolean,
     outputStream: OutputStream,
   ) {
@@ -160,8 +158,8 @@ class Cas1ReportService(
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
       cas1PlacementReportRepository.generatePlacementReport(
-        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
-        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        startDateTimeInclusive = reportDateRange.start,
+        endDateTimeInclusive = reportDateRange.end,
         consumer,
       )
     }
@@ -171,16 +169,4 @@ class Cas1ReportService(
     val start: LocalDateTime,
     val end: LocalDateTime,
   )
-
-  @Deprecated("Will be removed soon", replaceWith = ReplaceWith("ReportDateRange(startDate, endDate)"))
-  data class MonthSpecificReportParams(
-    val year: Int,
-    val month: Int,
-  )
-
-  @SuppressWarnings("MagicNumber")
-  private fun getFirstSecondOfMonth(year: Int, month: Int) = LocalDate.of(year, month, 1).atStartOfDay()
-
-  @SuppressWarnings("MagicNumber")
-  private fun getLastSecondOfMonth(year: Int, month: Int) = YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59, 999999999)
 }

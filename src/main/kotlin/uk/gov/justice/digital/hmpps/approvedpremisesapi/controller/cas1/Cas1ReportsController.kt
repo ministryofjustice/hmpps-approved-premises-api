@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.ReportDateRange
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -54,85 +53,78 @@ class Cas1ReportsController(
     val reportDateRange = computeReportDateRange(year, month, startDate, endDate)
     val startDate = reportDateRange.start
     val endDate = reportDateRange.end
-    val year = year ?: startDate.year
-    val month = month ?: startDate.monthValue
-
-    val monthSpecificReportParams = MonthSpecificReportParams(
-      year = year,
-      month = month,
-    )
 
     return when (reportName) {
       Cas1ReportName.applicationsV2 -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("applications", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("applications", reportDateRange),
       ) { outputStream ->
-        cas1ReportService.createApplicationReportV2(monthSpecificReportParams, includePii = false, outputStream)
+        cas1ReportService.createApplicationReportV2(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.applicationsV2WithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("applications-with-pii", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("applications-with-pii", reportDateRange),
       ) { outputStream ->
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
-        cas1ReportService.createApplicationReportV2(monthSpecificReportParams, includePii = true, outputStream)
+        cas1ReportService.createApplicationReportV2(reportDateRange, includePii = true, outputStream)
       }
       Cas1ReportName.dailyMetrics -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("daily-metrics", startDate, endDate, ContentType.CSV),
+        fileName = createCas1ReportName("daily-metrics", reportDateRange),
       ) { outputStream ->
         cas1ReportService.createDailyMetricsReport(reportDateRange, outputStream)
       }
       Cas1ReportName.outOfServiceBeds -> return generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("out-of-service-beds", startDate, endDate, ContentType.CSV),
+        fileName = createCas1ReportName("out-of-service-beds", reportDateRange),
       ) { outputStream ->
         cas1ReportService.createOutOfServiceBedReport(reportDateRange, outputStream, includePii = false)
       }
       Cas1ReportName.outOfServiceBedsWithPii -> return generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("out-of-service-beds-with-pii", startDate, endDate, ContentType.CSV),
+        fileName = createCas1ReportName("out-of-service-beds-with-pii", reportDateRange),
       ) { outputStream ->
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
         cas1ReportService.createOutOfServiceBedReport(reportDateRange, outputStream, includePii = true)
       }
       Cas1ReportName.requestsForPlacement -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("requests-for-placement", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("requests-for-placement", reportDateRange),
       ) { outputStream ->
-        cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, includePii = false, outputStream)
+        cas1ReportService.createRequestForPlacementReport(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.requestsForPlacementWithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("requests-for-placement-with-pii", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("requests-for-placement-with-pii", reportDateRange),
       ) { outputStream ->
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
-        cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, includePii = true, outputStream)
+        cas1ReportService.createRequestForPlacementReport(reportDateRange, includePii = true, outputStream)
       }
       Cas1ReportName.placementMatchingOutcomesV2 -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("placement-matching-outcomes", reportDateRange),
       ) { outputStream ->
-        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, includePii = false, outputStream)
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.placementMatchingOutcomesV2WithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("placement-matching-outcomes-with-pii", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("placement-matching-outcomes-with-pii", reportDateRange),
       ) { outputStream ->
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
-        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, includePii = true, outputStream)
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(reportDateRange, includePii = true, outputStream)
       }
       Cas1ReportName.placements -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("placements", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("placements", reportDateRange),
       ) { outputStream ->
-        cas1ReportService.createPlacementReport(monthSpecificReportParams, includePii = false, outputStream)
+        cas1ReportService.createPlacementReport(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.placementsWithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
-        fileName = createCas1ReportName("placements-with-pii", year, month, ContentType.CSV),
+        fileName = createCas1ReportName("placements-with-pii", reportDateRange),
       ) { outputStream ->
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
-        cas1ReportService.createPlacementReport(monthSpecificReportParams, includePii = true, outputStream)
+        cas1ReportService.createPlacementReport(reportDateRange, includePii = true, outputStream)
       }
     }
   }
@@ -158,23 +150,16 @@ class Cas1ReportsController(
     else -> throw IllegalArgumentException("Either year/month or startDate/endDate must be provided")
   }
 
-  @Deprecated("Will be removed soon", replaceWith = ReplaceWith("createCas1ReportName(name, startDate, endDate, contentType)"))
-  private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType): String {
-    val timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
-    return "$name-$year-${month.toString().padStart(2, '0')}-$timestamp.${contentType.extension}"
-  }
-
   private fun createCas1ReportName(
     name: String,
-    startDate: LocalDateTime,
-    endDate: LocalDateTime,
-    contentType: ContentType,
+    reportDateRange: ReportDateRange,
+    fileType: ContentType = ContentType.CSV,
   ): String {
     val timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
-    val startFormatted = startDate.format(DateTimeFormatter.ISO_DATE)
-    val endFormatted = endDate.format(DateTimeFormatter.ISO_DATE)
+    val startFormatted = reportDateRange.start.format(DateTimeFormatter.ISO_DATE)
+    val endFormatted = reportDateRange.end.format(DateTimeFormatter.ISO_DATE)
 
-    return "$name-$startFormatted-to-$endFormatted-$timestamp.${contentType.extension}"
+    return "$name-$startFormatted-to-$endFormatted-$timestamp.${fileType.extension}"
   }
 
   @SuppressWarnings("ThrowsCount")
