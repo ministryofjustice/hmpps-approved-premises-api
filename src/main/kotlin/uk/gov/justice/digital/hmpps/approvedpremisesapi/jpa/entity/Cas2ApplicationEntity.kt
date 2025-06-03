@@ -21,8 +21,11 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -90,6 +93,7 @@ data class Cas2ApplicationEntity(
   val crn: String,
 
   // BAIL-WIP - When start to create application for delius users, this will need to be nullable, but that creates cas2cade effects whenever we us code like `staffIdentifier = application.createdByUser.nomisStaffId`,`
+  // BAIL-WIP - Set this to deprecated when we make it optional
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: NomisUserEntity,
@@ -141,6 +145,24 @@ data class Cas2ApplicationEntity(
   var applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
+
+  fun getCreatedById(): UUID = createdByCas2User?.id ?: createdByUser.id
+  fun getCreatedByCanonicalName(): String = createdByCas2User?.name ?: createdByUser.name
+  fun getCreatedByUsername(): String = createdByCas2User?.username ?: createdByUser.nomisUsername
+  fun getCreatedByUserIdentifier(): String = createdByCas2User?.staffIdentifier() ?: createdByUser.nomisStaffId.toString()
+  fun getCreatedByUserEmail(): String? = createdByCas2User?.email ?: createdByUser.email
+
+  fun getCreatedByUserType(): Cas2StaffMember.Usertype {
+    if (createdByCas2User != null) {
+      return when (createdByCas2User!!.userType) {
+        Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
+        Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
+        Cas2UserType.EXTERNAL -> throw ForbiddenProblem() // BAIL-WIP - The cas2 staff member usertype does not know about external users, we need to add it in the yaml
+      }
+    }
+    return Cas2StaffMember.Usertype.nomis
+  }
+
   val currentPrisonCode: String?
     get() = applicationAssignments.maxByOrNull { it.createdAt }?.prisonCode
   val currentPomUserId: UUID?

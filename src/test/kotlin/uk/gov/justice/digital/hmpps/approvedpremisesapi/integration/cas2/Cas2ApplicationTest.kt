@@ -661,37 +661,37 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             // check transformers were able to return all fields
-            Assertions.assertThat(responseBody).anySatisfy {
-              Assertions.assertThat(it.id).isEqualTo(firstApplicationEntity.id)
-              Assertions.assertThat(it.crn).isEqualTo(firstApplicationEntity.crn)
-              Assertions.assertThat(it.nomsNumber).isEqualTo(firstApplicationEntity.nomsNumber)
-              Assertions.assertThat(it.personName).isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
-              Assertions.assertThat(it.createdAt).isEqualTo(firstApplicationEntity.createdAt.toInstant())
-              Assertions.assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.createdByUser.id)
-              Assertions.assertThat(it.submittedAt).isEqualTo(firstApplicationEntity.submittedAt?.toInstant())
-              Assertions.assertThat(it.hdcEligibilityDate).isEqualTo(firstApplicationEntity.hdcEligibilityDate)
-              Assertions.assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
+            assertThat(responseBody).anySatisfy {
+              assertThat(it.id).isEqualTo(firstApplicationEntity.id)
+              assertThat(it.crn).isEqualTo(firstApplicationEntity.crn)
+              assertThat(it.nomsNumber).isEqualTo(firstApplicationEntity.nomsNumber)
+              assertThat(it.personName).isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+              assertThat(it.createdAt).isEqualTo(firstApplicationEntity.createdAt.toInstant())
+              assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.createdByUser.id)
+              assertThat(it.submittedAt).isEqualTo(firstApplicationEntity.submittedAt?.toInstant())
+              assertThat(it.hdcEligibilityDate).isEqualTo(firstApplicationEntity.hdcEligibilityDate)
+              assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
             }
 
-            Assertions.assertThat(responseBody).noneMatch {
+            assertThat(responseBody).noneMatch {
               thirdApplicationEntity.id == it.id
             }
 
-            Assertions.assertThat(responseBody).noneMatch {
+            assertThat(responseBody).noneMatch {
               otherCas2ApplicationEntity.id == it.id
             }
 
-            Assertions.assertThat(responseBody).noneMatch {
+            assertThat(responseBody).noneMatch {
               abandonedApplicationEntity.id == it.id
             }
 
-            Assertions.assertThat(responseBody[0].createdAt)
+            assertThat(responseBody[0].createdAt)
               .isEqualTo(secondApplicationEntity.createdAt.toInstant())
 
-            Assertions.assertThat(responseBody[0].latestStatusUpdate!!.label)
+            assertThat(responseBody[0].latestStatusUpdate!!.label)
               .isEqualTo(statusUpdate.label)
 
-            Assertions.assertThat(responseBody[1].createdAt)
+            assertThat(responseBody[1].createdAt)
               .isEqualTo(firstApplicationEntity.createdAt.toInstant())
           }
         }

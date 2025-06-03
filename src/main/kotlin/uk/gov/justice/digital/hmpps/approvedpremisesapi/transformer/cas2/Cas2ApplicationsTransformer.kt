@@ -33,7 +33,7 @@ class Cas2ApplicationsTransformer(
     return Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      createdBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
+      createdBy = nomisUserTransformer.transformJpaToApi(jpa),
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
