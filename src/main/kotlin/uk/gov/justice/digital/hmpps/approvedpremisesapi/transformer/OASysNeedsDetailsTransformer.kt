@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 
 @Component
-class NeedsDetailsTransformer {
+class OASysNeedsDetailsTransformer {
 
   fun transformToApi(needsDetails: NeedsDetails) = listOf(
     OASysSection(

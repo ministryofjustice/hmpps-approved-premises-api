@@ -7,11 +7,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysNeedsDetailsTransformer
 
 class PersonOASysSelectionTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
-  lateinit var needsDetailsTransformer: NeedsDetailsTransformer
+  lateinit var oasSysNeedsDetailsTransformer: OASysNeedsDetailsTransformer
 
   @Test
   fun `Getting oasys section selection by CRN without a JWT returns 401`() {
@@ -88,7 +88,7 @@ class PersonOASysSelectionTest : InitialiseDatabasePerClassTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              needsDetailsTransformer.transformToApi(needsDetails),
+              oasSysNeedsDetailsTransformer.transformToApi(needsDetails),
             ),
           )
       }
