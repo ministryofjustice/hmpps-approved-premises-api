@@ -49,6 +49,8 @@ class Cas1ExpiredApplicationsScheduledJob(
           applicationId,
           previousStatus,
           (applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity).status.name,
+          statusBeforeExpiry = previousStatus,
+          expiryReason = ApplicationExpired.ExpiryReason.assessmentExpired,
         )
 
         val domainEventId = UUID.randomUUID()
@@ -67,6 +69,7 @@ class Cas1ExpiredApplicationsScheduledJob(
               eventDetails = applicationExpired,
             ),
             triggerSource = TriggerSourceType.SYSTEM,
+            schemaVersion = 2,
           ),
         )
         log.info("Domain event id $domainEventId emitted for application $applicationId.")
