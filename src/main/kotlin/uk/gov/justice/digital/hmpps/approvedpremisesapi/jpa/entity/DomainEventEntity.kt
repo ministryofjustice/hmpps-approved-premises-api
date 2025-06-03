@@ -249,6 +249,10 @@ enum class DomainEventType(
       emittable = false,
       payloadType = ApplicationExpired::class,
       apiType = Cas1EventType.applicationExpired,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Added statusBeforeExpiry and expiryReason fields"),
+      ),
     ),
   ),
   APPROVED_PREMISES_BOOKING_MADE(
