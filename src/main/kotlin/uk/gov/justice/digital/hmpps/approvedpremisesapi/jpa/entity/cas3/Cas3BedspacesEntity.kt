@@ -5,6 +5,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
@@ -30,6 +32,14 @@ class Cas3BedspacesEntity(
   val startDate: LocalDate?,
   val endDate: LocalDate?,
   val createdAt: OffsetDateTime?,
+
+  @ManyToMany
+  @JoinTable(
+    name = "cas3_bedspace_characteristic_assignments",
+    joinColumns = [JoinColumn(name = "bedspace_id")],
+    inverseJoinColumns = [JoinColumn(name = "bedspace_characteristics_id")],
+  )
+  var characteristics: MutableList<Cas3BedspaceCharacteristicEntity>,
 )
 
 @Repository
