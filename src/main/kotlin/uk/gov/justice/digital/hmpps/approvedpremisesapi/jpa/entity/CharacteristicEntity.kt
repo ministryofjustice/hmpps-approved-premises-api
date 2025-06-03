@@ -7,6 +7,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3BedspaceCharacteristicMappingId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3PremisesCharacteristicMappingId
 import java.util.UUID
 
 @Repository
@@ -91,6 +93,41 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllForRoomId(roomId: UUID): List<CharacteristicEntity>
+
+  @Query(
+    """
+      SELECT b.id AS bedspaceId, c.id AS bedspaceCharacteristicsId 
+      FROM characteristics c
+      JOIN room_characteristics rc ON rc.characteristic_id = c.id
+      JOIN beds b ON b.room_id = rc.room_id
+      WHERE b.id IN :bedIds
+    """,
+    nativeQuery = true,
+  )
+  fun findBedspaceCharacteristicsMappingsByBedIds(bedIds: List<UUID>): List<Cas3BedspaceCharacteristicMappingId>
+
+  @Query(
+    """
+      SELECT p.id AS premisesId, c.id AS premisesCharacteristicsId
+      FROM characteristics c
+      JOIN premises_characteristics pc ON pc.characteristic_id = c.id
+      JOIN premises p ON p.id = pc.premises_id
+      WHERE p.id IN :premisesIds
+    """,
+    nativeQuery = true,
+  )
+  fun findPremisesCharacteristicsMappingsByPremiseIds(premisesIds: List<UUID>): List<Cas3PremisesCharacteristicMappingId>
+
+  @Query(
+    """
+      SELECT c.*
+      FROM characteristics c
+      WHERE (model_scope = '*' OR model_scope = :modelScope)
+      AND (service_scope = '*' OR service_scope = :serviceScope)
+    """,
+    nativeQuery = true,
+  )
+  fun findAllCharacteristicsReferenceData(modelScope: String, serviceScope: String): List<CharacteristicEntity>
 }
 
 @Entity
