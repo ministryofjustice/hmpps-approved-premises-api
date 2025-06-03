@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
@@ -33,14 +33,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3FutureBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas3PremisesTest : IntegrationTestBase() {
+class Cas3PremisesTest : Cas3IntegrationTestBase() {
   @Autowired
   lateinit var cas3FutureBookingTransformer: Cas3FutureBookingTransformer
 
@@ -654,9 +653,9 @@ class Cas3PremisesTest : IntegrationTestBase() {
         propertyStatus = PropertyStatus.active,
       )
       return (
-        applyRoomsAndBeds(premises = premises, endDate = null) +
-          applyRoomsAndBeds(premises = definitelyArchivedPremises, endDate = LocalDate.now().minusDays(4)) +
-          applyRoomsAndBeds(premises = definitelyActivePremises, endDate = LocalDate.now().plusDays(4))
+        createRoomsWithSingleBedInPremises(premises = premises) +
+          createRoomsWithSingleBedInPremises(premises = definitelyArchivedPremises, endDate = LocalDate.now().minusDays(4)) +
+          createRoomsWithSingleBedInPremises(premises = definitelyActivePremises, endDate = LocalDate.now().plusDays(4))
         ).sortedBy { it.id }
     }
 
@@ -672,25 +671,6 @@ class Cas3PremisesTest : IntegrationTestBase() {
         withProbationDeliveryUnit(probationDeliveryUnit)
         withLocalAuthorityArea(localAuthorityArea)
         withStatus(propertyStatus)
-      }
-
-      return premises
-    }
-
-    private fun applyRoomsAndBeds(
-      premises: List<TemporaryAccommodationPremisesEntity>,
-      endDate: LocalDate?,
-    ): List<TemporaryAccommodationPremisesEntity> {
-      premises.forEach { premise ->
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premise)
-          withBeds()
-        }.apply { premise.rooms.add(this) }
-
-        bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withEndDate(endDate)
-        }.apply { premise.rooms.first().beds.add(this) }
       }
 
       return premises
@@ -916,8 +896,6 @@ class Cas3PremisesTest : IntegrationTestBase() {
 
   @Nested
   inner class GetBedspace {
-    @Autowired
-    lateinit var cas3BedspaceTransformer: Cas3BedspaceTransformer
 
     @Test
     fun `Get Bedspace by ID returns OK with correct body`() {

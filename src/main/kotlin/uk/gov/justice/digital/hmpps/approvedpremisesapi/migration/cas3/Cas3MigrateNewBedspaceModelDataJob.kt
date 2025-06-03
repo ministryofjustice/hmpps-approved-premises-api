@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationInBatchesJob
@@ -16,6 +18,7 @@ import java.util.UUID
 class Cas3MigrateNewBedspaceModelDataJob(
   private val temporaryAccommodationPremisesRepository: TemporaryAccommodationPremisesRepository,
   private val cas3PremisesRepository: Cas3PremisesRepository,
+  private val cas3BedspacesRepository: Cas3BedspacesRepository,
   private val migrationLogger: MigrationLogger,
   transactionTemplate: TransactionTemplate,
 ) : MigrationInBatchesJob(migrationLogger, transactionTemplate) {
@@ -32,17 +35,14 @@ class Cas3MigrateNewBedspaceModelDataJob(
 
   private fun migrateDataToNewBedspaceModelTables(premiseIds: List<UUID>) {
     migrationLogger.info("Starting bedspace model migration with batch size of ${premiseIds.size}...")
-    migrateDataToCas3Premises(premiseIds)
-    migrationLogger.info("Migrated batch size of ${premiseIds.size} to new cas3_premises table - data migrated from the premises and temporary_accommodation tables.")
-  }
-
-  private fun migrateDataToCas3Premises(premiseIds: List<UUID>) {
     val temporaryAccommodationPremisesBatch = temporaryAccommodationPremisesRepository.findTemporaryAccommodationPremisesByIds(premiseIds)
-    val cas3Premises = transformCas3PremisesBatch(temporaryAccommodationPremisesBatch)
-    cas3PremisesRepository.saveAllAndFlush(cas3Premises)
+    val cas3PremisesBatch = generateCas3PremisesBatch(temporaryAccommodationPremisesBatch)
+    cas3PremisesRepository.saveAllAndFlush(cas3PremisesBatch)
+    val cas3Bedspaces = generateCas3BedspacesBatch(cas3PremisesBatch, temporaryAccommodationPremisesBatch)
+    cas3BedspacesRepository.saveAllAndFlush(cas3Bedspaces)
   }
 
-  private fun transformCas3PremisesBatch(temporaryAccommodationPremisesBatch: List<TemporaryAccommodationPremisesEntity>) = temporaryAccommodationPremisesBatch.map { premise ->
+  private fun generateCas3PremisesBatch(temporaryAccommodationPremises: List<TemporaryAccommodationPremisesEntity>) = temporaryAccommodationPremises.map { premise ->
     Cas3PremisesEntity(
       id = premise.id,
       name = premise.name,
@@ -54,8 +54,26 @@ class Cas3MigrateNewBedspaceModelDataJob(
       status = premise.status,
       notes = premise.notes,
       probationDeliveryUnit = premise.probationDeliveryUnit!!,
+      bedspaces = emptyList<Cas3BedspacesEntity>().toMutableList(),
     )
   }
+
+  private fun generateCas3BedspacesBatch(cas3PremisesBatch: List<Cas3PremisesEntity>, temporaryAccommodationPremisesBatch: List<TemporaryAccommodationPremisesEntity>) = cas3PremisesBatch.map { cas3Premises ->
+    temporaryAccommodationPremisesBatch
+      .first { it.id == cas3Premises.id }
+      .rooms.map { room ->
+        val bed = room.beds.first()
+        Cas3BedspacesEntity(
+          id = bed.id,
+          premises = cas3Premises,
+          reference = room.name,
+          notes = room.notes,
+          startDate = bed.startDate,
+          endDate = bed.endDate,
+          createdAt = bed.createdAt,
+        )
+      }
+  }.flatten()
 }
 
 @Repository
