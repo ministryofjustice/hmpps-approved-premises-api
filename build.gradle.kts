@@ -63,7 +63,7 @@ dependencies {
 
   implementation("io.arrow-kt:arrow-core:1.2.4")
 
-  implementation("com.opencsv:opencsv:5.11")
+  implementation("com.opencsv:opencsv:5.11.1")
   constraints {
     implementation("commons-beanutils:commons-beanutils:[1.11.0,)") {
       because("resolves CVE-2025-48734. Once a version of opencsv is available using beanutils >= 1.11.0, this can be removed")
