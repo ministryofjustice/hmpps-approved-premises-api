@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -148,7 +148,7 @@ class TaskServiceTest {
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, assessment.id)
 
     assertThatCasResult(result).isSuccess().with {
-      Assertions.assertThat(it).isEqualTo(reallocation)
+      assertThat(it).isEqualTo(reallocation)
     }
   }
 
@@ -191,7 +191,7 @@ class TaskServiceTest {
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementApplication, assigneeUser.id, placementApplication.id)
 
     assertThatCasResult(result).isSuccess().with {
-      Assertions.assertThat(it).isEqualTo(reallocation)
+      assertThat(it).isEqualTo(reallocation)
     }
   }
 
@@ -320,8 +320,8 @@ class TaskServiceTest {
       placementApplications.map { TypedTask.PlacementApplication(it) },
     ).flatten()
 
-    Assertions.assertThat(result.first).isEqualTo(expectedTasks)
-    Assertions.assertThat(result.second).isEqualTo(metadata)
+    assertThat(result.first).isEqualTo(expectedTasks)
+    assertThat(result.second).isEqualTo(metadata)
   }
 
   private fun generateAndStubAssigneeUser(): UserEntity {

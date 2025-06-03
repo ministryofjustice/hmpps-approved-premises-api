@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -236,7 +237,7 @@ class Cas1BookingManagementServiceTest {
       assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
       result as CasResult.ConflictError
 
-      uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat(result)
+      assertThatCasResult(result)
         .isConflictError()
         .hasMessageContaining("The booking has already been cancelled")
     }
@@ -465,7 +466,7 @@ class Cas1BookingManagementServiceTest {
       assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
       result as CasResult.ConflictError
 
-      uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat(result)
+      assertThatCasResult(result)
         .isConflictError()
         .hasMessageContaining("The booking has already been cancelled")
     }
@@ -865,7 +866,7 @@ class Cas1BookingManagementServiceTest {
       assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
       result as CasResult.ConflictError
 
-      uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat(result)
+      assertThatCasResult(result)
         .isConflictError()
         .hasMessageContaining("The booking has already been cancelled")
     }

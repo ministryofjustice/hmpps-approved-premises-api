@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Request
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -60,7 +60,7 @@ class Cas1RequestForPlacementServiceTest {
       val id = UUID.randomUUID()
       val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(id, user)
 
-      assertThat(result).isNotFound("Application", id)
+      assertThatCasResult(result).isNotFound("Application", id)
     }
 
     @Test
@@ -92,7 +92,7 @@ class Cas1RequestForPlacementServiceTest {
 
       val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
-      assertThat(result).isSuccess().with {
+      assertThatCasResult(result).isSuccess().with {
         assertThat(it).hasSize(placementApplications.size)
       }
 
@@ -141,7 +141,7 @@ class Cas1RequestForPlacementServiceTest {
 
       val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
-      assertThat(result).isSuccess().with {
+      assertThatCasResult(result).isSuccess().with {
         assertThat(it).hasSize(placementRequests.size)
       }
 
