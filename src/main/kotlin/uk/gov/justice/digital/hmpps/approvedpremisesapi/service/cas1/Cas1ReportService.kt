@@ -1,16 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import org.apache.poi.ss.usermodel.WorkbookFactory
-import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DailyMetricsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OutOfServiceBedsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator.Cas1BedIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import java.io.OutputStream
 import java.time.LocalDate
@@ -22,9 +18,9 @@ class Cas1ReportService(
   private val cas1PlacementMatchingOutcomesV2ReportRepository: Cas1PlacementMatchingOutcomesV2ReportRepository,
   private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
-  private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
   private val cas1PlacementReportRepository: Cas1PlacementReportRepository,
   private val cas1DailyMetricsReportRepository: Cas1DailyMetricsReportRepository,
+  private val cas1OutOfServiceBedsReportRepository: Cas1OutOfServiceBedsReportRepository,
 ) {
 
   companion object {
@@ -80,21 +76,26 @@ class Cas1ReportService(
   }
 
   fun createOutOfServiceBedReport(
-    properties: MonthSpecificReportParams,
+    reportDateRange: ReportDateRange,
     outputStream: OutputStream,
     includePii: Boolean,
   ) {
-    Cas1OutOfServiceBedsReportGenerator(cas1OutOfServiceBedRepository)
-      .createReport(cas1OutOfServiceBedRepository.findBedIdsWithAtLeastOneOutOfServiceBedRecord().map { Cas1BedIdentifier(it) }, properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-        columnsSelector = if (includePii) {
-          { all() }
-        } else {
-          { all().except("notes") }
-        },
+    val columnsToExclude = if (includePii) {
+      emptyList()
+    } else {
+      listOf("notes")
+    }
+
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = columnsToExclude,
+    ).use { consumer ->
+      cas1OutOfServiceBedsReportRepository.generateOutOfServiceBedsReport(
+        startDate = reportDateRange.start,
+        endDate = reportDateRange.end,
+        jdbcResultSetConsumer = consumer,
       )
+    }
   }
 
   fun createRequestForPlacementReport(
