@@ -33,7 +33,8 @@ class Cas2ReportsService(
         submittedBy = row.getSubmittedBy(),
         submittedAt = row.getSubmittedAt(),
         startedAt = row.getStartedAt(),
-        numberOfTransfers = row.getNumberOfTransfers(),
+        numberOfLocationTransfers = row.getNumberOfLocationTransfers(),
+        numberOfPomTransfers = row.getNumberOfPomTransfers(),
         applicationOrigin = row.getApplicationOrigin(),
         bailHearingDate = row.getBailHearingDate(),
       )
@@ -57,7 +58,8 @@ class Cas2ReportsService(
         updatedBy = row.getUpdatedBy(),
         updatedAt = row.getUpdatedAt(),
         statusDetails = row.getStatusDetails(),
-        numberOfTransfers = row.getNumberOfTransfers(),
+        numberOfLocationTransfers = row.getNumberOfLocationTransfers(),
+        numberOfPomTransfers = row.getNumberOfPomTransfers(),
       )
     }
 

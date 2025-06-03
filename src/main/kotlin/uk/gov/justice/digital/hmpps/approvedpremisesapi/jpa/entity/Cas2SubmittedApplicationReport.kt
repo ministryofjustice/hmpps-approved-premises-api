@@ -27,12 +27,15 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         CASE
             WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0
             ELSE COUNT(distinct pom_assignments.id) - 1
-            END as numberOfTransfers
+        END as numberOfPomTransfers,
+        COUNT(distinct location_assignments.id) as numberOfLocationTransfers
     FROM domain_events events
              JOIN cas_2_applications applications
                   ON events.application_id = applications.id
              LEFT JOIN cas_2_application_assignments as pom_assignments
-                  ON events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_user_id is NOT NULL
+                       ON events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_user_id is NOT NULL
+             LEFT JOIN cas_2_application_assignments as location_assignments
+                       ON events.application_id = location_assignments.application_id and location_assignments.allocated_pom_user_id is NULL
     WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
       AND events.occurred_at  > CURRENT_DATE - 365
     GROUP BY events.id, events.application_id, events.data, events.occurred_at, applications.created_at, applications.application_origin, applications.bail_hearing_date
@@ -58,5 +61,6 @@ interface Cas2SubmittedApplicationReportRow {
   fun getHdcEligibilityDate(): String?
   fun getConditionalReleaseDate(): String?
   fun getStartedAt(): String
-  fun getNumberOfTransfers(): String
+  fun getNumberOfLocationTransfers(): String
+  fun getNumberOfPomTransfers(): String
 }
