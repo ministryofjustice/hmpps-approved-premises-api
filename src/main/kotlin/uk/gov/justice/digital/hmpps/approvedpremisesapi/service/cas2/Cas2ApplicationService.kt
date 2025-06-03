@@ -206,7 +206,7 @@ class Cas2ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
-    if (application.createdByUser != user) {
+    if (!application.isCreatedBy(user)) {
       return CasResult.Unauthorised()
     }
 
@@ -236,7 +236,7 @@ class Cas2ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
-    if (application.createdByUser != user) {
+    if (!application.isCreatedBy(user)) {
       return CasResult.Unauthorised()
     }
 
@@ -274,7 +274,7 @@ class Cas2ApplicationService(
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
-    if (application.createdByUser != user) {
+    if (!application.isCreatedBy(user)) {
       return CasResult.Unauthorised()
     }
 
@@ -363,9 +363,10 @@ class Cas2ApplicationService(
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
                 staffIdentifier = application.createdByUser.nomisStaffId,
-                name = application.createdByUser.name,
-                username = application.createdByUser.nomisUsername,
-                usertype = Cas2StaffMember.Usertype.nomis,
+                cas2StaffIdentifier = application.createdByCas2User?.staffIdentifier(),
+                name = application.getCreatedByCanonicalName(),
+                username = application.getCreatedByUsername(),
+                usertype = application.getCreatedByUserType(),
               ),
             ),
             applicationOrigin = ApplicationOrigin.homeDetentionCurfew.toString(),
