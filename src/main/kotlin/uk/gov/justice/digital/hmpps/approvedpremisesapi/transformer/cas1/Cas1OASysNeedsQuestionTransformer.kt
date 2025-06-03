@@ -49,6 +49,20 @@ class Cas1OASysNeedsQuestionTransformer {
       linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending,
     ),
     QuestionState(
+      sectionNumber = 8,
+      sectionLabel = OASysLabels.sectionToLabel[8]!!,
+      optional = false,
+      linkedToHarm = needsDetails.linksToHarm?.drugLinkedToHarm,
+      linkedToReOffending = needsDetails.linksToReOffending?.drugLinkedToReOffending,
+    ),
+    QuestionState(
+      sectionNumber = 9,
+      sectionLabel = OASysLabels.sectionToLabel[9]!!,
+      optional = false,
+      linkedToHarm = needsDetails.linksToHarm?.alcoholLinkedToHarm,
+      linkedToReOffending = needsDetails.linksToReOffending?.alcoholLinkedToReOffending,
+    ),
+    QuestionState(
       sectionNumber = 10,
       sectionLabel = OASysLabels.sectionToLabel[10]!!,
       optional = isOptional(needsDetails.linksToHarm?.emotionalLinkedToHarm),

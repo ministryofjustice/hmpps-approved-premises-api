@@ -8,6 +8,8 @@ object OASysLabels {
     5 to "Finance",
     6 to "Relationships",
     7 to "Lifestyle",
+    8 to "Drugs",
+    9 to "Alcohol",
     10 to "Emotional",
     11 to "Thinking and Behavioural",
     12 to "Attitude",
