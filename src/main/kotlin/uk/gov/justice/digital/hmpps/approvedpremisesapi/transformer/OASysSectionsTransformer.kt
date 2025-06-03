@@ -26,38 +26,46 @@ class OASysSectionsTransformer : OASysTransformer() {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    offenceDetails = listOf(
-      oASysQuestionWithSingleAnswer("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
-      oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimPerpetratorRel),
-      oASysQuestionWithSingleAnswer("Other victim information", "2.4.2", offenceDetails.offence?.victimInfo),
-      oASysQuestionWithSingleAnswer("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
-      oASysQuestionWithSingleAnswer("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
-      oASysQuestionWithSingleAnswer("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
-      oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending),
-    ),
-    roshSummary = listOf(
-      oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
-      oASysQuestionWithSingleAnswer("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
-      oASysQuestionWithSingleAnswer("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
-      oASysQuestionWithSingleAnswer("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
-      oASysQuestionWithSingleAnswer("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
-    ),
-    supportingInformation = transformSupportingInformation(needsDetails, requestedOptionalSections),
-    riskToSelf = listOf(
-      oASysQuestionWithSingleAnswer("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
-      oASysQuestionWithSingleAnswer("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
-      oASysQuestionWithSingleAnswer("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
-    ),
-    riskManagementPlan = listOf(
-      oASysQuestionWithSingleAnswer("Further considerations", "RM28", riskManagementPlan.riskManagementPlan?.furtherConsiderations),
-      oASysQuestionWithSingleAnswer("Additional comments", "RM35", riskManagementPlan.riskManagementPlan?.additionalComments),
-      oASysQuestionWithSingleAnswer("Contingency plans", "RM34", riskManagementPlan.riskManagementPlan?.contingencyPlans),
-      oASysQuestionWithSingleAnswer("Victim safety planning", "RM33", riskManagementPlan.riskManagementPlan?.victimSafetyPlanning),
-      oASysQuestionWithSingleAnswer("Interventions and treatment", "RM32", riskManagementPlan.riskManagementPlan?.interventionsAndTreatment),
-      oASysQuestionWithSingleAnswer("Monitoring and control", "RM31", riskManagementPlan.riskManagementPlan?.monitoringAndControl),
-      oASysQuestionWithSingleAnswer("Supervision", "RM30", riskManagementPlan.riskManagementPlan?.supervision),
-      oASysQuestionWithSingleAnswer("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
-    ),
+    offenceDetails = offenceDetailsAnswers(offenceDetails),
+    roshSummary = roshSummaryAnswers(roshSummary),
+    supportingInformation = supportingInformationAnswers(needsDetails, requestedOptionalSections),
+    riskToSelf = riskToSelfAnswers(risksToTheIndividual),
+    riskManagementPlan = riskManagementPlanAnswers(riskManagementPlan),
+  )
+
+  fun offenceDetailsAnswers(offenceDetails: OffenceDetails) = listOf(
+    oASysQuestionWithSingleAnswer("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
+    oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimPerpetratorRel),
+    oASysQuestionWithSingleAnswer("Other victim information", "2.4.2", offenceDetails.offence?.victimInfo),
+    oASysQuestionWithSingleAnswer("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
+    oASysQuestionWithSingleAnswer("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
+    oASysQuestionWithSingleAnswer("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
+    oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending),
+  )
+
+  fun roshSummaryAnswers(roshSummary: RoshSummary) = listOf(
+    oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
+    oASysQuestionWithSingleAnswer("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
+    oASysQuestionWithSingleAnswer("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
+    oASysQuestionWithSingleAnswer("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
+    oASysQuestionWithSingleAnswer("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
+  )
+
+  fun riskToSelfAnswers(risksToTheIndividual: RisksToTheIndividual) = listOf(
+    oASysQuestionWithSingleAnswer("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
+    oASysQuestionWithSingleAnswer("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
+    oASysQuestionWithSingleAnswer("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
+  )
+
+  fun riskManagementPlanAnswers(riskManagementPlan: RiskManagementPlan) = listOf(
+    oASysQuestionWithSingleAnswer("Further considerations", "RM28", riskManagementPlan.riskManagementPlan?.furtherConsiderations),
+    oASysQuestionWithSingleAnswer("Additional comments", "RM35", riskManagementPlan.riskManagementPlan?.additionalComments),
+    oASysQuestionWithSingleAnswer("Contingency plans", "RM34", riskManagementPlan.riskManagementPlan?.contingencyPlans),
+    oASysQuestionWithSingleAnswer("Victim safety planning", "RM33", riskManagementPlan.riskManagementPlan?.victimSafetyPlanning),
+    oASysQuestionWithSingleAnswer("Interventions and treatment", "RM32", riskManagementPlan.riskManagementPlan?.interventionsAndTreatment),
+    oASysQuestionWithSingleAnswer("Monitoring and control", "RM31", riskManagementPlan.riskManagementPlan?.monitoringAndControl),
+    oASysQuestionWithSingleAnswer("Supervision", "RM30", riskManagementPlan.riskManagementPlan?.supervision),
+    oASysQuestionWithSingleAnswer("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
   )
 
   fun transformRiskToIndividual(
@@ -68,12 +76,11 @@ class OASysSectionsTransformer : OASysTransformer() {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    riskToSelf = listOf(
-      oASysQuestionWithSingleAnswer("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
-      oASysQuestionWithSingleAnswer("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
-      oASysQuestionWithSingleAnswer("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
-      oASysQuestionWithSingleAnswer("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
-    ),
+    riskToSelf =
+    riskToSelfAnswers(risksToTheIndividual) +
+      listOf(
+        oASysQuestionWithSingleAnswer("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
+      ),
   )
 
   fun transformRiskOfSeriousHarm(
@@ -84,16 +91,11 @@ class OASysSectionsTransformer : OASysTransformer() {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    rosh = listOf(
-      oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
-      oASysQuestionWithSingleAnswer("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
-      oASysQuestionWithSingleAnswer("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
-      oASysQuestionWithSingleAnswer("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
-      oASysQuestionWithSingleAnswer("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
-    ),
+    rosh = roshSummaryAnswers(roshSummary),
   )
 
-  private fun transformSupportingInformation(needsDetails: NeedsDetails, requestedOptionalSections: List<Int>): List<OASysSupportingInformationQuestion> {
+  @SuppressWarnings("CyclomaticComplexMethod")
+  private fun supportingInformationAnswers(needsDetails: NeedsDetails, requestedOptionalSections: List<Int>): List<OASysSupportingInformationQuestion> {
     val supportingInformation = mutableListOf<OASysSupportingInformationQuestion>()
 
     if (needsDetails.linksToHarm?.accommodationLinkedToHarm == true || requestedOptionalSections.contains(3)) {

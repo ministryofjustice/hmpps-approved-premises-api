@@ -1850,7 +1850,7 @@ components:
           $ref: '_shared.yml#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
-    OASysNeedsQuestion:
+    Cas1OASysNeedsQuestion:
       type: object
       properties:
         section:

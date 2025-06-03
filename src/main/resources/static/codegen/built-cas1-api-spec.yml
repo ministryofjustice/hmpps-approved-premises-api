@@ -2069,7 +2069,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/OASysNeedsQuestion'
+                  $ref: '#/components/schemas/Cas1OASysNeedsQuestion'
         404:
           description: invalid CRN
           content:
@@ -8618,7 +8618,7 @@ components:
           $ref: '#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
-    OASysNeedsQuestion:
+    Cas1OASysNeedsQuestion:
       type: object
       properties:
         section:
