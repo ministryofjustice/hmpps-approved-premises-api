@@ -3,17 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 @SuppressWarnings("MagicNumber")
 object OASysLabels {
   val sectionToLabel = mapOf(
-    3 to "Accommodation",
-    4 to "Education, Training and Employment",
-    5 to "Finance",
-    6 to "Relationships",
-    7 to "Lifestyle",
-    8 to "Drugs",
-    9 to "Alcohol",
-    10 to "Emotional",
-    11 to "Thinking and Behavioural",
-    12 to "Attitude",
-    13 to "Health",
+    "3" to "Accommodation",
+    "4" to "Education, Training and Employment",
+    "5" to "Finance",
+    "6" to "Relationships",
+    "7" to "Lifestyle",
+    "8" to "Drugs",
+    "9" to "Alcohol",
+    "10" to "Emotional",
+    "11" to "Thinking and Behavioural",
+    "12" to "Attitude",
+    "13" to "Health",
   )
 
   val questionToLabel = mapOf(
