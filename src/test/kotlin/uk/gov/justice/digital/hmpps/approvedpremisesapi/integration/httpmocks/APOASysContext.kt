@@ -23,11 +23,6 @@ fun IntegrationTestBase.apOASysContextMockSuccessfulRiskToTheIndividualCall(crn:
   responseBody = response,
 )
 
-fun IntegrationTestBase.apOASysContextMockNotFoundRiskToTheIndividualCall(crn: String) = mockUnsuccessfulGetCall(
-  url = "/risk-to-the-individual/$crn",
-  responseStatus = 404,
-)
-
 fun IntegrationTestBase.apOASysContextMockSuccessfulRiskManagementPlanCall(crn: String, response: RiskManagementPlan) = mockSuccessfulGetCallWithJsonResponse(
   url = "/risk-management-plan/$crn",
   responseBody = response,

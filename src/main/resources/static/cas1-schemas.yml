@@ -1856,23 +1856,47 @@ components:
         section:
           type: integer
           example: 10
-          description: The OAsys section that this needs question relates to
-        name:
+          description: The OAsys section that this 'needs' question relates to
+        sectionLabel:
           type: string
-          example: Emotional wellbeing
         optional:
           type: boolean
           description: If the user can optionally elect to include this question in an application. If not optional, it will always be included in the application
         linkedToHarm:
           type: boolean
-          description: If the response to this question is linked to harm
+          description: If the response to this question for the person is linked to harm
         linkedToReOffending:
           type: boolean
-          description: If the response to this question is linked to re-offending
+          description: If the response to this question for the person is linked to re-offending
       required:
         - section
         - name
         - optional
+    Cas1OASysGroupName:
+      type: string
+      enum:
+        - riskManagementPlan
+        - offenceDetails
+        - roshSummary
+        - needs
+        - riskToSelf
+      x-enum-varnames:
+        - RISK_MANAGEMENT_PLAN
+        - OFFENCE_DETAILS
+        - ROSH_SUMMARY
+        - NEEDS
+        - RISK_TO_SELF
+    Cas1OASysGroup:
+      type: object
+      description: Groups questions and answers from OAsys. Groups directly align with OAsys Sections other than 'needs', which collates questions from multiple sections
+      properties:
+        group:
+          $ref: '#/components/schemas/Cas1OASysGroupName'
+        answers:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/OASysQuestion'
+
 
 
 

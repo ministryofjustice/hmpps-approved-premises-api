@@ -3,7 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
 
+/**
+ * Note that there is a CAS1 specific version of this transformer [Cas1OASysNeedsQuestionTransformer]
+ * that deduplicates logic in this transformer and [OASysSectionsTransformer]
+ */
 @Component
 class OASysNeedsDetailsTransformer {
 

@@ -2046,16 +2046,56 @@ paths:
                 items:
                   $ref: 'cas1-schemas.yml#/components/schemas/Cas1ApplicationSummary'
 
-  /people/{crn}/oasys/optional-needs-questions:
+  /people/{crn}/oasys/answers:
     get:
       tags:
         - OAsys
-      summary: Returns information about which needs questions & answers can be optionally included in an application (and which are mandatory), for a given CRN
-      operationId: optionalNeeds
+      summary: Returns OASys answers for the requested group. The Supporting Information answers are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter.
+      operationId: answers
       parameters:
         - name: crn
           in: path
           description: CRN of the Person to fetch latest OASys selection
+          required: true
+          schema:
+            type: string
+        - name: group
+          in: query
+          description: The section answers are required for
+          required: true
+          schema:
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysGroupName'
+        - name: includeOptionalSections
+          in: query
+          description: Should only be provided if the 'group' parameter is 'needs'. Defines which sections answers should be taken from. This is only required for answers that are optional, as indicated by the response from /people/{crn}/oasys/optional-needs-questions
+          required: false
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysGroup'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+
+  /people/{crn}/oasys/optional-needs-questions:
+    get:
+      tags:
+        - OAsys
+      summary: Returns information about which 'needs' questions & answers can be optionally included in an application (and which are mandatory), for a given CRN
+      operationId: optionalNeeds
+      parameters:
+        - name: crn
+          in: path
           required: true
           schema:
             type: string
