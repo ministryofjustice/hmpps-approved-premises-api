@@ -100,7 +100,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.accommodationLinkedToHarm == true || requestedOptionalSections.contains(3)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Accommodation issues contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["3.9"]!!,
         questionNumber = "3.9",
         sectionNumber = 3,
         linkedToHarm = needsDetails.linksToHarm?.accommodationLinkedToHarm,
@@ -111,7 +111,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.educationTrainingEmploymentLinkedToHarm == true || requestedOptionalSections.contains(4)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Education, training and employability issues contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["4.9"]!!,
         questionNumber = "4.9",
         sectionNumber = 4,
         linkedToHarm = needsDetails.linksToHarm?.educationTrainingEmploymentLinkedToHarm,
@@ -122,7 +122,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.financeLinkedToHarm == true || requestedOptionalSections.contains(5)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Financial management issues contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["5.9"]!!,
         questionNumber = "5.9",
         sectionNumber = 5,
         linkedToHarm = needsDetails.linksToHarm?.financeLinkedToHarm,
@@ -133,7 +133,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.relationshipLinkedToHarm == true || requestedOptionalSections.contains(6)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Relationship issues contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["6.9"]!!,
         questionNumber = "6.9",
         sectionNumber = 6,
         linkedToHarm = needsDetails.linksToHarm?.relationshipLinkedToHarm,
@@ -144,7 +144,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.lifestyleLinkedToHarm == true || requestedOptionalSections.contains(7)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Lifestyle issues contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["7.9"]!!,
         questionNumber = "7.9",
         sectionNumber = 7,
         linkedToHarm = needsDetails.linksToHarm?.lifestyleLinkedToHarm,
@@ -154,7 +154,7 @@ class OASysSectionsTransformer : OASysTransformer() {
     }
 
     supportingInformation += OASysSupportingInformationQuestion(
-      label = "Drug misuse issues contributing to risks of offending and harm",
+      label = OASysLabels.questionToLabel["8.9"]!!,
       questionNumber = "8.9",
       sectionNumber = 8,
       linkedToHarm = needsDetails.linksToHarm?.drugLinkedToHarm,
@@ -163,7 +163,7 @@ class OASysSectionsTransformer : OASysTransformer() {
     )
 
     supportingInformation += OASysSupportingInformationQuestion(
-      label = "Alcohol misuse issues contributing to risks of offending and harm",
+      label = OASysLabels.questionToLabel["9.9"]!!,
       questionNumber = "9.9",
       sectionNumber = 9,
       linkedToHarm = needsDetails.linksToHarm?.alcoholLinkedToHarm,
@@ -173,7 +173,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.emotionalLinkedToHarm == true || requestedOptionalSections.contains(10)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Issues of emotional well-being contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["10.9"]!!,
         questionNumber = "10.9",
         sectionNumber = 10,
         linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,
@@ -184,7 +184,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm == true || requestedOptionalSections.contains(11)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Thinking / behavioural issues contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["11.9"]!!,
         questionNumber = "11.9",
         sectionNumber = 11,
         linkedToHarm = needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm,
@@ -195,7 +195,7 @@ class OASysSectionsTransformer : OASysTransformer() {
 
     if (needsDetails.linksToHarm?.attitudeLinkedToHarm == true || requestedOptionalSections.contains(12)) {
       supportingInformation += OASysSupportingInformationQuestion(
-        label = "Issues about attitudes contributing to risks of offending and harm",
+        label = OASysLabels.questionToLabel["12.9"]!!,
         questionNumber = "12.9",
         sectionNumber = 12,
         linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,

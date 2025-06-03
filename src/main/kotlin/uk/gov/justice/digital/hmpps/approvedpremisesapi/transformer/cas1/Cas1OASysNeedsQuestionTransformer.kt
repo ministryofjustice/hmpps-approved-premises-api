@@ -3,14 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysNeedsQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer.Companion.sectionToName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 
 @Service
 class Cas1OASysNeedsQuestionTransformer {
 
   fun transformToApi(needsDetails: NeedsDetails) = toQuestionState(needsDetails).map {
     Cas1OASysNeedsQuestion(
-      section = it.section,
+      section = it.sectionNumber,
       name = it.sectionLabel,
       optional = it.optional,
       linkedToHarm = it.linkedToHarm,
@@ -19,7 +19,7 @@ class Cas1OASysNeedsQuestionTransformer {
   }
 
   private data class QuestionState(
-    val section: Int,
+    val sectionNumber: Int,
     val sectionLabel: String,
     val optional: Boolean,
     val linkedToHarm: Boolean?,
@@ -28,50 +28,50 @@ class Cas1OASysNeedsQuestionTransformer {
 
   private fun toQuestionState(needsDetails: NeedsDetails) = listOf(
     QuestionState(
-      section = 3,
-      sectionLabel = sectionToName[3]!!,
+      sectionNumber = 3,
+      sectionLabel = OASysLabels.sectionToLabel[3]!!,
       optional = isOptional(needsDetails.linksToHarm?.accommodationLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.accommodationLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.accommodationLinkedToReOffending,
     ),
     QuestionState(
-      section = 6,
-      sectionLabel = sectionToName[6]!!,
+      sectionNumber = 6,
+      sectionLabel = OASysLabels.sectionToLabel[6]!!,
       optional = isOptional(needsDetails.linksToHarm?.relationshipLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.relationshipLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.relationshipLinkedToReOffending,
     ),
     QuestionState(
-      section = 7,
-      sectionLabel = sectionToName[7]!!,
+      sectionNumber = 7,
+      sectionLabel = OASysLabels.sectionToLabel[7]!!,
       optional = isOptional(needsDetails.linksToHarm?.lifestyleLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.lifestyleLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending,
     ),
     QuestionState(
-      section = 10,
-      sectionLabel = sectionToName[10]!!,
+      sectionNumber = 10,
+      sectionLabel = OASysLabels.sectionToLabel[10]!!,
       optional = isOptional(needsDetails.linksToHarm?.emotionalLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.emotionalLinkedToReOffending,
     ),
     QuestionState(
-      section = 11,
-      sectionLabel = sectionToName[11]!!,
+      sectionNumber = 11,
+      sectionLabel = OASysLabels.sectionToLabel[11]!!,
       optional = isOptional(needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.thinkingBehaviouralLinkedToReOffending,
     ),
     QuestionState(
-      section = 12,
-      sectionLabel = sectionToName[12]!!,
+      sectionNumber = 12,
+      sectionLabel = OASysLabels.sectionToLabel[12]!!,
       optional = isOptional(needsDetails.linksToHarm?.attitudeLinkedToHarm),
       linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending,
     ),
     QuestionState(
-      section = 13,
-      sectionLabel = sectionToName[13]!!,
+      sectionNumber = 13,
+      sectionLabel = OASysLabels.sectionToLabel[13]!!,
       optional = true,
       linkedToHarm = null,
       linkedToReOffending = null,

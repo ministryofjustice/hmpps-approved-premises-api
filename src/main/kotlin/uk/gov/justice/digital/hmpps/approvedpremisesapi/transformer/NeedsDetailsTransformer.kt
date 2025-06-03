@@ -7,72 +7,58 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.Needs
 @Component
 class NeedsDetailsTransformer {
 
-  companion object {
-    val sectionToName = mapOf(
-      3 to "Accommodation",
-      4 to "Education, Training and Employment",
-      5 to "Finance",
-      6 to "Relationships",
-      7 to "Lifestyle",
-      10 to "Emotional",
-      11 to "Thinking and Behavioural",
-      12 to "Attitude",
-      13 to "Health",
-    )
-  }
-
   fun transformToApi(needsDetails: NeedsDetails) = listOf(
     OASysSection(
       section = 3,
-      name = sectionToName[3]!!,
+      name = OASysLabels.sectionToLabel[3]!!,
       linkedToHarm = needsDetails.linksToHarm?.accommodationLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.accommodationLinkedToReOffending,
     ),
     OASysSection(
       section = 4,
-      name = sectionToName[4]!!,
+      name = OASysLabels.sectionToLabel[4]!!,
       linkedToHarm = needsDetails.linksToHarm?.educationTrainingEmploymentLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.educationTrainingEmploymentLinkedToReOffending,
     ),
     OASysSection(
       section = 5,
-      name = sectionToName[5]!!,
+      name = OASysLabels.sectionToLabel[5]!!,
       linkedToHarm = needsDetails.linksToHarm?.financeLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.financeLinkedToReOffending,
     ),
     OASysSection(
       section = 6,
-      name = sectionToName[6]!!,
+      name = OASysLabels.sectionToLabel[6]!!,
       linkedToHarm = needsDetails.linksToHarm?.relationshipLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.relationshipLinkedToReOffending,
     ),
     OASysSection(
       section = 7,
-      name = sectionToName[7]!!,
+      name = OASysLabels.sectionToLabel[7]!!,
       linkedToHarm = needsDetails.linksToHarm?.lifestyleLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending,
     ),
     OASysSection(
       section = 10,
-      name = sectionToName[10]!!,
+      name = OASysLabels.sectionToLabel[10]!!,
       linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.emotionalLinkedToReOffending,
     ),
     OASysSection(
       section = 11,
-      name = sectionToName[11]!!,
+      name = OASysLabels.sectionToLabel[11]!!,
       linkedToHarm = needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.thinkingBehaviouralLinkedToReOffending,
     ),
     OASysSection(
       section = 12,
-      name = sectionToName[12]!!,
+      name = OASysLabels.sectionToLabel[12]!!,
       linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,
       linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending,
     ),
     OASysSection(
       section = 13,
-      name = sectionToName[13]!!,
+      name = OASysLabels.sectionToLabel[13]!!,
       linkedToHarm = null,
       linkedToReOffending = null,
     ),
