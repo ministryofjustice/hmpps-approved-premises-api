@@ -89,9 +89,9 @@ class Cas2AssessmentNoteService(
   }
 
   private fun sendEmailToReferrer(application: Cas2ApplicationEntity, savedNote: Cas2ApplicationNoteEntity) {
-    if (application.createdByUser.email != null) {
+    if (application.getCreatedByUserEmail() != null) {
       emailNotificationService.sendCas2Email(
-        recipientEmailAddress = application.createdByUser.email!!,
+        recipientEmailAddress = application.getCreatedByUserEmail()!!,
         templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
         personalisation = mapOf(
           "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
@@ -156,7 +156,7 @@ class Cas2AssessmentNoteService(
     userService.getUserForRequest()
   }
 
-  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean = if (user.id == application.createdByUser.id) {
+  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean = if (user.id == application.getCreatedById()) {
     true
   } else {
     userAccessService.offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeCaseloadId)
