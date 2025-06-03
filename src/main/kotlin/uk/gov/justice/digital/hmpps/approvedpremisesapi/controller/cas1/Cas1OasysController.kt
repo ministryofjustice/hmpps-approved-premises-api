@@ -34,7 +34,7 @@ class Cas1OasysController(
     }
 
     return ResponseEntity.ok(
-      cas1OASysNeedsQuestionTransformer.transformToApi(
+      cas1OASysNeedsQuestionTransformer.transformToNeedsQuestion(
         extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
       ),
     )

@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 @Service
 class Cas1OASysNeedsQuestionTransformer {
 
-  fun transformToApi(needsDetails: NeedsDetails) = toQuestionState(needsDetails).map {
+  fun transformToNeedsQuestion(needsDetails: NeedsDetails) = toQuestionState(needsDetails).map {
     Cas1OASysNeedsQuestion(
       section = it.sectionNumber,
       name = it.sectionLabel,

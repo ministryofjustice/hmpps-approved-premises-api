@@ -87,7 +87,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .expectBody()
         .json(
           objectMapper.writeValueAsString(
-            cas1OASysNeedsQuestionTransformer.transformToApi(needsDetails),
+            cas1OASysNeedsQuestionTransformer.transformToNeedsQuestion(needsDetails),
           ),
         )
     }
