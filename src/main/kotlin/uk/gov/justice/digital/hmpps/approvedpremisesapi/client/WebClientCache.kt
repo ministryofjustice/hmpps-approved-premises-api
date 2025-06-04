@@ -34,7 +34,7 @@ class WebClientCache(
     val refreshableAfter = cacheEntryMetadata.refreshableAfter
     val refreshableAfterWithJitter = refreshableAfter.minusRandomSeconds(cacheConfig.successSoftTtlJitterSeconds)
 
-    if (refreshableAfterWithJitter < Instant.now()) {
+    if (refreshableAfterWithJitter < now()) {
       return PreemptiveCacheEntryStatus.REQUIRES_REFRESH
     } else {
       return PreemptiveCacheEntryStatus.EXISTS
@@ -57,7 +57,7 @@ class WebClientCache(
 
     attempt.set(cacheEntry?.attempt?.plus(1) ?: 1)
 
-    if (cacheEntry != null && cacheEntry.refreshableAfter.isAfter(Instant.now())) {
+    if (cacheEntry != null && cacheEntry.refreshableAfter.isAfter(now())) {
       return resultFromCacheMetadata(cacheEntry, cacheKeySet, typeReference)
     }
 
@@ -85,7 +85,7 @@ class WebClientCache(
 
     val cacheEntry = PreemptiveCacheMetadata(
       httpStatus = exception.statusCode.toHttpStatus(),
-      refreshableAfter = Instant.now().plusSeconds(backoffSeconds),
+      refreshableAfter = now().plusSeconds(backoffSeconds),
       method = MarshallableHttpMethod.fromHttpMethod(method),
       path = path,
       hasResponseBody = body != null,
@@ -113,7 +113,7 @@ class WebClientCache(
 
     val cacheEntry = PreemptiveCacheMetadata(
       httpStatus = result.statusCode.toHttpStatus(),
-      refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
+      refreshableAfter = now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
       method = null,
       path = null,
       hasResponseBody = result.body != null,
@@ -122,6 +122,8 @@ class WebClientCache(
 
     writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
   }
+
+  private fun now() = Instant.now()
 
   private fun <ResponseType : Any> pollCacheWithBlockingWait(
     cacheKeyResolver: CacheKeyResolver,
