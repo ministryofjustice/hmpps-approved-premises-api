@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysNeedsDetailsTransformer
 
-class NeedsDetailsTransformerTest {
-  private val needsDetailsTransformer = NeedsDetailsTransformer()
+class OASysNeedsDetailsTransformerTest {
+  private val transformer = OASysNeedsDetailsTransformer()
 
   @Test
   fun `transformToApi transforms correctly`() {
@@ -36,7 +36,7 @@ class NeedsDetailsTransformerTest {
       )
       .produce()
 
-    val result = needsDetailsTransformer.transformToApi(needsDetails)
+    val result = transformer.transformToApi(needsDetails)
 
     assertThat(result).containsExactlyInAnyOrder(
       OASysSection(section = 10, name = "Emotional", linkedToHarm = false, linkedToReOffending = false),

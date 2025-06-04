@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysNeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -49,7 +49,7 @@ class PeopleController(
   private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
   private val adjudicationTransformer: AdjudicationTransformer,
   private val prisonerAlertTransformer: PrisonerAlertTransformer,
-  private val needsDetailsTransformer: NeedsDetailsTransformer,
+  private val oaSysNeedsDetailsTransformer: OASysNeedsDetailsTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
@@ -148,7 +148,7 @@ class PeopleController(
     ensureUserCanAccessOffenderInfo(crn)
 
     return ResponseEntity.ok(
-      needsDetailsTransformer.transformToApi(
+      oaSysNeedsDetailsTransformer.transformToApi(
         extractEntityFromCasResult(oasysService.getOASysNeeds(crn)),
       ),
     )
