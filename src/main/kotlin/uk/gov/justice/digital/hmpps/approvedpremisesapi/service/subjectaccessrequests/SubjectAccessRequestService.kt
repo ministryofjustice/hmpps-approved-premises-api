@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS3SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2SubjectAccessRequestRepository
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonProbationSubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
@@ -20,7 +20,7 @@ import java.time.LocalTime
 class SubjectAccessRequestService(
   val objectMapper: ObjectMapper,
   val cas1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
-  val cas2SubjectAccessRequestRepository: CAS2SubjectAccessRequestRepository,
+  val cas2SubjectAccessRequestRepository: Cas2SubjectAccessRequestRepository,
   val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
   val cas2v2SubjectAccessRequestRepository: Cas2v2SubjectAccessRequestRepository,
 ) : HmppsPrisonProbationSubjectAccessRequestService {
