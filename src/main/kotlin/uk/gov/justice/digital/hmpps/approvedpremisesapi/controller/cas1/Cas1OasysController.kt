@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OAsysCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysNeedsQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -25,11 +25,11 @@ class Cas1OasysController(
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
 ) : OAsysCas1Delegate {
 
-  override fun optionalNeeds(crn: String): ResponseEntity<List<Cas1OASysNeedsQuestion>> {
+  override fun supportingInformationMetadata(crn: String): ResponseEntity<List<Cas1OASysSupportingInformationMetaData>> {
     ensureOffenderAccess(crn)
 
     return ResponseEntity.ok(
-      cas1OASysNeedsQuestionTransformer.transformToNeedsQuestion(
+      cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
         extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
       ),
     )
@@ -52,7 +52,7 @@ class Cas1OasysController(
       Cas1OASysGroupName.ROSH_SUMMARY -> oaSysSectionsTransformer.roshSummaryAnswers(
         extractEntityFromCasResult(oaSysService.getOASysRoshSummary(crn)),
       )
-      Cas1OASysGroupName.NEEDS -> cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
+      Cas1OASysGroupName.SUPPORTING_INFORMATION -> cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
         needsDetails = extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
         includeOptionalSections = includeOptionalSections ?: emptyList(),
       )

@@ -34,12 +34,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Nested
-  inner class OptionalNeedsQuestions {
+  inner class SupportingInformationMetadata {
 
     @Test
     fun `No JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/people/CRN/oasys/optional-needs-questions")
+        .uri("/cas1/people/CRN/oasys/supporting-information-metadata")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -52,7 +52,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apDeliusContextUserAccessEmptyResponse()
 
       webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/optional-needs-questions")
+        .uri("/cas1/people/$CRN/oasys/supporting-information-metadata")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -71,7 +71,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/optional-needs-questions")
+        .uri("/cas1/people/$CRN/oasys/supporting-information-metadata")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -94,7 +94,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
       webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/optional-needs-questions")
+        .uri("/cas1/people/$CRN/oasys/supporting-information-metadata")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -102,7 +102,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .expectBody()
         .json(
           objectMapper.writeValueAsString(
-            cas1OASysNeedsQuestionTransformer.transformToNeedsQuestion(needsDetails),
+            cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
           ),
         )
     }
@@ -270,7 +270,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Needs`() {
+    fun `Supporting Information`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -284,14 +284,14 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
       val result = webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/answers?group=needs&includeOptionalSections=10")
+        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
-      assertThat(result.group).isEqualTo(Cas1OASysGroupName.NEEDS)
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
       assertThat(result.answers).contains(
         OASysQuestion(
           label = "Relationship issues contributing to risks of offending and harm",

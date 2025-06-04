@@ -2087,12 +2087,12 @@ paths:
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
 
-  /people/{crn}/oasys/optional-needs-questions:
+  /people/{crn}/oasys/supporting-information-metadata:
     get:
       tags:
         - OAsys
-      summary: Returns information about which 'needs' questions & answers can be optionally included in an application (and which are mandatory), for a given CRN
-      operationId: optionalNeeds
+      summary: Returns metadata about supporting information questions for a given CRN
+      operationId: supportingInformationMetadata
       parameters:
         - name: crn
           in: path
@@ -2107,7 +2107,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysNeedsQuestion'
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysSupportingInformationMetaData'
         404:
           description: invalid CRN
           content:

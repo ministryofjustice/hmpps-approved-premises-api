@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysNeedsQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
@@ -33,7 +33,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withFinanceIssuesDetails(linkedToHarm = true, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToNeedsQuestion(needsDetails)
+      val result = transformer.transformToSupportingInformationMetadata(needsDetails)
 
       assertThat(result.map { it.sectionLabel }).containsExactlyInAnyOrder(
         "Emotional",
@@ -60,64 +60,64 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = true, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToNeedsQuestion(needsDetails)
+      val result = transformer.transformToSupportingInformationMetadata(needsDetails)
 
       assertThat(result).containsExactlyInAnyOrder(
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 10,
           sectionLabel = "Emotional",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = false,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = false,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 3,
           sectionLabel = "Accommodation",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 6,
           sectionLabel = "Relationships",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 7,
           sectionLabel = "Lifestyle",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 8,
           sectionLabel = "Drugs",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 9,
           sectionLabel = "Alcohol",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 11,
           sectionLabel = "Thinking and Behavioural",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 12,
           sectionLabel = "Attitude",
-          optional = false,
-          linkedToHarm = true,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
         ),
       )
     }
@@ -136,64 +136,64 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkedToHarm, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToNeedsQuestion(needsDetails)
+      val result = transformer.transformToSupportingInformationMetadata(needsDetails)
 
       assertThat(result).containsExactlyInAnyOrder(
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 10,
           sectionLabel = "Emotional",
-          optional = true,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = false,
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = false,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 3,
           sectionLabel = "Accommodation",
-          optional = true,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = null,
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 6,
           sectionLabel = "Relationships",
-          optional = true,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = null,
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 7,
           sectionLabel = "Lifestyle",
-          optional = true,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = null,
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 8,
           sectionLabel = "Drugs",
-          optional = false,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 9,
           sectionLabel = "Alcohol",
-          optional = false,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = null,
+          inclusionOptional = false,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 11,
           sectionLabel = "Thinking and Behavioural",
-          optional = true,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = null,
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysNeedsQuestion(
+        Cas1OASysSupportingInformationMetaData(
           section = 12,
           sectionLabel = "Attitude",
-          optional = true,
-          linkedToHarm = linkedToHarm,
-          linkedToReOffending = null,
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = linkedToHarm,
+          oasysAnswerLinkedToReOffending = null,
         ),
       )
     }

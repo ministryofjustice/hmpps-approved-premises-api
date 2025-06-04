@@ -2089,12 +2089,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
 
-  /people/{crn}/oasys/optional-needs-questions:
+  /people/{crn}/oasys/supporting-information-metadata:
     get:
       tags:
         - OAsys
-      summary: Returns information about which 'needs' questions & answers can be optionally included in an application (and which are mandatory), for a given CRN
-      operationId: optionalNeeds
+      summary: Returns metadata about supporting information questions for a given CRN
+      operationId: supportingInformationMetadata
       parameters:
         - name: crn
           in: path
@@ -2109,7 +2109,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Cas1OASysNeedsQuestion'
+                  $ref: '#/components/schemas/Cas1OASysSupportingInformationMetaData'
         404:
           description: invalid CRN
           content:
@@ -8658,41 +8658,41 @@ components:
           $ref: '#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
-    Cas1OASysNeedsQuestion:
+    Cas1OASysSupportingInformationMetaData:
       type: object
       properties:
         section:
           type: integer
           example: 10
-          description: The OAsys section that this 'needs' question relates to
+          description: The OAsys section that this question relates to
         sectionLabel:
           type: string
-        optional:
+        inclusionOptional:
           type: boolean
-          description: If the user can optionally elect to include this question in an application. If not optional, it will always be included in the application
-        linkedToHarm:
+          description: If the user can optionally elect to include this question in an application. If not optional, it will always be returned by calls to '/cas1/people/{crn}/oasys/answers'
+        oasysAnswerLinkedToHarm:
           type: boolean
-          description: If the response to this question for the person is linked to harm
-        linkedToReOffending:
+          description: If the response to this question in OASys for the person has been identified as 'linked to harm'
+        oasysAnswerLinkedToReOffending:
           type: boolean
-          description: If the response to this question for the person is linked to re-offending
+          description: If the response to this question in OAsys for the person hsa been identified as 'linked to re-offending'. Nul
       required:
         - section
-        - name
-        - optional
+        - sectionLabel
+        - inclusionOptional
     Cas1OASysGroupName:
       type: string
       enum:
         - riskManagementPlan
         - offenceDetails
         - roshSummary
-        - needs
+        - supportingInformation
         - riskToSelf
       x-enum-varnames:
         - RISK_MANAGEMENT_PLAN
         - OFFENCE_DETAILS
         - ROSH_SUMMARY
-        - NEEDS
+        - SUPPORTING_INFORMATION
         - RISK_TO_SELF
     Cas1OASysGroup:
       type: object
