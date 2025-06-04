@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusRandomSeconds
+import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,6 +24,7 @@ class WebClientCache(
   private val redisTemplate: RedisTemplate<String, String>,
   @Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
   private val sentryService: SentryService,
+  private val clock: Clock,
 ) {
 
   fun checkPreemptiveCacheStatus(cacheConfig: PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus {
@@ -123,7 +125,7 @@ class WebClientCache(
     writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
   }
 
-  private fun now() = Instant.now()
+  private fun now() = Instant.now(clock)
 
   private fun <ResponseType : Any> pollCacheWithBlockingWait(
     cacheKeyResolver: CacheKeyResolver,
