@@ -35,6 +35,10 @@ class ClockConfiguration {
       fixedTime = now.toInstant(ZoneOffset.UTC)
     }
 
+    fun setNow(now: Instant) {
+      fixedTime = now
+    }
+
     fun setToNowWithoutMillis() {
       setNow(LocalDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }

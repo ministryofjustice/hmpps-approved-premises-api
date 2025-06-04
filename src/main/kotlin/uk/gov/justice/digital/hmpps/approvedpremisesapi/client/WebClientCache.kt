@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusRandomSeconds
+import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,6 +24,7 @@ class WebClientCache(
   private val redisTemplate: RedisTemplate<String, String>,
   @Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
   private val sentryService: SentryService,
+  private val clock: Clock,
 ) {
 
   fun checkPreemptiveCacheStatus(cacheConfig: PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus {
@@ -34,7 +36,7 @@ class WebClientCache(
     val refreshableAfter = cacheEntryMetadata.refreshableAfter
     val refreshableAfterWithJitter = refreshableAfter.minusRandomSeconds(cacheConfig.successSoftTtlJitterSeconds)
 
-    if (refreshableAfterWithJitter < Instant.now()) {
+    if (refreshableAfterWithJitter < now()) {
       return PreemptiveCacheEntryStatus.REQUIRES_REFRESH
     } else {
       return PreemptiveCacheEntryStatus.EXISTS
@@ -57,7 +59,7 @@ class WebClientCache(
 
     attempt.set(cacheEntry?.attempt?.plus(1) ?: 1)
 
-    if (cacheEntry != null && cacheEntry.refreshableAfter.isAfter(Instant.now())) {
+    if (cacheEntry != null && cacheEntry.refreshableAfter.isAfter(now())) {
       return resultFromCacheMetadata(cacheEntry, cacheKeySet, typeReference)
     }
 
@@ -85,7 +87,7 @@ class WebClientCache(
 
     val cacheEntry = PreemptiveCacheMetadata(
       httpStatus = exception.statusCode.toHttpStatus(),
-      refreshableAfter = Instant.now().plusSeconds(backoffSeconds),
+      refreshableAfter = now().plusSeconds(backoffSeconds),
       method = MarshallableHttpMethod.fromHttpMethod(method),
       path = path,
       hasResponseBody = body != null,
@@ -113,7 +115,7 @@ class WebClientCache(
 
     val cacheEntry = PreemptiveCacheMetadata(
       httpStatus = result.statusCode.toHttpStatus(),
-      refreshableAfter = Instant.now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
+      refreshableAfter = now().plusSeconds(cacheConfig.successSoftTtlSeconds.toLong()),
       method = null,
       path = null,
       hasResponseBody = result.body != null,
@@ -122,6 +124,8 @@ class WebClientCache(
 
     writeToRedis(cacheKeySet, cacheEntry, result.body, cacheConfig.hardTtlSeconds.toLong())
   }
+
+  private fun now() = Instant.now(clock)
 
   private fun <ResponseType : Any> pollCacheWithBlockingWait(
     cacheKeyResolver: CacheKeyResolver,
