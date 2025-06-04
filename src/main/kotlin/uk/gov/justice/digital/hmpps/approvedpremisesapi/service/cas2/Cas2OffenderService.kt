@@ -164,7 +164,7 @@ class Cas2OffenderService(
       }
     }
 
-    if (offender.currentExclusion || offender.currentRestriction) {
+    if (offender.currentRestriction) {
       return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
     }
 
