@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysNeedsQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
@@ -9,13 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 @Service
 class Cas1OASysNeedsQuestionTransformer {
 
-  fun transformToNeedsQuestion(needsDetails: NeedsDetails) = toQuestionState(needsDetails).map {
-    Cas1OASysNeedsQuestion(
+  fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails) = toQuestionState(needsDetails).map {
+    Cas1OASysSupportingInformationMetaData(
       section = it.sectionNumber,
       sectionLabel = it.sectionLabel,
-      optional = it.optional,
-      linkedToHarm = it.linkedToHarm,
-      linkedToReOffending = it.linkedToReOffending,
+      inclusionOptional = it.optional,
+      oasysAnswerLinkedToHarm = it.linkedToHarm,
+      oasysAnswerLinkedToReOffending = it.linkedToReOffending,
     )
   }
 
