@@ -64,6 +64,10 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.userType = { t }
   }
 
+  fun withIsActive(isActive: Boolean) = apply {
+    this.isActive = { isActive }
+  }
+
   override fun produce(): Cas2UserEntity = Cas2UserEntity(
     id = this.id(),
     username = this.username(),

@@ -38,6 +38,89 @@ class Cas2ApplicationEntityTest {
   }
 
   @Test
+  fun `isCreatedBy returns true when nomis user did create application`() {
+    val nomisUser = NomisUserEntityFactory()
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(nomisUser)
+      .withCreatedByCas2User(null)
+      .produce()
+
+    assertThat(application.isCreatedBy(nomisUser)).isTrue()
+  }
+
+  @Test
+  fun `isCreatedBy returns false when nomis user did not create application`() {
+    val nomisUser = NomisUserEntityFactory()
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByCas2User(null)
+      .produce()
+
+    assertThat(application.isCreatedBy(nomisUser)).isFalse()
+  }
+
+  @Test
+  fun `isCreatedBy returns true when cas2 user did create application`() {
+    val cas2User = Cas2UserEntityFactory()
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByCas2User(cas2User)
+      .produce()
+
+    assertThat(application.isCreatedBy(cas2User)).isTrue()
+  }
+
+  @Test
+  fun `isCreatedBy returns false when cas2 user did not create application`() {
+    val cas2User = Cas2UserEntityFactory()
+      .produce()
+    val originalCas2User = Cas2UserEntityFactory()
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByCas2User(originalCas2User)
+      .produce()
+
+    assertThat(application.isCreatedBy(cas2User)).isFalse()
+  }
+
+  @Test
+  fun `isCreatedBy returns false when cas2 user did not create application and cas2User id null`() {
+    val cas2User = Cas2UserEntityFactory()
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByCas2User(null)
+      .produce()
+
+    assertThat(application.isCreatedBy(cas2User)).isFalse()
+  }
+
+  @Test
+  fun `nomis user returns correct isActive status with getCreatedByUserIsActive`() {
+    val nomisUser = NomisUserEntityFactory()
+      .withIsActive(true)
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(nomisUser)
+      .withCreatedByCas2User(null)
+      .produce()
+
+    assertThat(application.createdByUser.isActive).isEqualTo(application.getCreatedByUserIsActive())
+  }
+
+  @Test
+  fun `cas2 user returns correct isActive status with getCreatedByUserIsActive`() {
+    val cas2User = Cas2UserEntityFactory()
+      .withIsActive(true)
+      .produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByCas2User(cas2User)
+      .produce()
+
+    assertThat(application.createdByCas2User?.isActive).isEqualTo(application.getCreatedByUserIsActive())
+  }
+
+  @Test
   fun `nomis user returns correct nomisUsername with getCreatedByUsername`() {
     val nomisUser = NomisUserEntityFactory()
       .withNomisUsername("nomis_username")

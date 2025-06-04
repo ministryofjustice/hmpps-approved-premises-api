@@ -42,6 +42,7 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   )
   fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
 
+  // BAIL-WIP - this will need updating when we switch over to cas2users
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
   fun findAllByCreatedByUserId(id: UUID): List<Cas2ApplicationEntity>
 
@@ -94,6 +95,7 @@ data class Cas2ApplicationEntity(
 
   // BAIL-WIP - When start to create application for delius users, this will need to be nullable, but that creates cas2cade effects whenever we us code like `staffIdentifier = application.createdByUser.nomisStaffId`,`
   // BAIL-WIP - Set this to deprecated when we make it optional
+  // BAIL-WIP - this will become private to force the use of getters
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: NomisUserEntity,
@@ -146,11 +148,15 @@ data class Cas2ApplicationEntity(
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 
+  fun isCreatedBy(user: NomisUserEntity): Boolean = createdByUser.id == user.id
+  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByCas2User?.id == user.id
+
   fun getCreatedById(): UUID = createdByCas2User?.id ?: createdByUser.id
   fun getCreatedByCanonicalName(): String = createdByCas2User?.name ?: createdByUser.name
   fun getCreatedByUsername(): String = createdByCas2User?.username ?: createdByUser.nomisUsername
   fun getCreatedByUserIdentifier(): String = createdByCas2User?.staffIdentifier() ?: createdByUser.nomisStaffId.toString()
   fun getCreatedByUserEmail(): String? = createdByCas2User?.email ?: createdByUser.email
+  fun getCreatedByUserIsActive(): Boolean = createdByCas2User?.isActive ?: createdByUser.isActive
 
   fun getCreatedByUserType(): Cas2StaffMember.Usertype {
     if (createdByCas2User != null) {

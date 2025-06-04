@@ -53,6 +53,10 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
     this.email = { email }
   }
 
+  fun withIsActive(isActive: Boolean) = apply {
+    this.isActive = { isActive }
+  }
+
   override fun produce(): NomisUserEntity = NomisUserEntity(
     id = this.id(),
     nomisUsername = this.nomisUsername(),
