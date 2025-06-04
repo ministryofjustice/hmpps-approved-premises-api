@@ -95,6 +95,7 @@ class PersonTransformer {
             inmateDetail?.assignedLivingUnit?.agencyName
               ?: inmateDetail?.assignedLivingUnit?.agencyId
           },
+        // this is used by Cas2 which ignores currentExclusion, isRestricted flag is not used on the cas 2 frontend so it can be left in
         isRestricted = (offenderDetailSummary.currentExclusion || offenderDetailSummary.currentRestriction),
       )
     }
