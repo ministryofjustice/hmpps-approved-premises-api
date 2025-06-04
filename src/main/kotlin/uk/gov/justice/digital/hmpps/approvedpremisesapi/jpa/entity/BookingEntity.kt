@@ -247,7 +247,8 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
         Cast(r.id as varchar) roomId,
         r.name AS roomName,
         Cast(b2.id as varchar) bedId,
-        b2.name AS bedName
+        b2.name AS bedName,
+        b.offender_name AS offenderName
       FROM bookings b
       LEFT JOIN beds b2 ON b.bed_id = b2.id
       LEFT JOIN rooms r ON b2.room_id = r.id
@@ -332,6 +333,7 @@ data class BookingEntity(
   val adhoc: Boolean? = null,
   @Version
   var version: Long = 1,
+  var offenderName: String?,
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }

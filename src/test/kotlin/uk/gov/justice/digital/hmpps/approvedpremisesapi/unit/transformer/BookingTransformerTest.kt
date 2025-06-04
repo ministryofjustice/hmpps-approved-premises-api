@@ -153,6 +153,7 @@ class BookingTransformerTest {
     nomsNumber = "NOMS123",
     placementRequest = null,
     status = null,
+    offenderName = null,
   )
 
   private val offenderDetails = OffenderDetailsSummaryFactory()
