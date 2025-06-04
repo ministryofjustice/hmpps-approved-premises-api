@@ -5,12 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import io.mockk.every
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -25,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.client.PreemptiveCacheTest.Companion.CACHE_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import java.time.Duration
 import java.time.Instant
@@ -36,17 +32,10 @@ class PreemptiveCacheTest : IntegrationTestBase() {
   }
 
   @Autowired
+  private lateinit var mutableClock: ClockConfiguration.MutableClock
+
+  @Autowired
   lateinit var preemptivelyCachedClient: PreemptivelyCachedClient
-
-  @BeforeEach
-  fun mockInstant() {
-    mockkStatic(Instant::class)
-  }
-
-  @AfterEach
-  fun unmockInstant() {
-    unmockkStatic(Instant::class)
-  }
 
   @Test
   fun `Making a request with isPreemptiveCall = true behaves correctly for 2xx responses`() {
@@ -69,7 +58,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
       responseBody = offenderDetailsResponseOne,
     )
 
-    every { Instant.now() } returns firstCallInstant
+    mutableClock.setNow(firstCallInstant)
 
     // The first call should make an upstream request
     val firstResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
@@ -78,7 +67,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertCallCount("/api/offenders/$nomsNumber", 1)
 
     // Subsequent calls up to successSoftTtlSeconds should return the cached value without making an upstream request
-    every { Instant.now() } returns fourSecondsLaterInstant
+    mutableClock.setNow(fourSecondsLaterInstant)
 
     val secondResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
     assertThat(secondResult is ClientResult.Success).isTrue
@@ -91,7 +80,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     )
 
     // The next call after successSoftTtlSeconds should make an upstream request and replace the original cached value
-    every { Instant.now() } returns sixSecondsLaterInstant
+    mutableClock.setNow(sixSecondsLaterInstant)
 
     val thirdResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
     assertThat(thirdResult is ClientResult.Success).isTrue
@@ -126,7 +115,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
       responseStatus = 404,
     )
 
-    every { Instant.now() } returns firstCallInstant
+    mutableClock.setNow(firstCallInstant)
 
     assertStatusCodeFailure(
       preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
@@ -139,7 +128,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     //
     // Subsequent calls up to the first amount of seconds in failureSoftTtlBackoffSeconds
     // should return the cached value without making an upstream request
-    every { Instant.now() } returns fourSecondsLaterInstant
+    mutableClock.setNow(fourSecondsLaterInstant)
 
     assertStatusCodeFailure(
       preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
@@ -156,7 +145,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     //
     // The next call after failureSoftTtlBackoffSeconds should make an upstream request and
     // replace the original cached value, attempt number in metadata should increase to 2
-    every { Instant.now() } returns sixSecondsLaterInstant
+    mutableClock.setNow(sixSecondsLaterInstant)
 
     assertStatusCodeFailure(
       preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber),
@@ -240,7 +229,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
       responseBody = offenderDetailsResponse,
     )
 
-    every { Instant.now() } returns firstCallInstant
+    mutableClock.setNow(firstCallInstant)
 
     // The first call should make an upstream request
     val firstResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
@@ -249,7 +238,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
     assertCallCount("/api/offenders/$nomsNumber", 1)
 
     // Subsequent calls up to successSoftTtlSeconds should return the cached value without making an upstream request
-    every { Instant.now() } returns fourSecondsLaterInstant
+    mutableClock.setNow(fourSecondsLaterInstant)
 
     val secondResult = preemptivelyCachedClient.getInmateDetailsWithCall(nomsNumber)
     assertThat(secondResult is ClientResult.Success).isTrue
