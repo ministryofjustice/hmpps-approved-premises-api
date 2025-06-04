@@ -4,10 +4,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import java.time.OffsetDateTime
 import java.util.UUID

@@ -13,10 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ExternalUserService
 
 class ExternalUserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()

@@ -1,12 +1,13 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2
 
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SubjectAccessRequestRepositoryBase
 import java.time.LocalDateTime
 
 @Repository
-class CAS2SubjectAccessRequestRepository(
+class Cas2SubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
 
