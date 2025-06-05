@@ -46,7 +46,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.11.1")
+  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.13.2")
 
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
