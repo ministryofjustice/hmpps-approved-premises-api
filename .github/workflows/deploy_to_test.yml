@@ -18,15 +18,19 @@ jobs:
       registry_org: 'ministryofjustice'
       push: true
       docker_multiplatform: false
+      tag_latest: false
 
   reset_database:
     name: Reset the database
+    needs:
+      - docker_build
     if: ${{ inputs.reset_database == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      # TODO: Actually reset the database using kube
+      # TODO: Actually reset the database using kube?
       - run: |
           echo "Resetting the database..."
+          echo "This is a test only - database has NOT been reset."
 
   deploy_test:
     name: Deploy to the test environment
@@ -37,3 +41,4 @@ jobs:
     with:
       environment: 'test'
       app_version: '${{ needs.docker_build.outputs.app_version }}'
+      show_changelog: false
