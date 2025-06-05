@@ -55,7 +55,7 @@ class NomisUserService(
     is ClientResult.Failure -> nomsStaffInformationResponse.throwException()
   }
 
-  @Transactional
+  @Transactional(value = Transactional.TxType.REQUIRES_NEW)
   fun getUserForUsername(username: String, jwt: String): NomisUserEntity {
     val nomisUserDetails = when (
       val nomisUserDetailResponse = nomisUserRolesForRequesterApiClient.getUserDetailsForMe(jwt)
