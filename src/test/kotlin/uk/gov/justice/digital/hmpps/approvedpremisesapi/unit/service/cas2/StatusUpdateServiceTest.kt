@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -55,6 +56,7 @@ class StatusUpdateServiceTest {
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
+  private val cas2EmailService = mockk<Cas2EmailService>()
 
   private val applicant = NomisUserEntityFactory().produce()
   private val application = Cas2ApplicationEntityFactory()
@@ -76,6 +78,7 @@ class StatusUpdateServiceTest {
     mockEmailNotificationService,
     mockStatusFinder,
     mockStatusTransformer,
+    cas2EmailService,
     applicationUrlTemplate,
     applicationOverviewUrlTemplate,
   )
@@ -179,6 +182,7 @@ class StatusUpdateServiceTest {
 
       @Test
       fun `saves and asks the domain event service to create a status-updated event`() {
+        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.getCreatedByUserEmail())
         statusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
@@ -309,6 +313,7 @@ class StatusUpdateServiceTest {
           every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
             Cas2StatusDetail("exampleStatusDetail", ""),
           )
+          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.getCreatedByUserEmail()
 
           statusUpdateService.createForAssessment(
             assessmentId = assessment.id,
@@ -380,6 +385,8 @@ class StatusUpdateServiceTest {
             {
               assessmentWithNoEmail
             }
+
+          every { cas2EmailService.getReferrerEmail(any()) } answers { callOriginal() }
 
           mockkStatic(Sentry::class)
 

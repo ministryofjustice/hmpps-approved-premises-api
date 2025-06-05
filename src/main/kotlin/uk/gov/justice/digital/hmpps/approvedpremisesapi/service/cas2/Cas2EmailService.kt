@@ -101,6 +101,17 @@ class Cas2EmailService(
     )
   }
 
+  fun getReferrerEmail(application: Cas2ApplicationEntity): String? {
+    // currently with cas2 bail there is no POM, and the offender is not in prison.
+    // in this instance we should fall back to use the created by user (a delius user)
+    application.currentAssignment?.let {
+      return it.allocatedPomUser?.email
+        ?: offenderManagementUnitRepository.findByPrisonCode(it.prisonCode)!!.email
+    }
+
+    return application.getCreatedByUserEmail()
+  }
+
   fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Received"
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
   private fun getAssessorLink(applicationId: UUID): String = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())

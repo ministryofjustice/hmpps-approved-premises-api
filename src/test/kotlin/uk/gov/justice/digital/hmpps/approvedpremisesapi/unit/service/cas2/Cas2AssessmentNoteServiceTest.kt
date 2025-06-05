@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.NomisUserService
@@ -47,6 +48,7 @@ class Cas2AssessmentNoteServiceTest {
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockUserAccessService = mockk<Cas2UserAccessService>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
+  private val cas2EmailService = mockk<Cas2EmailService>()
 
   private val assessmentNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentNoteService(
     mockApplicationRepository,
@@ -58,6 +60,7 @@ class Cas2AssessmentNoteServiceTest {
     mockEmailNotificationService,
     mockUserAccessService,
     mockNotifyConfig,
+    cas2EmailService,
     "http://frontend/applications/#id/overview",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -376,10 +379,11 @@ class Cas2AssessmentNoteServiceTest {
         every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
         every { mockApplicationRepository.findByIdOrNull(applicationId) } returns submittedApplication
         every { mockExternalUserService.getUserForRequest() } returns externalUser
+        every { cas2EmailService.getReferrerEmail(any()) } returns "email"
 
         every {
           mockEmailNotificationService.sendCas2Email(
-            recipientEmailAddress = referrer.email!!,
+            recipientEmailAddress = "email",
             templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
             personalisation = mapOf(
               "dateNoteAdded" to noteEntity.createdAt.toLocalDate().toCas2UiFormat(),
@@ -426,6 +430,8 @@ class Cas2AssessmentNoteServiceTest {
             submittedApplicationWithNoReferrerEmail
           }
         every { mockExternalUserService.getUserForRequest() } returns externalUser
+        every { cas2EmailService.getReferrerEmail(any()) } answers { callOriginal() }
+
         mockkStatic(Sentry::class)
 
         assessmentNoteService.createAssessmentNote(
