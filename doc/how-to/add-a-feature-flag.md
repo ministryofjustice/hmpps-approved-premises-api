@@ -28,7 +28,7 @@ You may wish to set a default in application-test.yml too for integration tests
 Update the environment-specific helm configurations (see /helm), adding
 environment-specific entries to override the spring configuration e.g.
 
-```values-dev.yml:
+```values-development.yml:
   env:
      FEATURE-FLAGS_MY-FLAG: true
 ```
