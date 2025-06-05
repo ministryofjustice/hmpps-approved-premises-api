@@ -3,7 +3,7 @@ orbs:
   hmpps: ministryofjustice/hmpps@8.8.0
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.2.0
-  slack: circleci/slack@4.12.6
+  slack: circleci/slack@4.15.0
 parameters:
   alerts-slack-channel:
     type: string
