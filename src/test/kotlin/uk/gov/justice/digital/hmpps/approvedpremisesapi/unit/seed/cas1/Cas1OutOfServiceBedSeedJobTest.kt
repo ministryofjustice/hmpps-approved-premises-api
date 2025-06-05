@@ -352,8 +352,6 @@ class Cas1OutOfServiceBedSeedJobTest {
       seedJob.processRow(secondRow)
 
       verify(exactly = 1) {
-        premisesService.getPremises(secondRow.key.premisesId)
-
         cas1OutOfServiceBedService.updateOutOfServiceBed(
           expectedOutOfServiceBed.id,
           secondRow.startDate,
