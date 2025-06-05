@@ -9,21 +9,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import java.util.UUID
 
 @SuppressWarnings("UnusedPrivateProperty")
 class Cas2JsonSchemaServiceTest {
   private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
-  private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
 
   private val jsonSchemaService = Cas2JsonSchemaService(
-    objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     jsonSchemaRepository = mockJsonSchemaRepository,
-    applicationRepository = mockApplicationRepository,
   )
 
   @Test
@@ -89,15 +83,7 @@ class Cas2JsonSchemaServiceTest {
       .withData("{}")
       .produce()
 
-    val applicationEntities = listOf(upToDateApplication, outdatedApplication)
-
     every { mockJsonSchemaRepository.getSchemasForType(Cas2ApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
-    every { mockApplicationRepository.findAllByCreatedByUserId(userId) } returns
-      applicationEntities
-    every { mockApplicationRepository.save(any()) } answers {
-      it.invocation.args[0] as
-        Cas2ApplicationEntity
-    }
 
     assertThat(jsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {
       it.id == upToDateApplication.id &&
@@ -113,62 +99,15 @@ class Cas2JsonSchemaServiceTest {
   }
 
   @Test
-  fun `validate returns false for JSON that does not satisfy schema`() {
+  fun `validate always returns true`() {
     val schema = Cas2ApplicationJsonSchemaEntityFactory()
-      .withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-      )
-      .produce()
-
-    assertThat(jsonSchemaService.validate(schema, "{}")).isFalse
-  }
-
-  @Test
-  fun `validate returns true for JSON that does satisfy schema`() {
-    val schema = Cas2ApplicationJsonSchemaEntityFactory()
-      .withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-      )
+      .withSchema("doesntmatter")
       .produce()
 
     assertThat(
       jsonSchemaService.validate(
         schema,
-        """
-        {
-           "thingId": 123
-        }
-      """,
+        "irrelevant",
       ),
     ).isTrue
   }
