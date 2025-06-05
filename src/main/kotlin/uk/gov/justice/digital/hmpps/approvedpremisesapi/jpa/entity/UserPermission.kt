@@ -88,4 +88,6 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
 
   CAS1_PLACEMENT_APPEAL_CREATE(ApprovedPremisesUserPermission.placementAppealCreate),
   CAS1_PLACEMENT_APPEAL_ASSESS(ApprovedPremisesUserPermission.placementAppealAssess),
+
+  CAS1_EXTENSION_REQUEST(ApprovedPremisesUserPermission.placementExtensionRequest),
 }
