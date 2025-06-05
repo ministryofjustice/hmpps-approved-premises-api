@@ -15,14 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import java.util.UUID
 
 class JsonSchemaServiceTest {
   private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
 
   private val jsonSchemaService = JsonSchemaService(
-    objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     jsonSchemaRepository = mockJsonSchemaRepository,
   )
 
@@ -195,62 +193,15 @@ class JsonSchemaServiceTest {
   }
 
   @Test
-  fun `validate returns false for JSON that does not satisfy schema`() {
+  fun `validate always returns true`() {
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-      )
-      .produce()
-
-    assertThat(jsonSchemaService.validate(schema, "{}")).isFalse
-  }
-
-  @Test
-  fun `validate returns true for JSON that does satisfy schema`() {
-    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-      )
+      .withSchema("doesntmatter")
       .produce()
 
     assertThat(
       jsonSchemaService.validate(
         schema,
-        """
-        {
-           "thingId": 123
-        }
-      """,
+        """irrelevant""",
       ),
     ).isTrue
   }
