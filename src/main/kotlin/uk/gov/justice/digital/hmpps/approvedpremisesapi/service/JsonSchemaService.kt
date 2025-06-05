@@ -8,7 +8,6 @@ import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 import java.util.Collections.synchronizedMap
@@ -18,7 +17,6 @@ import java.util.UUID
 class JsonSchemaService(
   private val objectMapper: ObjectMapper,
   private val jsonSchemaRepository: JsonSchemaRepository,
-  private val applicationRepository: ApplicationRepository,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

@@ -39,12 +39,6 @@ class Cas2v2JsonSchemaService(
     return validationErrors.isEmpty()
   }
 
-  fun checkSchemaOutdated(application: Cas2v2ApplicationEntity): Cas2v2ApplicationEntity {
-    val newestSchema = getNewestSchema(application.schemaVersion.javaClass)
-
-    return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
-  }
-
   fun checkCas2v2SchemaOutdated(application: Cas2v2ApplicationEntity): Cas2v2ApplicationEntity {
     val newestSchema = getNewestSchema(application.schemaVersion.javaClass)
 

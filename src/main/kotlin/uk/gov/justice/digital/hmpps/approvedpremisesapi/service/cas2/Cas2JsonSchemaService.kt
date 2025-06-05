@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import java.util.Collections.synchronizedMap
 import java.util.UUID
 
@@ -19,7 +17,6 @@ import java.util.UUID
 class Cas2JsonSchemaService(
   private val objectMapper: ObjectMapper,
   private val jsonSchemaRepository: JsonSchemaRepository,
-  private val applicationRepository: Cas2ApplicationRepository,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -44,12 +41,6 @@ class Cas2JsonSchemaService(
   }
 
   fun checkSchemaOutdated(application: Cas2ApplicationEntity): Cas2ApplicationEntity {
-    val newestSchema = getNewestSchema(application.schemaVersion.javaClass)
-
-    return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
-  }
-
-  fun checkCas2v2SchemaOutdated(application: Cas2v2ApplicationEntity): Cas2v2ApplicationEntity {
     val newestSchema = getNewestSchema(application.schemaVersion.javaClass)
 
     return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }

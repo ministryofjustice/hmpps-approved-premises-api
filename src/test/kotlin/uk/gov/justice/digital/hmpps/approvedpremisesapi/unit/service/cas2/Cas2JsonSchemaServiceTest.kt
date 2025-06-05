@@ -9,8 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import java.util.UUID
@@ -18,12 +16,10 @@ import java.util.UUID
 @SuppressWarnings("UnusedPrivateProperty")
 class Cas2JsonSchemaServiceTest {
   private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
-  private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
 
   private val jsonSchemaService = Cas2JsonSchemaService(
     objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     jsonSchemaRepository = mockJsonSchemaRepository,
-    applicationRepository = mockApplicationRepository,
   )
 
   @Test
@@ -89,15 +85,7 @@ class Cas2JsonSchemaServiceTest {
       .withData("{}")
       .produce()
 
-    val applicationEntities = listOf(upToDateApplication, outdatedApplication)
-
     every { mockJsonSchemaRepository.getSchemasForType(Cas2ApplicationJsonSchemaEntity::class.java) } returns listOf(newestJsonSchema)
-    every { mockApplicationRepository.findAllByCreatedByUserId(userId) } returns
-      applicationEntities
-    every { mockApplicationRepository.save(any()) } answers {
-      it.invocation.args[0] as
-        Cas2ApplicationEntity
-    }
 
     assertThat(jsonSchemaService.checkSchemaOutdated(upToDateApplication)).matches {
       it.id == upToDateApplication.id &&
