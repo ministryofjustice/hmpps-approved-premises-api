@@ -91,7 +91,7 @@ class Cas2PeopleController(
       val rosh = extractEntityFromCasResult(roshResult.await())
 
       ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
+        oaSysSectionsTransformer.cas2TransformRiskOfSeriousHarm(offenceDetails, rosh),
       )
     }
   }

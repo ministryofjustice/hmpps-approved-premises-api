@@ -353,7 +353,7 @@ class OASysSectionsTransformerTest {
   }
 
   @Test
-  fun `transformRiskOfSeriousHarm transforms correctly`() {
+  fun `cas2TransformRiskOfSeriousHarm transforms correctly`() {
     val offenceDetailsApiResponse = OffenceDetailsFactory().apply {
       withAssessmentId(34853487)
       withDateCompleted(null)
@@ -378,7 +378,7 @@ class OASysSectionsTransformerTest {
       withRiskReductionLikelyTo("riskReductionLikelyTo")
     }.produce()
 
-    val result = oaSysSectionsTransformer.transformRiskOfSeriousHarm(
+    val result = oaSysSectionsTransformer.cas2TransformRiskOfSeriousHarm(
       offenceDetailsApiResponse,
       roshApiResponse,
     )
