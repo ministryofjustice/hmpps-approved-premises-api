@@ -5,6 +5,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -512,5 +513,35 @@ class Cas2EmailServiceTest {
 
     val result = emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode)
     assertThat(result).isNull()
+  }
+
+  @Nested
+  inner class GetReferrerEmail {
+    @Test
+    fun `POM email is returned when application is assigned to a POM`() {
+      application.createApplicationAssignment("PRI1", oldUser)
+      val email = emailService.getReferrerEmail(application)
+
+      assertThat(application.applicationAssignments).hasSize(1)
+      assertThat(email).isEqualTo(application.currentAssignment!!.allocatedPomUser!!.email)
+    }
+
+    @Test
+    fun `OMU email is returned when application has transferred and not assigned to a POM`() {
+      application.createApplicationAssignment("PRI1", oldUser)
+      application.createApplicationAssignment(newOmu.prisonCode, null)
+      every { offenderManagementUnitRepository.findByPrisonCode(newOmu.prisonCode) } returns newOmu
+      val email = emailService.getReferrerEmail(application)
+
+      assertThat(application.applicationAssignments).hasSize(2)
+      assertThat(email).isEqualTo(newOmu.email)
+    }
+
+    @Test
+    fun `createdByUser email is returned when the application has not been assigned to a POM`() {
+      val email = emailService.getReferrerEmail(application)
+      assertThat(application.applicationAssignments).hasSize(0)
+      assertThat(email).isEqualTo(application.getCreatedByUserEmail())
+    }
   }
 }

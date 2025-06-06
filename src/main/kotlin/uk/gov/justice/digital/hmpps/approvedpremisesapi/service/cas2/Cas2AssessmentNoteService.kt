@@ -36,6 +36,7 @@ class Cas2AssessmentNoteService(
   private val emailNotificationService: EmailNotificationService,
   private val userAccessService: Cas2UserAccessService,
   private val notifyConfig: NotifyConfig,
+  private val cas2EmailService: Cas2EmailService,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) {
@@ -87,9 +88,10 @@ class Cas2AssessmentNoteService(
   }
 
   private fun sendEmailToReferrer(application: Cas2ApplicationEntity, savedNote: Cas2ApplicationNoteEntity) {
-    if (application.getCreatedByUserEmail() != null) {
+    val email = cas2EmailService.getReferrerEmail(application)
+    if (email != null) {
       emailNotificationService.sendCas2Email(
-        recipientEmailAddress = application.getCreatedByUserEmail()!!,
+        recipientEmailAddress = email,
         templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
         personalisation = mapOf(
           "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
