@@ -84,7 +84,7 @@ class OASysSectionsTransformer : OASysTransformer() {
       ),
   )
 
-  fun transformRiskOfSeriousHarm(
+  fun cas2TransformRiskOfSeriousHarm(
     offenceDetails: OffenceDetails,
     roshSummary: RoshSummary,
   ): OASysRiskOfSeriousHarm = OASysRiskOfSeriousHarm(
