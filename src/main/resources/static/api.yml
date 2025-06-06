@@ -744,37 +744,6 @@ paths:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-
-  /people/{crn}/risks:
-    get:
-      summary: Returns the risks for a Person
-      operationId: peopleCrnRisksGet
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch risks for
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/PersonRisks'
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/ValidationError'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
   /people/{crn}/prison-case-notes:
     get:
       summary: Returns the prison case notes for a Person
@@ -867,9 +836,10 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
   /people/{crn}/oasys/selection:
     get:
+      deprecated: true
       tags:
         - OASys
-      summary: Returns the importable sections of OASys including details of links to harm and reoffending
+      summary: Returns the importable sections of OASys including details of links to harm and reoffending. This is only used by CAS1, which should use /cas1/people/X320741/oasys/supporting-information-metadata instead.
       operationId: peopleCrnOasysSelectionGet
       parameters:
         - name: crn
@@ -929,6 +899,7 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
   /people/{crn}/oasys/risk-to-self:
     get:
+      deprecated: true
       tags:
         - OASys
       summary: Returns the Risk To Individual (known as Risk to Self on frontend) section of an OASys.
@@ -955,6 +926,7 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
   /people/{crn}/oasys/rosh:
     get:
+      deprecated: true
       tags:
         - OASys
       summary: Returns the Risk of Serious Harm section of an OASys.
