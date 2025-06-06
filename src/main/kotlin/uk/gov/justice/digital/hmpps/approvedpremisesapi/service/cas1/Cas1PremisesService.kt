@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.io.OutputStream
 import java.time.Clock
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Service
@@ -36,6 +38,8 @@ class Cas1PremisesService(
   companion object {
     private const val OVERBOOKING_RANGE_DURATION_WEEKS = 12L
   }
+
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   @SuppressWarnings("MagicNumber")
   fun createOccupancyReport(outputStream: OutputStream) {
@@ -110,10 +114,21 @@ class Cas1PremisesService(
       return CasResult.GeneralValidationError("Start Date $startDate should be before End Date $endDate")
     }
 
+    val dateRange = if (ChronoUnit.YEARS.between(startDate, endDate) > 1) {
+      log.warn(
+        """Capacity requested for more than 2 years, will only return the first few years. 
+        |Arrival Date: $startDate, Departure Date: $endDate, Premises: ${premises.name}
+        """.trimMargin(),
+      )
+      DateRange(startDate, startDate.plusYears(2).minusDays(1))
+    } else {
+      DateRange(startDate, endDate)
+    }
+
     return CasResult.Success(
       spacePlanningService.capacity(
         premises = premises,
-        rangeInclusive = DateRange(startDate, endDate),
+        rangeInclusive = dateRange,
         excludeSpaceBookingId = excludeSpaceBookingId,
       ),
     )
