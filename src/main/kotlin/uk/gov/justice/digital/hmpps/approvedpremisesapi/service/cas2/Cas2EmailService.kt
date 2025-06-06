@@ -102,7 +102,7 @@ class Cas2EmailService(
   }
 
   fun getReferrerEmail(application: Cas2ApplicationEntity): String? {
-    // currently with cas2 bail there is no POM, and the offender is not in prison.
+    // currently with cas2 bail, there will not be an application assignment as there is no POM nor prison.
     // in this instance we should fall back to use the created by user (a delius user)
     application.currentAssignment?.let {
       return it.allocatedPomUser?.email
