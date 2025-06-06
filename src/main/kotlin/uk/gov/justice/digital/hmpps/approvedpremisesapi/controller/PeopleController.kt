@@ -14,20 +14,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
@@ -37,15 +32,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonerAlertTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Service
 class PeopleController(
-  private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
   private val personTransformer: PersonTransformer,
-  private val risksTransformer: RisksTransformer,
   private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
   private val adjudicationTransformer: AdjudicationTransformer,
   private val prisonerAlertTransformer: PrisonerAlertTransformer,
@@ -54,7 +46,6 @@ class PeopleController(
   private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
   private val oasysService: OASysService,
-  private val offenderRisksService: OffenderRisksService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -69,21 +60,6 @@ class PeopleController(
         personTransformer.transformModelToPersonApi(personInfo),
       )
     }
-  }
-
-  override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
-    val principal = httpAuthService.getDeliusPrincipalOrThrow()
-
-    when (offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.CheckUserAccess(principal.name))) {
-      is PersonSummaryInfoResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is PersonSummaryInfoResult.Success.Restricted -> throw ForbiddenProblem()
-      is PersonSummaryInfoResult.Unknown -> throw NotFoundProblem(crn, "Person")
-      is PersonSummaryInfoResult.Success.Full -> Unit
-    }
-
-    val risks = offenderRisksService.getPersonRisks(crn)
-
-    return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks, crn))
   }
 
   override fun peopleCrnPrisonCaseNotesGet(
@@ -191,6 +167,7 @@ class PeopleController(
     }
   }
 
+  @Deprecated("remove")
   override fun peopleCrnOasysRiskToSelfGet(crn: String): ResponseEntity<OASysRiskToSelf> {
     ensureUserCanAccessOffenderInfo(crn)
 
@@ -212,6 +189,7 @@ class PeopleController(
     }
   }
 
+  @Deprecated("remove")
   override fun peopleCrnOasysRoshGet(crn: String): ResponseEntity<OASysRiskOfSeriousHarm> {
     ensureUserCanAccessOffenderInfo(crn)
 
