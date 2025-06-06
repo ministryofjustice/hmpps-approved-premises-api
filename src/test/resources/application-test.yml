@@ -217,3 +217,4 @@ refresh-inmate-details-cache:
 
 feature-flags:
   cas1-disable-overbooking-summary: false
+  cas1-expire-unsubmitted-applications-job-enabled: true
