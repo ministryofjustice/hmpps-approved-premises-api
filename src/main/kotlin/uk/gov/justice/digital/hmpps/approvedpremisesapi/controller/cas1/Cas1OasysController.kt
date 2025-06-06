@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OAsysCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationMetaData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -25,12 +25,14 @@ class Cas1OasysController(
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
 ) : OAsysCas1Delegate {
 
-  override fun supportingInformationMetadata(crn: String): ResponseEntity<List<Cas1OASysSupportingInformationMetaData>> {
+  override fun supportingInformationMetadata(crn: String): ResponseEntity<Cas1OASysMetadata> {
     ensureOffenderAccess(crn)
 
     return ResponseEntity.ok(
-      cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
-        extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
+      Cas1OASysMetadata(
+        cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
+          extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
+        ),
       ),
     )
   }

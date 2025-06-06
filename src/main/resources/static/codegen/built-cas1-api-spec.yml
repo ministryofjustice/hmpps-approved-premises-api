@@ -2089,7 +2089,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
 
-  /people/{crn}/oasys/supporting-information-metadata:
+  /people/{crn}/oasys/metadata:
     get:
       tags:
         - OAsys
@@ -2107,9 +2107,7 @@ paths:
           content:
             'application/json':
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cas1OASysSupportingInformationMetaData'
+                $ref: '#/components/schemas/Cas1OASysMetadata'
         404:
           description: invalid CRN
           content:
@@ -8659,7 +8657,15 @@ components:
           $ref: '#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
-    Cas1OASysSupportingInformationMetaData:
+    Cas1OASysMetadata:
+      properties:
+        supportingInformation:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1OASysSupportingInformationQuestionMetaData'
+      required:
+        - supportingInformationQuestions
+    Cas1OASysSupportingInformationQuestionMetaData:
       type: object
       properties:
         section:
