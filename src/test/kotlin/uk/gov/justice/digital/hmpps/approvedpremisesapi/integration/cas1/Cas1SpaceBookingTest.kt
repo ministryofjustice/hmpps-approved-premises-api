@@ -341,7 +341,9 @@ class Cas1SpaceBookingTest {
     lateinit var nonArrivedSpaceBooking: Cas1SpaceBookingEntity
     lateinit var legacySpaceBookingNoArrival: Cas1SpaceBookingEntity
     lateinit var legacySpaceBookingNoDeparture: Cas1SpaceBookingEntity
+    lateinit var upcomingSpaceBookingBeforeThreshold: Cas1SpaceBookingEntity
 
+    @SuppressWarnings("LongMethod")
     @BeforeAll
     fun setupTestData() {
       super.setupRegionAndKeyWorkerAndPremises()
@@ -548,6 +550,17 @@ class Cas1SpaceBookingTest {
           withKeyworkerStaffCode(null)
           withKeyworkerAssignedAt(Instant.now())
         }
+
+      upcomingSpaceBookingBeforeThreshold =
+        createSpaceBooking(crn = "CRN_UPCOMING_BEFORE_THRESHOLD", firstName = "up", lastName = "coming before threshold esquire", tier = "S") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2024-12-31"))
+          withExpectedDepartureDate(LocalDate.parse("2024-12-31"))
+          withActualArrivalDate(null)
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2024-12-31"))
+          withCanonicalDepartureDate(LocalDate.parse("2024-12-31"))
+        }
     }
 
     @Test
@@ -589,25 +602,26 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(9)
+      assertThat(response).hasSize(10)
       assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
-      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[3].appealRequested).isFalse
-      assertThat(response[3].plannedTransferRequested).isFalse
-      assertThat(response[3].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
-      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[5].appealRequested).isFalse
-      assertThat(response[5].plannedTransferRequested).isFalse
-      assertThat(response[5].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLANNED_TRANSFER)
-      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
+      assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[4].appealRequested).isFalse
+      assertThat(response[4].plannedTransferRequested).isFalse
+      assertThat(response[4].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
+      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[6].appealRequested).isFalse
       assertThat(response[6].plannedTransferRequested).isFalse
-      assertThat(response[6].openChangeRequestTypes).isEmpty()
-      assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[8].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[6].openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLANNED_TRANSFER)
+      assertThat(response[7].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[7].appealRequested).isFalse
+      assertThat(response[7].plannedTransferRequested).isFalse
+      assertThat(response[7].openChangeRequestTypes).isEmpty()
+      assertThat(response[8].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[9].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -622,11 +636,12 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(4)
+      assertThat(response).hasSize(5)
       assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
-      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[3].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
+      assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[4].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -787,7 +802,7 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(9)
+      assertThat(response).hasSize(10)
       assertThat(response[0].person.crn).isEqualTo("CRN_NONARRIVAL")
       assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT4")
@@ -795,9 +810,10 @@ class Cas1SpaceBookingTest {
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[6].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
-      assertThat(response[7].isNonArrival).isTrue
-      assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
+      assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[8].isNonArrival).isTrue
+      assertThat(response[9].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
     }
 
     @Test
@@ -812,16 +828,17 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(9)
+      assertThat(response).hasSize(10)
       assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
-      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
-      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
-      assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[8].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
+      assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
+      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[7].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[8].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[9].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -855,7 +872,7 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(9)
+      assertThat(response).hasSize(10)
 
       assertThat(response[0].tier).isNull()
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
@@ -866,23 +883,26 @@ class Cas1SpaceBookingTest {
       assertThat(response[2].tier).isEqualTo("U")
       assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING")
 
-      assertThat(response[3].tier).isEqualTo("D")
-      assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[3].tier).isEqualTo("S")
+      assertThat(response[3].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
 
-      assertThat(response[4].tier).isEqualTo("B")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[4].tier).isEqualTo("D")
+      assertThat(response[4].person.crn).isEqualTo("CRN_DEPARTED")
 
       assertThat(response[5].tier).isEqualTo("B")
-      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT4")
 
-      assertThat(response[6].tier).isEqualTo("A")
-      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[6].tier).isEqualTo("B")
+      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT3")
 
       assertThat(response[7].tier).isEqualTo("A")
       assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
 
       assertThat(response[8].tier).isEqualTo("A")
       assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+
+      assertThat(response[9].tier).isEqualTo("A")
+      assertThat(response[9].person.crn).isEqualTo("CRN_CURRENT1")
     }
   }
 

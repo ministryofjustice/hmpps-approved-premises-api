@@ -53,6 +53,24 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
 
   companion object {
 
+    /**
+     * The following criteria is used to determine if a space booking is 'upcoming'
+     *
+     * * not arrived
+     * * not non-arrived
+     * * not cancelled
+     * * has a departure date after this constant's value
+     *
+     * This was introduced because when importing arrival information into CAS1 from
+     * delius as part of the find and book rollout, we had several bookings in the
+     * past for which there was no arrival or non-arrival recorded.
+     *
+     * Without this date-based threshold the upcoming tab would include many old bookings
+     * and require a substantial amount of manual data cleansing. Use of this simple date
+     * threshold was determined to be a preferable approach
+     */
+    private const val UPCOMING_EXPECTED_DEPARTURE_THRESHOLD = "2025-01-01"
+
     private const val SPACE_BOOKING_SELECT = """
       SELECT 
         CAST(b.id AS varchar) AS id,
@@ -103,7 +121,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
             :residency = 'upcoming' AND (
               b.actual_arrival_date IS NULL AND 
               b.non_arrival_confirmed_at IS NULL AND
-              b.expected_departure_date >= '2024-06-01'
+              b.expected_departure_date >= '$UPCOMING_EXPECTED_DEPARTURE_THRESHOLD'
             )
           ) OR
           (
@@ -111,7 +129,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
               b.actual_arrival_date IS NOT NULL AND
               b.non_arrival_confirmed_at IS NULL AND
               b.actual_departure_date IS NULL  AND
-              b.expected_departure_date >= '2024-06-01'
+              b.expected_departure_date >= '$UPCOMING_EXPECTED_DEPARTURE_THRESHOLD'
             )
           ) OR
           (
@@ -119,7 +137,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
             (
               b.actual_departure_date IS NOT NULL OR 
               b.non_arrival_confirmed_at IS NOT NULL OR 
-              b.expected_departure_date < '2024-06-01'
+              b.expected_departure_date < '$UPCOMING_EXPECTED_DEPARTURE_THRESHOLD'
             )
           )
         ) 
@@ -442,7 +460,7 @@ data class Cas1SpaceBookingEntity(
    * This will only be set for bookings back-filled from referrals created
    * in delius, or those where management information was back-filled from
    * delius when converted from a legacy booking. It is captured for support
-   * purposes
+   * purposes when debugging migration issues.
    */
   val deliusId: String?,
 
