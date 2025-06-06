@@ -16,13 +16,13 @@ class EnvironmentService(
     log.info("Active profiles are ${environment.activeProfiles}")
   }
 
-  fun isLocal() = profileActive("local")
+  fun isLocalDev() = profileActive("localdev")
   fun isDev() = profileActive("dev")
   fun isIntegrationTest() = profileActive("test")
   fun isProd() = profileActive("prod")
   fun isPreProd() = profileActive("preprod")
 
-  fun isNotATestEnvironment() = isProd() || isPreProd() || (!isLocal() && !isDev() && !isIntegrationTest())
+  fun isNotATestEnvironment() = isProd() || isPreProd() || (!isDev() && !isIntegrationTest())
 
   fun profileActive(name: String) = environment.activeProfiles.any { it.equals(name, ignoreCase = true) }
 }
