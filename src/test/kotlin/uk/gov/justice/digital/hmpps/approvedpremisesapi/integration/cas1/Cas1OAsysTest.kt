@@ -162,6 +162,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+
       val riskManagementPlan = RiskManagementPlanFactory()
         .withSupervision("The supervision answer")
         .produce()
@@ -220,6 +222,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+
       val roshSummary = RoshSummaryFactory()
         .withWhoAtRisk("Who at risk answer")
         .produce()
@@ -249,6 +253,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+
       val riskToIndividual = RiskToTheIndividualFactory()
         .withCurrentVulnerability("Current vuln answer")
         .produce()
@@ -277,6 +283,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
 
       val needsDetails = NeedsDetailsFactory().apply {
         withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")

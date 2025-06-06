@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplicationLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Service
@@ -23,6 +24,7 @@ class Cas1OasysController(
   private val cas1OASysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer,
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
+  private val oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer,
 ) : OAsysCas1Delegate {
 
   override fun supportingInformationMetadata(crn: String): ResponseEntity<Cas1OASysMetadata> {
@@ -44,13 +46,15 @@ class Cas1OasysController(
   ): ResponseEntity<Cas1OASysGroup> {
     ensureOffenderAccess(crn)
 
-    val questions = when (group) {
+    val offenceDetails = extractEntityFromCasResult(oaSysService.getOASysOffenceDetails(crn))
+
+    val assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails)
+
+    val answers = when (group) {
       Cas1OASysGroupName.RISK_MANAGEMENT_PLAN -> oaSysSectionsTransformer.riskManagementPlanAnswers(
         extractEntityFromCasResult(oaSysService.getOASysRiskManagementPlan(crn)),
       )
-      Cas1OASysGroupName.OFFENCE_DETAILS -> oaSysSectionsTransformer.offenceDetailsAnswers(
-        extractEntityFromCasResult(oaSysService.getOASysOffenceDetails(crn)),
-      )
+      Cas1OASysGroupName.OFFENCE_DETAILS -> oaSysSectionsTransformer.offenceDetailsAnswers(offenceDetails)
       Cas1OASysGroupName.ROSH_SUMMARY -> oaSysSectionsTransformer.roshSummaryAnswers(
         extractEntityFromCasResult(oaSysService.getOASysRoshSummary(crn)),
       )
@@ -64,7 +68,11 @@ class Cas1OasysController(
     }
 
     return ResponseEntity.ok(
-      Cas1OASysGroup(group, questions),
+      Cas1OASysGroup(
+        group = group,
+        assessmentMetadata = assessmentMetadata,
+        answers = answers,
+      ),
     )
   }
 

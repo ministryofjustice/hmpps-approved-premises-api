@@ -8707,10 +8707,29 @@ components:
       properties:
         group:
           $ref: '#/components/schemas/Cas1OASysGroupName'
+        assessmentMetadata:
+          $ref: '#/components/schemas/Cas1OASysAssessmentMetadata'
         answers:
           type: array
           items:
             $ref: '#/components/schemas/OASysQuestion'
+      required:
+        - group
+        - assessmentMetadata
+        - answers
+    Cas1OASysAssessmentMetadata:
+      type: object
+      properties:
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
+      required:
+        - dateStarted
+
+
 
 
 
