@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3MigrateNewBedspaceModelDataJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateBookingOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
 import kotlin.reflect.KClass
 
@@ -48,6 +49,7 @@ class MigrationJobService(
         MigrationJobType.cas2NotesWithAssessments -> getBean(Cas2NoteMigrationJob::class)
         MigrationJobType.cas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
         MigrationJobType.cas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
+        MigrationJobType.cas3BookingOffenderName -> getBean(Cas3UpdateBookingOffenderNameJob::class)
         MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
         MigrationJobType.cas1ApplicationsLicenceExpiryDate -> getBean(Cas1UpdateApplicationLicenceExpiryDateJob::class)
         MigrationJobType.cas1BackfillOfflineApplicationName -> getBean(Cas1BackfillOfflineApplicationName::class)

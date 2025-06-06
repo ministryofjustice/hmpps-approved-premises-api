@@ -281,6 +281,17 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
     crnOrName: String?,
     pageable: Pageable?,
   ): Page<Cas3BookingSearchResult>
+
+  @Query(
+    """
+      SELECT * FROM  bookings b 
+      WHERE b.service='temporary-accommodation'""",
+    nativeQuery = true,
+  )
+  fun <T : BookingEntity> findAllTemporaryAccommodationBookings(
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Slice<BookingEntity>
 }
 
 @Entity
