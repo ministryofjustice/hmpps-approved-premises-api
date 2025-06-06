@@ -897,33 +897,6 @@ paths:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-  /people/{crn}/oasys/risk-to-self:
-    get:
-      deprecated: true
-      tags:
-        - OASys
-      summary: Returns the Risk To Individual (known as Risk to Self on frontend) section of an OASys.
-      operationId: peopleCrnOasysRiskToSelfGet
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch latest OASys
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/OASysRiskToSelf'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
   /people/{crn}/offences:
     get:
       summary: Returns all active offences for a Person.
