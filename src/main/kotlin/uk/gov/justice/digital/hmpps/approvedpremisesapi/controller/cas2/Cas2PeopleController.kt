@@ -70,7 +70,7 @@ class Cas2PeopleController(
       val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
 
       ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
+        oaSysSectionsTransformer.cas2TransformRiskToIndividual(offenceDetails, riskToTheIndividual),
       )
     }
   }

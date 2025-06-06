@@ -68,7 +68,7 @@ class OASysSectionsTransformer : OASysTransformer() {
     oASysQuestionWithSingleAnswer("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
   )
 
-  fun transformRiskToIndividual(
+  fun cas2TransformRiskToIndividual(
     offenceDetails: OffenceDetails,
     risksToTheIndividual: RisksToTheIndividual,
   ): OASysRiskToSelf = OASysRiskToSelf(
