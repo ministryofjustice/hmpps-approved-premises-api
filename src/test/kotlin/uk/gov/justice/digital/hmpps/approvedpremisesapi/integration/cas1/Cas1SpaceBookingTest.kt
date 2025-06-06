@@ -554,12 +554,12 @@ class Cas1SpaceBookingTest {
       upcomingSpaceBookingBeforeThreshold =
         createSpaceBooking(crn = "CRN_UPCOMING_BEFORE_THRESHOLD", firstName = "up", lastName = "coming before threshold esquire", tier = "S") {
           withPremises(premisesWithBookings)
-          withExpectedArrivalDate(LocalDate.parse("2024-05-01"))
-          withExpectedDepartureDate(LocalDate.parse("2024-05-30"))
+          withExpectedArrivalDate(LocalDate.parse("2024-12-31"))
+          withExpectedDepartureDate(LocalDate.parse("2024-12-31"))
           withActualArrivalDate(null)
           withActualDepartureDate(null)
-          withCanonicalArrivalDate(LocalDate.parse("2024-05-01"))
-          withCanonicalDepartureDate(LocalDate.parse("2024-05-30"))
+          withCanonicalArrivalDate(LocalDate.parse("2024-12-31"))
+          withCanonicalDepartureDate(LocalDate.parse("2024-12-31"))
         }
     }
 
@@ -603,9 +603,9 @@ class Cas1SpaceBookingTest {
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
       assertThat(response).hasSize(10)
-      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
-      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
-      assertThat(response[2].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
       assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[4].appealRequested).isFalse
@@ -638,8 +638,8 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(5)
       assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
-      assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
-      assertThat(response[2].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
       assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[4].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
@@ -810,9 +810,10 @@ class Cas1SpaceBookingTest {
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[6].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
-      assertThat(response[7].isNonArrival).isTrue
-      assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
+      assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[8].isNonArrival).isTrue
+      assertThat(response[9].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
     }
 
     @Test
@@ -828,9 +829,9 @@ class Cas1SpaceBookingTest {
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
       assertThat(response).hasSize(10)
-      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
-      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
-      assertThat(response[2].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
       assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")

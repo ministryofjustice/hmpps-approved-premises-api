@@ -69,7 +69,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
      * and require a substantial amount of manual data cleansing. Use of this simple date
      * threshold was determined to be a preferable approach
      */
-    private const val UPCOMING_EXPECTED_DEPARTURE_THRESHOLD = "2024-06-01"
+    private const val UPCOMING_EXPECTED_DEPARTURE_THRESHOLD = "2025-01-01"
 
     private const val SPACE_BOOKING_SELECT = """
       SELECT 
