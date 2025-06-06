@@ -84,7 +84,6 @@ class OASysSectionsTransformer : OASysTransformer() {
       ),
   )
 
-  // CAS2 only
   fun transformRiskOfSeriousHarm(
     offenceDetails: OffenceDetails,
     roshSummary: RoshSummary,
