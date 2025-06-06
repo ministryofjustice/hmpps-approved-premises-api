@@ -923,7 +923,7 @@ paths:
             format: date
         - name: endDate
           in: query
-          description: End date, inclusive
+          description: End date, inclusive. Should be within 2 years of the startDate. If it exceeds this threshold, capacity information will only be provided for 2 years.
           required: true
           schema:
             type: string

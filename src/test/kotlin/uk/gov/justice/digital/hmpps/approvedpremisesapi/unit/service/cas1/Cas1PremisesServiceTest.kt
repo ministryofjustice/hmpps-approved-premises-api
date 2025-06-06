@@ -499,5 +499,37 @@ class Cas1PremisesServiceTest {
         assertThat(it).isEqualTo(capacityResponse)
       }
     }
+
+    @Test
+    fun `success truncate to less than 2 years`() {
+      val premise = ApprovedPremisesEntityFactory().withDefaults().withId(PREMISES_ID).produce()
+      val excludeSpaceBookingId = UUID.randomUUID()
+
+      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premise
+
+      val capacityResponse = mockk<PremiseCapacitySummary>()
+
+      every {
+        spacePlanningService.capacity(
+          premises = premise,
+          rangeInclusive = DateRange(
+            LocalDate.of(2020, 1, 2),
+            LocalDate.of(2022, 1, 1),
+          ),
+          excludeSpaceBookingId = excludeSpaceBookingId,
+        )
+      } returns capacityResponse
+
+      val result = service.getPremiseCapacity(
+        premisesId = PREMISES_ID,
+        startDate = LocalDate.of(2020, 1, 2),
+        endDate = LocalDate.of(2023, 1, 3),
+        excludeSpaceBookingId = excludeSpaceBookingId,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(capacityResponse)
+      }
+    }
   }
 }
