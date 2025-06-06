@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
@@ -34,12 +35,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Nested
-  inner class SupportingInformationMetadata {
+  inner class Metadata {
 
     @Test
     fun `No JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/people/CRN/oasys/supporting-information-metadata")
+        .uri("/cas1/people/CRN/oasys/metadata")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -52,7 +53,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apDeliusContextUserAccessEmptyResponse()
 
       webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/supporting-information-metadata")
+        .uri("/cas1/people/$CRN/oasys/metadata")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -71,7 +72,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/supporting-information-metadata")
+        .uri("/cas1/people/$CRN/oasys/metadata")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -94,7 +95,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
       webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/supporting-information-metadata")
+        .uri("/cas1/people/$CRN/oasys/metadata")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -102,7 +103,9 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .expectBody()
         .json(
           objectMapper.writeValueAsString(
-            cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
+            Cas1OASysMetadata(
+              cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
+            ),
           ),
         )
     }

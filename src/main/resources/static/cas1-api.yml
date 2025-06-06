@@ -2087,7 +2087,7 @@ paths:
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
 
-  /people/{crn}/oasys/supporting-information-metadata:
+  /people/{crn}/oasys/metadata:
     get:
       tags:
         - OAsys
@@ -2105,9 +2105,7 @@ paths:
           content:
             'application/json':
               schema:
-                type: array
-                items:
-                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysSupportingInformationMetaData'
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysMetadata'
         404:
           description: invalid CRN
           content:
