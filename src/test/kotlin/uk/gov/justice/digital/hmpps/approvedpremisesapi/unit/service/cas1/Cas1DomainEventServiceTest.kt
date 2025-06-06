@@ -14,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
@@ -37,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlCon
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationExpiredFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
@@ -1038,32 +1036,6 @@ class Cas1DomainEventServiceTest {
         domainEventServiceSpy.saveAndEmitForEnvelope(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-        )
-      }
-    }
-
-    @Test
-    fun `saveApplicationExpiredEvent sends correct arguments to saveAndEmit`() {
-      val id = UUID.randomUUID()
-
-      val eventDetails = ApplicationExpiredFactory().produce()
-      val domainEventEnvelope = mockk<ApplicationExpiredEnvelope>()
-      val domainEvent = mockk<SaveCas1DomainEvent<ApplicationExpiredEnvelope>>()
-
-      every { domainEvent.id } returns id
-      every { domainEvent.data } returns domainEventEnvelope
-      every { domainEventEnvelope.eventDetails } returns eventDetails
-
-      val domainEventServiceSpy = spyk(domainEventService)
-
-      every { domainEventServiceSpy.saveAndEmitForEnvelope(any(), any()) } returns Unit
-
-      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent)
-
-      verify {
-        domainEventServiceSpy.saveAndEmitForEnvelope(
-          domainEvent = domainEvent,
-          eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
         )
       }
     }
