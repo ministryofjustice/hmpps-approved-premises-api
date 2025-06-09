@@ -41,9 +41,20 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
     givenAProbationRegion { probationRegion ->
       givenAUser(probationRegion = probationRegion) { user, jwt ->
 
-        val unsubmittedApplications = createApplications(user, ApprovedPremisesApplicationStatus.STARTED, 5)
-        val applicationsWithOtherStatus = createApplications(user, ApprovedPremisesApplicationStatus.SUBMITTED, 2)
-        applicationsWithOtherStatus.addAll(createApplications(user, ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS, 2))
+        val unsubmittedApplicationsOlderThan6Months = createApplicationsWithCreatedAtDate(user, ApprovedPremisesApplicationStatus.STARTED, 5) {
+          OffsetDateTime.now().randomDateTimeBeyond(180, 365)
+        }
+        val unsubmittedApplicationsNewerThan6Months = createApplicationsWithCreatedAtDate(user, ApprovedPremisesApplicationStatus.STARTED, 5) {
+          OffsetDateTime.now().randomDateTimeBeyond(0, 179)
+        }
+        val applicationsWithOtherStatus = createApplicationsWithCreatedAtDate(user, ApprovedPremisesApplicationStatus.SUBMITTED, 2) {
+          OffsetDateTime.now().randomDateTimeBeyond(180, 365)
+        }
+        applicationsWithOtherStatus.addAll(
+          createApplicationsWithCreatedAtDate(user, ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS, 2) {
+            OffsetDateTime.now().randomDateTimeBeyond(180, 365)
+          },
+        )
 
         cas1ExpireUnsubmittedApplicationsScheduledJob.expireApplicationsOlderThanSixMonths()
 
@@ -52,7 +63,12 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
             .isNotEqualTo(ApprovedPremisesApplicationStatus.EXPIRED)
         }
 
-        unsubmittedApplications.forEach {
+        unsubmittedApplicationsNewerThan6Months.forEach {
+          assertThat(approvedPremisesApplicationRepository.findByIdOrNull(it.id)!!.status.name)
+            .isEqualTo(ApprovedPremisesApplicationStatus.STARTED.name)
+        }
+
+        unsubmittedApplicationsOlderThan6Months.forEach {
           assertThat(approvedPremisesApplicationRepository.findByIdOrNull(it.id)!!.status.name)
             .isEqualTo(ApprovedPremisesApplicationStatus.EXPIRED.name)
 
@@ -84,7 +100,7 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
           assertThat(applicationExpired.updatedStatus).isEqualTo(ApprovedPremisesApplicationStatus.EXPIRED.name)
         }
 
-        val idToCheck = unsubmittedApplications.first().id
+        val idToCheck = unsubmittedApplicationsOlderThan6Months.first().id
 
         val responseBody = webTestClient.get()
           .uri("/cas1/applications/$idToCheck/timeline")
@@ -126,12 +142,12 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
     }
   }
 
-  private fun createApplications(user: UserEntity, status: ApprovedPremisesApplicationStatus, number: Int): MutableList<ApprovedPremisesApplicationEntity> {
+  private fun createApplicationsWithCreatedAtDate(user: UserEntity, status: ApprovedPremisesApplicationStatus, number: Int, createdAtGenerator: () -> OffsetDateTime): MutableList<ApprovedPremisesApplicationEntity> {
     val applications = mutableListOf<ApprovedPremisesApplicationEntity>()
     repeat(number) {
       val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user)
-          .withCreatedAt(OffsetDateTime.now().randomDateTimeBeyond(180, 365))
+          .withCreatedAt(createdAtGenerator())
           .withStatus(status)
         withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
       }
