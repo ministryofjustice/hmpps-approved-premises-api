@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmentState
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
@@ -13,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.Risks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 
 @Component
-class OASysSectionsTransformer : OASysTransformer() {
+class OASysSectionsTransformer {
   fun transformToApi(
     offenceDetails: OffenceDetails,
     roshSummary: RoshSummary,
@@ -34,38 +35,38 @@ class OASysSectionsTransformer : OASysTransformer() {
   )
 
   fun offenceDetailsAnswers(offenceDetails: OffenceDetails) = listOf(
-    oASysQuestionWithSingleAnswer("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
-    oASysQuestionWithSingleAnswer("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimPerpetratorRel),
-    oASysQuestionWithSingleAnswer("Other victim information", "2.4.2", offenceDetails.offence?.victimInfo),
-    oASysQuestionWithSingleAnswer("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
-    oASysQuestionWithSingleAnswer("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
-    oASysQuestionWithSingleAnswer("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
-    oASysQuestionWithSingleAnswer("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending),
+    OASysQuestion("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
+    OASysQuestion("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimPerpetratorRel),
+    OASysQuestion("Other victim information", "2.4.2", offenceDetails.offence?.victimInfo),
+    OASysQuestion("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
+    OASysQuestion("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
+    OASysQuestion("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
+    OASysQuestion("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending),
   )
 
   fun roshSummaryAnswers(roshSummary: RoshSummary) = listOf(
-    oASysQuestionWithSingleAnswer("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
-    oASysQuestionWithSingleAnswer("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
-    oASysQuestionWithSingleAnswer("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
-    oASysQuestionWithSingleAnswer("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
-    oASysQuestionWithSingleAnswer("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
+    OASysQuestion("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
+    OASysQuestion("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
+    OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
+    OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
+    OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
   )
 
   fun riskToSelfAnswers(risksToTheIndividual: RisksToTheIndividual) = listOf(
-    oASysQuestionWithSingleAnswer("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
-    oASysQuestionWithSingleAnswer("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
-    oASysQuestionWithSingleAnswer("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
+    OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
+    OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
+    OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
   )
 
   fun riskManagementPlanAnswers(riskManagementPlan: RiskManagementPlan) = listOf(
-    oASysQuestionWithSingleAnswer("Further considerations", "RM28", riskManagementPlan.riskManagementPlan?.furtherConsiderations),
-    oASysQuestionWithSingleAnswer("Additional comments", "RM35", riskManagementPlan.riskManagementPlan?.additionalComments),
-    oASysQuestionWithSingleAnswer("Contingency plans", "RM34", riskManagementPlan.riskManagementPlan?.contingencyPlans),
-    oASysQuestionWithSingleAnswer("Victim safety planning", "RM33", riskManagementPlan.riskManagementPlan?.victimSafetyPlanning),
-    oASysQuestionWithSingleAnswer("Interventions and treatment", "RM32", riskManagementPlan.riskManagementPlan?.interventionsAndTreatment),
-    oASysQuestionWithSingleAnswer("Monitoring and control", "RM31", riskManagementPlan.riskManagementPlan?.monitoringAndControl),
-    oASysQuestionWithSingleAnswer("Supervision", "RM30", riskManagementPlan.riskManagementPlan?.supervision),
-    oASysQuestionWithSingleAnswer("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
+    OASysQuestion("Further considerations", "RM28", riskManagementPlan.riskManagementPlan?.furtherConsiderations),
+    OASysQuestion("Additional comments", "RM35", riskManagementPlan.riskManagementPlan?.additionalComments),
+    OASysQuestion("Contingency plans", "RM34", riskManagementPlan.riskManagementPlan?.contingencyPlans),
+    OASysQuestion("Victim safety planning", "RM33", riskManagementPlan.riskManagementPlan?.victimSafetyPlanning),
+    OASysQuestion("Interventions and treatment", "RM32", riskManagementPlan.riskManagementPlan?.interventionsAndTreatment),
+    OASysQuestion("Monitoring and control", "RM31", riskManagementPlan.riskManagementPlan?.monitoringAndControl),
+    OASysQuestion("Supervision", "RM30", riskManagementPlan.riskManagementPlan?.supervision),
+    OASysQuestion("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
   )
 
   fun cas2TransformRiskToIndividual(
@@ -79,7 +80,7 @@ class OASysSectionsTransformer : OASysTransformer() {
     riskToSelf =
     riskToSelfAnswers(risksToTheIndividual) +
       listOf(
-        oASysQuestionWithSingleAnswer("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
+        OASysQuestion("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
       ),
   )
 
