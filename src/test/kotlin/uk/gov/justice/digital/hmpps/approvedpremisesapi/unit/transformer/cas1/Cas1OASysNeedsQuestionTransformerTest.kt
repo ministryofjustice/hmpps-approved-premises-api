@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationMetaData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationQuestionMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
@@ -63,56 +63,56 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToSupportingInformationMetadata(needsDetails)
 
       assertThat(result).containsExactlyInAnyOrder(
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 10,
           sectionLabel = "Emotional",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
           oasysAnswerLinkedToReOffending = false,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 3,
           sectionLabel = "Accommodation",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 6,
           sectionLabel = "Relationships",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 7,
           sectionLabel = "Lifestyle",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 8,
           sectionLabel = "Drugs",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 9,
           sectionLabel = "Alcohol",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 11,
           sectionLabel = "Thinking and Behavioural",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 12,
           sectionLabel = "Attitude",
           inclusionOptional = false,
@@ -139,56 +139,56 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToSupportingInformationMetadata(needsDetails)
 
       assertThat(result).containsExactlyInAnyOrder(
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 10,
           sectionLabel = "Emotional",
           inclusionOptional = true,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = false,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 3,
           sectionLabel = "Accommodation",
           inclusionOptional = true,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 6,
           sectionLabel = "Relationships",
           inclusionOptional = true,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 7,
           sectionLabel = "Lifestyle",
           inclusionOptional = true,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 8,
           sectionLabel = "Drugs",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 9,
           sectionLabel = "Alcohol",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 11,
           sectionLabel = "Thinking and Behavioural",
           inclusionOptional = true,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
-        Cas1OASysSupportingInformationMetaData(
+        Cas1OASysSupportingInformationQuestionMetaData(
           section = 12,
           sectionLabel = "Attitude",
           inclusionOptional = true,

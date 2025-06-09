@@ -1850,7 +1850,15 @@ components:
           $ref: '_shared.yml#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
-    Cas1OASysSupportingInformationMetaData:
+    Cas1OASysMetadata:
+      properties:
+        supportingInformation:
+          type: array
+          items:
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysSupportingInformationQuestionMetaData'
+      required:
+        - supportingInformationQuestions
+    Cas1OASysSupportingInformationQuestionMetaData:
       type: object
       properties:
         section:
@@ -1892,10 +1900,29 @@ components:
       properties:
         group:
           $ref: '#/components/schemas/Cas1OASysGroupName'
+        assessmentMetadata:
+          $ref: '#/components/schemas/Cas1OASysAssessmentMetadata'
         answers:
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/OASysQuestion'
+      required:
+        - group
+        - assessmentMetadata
+        - answers
+    Cas1OASysAssessmentMetadata:
+      type: object
+      properties:
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
+      required:
+        - dateStarted
+
+
 
 
 
