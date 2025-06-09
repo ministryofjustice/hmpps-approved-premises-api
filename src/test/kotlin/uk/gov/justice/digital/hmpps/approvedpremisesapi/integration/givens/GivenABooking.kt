@@ -17,7 +17,7 @@ import java.time.ZoneOffset
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenABooking(
   crn: String,
-  application: ApplicationEntity,
+  application: ApplicationEntity? = null,
   premises: PremisesEntity? = null,
   arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
   departureDate: LocalDate = LocalDate.now().randomDateBefore(14),
