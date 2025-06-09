@@ -45,12 +45,12 @@ class OASysSectionsTransformer {
   )
 
   fun roshSummaryAnswers(roshSummary: RoshSummary) = listOf(
-    OASysQuestion("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk),
-    OASysQuestion("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk),
-    OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest),
-    OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo),
-    OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo),
-  )
+    OrderedQuestion(1, OASysQuestion("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk)),
+    OrderedQuestion(2, OASysQuestion("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk)),
+    OrderedQuestion(3, OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest)),
+    OrderedQuestion(4, OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo)),
+    OrderedQuestion(5, OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo)),
+  ).sortedBy { it.position }.map { it.question }
 
   fun riskToSelfAnswers(risksToTheIndividual: RisksToTheIndividual) = listOf(
     OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
@@ -207,4 +207,6 @@ class OASysSectionsTransformer {
 
     return supportingInformation
   }
+
+  private data class OrderedQuestion(val position: Int, val question: OASysQuestion)
 }

@@ -403,10 +403,10 @@ class OASysSectionsTransformerTest {
         withCurrentConcernsBreachOfTrustText("currentConcernsBreachOfTrustText")
       }.produce()
 
-    val result = oaSysSectionsTransformer.cas2TransformRiskToIndividual(
-      offenceDetailsApiResponse,
-      risksToTheIndividualApiResponse,
-    )
+      val result = oaSysSectionsTransformer.cas2TransformRiskToIndividual(
+        offenceDetailsApiResponse,
+        risksToTheIndividualApiResponse,
+      )
 
       assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
       assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
