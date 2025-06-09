@@ -17,6 +17,97 @@ class OASysSectionsTransformerTest {
   private val oaSysSectionsTransformer = OASysSectionsTransformer()
 
   @Nested
+  inner class RiskToSelfAnswers {
+
+    @Test
+    fun `transforms correctly`() {
+      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        withAssessmentId(34853487)
+        withDateCompleted(null)
+        withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicide")
+        withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicide")
+        withCurrentCustodyHostelCoping("currentCustodyHostelCoping")
+        withPreviousCustodyHostelCoping("previousCustodyHostelCoping")
+        withCurrentVulnerability("currentVulnerability")
+        withPreviousVulnerability("previousVulnerability")
+        withRiskOfSeriousHarm("riskOfSeriousHarm")
+        withCurrentConcernsBreachOfTrustText("currentConcernsBreachOfTrustText")
+      }.produce()
+
+      val result = oaSysSectionsTransformer.riskToSelfAnswers(risksToTheIndividualApiResponse)
+
+      assertThat(result).containsAll(
+        listOf(
+          OASysQuestion(
+            label = "Current concerns about self-harm or suicide",
+            questionNumber = "R8.1.1",
+            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
+          ),
+          OASysQuestion(
+            label = "Current concerns about Coping in Custody or Hostel",
+            questionNumber = "R8.2.1",
+            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
+          ),
+          OASysQuestion(
+            label = "Current concerns about Vulnerability",
+            questionNumber = "R8.3.1",
+            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
+          ),
+        ),
+      )
+    }
+  }
+
+  @Nested
+  inner class RoshSummaryAnswers {
+
+    @Test
+    fun `transforms correctly`() {
+      val roshSummaryApiResponse = RoshSummaryFactory().apply {
+        withAssessmentId(34853487)
+        withDateCompleted(null)
+        withWhoAtRisk("Who is at risk")
+        withNatureOfRisk("What is the nature of the risk")
+        withRiskGreatest("When is the risk likely to be the greatest")
+        withRiskIncreaseLikelyTo("What circumstances are likely to increase risk")
+        withRiskReductionLikelyTo("Reduction Likely To")
+      }.produce()
+
+      val result = oaSysSectionsTransformer.roshSummaryAnswers(roshSummaryApiResponse)
+
+      assertThat(result).containsAll(
+        listOf(
+          OASysQuestion(
+            label = "Who is at risk",
+            questionNumber = "R10.1",
+            answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk,
+          ),
+          OASysQuestion(
+            label = "What is the nature of the risk",
+            questionNumber = "R10.2",
+            answer = roshSummaryApiResponse.roshSummary?.natureOfRisk,
+          ),
+          OASysQuestion(
+            label = "When is the risk likely to be the greatest",
+            questionNumber = "R10.3",
+            answer = roshSummaryApiResponse.roshSummary?.riskGreatest,
+          ),
+          OASysQuestion(
+            label = "What circumstances are likely to increase risk",
+            questionNumber = "R10.4",
+            answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo,
+          ),
+          OASysQuestion(
+            label = "What circumstances are likely to reduce the risk",
+            questionNumber = "R10.5",
+            answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
+          ),
+        ),
+      )
+    }
+  }
+
+  @Nested
   inner class TransformToApi {
 
     @Test
