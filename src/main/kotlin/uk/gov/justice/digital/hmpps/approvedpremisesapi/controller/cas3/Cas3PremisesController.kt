@@ -7,9 +7,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -18,11 +20,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.TemporaryAccommodationPremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3FutureBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -31,7 +37,10 @@ class Cas3PremisesController(
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val cas3BookingService: Cas3BookingService,
+  private val temporaryAccommodationPremisesService: TemporaryAccommodationPremisesService,
   private val cas3PremisesService: Cas3PremisesService,
+  private val premisesTransformer: PremisesTransformer,
+  private val cas3PremisesTransformer: Cas3PremisesTransformer,
   private val cas3FutureBookingTransformer: Cas3FutureBookingTransformer,
   private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val cas3DepartureTransformer: Cas3DepartureTransformer,
@@ -39,7 +48,7 @@ class Cas3PremisesController(
 ) : PremisesCas3Delegate {
 
   override fun getPremisesBedspaces(premisesId: UUID): ResponseEntity<List<Cas3Bedspace>> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    val premises = temporaryAccommodationPremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
     if (!userAccessService.currentUserCanViewPremises(premises)) {
       throw ForbiddenProblem()
@@ -49,7 +58,7 @@ class Cas3PremisesController(
   }
 
   override fun getPremisesBedspace(premisesId: UUID, bedspaceId: UUID): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    val premises = temporaryAccommodationPremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
     if (!userAccessService.currentUserCanViewPremises(premises)) {
       throw ForbiddenProblem()
@@ -60,9 +69,38 @@ class Cas3PremisesController(
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace))
   }
 
+  fun premisesTemporaryAccommodationPremisesIdGet(premisesId: UUID): ResponseEntity<Premises> {
+    val premises = temporaryAccommodationPremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+    val totalBeds = temporaryAccommodationPremisesService.getBedCount(premises)
+    val availableBedsForToday =
+      temporaryAccommodationPremisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+        .values.first().getFreeCapacity(totalBeds)
+    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday))
+  }
+
+  override fun premisesPremisesIdGet(premisesId: UUID): ResponseEntity<Cas3Premises> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+    val totalBeds = cas3PremisesService.getBedspaceCount(premises)
+    val availableBedsForToday = 0 // todo: replace with below equivalent
+//      cas3PremisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+//        .values.first().getFreeCapacity(totalBeds)
+
+    return ResponseEntity.ok(cas3PremisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday))
+  }
+
   override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
-    val premisesSummariesByPremisesId = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus).groupBy { it.id }
+    val premisesSummariesByPremisesId = temporaryAccommodationPremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus).groupBy { it.id }
     val transformedSummaries = premisesSummariesByPremisesId.map { map ->
       cas3PremisesSummaryTransformer.transformDomainToCas3PremisesSummary(
         map.value.first(),
@@ -116,7 +154,7 @@ class Cas3PremisesController(
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): BookingEntity {
-    val premises = cas3PremisesService.getPremises(premisesId)
+    val premises = temporaryAccommodationPremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     return when (val result = cas3BookingService.getBookingForPremises(premises, bookingId)) {

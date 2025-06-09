@@ -39,11 +39,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.TemporaryAccommodationPremisesService
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas3PremisesServiceTest {
+class TemporaryAccommodationPremisesServiceTest {
   private val premisesRepositoryMock = mockk<PremisesRepository>()
   private val cas3VoidBedspacesRepositoryMock = mockk<Cas3VoidBedspacesRepository>()
   private val cas3VoidBedspaceReasonRepositoryMock = mockk<Cas3VoidBedspaceReasonRepository>()
@@ -62,7 +62,7 @@ class Cas3PremisesServiceTest {
 
   private val bookingEntityFactory = BookingEntityFactory()
 
-  private val premisesService = Cas3PremisesService(
+  private val premisesService = TemporaryAccommodationPremisesService(
     premisesRepositoryMock,
     cas3VoidBedspacesRepositoryMock,
     cas3VoidBedspaceReasonRepositoryMock,

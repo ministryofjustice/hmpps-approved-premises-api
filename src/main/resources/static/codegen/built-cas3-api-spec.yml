@@ -238,6 +238,34 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ReferralHistoryNote'
+  /premises/{premisesId}:
+    get:
+      tags:
+        - Premises
+      summary: Returns a premises
+      operationId: premisesPremisesIdGet
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Premises'
+        404:
+          description: invalid premises ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+
   /premises/summary:
     get:
       tags:
@@ -5174,6 +5202,58 @@ components:
         - bookingId
         - roomId
         - isSexualRisk
+    Cas3Premises:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        addressLine1:
+          type: string
+          example: one something street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        town:
+          type: string
+          example: Braintree
+        postcode:
+          type: string
+          example: LS1 3AD
+        bedCount:
+          type: integer
+          example: 22
+        availableBedsForToday:
+          type: integer
+          example: 20
+        notes:
+          type: string
+          example: some notes about this property
+        localAuthorityArea:
+          $ref: '#/components/schemas/LocalAuthorityArea'
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3Characteristic'
+        status:
+          $ref: '#/components/schemas/PropertyStatus'
+        pdu:
+          type: string
+        probationDeliveryUnit:
+          $ref: '#/components/schemas/ProbationDeliveryUnit'
+      required:
+        - id
+        - name
+        - addressLine1
+        - postcode
+        - bedCount
+        - availableBedsForToday
+        - probationRegion
+        - apArea
+        - status
     Cas3PremisesSummary:
       type: object
       properties:
@@ -5234,6 +5314,22 @@ components:
       enum:
         - online
         - archived
+    Cas3Characteristic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 952790c0-21d7-4fd6-a7e1-9018f08d8bb0
+        name:
+          type: string
+          example: Is this premises catered (rather than self-catered)?
+        code:
+          type: string
+          example: isCatered
+      required:
+        - id
+        - name
     Cas3Departure:
       type: object
       properties:

@@ -75,8 +75,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.TemporaryAccommodationPremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -87,7 +87,7 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService as Cas3DomainEventService
 
 class Cas3BookingServiceTest {
-  private val mockCas3PremisesService = mockk<Cas3PremisesService>()
+  private val mockTemporaryAccommodationPremisesService = mockk<TemporaryAccommodationPremisesService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
@@ -124,7 +124,7 @@ class Cas3BookingServiceTest {
     cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
     cas3TurnaroundRepository = mockCas3TurnaroundRepository,
     extensionRepository = mockExtensionRepository,
-    cas3PremisesService = mockCas3PremisesService,
+    temporaryAccommodationPremisesService = mockTemporaryAccommodationPremisesService,
     assessmentService = mockAssessmentService,
     userAccessService = mockUserAccessService,
     offenderService = mockOffenderService,
@@ -241,7 +241,7 @@ class Cas3BookingServiceTest {
     fun `findFutureBookingsForPremises returns NotFound when premises with provided ID does not exist`() {
       val premisesId = UUID.randomUUID()
 
-      every { mockCas3PremisesService.getPremises(premisesId) } returns null
+      every { mockTemporaryAccommodationPremisesService.getPremises(premisesId) } returns null
 
       val result = cas3BookingService.findFutureBookingsForPremises(premisesId, listOf(BookingStatus.provisional), user)
 
@@ -250,7 +250,7 @@ class Cas3BookingServiceTest {
 
     @Test
     fun `findFutureBookingsForPremises returns Unauthorised if the user cannot view the bookings`() {
-      every { mockCas3PremisesService.getPremises(premises.id) } returns premises
+      every { mockTemporaryAccommodationPremisesService.getPremises(premises.id) } returns premises
       every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns false
 
       val result = cas3BookingService.findFutureBookingsForPremises(premises.id, listOf(BookingStatus.provisional), user)
@@ -294,7 +294,7 @@ class Cas3BookingServiceTest {
         LocalDate.now().plusDays(31),
       )
 
-      every { mockCas3PremisesService.getPremises(premises.id) } returns premises
+      every { mockTemporaryAccommodationPremisesService.getPremises(premises.id) } returns premises
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           setOf(fullPersonOffenderCaseSummary.crn, restrictedPersonSummaryInfo.crn),

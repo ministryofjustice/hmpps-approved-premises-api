@@ -67,7 +67,7 @@ class Cas3BookingService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas3TurnaroundRepository: Cas3TurnaroundRepository,
   private val extensionRepository: ExtensionRepository,
-  private val cas3PremisesService: Cas3PremisesService,
+  private val temporaryAccommodationPremisesService: TemporaryAccommodationPremisesService,
   private val assessmentService: AssessmentService,
   private val userAccessService: UserAccessService,
   private val offenderService: OffenderService,
@@ -462,7 +462,7 @@ class Cas3BookingService(
     statuses: List<BookingStatus>,
     user: UserEntity,
   ): CasResult<List<BookingAndPersons>> {
-    val premises = cas3PremisesService.getPremises(premisesId)
+    val premises = temporaryAccommodationPremisesService.getPremises(premisesId)
       ?: return CasResult.NotFound("Premises", premisesId.toString())
 
     if (!userAccessService.userCanManagePremisesBookings(user, premises)) {

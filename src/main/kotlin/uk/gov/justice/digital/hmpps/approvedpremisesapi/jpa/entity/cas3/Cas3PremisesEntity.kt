@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -58,4 +59,7 @@ class Cas3PremisesEntity(
 )
 
 @Repository
-interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID>
+interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID> {
+  @Query("SELECT CAST(COUNT(b) as int) FROM Cas3PremisesEntity p JOIN p.bedspaces b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE b.premises = :premises")
+  fun getBedspaceCount(premises: Cas3PremisesEntity): Int
+}
