@@ -283,6 +283,18 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
   fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
 
   fun findByCrn(crn: String, limit: Limit): List<ApprovedPremisesApplicationEntity>
+
+  @Query(
+    """
+    SELECT a.id
+    FROM applications a
+    JOIN approved_premises_applications ap ON a.id = ap.id
+    WHERE ap.status = 'STARTED' 
+    AND a.created_at <= CURRENT_TIMESTAMP - INTERVAL '180 days'
+    """,
+    nativeQuery = true,
+  )
+  fun findIdsForUnsubmittedApplicationsOlderThanSixMonths(): List<UUID>
 }
 
 @Repository
