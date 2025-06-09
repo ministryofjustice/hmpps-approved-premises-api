@@ -36,23 +36,21 @@ class OASysSectionsTransformerTest {
 
       val result = oaSysSectionsTransformer.riskToSelfAnswers(risksToTheIndividualApiResponse)
 
-      assertThat(result).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Current concerns about self-harm or suicide",
-            questionNumber = "R8.1.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Coping in Custody or Hostel",
-            questionNumber = "R8.2.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
-          ),
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Current concerns about self-harm or suicide",
+          questionNumber = "R8.1.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Coping in Custody or Hostel",
+          questionNumber = "R8.2.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
         ),
       )
     }
@@ -75,33 +73,31 @@ class OASysSectionsTransformerTest {
 
       val result = oaSysSectionsTransformer.roshSummaryAnswers(roshSummaryApiResponse)
 
-      assertThat(result).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Who is at risk",
-            questionNumber = "R10.1",
-            answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk,
-          ),
-          OASysQuestion(
-            label = "What is the nature of the risk",
-            questionNumber = "R10.2",
-            answer = roshSummaryApiResponse.roshSummary?.natureOfRisk,
-          ),
-          OASysQuestion(
-            label = "When is the risk likely to be the greatest",
-            questionNumber = "R10.3",
-            answer = roshSummaryApiResponse.roshSummary?.riskGreatest,
-          ),
-          OASysQuestion(
-            label = "What circumstances are likely to increase risk",
-            questionNumber = "R10.4",
-            answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo,
-          ),
-          OASysQuestion(
-            label = "What circumstances are likely to reduce the risk",
-            questionNumber = "R10.5",
-            answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
-          ),
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk,
+        ),
+        OASysQuestion(
+          label = "What is the nature of the risk",
+          questionNumber = "R10.2",
+          answer = roshSummaryApiResponse.roshSummary?.natureOfRisk,
+        ),
+        OASysQuestion(
+          label = "When is the risk likely to be the greatest",
+          questionNumber = "R10.3",
+          answer = roshSummaryApiResponse.roshSummary?.riskGreatest,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to increase risk",
+          questionNumber = "R10.4",
+          answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to reduce the risk",
+          questionNumber = "R10.5",
+          answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
         ),
       )
     }
@@ -179,138 +175,130 @@ class OASysSectionsTransformerTest {
       assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
       assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
       assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
-      assertThat(result.offenceDetails).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Offence analysis",
-            questionNumber = "2.1",
-            answer = offenceDetailsApiResponse.offence?.offenceAnalysis,
-          ),
-          OASysQuestion(
-            label = "Pattern of offending",
-            questionNumber = "2.12",
-            answer = offenceDetailsApiResponse.offence?.patternOffending,
-          ),
-          OASysQuestion(
-            label = "Victim - perpetrator relationship",
-            questionNumber = "2.4.1",
-            answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel,
-          ),
-          OASysQuestion(
-            label = "Other victim information",
-            questionNumber = "2.4.2",
-            answer = offenceDetailsApiResponse.offence?.victimInfo,
-          ),
-          OASysQuestion(
-            label = "Impact on the victim",
-            questionNumber = "2.5",
-            answer = offenceDetailsApiResponse.offence?.victimImpact,
-          ),
-          OASysQuestion(
-            label = "Motivation and triggers",
-            questionNumber = "2.8.3",
-            answer = offenceDetailsApiResponse.offence?.offenceMotivation,
-          ),
-          OASysQuestion(
-            label = "Issues contributing to risks",
-            questionNumber = "2.98",
-            answer = offenceDetailsApiResponse.offence?.issueContributingToRisk,
-          ),
+      assertThat(result.offenceDetails).containsExactly(
+        OASysQuestion(
+          label = "Offence analysis",
+          questionNumber = "2.1",
+          answer = offenceDetailsApiResponse.offence?.offenceAnalysis,
+        ),
+        OASysQuestion(
+          label = "Victim - perpetrator relationship",
+          questionNumber = "2.4.1",
+          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel,
+        ),
+        OASysQuestion(
+          label = "Other victim information",
+          questionNumber = "2.4.2",
+          answer = offenceDetailsApiResponse.offence?.victimInfo,
+        ),
+        OASysQuestion(
+          label = "Impact on the victim",
+          questionNumber = "2.5",
+          answer = offenceDetailsApiResponse.offence?.victimImpact,
+        ),
+        OASysQuestion(
+          label = "Motivation and triggers",
+          questionNumber = "2.8.3",
+          answer = offenceDetailsApiResponse.offence?.offenceMotivation,
+        ),
+        OASysQuestion(
+          label = "Issues contributing to risks",
+          questionNumber = "2.98",
+          answer = offenceDetailsApiResponse.offence?.issueContributingToRisk,
+        ),
+        OASysQuestion(
+          label = "Pattern of offending",
+          questionNumber = "2.12",
+          answer = offenceDetailsApiResponse.offence?.patternOffending,
         ),
       )
 
-      assertThat(result.roshSummary).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Who is at risk",
-            questionNumber = "R10.1",
-            answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk,
-          ),
-          OASysQuestion(
-            label = "What is the nature of the risk",
-            questionNumber = "R10.2",
-            answer = roshSummaryApiResponse.roshSummary?.natureOfRisk,
-          ),
-          OASysQuestion(
-            label = "When is the risk likely to be the greatest",
-            questionNumber = "R10.3",
-            answer = roshSummaryApiResponse.roshSummary?.riskGreatest,
-          ),
-          OASysQuestion(
-            label = "What circumstances are likely to increase risk",
-            questionNumber = "R10.4",
-            answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo,
-          ),
-          OASysQuestion(
-            label = "What circumstances are likely to reduce the risk",
-            questionNumber = "R10.5",
-            answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
-          ),
+      assertThat(result.roshSummary).containsExactly(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk,
+        ),
+        OASysQuestion(
+          label = "What is the nature of the risk",
+          questionNumber = "R10.2",
+          answer = roshSummaryApiResponse.roshSummary?.natureOfRisk,
+        ),
+        OASysQuestion(
+          label = "When is the risk likely to be the greatest",
+          questionNumber = "R10.3",
+          answer = roshSummaryApiResponse.roshSummary?.riskGreatest,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to increase risk",
+          questionNumber = "R10.4",
+          answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to reduce the risk",
+          questionNumber = "R10.5",
+          answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
         ),
       )
 
-      assertThat(result.riskToSelf).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Current concerns about self-harm or suicide",
-            questionNumber = "R8.1.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Coping in Custody or Hostel",
-            questionNumber = "R8.2.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
-          ),
+      assertThat(result.riskToSelf).containsExactly(
+        OASysQuestion(
+          label = "Current concerns about self-harm or suicide",
+          questionNumber = "R8.1.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Coping in Custody or Hostel",
+          questionNumber = "R8.2.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
         ),
       )
 
-      assertThat(result.riskManagementPlan).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Further considerations",
-            questionNumber = "RM28",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.furtherConsiderations,
-          ),
-          OASysQuestion(
-            label = "Additional comments",
-            questionNumber = "RM35",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.additionalComments,
-          ),
-          OASysQuestion(
-            label = "Contingency plans",
-            questionNumber = "RM34",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.contingencyPlans,
-          ),
-          OASysQuestion(
-            label = "Victim safety planning",
-            questionNumber = "RM33",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.victimSafetyPlanning,
-          ),
-          OASysQuestion(
-            label = "Interventions and treatment",
-            questionNumber = "RM32",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.interventionsAndTreatment,
-          ),
-          OASysQuestion(
-            label = "Monitoring and control",
-            questionNumber = "RM31",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.monitoringAndControl,
-          ),
-          OASysQuestion(
-            label = "Supervision",
-            questionNumber = "RM30",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.supervision,
-          ),
-          OASysQuestion(
-            label = "Key information about current situation",
-            questionNumber = "RM28.1",
-            answer = riskManagementPlanApiResponse.riskManagementPlan?.keyInformationAboutCurrentSituation,
-          ),
+      assertThat(result.riskManagementPlan).containsExactly(
+        OASysQuestion(
+          label = "Further considerations",
+          questionNumber = "RM28",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.furtherConsiderations,
+        ),
+        OASysQuestion(
+          label = "Additional comments",
+          questionNumber = "RM35",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.additionalComments,
+        ),
+        OASysQuestion(
+          label = "Contingency plans",
+          questionNumber = "RM34",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.contingencyPlans,
+        ),
+        OASysQuestion(
+          label = "Victim safety planning",
+          questionNumber = "RM33",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.victimSafetyPlanning,
+        ),
+        OASysQuestion(
+          label = "Interventions and treatment",
+          questionNumber = "RM32",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.interventionsAndTreatment,
+        ),
+        OASysQuestion(
+          label = "Monitoring and control",
+          questionNumber = "RM31",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.monitoringAndControl,
+        ),
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.supervision,
+        ),
+        OASysQuestion(
+          label = "Key information about current situation",
+          questionNumber = "RM28.1",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.keyInformationAboutCurrentSituation,
         ),
       )
     }
@@ -338,7 +326,7 @@ class OASysSectionsTransformerTest {
         requestedOptionalSections,
       )
 
-      assertThat(result.supportingInformation).containsExactlyInAnyOrder(
+      assertThat(result.supportingInformation).containsExactly(
         OASysSupportingInformationQuestion(
           label = "Education, training and employability issues contributing to risks of offending and harm",
           questionNumber = "4.9",
@@ -356,14 +344,6 @@ class OASysSectionsTransformerTest {
           answer = null,
         ),
         OASysSupportingInformationQuestion(
-          label = "Issues of emotional well-being contributing to risks of offending and harm",
-          questionNumber = "10.9",
-          sectionNumber = 10,
-          linkedToHarm = true,
-          linkedToReOffending = false,
-          answer = "Emotional",
-        ),
-        OASysSupportingInformationQuestion(
           label = "Drug misuse issues contributing to risks of offending and harm",
           questionNumber = "8.9",
           sectionNumber = 8,
@@ -378,6 +358,14 @@ class OASysSectionsTransformerTest {
           linkedToHarm = needsDetailsApiResponse.linksToHarm?.alcoholLinkedToHarm,
           linkedToReOffending = needsDetailsApiResponse.linksToReOffending?.alcoholLinkedToReOffending,
           answer = needsDetailsApiResponse.needs?.alcoholIssuesDetails,
+        ),
+        OASysSupportingInformationQuestion(
+          label = "Issues of emotional well-being contributing to risks of offending and harm",
+          questionNumber = "10.9",
+          sectionNumber = 10,
+          linkedToHarm = true,
+          linkedToReOffending = false,
+          answer = "Emotional",
         ),
       )
     }
@@ -425,28 +413,26 @@ class OASysSectionsTransformerTest {
       assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
       assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
 
-      assertThat(result.riskToSelf).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Current concerns about self-harm or suicide",
-            questionNumber = "R8.1.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Coping in Custody or Hostel",
-            questionNumber = "R8.2.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
-          ),
-          OASysQuestion(
-            label = "Current concerns about Vulnerability",
-            questionNumber = "R8.3.1",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
-          ),
-          OASysQuestion(
-            label = "Previous concerns about self-harm or suicide",
-            questionNumber = "R8.1.4",
-            answer = risksToTheIndividualApiResponse.riskToTheIndividual?.previousConcernsSelfHarmSuicide,
-          ),
+      assertThat(result.riskToSelf).containsExactly(
+        OASysQuestion(
+          label = "Current concerns about self-harm or suicide",
+          questionNumber = "R8.1.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Coping in Custody or Hostel",
+          questionNumber = "R8.2.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
+        ),
+        OASysQuestion(
+          label = "Previous concerns about self-harm or suicide",
+          questionNumber = "R8.1.4",
+          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.previousConcernsSelfHarmSuicide,
         ),
       )
     }
@@ -491,33 +477,31 @@ class OASysSectionsTransformerTest {
       assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
       assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
 
-      assertThat(result.rosh).containsAll(
-        listOf(
-          OASysQuestion(
-            label = "Who is at risk",
-            questionNumber = "R10.1",
-            answer = roshApiResponse.roshSummary?.whoIsAtRisk,
-          ),
-          OASysQuestion(
-            label = "What is the nature of the risk",
-            questionNumber = "R10.2",
-            answer = roshApiResponse.roshSummary?.natureOfRisk,
-          ),
-          OASysQuestion(
-            label = "When is the risk likely to be the greatest",
-            questionNumber = "R10.3",
-            answer = roshApiResponse.roshSummary?.riskGreatest,
-          ),
-          OASysQuestion(
-            label = "What circumstances are likely to increase risk",
-            questionNumber = "R10.4",
-            answer = roshApiResponse.roshSummary?.riskIncreaseLikelyTo,
-          ),
-          OASysQuestion(
-            label = "What circumstances are likely to reduce the risk",
-            questionNumber = "R10.5",
-            answer = roshApiResponse.roshSummary?.riskReductionLikelyTo,
-          ),
+      assertThat(result.rosh).containsExactly(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = roshApiResponse.roshSummary?.whoIsAtRisk,
+        ),
+        OASysQuestion(
+          label = "What is the nature of the risk",
+          questionNumber = "R10.2",
+          answer = roshApiResponse.roshSummary?.natureOfRisk,
+        ),
+        OASysQuestion(
+          label = "When is the risk likely to be the greatest",
+          questionNumber = "R10.3",
+          answer = roshApiResponse.roshSummary?.riskGreatest,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to increase risk",
+          questionNumber = "R10.4",
+          answer = roshApiResponse.roshSummary?.riskIncreaseLikelyTo,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to reduce the risk",
+          questionNumber = "R10.5",
+          answer = roshApiResponse.roshSummary?.riskReductionLikelyTo,
         ),
       )
     }
