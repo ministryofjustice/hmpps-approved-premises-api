@@ -6,39 +6,39 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.Risks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 class RiskToTheIndividualFactory : AssessmentInfoFactory<RisksToTheIndividual>() {
-  private var currentConcernsSelfHarmSuicide = { randomStringMultiCaseWithNumbers(20) }
-  private var previousConcernsSelfHarmSuicide = { randomStringMultiCaseWithNumbers(20) }
-  private var currentCustodyHostelCoping = { randomStringMultiCaseWithNumbers(20) }
-  private var previousCustodyHostelCoping = { randomStringMultiCaseWithNumbers(20) }
-  private var currentVulnerability = { randomStringMultiCaseWithNumbers(20) }
-  private var previousVulnerability = { randomStringMultiCaseWithNumbers(20) }
+  private var currentConcernsSelfHarmSuicide: Yielded<String?> = { null }
+  private var previousConcernsSelfHarmSuicide: Yielded<String?> = { null }
+  private var currentCustodyHostelCoping: Yielded<String?> = { null }
+  private var previousCustodyHostelCoping: Yielded<String?> = { null }
+  private var currentVulnerability: Yielded<String?> = { null }
+  private var previousVulnerability: Yielded<String?> = { null }
   private var riskOfSeriousHarm = { randomStringMultiCaseWithNumbers(20) }
   private var currentConcernsBreachOfTrustText = { randomStringMultiCaseWithNumbers(20) }
   private var analysisSuicideSelfharm: Yielded<String?> = { null }
   private var analysisCoping: Yielded<String?> = { null }
   private var analysisVulnerabilities: Yielded<String?> = { null }
 
-  fun withCurrentConcernsSelfHarmSuicide(currentConcernsSelfHarmSuicide: String) = apply {
+  fun withCurrentConcernsSelfHarmSuicide(currentConcernsSelfHarmSuicide: String?) = apply {
     this.currentConcernsSelfHarmSuicide = { currentConcernsSelfHarmSuicide }
   }
 
-  fun withPreviousConcernsSelfHarmSuicide(previousConcernsSelfHarmSuicide: String) = apply {
+  fun withPreviousConcernsSelfHarmSuicide(previousConcernsSelfHarmSuicide: String?) = apply {
     this.previousConcernsSelfHarmSuicide = { previousConcernsSelfHarmSuicide }
   }
 
-  fun withCurrentCustodyHostelCoping(currentCustodyHostelCoping: String) = apply {
+  fun withCurrentCustodyHostelCoping(currentCustodyHostelCoping: String?) = apply {
     this.currentCustodyHostelCoping = { currentCustodyHostelCoping }
   }
 
-  fun withPreviousCustodyHostelCoping(previousCustodyHostelCoping: String) = apply {
+  fun withPreviousCustodyHostelCoping(previousCustodyHostelCoping: String?) = apply {
     this.previousCustodyHostelCoping = { previousCustodyHostelCoping }
   }
 
-  fun withCurrentVulnerability(currentVulnerability: String) = apply {
+  fun withCurrentVulnerability(currentVulnerability: String?) = apply {
     this.currentVulnerability = { currentVulnerability }
   }
 
-  fun withPreviousVulnerability(previousVulnerability: String) = apply {
+  fun withPreviousVulnerability(previousVulnerability: String?) = apply {
     this.previousVulnerability = { previousVulnerability }
   }
 
@@ -50,15 +50,15 @@ class RiskToTheIndividualFactory : AssessmentInfoFactory<RisksToTheIndividual>()
     this.currentConcernsBreachOfTrustText = { currentConcernsBreachOfTrustText }
   }
 
-  fun withAnalysisSuicideSelfharm(analysisSuicideSelfharm: String) = apply {
+  fun withAnalysisSuicideSelfharm(analysisSuicideSelfharm: String?) = apply {
     this.analysisSuicideSelfharm = { analysisSuicideSelfharm }
   }
 
-  fun withAnalysisCoping(analysisCoping: String) = apply {
+  fun withAnalysisCoping(analysisCoping: String?) = apply {
     this.analysisCoping = { analysisCoping }
   }
 
-  fun withAnalysisVulnerabilities(analysisVulnerabilities: String) = apply {
+  fun withAnalysisVulnerabilities(analysisVulnerabilities: String?) = apply {
     this.analysisVulnerabilities = { analysisVulnerabilities }
   }
 

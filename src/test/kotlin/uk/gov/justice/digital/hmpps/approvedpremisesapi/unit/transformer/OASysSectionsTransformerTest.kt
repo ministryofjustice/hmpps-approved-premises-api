@@ -22,16 +22,38 @@ class OASysSectionsTransformerTest {
     @Test
     fun `transforms correctly`() {
       val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
-        withAssessmentId(34853487)
-        withDateCompleted(null)
+        withAnalysisSuicideSelfharm("analysisSuicideSelfharm")
+        withAnalysisCoping("analysisCoping")
+        withAnalysisVulnerabilities("analysisVulnerabilities")
+      }.produce()
+
+      val result = oaSysSectionsTransformer.riskToSelfAnswers(risksToTheIndividualApiResponse)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "FA62 Label TBD",
+          questionNumber = "FA62",
+          answer = "analysisSuicideSelfharm",
+        ),
+        OASysQuestion(
+          label = "FA63 Label TBD",
+          questionNumber = "FA63",
+          answer = "analysisCoping",
+        ),
+        OASysQuestion(
+          label = "FA64 Label TBD",
+          questionNumber = "FA64",
+          answer = "analysisVulnerabilities",
+        ),
+      )
+    }
+
+    @Test
+    fun `transforms correctly, legacy answers (pre NOD-1057 changes)`() {
+      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
         withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicide")
-        withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicide")
         withCurrentCustodyHostelCoping("currentCustodyHostelCoping")
-        withPreviousCustodyHostelCoping("previousCustodyHostelCoping")
         withCurrentVulnerability("currentVulnerability")
-        withPreviousVulnerability("previousVulnerability")
-        withRiskOfSeriousHarm("riskOfSeriousHarm")
-        withCurrentConcernsBreachOfTrustText("currentConcernsBreachOfTrustText")
       }.produce()
 
       val result = oaSysSectionsTransformer.riskToSelfAnswers(risksToTheIndividualApiResponse)
@@ -40,17 +62,17 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Current concerns about self-harm or suicide",
           questionNumber = "R8.1.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
+          answer = "currentConcernsSelfHarmSuicide",
         ),
         OASysQuestion(
           label = "Current concerns about Coping in Custody or Hostel",
           questionNumber = "R8.2.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
+          answer = "currentCustodyHostelCoping",
         ),
         OASysQuestion(
           label = "Current concerns about Vulnerability",
           questionNumber = "R8.3.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
+          answer = "currentVulnerability",
         ),
       )
     }
@@ -60,15 +82,13 @@ class OASysSectionsTransformerTest {
   inner class RoshSummaryAnswers {
 
     @Test
-    fun `transforms correctly`() {
+    fun `transforms correctly, legacy answers (pre NOD-1057 changes)`() {
       val roshSummaryApiResponse = RoshSummaryFactory().apply {
-        withAssessmentId(34853487)
-        withDateCompleted(null)
-        withWhoAtRisk("Who is at risk")
-        withNatureOfRisk("What is the nature of the risk")
-        withRiskGreatest("When is the risk likely to be the greatest")
-        withRiskIncreaseLikelyTo("What circumstances are likely to increase risk")
-        withRiskReductionLikelyTo("Reduction Likely To")
+        withWhoAtRisk("Who is at risk answer")
+        withNatureOfRisk("What is the nature of the risk answer")
+        withRiskGreatest("When is the risk likely to be the greatest answer")
+        withRiskIncreaseLikelyTo("What circumstances are likely to increase risk answer")
+        withRiskReductionLikelyTo("Reduction Likely To answer")
       }.produce()
 
       val result = oaSysSectionsTransformer.roshSummaryAnswers(roshSummaryApiResponse)
@@ -77,27 +97,68 @@ class OASysSectionsTransformerTest {
         OASysQuestion(
           label = "Who is at risk",
           questionNumber = "R10.1",
-          answer = roshSummaryApiResponse.roshSummary?.whoIsAtRisk,
+          answer = "Who is at risk answer",
         ),
         OASysQuestion(
           label = "What is the nature of the risk",
           questionNumber = "R10.2",
-          answer = roshSummaryApiResponse.roshSummary?.natureOfRisk,
+          answer = "What is the nature of the risk answer",
         ),
         OASysQuestion(
           label = "When is the risk likely to be the greatest",
           questionNumber = "R10.3",
-          answer = roshSummaryApiResponse.roshSummary?.riskGreatest,
+          answer = "When is the risk likely to be the greatest answer",
         ),
         OASysQuestion(
           label = "What circumstances are likely to increase risk",
           questionNumber = "R10.4",
-          answer = roshSummaryApiResponse.roshSummary?.riskIncreaseLikelyTo,
+          answer = "What circumstances are likely to increase risk answer",
         ),
         OASysQuestion(
           label = "What circumstances are likely to reduce the risk",
           questionNumber = "R10.5",
-          answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
+          answer = "Reduction Likely To answer",
+        ),
+      )
+    }
+
+    @Test
+    fun `transforms correctly`() {
+      val roshSummaryApiResponse = RoshSummaryFactory().apply {
+        withWhoAtRisk("Who is at risk answer")
+        withNatureOfRisk("What is the nature of the risk answer")
+        withFactorsSituationsLikelyToOffend("Factors situations likely to offender answer")
+        withFactorsAnalysisOfRisk("Factors analysis of risk answer")
+        withFactorsStrengthsAndProtective("Factors strengths and protective answer")
+      }.produce()
+
+      val result = oaSysSectionsTransformer.roshSummaryAnswers(roshSummaryApiResponse)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = "Who is at risk answer",
+        ),
+        OASysQuestion(
+          label = "What is the nature of the risk",
+          questionNumber = "R10.2",
+          answer = "What is the nature of the risk answer",
+        ),
+        OASysQuestion(
+          label = "SUM11 Label TBD",
+          questionNumber = "SUM11",
+          answer = "Factors situations likely to offender answer",
+        ),
+        OASysQuestion(
+          label = "SUM10 Label TBD",
+          questionNumber = "SUM10",
+          answer = "Factors strengths and protective answer",
+        ),
+        OASysQuestion(
+          label = "SUM9 Label TBD",
+          questionNumber = "SUM9",
+          answer = "Factors analysis of risk answer",
         ),
       )
     }

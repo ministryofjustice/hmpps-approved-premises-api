@@ -10,8 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSupportin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummaryInner
 
 @Component
 class OASysSectionsTransformer {
@@ -44,19 +46,56 @@ class OASysSectionsTransformer {
     OASysQuestion("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending),
   )
 
-  fun roshSummaryAnswers(roshSummary: RoshSummary) = listOf(
-    OrderedQuestion(1, OASysQuestion("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk)),
-    OrderedQuestion(2, OASysQuestion("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk)),
-    OrderedQuestion(3, OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest)),
-    OrderedQuestion(4, OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo)),
-    OrderedQuestion(5, OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo)),
-  ).sortedBy { it.position }.map { it.question }
+  fun roshSummaryAnswers(roshSummary: RoshSummary) = roshSummaryAnswers(roshSummary.roshSummary)
 
-  fun riskToSelfAnswers(risksToTheIndividual: RisksToTheIndividual) = listOf(
-    OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
-    OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
-    OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
-  )
+  fun roshSummaryAnswers(roshSummaryInner: RoshSummaryInner?) = listOf(
+    OrderedQuestion(1, OASysQuestion("Who is at risk", "R10.1", roshSummaryInner?.whoIsAtRisk)),
+    OrderedQuestion(2, OASysQuestion("What is the nature of the risk", "R10.2", roshSummaryInner?.natureOfRisk)),
+    if (roshSummaryInner?.factorsSituationsLikelyToOffend != null) {
+      OrderedQuestion(3, OASysQuestion("SUM11 Label TBD", "SUM11", roshSummaryInner.factorsSituationsLikelyToOffend))
+    } else {
+      OrderedQuestion(3, OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummaryInner?.riskGreatest))
+    },
+    if (roshSummaryInner?.factorsAnalysisOfRisk != null) {
+      OrderedQuestion(5, OASysQuestion("SUM9 Label TBD", "SUM9", roshSummaryInner.factorsAnalysisOfRisk))
+    } else {
+      OrderedQuestion(4, OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummaryInner?.riskIncreaseLikelyTo))
+    },
+    if (roshSummaryInner?.factorsStrengthsAndProtective != null) {
+      OrderedQuestion(4, OASysQuestion("SUM10 Label TBD", "SUM10", roshSummaryInner.factorsStrengthsAndProtective))
+    } else {
+      OrderedQuestion(5, OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummaryInner?.riskReductionLikelyTo))
+    },
+  ).sortQuestionsInOrder()
+
+  fun riskToSelfAnswers(risksToTheIndividual: RisksToTheIndividual) = riskToSelfAnswers(risksToTheIndividual.riskToTheIndividual)
+
+  private fun riskToSelfAnswers(riskToTheIndividualInner: RiskToTheIndividualInner?) = listOf(
+    OrderedQuestion(
+      position = 1,
+      question = if (riskToTheIndividualInner?.analysisSuicideSelfharm != null) {
+        OASysQuestion("FA62 Label TBD", "FA62", riskToTheIndividualInner.analysisSuicideSelfharm)
+      } else {
+        OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", riskToTheIndividualInner?.currentConcernsSelfHarmSuicide)
+      },
+    ),
+    OrderedQuestion(
+      position = 2,
+      question = if (riskToTheIndividualInner?.analysisCoping != null) {
+        OASysQuestion("FA63 Label TBD", "FA63", riskToTheIndividualInner.analysisCoping)
+      } else {
+        OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", riskToTheIndividualInner?.currentCustodyHostelCoping)
+      },
+    ),
+    OrderedQuestion(
+      position = 3,
+      question = if (riskToTheIndividualInner?.analysisVulnerabilities != null) {
+        OASysQuestion("FA64 Label TBD", "FA64", riskToTheIndividualInner.analysisVulnerabilities)
+      } else {
+        OASysQuestion("Current concerns about Vulnerability", "R8.3.1", riskToTheIndividualInner?.currentVulnerability)
+      },
+    ),
+  ).sortQuestionsInOrder()
 
   fun riskManagementPlanAnswers(riskManagementPlan: RiskManagementPlan) = listOf(
     OASysQuestion("Further considerations", "RM28", riskManagementPlan.riskManagementPlan?.furtherConsiderations),
@@ -209,4 +248,6 @@ class OASysSectionsTransformer {
   }
 
   private data class OrderedQuestion(val position: Int, val question: OASysQuestion)
+
+  private fun List<OrderedQuestion>.sortQuestionsInOrder() = this.sortedBy { it.position }.map { it.question }
 }
