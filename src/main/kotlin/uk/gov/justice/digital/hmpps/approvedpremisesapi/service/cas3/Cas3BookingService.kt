@@ -37,11 +37,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -134,6 +136,13 @@ class Cas3BookingService(
         return@validated fieldValidationError
       }
 
+      val personResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)
+      val offenderName = personResult.getPersonName()
+
+      if (offenderName == null) {
+        log.warn("Unable to get offender name for CRN $crn")
+      }
+
       val bookingCreatedAt = OffsetDateTime.now()
 
       val booking = bookingRepository.save(
@@ -162,7 +171,7 @@ class Cas3BookingService(
           turnarounds = mutableListOf(),
           placementRequest = null,
           status = BookingStatus.provisional,
-          offenderName = null,
+          offenderName = offenderName,
         ),
       )
 

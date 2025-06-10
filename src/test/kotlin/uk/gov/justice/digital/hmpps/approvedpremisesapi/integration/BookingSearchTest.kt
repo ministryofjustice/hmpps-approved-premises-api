@@ -68,7 +68,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val crn = "S121978"
         create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookingSearchResult =
-          createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
+          createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn, "${offenderDetails.firstName} ${offenderDetails.surname}")
         val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
 
         // when CRN is upper case
@@ -87,7 +87,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val crn = "S121978"
         val expectedBookingInSearchResult =
           create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
-        createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn)
+        createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn, "${offenderDetails.firstName} ${offenderDetails.surname}")
         val expectedResponse = getExpectedResponse(expectedBookingInSearchResult, offenderDetails)
 
         // when CRN is upper case
@@ -215,7 +215,7 @@ class BookingSearchTest : IntegrationTestBase() {
     }
     temporaryAccommodationApplications += application
 
-    val booking = createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, it.otherIds.crn)
+    val booking = createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, it.otherIds.crn, offenderName)
     allBookings += booking
   }
 
@@ -287,6 +287,7 @@ class BookingSearchTest : IntegrationTestBase() {
             LocalDate.now().plusDays(3),
             LocalDate.now().minusDays(randomInt(10, 20).toLong()).toLocalDateTime(),
             bookingStatus,
+            offenderName,
           )
 
           val departure = departureEntityFactory.produceAndPersist {
@@ -632,6 +633,7 @@ class BookingSearchTest : IntegrationTestBase() {
           LocalDate.now().minusDays(5),
           LocalDate.now().plusDays(randomInt(1, 10).toLong()),
           LocalDate.now().minusDays(randomInt(10, 20).toLong()).toLocalDateTime(),
+          offenderName = offenderName,
         )
 
         allBookings += booking
@@ -734,6 +736,7 @@ class BookingSearchTest : IntegrationTestBase() {
           LocalDate.now().minusDays(randomInt(5, 20).toLong()),
           LocalDate.now().plusDays(3),
           LocalDate.now().minusDays(randomInt(10, 20).toLong()).toLocalDateTime(),
+          offenderName = offenderName,
         )
 
         allBookings += booking
@@ -865,7 +868,7 @@ class BookingSearchTest : IntegrationTestBase() {
         }
         temporaryAccommodationApplications += application
 
-        val booking = createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, it)
+        val booking = createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, it, offenderName)
         allBookings += booking
       }
 
@@ -1116,6 +1119,7 @@ class BookingSearchTest : IntegrationTestBase() {
     numberOfPremises,
     numberOfBedsInEachPremises,
     offenderDetails.otherIds.crn,
+    "${offenderDetails.firstName} ${offenderDetails.surname}",
   )
 
   private fun createTestTemporaryAccommodationBookings(
@@ -1123,6 +1127,7 @@ class BookingSearchTest : IntegrationTestBase() {
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
     crn: String,
+    offenderName: String,
   ): MutableList<BookingEntity> {
     val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
       withProbationRegion(probationRegion)
@@ -1154,6 +1159,7 @@ class BookingSearchTest : IntegrationTestBase() {
         LocalDate.now().minusDays((60 - index).toLong()),
         LocalDate.now().minusDays((30 - index).toLong()),
         LocalDate.now().minusDays((30 - index).toLong()).toLocalDateTime(),
+        offenderName = offenderName,
       )
 
       allBookings += booking
@@ -1186,6 +1192,7 @@ class BookingSearchTest : IntegrationTestBase() {
     departureDate: LocalDate,
     createdAt: OffsetDateTime,
     bookingStatus: BookingStatus = BookingStatus.provisional,
+    offenderName: String,
   ): BookingEntity = bookingEntityFactory.produceAndPersist {
     withPremises(bed.room.premises)
     withCrn(crn)
@@ -1195,6 +1202,7 @@ class BookingSearchTest : IntegrationTestBase() {
     withArrivalDate(arrivalDate)
     withDepartureDate(departureDate)
     withCreatedAt(createdAt)
+    withOffenderName(offenderName)
   }
 
   private fun callApiAndAssertResponse(
