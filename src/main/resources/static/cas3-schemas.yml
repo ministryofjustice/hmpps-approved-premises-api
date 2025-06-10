@@ -226,6 +226,27 @@ components:
         - id
         - reference
         - characteristics
+    Cas3NewBedspace:
+      type: object
+      properties:
+        reference:
+          type: string
+        startDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: Start date of the bedspace availability.
+        notes:
+          type: string
+        characteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - reference
+        - startDate
+        - characteristicIds
     PremisesFilters:
       type: object
       properties:

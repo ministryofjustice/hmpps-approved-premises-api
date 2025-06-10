@@ -367,6 +367,46 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas3Bedspace'
+    post:
+      tags:
+        - Bedspaces
+      summary: Adds a new bedspace for a premises
+      operationId: createBedspace
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the bedspace is in
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the new bedspace
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3NewBedspace'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Bedspace'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        404:
+          description: invalid premises ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: body
   /premises/{premisesId}/bedspaces/{bedspaceId}:
     get:
       summary: Returns a specific bedspace for a premises
@@ -5078,6 +5118,27 @@ components:
         - id
         - reference
         - characteristics
+    Cas3NewBedspace:
+      type: object
+      properties:
+        reference:
+          type: string
+        startDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: Start date of the bedspace availability.
+        notes:
+          type: string
+        characteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - reference
+        - startDate
+        - characteristicIds
     PremisesFilters:
       type: object
       properties:
