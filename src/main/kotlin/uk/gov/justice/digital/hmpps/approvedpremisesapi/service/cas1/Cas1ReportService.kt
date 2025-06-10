@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Plac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import java.io.OutputStream
 import java.time.LocalDateTime
 
@@ -84,8 +85,7 @@ class Cas1ReportService(
       listOf("notes")
     }
 
-    CsvJdbcResultSetConsumer(
-      outputStream = outputStream,
+    ExcelJdbcResultSetConsumer(
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
       cas1OutOfServiceBedsReportRepository.generateOutOfServiceBedsReport(
@@ -93,6 +93,8 @@ class Cas1ReportService(
         endDate = reportDateRange.end,
         jdbcResultSetConsumer = consumer,
       )
+
+      consumer.writeBufferedWorkbook(outputStream)
     }
   }
 

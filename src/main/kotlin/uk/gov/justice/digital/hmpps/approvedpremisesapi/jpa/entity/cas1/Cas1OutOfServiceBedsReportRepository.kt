@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ReportJdbcTemplate
 import java.time.LocalDateTime
 
@@ -35,8 +35,8 @@ class Cas1OutOfServiceBedsReportRepository(
           probation_regions.name AS region,
           premises.name AS ap,
           latest_revisions.reason AS reason,
-          TO_CHAR(latest_revisions.start_date, 'YYYY-MM-DD') AS "startDate",
-          TO_CHAR(latest_revisions.end_date, 'YYYY-MM-DD') AS "endDate",
+          latest_revisions.start_date AS "startDate",
+          latest_revisions.end_date AS "endDate",
           CASE
             WHEN (
                 DATE_PART('day', LEAST(:endDate, latest_revisions.end_date) - GREATEST(:startDate, latest_revisions.start_date)) + 1 > 0
@@ -88,7 +88,7 @@ class Cas1OutOfServiceBedsReportRepository(
   fun generateOutOfServiceBedsReport(
     startDate: LocalDateTime,
     endDate: LocalDateTime,
-    jdbcResultSetConsumer: CsvJdbcResultSetConsumer,
+    jdbcResultSetConsumer: ExcelJdbcResultSetConsumer,
   ) = reportJdbcTemplate.query(
     QUERY,
     mapOf<String, Any>(
