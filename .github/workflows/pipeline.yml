@@ -33,41 +33,16 @@ jobs:
       environment: 'development'
       app_version: '${{ needs.docker_build.outputs.app_version }}'
 
-  cas1_e2e_test:
-    name: "CAS1 E2E"
+  e2e:
+    name: E2E tests
     needs:
       - deploy_dev
-    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
-
-  cas2_e2e_test:
-    name: "CAS2 E2E"
-    needs:
-      - deploy_dev
-    uses: ministryofjustice/hmpps-community-accommodation-tier-2-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
-
-  cas2_bail_e2e_test:
-    name: "CAS2 Bail E2E"
-    needs:
-      - deploy_dev
-    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
-
-  cas3_e2e_test:
-    name: "CAS3 E2E"
-    needs:
-      - deploy_dev
-    uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
+    uses: ./.github/workflows/e2e.yml
 
   deploy_preprod:
     name: Deploy to pre-production environment
     needs:
-      - cas1_e2e_test
-      - cas2_e2e_test
-      - cas2_bail_e2e_test
-      - cas3_e2e_test
+      - e2e
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
