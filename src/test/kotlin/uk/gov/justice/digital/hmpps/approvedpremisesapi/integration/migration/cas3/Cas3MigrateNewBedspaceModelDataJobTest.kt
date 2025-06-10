@@ -5,9 +5,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -24,8 +27,13 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
 
   @BeforeEach
   fun setupDataRequiredForDataMigrationToBedspaceModelTables() {
+    val cas3PremisesCharacteristics = characteristicRepository.findAllByServiceAndModelScope(
+      modelScope = "premises",
+      serviceScope = ServiceName.temporaryAccommodation.value,
+    )
     temporaryAccommodationPremises = generateSequence {
       temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        val premisesCharacteristicsCopy = cas3PremisesCharacteristics.toMutableList()
         val probationRegion = givenAProbationRegion()
         withProbationRegion(probationRegion)
         withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
@@ -33,6 +41,14 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(probationRegion)
           },
+        )
+        withCharacteristics(
+          mutableListOf(
+            pickRandomCharacteristicAndRemoveFromList(premisesCharacteristicsCopy),
+            pickRandomCharacteristicAndRemoveFromList(premisesCharacteristicsCopy),
+            pickRandomCharacteristicAndRemoveFromList(premisesCharacteristicsCopy),
+            pickRandomCharacteristicAndRemoveFromList(premisesCharacteristicsCopy),
+          ),
         )
       }
     }.take(NO_OF_PREMISES_TO_MIGRATE).toList()
@@ -75,6 +91,10 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
         cas3PremisesEntity = migratedPremise,
         temporaryAccommodationPremisesEntity = tap,
       )
+      assertThatPremisesCharacteristicsMatch(
+        cas3PremisesEntity = migratedPremise,
+        temporaryAccommodationPremisesEntity = tap,
+      )
       assertThatBedspacesMatchRoomsAndBeds(
         cas3PremisesEntity = migratedPremise,
         temporaryAccommodationPremisesEntity = tap,
@@ -108,6 +128,27 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
       assertThat(bedspace.endDate).isEqualTo(expectedBedToMatch.endDate)
       assertThat(bedspace.startDate).isEqualTo(expectedBedToMatch.startDate)
       assertThat(bedspace.createdAt).isEqualTo(expectedBedToMatch.createdAt)
+      assertThatBedspaceCharacteristicsMatch(bedspace, expectedRoomToMatch)
+    }
+  }
+
+  private fun assertThatPremisesCharacteristicsMatch(cas3PremisesEntity: Cas3PremisesEntity, temporaryAccommodationPremisesEntity: TemporaryAccommodationPremisesEntity) {
+    assertThat(cas3PremisesEntity.characteristics.size).isEqualTo(temporaryAccommodationPremisesEntity.characteristics.size)
+    cas3PremisesEntity.characteristics.forEach { migratedCharacteristic ->
+      val sourcePremisesCharacteristic = temporaryAccommodationPremisesEntity.characteristics.first { it.id == migratedCharacteristic.id }
+      assertThat(migratedCharacteristic.description).isEqualTo(sourcePremisesCharacteristic.name)
+      assertThat(migratedCharacteristic.name).isEqualTo(sourcePremisesCharacteristic.propertyName)
+      assertThat(migratedCharacteristic.isActive).isEqualTo(sourcePremisesCharacteristic.isActive)
+    }
+  }
+
+  private fun assertThatBedspaceCharacteristicsMatch(cas3Bedspace: Cas3BedspacesEntity, expectedRoomToMatch: RoomEntity) {
+    assertThat(cas3Bedspace.characteristics.size).isEqualTo(expectedRoomToMatch.characteristics.size)
+    cas3Bedspace.characteristics.forEach { migratedCharacteristic ->
+      val sourcePremisesCharacterists = expectedRoomToMatch.characteristics.first { it.id == migratedCharacteristic.id }
+      assertThat(migratedCharacteristic.description).isEqualTo(sourcePremisesCharacterists.name)
+      assertThat(migratedCharacteristic.name).isEqualTo(sourcePremisesCharacterists.propertyName)
+      assertThat(migratedCharacteristic.isActive).isEqualTo(sourcePremisesCharacterists.isActive)
     }
   }
 }

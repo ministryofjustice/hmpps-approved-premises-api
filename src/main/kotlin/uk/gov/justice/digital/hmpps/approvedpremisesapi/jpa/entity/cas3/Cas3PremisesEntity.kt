@@ -7,6 +7,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
@@ -30,6 +32,10 @@ class Cas3PremisesEntity(
   var addressLine2: String?,
   var town: String?,
 
+  @Enumerated(value = EnumType.STRING)
+  var status: PropertyStatus,
+  var notes: String,
+
   @ManyToOne
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity,
@@ -41,9 +47,14 @@ class Cas3PremisesEntity(
   @OneToMany(mappedBy = "premises")
   var bedspaces: MutableList<Cas3BedspacesEntity>,
 
-  @Enumerated(value = EnumType.STRING)
-  var status: PropertyStatus,
-  var notes: String,
+  @ManyToMany
+  @JoinTable(
+    name = "cas3_premises_characteristic_assignments",
+    joinColumns = [JoinColumn(name = "premises_id")],
+    inverseJoinColumns = [JoinColumn(name = "premises_characteristics_id")],
+  )
+  var characteristics: MutableList<Cas3PremisesCharacteristicEntity>,
+
 )
 
 @Repository
