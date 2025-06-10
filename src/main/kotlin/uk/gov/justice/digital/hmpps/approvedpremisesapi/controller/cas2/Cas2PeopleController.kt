@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
-@Service("Cas2PeopleController")
-class PeopleController(
+@Service
+class Cas2PeopleController(
   private val offenderService: Cas2OffenderService,
   private val oasysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
@@ -70,7 +70,7 @@ class PeopleController(
       val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
 
       ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
+        oaSysSectionsTransformer.cas2TransformRiskToIndividual(offenceDetails, riskToTheIndividual),
       )
     }
   }
@@ -91,7 +91,7 @@ class PeopleController(
       val rosh = extractEntityFromCasResult(roshResult.await())
 
       ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
+        oaSysSectionsTransformer.cas2TransformRiskOfSeriousHarm(offenceDetails, rosh),
       )
     }
   }
