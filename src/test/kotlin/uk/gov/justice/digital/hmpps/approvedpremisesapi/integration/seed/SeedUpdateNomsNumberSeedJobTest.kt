@@ -8,6 +8,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UpdateNomsNumberSeedRow
@@ -71,27 +72,13 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
     }
 
     val booking = bookingEntityFactory.produceAndPersist {
-      withPremises(
-        approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { givenAnApArea() } }
-          }
-        },
-      )
+      withPremises(givenAnApprovedPremises())
       withCrn(CRN)
       withNomsNumber(OLD_NOMS)
     }
 
     val otherCrnBooking = bookingEntityFactory.produceAndPersist {
-      withPremises(
-        approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { givenAnApArea() } }
-          }
-        },
-      )
+      withPremises(givenAnApprovedPremises())
       withCrn(OTHER_CRN)
       withNomsNumber(OTHER_NOMS)
     }

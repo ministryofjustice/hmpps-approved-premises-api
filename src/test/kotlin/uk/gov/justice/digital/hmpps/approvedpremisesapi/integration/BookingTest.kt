@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
@@ -90,10 +91,7 @@ class BookingTest : IntegrationTestBase() {
     fun `Get a booking returns OK with the correct body`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegion }
-          }
+          val premises = givenAnApprovedPremises()
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -141,10 +139,7 @@ class BookingTest : IntegrationTestBase() {
             withNomsNumber(null)
           },
         ) { offenderDetails, _ ->
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegion }
-          }
+          val premises = givenAnApprovedPremises()
 
           val keyWorker = ContextStaffMemberFactory().produce()
           apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
@@ -171,10 +166,7 @@ class BookingTest : IntegrationTestBase() {
     fun `Get a booking for an Approved Premises returns OK with the correct body`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegion }
-          }
+          val premises = givenAnApprovedPremises()
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -204,10 +196,7 @@ class BookingTest : IntegrationTestBase() {
     @Test
     fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
-        }
+        val premises = givenAnApprovedPremises()
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -241,10 +230,7 @@ class BookingTest : IntegrationTestBase() {
             withNomsNumber(null)
           },
         ) { offenderDetails, _ ->
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegion }
-          }
+          val premises = givenAnApprovedPremises()
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
@@ -382,10 +368,7 @@ class BookingTest : IntegrationTestBase() {
     role: UserRole,
   ) {
     givenAUser(roles = listOf(role)) { _, jwt ->
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
-      }
+      val premises = givenAnApprovedPremises()
 
       webTestClient.get()
         .uri("/premises/${premises.id}/bookings")
@@ -403,12 +386,7 @@ class BookingTest : IntegrationTestBase() {
   fun `Get all Bookings returns OK with correct body when user has one of roles FUTURE_MANAGER, CAS1_WORKFLOW_MANAGER`(role: UserRole) {
     givenAUser(roles = listOf(role)) { _, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
+        val premises = givenAnApprovedPremises()
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
@@ -465,12 +443,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Get all Bookings for premises returns OK with correct body when person details for a booking could not be found`() {
     givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegion
-        }
-      }
+      val premises = givenAnApprovedPremises()
 
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
@@ -503,12 +476,7 @@ class BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
       givenAnOffender(mockServerErrorForPrisonApi = true) { offenderDetails, _ ->
 
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
+        val premises = givenAnApprovedPremises()
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -594,12 +562,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking without JWT returns 401`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegion
-      }
-    }
+    val premises = givenAnApprovedPremises()
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
@@ -2518,12 +2481,7 @@ class BookingTest : IntegrationTestBase() {
 
             val booking = bookingEntityFactory.produceAndPersist {
               withYieldedPremises {
-                approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion {
-                    probationRegion
-                  }
-                }
+                givenAnApprovedPremises()
               }
               withCrn(offenderDetails.otherIds.crn)
               withApplication(application)
@@ -2600,12 +2558,7 @@ class BookingTest : IntegrationTestBase() {
 
               val booking = bookingEntityFactory.produceAndPersist {
                 withYieldedPremises {
-                  approvedPremisesEntityFactory.produceAndPersist {
-                    withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                    withYieldedProbationRegion {
-                      probationRegion
-                    }
-                  }
+                  givenAnApprovedPremises()
                 }
                 withCrn(offenderDetails.otherIds.crn)
                 withApplication(application)
@@ -2693,12 +2646,7 @@ class BookingTest : IntegrationTestBase() {
 
             val booking = bookingEntityFactory.produceAndPersist {
               withYieldedPremises {
-                approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion {
-                    probationRegion
-                  }
-                }
+                givenAnApprovedPremises()
               }
               withCrn(offenderDetails.otherIds.crn)
               withApplication(application)
@@ -3417,12 +3365,7 @@ class BookingTest : IntegrationTestBase() {
     @Test
     fun `CAS1 Date Change for a booking on a premises that does not exist returns 404 Not Found`() {
       givenAUser(roles = emptyList()) { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
+        val premises = givenAnApprovedPremises()
 
         val booking = bookingEntityFactory.produceAndPersist {
           withArrivalDate(LocalDate.parse("2022-08-18"))
@@ -3455,12 +3398,7 @@ class BookingTest : IntegrationTestBase() {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       givenAUser(roles = listOf(role)) { user, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
+        val premises = givenAnApprovedPremises()
 
         val application = givenASubmittedApplication(
           createdByUser = user,
@@ -3532,12 +3470,7 @@ class BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegion
-            }
-          }
+          givenAnApprovedPremises()
         }
         withServiceName(ServiceName.approvedPremises)
       }
@@ -3566,12 +3499,7 @@ class BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegion
-            }
-          }
+          givenAnApprovedPremises()
         }
         withServiceName(ServiceName.approvedPremises)
       }

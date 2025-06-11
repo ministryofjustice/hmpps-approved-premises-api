@@ -17,9 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -1835,10 +1835,7 @@ class WithdrawalTest : IntegrationTestBase() {
     hasArrivalInDelius: Boolean = false,
     adhoc: Boolean? = false,
   ): BookingEntity {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { givenAProbationRegion() }
-    }
+    val premises = givenAnApprovedPremises()
 
     val booking = bookingEntityFactory.produceAndPersist {
       withApplication(application)
@@ -1877,10 +1874,7 @@ class WithdrawalTest : IntegrationTestBase() {
     arrivalDate: LocalDateTime? = null,
     placementRequest: PlacementRequestEntity,
   ): Cas1SpaceBookingEntity {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { givenAProbationRegion() }
-    }
+    val premises = givenAnApprovedPremises()
 
     val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
       withApplication(application)

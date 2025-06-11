@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
@@ -42,13 +43,11 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
 
   @BeforeAll
   fun setupTestData() {
-    val premises = approvedPremisesEntityFactory
-      .produceAndPersist {
-        withId(UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"))
-        withName("Premises 1")
-        withProbationRegion(probationRegionEntityFactory.produceAndPersist())
-        withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
-      }
+    val premises = givenAnApprovedPremises(
+      id = UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"),
+      name = "Premises 1",
+    )
+
     premiseId = premises.id
 
     val room1 = roomEntityFactory.produceAndPersist {

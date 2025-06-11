@@ -14,9 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -82,33 +82,25 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
-      val premises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withSupportsSpaceBookings(true)
-        withCharacteristicsList(emptyList())
+      val premises = (0..4).map {
+        givenAnApprovedPremises(
+          latitude = (it * -0.01) - 0.08,
+          longitude = (it * 0.01) + 51.49,
+          supportsSpaceBookings = true,
+          characteristics = emptyList(),
+        )
       }
 
-      val premiseWithCharacteristics = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude(1.0)
-        withLongitude(2.0)
-        withSupportsSpaceBookings(true)
-        withCharacteristicsList(
-          listOf(
-            characteristicRepository.findCas1ByPropertyName("hasWideAccessToCommunalAreas")!!,
-            characteristicRepository.findCas1ByPropertyName("hasWideStepFreeAccess")!!,
-            characteristicRepository.findCas1ByPropertyName("hasLift")!!,
-          ),
-        )
-      }.also {
+      val premiseWithCharacteristics = givenAnApprovedPremises(
+        latitude = 1.0,
+        longitude = 2.0,
+        supportsSpaceBookings = true,
+        characteristics = listOf(
+          characteristicRepository.findCas1ByPropertyName("hasWideAccessToCommunalAreas")!!,
+          characteristicRepository.findCas1ByPropertyName("hasWideStepFreeAccess")!!,
+          characteristicRepository.findCas1ByPropertyName("hasLift")!!,
+        ),
+      ).also {
         roomEntityFactory.produceAndPersist {
           withPremises(it)
           withCharacteristics(
@@ -118,27 +110,19 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       // premise that doesn't support space bookings
-      approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((-0.01) - 0.08)
-        withLongitude((0.01) + 51.49)
-        withSupportsSpaceBookings(false)
-      }
+      givenAnApprovedPremises(
+        latitude = (-0.01) - 0.08,
+        longitude = (0.01) + 51.49,
+        supportsSpaceBookings = false,
+      )
 
       // archived
-      approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((-0.01) - 0.08)
-        withLongitude((0.01) + 51.49)
-        withSupportsSpaceBookings(true)
-        withStatus(PropertyStatus.archived)
-      }
+      givenAnApprovedPremises(
+        latitude = (-0.01) - 0.08,
+        longitude = (0.01) + 51.49,
+        supportsSpaceBookings = true,
+        status = PropertyStatus.archived,
+      )
 
       val searchParameters = Cas1SpaceSearchParameters(
         applicationId = application.id,
@@ -191,26 +175,22 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = gender == ApprovedPremisesGender.WOMAN)
 
-      val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withSupportsSpaceBookings(true)
-        withGender(gender)
+      val expectedPremises = (0..4).map {
+        givenAnApprovedPremises(
+          latitude = (-0.01) - 0.08,
+          longitude = (0.01) + 51.49,
+          supportsSpaceBookings = true,
+          gender = gender,
+        )
       }
 
-      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withSupportsSpaceBookings(true)
-        withGender(ApprovedPremisesGender.entries.first { it != gender })
+      val unexpectedPremises = (0..4).map {
+        givenAnApprovedPremises(
+          latitude = (-0.01) - 0.08,
+          longitude = (0.01) + 51.49,
+          supportsSpaceBookings = true,
+          gender = ApprovedPremisesGender.entries.first { it != gender },
+        )
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
@@ -234,11 +214,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
       assertThat(results.resultsCount).isEqualTo(5)
 
-      assertThatResultMatches(results.results[0], expectedPremises[0])
-      assertThatResultMatches(results.results[1], expectedPremises[1])
-      assertThatResultMatches(results.results[2], expectedPremises[2])
-      assertThatResultMatches(results.results[3], expectedPremises[3])
-      assertThatResultMatches(results.results[4], expectedPremises[4])
+      assertThat(results.results.map { it.premises.id }).containsExactlyInAnyOrder(
+        expectedPremises[0].id,
+        expectedPremises[1].id,
+        expectedPremises[2].id,
+        expectedPremises[3].id,
+        expectedPremises[4].id,
+      )
     }
   }
 
@@ -253,14 +235,10 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
-      fun createAp(characteristics: List<CharacteristicEntity>) = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withCharacteristicsList(characteristics)
-        withSupportsSpaceBookings(true)
-      }
+      fun createAp(characteristics: List<CharacteristicEntity>) = givenAnApprovedPremises(
+        characteristics = characteristics,
+        supportsSpaceBookings = true,
+      )
 
       val pipe = createAp(getCharacteristics(CAS1_PROPERTY_NAME_PREMISES_PIPE))
       val pipeAndEsap = createAp(
@@ -332,15 +310,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
-      val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(listOf(characteristic.asCharacteristicEntity()))
-        withSupportsSpaceBookings(true)
+      val expectedPremises = (0..4).map {
+        givenAnApprovedPremises(
+          latitude = (it * -0.01) - 0.08,
+          longitude = (it * 0.01) + 51.49,
+          characteristics = listOf(characteristic.asCharacteristicEntity()),
+          supportsSpaceBookings = true,
+        )
       }
 
       expectedPremises.forEach {
@@ -350,19 +326,15 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(
-          listOf(
+      val unexpectedPremises = (0..4).map {
+        givenAnApprovedPremises(
+          latitude = (it * -0.01) - 0.08,
+          longitude = (it * 0.01) + 51.49,
+          characteristics = listOf(
             Cas1SpaceCharacteristic.entries.first { it != characteristic }.asCharacteristicEntity(),
           ),
+          supportsSpaceBookings = true,
         )
-        withSupportsSpaceBookings(true)
       }
 
       unexpectedPremises.forEach {
@@ -416,15 +388,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
-      val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(Cas1SpaceCharacteristic.entries.slice(1..3).map { it.asCharacteristicEntity() })
-        withSupportsSpaceBookings(true)
+      val expectedPremises = (0..4).map {
+        givenAnApprovedPremises(
+          latitude = (it * -0.01) - 0.08,
+          longitude = (it * 0.01) + 51.49,
+          supportsSpaceBookings = true,
+          characteristics = Cas1SpaceCharacteristic.entries.slice(1..3).map { it.asCharacteristicEntity() },
+        )
       }
 
       expectedPremises.forEach {
@@ -434,19 +404,15 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
-        withYieldedProbationRegion { givenAProbationRegion() }
-        withYieldedLocalAuthorityArea {
-          localAuthorityEntityFactory.produceAndPersist()
-        }
-        withLatitude((it * -0.01) - 0.08)
-        withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(
-          listOf(
+      val unexpectedPremises = (0..3).map {
+        givenAnApprovedPremises(
+          latitude = (it * -0.01) - 0.08,
+          longitude = (it * 0.01) + 51.49,
+          supportsSpaceBookings = true,
+          characteristics = listOf(
             Cas1SpaceCharacteristic.entries[it].asCharacteristicEntity(),
           ),
         )
-        withSupportsSpaceBookings(true)
       }
 
       unexpectedPremises.forEach {

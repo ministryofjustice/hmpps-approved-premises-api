@@ -35,8 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
@@ -378,10 +378,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val placementRequest = application.getLatestPlacementRequest()!!
 
-    premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { givenAProbationRegion() }
-    }
+    premises = givenAnApprovedPremises()
 
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -415,11 +412,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val placementRequest = application.getLatestPlacementRequest()!!
 
-    premises = approvedPremisesEntityFactory.produceAndPersist {
-      withSupportsSpaceBookings(true)
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion { givenAProbationRegion() }
-    }
+    premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
     webTestClient.post()
       .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")

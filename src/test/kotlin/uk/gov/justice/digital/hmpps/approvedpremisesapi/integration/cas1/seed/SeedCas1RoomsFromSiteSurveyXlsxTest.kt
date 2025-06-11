@@ -5,6 +5,7 @@ import org.jetbrains.kotlinx.dataframe.api.dataFrameOf
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.dataFrameForHeadersAndRows
@@ -57,14 +58,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating a new room and a new bed with a characteristic succeeds, ensuring no redundant decimal points`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW"),
@@ -102,14 +97,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating a new room and a new bed with a characteristic succeeds, retaining non-redundant decimal points`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW"),
@@ -147,14 +136,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating three new rooms and three new beds with a characteristic succeeds`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW"),
@@ -223,14 +206,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating one new room with two beds but different characteristics fails`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW"),
@@ -270,14 +247,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating two new rooms and three new beds with a characteristic succeeds`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW"),
@@ -343,14 +314,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating a new room and a new bed without a characteristic succeeds`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW"),
@@ -392,14 +357,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Updating an existing room with a new bed and a characteristic succeeds`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
     roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -449,14 +408,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Updating an existing room with an existing bed and a characteristic succeeds`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -511,14 +464,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating a new room with two beds with the same name fails`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-2"
     roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -563,14 +510,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating a new room and a new bed using an existing bed code fails`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -618,14 +559,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Creating a new room and new beds using existing bed codes fails`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode(qCode)
-    }
+    val premises = givenAnApprovedPremises(qCode = qCode)
     val roomCode = "$qCode-1"
     val room1 = roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -681,14 +616,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Invalid questions throws exception, fails to process xlsx, rolls back transaction and logs an error`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode("Q999")
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW"),
@@ -735,14 +664,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `Invalid answer throws exception, fails to process xlsx, rolls back transaction and logs an error`() {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-    val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    approvedPremisesEntityFactory.produceAndPersist {
-      withLocalAuthorityArea(localAuthorityArea)
-      withProbationRegion(probationRegion)
-      withQCode("Q999")
-    }
+    givenAnApprovedPremises(qCode = qCode)
 
     val values = mutableListOf<List<Any>>(
       listOf("Unique Reference Number for Bed", "SWABI01NEW"),

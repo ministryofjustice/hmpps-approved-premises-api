@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -590,14 +591,10 @@ class PremisesTest {
     @Test
     fun `When an Approved Premises is updated then all field data is persisted`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
-        val premisesToGet = premises[0]
+        val premises = givenAnApprovedPremises()
 
         val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedPremises { premisesToGet }
+          withYieldedPremises { premises }
         }
 
         val bed1 = bedEntityFactory.produceAndPersist {
@@ -612,7 +609,7 @@ class PremisesTest {
         rooms[1].beds += bed2
 
         webTestClient.put()
-          .uri("/premises/${premisesToGet.id}")
+          .uri("/premises/${premises.id}")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdatePremises(
@@ -645,7 +642,7 @@ class PremisesTest {
           .jsonPath("status").isEqualTo("archived")
           .jsonPath("turnaroundWorkingDayCount").doesNotExist()
 
-        assertApprovedPremisesBedSpaceIsNotArchived(premisesToGet)
+        assertApprovedPremisesBedSpaceIsNotArchived(premises)
       }
     }
 
@@ -916,15 +913,10 @@ class PremisesTest {
     @Test
     fun `Trying to update a premises with an invalid local authority area id returns 400`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
-
-        val premisesToGet = premises[0]
+        val premises = givenAnApprovedPremises()
 
         webTestClient.put()
-          .uri("/premises/${premisesToGet.id}")
+          .uri("/premises/${premises.id}")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdatePremises(
@@ -952,15 +944,10 @@ class PremisesTest {
     @Test
     fun `Trying to update an Approved Premises with no local authority area id returns 400`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
-
-        val premisesToGet = premises[0]
+        val premises = givenAnApprovedPremises()
 
         webTestClient.put()
-          .uri("/premises/${premisesToGet.id}")
+          .uri("/premises/${premises.id}")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdatePremises(
@@ -1193,11 +1180,7 @@ class PremisesTest {
     @Test
     fun `Trying to update the name of an Approved Premises has no effect`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-          withName("old-premises-name")
-        }
+        val premises = givenAnApprovedPremises(name = "old-premises-name")
 
         webTestClient.put()
           .uri("/premises/${premises.id}")
@@ -1392,9 +1375,8 @@ class PremisesTest {
     @Test
     fun `Get Premises by ID returns OK with correct body`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+        val premises = (0..5).map {
+          givenAnApprovedPremises()
         }.onEach {
           addRoomsAndBeds(it, roomCount = 4, 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
@@ -1417,9 +1399,8 @@ class PremisesTest {
     @Test
     fun `Get Premises by ID returns OK with correct body when capacity is used`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+        val premises = (0..5).map {
+          givenAnApprovedPremises()
         }.onEach {
           addRoomsAndBeds(it, roomCount = 4, 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
@@ -1721,10 +1702,7 @@ class PremisesTest {
     @Test
     fun `Trying to create a room without a name returns 400`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
+        val premises = givenAnApprovedPremises()
 
         webTestClient.post()
           .uri("/premises/${premises.id}/rooms")
@@ -1807,10 +1785,7 @@ class PremisesTest {
     @Test
     fun `Trying to create a room with a characteristic of the wrong model scope returns 400`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
+        val premises = givenAnApprovedPremises()
 
         val characteristicId = characteristicEntityFactory.produceAndPersist {
           withModelScope("premises")
@@ -2040,10 +2015,7 @@ class PremisesTest {
     @Test
     fun `Trying to update a room with a characteristic of the wrong model scope returns 400`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
+        val premises = givenAnApprovedPremises()
 
         val room = roomEntityFactory.produceAndPersist {
           withYieldedPremises { premises }
@@ -2111,10 +2083,7 @@ class PremisesTest {
     @Test
     fun `Trying to update the name of an Approved Premises Room has no effect`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
+        val premises = givenAnApprovedPremises()
 
         val room = roomEntityFactory.produceAndPersist {
           withYieldedPremises { premises }
@@ -2939,10 +2908,7 @@ class PremisesTest {
     @Test
     fun `Get Room by ID returns OK with correct body`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
+        val premises = givenAnApprovedPremises()
 
         val room = roomEntityFactory.produceAndPersist {
           withYieldedPremises { premises }
@@ -2965,10 +2931,7 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID returns Not Found with correct body when Premises does not exist`() {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { givenAProbationRegion() }
-      }
+      val premises = givenAnApprovedPremises()
 
       val room = roomEntityFactory.produceAndPersist {
         withYieldedPremises { premises }
@@ -2996,10 +2959,7 @@ class PremisesTest {
     @Test
     fun `Get Room by ID returns Not Found with correct body when Room does not exist`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
+        val premises = givenAnApprovedPremises()
 
         val roomIdToRequest = UUID.randomUUID().toString()
 
