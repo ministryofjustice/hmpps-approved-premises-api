@@ -147,7 +147,9 @@ generic-prometheus-alerts:
   alertSeverity: hmpps-approved-premises
   rdsAlertsDatabases:
     cloud-platform-914625011536d5f1: "community accommodation"
-  rdsAlertsConnectionThreshold: 1
+  # API pool users = 20 per pod
+  # Max expected connections for 2 x pods = 40 + additional 10 (buffer for direct connections)
+  rdsAlertsConnectionThreshold: 50
 
 
 env_details:
