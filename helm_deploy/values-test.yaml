@@ -147,6 +147,8 @@ generic-prometheus-alerts:
   # API pool users = 20 per pod
   # Max expected connections for 2 x pods = 40 + additional 10 (buffer for direct connections)
   rdsAlertsConnectionThreshold: 50
+  elastiCacheAlertsClusterIds:
+    cp-377025d1a50411fe: "community accommodation"
 
 env_details:
   production_env: false
