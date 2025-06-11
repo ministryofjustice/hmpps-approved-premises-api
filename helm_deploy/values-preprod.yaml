@@ -109,6 +109,13 @@ generic-service:
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
   alertSeverity: hmpps-approved-premises
+  rdsAlertsDatabases:
+    cloud-platform-e683abb0b1eddb61: "community accommodation"
+  # API pool users = 20 per pod
+  # Max expected connections for 4 x pods = 80 + additional 10 (buffer for direct connections)
+  rdsAlertsConnectionThreshold: 90
+  elastiCacheAlertsClusterIds:
+    cp-1faf5cb78c4ab173: "community accommodation"
 
 env_details:
   production_env: false
