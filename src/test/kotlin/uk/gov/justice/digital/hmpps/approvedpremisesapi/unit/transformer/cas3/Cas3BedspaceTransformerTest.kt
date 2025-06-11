@@ -42,8 +42,6 @@ class Cas3BedspaceTransformerTest {
 
     room.beds.add(bed)
 
-    println()
-
     val result = cas3BedspaceTransformer.transformJpaToApi(room)
 
     assertThat(result).isEqualTo(
