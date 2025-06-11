@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -21,7 +22,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     givenAUser { userEntity, _ ->
       givenAnOffender { _, _ ->
         val approvedPremises = ServiceName.approvedPremises
-        val booking = createCAS1CancelledBooking(userEntity)
+        val booking = createCAS1CancelledBooking()
 
         assertBookingStatusIsNull(booking, approvedPremises)
 
@@ -262,8 +263,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     return booking
   }
 
-  private fun createCAS1CancelledBooking(userEntity: UserEntity): BookingEntity {
-    val booking = createApprovedAccommodationBooking(userEntity)
+  private fun createCAS1CancelledBooking(): BookingEntity {
+    val booking = createApprovedAccommodationBooking()
     booking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
       withBooking(booking)
       withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
@@ -296,13 +297,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     return booking
   }
 
-  private fun createApprovedAccommodationBooking(userEntity: UserEntity): BookingEntity {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(userEntity.probationRegion)
-      withYieldedLocalAuthorityArea {
-        localAuthorityEntityFactory.produceAndPersist()
-      }
-    }
+  private fun createApprovedAccommodationBooking(): BookingEntity {
+    val premises = givenAnApprovedPremises()
 
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)

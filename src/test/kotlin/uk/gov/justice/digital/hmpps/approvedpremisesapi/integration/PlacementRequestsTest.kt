@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -44,10 +45,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -57,12 +56,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var placementRequestTransformer: PlacementRequestTransformer
-
-  @Autowired
-  lateinit var cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer
-
-  @Autowired
-  lateinit var personTransformer: PersonTransformer
 
   @Autowired
   lateinit var realPlacementRequestRepository: PlacementRequestRepository
@@ -84,12 +77,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
   inner class Dashboard {
 
     private fun createBooking(placementRequest: PlacementRequestEntity) {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withProbationRegion(probationRegion)
-        withLocalAuthorityArea(
-          localAuthorityEntityFactory.produceAndPersist(),
-        )
-      }
+      val premises = givenAnApprovedPremises()
 
       placementRequest.booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
@@ -1288,12 +1276,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              val premises = approvedPremisesEntityFactory.produceAndPersist {
-                withProbationRegion(probationRegion)
-                withLocalAuthorityArea(
-                  localAuthorityEntityFactory.produceAndPersist(),
-                )
-              }
+              val premises = givenAnApprovedPremises()
 
               val room = roomEntityFactory.produceAndPersist {
                 withPremises(premises)
@@ -1369,10 +1352,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 createdByUser = applicant,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
+                val premises = givenAnApprovedPremises()
 
                 val room = roomEntityFactory.produceAndPersist {
                   withPremises(premises)
@@ -1432,10 +1412,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                     crn = offenderDetails.otherIds.crn,
                     placementApplication = placementApplication,
                   ) { placementRequest, _ ->
-                    val premises = approvedPremisesEntityFactory.produceAndPersist {
-                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion { probationRegion }
-                    }
+                    val premises = givenAnApprovedPremises()
 
                     val room = roomEntityFactory.produceAndPersist {
                       withPremises(premises)
@@ -1534,10 +1511,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 createdByUser = applicant,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
+                val premises = givenAnApprovedPremises()
 
                 val room = roomEntityFactory.produceAndPersist {
                   withPremises(premises)
@@ -1579,10 +1553,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
+                val premises = givenAnApprovedPremises()
 
                 webTestClient.post()
                   .uri("/placement-requests/${placementRequest.id}/booking")
@@ -1622,10 +1593,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
-                val premises = approvedPremisesEntityFactory.produceAndPersist {
-                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                  withYieldedProbationRegion { probationRegion }
-                }
+                val premises = givenAnApprovedPremises()
 
                 webTestClient.post()
                   .uri("/placement-requests/${placementRequest.id}/booking")

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -26,10 +27,7 @@ class Cas1BedDetailTest : InitialiseDatabasePerClassTestBase() {
     probationRegion = givenAProbationRegion()
     localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    this.premises = approvedPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(probationRegion)
-      withLocalAuthorityArea(localAuthorityArea)
-    }
+    this.premises = givenAnApprovedPremises()
   }
 
   @Test

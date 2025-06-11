@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -91,12 +91,7 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
 
   private fun createBooking(application: ApprovedPremisesApplicationEntity): BookingEntity {
     val booking = bookingEntityFactory.produceAndPersist {
-      withPremises(
-        approvedPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(givenAProbationRegion())
-          withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
-        },
-      )
+      withPremises(givenAnApprovedPremises())
       withAdhoc(true)
       withApplication(application)
     }

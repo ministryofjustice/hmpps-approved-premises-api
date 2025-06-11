@@ -85,19 +85,17 @@ class Cas1PremisesTest : IntegrationTestBase() {
     @BeforeAll
     fun setupTestData() {
       user = givenAUser().first
-      val region = givenAProbationRegion(
-        apArea = givenAnApArea(name = "The ap area name"),
-      )
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withName("the premises name")
-        withApCode("the ap code")
-        withPostcode("the postcode")
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withManagerDetails("manager details")
-        withSupportsSpaceBookings(true)
-      }
+      premises = givenAnApprovedPremises(
+        name = "the premises name",
+        supportsSpaceBookings = true,
+        apCode = "the ap code",
+        postCode = "the postcode",
+        region = givenAProbationRegion(
+          apArea = givenAnApArea(name = "The ap area name"),
+        ),
+        managerDetails = "manager details",
+      )
     }
 
     @Test

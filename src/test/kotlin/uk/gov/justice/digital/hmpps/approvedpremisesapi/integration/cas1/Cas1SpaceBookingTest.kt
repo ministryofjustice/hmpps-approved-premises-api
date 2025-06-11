@@ -113,14 +113,9 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct role`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(CAS1_FUTURE_MANAGER)) { _, jwt ->
         val placementRequestId = UUID.randomUUID()
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedProbationRegion { givenAProbationRegion() }
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
+        val premises = givenAnApprovedPremises()
 
         webTestClient.post()
           .uri("/cas1/placement-requests/$placementRequestId/space-bookings")
@@ -142,13 +137,7 @@ class Cas1SpaceBookingTest {
     @Test
     fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withSupportsSpaceBookings(true)
-          withYieldedProbationRegion { givenAProbationRegion() }
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
+        val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
         val placementRequestId = UUID.randomUUID()
 
@@ -209,13 +198,7 @@ class Cas1SpaceBookingTest {
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withSupportsSpaceBookings(true)
-            withYieldedProbationRegion { givenAProbationRegion() }
-            withYieldedLocalAuthorityArea {
-              localAuthorityEntityFactory.produceAndPersist()
-            }
-          }
+          val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
           webTestClient.post()
             .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
@@ -266,13 +249,7 @@ class Cas1SpaceBookingTest {
 
           placementRequestRepository.saveAndFlush(placementRequest)
 
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withSupportsSpaceBookings(true)
-            withYieldedProbationRegion { givenAProbationRegion() }
-            withYieldedLocalAuthorityArea {
-              localAuthorityEntityFactory.produceAndPersist()
-            }
-          }
+          val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
           val response = webTestClient.post()
             .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
@@ -975,17 +952,15 @@ class Cas1SpaceBookingTest {
     fun setupTestData() {
       val region = givenAProbationRegion()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
 
-      val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      val otherPremises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -1138,16 +1113,15 @@ class Cas1SpaceBookingTest {
     fun setupTestData() {
       val region = givenAProbationRegion()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
 
-      val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      val otherPremises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = false,
+      )
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -1279,11 +1253,10 @@ class Cas1SpaceBookingTest {
     fun setupTestData() {
       region = givenAProbationRegion()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -1623,11 +1596,10 @@ class Cas1SpaceBookingTest {
     fun setupTestData() {
       region = givenAProbationRegion()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
 
       nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
         withName("nonArrivalName")
@@ -1781,12 +1753,11 @@ class Cas1SpaceBookingTest {
     fun setupTestData() {
       region = givenAProbationRegion()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withQCode("QCODE")
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+        qCode = "QCODE",
+      )
 
       keyWorker = givenAUser().first
       val (user) = givenAUser()
@@ -1871,11 +1842,10 @@ class Cas1SpaceBookingTest {
     fun setupTestData() {
       region = givenAProbationRegion()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
 
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
@@ -2387,12 +2357,11 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withEmailAddress("premises@test.com")
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+        emailAddress = "premises@test.com",
+      )
 
       applicant = givenAUser(
         staffDetail =
@@ -2487,13 +2456,9 @@ class Cas1SpaceBookingTest {
         createdByUser = user,
       )
 
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
-      var characteristics = mutableListOf(
+      val characteristics = mutableListOf(
         characteristicEntityFactory.produceAndPersist {
           withName("Arson Room")
           withPropertyName("isArsonSuitable")
@@ -2579,13 +2544,12 @@ class Cas1SpaceBookingTest {
         createdByUser = user,
       )
 
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      }
+      val premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
 
-      var characteristics = mutableListOf(
+      val characteristics = mutableListOf(
         characteristicEntityFactory.produceAndPersist {
           withName("Step Free Designated")
           withPropertyName("isStepFreeDesignated")
@@ -2742,19 +2706,17 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withEmailAddress("premises@test.com")
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+        emailAddress = "premises@test.com",
+      )
 
-      destinationPremises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withEmailAddress("destPremises@test.com")
-      }
+      destinationPremises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+        emailAddress = "destPremises@test.com",
+      )
 
       applicant = givenAUser(
         staffDetail =
@@ -2871,19 +2833,17 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withEmailAddress("premises@test.com")
-      }
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+        emailAddress = "premises@test.com",
+      )
 
-      destinationPremises = approvedPremisesEntityFactory.produceAndPersist {
-        withSupportsSpaceBookings(true)
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withEmailAddress("destPremises@test.com")
-      }
+      destinationPremises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+        emailAddress = "destPremises@test.com",
+      )
 
       applicant = givenAUser(
         staffDetail =
@@ -3024,17 +2984,15 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
       withLegacyDeliusReasonCode("legacyDeliusCode")
     }
 
-    premisesWithNoBooking = approvedPremisesEntityFactory.produceAndPersist {
-      withSupportsSpaceBookings(true)
-      withYieldedProbationRegion { region }
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-    }
+    premisesWithNoBooking = givenAnApprovedPremises(
+      region = region,
+      supportsSpaceBookings = true,
+    )
 
-    premisesWithBookings = approvedPremisesEntityFactory.produceAndPersist {
-      withSupportsSpaceBookings(true)
-      withYieldedProbationRegion { region }
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-    }
+    premisesWithBookings = givenAnApprovedPremises(
+      region = region,
+      supportsSpaceBookings = true,
+    )
   }
 
   @SuppressWarnings("LongParameterList")

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import java.time.LocalDate
@@ -78,12 +79,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
     @BeforeEach
     fun setup() {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withProbationRegion(givenAProbationRegion())
-        withLocalAuthorityArea(
-          localAuthorityEntityFactory.produceAndPersist(),
-        )
-      }
+      val premises = givenAnApprovedPremises()
 
       val room = roomEntityFactory.produceAndPersist {
         withPremises(premises)

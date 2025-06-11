@@ -80,12 +80,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     private fun createBooking(
       placementRequest: PlacementRequestEntity,
-      premises: ApprovedPremisesEntity? = approvedPremisesEntityFactory.produceAndPersist {
-        withProbationRegion(probationRegion)
-        withLocalAuthorityArea(
-          localAuthorityEntityFactory.produceAndPersist(),
-        )
-      },
+      premises: ApprovedPremisesEntity? = givenAnApprovedPremises(),
       arrivalDate: LocalDate? = LocalDate.now(),
     ): BookingEntity {
       placementRequest.booking = bookingEntityFactory.produceAndPersist {
@@ -1500,12 +1495,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              val premises = approvedPremisesEntityFactory.produceAndPersist {
-                withProbationRegion(probationRegion)
-                withLocalAuthorityArea(
-                  localAuthorityEntityFactory.produceAndPersist(),
-                )
-              }
+              val premises = givenAnApprovedPremises()
 
               val room = roomEntityFactory.produceAndPersist {
                 withPremises(premises)

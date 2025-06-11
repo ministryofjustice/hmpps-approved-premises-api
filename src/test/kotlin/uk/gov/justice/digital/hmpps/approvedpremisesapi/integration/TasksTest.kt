@@ -31,9 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -1423,12 +1423,7 @@ class TasksTest {
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
                 booking = bookingEntityFactory.produceAndPersist {
-                  withPremises(
-                    approvedPremisesEntityFactory.produceAndPersist {
-                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion { givenAProbationRegion() }
-                    },
-                  )
+                  withPremises(givenAnApprovedPremises())
                 },
               )
 
@@ -1439,12 +1434,7 @@ class TasksTest {
                 crn = offenderDetails.otherIds.crn,
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 booking = bookingEntityFactory.produceAndPersist {
-                  withPremises(
-                    approvedPremisesEntityFactory.produceAndPersist {
-                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion { givenAProbationRegion() }
-                    },
-                  )
+                  withPremises(givenAnApprovedPremises())
                 },
               )
 

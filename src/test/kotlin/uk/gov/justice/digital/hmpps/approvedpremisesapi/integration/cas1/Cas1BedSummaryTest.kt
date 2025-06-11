@@ -4,32 +4,22 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
 import java.util.UUID
 
 class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
   lateinit var premises: PremisesEntity
-  lateinit var probationRegion: ProbationRegionEntity
-  lateinit var localAuthorityArea: LocalAuthorityAreaEntity
 
   @Autowired
   lateinit var cas1BedSummaryTransformer: Cas1BedSummaryTransformer
 
   @BeforeEach
   fun setup() {
-    probationRegion = givenAProbationRegion()
-    localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-
-    this.premises = approvedPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(probationRegion)
-      withLocalAuthorityArea(localAuthorityArea)
-    }
+    this.premises = givenAnApprovedPremises()
   }
 
   @Test
@@ -66,10 +56,7 @@ class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      val otherPremises = approvedPremisesEntityFactory.produceAndPersist {
-        withProbationRegion(probationRegion)
-        withLocalAuthorityArea(localAuthorityArea)
-      }
+      val otherPremises = givenAnApprovedPremises()
 
       bedEntityFactory.produceAndPersist {
         withYieldedRoom {
