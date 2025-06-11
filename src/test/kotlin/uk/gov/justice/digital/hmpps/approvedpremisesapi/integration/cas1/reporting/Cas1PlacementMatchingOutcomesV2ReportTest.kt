@@ -125,15 +125,17 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   @Test
   fun `Get report is empty if no applications`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+      val startDate = LocalDate.of(2019, 2, 1)
+      val endDate = LocalDate.of(2019, 2, 28)
 
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2, year = REPORT_YEAR - 1, month = REPORT_MONTH))
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2, startDate, endDate))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-2019-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame
@@ -149,15 +151,17 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   @Test
   fun `Get report returns OK with correct applications, excluding PII`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+      val startDate = LocalDate.of(2020, 2, 1)
+      val endDate = LocalDate.of(2020, 2, 29)
 
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2, year = REPORT_YEAR, month = REPORT_MONTH))
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2, startDate, endDate))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-2020-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
         .expectBody()
         .consumeWith { response ->
           val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
@@ -184,7 +188,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   fun `Permission denied if trying to access report with PII without correct role`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2WithPii, year = 2020, month = 2))
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2WithPii, startDate = LocalDate.of(2020, 2, 1), endDate = LocalDate.of(2020, 2, 29)))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -196,15 +200,17 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   @Test
   fun `Get report returns OK with correct applications, including PII`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII)) { _, jwt ->
+      val startDate = LocalDate.of(2020, 2, 1)
+      val endDate = LocalDate.of(2020, 2, 29)
 
       webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2WithPii, year = REPORT_YEAR, month = REPORT_MONTH))
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2WithPii, startDate, endDate))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-with-pii-2020-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-with-pii-$startDate-to-$endDate-\\d{8}_\\d{4}.csv\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame
@@ -816,7 +822,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   private fun getPlacementApplication(application: ApplicationEntity) = getPlacementApplications(application).first()
 
-  private fun getReportUrl(reportName: Cas1ReportName, year: Int, month: Int) = "/cas1/reports/${reportName.value}?year=$year&month=$month"
+  private fun getReportUrl(reportName: Cas1ReportName, startDate: LocalDate, endDate: LocalDate) = "/cas1/reports/${reportName.value}?startDate=$startDate&endDate=$endDate"
 
   @SuppressWarnings("ConstructorParameterNaming")
   data class PlacementMatchingOutcomeReportRow(
