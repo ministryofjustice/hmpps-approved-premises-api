@@ -12,6 +12,6 @@ class Cas1StartupScriptConfigTest : IntegrationTestBase() {
 
   @Test
   fun `ensure dev auto script runs`() {
-    cas1StartupScript.scriptDev()
+    cas1StartupScript.createDevApplications()
   }
 }

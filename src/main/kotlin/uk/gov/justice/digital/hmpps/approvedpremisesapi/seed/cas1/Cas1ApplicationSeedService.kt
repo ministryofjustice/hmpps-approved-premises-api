@@ -44,6 +44,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.scheduled.Cas1ExpireUnsubmittedApplicationsScheduledJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.scheduled.Cas1ExpiredApplicationsScheduledJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.io.IOException
@@ -73,6 +75,8 @@ class Cas1ApplicationSeedService(
   private val premisesRepository: ApprovedPremisesRepository,
   private val characteristicsRepository: CharacteristicRepository,
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
+  private val expiredApplicationsScheduledJob: Cas1ExpiredApplicationsScheduledJob,
+  private val expireUnsubmittedApplicationsScheduledJob: Cas1ExpireUnsubmittedApplicationsScheduledJob,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -98,6 +102,10 @@ class Cas1ApplicationSeedService(
     PENDING_SUBMISSION,
     AUTHORISED,
     BOOKED,
+    WITHDRAWN_BEFORE_SUBMISSION,
+    WITHDRAWN_AFTER_SUBMISSION,
+    EXPIRED_BEFORE_SUBMISSION,
+    EXPIRED_AFTER_AUTHORISATION,
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -155,6 +163,26 @@ class Cas1ApplicationSeedService(
           application,
           premises,
         )
+      }
+      ApplicationState.WITHDRAWN_BEFORE_SUBMISSION -> {
+        val application = createApplicationPendingSubmission(deliusUserName, crn)
+        withdrawApplication(application)
+      }
+      ApplicationState.WITHDRAWN_AFTER_SUBMISSION -> {
+        val application = createApplicationPendingSubmission(deliusUserName, crn)
+        submitApplication(application)
+        assessAndAcceptApplication(application)
+        withdrawApplication(application)
+      }
+      ApplicationState.EXPIRED_BEFORE_SUBMISSION -> {
+        val application = createApplicationPendingSubmission(deliusUserName, crn)
+        expireUnsubmittedApplicationsScheduledJob.expireApplications(listOf(application))
+      }
+      ApplicationState.EXPIRED_AFTER_AUTHORISATION -> {
+        val application = createApplicationPendingSubmission(deliusUserName, crn)
+        submitApplication(application)
+        assessAndAcceptApplication(application)
+        expiredApplicationsScheduledJob.expireApplication(application)
       }
     }
   }
@@ -277,13 +305,24 @@ class Cas1ApplicationSeedService(
     )
   }
 
+  private fun withdrawApplication(
+    application: ApprovedPremisesApplicationEntity,
+  ) {
+    applicationService.withdrawApprovedPremisesApplication(
+      applicationId = application.id,
+      user = application.createdByUser,
+      withdrawalReason = "error_in_application",
+      otherReason = null,
+    )
+  }
+
   @SuppressWarnings("MagicNumber")
   private fun createSpaceBooking(
     application: ApprovedPremisesApplicationEntity,
     premises: ApprovedPremisesEntity,
   ) {
     val arrivalDate = LocalDate.now().minusDays(Random.nextLong(0, 7))
-    val departureDate = arrivalDate.plusDays(Random.nextLong(0, 90))
+    val departureDate = arrivalDate.plusDays(Random.nextLong(1, 90))
     val characteristics = CHARACTERISTICS_OF_INTEREST.shuffled().take(Random.nextInt(0, CHARACTERISTICS_OF_INTEREST.size - 1))
 
     ensureEntityFromCasResultIsSuccess(
