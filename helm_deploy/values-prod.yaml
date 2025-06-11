@@ -105,5 +105,8 @@ generic-service:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
 
+generic-prometheus-alerts:
+  alertSeverity: hmpps-approved-premises
+
 env_details:
   production_env: true

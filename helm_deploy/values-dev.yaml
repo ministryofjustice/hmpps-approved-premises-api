@@ -145,6 +145,10 @@ generic-service:
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
   alertSeverity: hmpps-approved-premises
+  rdsAlertsDatabases:
+    cloud-platform-914625011536d5f1: "community accommodation"
+  rdsAlertsConnectionThreshold: 1
+
 
 env_details:
   production_env: false
