@@ -11,6 +11,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -1039,5 +1040,202 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       )
       return characteristicTwo
     }
+  }
+
+  @Nested
+  inner class CreateBedspace {
+    @Test
+    fun `Create new bedspace for Premises returns 201 Created with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(user.probationRegion)
+        val characteristics = characteristicEntityFactory.produceAndPersistMultiple(5) {
+          withModelScope("room")
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+          withName(randomStringMultiCaseWithNumbers(10))
+        }
+
+        val characteristicIds = characteristics.map { it.id }
+
+        val newBedspace = Cas3NewBedspace(
+          reference = randomStringMultiCaseWithNumbers(10),
+          startDate = LocalDate.now(),
+          characteristicIds = characteristicIds,
+          notes = randomStringLowerCase(100),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath("reference").isEqualTo(newBedspace.reference)
+          .jsonPath("startDate").isEqualTo(newBedspace.startDate.toString())
+          .jsonPath("notes").isEqualTo(newBedspace.notes)
+          .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+          .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+          .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { ServiceName.temporaryAccommodation.value })
+          .jsonPath("characteristics[*].name").isEqualTo(characteristics.map { it.name })
+      }
+    }
+
+    @Test
+    fun `When a new bedspace is created with no notes then it defaults to empty`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(user.probationRegion)
+
+        val newBedspace = Cas3NewBedspace(
+          reference = randomStringMultiCaseWithNumbers(10),
+          startDate = LocalDate.now(),
+          characteristicIds = emptyList(),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath("notes").isEmpty()
+      }
+    }
+
+    @Test
+    fun `When create a new bedspace without a reference returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(user.probationRegion)
+
+        val newBedspace = Cas3NewBedspace(
+          reference = "",
+          startDate = LocalDate.now(),
+          characteristicIds = emptyList(),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.reference")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+      }
+    }
+
+    @Test
+    fun `When create a new bedspace with an unknown characteristic returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(user.probationRegion)
+
+        val newBedspace = Cas3NewBedspace(
+          reference = randomStringMultiCaseWithNumbers(7),
+          startDate = LocalDate.now(),
+          characteristicIds = mutableListOf(UUID.randomUUID()),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+      }
+    }
+
+    @Test
+    fun `When create a new bedspace with a characteristic of the wrong service scope returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(user.probationRegion)
+
+        val characteristicId = characteristicEntityFactory.produceAndPersist {
+          withModelScope("room")
+          withServiceScope(ServiceName.approvedPremises.value)
+        }.id
+
+        val newBedspace = Cas3NewBedspace(
+          reference = randomStringMultiCaseWithNumbers(7),
+          startDate = LocalDate.now(),
+          characteristicIds = mutableListOf(characteristicId),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicServiceScope")
+      }
+    }
+
+    @Test
+    fun `When create a new bedspace with a characteristic of the wrong model scope returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(user.probationRegion)
+
+        val characteristicId = characteristicEntityFactory.produceAndPersist {
+          withModelScope("premises")
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+        }.id
+
+        val newBedspace = Cas3NewBedspace(
+          reference = randomStringMultiCaseWithNumbers(7),
+          startDate = LocalDate.now(),
+          characteristicIds = mutableListOf(characteristicId),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicModelScope")
+      }
+    }
+
+    @Test
+    fun `Create new bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
+
+        val newBedspace = Cas3NewBedspace(
+          reference = randomStringMultiCaseWithNumbers(10),
+          startDate = LocalDate.now(),
+          characteristicIds = emptyList(),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  private fun createPremises(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+    withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+    withYieldedProbationRegion { probationRegion }
   }
 }

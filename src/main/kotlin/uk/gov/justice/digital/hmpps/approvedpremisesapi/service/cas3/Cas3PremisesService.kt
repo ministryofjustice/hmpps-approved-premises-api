@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -14,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
@@ -24,7 +28,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
@@ -42,6 +48,8 @@ class Cas3PremisesService(
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
+  private val roomRepository: RoomRepository,
+  private val bedspaceRepository: BedRepository,
   private val characteristicService: CharacteristicService,
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
@@ -328,6 +336,74 @@ class Cas3PremisesService(
     }.associateBy { it.date }
   }
 
+  @SuppressWarnings("MagicNumber")
+  fun createBedspace(
+    premises: PremisesEntity,
+    bedspaceReference: String,
+    startDate: LocalDate,
+    notes: String?,
+    characteristicIds: List<UUID>,
+  ): CasResult<BedEntity> = validatedCasResult {
+    var room = RoomEntity(
+      id = UUID.randomUUID(),
+      name = bedspaceReference.trim(),
+      code = null,
+      notes = notes,
+      premises = premises,
+      beds = mutableListOf(),
+      characteristics = mutableListOf(),
+    )
+
+    if (bedspaceReference.isEmpty()) {
+      "$.reference" hasValidationError "empty"
+    }
+
+    if (startDate.isBefore(LocalDate.now().minusDays(7))) {
+      "$.startDate" hasValidationError "invalidStartDateInThePast"
+    }
+
+    if (startDate.isAfter(LocalDate.now().plusDays(7))) {
+      "$.startDate" hasValidationError "invalidStartDateInTheFuture"
+    }
+
+    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
+      val entity = characteristicService.getCharacteristic(uuid)
+
+      if (entity == null) {
+        "$.characteristics[$index]" hasValidationError "doesNotExist"
+      } else {
+        if (!characteristicService.modelScopeMatches(entity, room)) {
+          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
+        } else if (!characteristicService.serviceScopeMatches(entity, room)) {
+          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
+        }
+      }
+
+      entity
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    room.characteristics.addAll(characteristicEntities.map { it!! })
+    room = roomRepository.save(room)
+
+    val bedspace = BedEntity(
+      id = UUID.randomUUID(),
+      name = "default-bed",
+      code = null,
+      room = room,
+      startDate = startDate,
+      endDate = null,
+      createdAt = OffsetDateTime.now(),
+    )
+    bedspaceRepository.save(bedspace)
+    room.beds.add(bedspace)
+
+    return success(bedspace)
+  }
+
   fun createVoidBedspaces(
     premises: PremisesEntity,
     startDate: LocalDate,
@@ -431,12 +507,6 @@ class Cas3PremisesService(
     )
 
     return success(cancellationEntity)
-  }
-
-  private fun serviceScopeMatches(scope: String) = when (scope) {
-    "*" -> true
-    ServiceName.temporaryAccommodation.value -> true
-    else -> false
   }
 
   private fun tryGetProbationDeliveryUnit(
