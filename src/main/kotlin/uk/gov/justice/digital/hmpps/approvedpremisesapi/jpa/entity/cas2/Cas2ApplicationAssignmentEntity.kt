@@ -26,6 +26,11 @@ data class Cas2ApplicationAssignmentEntity(
   @JoinColumn(name = "application_id")
   val application: Cas2ApplicationEntity,
   val prisonCode: String,
+
+  /*
+   * BAIL-WIP - This should be migrated to CAS2 User when the system is stable but the prison assignment work did not
+   * exist when the bail system was branched and it will only ever be a nomis user that is assigned a transfer.
+   */
   @ManyToOne
   @JoinColumn(name = "allocated_pom_user_id")
   val allocatedPomUser: NomisUserEntity? = null,
