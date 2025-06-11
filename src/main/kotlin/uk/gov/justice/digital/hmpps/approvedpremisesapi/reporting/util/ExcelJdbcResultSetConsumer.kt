@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util
 
-import com.google.common.base.CaseFormat
-import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import java.io.OutputStream
@@ -23,13 +23,14 @@ import java.sql.Types
  * Given (2), it's recommended that the SQL is written to covert any non string types into a string in
  * the required format (e.g. format date/timestamps in the SQL as they should appear in the XLSX)
  */
-class ExcelJdbcResultSetConsumer :
-  JdbcResultSetConsumer,
+class ExcelJdbcResultSetConsumer(
+  private val columnsToExclude: List<String> = emptyList(),
+) : JdbcResultSetConsumer,
   AutoCloseable {
-  private val workbook = WorkbookFactory.create(true)
+  private val workbook = SXSSFWorkbook()
   private val sheet = workbook.createSheet("sheet0")
   private var currentRow = 1
-  private var columnCount = 0
+  private var columnToWrite: List<Int> = emptyList()
 
   fun writeBufferedWorkbook(outputStream: OutputStream) {
     workbook.write(outputStream)
@@ -45,43 +46,60 @@ class ExcelJdbcResultSetConsumer :
   }
 
   private fun addHeaders(resultSet: ResultSet) {
-    val headers = 1.rangeTo(resultSet.metaData.columnCount).map { col ->
+    val columnsToExcludeLowercase = columnsToExclude.map { it.lowercase() }
+
+    val headers = (1..resultSet.metaData.columnCount).map { col ->
       resultSet.metaData.getColumnName(col)
     }
 
-    val headerRow = sheet.createRow(0)
-    headers.forEachIndexed { index, header ->
-      headerRow
-        .createCell(index)
-        .setCellValue(CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, header))
-    }
+    columnToWrite = headers
+      .mapIndexed { index, columnName -> index to columnName }
+      .filter { (_, columnName) -> columnName.lowercase() !in columnsToExcludeLowercase }
+      .map { (index, _) -> index + 1 }
 
-    columnCount = headers.size
+    val headerRow = sheet.createRow(0)
+    columnToWrite.forEachIndexed { index, colIndex ->
+      val header = resultSet.metaData.getColumnName(colIndex)
+      headerRow.createCell(index).setCellValue(header)
+    }
   }
+
+  private val dateCellStyle: CellStyle = createDateCellStyle()
 
   private fun addRow(resultSet: ResultSet) {
     val row = sheet.createRow(currentRow)
 
-    for (col in 1.rangeTo(columnCount)) {
-      when (resultSet.metaData.getColumnType(col)) {
-        Types.INTEGER -> {
-          val value = resultSet.getInt(col)
-          if (!resultSet.wasNull()) {
-            row.createCell(col - 1).setCellValue(value.toDouble())
+    columnToWrite.forEachIndexed { index, colIndex ->
+      when (resultSet.metaData.getColumnType(colIndex)) {
+        Types.INTEGER -> resultSet.getInt(colIndex).takeIf { !resultSet.wasNull() }
+          ?.let {
+            row.createCell(index).setCellValue(it.toDouble())
           }
-        }
-        else -> {
-          val value = resultSet.getString(col)
-          if (!resultSet.wasNull()) {
-            row.createCell(col - 1).setCellValue(value)
+        Types.DATE -> resultSet.getDate(colIndex)?.toLocalDate()
+          ?.let {
+            row.createCell(index).setCellValue(it)
+            row.getCell(index).cellStyle = dateCellStyle
           }
+        Types.DOUBLE -> resultSet.getDouble(colIndex).takeIf { !resultSet.wasNull() }
+          ?.let {
+            row.createCell(index).setCellValue(it)
+          }
+        else -> resultSet.getString(colIndex)?.let {
+          row.createCell(index).setCellValue(it)
         }
       }
     }
-    currentRow += 1
+    currentRow++
   }
 
   override fun close() {
     workbook.close()
+  }
+
+  private fun createDateCellStyle(): CellStyle {
+    val createHelper = workbook.creationHelper
+    val dateCellStyle = workbook.createCellStyle()
+    dateCellStyle.dataFormat = createHelper.createDataFormat().getFormat("dd.mm.yyyy")
+    return dateCellStyle
   }
 }
