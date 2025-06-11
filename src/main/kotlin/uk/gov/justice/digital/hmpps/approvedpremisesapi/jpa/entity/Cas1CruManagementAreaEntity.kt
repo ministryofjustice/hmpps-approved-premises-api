@@ -17,6 +17,9 @@ import java.util.UUID
 
 @Repository
 interface Cas1CruManagementAreaRepository : JpaRepository<Cas1CruManagementAreaEntity, UUID> {
+  companion object {
+    val WOMENS_ESTATE_ID: UUID = UUID.fromString("bfb04c2a-1954-4512-803d-164f7fcf252c")
+  }
   fun findByName(cruManagementAreaOverride: String): Cas1CruManagementAreaEntity?
 }
 
@@ -48,11 +51,7 @@ data class Cas1CruManagementAreaEntity(
   @MapKeyColumn(name = "day")
   @Column(name = "delius_username")
   var assessmentAutoAllocations: MutableMap<AutoAllocationDay, String>,
-) {
-  companion object {
-    val WOMENS_ESTATE_ID = UUID.fromString("bfb04c2a-1954-4512-803d-164f7fcf252c")
-  }
-}
+)
 
 enum class AutoAllocationDay {
   MONDAY,

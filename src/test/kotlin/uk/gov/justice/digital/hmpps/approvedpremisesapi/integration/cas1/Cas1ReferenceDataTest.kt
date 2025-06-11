@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
@@ -344,7 +345,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
       }
 
       womensEstateArea = cas1CruManagementAreaEntityFactory.produceAndPersist {
-        withId(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
+        withId(Cas1CruManagementAreaRepository.WOMENS_ESTATE_ID)
         withName("The womens estate area")
       }
     }
