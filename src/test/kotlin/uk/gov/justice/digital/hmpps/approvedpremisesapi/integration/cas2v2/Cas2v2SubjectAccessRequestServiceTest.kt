@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase() {
@@ -234,7 +235,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
         "assessment_id": "${statusUpdateDetail.statusUpdate.assessment!!.id}",
         "status_label": "${statusUpdateDetail.statusUpdate.label}",
         "detail_label": "${statusUpdateDetail.label}",
-        "created_at": "${statusUpdateDetail.createdAt!!.toStandardisedFormat()}"
+        "created_at": "${statusUpdateDetail.createdAt!!.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}"
     }
   """.trimIndent()
 
@@ -246,11 +247,12 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       	"application_id": "${statusUpdate.application.id}",
       	"assessment_id": "${statusUpdate.assessment!!.id}",
       	"assessor_name": "${statusUpdate.assessor.name}",
-      	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
+        "created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
         "label": "${statusUpdate.label}"
     }    
   """.trimIndent()
+//              	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
 
   private fun cas2v2ApplicationNotesJson(applicationNotes: Cas2v2ApplicationNoteEntity): String = """
   {
@@ -327,14 +329,14 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     withStatusUpdate(statusUpdate)
     withLabel("Some detailed label")
     withStatusDetailId(UUID.randomUUID())
-    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT).withOffsetSameInstant(ZoneOffset.UTC))
   }
 
   private fun cas2v2AssessmentEntity(application: Cas2v2ApplicationEntity) = cas2v2AssessmentEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessorName(randomStringMultiCaseWithNumbers(10))
     withNacroReferralId(randomNumberChars(10))
-    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT).withOffsetSameInstant(ZoneOffset.UTC))
   }
 
   private fun cas2v2ApplicationEntity(

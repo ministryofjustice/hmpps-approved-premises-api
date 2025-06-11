@@ -106,7 +106,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val event2Id = UUID.randomUUID()
       val event3Id = UUID.randomUUID()
 
-      val oldSubmitted = OffsetDateTime.now().minusDays(365)
+      val oldSubmitted = OffsetDateTime.now().minusDays(365).withOffsetSameInstant(ZoneOffset.UTC)
       val oldCreated = oldSubmitted.minusDays(7)
 
       val newerSubmitted = OffsetDateTime.now().minusDays(100)
@@ -236,9 +236,9 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           preferredAreas = event2Details.preferredAreas.toString(),
           hdcEligibilityDate = event2Details.hdcEligibilityDate.toString(),
           conditionalReleaseDate = event2Details.conditionalReleaseDate.toString(),
-          submittedAt = event2.occurredAt.toString().split(".").first() + 'Z',
+          submittedAt = event2.occurredAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
-          startedAt = application2.createdAt.toString().split(".").first() + 'Z',
+          startedAt = application2.createdAt.toString().split(".").first(),
           applicationOrigin = ApplicationOrigin.courtBail,
           bailHearingDate = application2.bailHearingDate.toString(),
         ),
@@ -251,9 +251,9 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           preferredAreas = event1Details.preferredAreas.toString(),
           hdcEligibilityDate = event1Details.hdcEligibilityDate.toString(),
           conditionalReleaseDate = event1Details.conditionalReleaseDate.toString(),
-          submittedAt = event1.occurredAt.toString().split(".").first() + 'Z',
+          submittedAt = event1.occurredAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
-          startedAt = application1.createdAt.toString().split(".").first() + 'Z',
+          startedAt = application1.createdAt.toString().split(".").first(),
           applicationOrigin = ApplicationOrigin.courtBail,
           bailHearingDate = application2.bailHearingDate.toString(),
         ),
