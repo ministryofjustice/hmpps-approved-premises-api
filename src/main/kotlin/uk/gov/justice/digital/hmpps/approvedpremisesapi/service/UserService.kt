@@ -328,6 +328,7 @@ class UserService(
     staffDetail.probationArea.let { probationArea ->
       findProbationRegionFromArea(probationArea.code)?.let { probationRegion ->
         user.probationRegion = probationRegion
+        log.info("Updating user probation region with probation area code ${probationArea.code} to ${probationRegion.name} for the user $username.")
       }
     }
 
