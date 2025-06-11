@@ -725,6 +725,8 @@ components:
         outcomeRecordedAt:
           type: string
           format: date-time
+        apType:
+          $ref: '#/components/schemas/ApType'
       discriminator:
         propertyName: taskType
         mapping:
@@ -740,6 +742,7 @@ components:
         - status
         - crn
         - dueAt
+        - apType
     TaskStatus:
       type: string
       enum:

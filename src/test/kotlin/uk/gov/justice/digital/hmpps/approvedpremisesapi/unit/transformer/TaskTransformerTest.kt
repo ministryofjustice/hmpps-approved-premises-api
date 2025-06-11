@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
@@ -42,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -158,6 +160,7 @@ class TaskTransformerTest {
       assertThat((result.personSummary as FullPersonSummary).name).isEqualTo("First Last")
       assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
       assertThat(result.expectedArrivalDate).isEqualTo(application.arrivalDate!!.toLocalDate())
+      assertThat(result.apType).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).apType.asApiType())
     }
 
     @Test
@@ -331,6 +334,7 @@ class TaskTransformerTest {
       assertThat(result.dueAt).isEqualTo(placementApplication.dueAt!!.toInstant())
       assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
       assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 3, 23))
+      assertThat(result.apType).isEqualTo(application.apType.asApiType())
     }
 
     @ParameterizedTest
