@@ -71,11 +71,11 @@ INSERT INTO
 VALUES
   (
     '1de846dd-9617-4488-9b05-d54c9f955e2b',
-    CURRENT_DATE + 84 ,
-    CURRENT_DATE + 168,
+    CURRENT_DATE + 94 ,
+    CURRENT_DATE + 178,
     'X698320',
-    CURRENT_DATE + 84,
-    CURRENT_DATE + 168,
+    CURRENT_DATE + 94,
+    CURRENT_DATE + 178,
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
     'temporary-accommodation',
@@ -368,10 +368,10 @@ VALUES
   (
     'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
     CURRENT_DATE - 168,
-    CURRENT_DATE - 1,
+    CURRENT_DATE - 100,
     'X320741',
     CURRENT_DATE - 168,
-    CURRENT_DATE - 1,
+    CURRENT_DATE - 100,
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
     'temporary-accommodation',
@@ -441,10 +441,10 @@ VALUES
   (
     'b8d2b571-b5ce-4df4-8e99-f65a86470ef0',
     CURRENT_DATE - (5 * 2),
-    CURRENT_DATE - (5 * 2) - 2,
+    CURRENT_DATE - (5 * 2) + 2,
     'X371199',
     CURRENT_DATE - (5 * 2),
-    CURRENT_DATE - (5 * 2) - 2,
+    CURRENT_DATE - (5 * 2) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -515,10 +515,10 @@ VALUES
   (
     'dd833ba5-2924-4bda-8e5f-6036c2eef8c8',
     CURRENT_DATE - (5 * 3),
-    CURRENT_DATE - (5 * 3) - 2,
+    CURRENT_DATE - (5 * 3) + 2,
     'X371199',
     CURRENT_DATE - (5 * 3),
-    CURRENT_DATE - (5 * 3) - 2,
+    CURRENT_DATE - (5 * 3) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -589,10 +589,10 @@ VALUES
   (
     '10df1538-39d3-4f69-af32-53907f020f61',
     CURRENT_DATE - (5 * 4),
-    CURRENT_DATE - (5 * 4) - 2,
+    CURRENT_DATE - (5 * 4) + 2,
     'X371199',
     CURRENT_DATE - (5 * 4),
-    CURRENT_DATE - (5 * 4) - 2,
+    CURRENT_DATE - (5 * 4) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -663,10 +663,10 @@ VALUES
   (
     '013d0da0-9dc9-4aa5-a95a-be23f67cb20c',
     CURRENT_DATE - (5 * 5),
-    CURRENT_DATE - (5 * 5) - 2,
+    CURRENT_DATE - (5 * 5) + 2,
     'X371199',
     CURRENT_DATE - (5 * 5),
-    CURRENT_DATE - (5 * 5) - 2,
+    CURRENT_DATE - (5 * 5) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -737,10 +737,10 @@ VALUES
   (
     'f65006c9-2d6f-49f9-a800-3e3b71b9db72',
     CURRENT_DATE - (5 * 6),
-    CURRENT_DATE - (5 * 6) - 2,
+    CURRENT_DATE - (5 * 6) + 2,
     'X371199',
     CURRENT_DATE - (5 * 6),
-    CURRENT_DATE - (5 * 6) - 2,
+    CURRENT_DATE - (5 * 6) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -811,10 +811,10 @@ VALUES
   (
     '4096917e-42ff-4adb-b141-bbd39ac19ce7',
     CURRENT_DATE - (5 * 7),
-    CURRENT_DATE - (5 * 7) - 2,
+    CURRENT_DATE - (5 * 7) + 2,
     'X371199',
     CURRENT_DATE - (5 * 7),
-    CURRENT_DATE - (5 * 7) - 2,
+    CURRENT_DATE - (5 * 7) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -885,10 +885,10 @@ VALUES
   (
     'c97bb88b-da6a-4a96-8c98-664b0bebd9e1',
     CURRENT_DATE - (5 * 8),
-    CURRENT_DATE - (5 * 8) - 2,
+    CURRENT_DATE - (5 * 8) + 2,
     'X371199',
     CURRENT_DATE - (5 * 8),
-    CURRENT_DATE - (5 * 8) - 2,
+    CURRENT_DATE - (5 * 8) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -957,86 +957,12 @@ INSERT INTO
   )
 VALUES
   (
-    '70ba95d6-d3e1-4a1b-85bc-8f37fbf8618f',
-    CURRENT_DATE - (5 * 8),
-    CURRENT_DATE - (5 * 8) - 2,
-    'X371199',
-    CURRENT_DATE - (5 * 8),
-    CURRENT_DATE - (5 * 8) - 2,
-    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
-    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
-    CURRENT_DATE,
-    NULL,
-    'departed'
-  )
-ON CONFLICT(id) DO NOTHING;
-
-INSERT INTO
-  cas3_turnarounds (
-    "id",
-    "booking_id",
-    "working_day_count",
-    "created_at"
-  )
-VALUES
-  (
-    '5ce549ae-e079-4d0e-8476-521252a17361',
-    '70ba95d6-d3e1-4a1b-85bc-8f37fbf8618f',
-    2,
-    CURRENT_DATE
-  )
-ON CONFLICT(id) DO NOTHING;
-
-INSERT INTO
-  departures (
-    "id",
-    "date_time",
-    "departure_reason_id",
-    "move_on_category_id",
-    "destination_provider_id",
-    "notes",
-    "booking_id",
-    "created_at"
-  )
-VALUES
-  (
-    'cd51ea31-774b-478b-9b18-5addcdf2020e',
-    CURRENT_DATE - 1,
-    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
-    '587dc0dc-9073-4992-9d58-5576753050e9',
-    NULL,
-    NULL,
-    '70ba95d6-d3e1-4a1b-85bc-8f37fbf8618f',
-    CURRENT_DATE
-  )
-ON CONFLICT(id) DO NOTHING;
-
---- Add some departed Bookings for E2E---
-
-INSERT INTO
-  bookings (
-    "id",
-    "arrival_date",
-    "departure_date",
-    "crn",
-    "original_arrival_date",
-    "original_departure_date",
-    "premises_id",
-    "bed_id",
-    "service",
-    "created_at",
-    "noms_number",
-    "status"
-  )
-VALUES
-  (
     '9eec3324-c5db-4983-9907-cdd12890dd39',
     CURRENT_DATE - (5 * 9),
-    CURRENT_DATE - (5 * 9) - 2,
+    CURRENT_DATE - (5 * 9) + 2,
     'X371199',
     CURRENT_DATE - (5 * 9),
-    CURRENT_DATE - (5 * 9) - 2,
+    CURRENT_DATE - (5 * 9) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -1107,10 +1033,10 @@ VALUES
   (
     '99d8f177-ab9a-4afc-a5b9-360ccd40c5dc',
     CURRENT_DATE - (5 * 10),
-    CURRENT_DATE - (5 * 10) - 2,
+    CURRENT_DATE - (5 * 10) + 2,
     'X371199',
     CURRENT_DATE - (5 * 10),
-    CURRENT_DATE - (5 * 10) - 2,
+    CURRENT_DATE - (5 * 10) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
@@ -1181,10 +1107,10 @@ VALUES
   (
     '541ab042-3b7b-4fb2-b1be-a36b42581ec3',
     CURRENT_DATE - (5 * 11),
-    CURRENT_DATE - (5 * 11) - 2,
+    CURRENT_DATE - (5 * 11) + 2,
     'X371199',
     CURRENT_DATE - (5 * 11),
-    CURRENT_DATE - (5 * 11) - 2,
+    CURRENT_DATE - (5 * 11) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',

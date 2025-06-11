@@ -72,11 +72,11 @@ INSERT INTO
 VALUES
   (
     '1de846dd-9617-4488-9b05-d54c9f955e2b',
-    CURRENT_DATE + 84 ,
-    CURRENT_DATE + 168,
+    CURRENT_DATE + 94 ,
+    CURRENT_DATE + 178,
     'X698320',
-    CURRENT_DATE + 84,
-    CURRENT_DATE + 168,
+    CURRENT_DATE + 94,
+    CURRENT_DATE + 178,
     '70a6046c-23fc-4a30-b151-582ffd509e6a',
     '38e6b775-88c5-4571-8b6e-da3711aeaca6',
     'temporary-accommodation',
@@ -376,10 +376,10 @@ VALUES
   (
     'e3a08fac-88b3-4691-ad6f-b26b9180b1c6',
     CURRENT_DATE - 168,
-    CURRENT_DATE - 1,
+    CURRENT_DATE - 100,
     'X320741',
     CURRENT_DATE - 168,
-    CURRENT_DATE - 1,
+    CURRENT_DATE - 100,
     '70a6046c-23fc-4a30-b151-582ffd509e6a',
     '38e6b775-88c5-4571-8b6e-da3711aeaca6',
     'temporary-accommodation',
