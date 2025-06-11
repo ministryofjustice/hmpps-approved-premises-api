@@ -2,12 +2,6 @@ name: Deploy to test
 
 on:
   workflow_dispatch:
-    inputs:
-      reset_database:
-        description: Force a full reset of the database. Consult with other developers first to ensure the data on the test environment isn't in use by anyone.
-        type: boolean
-        required: false
-        default: false
 
 jobs:
   docker_build:
@@ -19,18 +13,6 @@ jobs:
       push: true
       docker_multiplatform: false
       tag_latest: false
-
-  reset_database:
-    name: Reset the database
-    needs:
-      - docker_build
-    if: ${{ inputs.reset_database == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      # TODO: Actually reset the database using kube?
-      - run: |
-          echo "Resetting the database..."
-          echo "This is a test only - database has NOT been reset."
 
   deploy_test:
     name: Deploy to the test environment
