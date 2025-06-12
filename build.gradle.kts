@@ -65,8 +65,8 @@ dependencies {
 
   implementation("com.opencsv:opencsv:5.11.2")
 
-  implementation("net.javacrumbs.shedlock:shedlock-spring:5.16.0")
-  implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:5.16.0")
+  implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.0")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:6.9.0")
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
