@@ -60,10 +60,10 @@ class Cas2ApplicationsTransformer(
     personName: String,
   ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.userId),
-    createdByUserName = jpaSummary.userName,
-    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
-    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
+    createdByUserId = UUID.fromString(jpaSummary.getCreatedById()),
+    createdByUserName = jpaSummary.getCreatedByUsername(),
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.getCreatedById()),
+    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.getCreatedByUsername(),
     currentPrisonName = jpaSummary.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName }
       ?: jpaSummary.currentPrisonCode,
     assignmentDate = jpaSummary.assignmentDate?.toLocalDate() ?: jpaSummary.createdAt.toLocalDate(),

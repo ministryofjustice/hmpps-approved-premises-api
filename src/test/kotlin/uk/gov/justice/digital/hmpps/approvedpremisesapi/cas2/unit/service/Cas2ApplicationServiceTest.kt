@@ -261,7 +261,7 @@ class Cas2ApplicationServiceTest {
     val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
     val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "createdAt", sortDirection = SortDirection.asc, page = 3)
-    val user = NomisUserEntityFactory().withId(UUID.fromString(applicationSummary.userId)).produce()
+    val user = NomisUserEntityFactory().withId(UUID.fromString(applicationSummary.getCreatedById())).produce()
 
     fun testNullPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
       every { page.content } returns listOf(applicationSummary)
@@ -279,7 +279,7 @@ class Cas2ApplicationServiceTest {
 
       every {
         mockApplicationSummaryRepository.findByUserId(
-          applicationSummary.userId,
+          applicationSummary.getCreatedById(),
           getPageableOrAllPages(pageCriteria),
         )
       } returns page
@@ -293,7 +293,7 @@ class Cas2ApplicationServiceTest {
 
       every {
         mockApplicationSummaryRepository.findByUserIdAndSubmittedAtIsNotNull(
-          applicationSummary.userId,
+          applicationSummary.getCreatedById(),
           getPageableOrAllPages(pageCriteria),
         )
       } returns page
@@ -307,7 +307,7 @@ class Cas2ApplicationServiceTest {
 
       every {
         mockApplicationSummaryRepository.findByUserIdAndSubmittedAtIsNull(
-          applicationSummary.userId,
+          applicationSummary.getCreatedById(),
           getPageableOrAllPages(pageCriteria),
         )
       } returns page
