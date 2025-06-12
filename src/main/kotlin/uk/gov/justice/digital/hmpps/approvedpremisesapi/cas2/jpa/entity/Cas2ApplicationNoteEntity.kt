@@ -53,6 +53,11 @@ data class Cas2ApplicationNoteEntity(
   var assessment: Cas2AssessmentEntity?,
 ) {
 
+  /*
+  BAIL-WIP createdByNomisUser and createdByExternalUser can both be replaced by cas2user entity when the move happens
+  the cas2user was an early attempt to unify the different user types but didn't seem to get propagated across the whole
+  code base.
+   */
   @ManyToOne
   @JoinColumn(name = "created_by_nomis_user_id")
   var createdByNomisUser: NomisUserEntity? = null
@@ -61,17 +66,22 @@ data class Cas2ApplicationNoteEntity(
   @JoinColumn(name = "created_by_external_user_id")
   var createdByExternalUser: ExternalUserEntity? = null
 
+  @ManyToOne
+  @JoinColumn(name = "created_by_cas2_user_id")
+  var createdByCas2User: Cas2UserEntity? = null
+
   init {
     when (this.createdByUser) {
       is NomisUserEntity -> this.createdByNomisUser = this.createdByUser
       is ExternalUserEntity -> this.createdByExternalUser = this.createdByUser
+      is Cas2UserEntity -> this.createdByCas2User = this.createdByUser
     }
   }
 
-  fun getUser(): Cas2User = if (this.createdByNomisUser != null) {
-    this.createdByNomisUser!!
-  } else {
-    this.createdByExternalUser!!
+  fun getUser(): Cas2User = when {
+    createdByNomisUser != null -> this.createdByNomisUser!!
+    createdByExternalUser != null -> this.createdByExternalUser!!
+    else -> this.createdByCas2User!! as Cas2User
   }
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
