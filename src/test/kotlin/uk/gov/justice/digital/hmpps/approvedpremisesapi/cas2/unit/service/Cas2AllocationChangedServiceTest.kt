@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AllocationChangedService
@@ -23,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2StatusUpdateEntityFactory
@@ -17,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2Use
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import java.time.OffsetDateTime
 import java.util.UUID
 

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
@@ -17,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisGeneralAccountFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisStaffInformationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 
 class NomisUserServiceTest {

@@ -34,6 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2NoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
@@ -47,6 +49,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.Cas2StatusUpdateTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.ExternalUserTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.NomisUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -82,10 +86,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExtensionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
@@ -249,10 +251,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DomainEventTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ExtensionTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ExternalUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategoryTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NomisUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.OfflineApplicationTestRepository

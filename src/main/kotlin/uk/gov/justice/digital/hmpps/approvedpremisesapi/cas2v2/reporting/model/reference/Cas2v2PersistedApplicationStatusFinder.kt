@@ -1,7 +1,9 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.reference
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import java.util.UUID
 
 @Component

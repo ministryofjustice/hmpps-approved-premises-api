@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.transformer
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExternalUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ExternalUserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 
 class ExternalUserTransformerTest {
   private val externalUserTransformer = ExternalUserTransformer()

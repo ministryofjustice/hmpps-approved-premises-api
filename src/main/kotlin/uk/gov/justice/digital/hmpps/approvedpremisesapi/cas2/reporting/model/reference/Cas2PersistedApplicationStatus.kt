@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference
 
 import java.util.UUID
 
