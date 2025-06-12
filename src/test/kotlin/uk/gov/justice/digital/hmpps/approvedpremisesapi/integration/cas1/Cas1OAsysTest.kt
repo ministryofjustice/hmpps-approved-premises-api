@@ -18,17 +18,26 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockNeedsDetails404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockOffenceDetails404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskManagementPlan404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRoSHSummary404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 
 class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
-  lateinit var cas1OASysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer
+  lateinit var oaSysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer
+
+  @Autowired
+  lateinit var oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer
 
   companion object {
     const val CRN = "CRN123"
@@ -47,7 +56,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Return 404 if access record can't be found for the CRN`() {
+    fun `Return 404 if access record can't be found for the CRN  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextUserAccessEmptyResponse()
@@ -58,6 +67,60 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isNotFound
+    }
+
+    @Test
+    fun `Return 404 if offence details record can't be found for the CRN  (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Return 404 if needs record can't be found for the CRN (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockNeedsDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `success when assessment not found`() {
+      val (_, jwt) = givenAUser()
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      apOASysContextMockOffenceDetails404Call(CRN)
+      apOASysContextMockNeedsDetails404Call(CRN)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysMetadata>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.supportingInformation).isEmpty()
     }
 
     @Test
@@ -85,13 +148,15 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
+      val offenceDetails = OffenceDetailsFactory().produce()
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
+
       val needsDetails = NeedsDetailsFactory().apply {
         withAssessmentId(34853487)
         withAccommodationIssuesDetails("Accommodation", true, false)
         withAttitudeIssuesDetails("Attitude", false, true)
         withFinanceIssuesDetails(null, null, null)
       }.produce()
-
       apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
       webTestClient.get()
@@ -104,7 +169,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .json(
           objectMapper.writeValueAsString(
             Cas1OASysMetadata(
-              cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
+              oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails),
+              oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
             ),
           ),
         )
@@ -157,7 +223,52 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk Management Plan`() {
+    fun `Risk Management Not Found, return 404  (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskManagementPlan404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Risk Management Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+      apOASysContextMockRiskManagementPlan404Call(CRN)
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Risk Management Plan Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -177,6 +288,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -188,7 +300,51 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Offence Details`() {
+    fun `Offence Details Not Found, return 404 (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      apOASysContextMockOffenceDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Offence Details Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Impact on the victim",
+          questionNumber = "2.5",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Offence Details Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -206,6 +362,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -217,7 +374,23 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `ROSH Summary`() {
+    fun `ROSH Summary Not Found, return 404  (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRoSHSummary404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=roshSummary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `ROSH Summary Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -237,6 +410,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -248,7 +422,67 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk to self`() {
+    fun `Risk to self Not Found, return 404  (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskToTheIndividual404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Risk to self Success Not Found, return 404  (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskToTheIndividual404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Risk to self Success Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskToTheIndividual404Call(CRN)
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Risk to self Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -268,6 +502,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -279,7 +514,62 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Supporting Information`() {
+    fun `Supporting Information Not Found, return 404  (legacy behaviour)`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockNeedsDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Supporting Information Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+      apOASysContextMockNeedsDetails404Call(CRN)
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Relationship issues contributing to risks of offending and harm",
+          questionNumber = "6.9",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Issues of emotional well-being contributing to risks of offending and harm",
+          questionNumber = "10.9",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Lifestyle issues contributing to risks of offending and harm",
+          questionNumber = "7.9",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Supporting Information Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -302,6 +592,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
       assertThat(result.answers).contains(
         OASysQuestion(

@@ -9,18 +9,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 @Service
 class Cas1OASysNeedsQuestionTransformer {
 
-  fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails) = toQuestionState(needsDetails).map {
-    Cas1OASysSupportingInformationQuestionMetaData(
-      section = it.sectionNumber,
-      sectionLabel = it.sectionLabel,
-      inclusionOptional = it.optional,
-      oasysAnswerLinkedToHarm = it.linkedToHarm,
-      oasysAnswerLinkedToReOffending = it.linkedToReOffending,
-    )
-  }
+  fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails?) = needsDetails?.let {
+    toQuestionState(needsDetails).map {
+      Cas1OASysSupportingInformationQuestionMetaData(
+        section = it.sectionNumber,
+        sectionLabel = it.sectionLabel,
+        inclusionOptional = it.optional,
+        oasysAnswerLinkedToHarm = it.linkedToHarm,
+        oasysAnswerLinkedToReOffending = it.linkedToReOffending,
+      )
+    }
+  } ?: emptyList()
 
-  fun transformToOASysQuestion(needsDetails: NeedsDetails, includeOptionalSections: List<Int>) = toQuestionState(needsDetails)
-    .filter { !it.optional || includeOptionalSections.contains(it.sectionNumber) }
+  fun transformToOASysQuestion(needsDetails: NeedsDetails?, includeOptionalSections: List<Int>) = toQuestionState(needsDetails)
+    .filter { !it.optional || includeOptionalSections.contains(it.sectionNumber) || needsDetails == null }
     .map {
       OASysQuestion(
         label = it.questionLabel,
@@ -40,86 +42,86 @@ class Cas1OASysNeedsQuestionTransformer {
     val linkedToReOffending: Boolean?,
   )
 
-  private fun toQuestionState(needsDetails: NeedsDetails) = listOf(
+  private fun toQuestionState(needsDetails: NeedsDetails?) = listOf(
     QuestionState(
       sectionNumber = 3,
       sectionLabel = OASysLabels.sectionToLabel.getValue("3"),
       questionNumber = "3.9",
       questionLabel = OASysLabels.questionToLabel.getValue("3.9"),
-      answer = needsDetails.needs?.accommodationIssuesDetails,
-      optional = isOptional(needsDetails.linksToHarm?.accommodationLinkedToHarm),
-      linkedToHarm = needsDetails.linksToHarm?.accommodationLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.accommodationLinkedToReOffending,
+      answer = needsDetails?.needs?.accommodationIssuesDetails,
+      optional = isOptional(needsDetails?.linksToHarm?.accommodationLinkedToHarm),
+      linkedToHarm = needsDetails?.linksToHarm?.accommodationLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.accommodationLinkedToReOffending,
     ),
     QuestionState(
       sectionNumber = 6,
       sectionLabel = OASysLabels.sectionToLabel.getValue("6"),
       questionNumber = "6.9",
       questionLabel = OASysLabels.questionToLabel.getValue("6.9"),
-      answer = needsDetails.needs?.relationshipIssuesDetails,
-      optional = isOptional(needsDetails.linksToHarm?.relationshipLinkedToHarm),
-      linkedToHarm = needsDetails.linksToHarm?.relationshipLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.relationshipLinkedToReOffending,
+      answer = needsDetails?.needs?.relationshipIssuesDetails,
+      optional = isOptional(needsDetails?.linksToHarm?.relationshipLinkedToHarm),
+      linkedToHarm = needsDetails?.linksToHarm?.relationshipLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.relationshipLinkedToReOffending,
     ),
     QuestionState(
       sectionNumber = 7,
       sectionLabel = OASysLabels.sectionToLabel.getValue("7"),
       questionNumber = "7.9",
       questionLabel = OASysLabels.questionToLabel.getValue("7.9"),
-      answer = needsDetails.needs?.lifestyleIssuesDetails,
-      optional = isOptional(needsDetails.linksToHarm?.lifestyleLinkedToHarm),
-      linkedToHarm = needsDetails.linksToHarm?.lifestyleLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.lifestyleLinkedToReOffending,
+      answer = needsDetails?.needs?.lifestyleIssuesDetails,
+      optional = isOptional(needsDetails?.linksToHarm?.lifestyleLinkedToHarm),
+      linkedToHarm = needsDetails?.linksToHarm?.lifestyleLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.lifestyleLinkedToReOffending,
     ),
     QuestionState(
       sectionNumber = 8,
       sectionLabel = OASysLabels.sectionToLabel.getValue("8"),
       questionNumber = "8.9",
       questionLabel = OASysLabels.questionToLabel.getValue("8.9"),
-      answer = needsDetails.needs?.drugIssuesDetails,
+      answer = needsDetails?.needs?.drugIssuesDetails,
       optional = false,
-      linkedToHarm = needsDetails.linksToHarm?.drugLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.drugLinkedToReOffending,
+      linkedToHarm = needsDetails?.linksToHarm?.drugLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.drugLinkedToReOffending,
     ),
     QuestionState(
       sectionNumber = 9,
       sectionLabel = OASysLabels.sectionToLabel.getValue("9"),
       questionNumber = "9.9",
       questionLabel = OASysLabels.questionToLabel.getValue("9.9"),
-      answer = needsDetails.needs?.alcoholIssuesDetails,
+      answer = needsDetails?.needs?.alcoholIssuesDetails,
       optional = false,
-      linkedToHarm = needsDetails.linksToHarm?.alcoholLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.alcoholLinkedToReOffending,
+      linkedToHarm = needsDetails?.linksToHarm?.alcoholLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.alcoholLinkedToReOffending,
     ),
     QuestionState(
       sectionNumber = 10,
       sectionLabel = OASysLabels.sectionToLabel.getValue("10"),
       questionNumber = "10.9",
       questionLabel = OASysLabels.questionToLabel.getValue("10.9"),
-      answer = needsDetails.needs?.emotionalIssuesDetails,
-      optional = isOptional(needsDetails.linksToHarm?.emotionalLinkedToHarm),
-      linkedToHarm = needsDetails.linksToHarm?.emotionalLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.emotionalLinkedToReOffending,
+      answer = needsDetails?.needs?.emotionalIssuesDetails,
+      optional = isOptional(needsDetails?.linksToHarm?.emotionalLinkedToHarm),
+      linkedToHarm = needsDetails?.linksToHarm?.emotionalLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.emotionalLinkedToReOffending,
     ),
     QuestionState(
       sectionNumber = 11,
       sectionLabel = OASysLabels.sectionToLabel.getValue("11"),
       questionNumber = "11.9",
       questionLabel = OASysLabels.questionToLabel.getValue("11.9"),
-      answer = needsDetails.needs?.thinkingBehaviouralIssuesDetails,
-      optional = isOptional(needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm),
-      linkedToHarm = needsDetails.linksToHarm?.thinkingBehaviouralLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.thinkingBehaviouralLinkedToReOffending,
+      answer = needsDetails?.needs?.thinkingBehaviouralIssuesDetails,
+      optional = isOptional(needsDetails?.linksToHarm?.thinkingBehaviouralLinkedToHarm),
+      linkedToHarm = needsDetails?.linksToHarm?.thinkingBehaviouralLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.thinkingBehaviouralLinkedToReOffending,
     ),
     QuestionState(
       sectionNumber = 12,
       sectionLabel = OASysLabels.sectionToLabel.getValue("12"),
       questionNumber = "12.9",
       questionLabel = OASysLabels.questionToLabel.getValue("12.9"),
-      answer = needsDetails.needs?.attitudeIssuesDetails,
-      optional = isOptional(needsDetails.linksToHarm?.attitudeLinkedToHarm),
-      linkedToHarm = needsDetails.linksToHarm?.attitudeLinkedToHarm,
-      linkedToReOffending = needsDetails.linksToReOffending?.attitudeLinkedToReOffending,
+      answer = needsDetails?.needs?.attitudeIssuesDetails,
+      optional = isOptional(needsDetails?.linksToHarm?.attitudeLinkedToHarm),
+      linkedToHarm = needsDetails?.linksToHarm?.attitudeLinkedToHarm,
+      linkedToReOffending = needsDetails?.linksToReOffending?.attitudeLinkedToReOffending,
     ),
   )
 

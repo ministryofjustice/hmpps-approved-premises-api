@@ -13,6 +13,7 @@ domain-events:
 feature-flags:
   cas1-disable-overbooking-summary: true
   cas1-expire-unsubmitted-applications-job-enabled: true
+  cas1-oasys-return-empty-oasys-responses: true
 
 hmpps.sqs:
   provider: localstack

@@ -2094,7 +2094,7 @@ paths:
       tags:
         - OAsys
       summary: Returns metadata about supporting information questions for a given CRN
-      operationId: supportingInformationMetadata
+      operationId: metadata
       parameters:
         - name: crn
           in: path
@@ -8662,12 +8662,15 @@ components:
         - reason
     Cas1OASysMetadata:
       properties:
+        assessmentMetadata:
+          $ref: '#/components/schemas/Cas1OASysAssessmentMetadata'
         supportingInformation:
           type: array
           items:
             $ref: '#/components/schemas/Cas1OASysSupportingInformationQuestionMetaData'
       required:
-        - supportingInformationQuestions
+        - assessmentMetadata
+        - supportingInformation
     Cas1OASysSupportingInformationQuestionMetaData:
       type: object
       properties:
@@ -8723,6 +8726,8 @@ components:
     Cas1OASysAssessmentMetadata:
       type: object
       properties:
+        hasApplicableAssessment:
+          type: boolean
         dateStarted:
           type: string
           format: date-time
@@ -8730,7 +8735,7 @@ components:
           type: string
           format: date-time
       required:
-        - dateStarted
+        - hasApplicableAssessment
 
 
 

@@ -6,8 +6,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.Offen
 
 @Service
 class Cas1OASysOffenceDetailsTransformer {
-  fun toAssessmentMetadata(offenceDetails: OffenceDetails) = Cas1OASysAssessmentMetadata(
-    dateStarted = offenceDetails.initiationDate.toInstant(),
-    dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-  )
+  fun toAssessmentMetadata(offenceDetails: OffenceDetails?) = offenceDetails?.let {
+    Cas1OASysAssessmentMetadata(
+      hasApplicableAssessment = true,
+      dateStarted = offenceDetails.initiationDate.toInstant(),
+      dateCompleted = offenceDetails.dateCompleted?.toInstant(),
+    )
+  } ?: Cas1OASysAssessmentMetadata(hasApplicableAssessment = false)
 }
