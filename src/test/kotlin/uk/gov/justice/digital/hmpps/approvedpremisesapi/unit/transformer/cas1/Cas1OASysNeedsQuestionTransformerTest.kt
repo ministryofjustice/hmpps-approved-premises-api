@@ -210,6 +210,57 @@ class Cas1OASysNeedsQuestionTransformerTest {
   inner class TransformToOASysQuestion {
 
     @Test
+    fun `If no assessment is available, always return question`() {
+      val result = transformer.transformToOASysQuestion(
+        needsDetails = null,
+        includeOptionalSections = emptyList(),
+      )
+
+      assertThat(result).containsExactlyInAnyOrder(
+        OASysQuestion(
+          questionNumber = "3.9",
+          label = "Accommodation issues contributing to risks of offending and harm",
+          answer = null,
+        ),
+        OASysQuestion(
+          questionNumber = "6.9",
+          label = "Relationship issues contributing to risks of offending and harm",
+          answer = null,
+        ),
+        OASysQuestion(
+          questionNumber = "7.9",
+          label = "Lifestyle issues contributing to risks of offending and harm",
+          answer = null,
+        ),
+        OASysQuestion(
+          questionNumber = "8.9",
+          label = "Drug misuse issues contributing to risks of offending and harm",
+          answer = null,
+        ),
+        OASysQuestion(
+          questionNumber = "9.9",
+          label = "Alcohol misuse issues contributing to risks of offending and harm",
+          answer = null,
+        ),
+        OASysQuestion(
+          questionNumber = "10.9",
+          label = "Issues of emotional well-being contributing to risks of offending and harm",
+          answer = null,
+        ),
+        OASysQuestion(
+          questionNumber = "11.9",
+          label = "Thinking / behavioural issues contributing to risks of offending and harm",
+          answer = null,
+        ),
+        OASysQuestion(
+          questionNumber = "12.9",
+          label = "Issues about attitudes contributing to risks of offending and harm",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
     fun `If linked to harm is true, always return question`() {
       val needsDetails = NeedsDetailsFactory()
         .withEmotionalIssuesDetails(linkedToHarm = true, linkedToReoffending = false, emotionalIssuesDetails = "emotional answer")
