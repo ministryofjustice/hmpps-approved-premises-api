@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -342,19 +343,17 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
   protected fun bedEntity(premisesEntity: ApprovedPremisesEntity? = null) = bedEntityFactory.produceAndPersist {
     withName("a bed ${randomStringMultiCaseWithNumbers(5)}")
     withCode("a code ${randomStringMultiCaseWithNumbers(5)}")
-    premises = approvedPremisesEntityFactory.produceAndPersist {
-      withName("a premises ${randomStringMultiCaseWithNumbers(5)}")
-      withApCode("AP Code ${randomStringMultiCaseWithNumbers(5)}")
-      withLocalAuthorityArea(
-        localAuthorityEntityFactory.produceAndPersist {
-          withName("An LAA ${randomStringMultiCaseWithNumbers(5)}")
-          withIdentifier("LAA ID ${randomStringMultiCaseWithNumbers(5)}")
-        },
-      )
-      withProbationRegion(
-        probationRegionEntity(),
-      )
-    }
+
+    premises = givenAnApprovedPremises(
+      name = "a premises ${randomStringMultiCaseWithNumbers(5)}",
+      apCode = "AP Code ${randomStringMultiCaseWithNumbers(5)}",
+      localAuthorityArea = localAuthorityEntityFactory.produceAndPersist {
+        withName("An LAA ${randomStringMultiCaseWithNumbers(5)}")
+        withIdentifier("LAA ID ${randomStringMultiCaseWithNumbers(5)}")
+      },
+      region = probationRegionEntity(),
+    )
+
     withRoom(
       roomEntityFactory.produceAndPersist {
         withCode("room code ${randomStringMultiCaseWithNumbers(5)}")

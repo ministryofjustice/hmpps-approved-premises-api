@@ -972,15 +972,10 @@ class PremisesTest {
     @Test
     fun `Trying to update a premises with an invalid probation region id returns 400`() {
       givenAUser { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(1) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
-
-        val premisesToGet = premises[0]
+        val premises = givenAnApprovedPremises()
 
         webTestClient.put()
-          .uri("/premises/${premisesToGet.id}")
+          .uri("/premises/${premises.id}")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdatePremises(

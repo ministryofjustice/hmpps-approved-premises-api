@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
@@ -18,6 +19,7 @@ fun IntegrationTestBase.givenAnApprovedPremises(
   qCode: String = randomStringUpperCase(4),
   supportsSpaceBookings: Boolean = false,
   region: ProbationRegionEntity? = null,
+  localAuthorityArea: LocalAuthorityAreaEntity? = null,
   emailAddress: String? = randomStringUpperCase(10),
   status: PropertyStatus = randomOf(PropertyStatus.entries),
   apCode: String = randomStringUpperCase(10),
@@ -35,7 +37,7 @@ fun IntegrationTestBase.givenAnApprovedPremises(
     withQCode(qCode)
     withEmailAddress(emailAddress)
     withProbationRegion(region ?: givenAProbationRegion())
-    withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+    withLocalAuthorityArea(localAuthorityArea ?: localAuthorityEntityFactory.produceAndPersist())
     withSupportsSpaceBookings(supportsSpaceBookings)
     withStatus(status)
     withApCode(apCode)

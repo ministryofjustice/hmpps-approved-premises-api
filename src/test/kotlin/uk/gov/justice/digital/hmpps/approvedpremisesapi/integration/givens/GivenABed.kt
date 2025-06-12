@@ -14,10 +14,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesBed(
   endDate: LocalDate? = null,
   block: ((bed: BedEntity) -> Unit)? = null,
 ): BedEntity {
-  val resolvedPremises = premises ?: approvedPremisesEntityFactory.produceAndPersist {
-    withProbationRegion(givenAProbationRegion())
-    withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
-  }
+  val resolvedPremises = premises ?: givenAnApprovedPremises()
 
   val room = roomEntityFactory.produceAndPersist {
     withPremises(resolvedPremises)

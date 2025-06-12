@@ -230,38 +230,34 @@ class Cas1PremisesTest : IntegrationTestBase() {
         apArea = apArea2,
       )
 
-      premises1ManInArea1 = approvedPremisesEntityFactory.produceAndPersist {
-        withName("the premises name 1")
-        withGender(ApprovedPremisesGender.MAN)
-        withYieldedProbationRegion { region1 }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withSupportsSpaceBookings(false)
-      }
+      premises1ManInArea1 = givenAnApprovedPremises(
+        name = "the premises name 1",
+        gender = ApprovedPremisesGender.MAN,
+        region = region1,
+        supportsSpaceBookings = false,
+      )
 
-      premises2WomanInArea2 = approvedPremisesEntityFactory.produceAndPersist {
-        withName("the premises name 2")
-        withGender(ApprovedPremisesGender.WOMAN)
-        withYieldedProbationRegion { region2 }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withSupportsSpaceBookings(false)
-      }
+      premises2WomanInArea2 = givenAnApprovedPremises(
+        name = "the premises name 2",
+        gender = ApprovedPremisesGender.WOMAN,
+        region = region2,
+        supportsSpaceBookings = false,
+      )
 
-      premises3ManInArea2 = approvedPremisesEntityFactory.produceAndPersist {
-        withName("the premises name 3")
-        withGender(ApprovedPremisesGender.MAN)
-        withYieldedProbationRegion { region2 }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withSupportsSpaceBookings(true)
-      }
+      premises3ManInArea2 = givenAnApprovedPremises(
+        name = "the premises name 3",
+        gender = ApprovedPremisesGender.MAN,
+        region = region2,
+        supportsSpaceBookings = true,
+      )
 
-      approvedPremisesEntityFactory.produceAndPersist {
-        withName("an archived premises")
-        withStatus(PropertyStatus.archived)
-        withGender(ApprovedPremisesGender.MAN)
-        withYieldedProbationRegion { region2 }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withSupportsSpaceBookings(true)
-      }
+      givenAnApprovedPremises(
+        name = "an archived premises",
+        status = PropertyStatus.archived,
+        gender = ApprovedPremisesGender.MAN,
+        region = region2,
+        supportsSpaceBookings = true,
+      )
 
       // premises 1 live beds
       repeat(5) { givenAnApprovedPremisesBed(premises1ManInArea1) }
@@ -431,14 +427,12 @@ class Cas1PremisesTest : IntegrationTestBase() {
         apArea = givenAnApArea(name = "The ap area name"),
       )
 
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withName("the premises name")
-        withApCode("the ap code")
-        withPostcode("the postcode")
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withManagerDetails("manager details")
-      }
+      premises = givenAnApprovedPremises(
+        name = "the premises name",
+        apCode = "the ap code",
+        postCode = "the postcode",
+        managerDetails = "manager details",
+      )
     }
 
     @Test
@@ -1095,11 +1089,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val qCode = "NON_EXISTENT_TEAM_QCODE"
 
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-          withQCode(qCode)
-        }
+        val premises = givenAnApprovedPremises(qCode = qCode)
 
         wiremockServer.stubFor(
           WireMock.get(urlEqualTo("/secure/teams/$qCode/staff"))
@@ -1130,11 +1120,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val qCode = "FOUND"
 
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-          withQCode(qCode)
-        }
+        val premises = givenAnApprovedPremises(qCode = qCode)
 
         val staffMembers = listOf(
           ContextStaffMemberFactory().produce(),

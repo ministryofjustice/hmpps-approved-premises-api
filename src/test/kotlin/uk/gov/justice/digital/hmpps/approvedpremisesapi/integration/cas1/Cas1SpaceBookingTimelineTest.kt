@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -72,10 +72,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
       withAssessmentSchema(assessmentSchema)
     }
 
-    premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedProbationRegion { givenAProbationRegion() }
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-    }
+    premises = givenAnApprovedPremises()
 
     val (offender) = givenAnOffender()
     val (placementRequest) = givenAPlacementRequest(
