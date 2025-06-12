@@ -29,5 +29,6 @@
       ]
     }
   ],
-  "rebaseWhen": "conflicted"
+  "rebaseWhen": "conflicted",
+  "ignoreDeps": ["org.hibernate:hibernate-spatial"]
 }
