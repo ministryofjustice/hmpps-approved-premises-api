@@ -56,7 +56,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Return 404 if access record can't be found for the CRN`() {
+    fun `Return 404 if access record can't be found for the CRN  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextUserAccessEmptyResponse()
@@ -70,7 +70,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Return 404 if offence details record can't be found for the CRN`() {
+    fun `Return 404 if offence details record can't be found for the CRN  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -85,7 +85,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Return 404 if needs record can't be found for the CRN`() {
+    fun `Return 404 if needs record can't be found for the CRN (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -98,6 +98,29 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isNotFound
+    }
+
+    @Test
+    fun `success when assessment not found`() {
+      val (_, jwt) = givenAUser()
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      apOASysContextMockOffenceDetails404Call(CRN)
+      apOASysContextMockNeedsDetails404Call(CRN)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysMetadata>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.supportingInformation).isEmpty()
     }
 
     @Test
@@ -200,7 +223,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk Management Not Found, return 404`() {
+    fun `Risk Management Not Found, return 404  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -247,7 +270,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Offence Details Not Found, return 404`() {
+    fun `Offence Details Not Found, return 404 (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -292,7 +315,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `ROSH Summary Not Found, return 404`() {
+    fun `ROSH Summary Not Found, return 404  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -339,7 +362,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk to self Not Found, return 404`() {
+    fun `Risk to self Not Found, return 404  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -355,7 +378,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk to self Success Not Found, return 404`() {
+    fun `Risk to self Success Not Found, return 404  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -402,7 +425,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Supporting Information Not Found, return 404`() {
+    fun `Supporting Information Not Found, return 404  (legacy behaviour)`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())

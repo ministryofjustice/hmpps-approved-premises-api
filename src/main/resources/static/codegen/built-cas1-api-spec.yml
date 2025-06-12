@@ -2094,7 +2094,7 @@ paths:
       tags:
         - OAsys
       summary: Returns metadata about supporting information questions for a given CRN
-      operationId: supportingInformationMetadata
+      operationId: metadata
       parameters:
         - name: crn
           in: path

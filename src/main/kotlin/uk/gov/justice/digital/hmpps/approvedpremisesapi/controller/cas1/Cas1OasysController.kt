@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -25,18 +27,19 @@ class Cas1OasysController(
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) : OAsysCas1Delegate {
 
-  override fun supportingInformationMetadata(crn: String): ResponseEntity<Cas1OASysMetadata> {
+  override fun metadata(crn: String): ResponseEntity<Cas1OASysMetadata> {
     ensureOffenderAccess(crn)
 
     return ResponseEntity.ok(
       Cas1OASysMetadata(
         assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(
-          extractEntityFromCasResult(oaSysService.getOASysOffenceDetails(crn)),
+          extractNullableOAsysResult(oaSysService.getOASysOffenceDetails(crn)),
         ),
         supportingInformation = cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
-          extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
+          extractNullableOAsysResult(oaSysService.getOASysNeeds(crn)),
         ),
       ),
     )
@@ -91,5 +94,14 @@ class Cas1OasysController(
       false -> throw throw ForbiddenProblem()
       else -> Unit
     }
+  }
+
+  private fun <EntityType> extractNullableOAsysResult(result: CasResult<EntityType>) = when (result) {
+    is CasResult.NotFound -> if (featureFlagService.getBooleanFlag("cas1-oasys-return-empty-oasys-responses")) {
+      null
+    } else {
+      throw NotFoundProblem(result.id, result.entityType)
+    }
+    else -> extractEntityFromCasResult(result)
   }
 }
