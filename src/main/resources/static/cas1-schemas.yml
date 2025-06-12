@@ -1852,14 +1852,14 @@ components:
         - reason
     Cas1OASysMetadata:
       properties:
-        metadata:
+        assessmentMetadata:
           $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysAssessmentMetadata'
         supportingInformation:
           type: array
           items:
             $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysSupportingInformationQuestionMetaData'
       required:
-        - metadata
+        - assessmentMetadata
         - supportingInformation
     Cas1OASysSupportingInformationQuestionMetaData:
       type: object

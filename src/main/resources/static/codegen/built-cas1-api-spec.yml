@@ -8662,14 +8662,14 @@ components:
         - reason
     Cas1OASysMetadata:
       properties:
-        metadata:
+        assessmentMetadata:
           $ref: '#/components/schemas/Cas1OASysAssessmentMetadata'
         supportingInformation:
           type: array
           items:
             $ref: '#/components/schemas/Cas1OASysSupportingInformationQuestionMetaData'
       required:
-        - metadata
+        - assessmentMetadata
         - supportingInformation
     Cas1OASysSupportingInformationQuestionMetaData:
       type: object
