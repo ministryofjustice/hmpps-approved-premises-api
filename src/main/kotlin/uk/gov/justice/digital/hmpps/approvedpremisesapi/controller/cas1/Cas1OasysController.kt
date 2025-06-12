@@ -55,18 +55,18 @@ class Cas1OasysController(
 
     val answers = when (group) {
       Cas1OASysGroupName.RISK_MANAGEMENT_PLAN -> oaSysSectionsTransformer.riskManagementPlanAnswers(
-        extractEntityFromCasResult(oaSysService.getOASysRiskManagementPlan(crn)),
+        extractEntityFromCasResult(oaSysService.getOASysRiskManagementPlan(crn)).riskManagementPlan,
       )
-      Cas1OASysGroupName.OFFENCE_DETAILS -> oaSysSectionsTransformer.offenceDetailsAnswers(offenceDetails)
+      Cas1OASysGroupName.OFFENCE_DETAILS -> oaSysSectionsTransformer.offenceDetailsAnswers(offenceDetails.offence)
       Cas1OASysGroupName.ROSH_SUMMARY -> oaSysSectionsTransformer.roshSummaryAnswers(
-        extractEntityFromCasResult(oaSysService.getOASysRoshSummary(crn)),
+        extractEntityFromCasResult(oaSysService.getOASysRoshSummary(crn)).roshSummary,
       )
       Cas1OASysGroupName.SUPPORTING_INFORMATION -> cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
         needsDetails = extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
         includeOptionalSections = includeOptionalSections ?: emptyList(),
       )
       Cas1OASysGroupName.RISK_TO_SELF -> oaSysSectionsTransformer.riskToSelfAnswers(
-        extractEntityFromCasResult(oaSysService.getOASysRiskToTheIndividual(crn)),
+        extractEntityFromCasResult(oaSysService.getOASysRiskToTheIndividual(crn)).riskToTheIndividual,
       )
     }
 

@@ -34,7 +34,7 @@ class OASysSectionsTransformerTest {
         withCurrentConcernsBreachOfTrustText("currentConcernsBreachOfTrustText")
       }.produce()
 
-      val result = oaSysSectionsTransformer.riskToSelfAnswers(risksToTheIndividualApiResponse)
+      val result = oaSysSectionsTransformer.riskToSelfAnswers(risksToTheIndividualApiResponse.riskToTheIndividual)
 
       assertThat(result).containsExactly(
         OASysQuestion(
@@ -71,7 +71,7 @@ class OASysSectionsTransformerTest {
         withRiskReductionLikelyTo("Reduction Likely To")
       }.produce()
 
-      val result = oaSysSectionsTransformer.roshSummaryAnswers(roshSummaryApiResponse)
+      val result = oaSysSectionsTransformer.roshSummaryAnswers(roshSummaryApiResponse.roshSummary)
 
       assertThat(result).containsExactly(
         OASysQuestion(

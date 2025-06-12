@@ -9,9 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSupportingInformationQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetailsInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlanInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummaryInner
 
 @Component
 class OASysSectionsTransformer {
@@ -27,46 +31,46 @@ class OASysSectionsTransformer {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    offenceDetails = offenceDetailsAnswers(offenceDetails),
-    roshSummary = roshSummaryAnswers(roshSummary),
+    offenceDetails = offenceDetailsAnswers(offenceDetails.offence),
+    roshSummary = roshSummaryAnswers(roshSummary.roshSummary),
     supportingInformation = supportingInformationAnswers(needsDetails, requestedOptionalSections),
-    riskToSelf = riskToSelfAnswers(risksToTheIndividual),
-    riskManagementPlan = riskManagementPlanAnswers(riskManagementPlan),
+    riskToSelf = riskToSelfAnswers(risksToTheIndividual.riskToTheIndividual),
+    riskManagementPlan = riskManagementPlanAnswers(riskManagementPlan.riskManagementPlan),
   )
 
-  fun offenceDetailsAnswers(offenceDetails: OffenceDetails) = listOf(
-    OASysQuestion("Offence analysis", "2.1", offenceDetails.offence?.offenceAnalysis),
-    OASysQuestion("Victim - perpetrator relationship", "2.4.1", offenceDetails.offence?.victimPerpetratorRel),
-    OASysQuestion("Other victim information", "2.4.2", offenceDetails.offence?.victimInfo),
-    OASysQuestion("Impact on the victim", "2.5", offenceDetails.offence?.victimImpact),
-    OASysQuestion("Motivation and triggers", "2.8.3", offenceDetails.offence?.offenceMotivation),
-    OASysQuestion("Issues contributing to risks", "2.98", offenceDetails.offence?.issueContributingToRisk),
-    OASysQuestion("Pattern of offending", "2.12", offenceDetails.offence?.patternOffending),
+  fun offenceDetailsAnswers(offenceDetails: OffenceDetailsInner?) = listOf(
+    OASysQuestion("Offence analysis", "2.1", offenceDetails?.offenceAnalysis),
+    OASysQuestion("Victim - perpetrator relationship", "2.4.1", offenceDetails?.victimPerpetratorRel),
+    OASysQuestion("Other victim information", "2.4.2", offenceDetails?.victimInfo),
+    OASysQuestion("Impact on the victim", "2.5", offenceDetails?.victimImpact),
+    OASysQuestion("Motivation and triggers", "2.8.3", offenceDetails?.offenceMotivation),
+    OASysQuestion("Issues contributing to risks", "2.98", offenceDetails?.issueContributingToRisk),
+    OASysQuestion("Pattern of offending", "2.12", offenceDetails?.patternOffending),
   )
 
-  fun roshSummaryAnswers(roshSummary: RoshSummary) = listOf(
-    OrderedQuestion(1, OASysQuestion("Who is at risk", "R10.1", roshSummary.roshSummary?.whoIsAtRisk)),
-    OrderedQuestion(2, OASysQuestion("What is the nature of the risk", "R10.2", roshSummary.roshSummary?.natureOfRisk)),
-    OrderedQuestion(3, OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary.roshSummary?.riskGreatest)),
-    OrderedQuestion(4, OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary.roshSummary?.riskIncreaseLikelyTo)),
-    OrderedQuestion(5, OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary.roshSummary?.riskReductionLikelyTo)),
+  fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = listOf(
+    OrderedQuestion(1, OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk)),
+    OrderedQuestion(2, OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk)),
+    OrderedQuestion(3, OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary?.riskGreatest)),
+    OrderedQuestion(4, OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary?.riskIncreaseLikelyTo)),
+    OrderedQuestion(5, OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo)),
   ).sortedBy { it.position }.map { it.question }
 
-  fun riskToSelfAnswers(risksToTheIndividual: RisksToTheIndividual) = listOf(
-    OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual.riskToTheIndividual?.currentConcernsSelfHarmSuicide),
-    OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual.riskToTheIndividual?.currentCustodyHostelCoping),
-    OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual.riskToTheIndividual?.currentVulnerability),
+  fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
+    OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual?.currentConcernsSelfHarmSuicide),
+    OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual?.currentCustodyHostelCoping),
+    OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.currentVulnerability),
   )
 
-  fun riskManagementPlanAnswers(riskManagementPlan: RiskManagementPlan) = listOf(
-    OASysQuestion("Further considerations", "RM28", riskManagementPlan.riskManagementPlan?.furtherConsiderations),
-    OASysQuestion("Additional comments", "RM35", riskManagementPlan.riskManagementPlan?.additionalComments),
-    OASysQuestion("Contingency plans", "RM34", riskManagementPlan.riskManagementPlan?.contingencyPlans),
-    OASysQuestion("Victim safety planning", "RM33", riskManagementPlan.riskManagementPlan?.victimSafetyPlanning),
-    OASysQuestion("Interventions and treatment", "RM32", riskManagementPlan.riskManagementPlan?.interventionsAndTreatment),
-    OASysQuestion("Monitoring and control", "RM31", riskManagementPlan.riskManagementPlan?.monitoringAndControl),
-    OASysQuestion("Supervision", "RM30", riskManagementPlan.riskManagementPlan?.supervision),
-    OASysQuestion("Key information about current situation", "RM28.1", riskManagementPlan.riskManagementPlan?.keyInformationAboutCurrentSituation),
+  fun riskManagementPlanAnswers(riskManagementPlan: RiskManagementPlanInner?) = listOf(
+    OASysQuestion("Further considerations", "RM28", riskManagementPlan?.furtherConsiderations),
+    OASysQuestion("Additional comments", "RM35", riskManagementPlan?.additionalComments),
+    OASysQuestion("Contingency plans", "RM34", riskManagementPlan?.contingencyPlans),
+    OASysQuestion("Victim safety planning", "RM33", riskManagementPlan?.victimSafetyPlanning),
+    OASysQuestion("Interventions and treatment", "RM32", riskManagementPlan?.interventionsAndTreatment),
+    OASysQuestion("Monitoring and control", "RM31", riskManagementPlan?.monitoringAndControl),
+    OASysQuestion("Supervision", "RM30", riskManagementPlan?.supervision),
+    OASysQuestion("Key information about current situation", "RM28.1", riskManagementPlan?.keyInformationAboutCurrentSituation),
   )
 
   fun cas2TransformRiskToIndividual(
@@ -78,7 +82,7 @@ class OASysSectionsTransformer {
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
     riskToSelf =
-    riskToSelfAnswers(risksToTheIndividual) +
+    riskToSelfAnswers(risksToTheIndividual.riskToTheIndividual) +
       listOf(
         OASysQuestion("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
       ),
@@ -92,7 +96,7 @@ class OASysSectionsTransformer {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    rosh = roshSummaryAnswers(roshSummary),
+    rosh = roshSummaryAnswers(roshSummary.roshSummary),
   )
 
   @SuppressWarnings("CyclomaticComplexMethod")
