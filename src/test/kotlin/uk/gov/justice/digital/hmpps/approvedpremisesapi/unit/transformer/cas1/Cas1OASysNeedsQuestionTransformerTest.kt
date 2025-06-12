@@ -15,7 +15,14 @@ class Cas1OASysNeedsQuestionTransformerTest {
   private val transformer = Cas1OASysNeedsQuestionTransformer()
 
   @Nested
-  inner class TransformToNeedsQuestion {
+  inner class TransformToSupportingInformationMetadataQuestion {
+
+    @Test
+    fun `if no supporting information, return an empty list`() {
+      val result = transformer.transformToSupportingInformationMetadata(null)
+
+      assertThat(result).isEmpty()
+    }
 
     @Test
     fun `exclude irrelevant questions`() {

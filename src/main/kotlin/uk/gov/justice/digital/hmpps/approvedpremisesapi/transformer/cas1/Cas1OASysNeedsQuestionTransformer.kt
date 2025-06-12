@@ -9,15 +9,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 @Service
 class Cas1OASysNeedsQuestionTransformer {
 
-  fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails) = toQuestionState(needsDetails).map {
-    Cas1OASysSupportingInformationQuestionMetaData(
-      section = it.sectionNumber,
-      sectionLabel = it.sectionLabel,
-      inclusionOptional = it.optional,
-      oasysAnswerLinkedToHarm = it.linkedToHarm,
-      oasysAnswerLinkedToReOffending = it.linkedToReOffending,
-    )
-  }
+  fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails?) = needsDetails?.let {
+    toQuestionState(needsDetails).map {
+      Cas1OASysSupportingInformationQuestionMetaData(
+        section = it.sectionNumber,
+        sectionLabel = it.sectionLabel,
+        inclusionOptional = it.optional,
+        oasysAnswerLinkedToHarm = it.linkedToHarm,
+        oasysAnswerLinkedToReOffending = it.linkedToReOffending,
+      )
+    }
+  } ?: emptyList()
 
   fun transformToOASysQuestion(needsDetails: NeedsDetails, includeOptionalSections: List<Int>) = toQuestionState(needsDetails)
     .filter { !it.optional || includeOptionalSections.contains(it.sectionNumber) }
