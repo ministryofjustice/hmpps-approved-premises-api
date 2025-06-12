@@ -24,11 +24,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 
 class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
-  lateinit var cas1OASysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer
+  lateinit var oaSysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer
+
+  @Autowired
+  lateinit var oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer
 
   companion object {
     const val CRN = "CRN123"
@@ -94,6 +98,10 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
+      val offenceDetails = OffenceDetailsFactory().produce()
+
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
+
       webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/metadata")
         .header("Authorization", "Bearer $jwt")
@@ -104,7 +112,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .json(
           objectMapper.writeValueAsString(
             Cas1OASysMetadata(
-              cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
+              oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails),
+              oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
             ),
           ),
         )

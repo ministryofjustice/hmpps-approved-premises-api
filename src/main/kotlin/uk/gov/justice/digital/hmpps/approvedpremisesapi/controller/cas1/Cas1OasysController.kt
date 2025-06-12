@@ -32,7 +32,10 @@ class Cas1OasysController(
 
     return ResponseEntity.ok(
       Cas1OASysMetadata(
-        cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
+        metadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(
+          extractEntityFromCasResult(oaSysService.getOASysOffenceDetails(crn)),
+        ),
+        supportingInformation = cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
           extractEntityFromCasResult(oaSysService.getOASysNeeds(crn)),
         ),
       ),

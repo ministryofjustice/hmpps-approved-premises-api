@@ -8662,12 +8662,15 @@ components:
         - reason
     Cas1OASysMetadata:
       properties:
+        metadata:
+          $ref: '#/components/schemas/Cas1OASysAssessmentMetadata'
         supportingInformation:
           type: array
           items:
             $ref: '#/components/schemas/Cas1OASysSupportingInformationQuestionMetaData'
       required:
-        - supportingInformationQuestions
+        - metadata
+        - supportingInformation
     Cas1OASysSupportingInformationQuestionMetaData:
       type: object
       properties:
