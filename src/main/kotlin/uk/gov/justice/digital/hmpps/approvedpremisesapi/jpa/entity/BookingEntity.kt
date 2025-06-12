@@ -216,23 +216,11 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
   )
   fun findClosestBookingBeforeDateForBeds(date: LocalDate, bedIds: List<UUID>): List<BookingEntity>
 
-  companion object {
-    private const val OFFENDERS_QUERY = """
-       WITH offenders AS
-         (SELECT distinct on (crn) crn,name
-            FROM temporary_accommodation_applications taa
-            INNER JOIN applications a ON a.id = taa.id
-            ORDER BY crn,a.created_at desc)
-    """
-  }
-
   @Query(
-    """
-      $OFFENDERS_QUERY
-      
+    """      
       SELECT
         b.crn AS personCrn,
-        offenders.name AS personName,
+        b.offender_name AS personName,
         Cast(b.id as varchar) bookingId,
         COALESCE(b.status, 'provisional') as bookingStatus,
         b.arrival_date AS bookingStartDate,
@@ -247,31 +235,26 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
         Cast(r.id as varchar) roomId,
         r.name AS roomName,
         Cast(b2.id as varchar) bedId,
-        b2.name AS bedName,
-        b.offender_name AS offenderName
+        b2.name AS bedName
       FROM bookings b
       LEFT JOIN beds b2 ON b.bed_id = b2.id
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
-      LEFT JOIN offenders on b.crn = offenders.crn
       WHERE b.service = 'temporary-accommodation'
       AND (:status is null or b.status = :status)
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
+      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
-    countQuery = """
-      $OFFENDERS_QUERY
-      
+    countQuery = """      
       SELECT count(1)
       FROM bookings b
       LEFT JOIN beds b2 ON b.bed_id = b2.id
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
-      LEFT JOIN offenders on b.crn = offenders.crn
       WHERE b.service = 'temporary-accommodation'
       AND (:status is null or b.status = :status)
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(offenders.name) LIKE CONCAT('%', lower(:crnOrName),'%'))
+      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
     nativeQuery = true,
   )
