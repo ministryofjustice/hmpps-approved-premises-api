@@ -56,6 +56,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   application: ApprovedPremisesApplicationEntity? = null,
   essentialCriteria: List<CharacteristicEntity>? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
+  apType: ApprovedPremisesType? = null,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -99,6 +100,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
     withNoticeType(noticeType)
     withCaseManagerUserDetails(caseManager)
     withCaseManagerIsNotApplicant(caseManager != null)
+    apType?.let { withApType(it) }
   }
 
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {

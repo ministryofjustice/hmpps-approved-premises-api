@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
@@ -38,6 +39,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   isWithdrawn: Boolean = false,
   placementDates: List<PlacementDateEntity> = mutableListOf(),
   application: ApprovedPremisesApplicationEntity? = null,
+  apType: ApprovedPremisesType? = null,
 ): PlacementApplicationEntity {
   val userApArea = givenAnApArea()
 
@@ -65,6 +67,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     name = name,
     requiredQualification = requiredQualification,
     noticeType = noticeType,
+    apType = apType,
   ).second
 
   return placementApplicationFactory.produceAndPersist {
