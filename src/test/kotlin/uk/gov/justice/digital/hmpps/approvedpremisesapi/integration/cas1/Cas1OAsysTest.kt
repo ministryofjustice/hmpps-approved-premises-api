@@ -239,6 +239,35 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
+    fun `Risk Management Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+      apOASysContextMockRiskManagementPlan404Call(CRN)
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
     fun `Risk Management Plan Success`() {
       val (_, jwt) = givenAUser()
 
@@ -259,6 +288,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -286,6 +316,34 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
+    fun `Offence Details Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Impact on the victim",
+          questionNumber = "2.5",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
     fun `Offence Details Success`() {
       val (_, jwt) = givenAUser()
 
@@ -304,6 +362,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -351,6 +410,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -385,12 +445,40 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
       apOASysContextMockRiskToTheIndividual404Call(CRN)
 
-      val result = webTestClient.get()
+      webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isNotFound
+    }
+
+    @Test
+    fun `Risk to self Success Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskToTheIndividual404Call(CRN)
+
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = null,
+        ),
+      )
     }
 
     @Test
@@ -414,6 +502,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -439,51 +528,91 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .expectStatus()
         .isNotFound
     }
-  }
 
-  @Test
-  fun `Supporting Information Success`() {
-    val (_, jwt) = givenAUser()
+    @Test
+    fun `Supporting Information Not Found, return empty questions`() {
+      val (_, jwt) = givenAUser()
 
-    apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+      apOASysContextMockNeedsDetails404Call(CRN)
 
-    apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
 
-    val needsDetails = NeedsDetailsFactory().apply {
-      withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
-      withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
-      withEmotionalIssuesDetails(linkedToHarm = null, emotionalIssuesDetails = "emotional answer")
-    }.produce()
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
 
-    apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Relationship issues contributing to risks of offending and harm",
+          questionNumber = "6.9",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Issues of emotional well-being contributing to risks of offending and harm",
+          questionNumber = "10.9",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Lifestyle issues contributing to risks of offending and harm",
+          questionNumber = "7.9",
+          answer = null,
+        ),
+      )
+    }
 
-    val result = webTestClient.get()
-      .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .bodyAsObject<Cas1OASysGroup>()
+    @Test
+    fun `Supporting Information Success`() {
+      val (_, jwt) = givenAUser()
 
-    assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
-    assertThat(result.answers).contains(
-      OASysQuestion(
-        label = "Relationship issues contributing to risks of offending and harm",
-        questionNumber = "6.9",
-        answer = "relationship answer",
-      ),
-      OASysQuestion(
-        label = "Issues of emotional well-being contributing to risks of offending and harm",
-        questionNumber = "10.9",
-        answer = "emotional answer",
-      ),
-    )
-    assertThat(result.answers).doesNotContain(
-      OASysQuestion(
-        label = "Lifestyle issues contributing to risks of offending and harm",
-        questionNumber = "7.9",
-        answer = "relationship answer",
-      ),
-    )
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+
+      val needsDetails = NeedsDetailsFactory().apply {
+        withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
+        withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
+        withEmotionalIssuesDetails(linkedToHarm = null, emotionalIssuesDetails = "emotional answer")
+      }.produce()
+
+      apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Relationship issues contributing to risks of offending and harm",
+          questionNumber = "6.9",
+          answer = "relationship answer",
+        ),
+        OASysQuestion(
+          label = "Issues of emotional well-being contributing to risks of offending and harm",
+          questionNumber = "10.9",
+          answer = "emotional answer",
+        ),
+      )
+      assertThat(result.answers).doesNotContain(
+        OASysQuestion(
+          label = "Lifestyle issues contributing to risks of offending and harm",
+          questionNumber = "7.9",
+          answer = "relationship answer",
+        ),
+      )
+    }
   }
 }

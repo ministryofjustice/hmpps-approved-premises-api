@@ -17,6 +17,223 @@ class OASysSectionsTransformerTest {
   private val oaSysSectionsTransformer = OASysSectionsTransformer()
 
   @Nested
+  inner class OffenceDetailsAnswers {
+
+    @Test
+    fun `transforms correctly`() {
+      val offenceDetailsApiResponse = OffenceDetailsFactory().apply {
+        withAssessmentId(34853487)
+        withDateCompleted(null)
+        withOffenceAnalysis("Offence Analysis")
+        withOthersInvolved("Others Involved")
+        withIssueContributingToRisk("Issue Contributing to Risk")
+        withOffenceMotivation("Offence Motivation")
+        withVictimImpact("Impact on the victim")
+        withVictimPerpetratorRel("Other victim information")
+        withVictimInfo("Victim Info")
+        withPatternOffending("Pattern Reoffending")
+        withAcceptsResponsibility("Accepts Responsibility")
+      }.produce()
+
+      val result = oaSysSectionsTransformer.offenceDetailsAnswers(offenceDetailsApiResponse.offence)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Offence analysis",
+          questionNumber = "2.1",
+          answer = offenceDetailsApiResponse.offence?.offenceAnalysis,
+        ),
+        OASysQuestion(
+          label = "Victim - perpetrator relationship",
+          questionNumber = "2.4.1",
+          answer = offenceDetailsApiResponse.offence?.victimPerpetratorRel,
+        ),
+        OASysQuestion(
+          label = "Other victim information",
+          questionNumber = "2.4.2",
+          answer = offenceDetailsApiResponse.offence?.victimInfo,
+        ),
+        OASysQuestion(
+          label = "Impact on the victim",
+          questionNumber = "2.5",
+          answer = offenceDetailsApiResponse.offence?.victimImpact,
+        ),
+        OASysQuestion(
+          label = "Motivation and triggers",
+          questionNumber = "2.8.3",
+          answer = offenceDetailsApiResponse.offence?.offenceMotivation,
+        ),
+        OASysQuestion(
+          label = "Issues contributing to risks",
+          questionNumber = "2.98",
+          answer = offenceDetailsApiResponse.offence?.issueContributingToRisk,
+        ),
+        OASysQuestion(
+          label = "Pattern of offending",
+          questionNumber = "2.12",
+          answer = offenceDetailsApiResponse.offence?.patternOffending,
+        ),
+      )
+    }
+
+    @Test
+    fun `return empty questions if no assessment available`() {
+      val result = oaSysSectionsTransformer.offenceDetailsAnswers(null)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Offence analysis",
+          questionNumber = "2.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Victim - perpetrator relationship",
+          questionNumber = "2.4.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Other victim information",
+          questionNumber = "2.4.2",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Impact on the victim",
+          questionNumber = "2.5",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Motivation and triggers",
+          questionNumber = "2.8.3",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Issues contributing to risks",
+          questionNumber = "2.98",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Pattern of offending",
+          questionNumber = "2.12",
+          answer = null,
+        ),
+      )
+    }
+  }
+
+  @Nested
+  inner class RiskManagementAnswers {
+
+    @Test
+    fun `transforms correctly`() {
+      val riskManagementPlanApiResponse = RiskManagementPlanFactory().apply {
+        withAssessmentId(34853487)
+        withDateCompleted(null)
+        withFurtherConsiderations("Further Considerations")
+        withAdditionalComments("Additional Comments")
+        withContingencyPlans("Contingency Plans")
+        withVictimSafetyPlanning("Victim Safety Planning")
+        withInterventionsAndTreatment("Interventions and Treatment")
+        withMonitoringAndControl("Monitoring and Control")
+        withSupervision("Supervision")
+        withKeyInformationAboutCurrentSituation("Key Information About Current Situation")
+      }.produce()
+
+      val result = oaSysSectionsTransformer.riskManagementPlanAnswers(riskManagementPlanApiResponse.riskManagementPlan)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Further considerations",
+          questionNumber = "RM28",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.furtherConsiderations,
+        ),
+        OASysQuestion(
+          label = "Additional comments",
+          questionNumber = "RM35",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.additionalComments,
+        ),
+        OASysQuestion(
+          label = "Contingency plans",
+          questionNumber = "RM34",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.contingencyPlans,
+        ),
+        OASysQuestion(
+          label = "Victim safety planning",
+          questionNumber = "RM33",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.victimSafetyPlanning,
+        ),
+        OASysQuestion(
+          label = "Interventions and treatment",
+          questionNumber = "RM32",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.interventionsAndTreatment,
+        ),
+        OASysQuestion(
+          label = "Monitoring and control",
+          questionNumber = "RM31",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.monitoringAndControl,
+        ),
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.supervision,
+        ),
+        OASysQuestion(
+          label = "Key information about current situation",
+          questionNumber = "RM28.1",
+          answer = riskManagementPlanApiResponse.riskManagementPlan?.keyInformationAboutCurrentSituation,
+        ),
+      )
+    }
+
+    @Test
+    fun `return empty questions if no assessment available`() {
+      val result = oaSysSectionsTransformer.riskManagementPlanAnswers(null)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Further considerations",
+          questionNumber = "RM28",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Additional comments",
+          questionNumber = "RM35",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Contingency plans",
+          questionNumber = "RM34",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Victim safety planning",
+          questionNumber = "RM33",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Interventions and treatment",
+          questionNumber = "RM32",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Monitoring and control",
+          questionNumber = "RM31",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Key information about current situation",
+          questionNumber = "RM28.1",
+          answer = null,
+        ),
+      )
+    }
+  }
+
+  @Nested
   inner class RiskToSelfAnswers {
 
     @Test
@@ -51,6 +268,29 @@ class OASysSectionsTransformerTest {
           label = "Current concerns about Vulnerability",
           questionNumber = "R8.3.1",
           answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
+        ),
+      )
+    }
+
+    @Test
+    fun `return empty questions if no assessment available`() {
+      val result = oaSysSectionsTransformer.riskToSelfAnswers(null)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Current concerns about self-harm or suicide",
+          questionNumber = "R8.1.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Coping in Custody or Hostel",
+          questionNumber = "R8.2.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = null,
         ),
       )
     }
@@ -98,6 +338,39 @@ class OASysSectionsTransformerTest {
           label = "What circumstances are likely to reduce the risk",
           questionNumber = "R10.5",
           answer = roshSummaryApiResponse.roshSummary?.riskReductionLikelyTo,
+        ),
+      )
+    }
+
+    @Test
+    fun `return empty questions if no assessment available`() {
+      val result = oaSysSectionsTransformer.roshSummaryAnswers(null)
+
+      assertThat(result).containsExactly(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "What is the nature of the risk",
+          questionNumber = "R10.2",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "When is the risk likely to be the greatest",
+          questionNumber = "R10.3",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to increase risk",
+          questionNumber = "R10.4",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to reduce the risk",
+          questionNumber = "R10.5",
+          answer = null,
         ),
       )
     }
