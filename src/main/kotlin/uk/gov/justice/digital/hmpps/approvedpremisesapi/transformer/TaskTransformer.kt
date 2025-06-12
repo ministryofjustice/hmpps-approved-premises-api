@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
@@ -59,6 +60,7 @@ class TaskTransformer(
       is ApprovedPremisesApplicationEntity -> application.arrivalDate?.toLocalDate()
       else -> null
     },
+    apType = (assessment.application as ApprovedPremisesApplicationEntity).apType.asApiType(),
   )
 
   fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>) = PlacementApplicationTask(
@@ -90,6 +92,7 @@ class TaskTransformer(
     expectedArrivalDate = placementApplication.placementDates
       .map { it.expectedArrival }
       .minByOrNull { it },
+    apType = placementApplication.application.apType.asApiType(),
   )
 
   private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): PersonSummary = personTransformer.personSummaryInfoToPersonSummary(
