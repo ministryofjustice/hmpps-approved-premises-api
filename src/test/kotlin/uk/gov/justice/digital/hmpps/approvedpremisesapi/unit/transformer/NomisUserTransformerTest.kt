@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 
 class NomisUserTransformerTest {

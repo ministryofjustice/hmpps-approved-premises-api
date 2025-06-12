@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -28,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Prof
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers

@@ -8,15 +8,15 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.jwt.Jwt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ExternalUserService
 
 class ExternalUserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()

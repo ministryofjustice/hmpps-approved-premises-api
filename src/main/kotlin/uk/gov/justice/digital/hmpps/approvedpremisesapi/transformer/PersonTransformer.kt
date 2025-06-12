@@ -12,11 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
@@ -30,14 +30,17 @@ class PersonTransformer {
     is PersonInfoResult.NotFound -> PersonSummaryInfoResult.NotFound(
       crn = personInfo.crn,
     )
+
     is PersonInfoResult.Success.Full -> PersonSummaryInfoResult.Success.Full(
       crn = personInfo.crn,
       summary = personInfo.offenderDetailSummary.asCaseSummary(),
     )
+
     is PersonInfoResult.Success.Restricted -> PersonSummaryInfoResult.Success.Restricted(
       crn = personInfo.crn,
       nomsNumber = personInfo.nomsNumber,
     )
+
     is PersonInfoResult.Unknown -> PersonSummaryInfoResult.Unknown(
       crn = personInfo.crn,
     )
@@ -55,12 +58,14 @@ class PersonTransformer {
           isRestricted = personSummaryInfo.summary.currentRestriction || personSummaryInfo.summary.currentExclusion,
         )
       }
+
       is PersonSummaryInfoResult.Success.Restricted -> {
         return RestrictedPersonSummary(
           crn = personSummaryInfo.crn,
           personType = PersonSummaryDiscriminator.restrictedPersonSummary,
         )
       }
+
       is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> {
         return UnknownPersonSummary(
           crn = personSummaryInfo.crn,

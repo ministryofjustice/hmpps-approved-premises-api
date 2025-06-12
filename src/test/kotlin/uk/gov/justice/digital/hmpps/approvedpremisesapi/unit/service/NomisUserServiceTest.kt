@@ -7,6 +7,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
@@ -15,10 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisGeneralAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisStaffInformationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.NomisUserService
 
 class NomisUserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()
