@@ -61,6 +61,12 @@ data class Cas2ApplicationSummaryEntity(
   val crn: String,
   @Column(name = "noms_number")
   var nomsNumber: String,
+  /*
+   * BAIL-WIP The userid  is retrieved from the sql view named cas_2_application_summary or
+   * cas_2_application_summary_live`. These will need work before we start to use the cas2
+   * user entity. I’m not how best to bridge the view into the cas2 user entity way of working
+   * see https://dsdmoj.atlassian.net/browse/CBA-693
+   */
   @Column(name = "created_by_user_id")
   val userId: String,
   @Column(name = "name")
