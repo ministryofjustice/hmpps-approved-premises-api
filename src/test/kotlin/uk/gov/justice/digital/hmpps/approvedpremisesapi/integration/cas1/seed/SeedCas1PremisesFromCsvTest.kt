@@ -232,6 +232,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       .withLatitude(53.9634721)
       .withSupportsSpaceBookings("yes")
       .withManagerDetails("manager details")
+      .withCruManagementAreaName("North East")
       .produce()
 
     seed(
@@ -261,6 +262,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
     assertThat(persistedApprovedPremises.supportsSpaceBookings).isTrue()
     assertThat(persistedApprovedPremises.managerDetails).isEqualTo("manager details")
+    assertThat(persistedApprovedPremises.cruManagementArea!!.name).isEqualTo("North East")
   }
 
   @Test
@@ -290,14 +292,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       .withSupportsSpaceBookings("no")
       .produce()
 
-    seed(
-      SeedFileType.approvedPremises,
-      approvedPremisesSeedCsvRowsToCsv(
-        listOf(
-          csvRow,
-        ),
-      ),
-    )
+    seed(SeedFileType.approvedPremises, approvedPremisesSeedCsvRowsToCsv(listOf(csvRow)))
 
     val persistedApprovedPremises = approvedPremisesRepository.findByApCode(csvRow.apCode)
     assertThat(persistedApprovedPremises).isNotNull
@@ -361,6 +356,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         "fullAddress",
         "isMHAPElliottHouse",
         "isMHAPStJosephs",
+        "cruManagementAreaName",
       )
       .newRow()
 
@@ -405,6 +401,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         .withQuotedField(it.fullAddress ?: "")
         .withQuotedField(it.isMHAPElliottHouse)
         .withQuotedField(it.isMHAPStJosephs)
+        .withQuotedField(it.cruManagementAreaName)
         .newRow()
     }
 
@@ -452,6 +449,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var managerDetails: Yielded<String> = { "no" }
   private var isMHAPElliottHouse: Yielded<String> = { "no" }
   private var isMHAPStJosephs: Yielded<String> = { "no" }
+  private var cruManagementAreaName = { randomStringMultiCaseWithNumbers(6) }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -528,6 +526,10 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     this.isMHAPStJosephs = { value }
   }
 
+  fun withCruManagementAreaName(value: String) = apply {
+    this.cruManagementAreaName = { value }
+  }
+
   override fun produce() = ApprovedPremisesSeedCsvRow(
     name = this.name(),
     fullAddress = this.fullAddress(),
@@ -568,5 +570,6 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     managerDetails = this.managerDetails(),
     isMHAPElliottHouse = this.isMHAPElliottHouse(),
     isMHAPStJosephs = this.isMHAPStJosephs(),
+    cruManagementAreaName = this.cruManagementAreaName(),
   )
 }

@@ -17,6 +17,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -46,6 +47,7 @@ class SeedOnStartupServiceTest {
   private val mockSeedService = mockk<SeedService>()
   private val mockEnvironmentService = mockk<EnvironmentService>()
   private val mockSentryService = mockk<SentryService>()
+  private val mockCruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
   private val logEntries = mutableListOf<LogEntry>()
 
   private val seedService = SeedOnStartupService(
@@ -151,6 +153,7 @@ class SeedOnStartupServiceTest {
     every { mockApplicationContext.getBean(CharacteristicRepository::class.java) } returns mockCharacteristicRepository
     every { mockApplicationContext.getBean(RoomRepository::class.java) } returns mockRoomRepository
     every { mockApplicationContext.getBean(BedRepository::class.java) } returns mockBedRepository
+    every { mockApplicationContext.getBean(Cas1CruManagementAreaRepository::class.java) } returns mockCruManagementAreaRepository
 
     val spy = spyk(seedService, recordPrivateCalls = true)
 
@@ -173,6 +176,7 @@ class SeedOnStartupServiceTest {
         mockApplicationContext.getBean(ProbationRegionRepository::class.java),
         mockApplicationContext.getBean(LocalAuthorityAreaRepository::class.java),
         mockApplicationContext.getBean(CharacteristicRepository::class.java),
+        mockApplicationContext.getBean(Cas1CruManagementAreaRepository::class.java),
       ),
     ).split("/").last()
 

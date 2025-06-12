@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
@@ -26,7 +27,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
-  fun `create new premise - all characteristics`() {
+  fun `create new premise - all characteristics, male`() {
     val dataFrame = createNameValueDataFrame(
       "Name of AP", "The Premise Name",
       "AP Identifier (Q No.)", "Q123",
@@ -91,6 +92,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.gender).isEqualTo(ApprovedPremisesGender.MAN)
     assertThat(createdPremise.supportsSpaceBookings).isEqualTo(false)
     assertThat(createdPremise.managerDetails).isNull()
+    assertThat(createdPremise.cruManagementArea!!.name).isEqualTo("North East")
 
     assertThat(createdPremise.characteristics).hasSize(19)
 
@@ -121,7 +123,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
-  fun `create new premise - no characteristics`() {
+  fun `create new premise - no characteristics, female`() {
     val dataFrame = createNameValueDataFrame(
       "Name of AP", "The Premise Name 2",
       "AP Identifier (Q No.)", "Q123",
@@ -185,6 +187,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.gender).isEqualTo(ApprovedPremisesGender.WOMAN)
     assertThat(createdPremise.supportsSpaceBookings).isEqualTo(false)
     assertThat(createdPremise.managerDetails).isNull()
+    assertThat(createdPremise.cruManagementArea!!.name).isEqualTo("Women's Estate")
 
     assertThat(createdPremise.characteristics).isEmpty()
   }
@@ -333,6 +336,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
           characteristicRepository.findCas1ByPropertyName("hasLift")!!,
         ),
       )
+      withCruManagementArea(givenACas1CruManagementArea())
     }
 
     roomEntityFactory.produceAndPersist {

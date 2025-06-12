@@ -7,8 +7,10 @@ import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -44,6 +46,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var rooms: Yielded<MutableList<RoomEntity>> = { mutableListOf() }
   private var supportsSpaceBookings: Yielded<Boolean> = { false }
   private var managerDetails: Yielded<String> = { randomStringUpperCase(10) }
+  private var cruManagementArea = { Cas1CruManagementAreaEntityFactory().produce() }
 
   fun withDefaults() = apply {
     withDefaultProbationRegion()
@@ -182,6 +185,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.managerDetails = { managerDetails }
   }
 
+  fun withCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity) = apply {
+    this.cruManagementArea = { cruManagementArea }
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -208,5 +215,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     supportsSpaceBookings = this.supportsSpaceBookings(),
     managerDetails = this.managerDetails(),
     fullAddress = this.fullAddress(),
+    cruManagementArea = this.cruManagementArea(),
   )
 }

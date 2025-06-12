@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -698,8 +697,8 @@ class ApplicationService(
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
       this.apArea = apArea
       this.cruManagementArea = if (submitApplication.isWomensApplication == true) {
-        cas1CruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
-          ?: throw InternalServerErrorProblem("Could not find women's estate CRU Management Area Entity with ID ${Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID}")
+        cas1CruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaRepository.WOMENS_ESTATE_ID)
+          ?: throw InternalServerErrorProblem("Could not find women's estate CRU Management Area Entity with ID ${Cas1CruManagementAreaRepository.WOMENS_ESTATE_ID}")
       } else {
         apArea.defaultCruManagementArea
       }
