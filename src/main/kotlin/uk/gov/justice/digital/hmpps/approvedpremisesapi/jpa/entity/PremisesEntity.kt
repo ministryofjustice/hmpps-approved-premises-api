@@ -209,7 +209,7 @@ class ApprovedPremisesEntity(
   var fullAddress: String?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_cru_management_area_id")
-  val cruManagementArea: Cas1CruManagementAreaEntity?,
+  var cruManagementArea: Cas1CruManagementAreaEntity?,
 ) : PremisesEntity(
   id,
   name,
