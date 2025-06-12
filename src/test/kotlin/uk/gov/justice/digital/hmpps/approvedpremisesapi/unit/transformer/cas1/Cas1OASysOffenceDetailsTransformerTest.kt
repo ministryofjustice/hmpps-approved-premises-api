@@ -16,7 +16,7 @@ class Cas1OASysOffenceDetailsTransformerTest {
   inner class ToAssessmentMetadata {
 
     @Test
-    fun success() {
+    fun `has applicable assessment`() {
       val initiationDate = OffsetDateTime.parse("2020-05-02T12:01:00+00:00")
       val completionDate = OffsetDateTime.parse("2021-05-02T12:02:00+00:00")
 
@@ -27,8 +27,18 @@ class Cas1OASysOffenceDetailsTransformerTest {
           .produce(),
       )
 
+      assertThat(result.hasApplicableAssessment).isTrue()
       assertThat(result.dateStarted).isEqualTo(Instant.parse("2020-05-02T12:01:00+00:00"))
       assertThat(result.dateCompleted).isEqualTo(Instant.parse("2021-05-02T12:02:00+00:00"))
+    }
+
+    @Test
+    fun `no applicable assessment`() {
+      val result = transformer.toAssessmentMetadata(null)
+
+      assertThat(result.hasApplicableAssessment).isFalse()
+      assertThat(result.dateStarted).isNull()
+      assertThat(result.dateCompleted).isNull()
     }
   }
 }

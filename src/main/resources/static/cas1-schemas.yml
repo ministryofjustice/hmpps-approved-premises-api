@@ -1916,6 +1916,8 @@ components:
     Cas1OASysAssessmentMetadata:
       type: object
       properties:
+        hasApplicableAssessment:
+          type: boolean
         dateStarted:
           type: string
           format: date-time
@@ -1923,7 +1925,7 @@ components:
           type: string
           format: date-time
       required:
-        - dateStarted
+        - hasApplicableAssessment
 
 
 
