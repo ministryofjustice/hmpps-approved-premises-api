@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
 

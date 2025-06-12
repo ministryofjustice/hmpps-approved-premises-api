@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser

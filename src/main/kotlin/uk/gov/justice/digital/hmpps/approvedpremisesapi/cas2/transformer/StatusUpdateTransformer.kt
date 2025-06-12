@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExternalUserTransformer
 import java.util.UUID
 
 @Component("Cas2StatusUpdateTransformer")

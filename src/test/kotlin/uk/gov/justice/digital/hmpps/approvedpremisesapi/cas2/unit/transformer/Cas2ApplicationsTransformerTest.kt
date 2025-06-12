@@ -27,12 +27,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate

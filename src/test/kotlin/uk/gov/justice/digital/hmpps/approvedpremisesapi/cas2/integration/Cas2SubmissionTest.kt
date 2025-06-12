@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
@@ -42,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
