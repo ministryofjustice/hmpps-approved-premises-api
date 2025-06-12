@@ -6,11 +6,13 @@ import org.javers.core.JaversBuilder
 import org.javers.core.diff.ListCompareAlgorithm
 import org.locationtech.jts.geom.Point
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE
@@ -41,6 +43,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val characteristicRepository: CharacteristicRepository,
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
+  private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val entityManager: EntityManager,
 ) : ExcelSeedJob {
 
@@ -157,6 +160,12 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     changesLog.info("Creating new premise for qcode $qCode (${premisesInfo.siteSurveyPremise.name})")
 
     val siteSurvey = premisesInfo.siteSurveyPremise
+    val region = premisesInfo.probationRegion
+    val gender = siteSurvey.maleFemale.toApprovedPremisesGender()
+    val cruManagementArea = when (gender) {
+      ApprovedPremisesGender.MAN -> region.apArea!!.defaultCruManagementArea
+      ApprovedPremisesGender.WOMAN -> cruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaRepository.WOMENS_ESTATE_ID)!!
+    }
 
     val approvedPremises = premisesRepository.save(
       ApprovedPremisesEntity(
@@ -172,7 +181,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
         notes = "",
         // A new row is required in site surveys to capture this
         emailAddress = null,
-        probationRegion = premisesInfo.probationRegion,
+        probationRegion = region,
         localAuthorityArea = premisesInfo.localAuthorityArea,
         bookings = mutableListOf(),
         lostBeds = mutableListOf(),
@@ -189,6 +198,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
         supportsSpaceBookings = false,
         // A new row is required in site surveys to capture this
         managerDetails = null,
+        cruManagementArea = cruManagementArea,
       ),
     )
 

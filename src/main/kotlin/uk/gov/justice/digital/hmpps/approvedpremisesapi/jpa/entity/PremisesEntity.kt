@@ -5,6 +5,7 @@ import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
@@ -206,6 +207,9 @@ class ApprovedPremisesEntity(
    * It's recommended that [resolveFullAddress] is used in the meantime when address is required
    */
   var fullAddress: String?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_cru_management_area_id")
+  val cruManagementArea: Cas1CruManagementAreaEntity?,
 ) : PremisesEntity(
   id,
   name,

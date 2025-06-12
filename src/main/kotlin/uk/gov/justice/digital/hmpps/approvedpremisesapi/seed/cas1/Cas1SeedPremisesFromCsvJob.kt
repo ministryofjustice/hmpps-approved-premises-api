@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -29,6 +30,7 @@ class Cas1SeedPremisesFromCsvJob(
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val characteristicRepository: CharacteristicRepository,
+  private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
 ) : SeedJob<ApprovedPremisesSeedCsvRow>(
   requiredHeaders = setOf(
     "name",
@@ -70,6 +72,7 @@ class Cas1SeedPremisesFromCsvJob(
     "fullAddress",
     "isMHAPElliottHouse",
     "isMHAPStJosephs",
+    "cruManagementAreaName",
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -120,6 +123,7 @@ class Cas1SeedPremisesFromCsvJob(
     fullAddress = columns["fullAddress"],
     isMHAPElliottHouse = columns["isMHAPElliottHouse"]!!,
     isMHAPStJosephs = columns["isMHAPStJosephs"]!!,
+    cruManagementAreaName = columns["cruManagementAreaName"]!!,
   )
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -204,6 +208,7 @@ class Cas1SeedPremisesFromCsvJob(
         supportsSpaceBookings = castBooleanString(row.supportsSpaceBookings),
         managerDetails = row.managerDetails,
         fullAddress = row.fullAddress,
+        cruManagementArea = cruManagementAreaRepository.findByName(row.cruManagementAreaName) ?: error("Could not find management area with name ${row.cruManagementAreaName}"),
       ),
     )
 
@@ -308,4 +313,5 @@ data class ApprovedPremisesSeedCsvRow(
   val fullAddress: String?,
   val isMHAPElliottHouse: String,
   val isMHAPStJosephs: String,
+  val cruManagementAreaName: String,
 )

@@ -47,4 +47,5 @@ fun IntegrationTestBase.givenAnApprovedPremises(
     withLongitude(longitude)
     withCharacteristics(characteristics.toMutableList())
     withGender(gender)
+    withCruManagementArea(givenACas1CruManagementArea())
   }
