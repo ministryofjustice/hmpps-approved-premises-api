@@ -19,7 +19,7 @@ import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
@@ -40,7 +40,10 @@ SELECT
           la.name as localAuthorityAreaName,
           beds.id as bedspaceId,
           rooms.name as bedspaceReference,
-          CASE WHEN beds.end_date <= CURRENT_DATE THEN 'archived' ELSE 'online' END as bedspaceStatus
+          CASE 
+            WHEN beds.end_date <= CURRENT_DATE THEN 'archived' 
+            WHEN beds.start_date IS NOT NULL AND beds.start_date > CURRENT_DATE THEN 'upcoming' 
+            ELSE 'online' END as bedspaceStatus
       FROM
           temporary_accommodation_premises tap
           INNER JOIN premises p on tap.premises_id = p.id
@@ -306,7 +309,7 @@ interface TemporaryAccommodationPremisesSummary {
   val localAuthorityAreaName: String?
   val bedspaceId: UUID?
   val bedspaceReference: String?
-  val bedspaceStatus: Cas3BedspaceSummary.Status?
+  val bedspaceStatus: Cas3BedspaceStatus?
 }
 
 data class ApprovedPremisesBasicSummary(

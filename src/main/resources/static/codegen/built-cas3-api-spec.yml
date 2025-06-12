@@ -5287,9 +5287,7 @@ components:
         reference:
           type: string
         status:
-          enum:
-            - online
-            - archived
+          $ref: '#/components/schemas/Cas3BedspaceStatus'
       required:
         - id
         - reference
@@ -5299,6 +5297,12 @@ components:
       enum:
         - online
         - archived
+    Cas3BedspaceStatus:
+      type: string
+      enum:
+        - online
+        - archived
+        - upcoming
     Cas3Departure:
       type: object
       properties:
