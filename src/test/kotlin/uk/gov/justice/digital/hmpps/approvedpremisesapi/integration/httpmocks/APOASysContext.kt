@@ -13,9 +13,21 @@ fun IntegrationTestBase.apOASysContextMockSuccessfulOffenceDetailsCall(crn: Stri
   responseBody = response,
 )
 
+fun IntegrationTestBase.apOASysContextMockOffenceDetails404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/offence-details/$crn",
+  responseStatus = 404,
+  delayMs = 0,
+)
+
 fun IntegrationTestBase.apOASysContextMockSuccessfulRoSHSummaryCall(crn: String, response: RoshSummary) = mockSuccessfulGetCallWithJsonResponse(
   url = "/rosh-summary/$crn",
   responseBody = response,
+)
+
+fun IntegrationTestBase.apOASysContextMockRoSHSummary404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/rosh-summary/$crn",
+  responseStatus = 404,
+  delayMs = 0,
 )
 
 fun IntegrationTestBase.apOASysContextMockSuccessfulRiskToTheIndividualCall(crn: String, response: RisksToTheIndividual) = mockSuccessfulGetCallWithJsonResponse(
@@ -23,14 +35,32 @@ fun IntegrationTestBase.apOASysContextMockSuccessfulRiskToTheIndividualCall(crn:
   responseBody = response,
 )
 
+fun IntegrationTestBase.apOASysContextMockRiskToTheIndividual404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/risk-to-the-individual/$crn",
+  responseStatus = 404,
+  delayMs = 0,
+)
+
 fun IntegrationTestBase.apOASysContextMockSuccessfulRiskManagementPlanCall(crn: String, response: RiskManagementPlan) = mockSuccessfulGetCallWithJsonResponse(
   url = "/risk-management-plan/$crn",
   responseBody = response,
 )
 
+fun IntegrationTestBase.apOASysContextMockRiskManagementPlan404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/risk-management-plan/$crn",
+  responseStatus = 404,
+  delayMs = 0,
+)
+
 fun IntegrationTestBase.apOASysContextMockSuccessfulNeedsDetailsCall(crn: String, response: NeedsDetails) = mockSuccessfulGetCallWithJsonResponse(
   url = "/needs-details/$crn",
   responseBody = response,
+)
+
+fun IntegrationTestBase.apOASysContextMockNeedsDetails404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/needs-details/$crn",
+  responseStatus = 404,
+  delayMs = 0,
 )
 
 fun IntegrationTestBase.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(crn: String, response: NeedsDetails, delayMs: Int) = mockUnsuccessfulGetCallWithDelayedResponse(

@@ -18,6 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockNeedsDetails404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockOffenceDetails404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskManagementPlan404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRoSHSummary404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
@@ -65,6 +70,37 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
+    fun `Return 404 if offence details record can't be found for the CRN`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockOffenceDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Return 404 if needs record can't be found for the CRN`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockNeedsDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
     fun `Return forbidden if user can't access the CRN`() {
       val (_, jwt) = givenAUser()
 
@@ -89,18 +125,16 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
+      val offenceDetails = OffenceDetailsFactory().produce()
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
+
       val needsDetails = NeedsDetailsFactory().apply {
         withAssessmentId(34853487)
         withAccommodationIssuesDetails("Accommodation", true, false)
         withAttitudeIssuesDetails("Attitude", false, true)
         withFinanceIssuesDetails(null, null, null)
       }.produce()
-
       apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
-
-      val offenceDetails = OffenceDetailsFactory().produce()
-
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
 
       webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/metadata")
@@ -166,7 +200,23 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk Management Plan`() {
+    fun `Risk Management Not Found, return 404`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskManagementPlan404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Risk Management Plan Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -197,7 +247,23 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Offence Details`() {
+    fun `Offence Details Not Found, return 404`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      apOASysContextMockOffenceDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Offence Details Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -226,7 +292,23 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `ROSH Summary`() {
+    fun `ROSH Summary Not Found, return 404`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRoSHSummary404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=roshSummary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `ROSH Summary Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -257,7 +339,39 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk to self`() {
+    fun `Risk to self Not Found, return 404`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskToTheIndividual404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Risk to self Success Not Found, return 404`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockRiskToTheIndividual404Call(CRN)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Risk to self Success`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -288,49 +402,65 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Supporting Information`() {
+    fun `Supporting Information Not Found, return 404`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-
       apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apOASysContextMockNeedsDetails404Call(CRN)
 
-      val needsDetails = NeedsDetailsFactory().apply {
-        withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
-        withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
-        withEmotionalIssuesDetails(linkedToHarm = null, emotionalIssuesDetails = "emotional answer")
-      }.produce()
-
-      apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
-
-      val result = webTestClient.get()
+      webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
-        .isOk
-        .bodyAsObject<Cas1OASysGroup>()
-
-      assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
-      assertThat(result.answers).contains(
-        OASysQuestion(
-          label = "Relationship issues contributing to risks of offending and harm",
-          questionNumber = "6.9",
-          answer = "relationship answer",
-        ),
-        OASysQuestion(
-          label = "Issues of emotional well-being contributing to risks of offending and harm",
-          questionNumber = "10.9",
-          answer = "emotional answer",
-        ),
-      )
-      assertThat(result.answers).doesNotContain(
-        OASysQuestion(
-          label = "Lifestyle issues contributing to risks of offending and harm",
-          questionNumber = "7.9",
-          answer = "relationship answer",
-        ),
-      )
+        .isNotFound
     }
+  }
+
+  @Test
+  fun `Supporting Information Success`() {
+    val (_, jwt) = givenAUser()
+
+    apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+    apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+
+    val needsDetails = NeedsDetailsFactory().apply {
+      withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
+      withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
+      withEmotionalIssuesDetails(linkedToHarm = null, emotionalIssuesDetails = "emotional answer")
+    }.produce()
+
+    apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+
+    val result = webTestClient.get()
+      .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsObject<Cas1OASysGroup>()
+
+    assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
+    assertThat(result.answers).contains(
+      OASysQuestion(
+        label = "Relationship issues contributing to risks of offending and harm",
+        questionNumber = "6.9",
+        answer = "relationship answer",
+      ),
+      OASysQuestion(
+        label = "Issues of emotional well-being contributing to risks of offending and harm",
+        questionNumber = "10.9",
+        answer = "emotional answer",
+      ),
+    )
+    assertThat(result.answers).doesNotContain(
+      OASysQuestion(
+        label = "Lifestyle issues contributing to risks of offending and harm",
+        questionNumber = "7.9",
+        answer = "relationship answer",
+      ),
+    )
   }
 }
