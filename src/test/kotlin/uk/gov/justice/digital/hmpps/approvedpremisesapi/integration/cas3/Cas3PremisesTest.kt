@@ -10,6 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
@@ -35,6 +36,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3FutureBookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -252,11 +256,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   @Nested
   inner class GetPremisesSummary {
     @Test
-    fun `Get all Premises returns OK with correct premises sorted and containing archived and online bedspaces`() {
+    fun `Get all Premises returns OK with correct premises sorted and containing online, upcoming and archived bedspaces`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getListPremises(user.probationRegion)
-
-        val expectedPremisesSummaries = premises.map { premisesSummaryTransformer(it) }
+        val (premises, expectedPremisesSummaries) = getListPremises(user.probationRegion)
 
         assertUrlReturnsPremises(
           jwt,
@@ -458,12 +460,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Get all premises filters correctly when a postcode is passed in the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getListPremises(user.probationRegion)
+        val (premises, expectedPremisesSummaries) = getListPremises(user.probationRegion)
 
         // filter premises with full postcode
         val expectedPremisesPostcode = premises.take(2).first()
 
-        val expectedPremisesSummaryPostcode = premisesSummaryTransformer(expectedPremisesPostcode)
+        val expectedPremisesSummaryPostcode = expectedPremisesSummaries.take(2).first()
 
         assertUrlReturnsPremises(
           jwt,
@@ -474,7 +476,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // filter premises with full postcode without whitespaces
         val expectedPremisesPostcodeWithoutSpaces = premises.take(3).first()
 
-        val expectedPremisesSummaryWithoutSpaces = premisesSummaryTransformer(expectedPremisesPostcode)
+        val expectedPremisesSummaryWithoutSpaces = expectedPremisesSummaries.take(3).first()
 
         assertUrlReturnsPremises(
           jwt,
@@ -485,7 +487,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // filter premises with partial postcode
         val expectedPremisesPartialPostcode = premises.take(5).first()
 
-        val expectedPremisesSummaryPartialPostcode = premisesSummaryTransformer(expectedPremisesPartialPostcode)
+        val expectedPremisesSummaryPartialPostcode = expectedPremisesSummaries.take(5).first()
 
         assertUrlReturnsPremises(
           jwt,
@@ -496,11 +498,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // filter premises with partial postcode without whitespaces
         val expectedPremisesPartialPostcodeWithoutSpaces = premises.take(8).first()
 
-        val expectedPremisesSummaryPartialPostcodeWithoutSpaces = premisesSummaryTransformer(expectedPremisesPartialPostcodeWithoutSpaces)
+        val expectedPremisesSummaryPartialPostcodeWithoutSpaces = expectedPremisesSummaries.take(8).first()
 
         assertUrlReturnsPremises(
           jwt,
-          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesSummaryPartialPostcodeWithoutSpaces.postcode.replace(" ", "").substring(0, 5)}",
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesPartialPostcodeWithoutSpaces.postcode.replace(" ", "").substring(0, 5)}",
           listOf(expectedPremisesSummaryPartialPostcodeWithoutSpaces),
         )
       }
@@ -509,9 +511,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Get all premises filters correctly when 'archived' is passed in to the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getListPremises(user.probationRegion)
+        val (premises, premisesSummaries) = getListPremises(user.probationRegion)
 
-        val expectedPremisesSummaryArchived = premises.filter { it.status == PropertyStatus.archived }.map { premisesSummaryTransformer(it) }
+        val expectedPremisesSummaryArchived = premisesSummaries.filter { it.status == PropertyStatus.archived }
 
         assertUrlReturnsPremises(
           jwt,
@@ -524,9 +526,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Get all premises filters correctly when 'online' is passed in to the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getListPremises(user.probationRegion)
+        val (premises, premisesSummaries) = getListPremises(user.probationRegion)
 
-        val expectedPremisesSummaryOnline = premises.filter { it.status == PropertyStatus.active }.map { premisesSummaryTransformer(it) }
+        val expectedPremisesSummaryOnline = premisesSummaries.filter { it.status == PropertyStatus.active }
 
         assertUrlReturnsPremises(
           jwt,
@@ -540,12 +542,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @ValueSource(strings = ["addressLine1", "addressLine2"])
     fun `Get all premises filters correctly when a premises address is passed in the query parameter`(addressLineField: String) {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = getListPremises(user.probationRegion)
+        val (premises, premisesSummaries) = getListPremises(user.probationRegion)
 
         // filter premises with the full premises address
         val expectedPremisesAddress = premises.take(6).first()
 
-        val expectedPremisesSummaryAddress = premisesSummaryTransformer(expectedPremisesAddress)
+        val expectedPremisesSummaryAddress = premisesSummaries.take(6).first()
 
         val addressLine = when (addressLineField) {
           "addressLine1" -> expectedPremisesAddress.addressLine1
@@ -562,7 +564,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // filter premises with the partial premises address
         val expectedPremisesPartialAddress = premises.take(6).first()
 
-        val expectedPremisesSummaryPartialAddress = premisesSummaryTransformer(expectedPremisesPartialAddress)
+        val expectedPremisesSummaryPartialAddress = premisesSummaries.take(6).first()
 
         val partialAddressLine = when (addressLineField) {
           "addressLine1" -> expectedPremisesPartialAddress.addressLine1
@@ -627,47 +629,62 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       withService("CAS3")
     }
 
-    private fun getListPremises(probationRegion: ProbationRegionEntity): List<TemporaryAccommodationPremisesEntity> {
+    private fun getListPremises(probationRegion: ProbationRegionEntity): Pair<List<TemporaryAccommodationPremisesEntity>, List<Cas3PremisesSummary>> {
       val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
       val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
-      val premises = getListPremisesByStatus(
+      val premisesSummary = mutableListOf<Cas3PremisesSummary>()
+      val onlinePremisesWithBedspaceWithoutEndDate = getListPremisesByStatus(
         probationRegion = probationRegion,
         probationDeliveryUnit = probationDeliveryUnit,
         localAuthorityArea = localAuthorityArea,
-        dbSize = 8,
-        propertyStatus = PropertyStatus.pending,
-      )
-      val definitelyArchivedPremises = getListPremisesByStatus(
-        probationRegion = probationRegion,
-        probationDeliveryUnit = probationDeliveryUnit,
-        localAuthorityArea = localAuthorityArea,
-        dbSize = 1,
-        propertyStatus = PropertyStatus.archived,
-      )
-      val definitelyActivePremises = getListPremisesByStatus(
-        probationRegion = probationRegion,
-        probationDeliveryUnit = probationDeliveryUnit,
-        localAuthorityArea = localAuthorityArea,
-        dbSize = 1,
+        numberOfPremises = 5,
         propertyStatus = PropertyStatus.active,
-      )
-      return (
-        createRoomsWithSingleBedInPremises(premises = premises) +
-          createRoomsWithSingleBedInPremises(premises = definitelyArchivedPremises, endDate = LocalDate.now().minusDays(4)) +
-          createRoomsWithSingleBedInPremises(premises = definitelyActivePremises, endDate = LocalDate.now().plusDays(4))
-        ).sortedBy { it.id }
+      ).map { premises ->
+        val onlineBedspacesSummary = createBedspacesAndBedspacesSummary(premises, Cas3BedspaceStatus.online, true)
+        val upcomingBedspacesSummary = createBedspacesAndBedspacesSummary(premises, Cas3BedspaceStatus.upcoming, true)
+        premisesSummary.add(createPremisesSummary(premises, (onlineBedspacesSummary + upcomingBedspacesSummary)))
+        premises
+      }
+
+      val onlinePremisesWithBedspaceWithEndDate = getListPremisesByStatus(
+        probationRegion = probationRegion,
+        probationDeliveryUnit = probationDeliveryUnit,
+        localAuthorityArea = localAuthorityArea,
+        numberOfPremises = 5,
+        propertyStatus = PropertyStatus.active,
+      ).map { premises ->
+        val onlineBedspacesSummary = createBedspacesAndBedspacesSummary(premises, Cas3BedspaceStatus.online)
+        val upcomingBedspacesSummary = createBedspacesAndBedspacesSummary(premises, Cas3BedspaceStatus.upcoming)
+        premisesSummary.add(createPremisesSummary(premises, (onlineBedspacesSummary + upcomingBedspacesSummary)))
+        premises
+      }
+
+      val archivedPremises = getListPremisesByStatus(
+        probationRegion = probationRegion,
+        probationDeliveryUnit = probationDeliveryUnit,
+        localAuthorityArea = localAuthorityArea,
+        numberOfPremises = 3,
+        propertyStatus = PropertyStatus.archived,
+      ).map { premises ->
+        val archivedBedspacesSummary = createBedspacesAndBedspacesSummary(premises, Cas3BedspaceStatus.archived)
+        premisesSummary.add(createPremisesSummary(premises, archivedBedspacesSummary))
+        premises
+      }
+
+      val allPremises = (onlinePremisesWithBedspaceWithoutEndDate + onlinePremisesWithBedspaceWithEndDate + archivedPremises)
+      return Pair(allPremises.sortedBy { it.id }, premisesSummary.sortedBy { it.id })
     }
 
     private fun getListPremisesByStatus(
       probationRegion: ProbationRegionEntity,
       probationDeliveryUnit: ProbationDeliveryUnitEntity,
       localAuthorityArea: LocalAuthorityAreaEntity,
-      dbSize: Int,
+      numberOfPremises: Int,
       propertyStatus: PropertyStatus,
     ): List<TemporaryAccommodationPremisesEntity> {
-      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(dbSize) {
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
         withProbationRegion(probationRegion)
         withProbationDeliveryUnit(probationDeliveryUnit)
         withLocalAuthorityArea(localAuthorityArea)
@@ -677,32 +694,59 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       return premises
     }
 
-    private fun premisesSummaryTransformer(premises: TemporaryAccommodationPremisesEntity): Cas3PremisesSummary {
-      val bedspaces = premises.rooms.map {
-        Cas3BedspaceSummary(
-          it.beds.first().id,
-          it.name,
-          if (it.beds.first().endDate == null || it.beds.first().endDate!! > LocalDate.now()) {
-            Cas3BedspaceSummary.Status.online
-          } else {
-            Cas3BedspaceSummary.Status.archived
-          },
-        )
+    private fun createBedspacesAndBedspacesSummary(premises: TemporaryAccommodationPremisesEntity, status: Cas3BedspaceStatus, withoutEndDate: Boolean = false): List<Cas3BedspaceSummary> {
+      val bedspacesSummary = mutableListOf<Cas3BedspaceSummary>()
+      var startDate = LocalDate.now().minusDays(30)
+      var endDate: LocalDate? = null
+
+      repeat(randomInt(1, 5)) {
+        when (status) {
+          Cas3BedspaceStatus.online -> {
+            startDate = LocalDate.now().randomDateBefore(360)
+            endDate = when {
+              withoutEndDate -> null
+              else -> LocalDate.now().plusDays(1).randomDateAfter(90)
+            }
+          }
+          Cas3BedspaceStatus.upcoming -> {
+            startDate = LocalDate.now().plusDays(1).randomDateAfter(30)
+            endDate = when {
+              withoutEndDate -> null
+              else -> startDate.plusDays(1).randomDateAfter(90)
+            }
+          }
+          Cas3BedspaceStatus.archived -> {
+            endDate = LocalDate.now().minusDays(1).randomDateBefore(360)
+            startDate = endDate!!.randomDateBefore(360)
+          }
+        }
+
+        val bedspace = createBedspaceInPremises(premises, startDate, endDate)
+
+        bedspacesSummary.add(createBedspaceSummary(bedspace.id, bedspace.room.name, status))
       }
 
-      return Cas3PremisesSummary(
-        id = premises.id,
-        name = premises.name,
-        addressLine1 = premises.addressLine1,
-        addressLine2 = premises.addressLine2,
-        postcode = premises.postcode,
-        pdu = premises.probationDeliveryUnit?.name!!,
-        status = premises.status,
-        bedspaces = bedspaces,
-        bedspaceCount = bedspaces.filter { it.status == Cas3BedspaceSummary.Status.online }.size,
-        localAuthorityAreaName = premises.localAuthorityArea?.name!!,
-      )
+      return bedspacesSummary
     }
+
+    private fun createBedspaceSummary(bedspaceId: UUID, name: String, bedspaceStatus: Cas3BedspaceStatus) = Cas3BedspaceSummary(
+      bedspaceId,
+      name,
+      bedspaceStatus,
+    )
+
+    private fun createPremisesSummary(premises: TemporaryAccommodationPremisesEntity, bedspaces: List<Cas3BedspaceSummary>) = Cas3PremisesSummary(
+      id = premises.id,
+      name = premises.name,
+      addressLine1 = premises.addressLine1,
+      addressLine2 = premises.addressLine2,
+      postcode = premises.postcode,
+      pdu = premises.probationDeliveryUnit?.name!!,
+      status = premises.status,
+      bedspaces = bedspaces,
+      bedspaceCount = bedspaces.filter { it.status == Cas3BedspaceStatus.online || it.status == Cas3BedspaceStatus.upcoming }.size,
+      localAuthorityAreaName = premises.localAuthorityArea?.name!!,
+    )
   }
 
   @Nested

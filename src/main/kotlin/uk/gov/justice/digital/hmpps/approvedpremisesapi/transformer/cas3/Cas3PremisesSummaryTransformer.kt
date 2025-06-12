@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
@@ -15,7 +16,7 @@ class Cas3PremisesSummaryTransformer {
     postcode = domain.postcode,
     status = domain.status,
     bedspaces = bedspaces,
-    bedspaceCount = bedspaces.count { it.status == Cas3BedspaceSummary.Status.online },
+    bedspaceCount = bedspaces.count { it.status == Cas3BedspaceStatus.online || it.status == Cas3BedspaceStatus.upcoming },
     pdu = domain.pdu,
     localAuthorityAreaName = domain.localAuthorityAreaName,
   )
