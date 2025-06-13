@@ -174,7 +174,7 @@ class Cas2v2StartupScript(
   private fun documentFixtureFor(nomsNumber: String): String = loadFixtureAsResource("document_$nomsNumber.json")
 
   private fun loadFixtureAsResource(filename: String): String {
-    val path = "db/seed/local+dev+test/cas2v2_application_data/$filename"
+    val path = "db/seed/dev+test/cas2v2_application_data/$filename"
     val loader = DefaultResourceLoader()
     return try {
       val resource = loader.getResource(path)

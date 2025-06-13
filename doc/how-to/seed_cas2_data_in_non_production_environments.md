@@ -18,7 +18,7 @@ aims to clarify the use case for each type of seeding due to some recent confusi
 Seed Jobs like the `Cas2ApplicationsSeedJob` are run on start up with the `SeedService`'s `@PostConstruct` annotation.
 
 They read from a CSV file
-e.g. [`6_cas2_applications.csv`](src/main/resources/db/seed/local+dev+test/6__cas2_applications.csv) defined in
+e.g. [`6_cas2_applications.csv`](src/main/resources/db/seed/dev+test/6__cas2_applications.csv) defined in
 the `src/main/resources/db/seed/local+dev+test` directory, and run on the three environments in the directory name.
 
 These seeds incidentally manually set a `created_at` value on an Application, meaning checking your own database for
