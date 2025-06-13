@@ -1,5 +1,5 @@
 # You'll need to link the seeds folder into the root of the repo
-# ln -s src/main/resources/db/seed/local+dev+test seed
+# ln -s src/main/resources/db/seed/dev+test seed
 
 ### POST seed cas2v2 users
 POST http://127.0.0.1:8080/seed

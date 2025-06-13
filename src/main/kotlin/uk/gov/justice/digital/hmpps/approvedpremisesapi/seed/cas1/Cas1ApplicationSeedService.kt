@@ -87,7 +87,7 @@ class Cas1ApplicationSeedService(
     val APPLICATION_DOCUMENT_JSON: MutableMap<String, Any> = JSONObject(loadFixtureAsResource("application_document.json")).toMap()
 
     private fun loadFixtureAsResource(filename: String): String {
-      val path = "db/seed/local+dev+test/cas1_application_data/$filename"
+      val path = "db/seed/dev+test/cas1_application_data/$filename"
 
       try {
         return this::class.java.classLoader.getResource(path)?.readText() ?: ""

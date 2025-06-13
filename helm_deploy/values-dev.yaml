@@ -46,7 +46,7 @@ generic-service:
     PREEMPTIVE-CACHE-DELAY-MS: 60000
 
     SEED_ON-STARTUP_ENABLED: true
-    SEED_ON-STARTUP_FILE-PREFIXES: classpath:db/seed/dev+test,classpath:db/seed/local+dev+test
+    SEED_ON-STARTUP_FILE-PREFIXES: classpath:db/seed/dev+test
     SEED_ON-STARTUP_SCRIPT_CAS1-ENABLED: true
     SEED_ON-STARTUP_SCRIPT_CAS2-ENABLED: true
     SEED_ON-STARTUP_SCRIPT_NOMS: A5276DZ
