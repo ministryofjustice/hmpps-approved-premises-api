@@ -162,10 +162,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     val siteSurvey = premisesInfo.siteSurveyPremise
     val region = premisesInfo.probationRegion
     val gender = siteSurvey.maleFemale.toApprovedPremisesGender()
-    val cruManagementArea = when (gender) {
-      ApprovedPremisesGender.MAN -> region.apArea!!.defaultCruManagementArea
-      ApprovedPremisesGender.WOMAN -> cruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaRepository.WOMENS_ESTATE_ID)!!
-    }
+    val cruManagementArea = determineCruManagementArea(region, gender)
 
     val approvedPremises = premisesRepository.save(
       ApprovedPremisesEntity(
@@ -215,6 +212,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     val beforeChange = ApprovedPremisesForComparison.fromEntity(existingPremise)
 
     val siteSurvey = premisesInfo.siteSurveyPremise
+
     existingPremise.apply {
       name = siteSurvey.name
       fullAddress = premisesInfo.siteSurveyPremise.address
@@ -228,6 +226,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       latitude = premisesInfo.latitude
       point = premisesInfo.point
       gender = siteSurvey.maleFemale.toApprovedPremisesGender()
+      cruManagementArea = determineCruManagementArea(premisesInfo.probationRegion, siteSurvey.maleFemale.toApprovedPremisesGender())
     }
 
     existingPremise.characteristics.clear()
@@ -248,6 +247,14 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private fun MaleFemale.toApprovedPremisesGender() = when (this) {
     MaleFemale.MALE -> ApprovedPremisesGender.MAN
     MaleFemale.FEMALE -> ApprovedPremisesGender.WOMAN
+  }
+
+  private fun determineCruManagementArea(
+    region: ProbationRegionEntity,
+    gender: ApprovedPremisesGender,
+  ) = when (gender) {
+    ApprovedPremisesGender.MAN -> region.apArea!!.defaultCruManagementArea
+    ApprovedPremisesGender.WOMAN -> cruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaRepository.WOMENS_ESTATE_ID)!!
   }
 
   private data class CharacteristicRequired(
@@ -277,6 +284,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     val gender: ApprovedPremisesGender,
     val supportsSpaceBookings: Boolean,
     val managerDetails: String?,
+    val cruManagementAreaName: String?,
   ) {
     companion object {
       fun fromEntity(entity: ApprovedPremisesEntity) = ApprovedPremisesForComparison(
@@ -301,6 +309,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
         gender = entity.gender,
         supportsSpaceBookings = entity.supportsSpaceBookings,
         managerDetails = entity.managerDetails,
+        cruManagementAreaName = entity.cruManagementArea?.name,
       )
     }
   }
