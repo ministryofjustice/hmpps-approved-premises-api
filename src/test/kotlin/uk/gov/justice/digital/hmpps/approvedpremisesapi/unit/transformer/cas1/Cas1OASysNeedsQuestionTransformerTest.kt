@@ -131,7 +131,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
 
     @ParameterizedTest
     @CsvSource("false", "null", nullValues = ["null"])
-    fun `If linked to harm is false or null, questions other than Drugs and Alcohol are optional`(linkedToHarm: Boolean?) {
+    fun `If linked to harm is false or null, questions other than Accommodation, Drugs and Alcohol are optional`(linkedToHarm: Boolean?) {
       val needsDetails = NeedsDetailsFactory()
         .withEmotionalIssuesDetails(linkedToHarm = linkedToHarm, linkedToReoffending = false)
         .withLifestyleIssuesDetails(linkedToHarm = linkedToHarm, linkedToReoffending = null)
@@ -156,7 +156,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         Cas1OASysSupportingInformationQuestionMetaData(
           section = 3,
           sectionLabel = "Accommodation",
-          inclusionOptional = true,
+          inclusionOptional = false,
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
@@ -321,14 +321,14 @@ class Cas1OASysNeedsQuestionTransformerTest {
 
     @ParameterizedTest
     @CsvSource("false", "null", nullValues = ["null"])
-    fun `If linked to harm is false or null, only Drugs and Alcohol and selected questions are returned, None selected`(linkToHarm: Boolean?) {
+    fun `If linked to harm is false or null, only Accommodation, Drugs, Alcohol and selected questions are returned, None selected`(linkToHarm: Boolean?) {
       val needsDetails = NeedsDetailsFactory()
         .withEmotionalIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = false)
         .withLifestyleIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .withDrugIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null, drugIssuesDetails = "drug answer")
         .withAlcoholIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null, alcoholIssuesDetails = "alcohol answer")
         .withRelationshipIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
-        .withAccommodationIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
+        .withAccommodationIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null, accommodationIssuesDetails = "accommodation answer")
         .withAttitudeIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .produce()
@@ -336,6 +336,11 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToOASysQuestion(needsDetails, includeOptionalSections = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
+        OASysQuestion(
+          questionNumber = "3.9",
+          label = "Accommodation issues contributing to risks of offending and harm",
+          answer = "accommodation answer",
+        ),
         OASysQuestion(
           questionNumber = "8.9",
           label = "Drug misuse issues contributing to risks of offending and harm",
@@ -365,7 +370,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
 
       val result = transformer.transformToOASysQuestion(
         needsDetails,
-        includeOptionalSections = listOf(3, 6, 7, 10, 11, 12),
+        includeOptionalSections = listOf(6, 7, 10, 11, 12),
       )
 
       assertThat(result).containsExactlyInAnyOrder(
