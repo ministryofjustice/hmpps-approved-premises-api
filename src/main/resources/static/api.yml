@@ -834,35 +834,6 @@ paths:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-  /people/{crn}/oasys/selection:
-    get:
-      deprecated: true
-      tags:
-        - OASys
-      summary: Returns the importable sections of OASys including details of links to harm and reoffending. This is only used by CAS1, which should use /cas1/people/CRN/oasys/supporting-information-metadata instead.
-      operationId: peopleCrnOasysSelectionGet
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch latest OASys selection
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/OASysSection'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
   /people/{crn}/oasys/sections:
     get:
       tags:
