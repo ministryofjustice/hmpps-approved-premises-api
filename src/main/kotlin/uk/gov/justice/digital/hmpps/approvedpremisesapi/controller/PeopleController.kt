@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
@@ -24,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysNeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -39,7 +37,6 @@ class PeopleController(
   private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
   private val adjudicationTransformer: AdjudicationTransformer,
   private val prisonerAlertTransformer: PrisonerAlertTransformer,
-  private val oaSysNeedsDetailsTransformer: OASysNeedsDetailsTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
@@ -116,16 +113,6 @@ class PeopleController(
     val acctAlertsResult = offenderService.getAcctPrisonerAlertsByNomsNumber(nomsNumber)
 
     return ResponseEntity.ok(extractEntityFromCasResult(acctAlertsResult).map(prisonerAlertTransformer::transformToApi))
-  }
-
-  override fun peopleCrnOasysSelectionGet(crn: String): ResponseEntity<List<OASysSection>> {
-    ensureUserCanAccessOffenderInfo(crn)
-
-    return ResponseEntity.ok(
-      oaSysNeedsDetailsTransformer.transformToApi(
-        extractEntityFromCasResult(oasysService.getOASysNeeds(crn)),
-      ),
-    )
   }
 
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
