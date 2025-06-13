@@ -50,7 +50,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         u.name as allocated_to,
         assessment.submitted_at as completed_at,
         assessment.decision as decision,
-        apa.arrival_date AS sorting_date
+        apa.arrival_date AS sorting_date,
+        apa.ap_type AS ap_type
       FROM
         assessments assessment
         INNER JOIN applications application ON assessment.application_id = application.id
@@ -96,7 +97,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         u.name as allocated_to,
         placement_application.submitted_at as completed_at,
         placement_application.decision as decision,
-        pad.expected_arrival AS sorting_date
+        pad.expected_arrival AS sorting_date,
+        apa.ap_type AS ap_type
       from
         placement_applications placement_application
         INNER JOIN applications application ON placement_application.application_id = application.id

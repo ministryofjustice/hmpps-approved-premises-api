@@ -38,6 +38,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   createdFromAppeal: Boolean = false,
   arrivalDate: OffsetDateTime? = null,
+  apType: ApprovedPremisesType? = null,
 ): Pair<ApprovedPremisesAssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -76,6 +77,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
         null -> ApprovedPremisesApplicationStatus.STARTED
       },
     )
+    apType?.let { withApType(it) }
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

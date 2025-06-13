@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -52,11 +53,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -1405,6 +1408,7 @@ class TasksTest {
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+                apType = ApprovedPremisesType.ESAP,
               )
 
               val (assessment2, _) = givenAnAssessmentForApprovedPremises(
@@ -1415,6 +1419,7 @@ class TasksTest {
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+                apType = ApprovedPremisesType.MHAP_ELLIOTT_HOUSE,
               )
 
               val (placementRequest1, _) = givenAPlacementRequest(
@@ -1425,6 +1430,7 @@ class TasksTest {
                 booking = bookingEntityFactory.produceAndPersist {
                   withPremises(givenAnApprovedPremises())
                 },
+                apType = ApprovedPremisesType.ESAP,
               )
 
               val (placementRequest2, _) = givenAPlacementRequest(
@@ -1436,6 +1442,7 @@ class TasksTest {
                 booking = bookingEntityFactory.produceAndPersist {
                   withPremises(givenAnApprovedPremises())
                 },
+                apType = ApprovedPremisesType.RFAP,
               )
 
               val offenderSummaries = getOffenderSummaries(offenderDetails)
@@ -1445,6 +1452,7 @@ class TasksTest {
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+                apType = ApprovedPremisesType.PIPE,
               )
 
               placementRequest3.bookingNotMades = mutableListOf(
@@ -1463,6 +1471,7 @@ class TasksTest {
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 decision = REJECTED,
+                apType = ApprovedPremisesType.MHAP_ST_JOSEPHS,
               )
 
               val placementDate1 = placementDateFactory.produceAndPersist {
@@ -1486,6 +1495,7 @@ class TasksTest {
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 decision = ACCEPTED,
+                apType = ApprovedPremisesType.NORMAL,
               )
 
               assessments = mapOf(
@@ -1833,6 +1843,54 @@ class TasksTest {
               tasksSortedByDecision(SortDirection.desc),
             ),
           )
+      }
+
+      @Test
+      fun `Get all tasks sorts by apType in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=apType&sortDirection=asc&page=1&perPage=10"
+
+        val response = webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<Task>()
+
+        assertThat(response).hasSize(9)
+        assertThat(response[0].apType).isEqualTo(ApType.esap)
+        assertThat(response[1].apType).isEqualTo(ApType.esap)
+        assertThat(response[2].apType).isEqualTo(ApType.mhapElliottHouse)
+        assertThat(response[3].apType).isEqualTo(ApType.mhapStJosephs)
+        assertThat(response[4].apType).isEqualTo(ApType.mhapStJosephs)
+        assertThat(response[5].apType).isEqualTo(ApType.normal)
+        assertThat(response[6].apType).isEqualTo(ApType.normal)
+        assertThat(response[7].apType).isEqualTo(ApType.pipe)
+        assertThat(response[8].apType).isEqualTo(ApType.rfap)
+      }
+
+      @Test
+      fun `Get all tasks sorts by apType in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=apType&sortDirection=desc&page=1&perPage=10"
+
+        val response = webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<Task>()
+
+        assertThat(response).hasSize(9)
+        assertThat(response[0].apType).isEqualTo(ApType.rfap)
+        assertThat(response[1].apType).isEqualTo(ApType.pipe)
+        assertThat(response[2].apType).isEqualTo(ApType.normal)
+        assertThat(response[3].apType).isEqualTo(ApType.normal)
+        assertThat(response[4].apType).isEqualTo(ApType.mhapStJosephs)
+        assertThat(response[5].apType).isEqualTo(ApType.mhapStJosephs)
+        assertThat(response[6].apType).isEqualTo(ApType.mhapElliottHouse)
+        assertThat(response[7].apType).isEqualTo(ApType.esap)
+        assertThat(response[8].apType).isEqualTo(ApType.esap)
       }
 
       private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
