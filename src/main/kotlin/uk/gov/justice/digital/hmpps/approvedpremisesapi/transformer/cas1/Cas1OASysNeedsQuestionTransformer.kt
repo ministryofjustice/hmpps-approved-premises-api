@@ -49,7 +49,7 @@ class Cas1OASysNeedsQuestionTransformer {
       questionNumber = "3.9",
       questionLabel = OASysLabels.questionToLabel.getValue("3.9"),
       answer = needsDetails?.needs?.accommodationIssuesDetails,
-      optional = isOptional(needsDetails?.linksToHarm?.accommodationLinkedToHarm),
+      optional = false,
       linkedToHarm = needsDetails?.linksToHarm?.accommodationLinkedToHarm,
       linkedToReOffending = needsDetails?.linksToReOffending?.accommodationLinkedToReOffending,
     ),
