@@ -80,10 +80,10 @@
     },
     "release-date": {
       "knowReleaseDate": "yes",
-      "releaseDate-year": "2025",
+      "releaseDate-year": "2030",
       "releaseDate-month": "12",
       "releaseDate-day": "12",
-      "releaseDate": "2025-12-12"
+      "releaseDate": "2030-12-12"
     },
     "placement-date": {
       "startDateSameAsReleaseDate": "yes"
