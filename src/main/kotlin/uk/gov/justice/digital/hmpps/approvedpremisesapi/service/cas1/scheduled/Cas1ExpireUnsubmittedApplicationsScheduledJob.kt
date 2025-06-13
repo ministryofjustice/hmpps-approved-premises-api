@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
@@ -41,48 +42,50 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJob(
         log.info("Processing batch of ${batch.size} applications")
 
         transactionTemplate.executeWithoutResult {
-          val applications = approvedPremisesApplicationRepository.findAllById(batch)
-
-          applications.forEach { application ->
-            application.status = ApprovedPremisesApplicationStatus.EXPIRED
-          }
-
-          approvedPremisesApplicationRepository.saveAll(applications)
-
-          log.info("Successfully updated batch of ${applications.size} applications with EXPIRED status")
-
-          applications.forEach { application ->
-            val previousStatus = ApprovedPremisesApplicationStatus.STARTED.name
-            val applicationExpiredPayload = ApplicationExpired(
-              application.id,
-              previousStatus,
-              application.status.name,
-              statusBeforeExpiry = previousStatus,
-              expiryReason = ApplicationExpired.ExpiryReason.unsubmittedApplicationExpired,
-            )
-
-            domainEventService.save(
-              SaveCas1DomainEventWithPayload(
-                id = UUID.randomUUID(),
-                applicationId = application.id,
-                crn = application.crn,
-                nomsNumber = application.nomsNumber,
-                occurredAt = Instant.now(),
-                data = applicationExpiredPayload,
-                triggerSource = TriggerSourceType.SYSTEM,
-                schemaVersion = 2,
-                type = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
-                assessmentId = null,
-                bookingId = null,
-                cas1SpaceBookingId = null,
-                metadata = emptyMap(),
-                emit = true,
-              ),
-            )
-            log.info("Domain event raised for application ID: ${application.id}")
-          }
+          expireApplications(approvedPremisesApplicationRepository.findAllById(batch))
         }
       }
+    }
+  }
+
+  fun expireApplications(applications: List<ApprovedPremisesApplicationEntity>) {
+    applications.forEach { application ->
+      application.status = ApprovedPremisesApplicationStatus.EXPIRED
+    }
+
+    approvedPremisesApplicationRepository.saveAll(applications)
+
+    log.info("Successfully updated batch of ${applications.size} applications with EXPIRED status")
+
+    applications.forEach { application ->
+      val previousStatus = ApprovedPremisesApplicationStatus.STARTED.name
+      val applicationExpiredPayload = ApplicationExpired(
+        application.id,
+        previousStatus,
+        application.status.name,
+        statusBeforeExpiry = previousStatus,
+        expiryReason = ApplicationExpired.ExpiryReason.unsubmittedApplicationExpired,
+      )
+
+      domainEventService.save(
+        SaveCas1DomainEventWithPayload(
+          id = UUID.randomUUID(),
+          applicationId = application.id,
+          crn = application.crn,
+          nomsNumber = application.nomsNumber,
+          occurredAt = Instant.now(),
+          data = applicationExpiredPayload,
+          triggerSource = TriggerSourceType.SYSTEM,
+          schemaVersion = 2,
+          type = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
+          assessmentId = null,
+          bookingId = null,
+          cas1SpaceBookingId = null,
+          metadata = emptyMap(),
+          emit = true,
+        ),
+      )
+      log.info("Domain event raised for application ID: ${application.id}")
     }
   }
 }

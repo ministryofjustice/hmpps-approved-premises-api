@@ -34,46 +34,53 @@ class Cas1ExpiredApplicationsScheduledJob(
     log.info("There are ${applicationIds.size} applications to update.")
 
     applicationIds.forEach { applicationId ->
-      log.info("Updating application $applicationId.")
+      log.info("Expiring application $applicationId.")
 
       transactionTemplate.executeWithoutResult {
         val application = applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-        val previousStatus = application.status.name
-        application.status = ApprovedPremisesApplicationStatus.EXPIRED
-        applicationRepository.save(application)
-
-        log.info("Status changed from $previousStatus to ${application.status} for application $applicationId.")
-
-        val applicationExpiredPayLoad = ApplicationExpired(
-          applicationId,
-          previousStatus,
-          (applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity).status.name,
-          statusBeforeExpiry = previousStatus,
-          expiryReason = ApplicationExpired.ExpiryReason.assessmentExpired,
-        )
-
-        val domainEventId = UUID.randomUUID()
-        val eventOccurredAt = Instant.now()
-        domainEventService.save(
-          SaveCas1DomainEventWithPayload(
-            id = domainEventId,
-            applicationId = application.id,
-            crn = application.crn,
-            nomsNumber = application.nomsNumber,
-            occurredAt = eventOccurredAt,
-            data = applicationExpiredPayLoad,
-            triggerSource = TriggerSourceType.SYSTEM,
-            schemaVersion = 2,
-            type = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
-            assessmentId = null,
-            bookingId = null,
-            cas1SpaceBookingId = null,
-            metadata = emptyMap(),
-            emit = true,
-          ),
-        )
-        log.info("Domain event id $domainEventId emitted for application $applicationId.")
+        expireApplication(application)
       }
     }
+  }
+
+  fun expireApplication(
+    application: ApprovedPremisesApplicationEntity,
+  ) {
+    val applicationId = application.id
+    val previousStatus = application.status.name
+    application.status = ApprovedPremisesApplicationStatus.EXPIRED
+    applicationRepository.save(application)
+
+    log.info("Status changed from $previousStatus to ${application.status} for application $applicationId.")
+
+    val applicationExpiredPayLoad = ApplicationExpired(
+      applicationId,
+      previousStatus,
+      (applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity).status.name,
+      statusBeforeExpiry = previousStatus,
+      expiryReason = ApplicationExpired.ExpiryReason.assessmentExpired,
+    )
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        nomsNumber = application.nomsNumber,
+        occurredAt = eventOccurredAt,
+        data = applicationExpiredPayLoad,
+        triggerSource = TriggerSourceType.SYSTEM,
+        schemaVersion = 2,
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
+        assessmentId = null,
+        bookingId = null,
+        cas1SpaceBookingId = null,
+        metadata = emptyMap(),
+        emit = true,
+      ),
+    )
+    log.info("Domain event id $domainEventId emitted for application $applicationId.")
   }
 }

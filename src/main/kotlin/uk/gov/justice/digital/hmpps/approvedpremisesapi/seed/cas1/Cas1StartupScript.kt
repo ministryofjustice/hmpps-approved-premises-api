@@ -18,20 +18,57 @@ class Cas1StartupScript(
     seedLogger.info("Running Startup Script for CAS1")
 
     if (environmentService.isDev()) {
-      scriptDev()
+      createDevApplications()
     }
   }
 
-  fun createApplicationPendingSubmission(
+  fun createDevApplications() {
+    seedLogger.info("Creating Dev Applications")
+
+    createApplication(
+      deliusUserName = "AP_USER_TEST_1",
+      crn = "X320741",
+      state = Cas1ApplicationSeedService.ApplicationState.PENDING_SUBMISSION,
+    )
+
+    createApplication(
+      deliusUserName = "AP_USER_TEST_1",
+      crn = "X698340",
+      state = Cas1ApplicationSeedService.ApplicationState.WITHDRAWN_BEFORE_SUBMISSION,
+    )
+
+    createApplication(
+      deliusUserName = "AP_USER_TEST_1",
+      crn = "X698227",
+      state = Cas1ApplicationSeedService.ApplicationState.WITHDRAWN_AFTER_SUBMISSION,
+    )
+
+    createApplication(
+      deliusUserName = "AP_USER_TEST_1",
+      crn = "X698317",
+      state = Cas1ApplicationSeedService.ApplicationState.EXPIRED_BEFORE_SUBMISSION,
+    )
+
+    createApplication(
+      deliusUserName = "AP_USER_TEST_1",
+      crn = "X698338",
+      state = Cas1ApplicationSeedService.ApplicationState.EXPIRED_AFTER_AUTHORISATION,
+    )
+
+    createOfflineApplicationWithBooking(deliusUserName = "AP_USER_TEST_1", crn = "X320741")
+  }
+
+  fun createApplication(
     deliusUserName: String,
     crn: String,
+    state: Cas1ApplicationSeedService.ApplicationState,
   ) {
-    seedLogger.info("Auto-scripting application for CRN $crn")
+    seedLogger.info("Creating application with state $state for CRN X320741")
     try {
       cas1ApplicationSeedService.createApplication(
         deliusUserName = deliusUserName,
         crn = crn,
-        state = Cas1ApplicationSeedService.ApplicationState.PENDING_SUBMISSION,
+        state = state,
       )
     } catch (e: Exception) {
       seedLogger.error("Creating application with crn $crn failed", e)
@@ -49,15 +86,5 @@ class Cas1StartupScript(
     } catch (e: Exception) {
       seedLogger.error("Creating offline application with crn $crn failed", e)
     }
-  }
-
-  fun scriptDev() {
-    seedLogger.info("Running Startup Script for CAS1 dev")
-
-    createApplicationPendingSubmission(
-      deliusUserName = "AP_USER_TEST_1",
-      crn = "X320741",
-    )
-    createOfflineApplicationWithBooking(deliusUserName = "AP_USER_TEST_1", crn = "X320741")
   }
 }
