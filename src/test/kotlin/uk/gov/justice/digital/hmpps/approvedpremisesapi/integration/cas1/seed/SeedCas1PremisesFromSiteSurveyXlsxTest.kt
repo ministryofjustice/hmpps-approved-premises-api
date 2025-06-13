@@ -187,7 +187,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.gender).isEqualTo(ApprovedPremisesGender.WOMAN)
     assertThat(createdPremise.supportsSpaceBookings).isEqualTo(false)
     assertThat(createdPremise.managerDetails).isNull()
-    assertThat(createdPremise.cruManagementArea.name).isEqualTo("Women's Estate")
+    assertThat(createdPremise.cruManagementArea.name).isEqualTo("Women's AP's")
 
     assertThat(createdPremise.characteristics).isEmpty()
   }
