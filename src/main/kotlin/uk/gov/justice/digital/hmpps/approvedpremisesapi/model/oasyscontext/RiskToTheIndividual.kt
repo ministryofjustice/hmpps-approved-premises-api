@@ -32,4 +32,7 @@ data class RiskToTheIndividualInner(
   val previousVulnerability: String?,
   val riskOfSeriousHarm: String?,
   val currentConcernsBreachOfTrustText: String?,
+  val analysisSuicideSelfharm: String?,
+  val analysisCoping: String?,
+  val analysisVulnerabilities: String?,
 )
