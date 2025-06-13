@@ -839,7 +839,7 @@ paths:
       deprecated: true
       tags:
         - OASys
-      summary: Returns the importable sections of OASys including details of links to harm and reoffending. This is only used by CAS1, which should use /cas1/people/X320741/oasys/supporting-information-metadata instead.
+      summary: Returns the importable sections of OASys including details of links to harm and reoffending. This is only used by CAS1, which should use /cas1/people/CRN/oasys/supporting-information-metadata instead.
       operationId: peopleCrnOasysSelectionGet
       parameters:
         - name: crn
@@ -867,7 +867,8 @@ paths:
     get:
       tags:
         - OASys
-      summary: Returns OASys sections to support an Application.  The Supporting Information sections are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter.
+      summary: Returns OASys sections to support an Application.  The Supporting Information sections are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter. CAS1 should use /cas1/people/CRN/oasys/answers. CAS3 shoudl use /cas3/people/CRN/oasys/riskManagement
+      deprecated: true
       operationId: peopleCrnOasysSectionsGet
       parameters:
         - name: crn
@@ -878,7 +879,7 @@ paths:
             type: string
         - name: selected-sections
           in: query
-          description: Section numbers for optional (not Linked to Harm) suppprting information
+          description: Section numbers for optional (not Linked to Harm) supporting information
           required: false
           schema:
             type: array

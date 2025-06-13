@@ -464,3 +464,29 @@ components:
         - futureBookings
         - futureBookingsCsv
         - bookingGap
+    Cas3OASysGroup:
+      type: object
+      description: Groups questions and answers from OAsys
+      properties:
+        assessmentMetadata:
+          $ref: '#/components/schemas/Cas3OASysAssessmentMetadata'
+        answers:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/OASysQuestion'
+      required:
+        - assessmentMetadata
+        - answers
+    Cas3OASysAssessmentMetadata:
+      type: object
+      properties:
+        hasApplicableAssessment:
+          type: boolean
+        dateStarted:
+          type: string
+          format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
+      required:
+        - hasApplicableAssessment

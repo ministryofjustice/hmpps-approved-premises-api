@@ -91,7 +91,7 @@ class Cas1OasysController(
       )
     ) {
       null -> throw NotFoundProblem(crn, "Offender")
-      false -> throw throw ForbiddenProblem()
+      false -> throw ForbiddenProblem()
       else -> Unit
     }
   }

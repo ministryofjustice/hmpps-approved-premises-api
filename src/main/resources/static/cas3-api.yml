@@ -460,4 +460,28 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-
+  /people/{crn}/oasys/riskManagement:
+    get:
+      tags:
+        - OAsys
+      operationId: riskManagement
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys selection
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3OASysGroup'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
