@@ -29,4 +29,7 @@ data class RoshSummaryInner(
   val riskGreatest: String?,
   val riskIncreaseLikelyTo: String?,
   val riskReductionLikelyTo: String?,
+  val factorsAnalysisOfRisk: String?,
+  val factorsStrengthsAndProtective: String?,
+  val factorsSituationsLikelyToOffend: String?,
 )
