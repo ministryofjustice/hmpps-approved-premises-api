@@ -6,12 +6,12 @@
 
 set -e
 
-if [ $1 == "local+dev+test" ]; then
-    dir="local+dev+test"
+if [ $1 == "dev+test" ]; then
+    dir="dev+test"
 elif [ $1 == "all" ]; then
     dir="all"
 else
-    echo "Unrecognised option: $1 - must be either 'all' or 'local+dev+test'"
+    echo "Unrecognised option: $1 - must be either 'all' or 'dev+test'"
     exit 1
 fi
 
