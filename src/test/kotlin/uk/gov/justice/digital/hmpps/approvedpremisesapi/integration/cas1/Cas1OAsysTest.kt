@@ -474,8 +474,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
-          label = "Current concerns about Vulnerability",
-          questionNumber = "R8.3.1",
+          label = "Analysis of vulnerabilities",
+          questionNumber = "FA64",
           answer = null,
         ),
       )

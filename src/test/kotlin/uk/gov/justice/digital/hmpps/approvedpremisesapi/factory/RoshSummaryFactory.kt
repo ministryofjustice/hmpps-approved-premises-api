@@ -8,9 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 class RoshSummaryFactory : AssessmentInfoFactory<RoshSummary>() {
   private var whoAtRisk = { randomStringMultiCaseWithNumbers(20) }
   private var natureOfRisk = { randomStringMultiCaseWithNumbers(20) }
-  private var riskGreatest = { randomStringMultiCaseWithNumbers(20) }
-  private var riskIncreaseLikelyTo = { randomStringMultiCaseWithNumbers(20) }
-  private var riskReductionLikelyTo = { randomStringMultiCaseWithNumbers(20) }
+  private var riskGreatest: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
+  private var riskIncreaseLikelyTo: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
+  private var riskReductionLikelyTo: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var factorsAnalysisOfRisk: Yielded<String?> = { null }
   private var factorsStrengthsAndProtective: Yielded<String?> = { null }
   private var factorsSituationsLikelyToOffend: Yielded<String?> = { null }
@@ -23,15 +23,15 @@ class RoshSummaryFactory : AssessmentInfoFactory<RoshSummary>() {
     this.natureOfRisk = { natureOfRisk }
   }
 
-  fun withRiskGreatest(riskGreatest: String) = apply {
+  fun withRiskGreatest(riskGreatest: String?) = apply {
     this.riskGreatest = { riskGreatest }
   }
 
-  fun withRiskIncreaseLikelyTo(riskIncreaseLikelyTo: String) = apply {
+  fun withRiskIncreaseLikelyTo(riskIncreaseLikelyTo: String?) = apply {
     this.riskIncreaseLikelyTo = { riskIncreaseLikelyTo }
   }
 
-  fun withRiskReductionLikelyTo(riskReductionLikelyTo: String) = apply {
+  fun withRiskReductionLikelyTo(riskReductionLikelyTo: String?) = apply {
     this.riskReductionLikelyTo = { riskReductionLikelyTo }
   }
 
