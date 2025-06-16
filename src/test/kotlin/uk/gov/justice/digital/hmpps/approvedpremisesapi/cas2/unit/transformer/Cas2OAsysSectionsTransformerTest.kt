@@ -27,8 +27,6 @@ class Cas2OAsysSectionsTransformerTest {
       val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
 
       val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
-        withAssessmentId(34853487)
-        withDateCompleted(null)
         withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicideAnswer")
         withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicideAnswer")
         withCurrentCustodyHostelCoping("currentCustodyHostelCopingAnswer")
@@ -65,6 +63,51 @@ class Cas2OAsysSectionsTransformerTest {
           label = "Previous concerns about self-harm or suicide",
           questionNumber = "R8.1.4",
           answer = "previousConcernsSelfHarmSuicideAnswer",
+        ),
+      )
+    }
+
+    @Test
+    fun `transforms correctly, no answers`() {
+      val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
+
+      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        withCurrentConcernsSelfHarmSuicide(null)
+        withPreviousConcernsSelfHarmSuicide(null)
+        withCurrentCustodyHostelCoping(null)
+        withCurrentVulnerability(null)
+      }.produce()
+
+      val result = transformer.transformRiskToIndividual(
+        offenceDetailsApiResponse,
+        risksToTheIndividualApiResponse,
+      )
+
+      assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+      assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
+      assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
+      assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+
+      assertThat(result.riskToSelf).containsExactly(
+        OASysQuestion(
+          label = "Current concerns about self-harm or suicide",
+          questionNumber = "R8.1.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Coping in Custody or Hostel",
+          questionNumber = "R8.2.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Previous concerns about self-harm or suicide",
+          questionNumber = "R8.1.4",
+          answer = null,
         ),
       )
     }
@@ -120,6 +163,52 @@ class Cas2OAsysSectionsTransformerTest {
           label = "What circumstances are likely to reduce the risk",
           questionNumber = "R10.5",
           answer = "riskReductionLikelyToAnswer",
+        ),
+      )
+    }
+
+    @Test
+    fun `transforms correctly, no answers`() {
+      val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
+
+      val roshApiResponse = RoshSummaryFactory().apply {
+        withWhoAtRisk(null)
+        withNatureOfRisk(null)
+        withRiskGreatest(null)
+        withRiskIncreaseLikelyTo(null)
+        withRiskReductionLikelyTo(null)
+      }.produce()
+
+      val result = transformer.transformRiskOfSeriousHarm(
+        offenceDetailsApiResponse,
+        roshApiResponse,
+      )
+
+      assertThat(result.rosh).containsExactly(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "What is the nature of the risk",
+          questionNumber = "R10.2",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "When is the risk likely to be the greatest",
+          questionNumber = "R10.3",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to increase risk",
+          questionNumber = "R10.4",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "What circumstances are likely to reduce the risk",
+          questionNumber = "R10.5",
+          answer = null,
         ),
       )
     }
