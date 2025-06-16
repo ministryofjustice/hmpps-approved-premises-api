@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
+import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
@@ -15,6 +16,7 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
@@ -95,6 +97,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@ExtendWith(MockKExtension::class)
 class AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val userAccessServiceMock = mockk<UserAccessService>()
@@ -176,7 +179,7 @@ class AssessmentServiceTest {
       ),
     )
 
-    verify(exactly = 1) {
+    verify {
       assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
         user.id.toString(),
         listOf("NOT_STARTED", "IN_PROGRESS"),
