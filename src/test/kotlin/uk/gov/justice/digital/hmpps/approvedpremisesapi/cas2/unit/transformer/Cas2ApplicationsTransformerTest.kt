@@ -357,14 +357,14 @@ class Cas2ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
+      assertThat(result.createdByUserId.toString()).isEqualTo(application.getCreatedById())
       assertThat(result.risks).isNull()
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
-      assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.createdByUserName).isEqualTo(application.getCreatedByUsername())
       assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
       assertThat(result.bailHearingDate).isNull()
     }
@@ -386,8 +386,8 @@ class Cas2ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.userId))
-      assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.getCreatedById()))
+      assertThat(result.createdByUserName).isEqualTo(application.getCreatedByUsername())
       assertThat(result.allocatedPomUserId).isEqualTo(application.allocatedPomUserId)
       assertThat(result.allocatedPomName).isEqualTo(application.allocatedPomName)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
