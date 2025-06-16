@@ -23,7 +23,61 @@ class Cas2OAsysSectionsTransformerTest {
   inner class RiskToIndividual {
 
     @Test
-    fun `transforms correctly`() {
+    fun `transforms correctly, post nod-1057 answers`() {
+      val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
+
+      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        withCurrentConcernsSelfHarmSuicide(null)
+        withPreviousConcernsSelfHarmSuicide(null)
+        withCurrentCustodyHostelCoping(null)
+        withCurrentVulnerability(null)
+        withAnalysisSuicideSelfharm("analysisSuicideSelfHarmAnswer")
+        withAnalysisCoping("analysisCopingAnswer")
+        withAnalysisVulnerabilities("analysisVulnerabilitiesAnswer")
+      }.produce()
+
+      val result = transformer.transformRiskToIndividual(
+        offenceDetailsApiResponse,
+        risksToTheIndividualApiResponse,
+      )
+
+      assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+      assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
+      assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
+      assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+
+      assertThat(result.riskToSelf).containsExactly(
+        OASysQuestion(
+          label = "Current concerns about self-harm or suicide",
+          questionNumber = "R8.1.1",
+          // FA62
+          answer = "analysisSuicideSelfHarmAnswer",
+        ),
+        // TODO: remove this as not used?
+        OASysQuestion(
+          label = "Current concerns about Coping in Custody or Hostel",
+          questionNumber = "R8.2.1",
+          // FA63
+          answer = "analysisCopingAnswer",
+        ),
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          // FA64
+          answer = "analysisVulnerabilitiesAnswer",
+        ),
+        // This appears to have been merged into analysisSuicideSelfHarmAnswer (FA62)
+        // TODO: how to resolve this?
+        OASysQuestion(
+          label = "Previous concerns about self-harm or suicide",
+          questionNumber = "R8.1.4",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `transforms correctly, pre nod-1057 answers`() {
       val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
 
       val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
@@ -149,6 +203,7 @@ class Cas2OAsysSectionsTransformerTest {
           questionNumber = "R10.2",
           answer = "natureOfRiskAnswer",
         ),
+        // TODO: remove these 3 as not used?
         OASysQuestion(
           label = "When is the risk likely to be the greatest",
           questionNumber = "R10.3",
