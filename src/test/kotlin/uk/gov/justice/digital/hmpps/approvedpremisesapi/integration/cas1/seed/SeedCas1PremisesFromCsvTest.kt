@@ -262,7 +262,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
     assertThat(persistedApprovedPremises.supportsSpaceBookings).isTrue()
     assertThat(persistedApprovedPremises.managerDetails).isEqualTo("manager details")
-    assertThat(persistedApprovedPremises.cruManagementArea!!.name).isEqualTo("North East")
+    assertThat(persistedApprovedPremises.cruManagementArea.name).isEqualTo("North East")
   }
 
   @Test
