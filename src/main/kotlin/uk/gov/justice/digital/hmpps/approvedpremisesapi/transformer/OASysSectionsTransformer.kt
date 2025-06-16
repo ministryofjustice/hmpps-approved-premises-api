@@ -48,7 +48,9 @@ class OASysSectionsTransformer {
     OASysQuestion("Pattern of offending", "2.12", offenceDetails?.patternOffending),
   )
 
-  fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = listOf(
+  fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = roshSummaryAnswersPreNod1057(roshSummary)
+
+  fun roshSummaryAnswersPreNod1057(roshSummary: RoshSummaryInner?) = listOf(
     OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk),
     OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk),
     OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary?.riskGreatest),
@@ -56,7 +58,9 @@ class OASysSectionsTransformer {
     OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo),
   )
 
-  fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
+  fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = riskToSelfAnswersPreNod1057(risksToTheIndividual)
+
+  fun riskToSelfAnswersPreNod1057(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
     OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual?.currentConcernsSelfHarmSuicide),
     OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual?.currentCustodyHostelCoping),
     OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.currentVulnerability),
@@ -82,7 +86,7 @@ class OASysSectionsTransformer {
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
     riskToSelf =
-    riskToSelfAnswers(risksToTheIndividual.riskToTheIndividual) +
+    riskToSelfAnswersPreNod1057(risksToTheIndividual.riskToTheIndividual) +
       listOf(
         OASysQuestion("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
       ),
@@ -96,7 +100,7 @@ class OASysSectionsTransformer {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    rosh = roshSummaryAnswers(roshSummary.roshSummary),
+    rosh = roshSummaryAnswersPreNod1057(roshSummary.roshSummary),
   )
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -211,6 +215,4 @@ class OASysSectionsTransformer {
 
     return supportingInformation
   }
-
-  private data class OrderedQuestion(val position: Int, val question: OASysQuestion)
 }
