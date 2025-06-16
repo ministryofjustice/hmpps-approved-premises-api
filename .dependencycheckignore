@@ -12,4 +12,12 @@
         <packageUrl regex="true">^.*org.apache.poi.*$</packageUrl>
         <vulnerabilityName>CVE-2025-31672</vulnerabilityName>
     </suppress>
+    <suppress>
+        <notes>We don't derive file download names from user input, so this is not
+        of concern. This should be resolved in a newer version of
+        uk.gov.justice.hmpps.gradle-spring-boot when it includes a version
+         of spring newer than 6.2.7</notes>
+        <packageUrl regex="true">^.*org.springframework.*$</packageUrl>
+        <vulnerabilityName>CVE-2025-41234</vulnerabilityName>
+    <suppress>
 </suppressions>
