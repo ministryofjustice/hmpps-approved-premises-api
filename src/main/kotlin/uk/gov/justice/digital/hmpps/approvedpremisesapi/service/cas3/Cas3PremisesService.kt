@@ -4,7 +4,7 @@ import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -54,14 +54,14 @@ class Cas3PremisesService(
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): List<TemporaryAccommodationPremisesSummary> {
+  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, premisesStatus: Cas3PremisesStatus?): List<TemporaryAccommodationPremisesSummary> {
     val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
-    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.transformStatus())
+    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, premisesStatus?.transformStatus())
   }
 
-  private fun Cas3PropertyStatus.transformStatus() = when (this) {
-    Cas3PropertyStatus.archived -> PropertyStatus.archived.toString()
-    Cas3PropertyStatus.online -> PropertyStatus.active.toString()
+  private fun Cas3PremisesStatus.transformStatus() = when (this) {
+    Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
+    Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")

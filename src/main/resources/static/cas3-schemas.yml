@@ -366,10 +366,6 @@ components:
           type: string
         localAuthorityAreaName:
           type: string
-        bedspaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas3BedspaceSummary'
         bedspaceCount:
           type: integer
           example: 22
@@ -383,7 +379,63 @@ components:
         - pdu
         - bedspaceCount
         - status
-    Cas3BedspaceSummary:
+    Cas3PremisesSearchResults:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3PremisesSearchResult'
+        totalPremises:
+          type: integer
+          example: 50
+        totalOnlineBedspaces:
+          type: integer
+          example: 15
+        totalUpcomingBedspaces:
+          type: integer
+          example: 3
+      required:
+        - totalPremises
+    Cas3PremisesSearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+          example: Hope House
+        addressLine1:
+          type: string
+          example: one something street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        town:
+          type: string
+          example: Leeds
+        postcode:
+          type: string
+          example: LS1 3AD
+        pdu:
+          type: string
+        localAuthorityAreaName:
+          type: string
+        bedspaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3BedspacePremisesSearchResult'
+        totalArchivedBedspaces:
+          type: integer
+          example: 4
+      required:
+        - id
+        - reference
+        - addressLine1
+        - postcode
+        - pdu
+    Cas3BedspacePremisesSearchResult:
       type: object
       properties:
         id:
@@ -397,7 +449,7 @@ components:
         - id
         - reference
         - status
-    Cas3PropertyStatus:
+    Cas3PremisesStatus:
       type: string
       enum:
         - online

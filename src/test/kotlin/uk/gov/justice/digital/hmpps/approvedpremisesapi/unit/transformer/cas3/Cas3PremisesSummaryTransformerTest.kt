@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas3
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
@@ -14,34 +13,6 @@ class Cas3PremisesSummaryTransformerTest {
   private val cas3PremisesSummaryTransformer = Cas3PremisesSummaryTransformer()
 
   @Test
-  fun `transformDomainToCas3BedspaceSummary transforms the TemporaryAccommodationPremisesSummary into a Cas3BedspacesSummary`() {
-    val uuid = UUID.randomUUID()
-    val domainPremisesSummary = TemporaryAccommodationPremisesSummaryData(
-      id = uuid,
-      name = "bob",
-      addressLine1 = "address",
-      addressLine2 = "address line 2",
-      postcode = "123ABC",
-      pdu = "North east",
-      status = PropertyStatus.active,
-      localAuthorityAreaName = "Rochford",
-      bedspaceReference = "TEST1",
-      bedspaceId = UUID.randomUUID(),
-      bedspaceStatus = Cas3BedspaceStatus.online,
-    )
-
-    val result = cas3PremisesSummaryTransformer.transformDomainToCas3BedspaceSummary(domainPremisesSummary)
-
-    assertThat(result).isEqualTo(
-      Cas3BedspaceSummary(
-        id = domainPremisesSummary.bedspaceId!!,
-        reference = domainPremisesSummary.bedspaceReference!!,
-        status = domainPremisesSummary.bedspaceStatus!!,
-      ),
-    )
-  }
-
-  @Test
   fun `transformFlatDomainToCas3PremisesSummary transforms the TemporaryAccommodationPremisesSummary and bedspaces into a Cas3PremisesSummary`() {
     val uuid = UUID.randomUUID()
     val domainPremisesSummary = TemporaryAccommodationPremisesSummaryData(
@@ -50,6 +21,7 @@ class Cas3PremisesSummaryTransformerTest {
       addressLine1 = "address",
       addressLine2 = "address line 2",
       postcode = "123ABC",
+      town = "Swale",
       pdu = "North east",
       status = PropertyStatus.active,
       localAuthorityAreaName = "Rochford",
@@ -58,25 +30,7 @@ class Cas3PremisesSummaryTransformerTest {
       bedspaceStatus = Cas3BedspaceStatus.online,
     )
 
-    val bedspaces = listOf(
-      Cas3BedspaceSummary(
-        domainPremisesSummary.bedspaceId!!,
-        domainPremisesSummary.bedspaceReference!!,
-        domainPremisesSummary.bedspaceStatus!!,
-      ),
-      Cas3BedspaceSummary(
-        UUID.randomUUID(),
-        "TEST2",
-        Cas3BedspaceStatus.archived,
-      ),
-      Cas3BedspaceSummary(
-        UUID.randomUUID(),
-        "TEST3",
-        Cas3BedspaceStatus.upcoming,
-      ),
-    )
-
-    val result = cas3PremisesSummaryTransformer.transformDomainToCas3PremisesSummary(domainPremisesSummary, bedspaces)
+    val result = cas3PremisesSummaryTransformer.transformDomainToCas3PremisesSummary(domainPremisesSummary, 2)
 
     assertThat(result).isEqualTo(
       Cas3PremisesSummary(
@@ -88,7 +42,6 @@ class Cas3PremisesSummaryTransformerTest {
         pdu = "North east",
         status = PropertyStatus.active,
         bedspaceCount = 2,
-        bedspaces = bedspaces,
         localAuthorityAreaName = "Rochford",
       ),
     )
@@ -103,6 +56,7 @@ class Cas3PremisesSummaryTransformerTest {
       addressLine1 = "address",
       addressLine2 = null,
       postcode = "123ABC",
+      town = null,
       pdu = "North east",
       status = PropertyStatus.active,
       localAuthorityAreaName = null,
@@ -111,25 +65,7 @@ class Cas3PremisesSummaryTransformerTest {
       bedspaceStatus = Cas3BedspaceStatus.online,
     )
 
-    val bedspaces = listOf(
-      Cas3BedspaceSummary(
-        domainPremisesSummary.bedspaceId!!,
-        domainPremisesSummary.bedspaceReference!!,
-        domainPremisesSummary.bedspaceStatus!!,
-      ),
-      Cas3BedspaceSummary(
-        UUID.randomUUID(),
-        "TEST2",
-        Cas3BedspaceStatus.archived,
-      ),
-      Cas3BedspaceSummary(
-        UUID.randomUUID(),
-        "TEST3",
-        Cas3BedspaceStatus.upcoming,
-      ),
-    )
-
-    val result = cas3PremisesSummaryTransformer.transformDomainToCas3PremisesSummary(domainPremisesSummary, bedspaces)
+    val result = cas3PremisesSummaryTransformer.transformDomainToCas3PremisesSummary(domainPremisesSummary, 1)
 
     assertThat(result).isEqualTo(
       Cas3PremisesSummary(
@@ -139,8 +75,7 @@ class Cas3PremisesSummaryTransformerTest {
         postcode = "123ABC",
         pdu = "North east",
         status = PropertyStatus.active,
-        bedspaceCount = 2,
-        bedspaces = bedspaces,
+        bedspaceCount = 1,
       ),
     )
   }
@@ -153,6 +88,7 @@ class Cas3PremisesSummaryTransformerTest {
     override val addressLine2: String?,
     override val postcode: String,
     override val pdu: String,
+    override val town: String?,
     override val status: PropertyStatus,
     override val bedspaceId: UUID?,
     override val bedspaceReference: String?,
