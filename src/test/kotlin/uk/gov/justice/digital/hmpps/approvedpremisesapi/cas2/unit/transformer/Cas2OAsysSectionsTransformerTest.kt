@@ -24,31 +24,15 @@ class Cas2OAsysSectionsTransformerTest {
 
     @Test
     fun `transforms correctly`() {
-      val offenceDetailsApiResponse = OffenceDetailsFactory().apply {
-        withAssessmentId(34853487)
-        withDateCompleted(null)
-        withOffenceAnalysis("Offence Analysis")
-        withOthersInvolved("Others Involved")
-        withIssueContributingToRisk("Issue Contributing to Risk")
-        withOffenceMotivation("Offence Motivation")
-        withVictimImpact("Impact on the victim")
-        withVictimPerpetratorRel("Other victim information")
-        withVictimInfo("Victim Info")
-        withPatternOffending("Pattern Reoffending")
-        withAcceptsResponsibility("Accepts Responsibility")
-      }.produce()
+      val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
 
       val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
         withAssessmentId(34853487)
         withDateCompleted(null)
-        withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicide")
-        withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicide")
-        withCurrentCustodyHostelCoping("currentCustodyHostelCoping")
-        withPreviousCustodyHostelCoping("previousCustodyHostelCoping")
-        withCurrentVulnerability("currentVulnerability")
-        withPreviousVulnerability("previousVulnerability")
-        withRiskOfSeriousHarm("riskOfSeriousHarm")
-        withCurrentConcernsBreachOfTrustText("currentConcernsBreachOfTrustText")
+        withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicideAnswer")
+        withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicideAnswer")
+        withCurrentCustodyHostelCoping("currentCustodyHostelCopingAnswer")
+        withCurrentVulnerability("currentVulnerabilityAnswer")
       }.produce()
 
       val result = transformer.transformRiskToIndividual(
@@ -65,22 +49,22 @@ class Cas2OAsysSectionsTransformerTest {
         OASysQuestion(
           label = "Current concerns about self-harm or suicide",
           questionNumber = "R8.1.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentConcernsSelfHarmSuicide,
+          answer = "currentConcernsSelfHarmSuicideAnswer",
         ),
         OASysQuestion(
           label = "Current concerns about Coping in Custody or Hostel",
           questionNumber = "R8.2.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentCustodyHostelCoping,
+          answer = "currentCustodyHostelCopingAnswer",
         ),
         OASysQuestion(
           label = "Current concerns about Vulnerability",
           questionNumber = "R8.3.1",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.currentVulnerability,
+          answer = "currentVulnerabilityAnswer",
         ),
         OASysQuestion(
           label = "Previous concerns about self-harm or suicide",
           questionNumber = "R8.1.4",
-          answer = risksToTheIndividualApiResponse.riskToTheIndividual?.previousConcernsSelfHarmSuicide,
+          answer = "previousConcernsSelfHarmSuicideAnswer",
         ),
       )
     }
@@ -91,28 +75,14 @@ class Cas2OAsysSectionsTransformerTest {
 
     @Test
     fun `transforms correctly`() {
-      val offenceDetailsApiResponse = OffenceDetailsFactory().apply {
-        withAssessmentId(34853487)
-        withDateCompleted(null)
-        withOffenceAnalysis("Offence Analysis")
-        withOthersInvolved("Others Involved")
-        withIssueContributingToRisk("Issue Contributing to Risk")
-        withOffenceMotivation("Offence Motivation")
-        withVictimImpact("Impact on the victim")
-        withVictimPerpetratorRel("Other victim information")
-        withVictimInfo("Victim Info")
-        withPatternOffending("Pattern Reoffending")
-        withAcceptsResponsibility("Accepts Responsibility")
-      }.produce()
+      val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
 
       val roshApiResponse = RoshSummaryFactory().apply {
-        withAssessmentId(34853487)
-        withDateCompleted(null)
-        withWhoAtRisk("whoIsAtRisk")
-        withNatureOfRisk("natureOfRisk")
-        withRiskGreatest("riskGreatest")
-        withRiskIncreaseLikelyTo("riskIncreaseLikelyTo")
-        withRiskReductionLikelyTo("riskReductionLikelyTo")
+        withWhoAtRisk("whoIsAtRiskAnswer")
+        withNatureOfRisk("natureOfRiskAnswer")
+        withRiskGreatest("riskGreatestAnswer")
+        withRiskIncreaseLikelyTo("riskIncreaseLikelyToAnswer")
+        withRiskReductionLikelyTo("riskReductionLikelyToAnswer")
       }.produce()
 
       val result = transformer.transformRiskOfSeriousHarm(
@@ -129,27 +99,27 @@ class Cas2OAsysSectionsTransformerTest {
         OASysQuestion(
           label = "Who is at risk",
           questionNumber = "R10.1",
-          answer = roshApiResponse.roshSummary?.whoIsAtRisk,
+          answer = "whoIsAtRiskAnswer",
         ),
         OASysQuestion(
           label = "What is the nature of the risk",
           questionNumber = "R10.2",
-          answer = roshApiResponse.roshSummary?.natureOfRisk,
+          answer = "natureOfRiskAnswer",
         ),
         OASysQuestion(
           label = "When is the risk likely to be the greatest",
           questionNumber = "R10.3",
-          answer = roshApiResponse.roshSummary?.riskGreatest,
+          answer = "riskGreatestAnswer",
         ),
         OASysQuestion(
           label = "What circumstances are likely to increase risk",
           questionNumber = "R10.4",
-          answer = roshApiResponse.roshSummary?.riskIncreaseLikelyTo,
+          answer = "riskIncreaseLikelyToAnswer",
         ),
         OASysQuestion(
           label = "What circumstances are likely to reduce the risk",
           questionNumber = "R10.5",
-          answer = roshApiResponse.roshSummary?.riskReductionLikelyTo,
+          answer = "riskReductionLikelyToAnswer",
         ),
       )
     }
