@@ -4,10 +4,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationQuestionMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 
 @Service
-class Cas1OASysNeedsQuestionTransformer {
+class Cas1OASysNeedsQuestionTransformer(val featureFlagService: FeatureFlagService) {
 
   fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails?) = needsDetails?.let {
     toQuestionState(needsDetails).map {
@@ -49,7 +50,7 @@ class Cas1OASysNeedsQuestionTransformer {
       questionNumber = "3.9",
       questionLabel = OASysLabels.questionToLabel.getValue("3.9"),
       answer = needsDetails?.needs?.accommodationIssuesDetails,
-      optional = isOptional(needsDetails?.linksToHarm?.accommodationLinkedToHarm),
+      optional = !accommodationMandatory() && isOptional(needsDetails?.linksToHarm?.accommodationLinkedToHarm),
       linkedToHarm = needsDetails?.linksToHarm?.accommodationLinkedToHarm,
       linkedToReOffending = needsDetails?.linksToReOffending?.accommodationLinkedToReOffending,
     ),
@@ -124,6 +125,8 @@ class Cas1OASysNeedsQuestionTransformer {
       linkedToReOffending = needsDetails?.linksToReOffending?.attitudeLinkedToReOffending,
     ),
   )
+
+  private fun accommodationMandatory() = featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions")
 
   private fun isOptional(linkedToHarm: Boolean?) = linkedToHarm != true
 }
