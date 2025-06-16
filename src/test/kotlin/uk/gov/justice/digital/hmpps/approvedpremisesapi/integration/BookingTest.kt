@@ -561,6 +561,77 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all Bookings for a Temporary Accommodation premises returns OK with correct body when person is an LAO`() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCurrentExclusion(true)
+        },
+      )
+       { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(premises)
+          withCrn(offenderDetails.otherIds.crn)
+        }
+
+        bookings[1].let {
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+        }
+        bookings[2].let {
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[3].let {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[4].let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
+
+        val expectedJson = objectMapper.writeValueAsString(
+          bookings.map { booking ->
+            bookingTransformer.transformJpaToApi(
+              booking,
+              PersonInfoResult.Success.Full(
+                crn = offenderDetails.otherIds.crn,
+                offenderDetailSummary = offenderDetails,
+                inmateDetail = inmateDetails,
+              ),
+            )
+          }
+        )
+
+        webTestClient.get()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(expectedJson)
+      }
+    }
+  }
+
+  @Test
   fun `Create Booking without JWT returns 401`() {
     val premises = givenAnApprovedPremises()
 
