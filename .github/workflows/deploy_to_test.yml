@@ -1,0 +1,26 @@
+name: Deploy to test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker_build:
+    name: Build docker image from hmpps-github-actions
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
+    with:
+      docker_registry: 'ghcr.io'
+      registry_org: 'ministryofjustice'
+      push: true
+      docker_multiplatform: false
+      tag_latest: false
+
+  deploy_test:
+    name: Deploy to the test environment
+    needs:
+      - docker_build
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'test'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
+      show_changelog: false

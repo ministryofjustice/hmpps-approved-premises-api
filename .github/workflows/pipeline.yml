@@ -1,0 +1,61 @@
+name: Pipeline [test -> build -> deploy]
+on:
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+
+  docker_build:
+    name: Build docker image from hmpps-github-actions
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
+    with:
+      docker_registry: 'ghcr.io'
+      registry_org: 'ministryofjustice'
+      push: true
+      docker_multiplatform: false
+
+  deploy_dev:
+    name: Deploy to the development environment
+    needs:
+      - test
+      - docker_build
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'development'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
+
+  e2e:
+    name: E2E tests
+    needs:
+      - deploy_dev
+    uses: ./.github/workflows/e2e.yml
+
+  deploy_preprod:
+    name: Deploy to pre-production environment
+    needs:
+      - e2e
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'preprod'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
+
+  deploy_prod:
+    name: Deploy to production environment
+    needs:
+      - deploy_preprod
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'prod'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
+      slack_notification: 'true'

@@ -8,7 +8,7 @@ generic-service:
     initialDelaySeconds: 60
 
   image:
-    repository: quay.io/hmpps/hmpps-approved-premises-api
+    repository: ghcr.io/ministryofjustice/hmpps-approved-premises-api
     tag: app_version    # override at deployment time
     port: 8080
 
