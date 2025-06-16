@@ -12,6 +12,7 @@ jobs:
   test:
     name: Test
     uses: ./.github/workflows/test.yml
+    secrets: inherit
 
   docker_build:
     name: Build docker image from hmpps-github-actions
@@ -38,6 +39,7 @@ jobs:
     needs:
       - deploy_dev
     uses: ./.github/workflows/e2e.yml
+    secrets: inherit
 
   deploy_preprod:
     name: Deploy to pre-production environment
