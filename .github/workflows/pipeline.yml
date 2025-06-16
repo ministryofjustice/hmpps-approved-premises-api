@@ -44,6 +44,7 @@ jobs:
   deploy_preprod:
     name: Deploy to pre-production environment
     needs:
+      - docker_build
       - e2e
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
@@ -54,6 +55,7 @@ jobs:
   deploy_prod:
     name: Deploy to production environment
     needs:
+      - docker_build
       - deploy_preprod
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
