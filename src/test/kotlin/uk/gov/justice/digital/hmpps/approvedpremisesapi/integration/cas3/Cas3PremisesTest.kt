@@ -262,7 +262,21 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         assertUrlReturnsPremises(
           jwt,
-          "/cas3/premises/summary",
+          "/cas3/premises/summary?sortBy=pdu",
+          expectedPremisesSummaries,
+        )
+      }
+    }
+
+
+    @Test
+    fun `Get all Premises returns OK with correct premises sorted by PDU or LA`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, expectedPremisesSummaries) = getListPremisesWithIndividualPduAndLa(user.probationRegion)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?sortBy=la",
           expectedPremisesSummaries,
         )
       }
@@ -674,6 +688,33 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
 
       val allPremises = (onlinePremisesWithBedspaceWithoutEndDate + onlinePremisesWithBedspaceWithEndDate + archivedPremises)
+      return Pair(allPremises.sortedBy { it.id }, premisesSummary.sortedBy { it.id })
+    }
+
+    private fun getListPremisesWithIndividualPduAndLa(probationRegion: ProbationRegionEntity): Pair<List<TemporaryAccommodationPremisesEntity>, List<Cas3PremisesSummary>> {
+
+      val premisesSummary = mutableListOf<Cas3PremisesSummary>()
+      val allPremises = mutableListOf<TemporaryAccommodationPremisesEntity>()
+
+      val localAuthorityArea = localAuthorityEntityFactory.produceAndPersistMultiple(5)
+
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersistMultiple(5) {
+        withProbationRegion(probationRegion)
+      }
+
+      localAuthorityArea.forEachIndexed { i, localAuthorityAreaEntity ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withProbationDeliveryUnit(probationDeliveryUnit[i])
+          withLocalAuthorityArea(localAuthorityAreaEntity)
+          withStatus(PropertyStatus.active)
+        }
+        val onlineBedspacesSummary = createBedspacesAndBedspacesSummary(premises, Cas3BedspaceStatus.online, true)
+        val upcomingBedspacesSummary = createBedspacesAndBedspacesSummary(premises, Cas3BedspaceStatus.upcoming, true)
+        premisesSummary.add(createPremisesSummary(premises, (onlineBedspacesSummary + upcomingBedspacesSummary)))
+
+      }
+
       return Pair(allPremises.sortedBy { it.id }, premisesSummary.sortedBy { it.id })
     }
 

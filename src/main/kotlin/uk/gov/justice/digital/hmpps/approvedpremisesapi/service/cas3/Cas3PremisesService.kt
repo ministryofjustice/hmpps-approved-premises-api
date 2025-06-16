@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import arrow.core.Either
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSortBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -54,9 +58,24 @@ class Cas3PremisesService(
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): List<TemporaryAccommodationPremisesSummary> {
+  fun getAllPremisesSummaries(
+    regionId: UUID,
+    postcodeOrAddress: String?,
+    propertyStatus: Cas3PropertyStatus?,
+    sortBy: Cas3PremisesSortBy?,
+  ): List<TemporaryAccommodationPremisesSummary> {
     val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
-    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.transformStatus())
+    val p = premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, propertyStatus?.transformStatus(), buildPageable(sortBy))
+    return p
+  }
+
+  private fun buildPageable(sortBy: Cas3PremisesSortBy?): Pageable? = sortBy?.let {
+    PageRequest.of(0, Int.MAX_VALUE, Sort.by(Sort.Direction.ASC, getSortByDbColumnName(sortBy)))
+  }
+
+  private fun getSortByDbColumnName(sortBy: Cas3PremisesSortBy): String = when (sortBy) {
+    Cas3PremisesSortBy.pdu -> "pdu"
+    Cas3PremisesSortBy.la -> "localAuthorityAreaName"
   }
 
   private fun Cas3PropertyStatus.transformStatus() = when (this) {

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSortBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
@@ -76,9 +77,9 @@ class Cas3PremisesController(
     return ResponseEntity(cas3BedspaceTransformer.transformJpaToApi(bedspace), HttpStatus.CREATED)
   }
 
-  override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?): ResponseEntity<List<Cas3PremisesSummary>> {
+  override fun getPremisesSummary(postcodeOrAddress: String?, propertyStatus: Cas3PropertyStatus?, sortBy: Cas3PremisesSortBy?): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
-    val premisesSummariesByPremisesId = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus).groupBy { it.id }
+    val premisesSummariesByPremisesId = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, propertyStatus, sortBy).groupBy { it.id }
     val transformedSummaries = premisesSummariesByPremisesId.map { map ->
       cas3PremisesSummaryTransformer.transformDomainToCas3PremisesSummary(
         map.value.first(),

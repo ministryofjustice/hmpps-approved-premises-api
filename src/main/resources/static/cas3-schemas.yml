@@ -402,6 +402,11 @@ components:
       enum:
         - online
         - archived
+    Cas3PremisesSortBy:
+      type: string
+      enum:
+        - pdu
+        - la
     Cas3BedspaceStatus:
       type: string
       enum:
