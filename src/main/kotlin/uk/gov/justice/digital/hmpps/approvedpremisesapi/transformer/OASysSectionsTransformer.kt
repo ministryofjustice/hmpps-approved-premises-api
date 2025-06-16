@@ -16,9 +16,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummaryInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
 @Component
-class OASysSectionsTransformer {
+class OASysSectionsTransformer(val featureFlagService: FeatureFlagService) {
   fun transformToApi(
     offenceDetails: OffenceDetails,
     roshSummary: RoshSummary,
@@ -48,15 +49,41 @@ class OASysSectionsTransformer {
     OASysQuestion("Pattern of offending", "2.12", offenceDetails?.patternOffending),
   )
 
-  fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = listOf(
-    OrderedQuestion(1, OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk)),
-    OrderedQuestion(2, OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk)),
-    OrderedQuestion(3, OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary?.riskGreatest)),
-    OrderedQuestion(4, OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary?.riskIncreaseLikelyTo)),
-    OrderedQuestion(5, OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo)),
-  ).sortedBy { it.position }.map { it.question }
+  fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = if (roshSummary.isPreNod1057() || !cas1UseNewQuestions()) {
+    roshSummaryAnswersPreNod1057(roshSummary)
+  } else {
+    roshSummaryAnswersPost1057(roshSummary)
+  }
 
-  fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
+  fun roshSummaryAnswersPost1057(roshSummary: RoshSummaryInner?) = listOf(
+    OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk),
+    OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk),
+    OASysQuestion("Circumstances or situations where offending is most likely to occur", "SUM11", roshSummary?.factorsSituationsLikelyToOffend),
+    OASysQuestion("Analysis of risk factors", "SUM9", roshSummary?.factorsAnalysisOfRisk),
+    OASysQuestion("Strengths and protective factors", "SUM10", roshSummary?.factorsStrengthsAndProtective),
+  )
+
+  fun roshSummaryAnswersPreNod1057(roshSummary: RoshSummaryInner?) = listOf(
+    OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk),
+    OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk),
+    OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary?.riskGreatest),
+    OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary?.riskIncreaseLikelyTo),
+    OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo),
+  )
+
+  fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = if (risksToTheIndividual.isPreNod1057() || !cas1UseNewQuestions()) {
+    riskToSelfAnswersPreNod1057(risksToTheIndividual)
+  } else {
+    riskToSelfAnswersPostNod1057(risksToTheIndividual)
+  }
+
+  fun riskToSelfAnswersPostNod1057(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
+    OASysQuestion("Analysis of current or previous self-harm and/or suicide concerns", "FA62", risksToTheIndividual?.analysisSuicideSelfharm),
+    OASysQuestion("Coping in custody / approved premises / hostel / secure hospital", "FA63", risksToTheIndividual?.analysisCoping),
+    OASysQuestion("Analysis of vulnerabilities", "FA64", risksToTheIndividual?.analysisVulnerabilities),
+  )
+
+  fun riskToSelfAnswersPreNod1057(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
     OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual?.currentConcernsSelfHarmSuicide),
     OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual?.currentCustodyHostelCoping),
     OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.currentVulnerability),
@@ -82,7 +109,7 @@ class OASysSectionsTransformer {
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
     riskToSelf =
-    riskToSelfAnswers(risksToTheIndividual.riskToTheIndividual) +
+    riskToSelfAnswersPreNod1057(risksToTheIndividual.riskToTheIndividual) +
       listOf(
         OASysQuestion("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
       ),
@@ -96,7 +123,7 @@ class OASysSectionsTransformer {
     assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
     dateStarted = offenceDetails.initiationDate.toInstant(),
     dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    rosh = roshSummaryAnswers(roshSummary.roshSummary),
+    rosh = roshSummaryAnswersPreNod1057(roshSummary.roshSummary),
   )
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -212,5 +239,12 @@ class OASysSectionsTransformer {
     return supportingInformation
   }
 
-  private data class OrderedQuestion(val position: Int, val question: OASysQuestion)
+  private fun cas1UseNewQuestions() = featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions")
+
+  private fun RoshSummaryInner?.isPreNod1057() = this?.riskGreatest != null || this?.riskIncreaseLikelyTo != null || this?.riskReductionLikelyTo != null
+
+  private fun RiskToTheIndividualInner?.isPreNod1057() = this?.currentConcernsSelfHarmSuicide != null ||
+    this?.previousConcernsSelfHarmSuicide != null ||
+    this?.currentCustodyHostelCoping != null ||
+    this?.currentVulnerability != null
 }

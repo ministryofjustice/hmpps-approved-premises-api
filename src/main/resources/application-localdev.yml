@@ -14,6 +14,7 @@ feature-flags:
   cas1-disable-overbooking-summary: true
   cas1-expire-unsubmitted-applications-job-enabled: true
   cas1-oasys-return-empty-oasys-responses: true
+  cas1-oasys-use-new-questions: true
 
 hmpps.sqs:
   provider: localstack
