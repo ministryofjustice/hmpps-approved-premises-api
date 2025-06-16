@@ -462,6 +462,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apOASysContextMockRiskToTheIndividual404Call(CRN)
 
       mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
+      mockFeatureFlagService.setFlag("cas1-oasys-use-new-questions", true)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
@@ -474,8 +475,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
-          label = "Current concerns about Vulnerability",
-          questionNumber = "R8.3.1",
+          label = "Analysis of vulnerabilities",
+          questionNumber = "FA64",
           answer = null,
         ),
       )
