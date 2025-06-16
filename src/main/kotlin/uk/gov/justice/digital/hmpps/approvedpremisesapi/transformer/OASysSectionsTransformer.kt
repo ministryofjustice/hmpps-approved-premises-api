@@ -49,12 +49,12 @@ class OASysSectionsTransformer {
   )
 
   fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = listOf(
-    OrderedQuestion(1, OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk)),
-    OrderedQuestion(2, OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk)),
-    OrderedQuestion(3, OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary?.riskGreatest)),
-    OrderedQuestion(4, OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary?.riskIncreaseLikelyTo)),
-    OrderedQuestion(5, OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo)),
-  ).sortedBy { it.position }.map { it.question }
+    OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk),
+    OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk),
+    OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary?.riskGreatest),
+    OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary?.riskIncreaseLikelyTo),
+    OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo),
+  )
 
   fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
     OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual?.currentConcernsSelfHarmSuicide),
