@@ -6,8 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 class RoshSummaryFactory : AssessmentInfoFactory<RoshSummary>() {
-  private var whoAtRisk = { randomStringMultiCaseWithNumbers(20) }
-  private var natureOfRisk = { randomStringMultiCaseWithNumbers(20) }
+  private var whoAtRisk: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
+  private var natureOfRisk: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var riskGreatest: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var riskIncreaseLikelyTo: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var riskReductionLikelyTo: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
@@ -15,11 +15,11 @@ class RoshSummaryFactory : AssessmentInfoFactory<RoshSummary>() {
   private var factorsStrengthsAndProtective: Yielded<String?> = { null }
   private var factorsSituationsLikelyToOffend: Yielded<String?> = { null }
 
-  fun withWhoAtRisk(whoAtRisk: String) = apply {
+  fun withWhoAtRisk(whoAtRisk: String?) = apply {
     this.whoAtRisk = { whoAtRisk }
   }
 
-  fun withNatureOfRisk(natureOfRisk: String) = apply {
+  fun withNatureOfRisk(natureOfRisk: String?) = apply {
     this.natureOfRisk = { natureOfRisk }
   }
 
