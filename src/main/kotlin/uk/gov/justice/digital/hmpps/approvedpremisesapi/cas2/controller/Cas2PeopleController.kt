@@ -13,12 +13,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OAsysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 class Cas2PeopleController(
   private val offenderService: Cas2OffenderService,
   private val oasysService: OASysService,
-  private val oaSysSectionsTransformer: OASysSectionsTransformer,
+  private val oaSysSectionsTransformer: Cas2OAsysSectionsTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val nomisUserService: NomisUserService,
@@ -70,7 +70,7 @@ class Cas2PeopleController(
       val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
 
       ResponseEntity.ok(
-        oaSysSectionsTransformer.cas2TransformRiskToIndividual(offenceDetails, riskToTheIndividual),
+        oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
       )
     }
   }
@@ -91,7 +91,7 @@ class Cas2PeopleController(
       val rosh = extractEntityFromCasResult(roshResult.await())
 
       ResponseEntity.ok(
-        oaSysSectionsTransformer.cas2TransformRiskOfSeriousHarm(offenceDetails, rosh),
+        oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
       )
     }
   }
