@@ -9,7 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -66,11 +69,79 @@ class BookingTransformer(
     )
   }
 
+  fun transformJpaToApi(jpa: Cas3BookingEntity, personInfo: PersonInfoResult): Booking {
+    val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
+
+    return Booking(
+      id = jpa.id,
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      arrivalDate = jpa.arrivalDate,
+      departureDate = jpa.departureDate,
+      serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),
+      // key worker is a legacy CAS1 only field that is no longer populated. This will be removed once migration to space bookings is complete
+      keyWorker = null,
+      status = determineStatus(
+        jpa.turnaround,
+        jpa.departureDate,
+        jpa.cancellation,
+        jpa.departure,
+        jpa.arrival,
+        jpa.nonArrival,
+        jpa.confirmation,
+      ),
+      arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
+      departure = departureTransformer.transformJpaToApi(jpa.departure),
+      departures = jpa.departures.map { departureTransformer.transformJpaToApi(it)!! },
+      nonArrival = nonArrivalTransformer.transformJpaToApi(jpa.nonArrival),
+      cancellation = cancellationTransformer.transformJpaToApi(jpa.cancellation),
+      cancellations = jpa.cancellations.map { cancellationTransformer.transformJpaToApi(it)!! },
+      confirmation = cas3ConfirmationTransformer.transformJpaToApi(jpa.confirmation),
+      extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi),
+      bed = jpa.bedspace?.let { bedTransformer.transformJpaToApi(it) },
+      originalArrivalDate = jpa.originalArrivalDate,
+      originalDepartureDate = jpa.originalDepartureDate,
+      createdAt = jpa.createdAt.toInstant(),
+      turnaround = jpa.turnaround?.let(cas3TurnaroundTransformer::transformJpaToApi),
+      turnarounds = jpa.turnarounds.map(cas3TurnaroundTransformer::transformJpaToApi),
+      turnaroundStartDate = if (hasNonZeroDayTurnaround) workingDayService.addWorkingDays(jpa.departureDate, 1) else null,
+      effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
+      applicationId = jpa.application?.id,
+      assessmentId = jpa.application?.getLatestAssessment()?.id,
+      premises = jpa.cas3Premises.let { BookingPremisesSummary(it.id, it.name) },
+    )
+  }
+
   fun determineStatus(jpa: BookingEntity) = when {
     jpa.service == ServiceName.approvedPremises.value -> determineApprovedPremisesStatus(jpa)
-    jpa.service == ServiceName.temporaryAccommodation.value -> determineTemporaryAccommodationStatus(jpa)
+    jpa.service == ServiceName.temporaryAccommodation.value -> determineTemporaryAccommodationStatus(
+      jpa.turnaround,
+      jpa.departureDate,
+      jpa.cancellation,
+      jpa.departure,
+      jpa.arrival,
+      jpa.nonArrival,
+      jpa.confirmation,
+    )
     else -> throw RuntimeException("Could not determine service for Booking ${jpa.id}")
   }
+
+  fun determineStatus(
+    turnaround: Cas3TurnaroundEntity?,
+    departureDate: LocalDate,
+    cancellation: CancellationEntity?,
+    departure: DepartureEntity?,
+    arrival: ArrivalEntity?,
+    nonArrival: NonArrivalEntity?,
+    confirmation: Cas3ConfirmationEntity?
+  ) = determineTemporaryAccommodationStatus(
+    turnaround,
+    departureDate,
+    cancellation,
+    departure,
+    arrival,
+    nonArrival,
+    confirmation,
+  )
 
   fun transformToWithdrawable(jpa: BookingEntity) = Withdrawable(
     jpa.id,
@@ -87,22 +158,30 @@ class BookingTransformer(
     else -> throw RuntimeException("Could not determine status for Booking ${jpa.id}")
   }
 
-  private fun determineTemporaryAccommodationStatus(jpa: BookingEntity): BookingStatus {
-    val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
-    val hasZeroDayTurnaround = jpa.turnaround == null || jpa.turnaround!!.workingDayCount == 0
+  private fun determineTemporaryAccommodationStatus(
+    turnaround: Cas3TurnaroundEntity?,
+    departureDate: LocalDate,
+    cancellation: CancellationEntity?,
+    departure: DepartureEntity?,
+    arrival: ArrivalEntity?,
+    nonArrival: NonArrivalEntity?,
+    confirmation: Cas3ConfirmationEntity?,
+  ): BookingStatus {
+    val hasNonZeroDayTurnaround = turnaround != null && turnaround.workingDayCount != 0
+    val hasZeroDayTurnaround = turnaround == null || turnaround.workingDayCount == 0
     val turnaroundPeriodEnded = if (!hasNonZeroDayTurnaround) {
       false
     } else {
-      workingDayService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount).isBefore(LocalDate.now())
+      workingDayService.addWorkingDays(departureDate, turnaround!!.workingDayCount).isBefore(LocalDate.now())
     }
 
     return when {
-      jpa.cancellation != null -> BookingStatus.cancelled
-      jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
-      jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
-      jpa.arrival != null -> BookingStatus.arrived
-      jpa.nonArrival != null -> BookingStatus.notMinusArrived
-      jpa.confirmation != null -> BookingStatus.confirmed
+      cancellation != null -> BookingStatus.cancelled
+      departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
+      departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
+      arrival != null -> BookingStatus.arrived
+      nonArrival != null -> BookingStatus.notMinusArrived
+      confirmation != null -> BookingStatus.confirmed
       else -> BookingStatus.provisional
     }
   }

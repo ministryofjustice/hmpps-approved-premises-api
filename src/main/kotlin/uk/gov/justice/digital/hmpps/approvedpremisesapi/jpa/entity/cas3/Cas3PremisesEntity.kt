@@ -47,6 +47,9 @@ class Cas3PremisesEntity(
   @OneToMany(mappedBy = "premises")
   var bedspaces: MutableList<Cas3BedspacesEntity>,
 
+  @OneToMany(mappedBy = "cas3Premises")
+  var bookings: MutableList<Cas3BookingEntity>,
+
   @ManyToMany
   @JoinTable(
     name = "cas3_premises_characteristic_assignments",

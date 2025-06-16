@@ -14,14 +14,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspaceCharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspaceCharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesCharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesCharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationInBatchesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import java.util.UUID
@@ -85,6 +78,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
       probationDeliveryUnit = premise.probationDeliveryUnit!!,
       bedspaces = emptyList<Cas3BedspacesEntity>().toMutableList(),
       characteristics = emptyList<Cas3PremisesCharacteristicEntity>().toMutableList(),
+      bookings = emptyList<Cas3BookingEntity>().toMutableList(),
     )
   }
 
