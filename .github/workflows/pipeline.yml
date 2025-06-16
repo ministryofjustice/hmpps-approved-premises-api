@@ -51,6 +51,7 @@ jobs:
     with:
       environment: 'preprod'
       app_version: '${{ needs.docker_build.outputs.app_version }}'
+      slack_notification: 'true'
 
   deploy_prod:
     name: Deploy to production environment
