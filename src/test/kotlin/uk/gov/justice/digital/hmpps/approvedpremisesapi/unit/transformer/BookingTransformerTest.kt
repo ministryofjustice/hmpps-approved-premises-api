@@ -125,6 +125,7 @@ class BookingTransformerTest {
     characteristics = mutableListOf(),
     status = PropertyStatus.active,
     probationDeliveryUnit = null,
+    startDate = null,
     turnaroundWorkingDayCount = 2,
   )
 

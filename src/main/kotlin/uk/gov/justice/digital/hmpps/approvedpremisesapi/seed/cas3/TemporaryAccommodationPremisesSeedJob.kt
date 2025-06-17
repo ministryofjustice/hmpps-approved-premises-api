@@ -113,6 +113,7 @@ class TemporaryAccommodationPremisesSeedJob(
         probationDeliveryUnit = probationDeliveryUnit,
         status = PropertyStatus.active,
         turnaroundWorkingDayCount = 2,
+        startDate = null,
       ),
     )
 
