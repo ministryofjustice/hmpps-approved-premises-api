@@ -14,22 +14,26 @@ class CharacteristicQueryTest : IntegrationTestBase() {
   fun `findAllForRoomId returns all the characteristics for a roomId`() {
     val premises = givenAnApprovedPremises()
 
-    val roomCharacteristics = mutableListOf(
-      characteristicEntityFactory.produceAndPersist(),
-      characteristicEntityFactory.produceAndPersist(),
-      characteristicEntityFactory.produceAndPersist(),
-    )
+    val char1 = characteristicEntityFactory.produceAndPersist()
+    val char2 = characteristicEntityFactory.produceAndPersist()
+    val char3 = characteristicEntityFactory.produceAndPersist()
+
+    val roomCharacteristics = mutableListOf(char1, char2, char3)
 
     var otherCharacteristics = mutableListOf(
       characteristicEntityFactory.produceAndPersist(),
       characteristicEntityFactory.produceAndPersist(),
     )
 
-    var room = roomEntityFactory.produceAndPersist {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCharacteristics(roomCharacteristics)
     }
 
-    assertThat(realCharacteristicRepository.findAllForRoomId(room.id)).isEqualTo(roomCharacteristics)
+    assertThat(realCharacteristicRepository.findAllForRoomId(room.id)).containsExactlyInAnyOrder(
+      char1,
+      char2,
+      char3,
+    )
   }
 }
