@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPremisesAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.LocalDate
 import java.util.UUID
 
 class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodationPremisesEntity> {
@@ -30,6 +31,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
+  private var startDate: Yielded<LocalDate?>? = null
   private var turnaroundWorkingDayCount: Yielded<Int>? = null
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
 
@@ -98,6 +100,10 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.probationDeliveryUnit = probationDeliveryUnit
   }
 
+  fun withStartDate(startDate: LocalDate?) = apply {
+    this.startDate = { startDate }
+  }
+
   fun withTurnaroundWorkingDayCount(turnaroundWorkingDayCount: Int) = apply {
     this.turnaroundWorkingDayCount = { turnaroundWorkingDayCount }
   }
@@ -144,6 +150,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     characteristics = this.characteristics(),
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
+    startDate = this.startDate?.invoke(),
     turnaroundWorkingDayCount = this.turnaroundWorkingDayCount?.invoke() ?: 2,
   )
 }

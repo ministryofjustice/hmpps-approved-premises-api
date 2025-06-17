@@ -135,6 +135,7 @@ class Cas3PremisesService(
       longitude = null,
       probationRegion = probationRegion!!,
       localAuthorityArea = localAuthorityArea,
+      startDate = null,
       bookings = mutableListOf(),
       lostBeds = mutableListOf(),
       notes = if (notes.isNullOrEmpty()) "" else notes,
