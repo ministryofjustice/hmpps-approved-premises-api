@@ -778,6 +778,7 @@ components:
         - requestsForPlacementWithPii
         - placements
         - placementsWithPii
+        - overduePlacements
     Cas1BedDetail:
       type: object
       properties:

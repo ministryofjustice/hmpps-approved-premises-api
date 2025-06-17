@@ -4,12 +4,15 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DailyMetricsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OutOfServiceBedsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OverduePlacementsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import java.io.OutputStream
+import java.time.Clock
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Service
@@ -20,6 +23,8 @@ class Cas1ReportService(
   private val cas1PlacementReportRepository: Cas1PlacementReportRepository,
   private val cas1DailyMetricsReportRepository: Cas1DailyMetricsReportRepository,
   private val cas1OutOfServiceBedsReportRepository: Cas1OutOfServiceBedsReportRepository,
+  private val cas1OverduePlacementsReportRepository: Cas1OverduePlacementsReportRepository,
+  private val clock: Clock,
 ) {
 
   companion object {
@@ -163,6 +168,20 @@ class Cas1ReportService(
         startDateTimeInclusive = reportDateRange.start,
         endDateTimeInclusive = reportDateRange.end,
         consumer,
+      )
+    }
+  }
+
+  fun createOverduePlacementsReport(reportDateRange: ReportDateRange, outputStream: OutputStream) {
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = emptyList(),
+    ).use { consumer ->
+      cas1OverduePlacementsReportRepository.generateCas1OverduePlacementsReport(
+        startDate = reportDateRange.start,
+        endDate = reportDateRange.end,
+        jdbcResultSetConsumer = consumer,
+        currentDate = LocalDate.now(clock),
       )
     }
   }
