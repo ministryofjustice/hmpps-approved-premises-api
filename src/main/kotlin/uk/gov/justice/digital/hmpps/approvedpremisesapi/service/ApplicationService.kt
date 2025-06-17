@@ -57,7 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalTime
@@ -115,6 +115,7 @@ class ApplicationService(
     apAreaId: UUID?,
     releaseType: String?,
     pageSize: Int? = 10,
+    createdByUserId: UUID? = null,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
     val sortField = when (sortBy) {
       ApplicationSortField.arrivalDate -> "arrivalDate"
@@ -123,7 +124,7 @@ class ApplicationService(
       ApplicationSortField.releaseType -> "releaseType"
       else -> "a.created_at"
     }
-    val pageable = getPageable(sortField, sortDirection, page, pageSize)
+    val pageable = getPageableOrAllPages(sortField, sortDirection, page, pageSize)
 
     val statusNames = status.map { it.name }
 
@@ -134,6 +135,7 @@ class ApplicationService(
       status = statusNames,
       apAreaId = apAreaId,
       releaseType,
+      createdByUserId,
     )
 
     return Pair(response.content, getMetadata(response, page, pageSize))

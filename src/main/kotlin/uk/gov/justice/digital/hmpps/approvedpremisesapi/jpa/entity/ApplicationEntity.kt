@@ -87,6 +87,9 @@ AND (
 AND (
     (:releaseType IS NULL) OR (apa.release_type = :releaseType)
 )
+AND (
+    (:createdByUserId IS NULL) OR (a.created_by_user_id = :createdByUserId)
+)
 """,
     countQuery = """
     SELECT COUNT(*)
@@ -118,6 +121,7 @@ AND (
     status: List<String>,
     apAreaId: UUID?,
     releaseType: String?,
+    createdByUserId: UUID?,
   ): Page<ApprovedPremisesApplicationSummary>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")

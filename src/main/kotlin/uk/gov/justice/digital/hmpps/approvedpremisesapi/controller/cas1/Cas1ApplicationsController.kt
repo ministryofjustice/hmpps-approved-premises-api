@@ -70,6 +70,31 @@ class Cas1ApplicationsController(
     )
   }
 
+  override fun getApplicationsMe(): ResponseEntity<List<Cas1ApplicationSummary>> {
+    val user = userService.getUserForRequest()
+
+    val (applications, metadata) =
+      applicationService.getAllApprovedPremisesApplications(
+        page = null,
+        crnOrName = null,
+        sortDirection = SortDirection.asc,
+        status = emptyList(),
+        sortBy = ApplicationSortField.createdAt,
+        apAreaId = null,
+        releaseType = null,
+        createdByUserId = user.id,
+      )
+
+    return ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(
+      getPersonDetailAndTransformToSummary(
+        applications = applications,
+        laoStrategy = user.cas1LaoStrategy(),
+      ),
+    )
+  }
+
   override fun getApplicationsForUser(): ResponseEntity<List<Cas1ApplicationSummary>> {
     val user = userService.getUserForRequest()
 

@@ -2031,6 +2031,21 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
+  /applications/me:
+    get:
+      tags:
+        - Applications
+      summary: Lists all applications that any user has created
+      operationId: getApplicationsMe
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1ApplicationSummary'
 
   /applications:
     get:
