@@ -155,7 +155,7 @@ class PremisesService(
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
       status = status,
-      probationDeliveryUnit = probationDeliveryUnit!!,
+      probationDeliveryUnit = probationDeliveryUnit,
       turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2,
     )
 

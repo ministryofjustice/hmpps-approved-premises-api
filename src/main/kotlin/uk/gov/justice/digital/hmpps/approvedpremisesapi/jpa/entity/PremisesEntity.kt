@@ -38,6 +38,7 @@ SELECT
           p.address_line2 as addressLine2,
           p.postcode as postcode,
           pdu.name as pdu,
+          p.town as town,
           p.status as status,
           la.name as localAuthorityAreaName,
           beds.id as bedspaceId,
@@ -45,7 +46,8 @@ SELECT
           CASE 
             WHEN beds.end_date <= CURRENT_DATE THEN 'archived' 
             WHEN beds.start_date IS NOT NULL AND beds.start_date > CURRENT_DATE THEN 'upcoming' 
-            ELSE 'online' END as bedspaceStatus
+            WHEN beds.id IS NOT NULL THEN 'online'
+            ELSE NULL END as bedspaceStatus
       FROM
           temporary_accommodation_premises tap
           INNER JOIN premises p on tap.premises_id = p.id
@@ -61,11 +63,11 @@ SELECT
           OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
           )
-        AND (:propertyStatus is null OR p.status = :propertyStatus)
+        AND (:premisesStatus is null OR p.status = :premisesStatus)
       """,
     nativeQuery = true,
   )
-  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, propertyStatus: String?): List<TemporaryAccommodationPremisesSummary>
+  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<TemporaryAccommodationPremisesSummary>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
@@ -310,6 +312,7 @@ interface TemporaryAccommodationPremisesSummary {
   val addressLine1: String
   val addressLine2: String?
   val postcode: String
+  val town: String?
   val pdu: String
   val status: PropertyStatus
   val localAuthorityAreaName: String?
