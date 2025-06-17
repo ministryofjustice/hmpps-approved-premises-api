@@ -309,7 +309,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
         gender = entity.gender,
         supportsSpaceBookings = entity.supportsSpaceBookings,
         managerDetails = entity.managerDetails,
-        cruManagementAreaName = entity.cruManagementArea?.name,
+        cruManagementAreaName = entity.cruManagementArea.name,
       )
     }
   }
