@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmentState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSupportingInformationQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
@@ -98,32 +96,6 @@ class OASysSectionsTransformer(val featureFlagService: FeatureFlagService) {
     OASysQuestion("Monitoring and control", "RM31", riskManagementPlan?.monitoringAndControl),
     OASysQuestion("Supervision", "RM30", riskManagementPlan?.supervision),
     OASysQuestion("Key information about current situation", "RM28.1", riskManagementPlan?.keyInformationAboutCurrentSituation),
-  )
-
-  fun cas2TransformRiskToIndividual(
-    offenceDetails: OffenceDetails,
-    risksToTheIndividual: RisksToTheIndividual,
-  ): OASysRiskToSelf = OASysRiskToSelf(
-    assessmentId = offenceDetails.assessmentId,
-    assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
-    dateStarted = offenceDetails.initiationDate.toInstant(),
-    dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    riskToSelf =
-    riskToSelfAnswersPreNod1057(risksToTheIndividual.riskToTheIndividual) +
-      listOf(
-        OASysQuestion("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual.riskToTheIndividual?.previousConcernsSelfHarmSuicide),
-      ),
-  )
-
-  fun cas2TransformRiskOfSeriousHarm(
-    offenceDetails: OffenceDetails,
-    roshSummary: RoshSummary,
-  ): OASysRiskOfSeriousHarm = OASysRiskOfSeriousHarm(
-    assessmentId = offenceDetails.assessmentId,
-    assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
-    dateStarted = offenceDetails.initiationDate.toInstant(),
-    dateCompleted = offenceDetails.dateCompleted?.toInstant(),
-    rosh = roshSummaryAnswersPreNod1057(roshSummary.roshSummary),
   )
 
   @SuppressWarnings("CyclomaticComplexMethod")
