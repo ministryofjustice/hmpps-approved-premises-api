@@ -2035,7 +2035,7 @@ paths:
     get:
       tags:
         - Applications
-      summary: Lists all applications that any user has created
+      summary: Lists all applications that the user has created
       operationId: getApplicationsMe
       responses:
         200:
@@ -2053,6 +2053,8 @@ paths:
         - Applications
       summary: Lists all applications that the user has created
       operationId: getApplicationsForUser
+      deprecated: true
+      description: Deprecated, use GET /cas1/applications/me instead.
       responses:
         200:
           description: successful operation
