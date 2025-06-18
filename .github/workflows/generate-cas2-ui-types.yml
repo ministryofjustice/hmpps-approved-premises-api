@@ -1,4 +1,4 @@
-name: Generate UI Types
+name: Generate CAS2 UI Types
 
 on:
   push:
@@ -19,7 +19,6 @@ jobs:
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Trigger CAS-2 UI Type Generation Workflow
         if: ${{ github.ref == 'refs/heads/main' }}
-        id: sa-trigger-ui-workflow
         uses: actions/github-script@v6
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
