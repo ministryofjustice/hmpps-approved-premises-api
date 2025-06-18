@@ -18,7 +18,7 @@ class Cas2AllocationChangedService(
   private val managePomCasesClient: ManagePomCasesClient,
   private val applicationService: Cas2ApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
-  private val nomisUserService: NomisUserService,
+  private val cas2UserService: Cas2UserService,
   private val emailService: Cas2EmailService,
   private val cas2LocationChangedService: Cas2LocationChangedService,
 ) {
@@ -38,7 +38,7 @@ class Cas2AllocationChangedService(
 
       when (val pomAllocation = getAllocationResponse(detailUrl)) {
         is PomAllocation -> {
-          val allocatedUser = nomisUserService.getUserByStaffId(staffId = pomAllocation.manager.code)
+          val allocatedUser = cas2UserService.getUserByStaffId(staffId = pomAllocation.manager.code)
           val isSamePOM = allocatedUser.id == application.currentPomUserId
           if (isSamePOM) {
             log.info("POM has not changed for $nomsNumber.")
