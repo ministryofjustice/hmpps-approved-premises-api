@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
@@ -75,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
+  private val cas1ApplicationService: Cas1ApplicationService,
   private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val assessmentTransformer: AssessmentTransformer,
@@ -125,7 +127,7 @@ class ApplicationsController(
     val statusTransformed = status?.map { DomainApprovedPremisesApplicationStatus.valueOf(it) } ?: emptyList()
 
     val (applications, metadata) =
-      applicationService.getAllApprovedPremisesApplications(
+      cas1ApplicationService.getAllApprovedPremisesApplications(
         page,
         crnOrName,
         sortDirection,

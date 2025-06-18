@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -814,6 +815,135 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class GetApplicationsMe {
+    @Test
+    fun `Get applications me without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/applications/me")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get applications me returns twelve items sorted by created_at asc`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val createdApplications = createTwelveApplications(crn, userEntity)
+
+          val anotherUser = givenAUser().first
+          createTwelveApplications(crn, anotherUser)
+
+          val responseBody = webTestClient.get()
+            .uri("/cas1/applications/me")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+          val sortedDates = createdApplications.map { it.createdAt.toString() }.sorted()
+
+          assertThat(responseBody.count()).isEqualTo(12)
+
+          responseBody.forEachIndexed { index, element ->
+            assertThat(element.createdAt).isEqualTo(sortedDates[index])
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications me LAO without qualification returns 200 and restricted person`() {
+      givenAUser { userEntity, jwt ->
+
+        val (offenderDetails, _) = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        )
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(
+            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          )
+          withId(UUID.randomUUID())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+          withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
+          withData(
+            """
+        {
+           "thingId": 123
+        }
+        """,
+          )
+        }
+
+        val response = webTestClient.get()
+          .uri("/cas1/applications/me")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+        assertThat(response).hasSize(1)
+        assertThat(response[0].person).isInstanceOf(RestrictedPerson::class.java)
+      }
+    }
+
+    @Test
+    fun `Get applications me LAO with LAO qualification returns 200 and full person`() {
+      givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+        val (offenderDetails, _) = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        )
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(
+            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          )
+          withId(UUID.randomUUID())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+          withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+          withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
+          withData(
+            """
+        {
+           "thingId": 123
+        }
+        """,
+          )
+        }
+
+        val response = webTestClient.get()
+          .uri("/cas1/applications/me")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+        assertThat(response).hasSize(1)
+        assertThat(response[0].person).isInstanceOf(FullPerson::class.java)
+      }
+    }
+  }
+
+  @Nested
   inner class GetApplications {
 
     @Test
@@ -1147,12 +1277,12 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     return application
   }
 
-  private fun createTwelveApplications(crn: String, user: UserEntity) {
+  private fun createTwelveApplications(crn: String, user: UserEntity): List<ApprovedPremisesApplicationEntity> {
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
 
-    approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+    return approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
       withApplicationSchema(applicationSchema)
       withCrn(crn)
       withCreatedByUser(user)

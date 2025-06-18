@@ -5,11 +5,9 @@ import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -22,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
@@ -40,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Offe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -56,8 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalTime
@@ -104,39 +98,6 @@ class ApplicationService(
     ServiceName.cas2 -> throw RuntimeException("CAS2 applications now require NomisUser")
     ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 applications now require Cas2v2User")
     ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
-  }
-
-  fun getAllApprovedPremisesApplications(
-    page: Int?,
-    crnOrName: String?,
-    sortDirection: SortDirection?,
-    status: List<ApprovedPremisesApplicationStatus>,
-    sortBy: ApplicationSortField?,
-    apAreaId: UUID?,
-    releaseType: String?,
-    pageSize: Int? = 10,
-  ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
-    val sortField = when (sortBy) {
-      ApplicationSortField.arrivalDate -> "arrivalDate"
-      ApplicationSortField.createdAt -> "a.created_at"
-      ApplicationSortField.tier -> "tier"
-      ApplicationSortField.releaseType -> "releaseType"
-      else -> "a.created_at"
-    }
-    val pageable = getPageable(sortField, sortDirection, page, pageSize)
-
-    val statusNames = status.map { it.name }
-
-    val response = applicationRepository.findAllApprovedPremisesSummaries(
-      pageable = pageable,
-      crnOrName = crnOrName,
-      statusProvided = statusNames.isNotEmpty(),
-      status = statusNames,
-      apAreaId = apAreaId,
-      releaseType,
-    )
-
-    return Pair(response.content, getMetadata(response, page, pageSize))
   }
 
   fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) = applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
