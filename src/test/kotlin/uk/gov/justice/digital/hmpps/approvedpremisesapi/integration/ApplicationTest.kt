@@ -813,41 +813,41 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-  }
 
-  @Test
-  fun `Get single offline application returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-        }
+    @Test
+    fun `Get single offline application returns 200 with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+          }
 
-        apDeliusContextAddResponseToUserAccessCall(
-          listOf(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-          ),
-          userEntity.deliusUsername,
-        )
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${offlineApplicationEntity.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${offlineApplicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
+          val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
 
-        assertThat(responseBody).matches {
-          offlineApplicationEntity.id == it.id &&
-            offlineApplicationEntity.crn == it.person.crn &&
-            offlineApplicationEntity.createdAt.toInstant() == it.createdAt
+          assertThat(responseBody).matches {
+            offlineApplicationEntity.id == it.id &&
+              offlineApplicationEntity.crn == it.person.crn &&
+              offlineApplicationEntity.createdAt.toInstant() == it.createdAt
+          }
         }
       }
     }
