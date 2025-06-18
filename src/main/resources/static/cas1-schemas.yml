@@ -1655,6 +1655,7 @@ components:
         - application
         - createdFromAppeal
     Cas1Application:
+      type: object
       properties:
         id:
           type: string
@@ -1852,6 +1853,7 @@ components:
       required:
         - reason
     Cas1OASysMetadata:
+      type: object
       properties:
         assessmentMetadata:
           $ref: 'cas1-schemas.yml#/components/schemas/Cas1OASysAssessmentMetadata'

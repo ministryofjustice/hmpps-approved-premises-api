@@ -8483,6 +8483,7 @@ components:
         - application
         - createdFromAppeal
     Cas1Application:
+      type: object
       properties:
         id:
           type: string
@@ -8680,6 +8681,7 @@ components:
       required:
         - reason
     Cas1OASysMetadata:
+      type: object
       properties:
         assessmentMetadata:
           $ref: '#/components/schemas/Cas1OASysAssessmentMetadata'
