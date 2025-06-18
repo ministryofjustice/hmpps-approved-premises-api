@@ -12,9 +12,11 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.springframework.data.domain.Limit
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
+import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -149,6 +151,8 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     "SELECT b FROM BookingEntity b WHERE b.service = :serviceName AND b.premises.id = :premisesId AND b.departureDate >= :date AND b.status in :statuses",
   )
   fun findFutureBookingsByPremisesIdAndStatus(serviceName: String, premisesId: UUID, date: LocalDate, statuses: List<BookingStatus>): List<BookingEntity>
+
+  fun findByBedId(id: UUID, by: Sort, limit: Limit): List<BookingEntity>
 }
 
 @Repository
