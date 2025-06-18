@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.isWorkingDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DatesConstant
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -65,7 +67,9 @@ class Cas1TaskDeadlineService(
     .atTime(date.toOffsetTime())
 
   private fun ZonedDateTime.isWorkingDay() = this.toLocalDate().isWorkingDay(workingDayService.bankHolidays)
-  private fun ZonedDateTime.isBeforeSameWorkingDayDeadline() = this.toLocalTime().isBefore(SAME_WORKING_DAY_DEADLINE_TIME)
+  private fun ZonedDateTime.isBeforeSameWorkingDayDeadline() = this.toLocalTime().isBefore(
+    SAME_WORKING_DAY_DEADLINE_TIME,
+  )
 
   private fun OffsetDateTime.slewedToWorkingPattern(): OffsetDateTime {
     val zonedDateTime = this.toZonedDateTime().withZoneSameInstant(DatesConstant.DEFAULT_CAS_TIMEZONE)

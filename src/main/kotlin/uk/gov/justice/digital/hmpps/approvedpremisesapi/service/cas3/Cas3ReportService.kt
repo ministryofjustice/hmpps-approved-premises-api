@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Boo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvObjectListConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvObjectListConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
