@@ -76,9 +76,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
@@ -111,7 +111,7 @@ class AssessmentServiceTest {
   private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
   private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
-  private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
+  private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
@@ -132,7 +132,7 @@ class AssessmentServiceTest {
     cas1PlacementRequirementsServiceMock,
     userAllocatorMock,
     objectMapperMock,
-    taskDeadlineServiceMock,
+    cas1TaskDeadlineServiceMock,
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
@@ -2009,7 +2009,7 @@ class AssessmentServiceTest {
 
       every { cas1AssessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
 
-      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
       every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
 
@@ -2091,7 +2091,7 @@ class AssessmentServiceTest {
 
       every { cas1AssessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
 
-      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
       every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
 
@@ -2379,7 +2379,7 @@ class AssessmentServiceTest {
       cas1PlacementRequirementsServiceMock,
       userAllocatorMock,
       objectMapperMock,
-      taskDeadlineServiceMock,
+      cas1TaskDeadlineServiceMock,
       cas1AssessmentEmailServiceMock,
       cas1AssessmentDomainEventService,
       cas1PlacementRequestEmailService,
@@ -2680,7 +2680,7 @@ class AssessmentServiceTest {
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
 
-      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
       if (createdFromAppeal) {
         every { cas1AssessmentEmailServiceMock.appealedAssessmentAllocated(any(), any(), any()) } just Runs
@@ -2748,7 +2748,7 @@ class AssessmentServiceTest {
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns null
 
-      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
       every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
 

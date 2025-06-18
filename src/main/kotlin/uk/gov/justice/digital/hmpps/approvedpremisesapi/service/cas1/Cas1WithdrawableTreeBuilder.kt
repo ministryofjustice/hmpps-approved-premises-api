@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1PlacementApplicationService
 import java.util.UUID
 
 /**
@@ -31,7 +31,7 @@ import java.util.UUID
 class Cas1WithdrawableTreeBuilder(
   @Lazy private val placementRequestService: PlacementRequestService,
   @Lazy private val bookingService: BookingService,
-  @Lazy private val placementApplicationService: PlacementApplicationService,
+  @Lazy private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   @Lazy private val applicationService: ApplicationService,
   @Lazy private val cas1SpaceBookingService: Cas1SpaceBookingService,
 ) {
@@ -42,7 +42,7 @@ class Cas1WithdrawableTreeBuilder(
       children.add(treeForPlacementReq(it, user).rootNode)
     }
 
-    placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id).forEach {
+    cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id).forEach {
       children.add(treeForPlacementApp(it, user).rootNode)
     }
 
@@ -70,7 +70,7 @@ class Cas1WithdrawableTreeBuilder(
         applicationId = placementApplication.application.id,
         entityType = WithdrawableEntityType.PlacementApplication,
         entityId = placementApplication.id,
-        status = placementApplicationService.getWithdrawableState(placementApplication, user),
+        status = cas1PlacementApplicationService.getWithdrawableState(placementApplication, user),
         dates = placementApplication.placementDates.map { WithdrawableDatePeriod(it.expectedArrival, it.expectedDeparture()) },
         children = children,
       ),

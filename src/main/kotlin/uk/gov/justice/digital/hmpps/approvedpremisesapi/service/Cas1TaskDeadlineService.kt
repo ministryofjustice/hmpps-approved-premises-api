@@ -13,7 +13,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 @Service
-class TaskDeadlineService(
+class Cas1TaskDeadlineService(
   private val workingDayService: WorkingDayService,
 ) {
   fun getDeadline(assessment: AssessmentEntity): OffsetDateTime? {

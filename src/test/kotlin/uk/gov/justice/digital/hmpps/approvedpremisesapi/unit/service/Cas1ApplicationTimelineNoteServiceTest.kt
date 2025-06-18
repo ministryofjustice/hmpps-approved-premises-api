@@ -14,16 +14,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTimel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1ApplicationTimelineNoteService
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class ApplicationTimelineNoteServiceTest {
+class Cas1ApplicationTimelineNoteServiceTest {
   @MockK
   private lateinit var applicationTimelineNoteRepository: ApplicationTimelineNoteRepository
 
   @InjectMockKs
-  private lateinit var service: ApplicationTimelineNoteService
+  private lateinit var service: Cas1ApplicationTimelineNoteService
 
   @Nested
   inner class SaveApplicationTimelineNote {

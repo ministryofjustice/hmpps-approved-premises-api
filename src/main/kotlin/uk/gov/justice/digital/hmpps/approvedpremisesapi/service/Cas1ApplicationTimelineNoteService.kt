@@ -8,7 +8,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class ApplicationTimelineNoteService(
+class Cas1ApplicationTimelineNoteService(
   private val applicationTimelineNoteRepository: ApplicationTimelineNoteRepository,
 ) {
 

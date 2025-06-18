@@ -52,8 +52,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
@@ -83,7 +83,7 @@ class Cas1PlacementRequestServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
-  private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
+  private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val offenderService = mockk<OffenderService>()
 
@@ -97,7 +97,7 @@ class Cas1PlacementRequestServiceTest {
     applicationService,
     cas1PlacementRequestEmailService,
     cas1PlacementRequestDomainEventService,
-    taskDeadlineServiceMock,
+    cas1TaskDeadlineServiceMock,
     cas1BookingDomainEventService,
     offenderService,
     clock = Clock.systemDefaultZone(),
@@ -124,7 +124,7 @@ class Cas1PlacementRequestServiceTest {
     fun `createPlacementRequest creates a placement request with the correct deadline`(source: PlacementRequestSource) {
       val dueAt = OffsetDateTime.now()
 
-      every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
 

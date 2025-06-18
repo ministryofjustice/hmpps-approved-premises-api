@@ -22,7 +22,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class AppealService(
+class Cas1AppealService(
   private val appealRepository: AppealRepository,
   private val assessmentService: AssessmentService,
   private val cas1AppealEmailService: Cas1AppealEmailService,

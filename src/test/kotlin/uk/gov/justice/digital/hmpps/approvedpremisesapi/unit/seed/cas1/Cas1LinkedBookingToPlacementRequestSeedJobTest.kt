@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkBookingToPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkBookingToPlacementRequestSeedJobCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1ApplicationTimelineNoteService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -25,7 +25,7 @@ class Cas1LinkedBookingToPlacementRequestSeedJobTest {
 
   val placementRequestRepository = mockk<PlacementRequestRepository>()
   val bookingRepository = mockk<BookingRepository>()
-  val applicationTimelineNoteService = mockk<ApplicationTimelineNoteService>()
+  val cas1ApplicationTimelineNoteService = mockk<Cas1ApplicationTimelineNoteService>()
 
   val validPlacementRequest = PlacementRequestEntityFactory()
     .withDefaults()
@@ -45,7 +45,7 @@ class Cas1LinkedBookingToPlacementRequestSeedJobTest {
   val service = Cas1LinkBookingToPlacementRequestSeedJob(
     placementRequestRepository = placementRequestRepository,
     bookingRepository = bookingRepository,
-    applicationTimelineNoteService = applicationTimelineNoteService,
+    cas1ApplicationTimelineNoteService = cas1ApplicationTimelineNoteService,
   )
 
   @Test
@@ -132,7 +132,7 @@ class Cas1LinkedBookingToPlacementRequestSeedJobTest {
     every { bookingRepository.findByIdOrNull(bookingId) } returns booking
 
     every { placementRequestRepository.save(any()) } returns placementRequest
-    every { applicationTimelineNoteService.saveApplicationTimelineNote(any(), any(), any()) } returns ApplicationTimelineNoteEntityFactory.DEFAULT
+    every { cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(any(), any(), any()) } returns ApplicationTimelineNoteEntityFactory.DEFAULT
 
     service.processRow(Cas1LinkBookingToPlacementRequestSeedJobCsvRow(bookingId, placementRequestId))
 
@@ -155,12 +155,12 @@ class Cas1LinkedBookingToPlacementRequestSeedJobTest {
     every { bookingRepository.findByIdOrNull(bookingId) } returns booking
 
     every { placementRequestRepository.save(any()) } returns placementRequest
-    every { applicationTimelineNoteService.saveApplicationTimelineNote(any(), any(), any()) } returns ApplicationTimelineNoteEntityFactory.DEFAULT
+    every { cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(any(), any(), any()) } returns ApplicationTimelineNoteEntityFactory.DEFAULT
 
     service.processRow(Cas1LinkBookingToPlacementRequestSeedJobCsvRow(bookingId, placementRequestId))
 
     verify {
-      applicationTimelineNoteService.saveApplicationTimelineNote(
+      cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
         applicationId = ApprovedPremisesApplicationEntityFactory.DEFAULT.id,
         "Adhoc booking with arrival date 'Thursday 11 December 2059' linked to corresponding request for placement by Application Support",
         user = null,

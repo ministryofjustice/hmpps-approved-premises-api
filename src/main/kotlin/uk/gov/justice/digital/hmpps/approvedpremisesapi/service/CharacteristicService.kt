@@ -18,8 +18,6 @@ class CharacteristicService(
 ) {
   fun getCharacteristic(characteristicId: UUID): CharacteristicEntity? = characteristicRepository.findByIdOrNull(characteristicId)
 
-  fun getCharacteristicByPropertyName(propertyName: String, serviceName: ServiceName): CharacteristicEntity? = characteristicRepository.findByPropertyName(propertyName, serviceName.value)
-
   fun getCharacteristics(characteristicName: String): List<CharacteristicEntity> = characteristicRepository.findAllByName(characteristicName)
 
   fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>, serviceName: ServiceName) = characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics, serviceName.value)
