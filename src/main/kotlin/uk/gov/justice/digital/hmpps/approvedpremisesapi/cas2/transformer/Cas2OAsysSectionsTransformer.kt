@@ -10,9 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummaryInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
 @Service
-class Cas2OAsysSectionsTransformer {
+class Cas2OAsysSectionsTransformer(val featureFlagService: FeatureFlagService) {
   fun transformRiskToIndividual(
     offenceDetails: OffenceDetails,
     risksToTheIndividual: RisksToTheIndividual,
@@ -35,18 +36,46 @@ class Cas2OAsysSectionsTransformer {
     rosh = roshSummaryAnswers(roshSummary.roshSummary),
   )
 
-  private fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
+  private fun oldRiskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
     OASysQuestion("Current concerns about self-harm or suicide", "R8.1.1", risksToTheIndividual?.currentConcernsSelfHarmSuicide),
-    OASysQuestion("Current concerns about Coping in Custody or Hostel", "R8.2.1", risksToTheIndividual?.currentCustodyHostelCoping),
     OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.currentVulnerability),
     OASysQuestion("Previous concerns about self-harm or suicide", "R8.1.4", risksToTheIndividual?.previousConcernsSelfHarmSuicide),
+  )
+
+  private fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = if (cas2UseNewQuestions()) {
+    if (risksToTheIndividual.isPreNod1057()) {
+      riskToSelfAnswersPreNod1057(risksToTheIndividual)
+    } else {
+      riskToSelfAnswersPostNod1057(risksToTheIndividual)
+    }
+  } else {
+    oldRiskToSelfAnswers(risksToTheIndividual)
+  }
+
+  private fun riskToSelfAnswersPostNod1057(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
+    OASysQuestion("Analysis of current or previous self-harm and/or suicide concerns", "FA62", risksToTheIndividual?.analysisSuicideSelfharm),
+    OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.analysisVulnerabilities),
+  )
+
+  private fun riskToSelfAnswersPreNod1057(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
+    OASysQuestion("Analysis of current or previous self-harm and/or suicide concerns", "FA62", combineAnswers(risksToTheIndividual?.previousConcernsSelfHarmSuicide, risksToTheIndividual?.currentConcernsSelfHarmSuicide)),
+    OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.currentVulnerability),
   )
 
   private fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = listOf(
     OASysQuestion("Who is at risk", "R10.1", roshSummary?.whoIsAtRisk),
     OASysQuestion("What is the nature of the risk", "R10.2", roshSummary?.natureOfRisk),
-    OASysQuestion("When is the risk likely to be the greatest", "R10.3", roshSummary?.riskGreatest),
-    OASysQuestion("What circumstances are likely to increase risk", "R10.4", roshSummary?.riskIncreaseLikelyTo),
-    OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo),
   )
+
+  private fun combineAnswers(answer1: String?, answer2: String?) = if (answer1 != null && answer2 != null) {
+    answer1 + "\n\n" + answer2
+  } else {
+    answer1 ?: answer2
+  }
+
+  private fun cas2UseNewQuestions() = featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions")
+
+  private fun RiskToTheIndividualInner?.isPreNod1057() = this?.currentConcernsSelfHarmSuicide != null ||
+    this?.previousConcernsSelfHarmSuicide != null ||
+    this?.currentVulnerability != null
 }
