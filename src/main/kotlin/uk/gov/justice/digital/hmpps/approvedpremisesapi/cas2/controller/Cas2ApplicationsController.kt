@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -29,7 +29,7 @@ class Cas2ApplicationsController(
   private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: Cas2OffenderService,
-  private val userService: NomisUserService,
+  private val userService: Cas2UserService,
 ) : ApplicationsCas2Delegate {
 
   override fun getCas2Applications(

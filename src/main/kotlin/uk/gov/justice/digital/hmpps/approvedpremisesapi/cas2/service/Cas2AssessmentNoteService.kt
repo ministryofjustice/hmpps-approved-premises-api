@@ -30,7 +30,7 @@ class Cas2AssessmentNoteService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
-  private val userService: NomisUserService,
+  private val userService: Cas2UserService,
   private val externalUserService: ExternalUserService,
   private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,

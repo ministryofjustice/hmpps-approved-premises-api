@@ -68,6 +68,10 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.isActive = { isActive }
   }
 
+  fun withDeliusTeamCodes(deliusTeamCodes: List<String>?) = apply {
+    this.deliusTeamCodes = { deliusTeamCodes }
+  }
+
   override fun produce(): Cas2UserEntity = Cas2UserEntity(
     id = this.id(),
     username = this.username(),

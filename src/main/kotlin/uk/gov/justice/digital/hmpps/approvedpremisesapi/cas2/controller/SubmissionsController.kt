@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -28,7 +28,7 @@ class SubmissionsController(
   private val submissionsTransformer: SubmissionsTransformer,
   private val offenderService: Cas2OffenderService,
   private val externalUserService: ExternalUserService,
-  private val nomisUserService: NomisUserService,
+  private val cas2UserService: Cas2UserService,
 ) : SubmissionsCas2Delegate {
 
   override fun submissionsGet(page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
@@ -65,7 +65,7 @@ class SubmissionsController(
   override fun submissionsPost(
     submitCas2Application: SubmitCas2Application,
   ): ResponseEntity<Unit> {
-    val user = nomisUserService.getUserForRequest()
+    val user = cas2UserService.getUserForRequest()
     val submitResult = applicationService.submitApplication(submitCas2Application, user)
 
     extractEntityFromCasResult(submitResult)
@@ -78,7 +78,7 @@ class SubmissionsController(
   }
 
   private fun ensureNomisUserPersisted() {
-    nomisUserService.getUserForRequest()
+    cas2UserService.getUserForRequest()
   }
 
   private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2SubmittedApplicationSummary> {
