@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.util.UUID
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 class Cas1ApplicationsController(
   private val cas1TimelineService: Cas1TimelineService,
   private val applicationService: ApplicationService,
+  private val cas1ApplicationService: Cas1ApplicationService,
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val applicationsTransformer: ApplicationsTransformer,
@@ -50,7 +52,7 @@ class Cas1ApplicationsController(
     val statusTransformed = status?.map { DomainApprovedPremisesApplicationStatus.valueOf(it) } ?: emptyList()
 
     val (applications, metadata) =
-      applicationService.getAllApprovedPremisesApplications(
+      cas1ApplicationService.getAllApprovedPremisesApplications(
         page,
         crnOrName,
         sortDirection,
@@ -74,7 +76,7 @@ class Cas1ApplicationsController(
     val user = userService.getUserForRequest()
 
     val (applications, metadata) =
-      applicationService.getAllApprovedPremisesApplications(
+      cas1ApplicationService.getAllApprovedPremisesApplications(
         page = null,
         crnOrName = null,
         sortDirection = SortDirection.asc,
