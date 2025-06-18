@@ -19,7 +19,7 @@ Seed Jobs like the `Cas2ApplicationsSeedJob` are run on start up with the `SeedS
 
 They read from a CSV file
 e.g. [`6_cas2_applications.csv`](src/main/resources/db/seed/dev+test/6__cas2_applications.csv) defined in
-the `src/main/resources/db/seed/local+dev+test` directory, and run on the three environments in the directory name.
+the `src/main/resources/db/seed/dev+test` directory, and run on the three environments in the directory name.
 
 These seeds incidentally manually set a `created_at` value on an Application, meaning checking your own database for
 these values to check the seeds are run (e.g. on today's date) may not be reliable. Instead, checking the logs will show
