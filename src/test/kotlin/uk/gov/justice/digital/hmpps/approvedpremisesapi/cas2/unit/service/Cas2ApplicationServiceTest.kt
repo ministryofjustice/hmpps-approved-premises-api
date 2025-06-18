@@ -3,15 +3,19 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Runs
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import io.mockk.verifySequence
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
@@ -19,6 +23,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
@@ -56,34 +61,62 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@ExtendWith(MockKExtension::class)
 class Cas2ApplicationServiceTest {
-  private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
-  private val mockLockableApplicationRepository = mockk<Cas2LockableApplicationRepository>()
-  private val mockApplicationSummaryRepository = mockk<ApplicationSummaryRepository>()
-  private val mockJsonSchemaService = mockk<Cas2JsonSchemaService>()
-  private val mockOffenderService = mockk<Cas2OffenderService>()
-  private val mockUserAccessService = mockk<Cas2UserAccessService>()
-  private val mockDomainEventService = mockk<Cas2DomainEventService>()
-  private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val mockAssessmentService = mockk<Cas2AssessmentService>()
-  private val mockObjectMapper = mockk<ObjectMapper>()
-  private val mockNotifyConfig = mockk<NotifyConfig>()
 
-  private val applicationService = Cas2ApplicationService(
-    mockApplicationRepository,
-    mockLockableApplicationRepository,
-    mockApplicationSummaryRepository,
-    mockJsonSchemaService,
-    mockOffenderService,
-    mockUserAccessService,
-    mockDomainEventService,
-    mockEmailNotificationService,
-    mockAssessmentService,
-    mockNotifyConfig,
-    mockObjectMapper,
-    "http://frontend/applications/#id",
-    "http://frontend/assess/applications/#applicationId/overview",
-  )
+  @MockK(relaxed = true)
+  lateinit var mockApplicationRepository: Cas2ApplicationRepository
+
+  @MockK
+  lateinit var mockLockableApplicationRepository: Cas2LockableApplicationRepository
+
+  @MockK(relaxed = true)
+  lateinit var mockApplicationSummaryRepository: ApplicationSummaryRepository
+
+  @MockK
+  lateinit var mockJsonSchemaService: Cas2JsonSchemaService
+
+  @MockK
+  lateinit var mockOffenderService: Cas2OffenderService
+
+  @MockK
+  lateinit var mockUserAccessService: Cas2UserAccessService
+
+  @MockK
+  lateinit var mockDomainEventService: Cas2DomainEventService
+
+  @MockK
+  lateinit var mockEmailNotificationService: EmailNotificationService
+
+  @MockK
+  lateinit var mockAssessmentService: Cas2AssessmentService
+
+  @MockK
+  lateinit var mockObjectMapper: ObjectMapper
+
+  @MockK
+  lateinit var mockNotifyConfig: NotifyConfig
+
+  lateinit var applicationService: Cas2ApplicationService
+
+  @BeforeEach
+  fun setup() {
+    applicationService = Cas2ApplicationService(
+      mockApplicationRepository,
+      mockLockableApplicationRepository,
+      mockApplicationSummaryRepository,
+      mockJsonSchemaService,
+      mockOffenderService,
+      mockUserAccessService,
+      mockDomainEventService,
+      mockEmailNotificationService,
+      mockAssessmentService,
+      mockNotifyConfig,
+      mockObjectMapper,
+      "http://frontend/applications/#id",
+      "http://frontend/assess/applications/#applicationId/overview",
+    )
+  }
 
   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   @Nested
@@ -192,6 +225,101 @@ class Cas2ApplicationServiceTest {
       assertThat(metadata?.pageSize).isEqualTo(10)
       assertThat(metadata?.totalPages).isEqualTo(10)
       assertThat(metadata?.totalResults).isEqualTo(100)
+    }
+  }
+
+  @Nested
+  inner class ApplicationSummaries {
+
+    private val prisonCode = "PRI"
+    private val user = NomisUserEntityFactory().withActiveCaseloadId(prisonCode).produce()
+    private val pageCriteria = PageCriteria("createdAt", SortDirection.desc, 1)
+
+    @BeforeEach
+    fun setup() {
+      PaginationConfig(defaultPageSize = 10).postInit()
+    }
+
+    @Test
+    fun getAllocatedApplicationSummaries() {
+      applicationService.getApplicationSummaries(
+        user = user,
+        pageCriteria = pageCriteria,
+        assignmentType = AssignmentType.ALLOCATED,
+      )
+
+      verify {
+        mockApplicationSummaryRepository.findApplicationsAssignedToUser(
+          user.id,
+          any(),
+        )
+      }
+    }
+
+    @Test
+    fun getUnallocatedApplicationSummaries() {
+      applicationService.getApplicationSummaries(
+        user = user,
+        pageCriteria = pageCriteria,
+        assignmentType = AssignmentType.UNALLOCATED,
+      )
+
+      verify {
+        mockApplicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
+          prisonCode,
+          any(),
+        )
+      }
+    }
+
+    @Test
+    fun getDeallocatedApplicationSummaries() {
+      applicationService.getApplicationSummaries(
+        user = user,
+        pageCriteria = pageCriteria,
+        assignmentType = AssignmentType.DEALLOCATED,
+      )
+
+      verifySequence {
+        mockApplicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(
+          user.id,
+          prisonCode,
+        )
+        mockApplicationSummaryRepository.findAllByIdIn(any(), any())
+      }
+    }
+
+    @Test
+    fun getInProgressApplicationSummaries() {
+      applicationService.getApplicationSummaries(
+        user = user,
+        pageCriteria = pageCriteria,
+        assignmentType = AssignmentType.IN_PROGRESS,
+      )
+
+      verify {
+        mockApplicationSummaryRepository.findInProgressApplications(
+          user.id.toString(),
+          any(),
+        )
+      }
+    }
+
+    @Test
+    fun getInSamePrisonApplicationSummaries() {
+      applicationService.getApplicationSummaries(
+        user = user,
+        pageCriteria = pageCriteria,
+        assignmentType = AssignmentType.PRISON,
+      )
+
+      verify {
+        mockApplicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
+          prisonCode,
+          any(),
+
+        )
+      }
     }
   }
 
