@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
@@ -60,10 +61,9 @@ class Cas3BookingSearchService(
     bookingSearchResultDtos: List<BookingSearchResultDto>,
     user: UserEntity,
   ): List<BookingSearchResultDto> {
-    val offenderSummaries = offenderService.getOffenderSummariesByCrns(
+    val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       bookingSearchResultDtos.map { it.personCrn }.toSet(),
-      user.deliusUsername,
-      ignoreLaoRestrictions = false,
+      user.cas3LaoStrategy(),
     )
 
     return bookingSearchResultDtos

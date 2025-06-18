@@ -209,13 +209,14 @@ fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSu
   }
 }
 
-fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(casesSummary: List<CaseSummary>) {
+fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(
+  casesSummary: List<CaseSummary>,
+  crns: List<String> = casesSummary.map { it.crn },
+) {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
-      objectMapper.writeValueAsString(
-        casesSummary.map { it.crn },
-      ),
+      objectMapper.writeValueAsString(crns),
       true,
       false,
     ),
