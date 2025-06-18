@@ -177,24 +177,6 @@ class AssessmentService(
     return CasResult.Success(assessment)
   }
 
-  fun getAssessmentForUserAndApplication(
-    user: UserEntity,
-    applicationID: UUID,
-  ): AuthorisableActionResult<AssessmentEntity> {
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-
-    val assessment = assessmentRepository.findByApplicationIdAndReallocatedAtNull(applicationID)
-      ?: return AuthorisableActionResult.NotFound()
-
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && assessment.allocatedToUser != user) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
-
-    return AuthorisableActionResult.Success(assessment)
-  }
-
   fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity, createdFromAppeal: Boolean = false): ApprovedPremisesAssessmentEntity {
     val dateTimeNow = OffsetDateTime.now(clock)
 

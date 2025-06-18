@@ -66,8 +66,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -75,10 +73,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -1784,90 +1780,6 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetAssessmentForApplication {
-    @Test
-    fun `Get assessment for application returns an application's assessment when the requesting user is the allocated user`() {
-      givenAUser { applicant, _ ->
-        givenAUser { user, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            val (application, assessment) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
-
-            webTestClient.get()
-              .uri("/applications/${application.id}/assessment")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  assessmentTransformer.transformJpaToApi(
-                    assessment,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get assessment for application returns an application's assessment when the requesting user is a workflow manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { applicant, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { assignee, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
-              val (application, assessment) = produceAndPersistApplicationAndAssessment(
-                applicant,
-                assignee,
-                offenderDetails,
-              )
-
-              webTestClient.get()
-                .uri("/applications/${application.id}/assessment")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    assessmentTransformer.transformJpaToApi(
-                      assessment,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                    ),
-                  ),
-                )
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get assessment for an application returns 403 if the user does not have permission`() {
-      givenAUser { applicant, _ ->
-        givenAUser { assignee, _ ->
-          givenAUser { _, jwt ->
-            givenAnOffender { offenderDetails, _ ->
-
-              val (application, _) = produceAndPersistApplicationAndAssessment(applicant, assignee, offenderDetails)
-
-              webTestClient.get()
-                .uri("/applications/${application.id}/assessment")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isForbidden
-            }
-          }
-        }
-      }
-    }
-  }
-
-  @Nested
   inner class PostTimelineNotesForApplication {
     @Test
     fun `post ApplicationTimelineNote without JWT returns 401`() {
@@ -2885,38 +2797,5 @@ class ApplicationTest : IntegrationTestBase() {
     )
 
     return application
-  }
-
-  private fun produceAndPersistApplicationAndAssessment(
-    applicant: UserEntity,
-    assignee: UserEntity,
-    offenderDetails: OffenderDetailSummary,
-  ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(applicant)
-      withApplicationSchema(applicationSchema)
-      withSubmittedAt(OffsetDateTime.now())
-    }
-
-    val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-      withAllocatedToUser(assignee)
-      withApplication(application)
-      withAssessmentSchema(assessmentSchema)
-    }
-
-    assessment.schemaUpToDate = true
-    application.assessments.add(assessment)
-
-    return Pair(application, assessment)
   }
 }
