@@ -49,7 +49,6 @@ class Cas2ApplicationsController(
         user,
         pageCriteria,
         assignmentType,
-        forPrison = prisonCode != null,
       )
       return ResponseEntity.ok().headers(
         metadata?.toHeaders(),
