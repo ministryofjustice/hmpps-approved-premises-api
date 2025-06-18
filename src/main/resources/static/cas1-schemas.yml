@@ -1655,83 +1655,83 @@ components:
         - application
         - createdFromAppeal
     Cas1Application:
-          properties:
-            id:
-              type: string
-              format: uuid
-            person:
-              $ref: '_shared.yml#/components/schemas/Person'
-            createdAt:
-              type: string
-              format: date-time
-            isWomensApplication:
-              type: boolean
-            isPipeApplication:
-              deprecated: true
-              description: Use apType
-              type: boolean
-            isEmergencyApplication:
-              type: boolean
-            isEsapApplication:
-              deprecated: true
-              description: Use apType
-              type: boolean
-            apType:
-              $ref: '_shared.yml#/components/schemas/ApType'
-            arrivalDate:
-              type: string
-              format: date-time
-            risks:
-              $ref: '_shared.yml#/components/schemas/PersonRisks'
-            createdByUserId:
-              type: string
-              format: uuid
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
-            data:
-              $ref: '_shared.yml#/components/schemas/Unit'
-            document:
-              $ref: '_shared.yml#/components/schemas/Unit'
-            status:
-              $ref: '_shared.yml#/components/schemas/ApprovedPremisesApplicationStatus'
-            assessmentId:
-              type: string
-              format: uuid
-            assessmentDecision:
-              $ref: '_shared.yml#/components/schemas/AssessmentDecision'
-            assessmentDecisionDate:
-              type: string
-              format: date
-            submittedAt:
-              type: string
-              format: date-time
-            personStatusOnSubmission:
-              $ref: '_shared.yml#/components/schemas/PersonStatus'
-            apArea:
-              $ref: '_shared.yml#/components/schemas/ApArea'
-            cruManagementArea:
-              $ref: '_shared.yml#/components/schemas/Cas1CruManagementArea'
-            applicantUserDetails:
-              $ref: '_shared.yml#/components/schemas/Cas1ApplicationUserDetails'
-            caseManagerIsNotApplicant:
-              description: "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details"
-              type: boolean
-            caseManagerUserDetails:
-              $ref: '_shared.yml#/components/schemas/Cas1ApplicationUserDetails'
-            licenceExpiryDate:
-              type: string
-              format: date
-          required:
-            - id
-            - person
-            - createdAt
-            - createdByUserId
-            - schemaVersion
-            - outdatedSchema
-            - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        isWomensApplication:
+          type: boolean
+        isPipeApplication:
+          deprecated: true
+          description: Use apType
+          type: boolean
+        isEmergencyApplication:
+          type: boolean
+        isEsapApplication:
+          deprecated: true
+          description: Use apType
+          type: boolean
+        apType:
+          $ref: '_shared.yml#/components/schemas/ApType'
+        arrivalDate:
+          type: string
+          format: date-time
+        risks:
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        data:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        document:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        status:
+          $ref: '_shared.yml#/components/schemas/ApprovedPremisesApplicationStatus'
+        assessmentId:
+          type: string
+          format: uuid
+        assessmentDecision:
+          $ref: '_shared.yml#/components/schemas/AssessmentDecision'
+        assessmentDecisionDate:
+          type: string
+          format: date
+        submittedAt:
+          type: string
+          format: date-time
+        personStatusOnSubmission:
+          $ref: '_shared.yml#/components/schemas/PersonStatus'
+        apArea:
+          $ref: '_shared.yml#/components/schemas/ApArea'
+        cruManagementArea:
+          $ref: '_shared.yml#/components/schemas/Cas1CruManagementArea'
+        applicantUserDetails:
+          $ref: '_shared.yml#/components/schemas/Cas1ApplicationUserDetails'
+        caseManagerIsNotApplicant:
+          description: "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details"
+          type: boolean
+        caseManagerUserDetails:
+          $ref: '_shared.yml#/components/schemas/Cas1ApplicationUserDetails'
+        licenceExpiryDate:
+          type: string
+          format: date
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
     Cas1UpdateAssessment:
       type: object
       properties:
