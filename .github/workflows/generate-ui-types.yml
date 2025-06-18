@@ -1,4 +1,4 @@
-name: Generate UI Types
+name: Generate CAS3 UI Types
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'src/main/resources/static/codegen/built-api-spec.yml'
+      - 'src/main/resources/static/codegen/built-cas3-api-spec.yml'
 
 jobs:
   generate-ui:
@@ -17,22 +18,8 @@ jobs:
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
-      - name: Trigger AP UI Type Generation Workflow
+      - name: Trigger CAS3 UI Type Generation Workflow
         if: ${{ github.ref == 'refs/heads/main' }}
-        id: ap-trigger-ui-workflow
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ steps.generate-token.outputs.token }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: 'hmpps-approved-premises-ui',
-              workflow_id: 'generate-types.yml',
-              ref: 'main'
-            })
-      - name: Trigger TA UI Type Generation Workflow
-        if: ${{ github.ref == 'refs/heads/main' }}
-        id: ta-trigger-ui-workflow
         uses: actions/github-script@v6
         with:
           github-token: ${{ steps.generate-token.outputs.token }}

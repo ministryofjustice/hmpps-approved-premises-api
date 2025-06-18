@@ -1,11 +1,13 @@
-name: Generate CAS2 Bail UI Types
+name: Generate CAS1 UI Types
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'src/main/resources/static/codegen/built-cas2v2-api-spec.yml'
+      - 'src/main/resources/static/codegen/built-api-spec.yml'
+      - 'src/main/resources/static/codegen/built-cas1-api-spec.yml'
+      - 'src/main/resources/static/codegen/built-cas1-roles.json'
 
 jobs:
   generate-ui:
@@ -17,7 +19,7 @@ jobs:
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
-      - name: Trigger CAS-2 Bail UI Type Generation Workflow
+      - name: Trigger CAS1 UI Type Generation Workflow
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/github-script@v6
         with:
@@ -25,7 +27,7 @@ jobs:
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
-              repo: 'hmpps-community-accommodation-tier-2-bail-ui',
+              repo: 'hmpps-approved-premises-ui',
               workflow_id: 'generate-types.yml',
               ref: 'main'
             })
