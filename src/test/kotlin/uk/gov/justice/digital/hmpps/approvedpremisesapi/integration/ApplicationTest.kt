@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -814,9 +816,13 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get single offline application returns 200 with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+    )
+    fun `Get single offline application returns 200 with correct body`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
