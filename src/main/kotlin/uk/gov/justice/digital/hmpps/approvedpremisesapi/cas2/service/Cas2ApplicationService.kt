@@ -99,34 +99,6 @@ class Cas2ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  val repositoryUserFunctionMap = mapOf(
-    null to applicationSummaryRepository::findByUserId,
-    true to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
-    false to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNull,
-  )
-
-  val repositoryPrisonFunctionMap = mapOf(
-    null to applicationSummaryRepository::findByPrisonCode,
-    true to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNotNull,
-    false to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNull,
-  )
-
-  @Deprecated(message = "This will be removed when the UI begins passing the assignmentType parameter")
-  fun getApplications(
-    prisonCode: String?,
-    isSubmitted: Boolean?,
-    user: NomisUserEntity,
-    pageCriteria: PageCriteria<String>,
-  ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = if (prisonCode == null) {
-      repositoryUserFunctionMap.get(isSubmitted)!!(user.id.toString(), getPageableOrAllPages(pageCriteria))
-    } else {
-      repositoryPrisonFunctionMap.get(isSubmitted)!!(prisonCode, getPageableOrAllPages(pageCriteria))
-    }
-    val metadata = getMetadata(response, pageCriteria)
-    return Pair(response.content, metadata)
-  }
-
   fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber)
 
   fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = findMostRecentApplication(nomsNumber)?.takeIf { !it.isMostRecentStatusUpdateANonAssignableStatus() }

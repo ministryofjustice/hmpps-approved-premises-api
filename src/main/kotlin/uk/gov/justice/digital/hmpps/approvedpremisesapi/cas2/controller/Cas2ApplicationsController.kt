@@ -32,34 +32,24 @@ class Cas2ApplicationsController(
   private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
 
-  override fun getCas2Applications(
-    isSubmitted: Boolean?,
+  override fun getCas2ApplicationSummaries(
+    assignmentType: AssignmentType,
     page: Int?,
-    prisonCode: String?,
-    assignmentType: AssignmentType?,
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (user.activeCaseloadId == null || prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
+    if (user.activeCaseloadId == null) throw ForbiddenProblem()
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
-    if (assignmentType != null) {
-      val (results, metadata) = applicationService.getApplicationSummaries(
-        user,
-        pageCriteria,
-        assignmentType,
-      )
-      return ResponseEntity.ok().headers(
-        metadata?.toHeaders(),
-      ).body(getPersonNamesAndTransformToSummaries(results))
-    }
-
-    val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
-
+    val (results, metadata) = applicationService.getApplicationSummaries(
+      user,
+      pageCriteria,
+      assignmentType,
+    )
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
-    ).body(getPersonNamesAndTransformToSummaries(applications))
+    ).body(getPersonNamesAndTransformToSummaries(results))
   }
 
   override fun getCas2Application(applicationId: UUID): ResponseEntity<Cas2Application> {

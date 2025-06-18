@@ -562,7 +562,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas2/applications")
+            .uri("/cas2/applications?assignmentType=IN_PROGRESS")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .exchange()
@@ -583,142 +583,30 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all applications returns 200 with correct body`() {
-      givenACas2PomUser { userEntity, jwt ->
-        givenACas2PomUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
-
-            val applicationSchema = createApplicationSchema()
-
-            // abandoned application
-            val abandonedApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
-              withAbandonedAt(OffsetDateTime.now())
-            }
-
-            // unsubmitted application
-            val firstApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
-              withHdcEligibilityDate(LocalDate.now().plusMonths(3))
-            }
-
-            // submitted application, CRD >= today so should be returned
-            val secondApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
-              withSubmittedAt(OffsetDateTime.now())
-              withConditionalReleaseDate(LocalDate.now())
-            }
-
-            // submitted application, CRD = yesterday, so should not be returned
-            val thirdApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
-              withSubmittedAt(OffsetDateTime.now())
-              withConditionalReleaseDate(LocalDate.now().minusDays(1))
-            }
-
-            val statusUpdate = cas2StatusUpdateEntityFactory.produceAndPersist {
-              withLabel("More information requested")
-              withApplication(secondApplicationEntity)
-              withAssessor(externalUserEntityFactory.produceAndPersist())
-            }
-
-            val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(otherUser)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-            }
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
-
-            // check transformers were able to return all fields
-            assertThat(responseBody).anySatisfy {
-              assertThat(it.id).isEqualTo(firstApplicationEntity.id)
-              assertThat(it.crn).isEqualTo(firstApplicationEntity.crn)
-              assertThat(it.nomsNumber).isEqualTo(firstApplicationEntity.nomsNumber)
-              assertThat(it.personName).isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
-              assertThat(it.createdAt).isEqualTo(firstApplicationEntity.createdAt.toInstant())
-              assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.createdByUser.id)
-              assertThat(it.submittedAt).isEqualTo(firstApplicationEntity.submittedAt?.toInstant())
-              assertThat(it.hdcEligibilityDate).isEqualTo(firstApplicationEntity.hdcEligibilityDate)
-              assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
-            }
-
-            assertThat(responseBody).noneMatch {
-              thirdApplicationEntity.id == it.id
-            }
-
-            assertThat(responseBody).noneMatch {
-              otherCas2ApplicationEntity.id == it.id
-            }
-
-            assertThat(responseBody).noneMatch {
-              abandonedApplicationEntity.id == it.id
-            }
-
-            assertThat(responseBody[0].createdAt)
-              .isEqualTo(secondApplicationEntity.createdAt.toInstant())
-
-            assertThat(responseBody[0].latestStatusUpdate!!.label)
-              .isEqualTo(statusUpdate.label)
-
-            assertThat(responseBody[1].createdAt)
-              .isEqualTo(firstApplicationEntity.createdAt.toInstant())
-          }
-        }
-      }
-    }
-
-    @Test
     fun `Get all applications with pagination returns 200 with correct body and header`() {
-      givenACas2PomUser { userEntity, jwt ->
-        givenACas2PomUser { otherUser, _ ->
+      givenACas2PomUser { otherUser, _ ->
+        givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationSchema = createApplicationSchema()
 
             repeat(12) {
-              cas2ApplicationEntityFactory.produceAndPersist {
+              val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+                withSubmittedAt(OffsetDateTime.now().minusDays(1))
               }
+
+              application.createApplicationAssignment(userEntity.activeCaseloadId!!, userEntity)
+              cas2ApplicationRepository.save(application)
             }
 
             val rawResponseBodyPage1 = webTestClient.get()
-              .uri("/cas2/applications?page=1")
+              .uri("/cas2/applications?page=1&assignmentType=ALLOCATED")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -740,7 +628,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             Assertions.assertThat(isOrderedByCreatedAtDescending(responseBodyPage1)).isTrue()
 
             val rawResponseBodyPage2 = webTestClient.get()
-              .uri("/cas2/applications?page=2")
+              .uri("/cas2/applications?page=2&assignmentType=ALLOCATED")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -772,7 +660,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
         produceAndPersistBasicApplication(crn, userEntity)
         webTestClient.get()
-          .uri("/cas2/applications")
+          .uri("/cas2/applications?assignmentType=IN_PROGRESS")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -809,7 +697,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @Nested
     inner class WithPrisonCode {
       @Test
-      fun `Get all applications using prisonCode returns 200 with correct body`() {
+      fun `Get all applications for prison returns 200 with correct body`() {
         givenACas2Assessor { assessor, _ ->
           givenACas2PomUser { userAPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
@@ -823,16 +711,17 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               val userAPrisonAApplicationIds = mutableListOf<UUID>()
 
               repeat(5) {
-                userAPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
-                    withCreatedByUser(userAPrisonA)
-                    withCrn(offenderDetails.otherIds.crn)
-                    withData("{}")
-                    withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                    withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
-                  }.id,
-                )
+                val application = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userAPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                }
+                application.createApplicationAssignment(userAPrisonA.activeCaseloadId!!, userAPrisonA)
+                cas2ApplicationRepository.save(application)
+                userAPrisonAApplicationIds.add(application.id)
               }
 
               val userBPrisonA = nomisUserEntityFactory.produceAndPersist {
@@ -843,38 +732,40 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted applications with conditional release dates in the future
               repeat(6) {
-                userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
-                    withCreatedByUser(userBPrisonA)
-                    withCrn(offenderDetails.otherIds.crn)
-                    withData("{}")
-                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
-                    withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
-                  }.id,
-                )
+                val application = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userBPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                  withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                  withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                }
+                application.createApplicationAssignment(userAPrisonA.activeCaseloadId!!, userAPrisonA)
+                cas2ApplicationRepository.save(application)
+                userBPrisonAApplicationIds.add(application.id)
               }
 
               // submitted applications with conditional release dates today
               repeat(2) {
-                userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
-                    withCreatedByUser(userBPrisonA)
-                    withCrn(offenderDetails.otherIds.crn)
-                    withData("{}")
-                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
-                    withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
-                    withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
-                    withConditionalReleaseDate(LocalDate.now())
-                  }.id,
-                )
+                val application = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userBPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                  withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                  withConditionalReleaseDate(LocalDate.now())
+                }
+                application.createApplicationAssignment(userAPrisonA.activeCaseloadId!!, userAPrisonA)
+                cas2ApplicationRepository.save(application)
+                userBPrisonAApplicationIds.add(application.id)
               }
 
               // submitted application with a conditional release date before today
-              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+              val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
@@ -883,7 +774,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
-              }.id
+              }
+              excludedApplication.createApplicationAssignment(userAPrisonA.activeCaseloadId!!, userAPrisonA)
+              cas2ApplicationRepository.save(excludedApplication)
 
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
 
@@ -899,23 +792,20 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withReferringPrisonCode(userCPrisonB.activeCaseloadId!!)
               }
+              otherPrisonApplication.createApplicationAssignment(userCPrisonB.activeCaseloadId!!, userCPrisonB)
+              cas2ApplicationRepository.save(otherPrisonApplication)
 
-              val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications?prisonCode=${userAPrisonA.activeCaseloadId}")
+              val responseBody = webTestClient.get()
+                .uri("/cas2/applications?assignmentType=PRISON")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
                 .expectStatus()
                 .isOk
-                .returnResult<String>()
-                .responseBody
-                .blockFirst()
-
-              val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+                .bodyAsListOfObjects<Cas2ApplicationSummary>()
 
               Assertions.assertThat(responseBody).noneMatch {
-                excludedApplicationId == it.id
+                excludedApplication.id == it.id
               }
 
               val returnedApplicationIds = responseBody.map { it.id }.toSet()
@@ -1104,25 +994,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           }
         }
       }
-
-      @Test
-      fun `Get applications using another prisonCode returns Forbidden 403`() {
-        givenACas2PomUser { userAPrisonA, jwt ->
-          val rawResponseBody = webTestClient.get()
-            .uri("/cas2/applications?prisonCode=${userAPrisonA.activeCaseloadId!!.reversed()}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2.value)
-            .exchange()
-            .expectStatus()
-            .isForbidden()
-        }
-      }
     }
 
     @Nested
     inner class AsLicenceCaseAdminUser {
       @Test
-      fun `Get all submitted applications using prisonCode returns 200 with correct body`() {
+      fun `Get all applications for prison returns 200 with correct body`() {
         givenACas2Assessor { assessor, _ ->
           givenACas2LicenceCaseAdminUser { caseAdminPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
@@ -1141,38 +1018,42 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted applications with conditional release dates in the future
               repeat(6) {
-                userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
-                    withCreatedByUser(pomUserPrisonA)
-                    withCrn(offenderDetails.otherIds.crn)
-                    withData("{}")
-                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                    withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
-                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
-                  }.id,
-                )
+                val application = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(pomUserPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                  withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+                  withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
+                  withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                }
+                application.createApplicationAssignment(caseAdminPrisonA.activeCaseloadId!!, caseAdminPrisonA)
+                cas2ApplicationRepository.save(application)
+
+                userBPrisonAApplicationIds.add(application.id)
               }
 
               // submitted applications with conditional release date of today
               repeat(2) {
-                userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
-                    withCreatedByUser(pomUserPrisonA)
-                    withCrn(offenderDetails.otherIds.crn)
-                    withData("{}")
-                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
-                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                    withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
-                    withConditionalReleaseDate(LocalDate.now())
-                  }.id,
-                )
+                val application = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(pomUserPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
+                  withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+                  withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
+                  withConditionalReleaseDate(LocalDate.now())
+                }
+
+                application.createApplicationAssignment(caseAdminPrisonA.activeCaseloadId!!, caseAdminPrisonA)
+                cas2ApplicationRepository.save(application)
+                userBPrisonAApplicationIds.add(application.id)
               }
 
               // submitted application with a conditional release date before today
-              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+              val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(pomUserPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
@@ -1181,7 +1062,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
-              }.id
+              }
+
+              excludedApplication.createApplicationAssignment(caseAdminPrisonA.activeCaseloadId!!, caseAdminPrisonA)
 
               val pomUserPrisonB = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId("other_prison")
@@ -1197,22 +1080,17 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withReferringPrisonCode("other_prison")
               }
 
-              val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications?isSubmitted=true&prisonCode=${caseAdminPrisonA.activeCaseloadId}")
+              val responseBody = webTestClient.get()
+                .uri("/cas2/applications?assignmentType=PRISON")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
                 .expectStatus()
                 .isOk
-                .returnResult<String>()
-                .responseBody
-                .blockFirst()
-
-              val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+                .bodyAsListOfObjects<Cas2ApplicationSummary>()
 
               Assertions.assertThat(responseBody).noneMatch {
-                excludedApplicationId == it.id
+                excludedApplication.id == it.id
               }
               val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
