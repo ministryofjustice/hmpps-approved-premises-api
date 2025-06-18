@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.util.UUID
 
@@ -14,7 +14,7 @@ import java.util.UUID
 class Cas1LinkBookingToPlacementRequestSeedJob(
   private val placementRequestRepository: PlacementRequestRepository,
   private val bookingRepository: BookingRepository,
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
 ) : SeedJob<Cas1LinkBookingToPlacementRequestSeedJobCsvRow>(
   requiredHeaders = setOf(
     "booking_id",
@@ -59,7 +59,7 @@ class Cas1LinkBookingToPlacementRequestSeedJob(
     placementRequest.booking = booking
     placementRequestRepository.save(placementRequest)
 
-    applicationTimelineNoteService.saveApplicationTimelineNote(
+    cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
       applicationId = placementRequest.application.id,
       note = "Adhoc booking with arrival date '${booking.arrivalDate.toUiFormat()}' linked to corresponding request for placement by Application Support",
       user = null,

@@ -20,13 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimeService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.OffsetDateTime
 
-class TaskDeadlineServiceTest {
-  private val taskDeadlineService = TaskDeadlineService(
+class Cas1TaskDeadlineServiceTest {
+  private val cas1TaskDeadlineService = Cas1TaskDeadlineService(
     // this treats all weekends as non-working days with no bank holidays
     WorkingDayService(
       bankHolidaysProvider = { emptyList() },
@@ -52,7 +52,7 @@ class TaskDeadlineServiceTest {
         .withApplication(application)
         .produce()
 
-      val result = taskDeadlineService.getDeadline(assessment)
+      val result = cas1TaskDeadlineService.getDeadline(assessment)
 
       assertThat(result).isNull()
     }
@@ -119,7 +119,7 @@ class TaskDeadlineServiceTest {
         createdAt = createdAt,
       )
 
-      val result = taskDeadlineService.getDeadline(assessment)
+      val result = cas1TaskDeadlineService.getDeadline(assessment)
 
       assertThat(result!!).isEqualTo(expectedDeadline)
     }
@@ -185,7 +185,7 @@ class TaskDeadlineServiceTest {
         isEsap = false,
         createdAt = createdAt,
       )
-      val result = taskDeadlineService.getDeadline(assessment)
+      val result = cas1TaskDeadlineService.getDeadline(assessment)
 
       assertThat(result!!).isEqualTo(expectedDeadline)
     }
@@ -247,7 +247,7 @@ class TaskDeadlineServiceTest {
         isEsap = false,
         createdAt = createdAt,
       )
-      val result = taskDeadlineService.getDeadline(assessment)
+      val result = cas1TaskDeadlineService.getDeadline(assessment)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }
@@ -318,7 +318,7 @@ class TaskDeadlineServiceTest {
         createdAt = createdAt,
       )
 
-      val result = taskDeadlineService.getDeadline(placementRequest)
+      val result = cas1TaskDeadlineService.getDeadline(placementRequest)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }
@@ -385,7 +385,7 @@ class TaskDeadlineServiceTest {
         createdAt = createdAt,
       )
 
-      val result = taskDeadlineService.getDeadline(placementRequest)
+      val result = cas1TaskDeadlineService.getDeadline(placementRequest)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }
@@ -448,7 +448,7 @@ class TaskDeadlineServiceTest {
         createdAt = createdAt,
       )
 
-      val result = taskDeadlineService.getDeadline(placementRequest)
+      val result = cas1TaskDeadlineService.getDeadline(placementRequest)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }
@@ -511,7 +511,7 @@ class TaskDeadlineServiceTest {
         createdAt = createdAt,
       )
 
-      val result = taskDeadlineService.getDeadline(placementRequest)
+      val result = cas1TaskDeadlineService.getDeadline(placementRequest)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }
@@ -582,7 +582,7 @@ class TaskDeadlineServiceTest {
         submittedAt = submittedAt,
       )
 
-      val result = taskDeadlineService.getDeadline(placementApplication)
+      val result = cas1TaskDeadlineService.getDeadline(placementApplication)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }
@@ -649,7 +649,7 @@ class TaskDeadlineServiceTest {
         submittedAt = submittedAt,
       )
 
-      val result = taskDeadlineService.getDeadline(placementApplication)
+      val result = cas1TaskDeadlineService.getDeadline(placementApplication)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }
@@ -716,7 +716,7 @@ class TaskDeadlineServiceTest {
         submittedAt = submittedAt,
       )
 
-      val result = taskDeadlineService.getDeadline(placementApplication)
+      val result = cas1TaskDeadlineService.getDeadline(placementApplication)
 
       assertThat(result).isEqualTo(expectedDeadline)
     }

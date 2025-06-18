@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
@@ -35,7 +35,7 @@ import java.util.UUID
 class Cas1DuplicateApplicationSeedJob(
   private val applicationService: ApplicationService,
   private val offenderService: OffenderService,
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
 ) : SeedJob<Cas1DuplicateApplicationSeedCsvRow>(
   requiredHeaders = setOf(
     "application_id",
@@ -106,7 +106,7 @@ class Cas1DuplicateApplicationSeedJob(
       createdByUser,
     )
 
-    applicationTimelineNoteService.saveApplicationTimelineNote(
+    cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
       applicationId = newApplicationEntity.id,
       note = "Application automatically created by Application Support by duplicating existing application ${sourceApplication.id}",
       user = null,

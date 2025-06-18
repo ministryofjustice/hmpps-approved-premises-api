@@ -30,12 +30,12 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class TaskService(
+class Cas1TaskService(
   private val assessmentService: AssessmentService,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val userTransformer: UserTransformer,
-  private val placementApplicationService: PlacementApplicationService,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val taskRepository: TaskRepository,
   private val assessmentRepository: AssessmentRepository,
   private val placementApplicationRepository: PlacementApplicationRepository,
@@ -164,7 +164,7 @@ class TaskService(
         )
       }
       TaskType.placementApplication -> {
-        placementApplicationService.reallocateApplication(assigneeUser, taskId)
+        cas1PlacementApplicationService.reallocateApplication(assigneeUser, taskId)
       }
     }
 
@@ -211,6 +211,7 @@ class TaskService(
     )
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun entityToReallocation(entity: Any, taskType: TaskType): Reallocation {
     val allocatedToUser = when (entity) {
       is AssessmentEntity -> entity.allocatedToUser

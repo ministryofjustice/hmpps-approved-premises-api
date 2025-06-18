@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
@@ -34,14 +34,14 @@ class Cas1WithdrawableTreeBuilderTest {
 
   private val placementRequestService = mockk<PlacementRequestService>()
   private val bookingService = mockk<BookingService>()
-  private val placementApplicationService = mockk<PlacementApplicationService>()
+  private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
   private val applicationService = mockk<ApplicationService>()
   private val cas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
 
   private val service = Cas1WithdrawableTreeBuilder(
     placementRequestService,
     bookingService,
-    placementApplicationService,
+    cas1PlacementApplicationService,
     applicationService,
     cas1SpaceBookingService,
   )
@@ -111,7 +111,7 @@ class Cas1WithdrawableTreeBuilderTest {
     setupWithdrawableState(placementApplication2, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true))
 
     every {
-      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+      cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApplication2)
 
     val adhocBooking1 = createBooking(adhoc = true)
@@ -179,7 +179,7 @@ Notes: []
     setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false))
 
     every {
-      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+      cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApp2)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
@@ -240,7 +240,7 @@ Notes: []
     setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true))
 
     every {
-      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+      cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApp2)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
@@ -285,7 +285,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInDelius))
 
     every {
-      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+      cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
@@ -337,7 +337,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival recorde
     )
 
     every {
-      placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+      cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
@@ -400,7 +400,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
 
   private fun setupWithdrawableState(placementApplication: PlacementApplicationEntity, state: WithdrawableState) {
     every {
-      placementApplicationService.getWithdrawableState(placementApplication, user)
+      cas1PlacementApplicationService.getWithdrawableState(placementApplication, user)
     } returns state
   }
 }

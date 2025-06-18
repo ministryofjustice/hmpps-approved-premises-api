@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas1TaskDeadlineService
 
 @Component
 class Cas1TaskDueMigrationJob(
@@ -20,7 +20,7 @@ class Cas1TaskDueMigrationJob(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val placementRequestRepository: PlacementRequestRepository,
   private val entityManager: EntityManager,
-  private val taskDeadlineService: TaskDeadlineService,
+  private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
@@ -43,7 +43,7 @@ class Cas1TaskDueMigrationJob(
       log.info("Getting page $page")
       slice = assessmentRepository.findAllWithNullDueAt(PageRequest.of(0, pageSize))
       slice.content.forEach {
-        assessmentRepository.updateDueAt(it.id, taskDeadlineService.getDeadline(it))
+        assessmentRepository.updateDueAt(it.id, cas1TaskDeadlineService.getDeadline(it))
         entityManager.detach(it)
       }
       entityManager.clear()
@@ -62,7 +62,7 @@ class Cas1TaskDueMigrationJob(
       log.info("Getting page $page")
       slice = placementApplicationRepository.findAllWithNullDueAt(PageRequest.of(0, pageSize))
       slice.content.forEach {
-        placementApplicationRepository.updateDueAt(it.id, taskDeadlineService.getDeadline(it))
+        placementApplicationRepository.updateDueAt(it.id, cas1TaskDeadlineService.getDeadline(it))
         entityManager.detach(it)
       }
       entityManager.clear()
@@ -81,7 +81,7 @@ class Cas1TaskDueMigrationJob(
       log.info("Getting page $page")
       slice = placementRequestRepository.findAllWithNullDueAt(PageRequest.of(0, pageSize))
       slice.content.forEach {
-        placementRequestRepository.updateDueAt(it.id, taskDeadlineService.getDeadline(it))
+        placementRequestRepository.updateDueAt(it.id, cas1TaskDeadlineService.getDeadline(it))
         entityManager.detach(it)
       }
       entityManager.clear()

@@ -42,7 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 
 @Service
 @Suppress("ReturnCount")
-class PlacementApplicationService(
+class Cas1PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
@@ -52,7 +52,7 @@ class PlacementApplicationService(
   private val userAccessService: UserAccessService,
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
-  private val taskDeadlineService: TaskDeadlineService,
+  private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val clock: Clock,
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
 ) {
@@ -161,7 +161,7 @@ class PlacementApplicationService(
       dueAt = null,
     )
 
-    newPlacementApplication.dueAt = taskDeadlineService.getDeadline(newPlacementApplication)
+    newPlacementApplication.dueAt = cas1TaskDeadlineService.getDeadline(newPlacementApplication)
 
     placementApplicationRepository.save(newPlacementApplication)
     cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
@@ -308,7 +308,7 @@ class PlacementApplicationService(
       submissionGroupId = UUID.randomUUID()
     }
 
-    submittedPlacementApplication.dueAt = taskDeadlineService.getDeadline(submittedPlacementApplication)
+    submittedPlacementApplication.dueAt = cas1TaskDeadlineService.getDeadline(submittedPlacementApplication)
 
     val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 

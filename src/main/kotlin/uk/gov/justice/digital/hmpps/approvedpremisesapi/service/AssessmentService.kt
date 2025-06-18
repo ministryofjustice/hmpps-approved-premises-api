@@ -71,7 +71,7 @@ class AssessmentService(
   private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
-  private val taskDeadlineService: TaskDeadlineService,
+  private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
@@ -218,7 +218,7 @@ class AssessmentService(
       dueAt = null,
     )
 
-    assessment.dueAt = taskDeadlineService.getDeadline(assessment)
+    assessment.dueAt = cas1TaskDeadlineService.getDeadline(assessment)
 
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
     assessment.allocatedToUser = allocatedUser
@@ -616,7 +616,7 @@ class AssessmentService(
         dueAt = null,
       )
 
-    newAssessment.dueAt = taskDeadlineService.getDeadline(newAssessment)
+    newAssessment.dueAt = cas1TaskDeadlineService.getDeadline(newAssessment)
 
     prePersistAssessment(newAssessment)
     assessmentRepository.save(newAssessment)
