@@ -468,7 +468,7 @@ detekt {
 }
 
 dependencyCheck {
-  suppressionFile = ".dependencycheckignore"
+  suppressionFile = ".dependencycheckignore.xml"
 }
 
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
