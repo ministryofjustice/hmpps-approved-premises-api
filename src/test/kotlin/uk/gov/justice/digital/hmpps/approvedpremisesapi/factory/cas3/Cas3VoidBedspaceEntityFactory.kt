@@ -83,5 +83,8 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed?.invoke() ?: throw RuntimeException("Must provide a Bed"),
     cancellation = this.voidBedspaceCancellation?.invoke(),
+    bedspace = null,
+    cancellationDate = null,
+    cancellationNotes = null,
   )
 }
