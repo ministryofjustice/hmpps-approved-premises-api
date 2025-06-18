@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
