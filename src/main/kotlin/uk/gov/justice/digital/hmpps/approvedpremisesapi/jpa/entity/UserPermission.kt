@@ -29,6 +29,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList),
   CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView),
 
+  CAS1_OFFLINE_APPLICATION_VIEW(ApprovedPremisesUserPermission.offlineApplicationView),
+
   CAS1_OUT_OF_SERVICE_BED_CREATE(ApprovedPremisesUserPermission.outOfServiceBedCreate),
   CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD(ApprovedPremisesUserPermission.outOfServiceBedCreateBedOnHold),
   CAS1_OUT_OF_SERVICE_BED_CANCEL(ApprovedPremisesUserPermission.outOfServiceBedCancel),

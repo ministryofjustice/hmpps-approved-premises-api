@@ -815,7 +815,7 @@ class ApplicationTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
     )
     fun `Get single offline application returns 200 with correct body`(role: UserRole) {
       givenAUser(roles = listOf(role)) { userEntity, jwt ->
