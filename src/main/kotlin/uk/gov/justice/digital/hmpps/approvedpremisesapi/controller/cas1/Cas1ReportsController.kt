@@ -51,8 +51,6 @@ class Cas1ReportsController(
     validateDateInputs(year, month, startDate, endDate)
 
     val reportDateRange = computeReportDateRange(year, month, startDate, endDate)
-    val startDate = reportDateRange.start
-    val endDate = reportDateRange.end
 
     return when (reportName) {
       Cas1ReportName.applicationsV2 -> generateStreamingResponse(
@@ -125,6 +123,13 @@ class Cas1ReportsController(
       ) { outputStream ->
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
         cas1ReportService.createPlacementReport(reportDateRange, includePii = true, outputStream)
+      }
+
+      Cas1ReportName.overduePlacements -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("overdue-placements", reportDateRange),
+      ) { outputStream ->
+        cas1ReportService.createOverduePlacementsReport(reportDateRange, outputStream)
       }
     }
   }

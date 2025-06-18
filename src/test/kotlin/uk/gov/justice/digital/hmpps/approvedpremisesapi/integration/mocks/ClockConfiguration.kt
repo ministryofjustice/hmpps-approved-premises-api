@@ -29,7 +29,9 @@ class ClockConfiguration {
   open class MutableClock(time: Instant? = null) : Clock() {
     var fixedTime: Instant? = time
 
-    fun reset() = run { fixedTime = null }
+    fun reset() {
+      fixedTime = null
+    }
 
     fun setNow(now: LocalDateTime) {
       fixedTime = now.toInstant(ZoneOffset.UTC)
