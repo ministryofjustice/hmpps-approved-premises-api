@@ -352,6 +352,8 @@ class PremisesController(
 
   @Transactional
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
+    requestContextService.ensureCas3Request()
+
     val user = usersService.getUserForRequest()
     val crn = body.crn.uppercase()
 

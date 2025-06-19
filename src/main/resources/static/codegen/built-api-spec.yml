@@ -135,7 +135,7 @@ paths:
     post:
       tags:
         - Operations on premises
-      summary: Adds a new booking for an approved premises
+      summary: Adds a new booking for CAS3
       operationId: premisesPremisesIdBookingsPost
       parameters:
         - name: premisesId
