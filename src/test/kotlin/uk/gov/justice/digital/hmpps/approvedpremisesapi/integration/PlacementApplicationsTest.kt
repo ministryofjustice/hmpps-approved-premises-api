@@ -1398,10 +1398,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing a submitted placement application as a workflow manager sends emails, raises a domain event and returns successfully`() {
+    fun `withdrawing a submitted placement application as someone other than applicant raises a domain event and returns successfully`() {
       givenAUser { applicant, _ ->
         givenAUser { assessor, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+          givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
             givenAPlacementApplication(
               createdByUser = applicant,
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
