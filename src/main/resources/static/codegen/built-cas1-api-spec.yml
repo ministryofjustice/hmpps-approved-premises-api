@@ -8354,7 +8354,7 @@ components:
           type: boolean
         arrivalDate:
           type: string
-          format: date-time
+          format: date
         risks:
           $ref: '#/components/schemas/PersonRisks'
         createdByUserId:

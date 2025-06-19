@@ -23,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
+import java.time.LocalDate
+import java.time.ZoneOffset
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
@@ -175,7 +177,7 @@ class ApplicationsTransformer(
       submittedAt = domain.getSubmittedAt(),
       isWomensApplication = domain.getIsWomensApplication(),
       isPipeApplication = domain.getIsPipeApplication(),
-      arrivalDate = domain.getArrivalDate(),
+      arrivalDate = domain.getArrivalDate()?.let { LocalDate.ofInstant(domain.getArrivalDate(), ZoneOffset.UTC) },
       risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
       status = getStatusFromSummary(domain),
       tier = domain.getTier(),
