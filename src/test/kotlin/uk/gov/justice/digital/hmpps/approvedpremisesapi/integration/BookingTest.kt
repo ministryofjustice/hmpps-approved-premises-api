@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -357,22 +358,21 @@ class BookingTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/bookings")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .exchange()
       .expectStatus()
       .isNotFound
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
-  fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles FUTURE_MANAGER, CAS1_WORKFLOW_MANAGER`(
-    role: UserRole,
-  ) {
-    givenAUser(roles = listOf(role)) { _, jwt ->
-      val premises = givenAnApprovedPremises()
+  @Test
+  fun `Get all Bookings on Premises without any Bookings returns empty list`() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      val premises = givenATemporaryAccommodationPremises(region = user.probationRegion)
 
       webTestClient.get()
         .uri("/premises/${premises.id}/bookings")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -381,12 +381,11 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
-  fun `Get all Bookings returns OK with correct body when user has one of roles FUTURE_MANAGER, CAS1_WORKFLOW_MANAGER`(role: UserRole) {
-    givenAUser(roles = listOf(role)) { _, jwt ->
+  @Test
+  fun `Get all Bookings returns OK with correct body`() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        val premises = givenAnApprovedPremises()
+        val premises = givenATemporaryAccommodationPremises(region = user.probationRegion)
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
@@ -431,6 +430,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -442,13 +442,13 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings for premises returns OK with correct body when person details for a booking could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-      val premises = givenAnApprovedPremises()
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      val premises = givenATemporaryAccommodationPremises(region = user.probationRegion)
 
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
         withCrn("SOME-CRN")
-        withServiceName(ServiceName.approvedPremises)
+        withServiceName(ServiceName.temporaryAccommodation)
       }
 
       val expectedJson = objectMapper.writeValueAsString(
@@ -463,6 +463,7 @@ class BookingTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/premises/${premises.id}/bookings")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -473,15 +474,15 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings for premises returns OK with correct body when inmate details for a booking could not be found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender(mockServerErrorForPrisonApi = true) { offenderDetails, _ ->
 
-        val premises = givenAnApprovedPremises()
+        val premises = givenATemporaryAccommodationPremises(region = user.probationRegion)
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withCrn(offenderDetails.otherIds.crn)
-          withServiceName(ServiceName.approvedPremises)
+          withServiceName(ServiceName.temporaryAccommodation)
         }
 
         val expectedJson = objectMapper.writeValueAsString(
@@ -500,6 +501,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -511,12 +513,9 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
-    givenAUser { _, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
-        }
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val premises = givenATemporaryAccommodationPremises(region = givenAProbationRegion { })
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
@@ -628,6 +627,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -716,6 +716,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -790,6 +791,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -864,6 +866,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -938,6 +941,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1026,6 +1030,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1126,6 +1131,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1188,6 +1194,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1254,6 +1261,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1304,6 +1312,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1349,6 +1358,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1403,6 +1413,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1467,6 +1478,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1529,6 +1541,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1597,6 +1610,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1653,6 +1667,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1716,6 +1731,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
