@@ -1,13 +1,45 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 
 abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
+
+  protected fun getListPremisesByStatus(
+    probationRegion: ProbationRegionEntity,
+    probationDeliveryUnit: ProbationDeliveryUnitEntity,
+    localAuthorityArea: LocalAuthorityAreaEntity,
+    numberOfPremises: Int,
+    propertyStatus: PropertyStatus,
+  ): List<TemporaryAccommodationPremisesEntity> {
+    val premisesCharacteristics = getPremisesCharacteristics().toMutableList()
+
+    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
+      withProbationRegion(probationRegion)
+      withProbationDeliveryUnit(probationDeliveryUnit)
+      withLocalAuthorityArea(localAuthorityArea)
+      withStatus(propertyStatus)
+      withAddressLine2(randomStringUpperCase(10))
+      withCharacteristics(
+        mutableListOf(
+          pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+          pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+          pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+        ),
+      )
+    }
+
+    return premises
+  }
 
   protected fun createRoomsWithSingleBedInPremises(
     premises: List<TemporaryAccommodationPremisesEntity>,
@@ -78,6 +110,11 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     characteristics.remove(randomCharacteristic)
     return randomCharacteristic
   }
+
+  private fun getPremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
+    modelScope = "premises",
+    serviceScope = ServiceName.temporaryAccommodation.value,
+  )
 
   private fun getRoomCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
     modelScope = "room",

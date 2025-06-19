@@ -12,9 +12,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -27,8 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -515,35 +518,47 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // filter premises with the full premises address
         val expectedPremisesAddress = premises.take(6).first()
 
-        val expectedPremisesSummaryAddress = premisesSummaries.take(6).first()
+        var expectedPremisesSummaryAddress: List<Cas3PremisesSummary>
 
         val addressLine = when (addressLineField) {
-          "addressLine1" -> expectedPremisesAddress.addressLine1
-          "addressLine2" -> expectedPremisesAddress.addressLine2
+          "addressLine1" -> {
+            expectedPremisesSummaryAddress = premisesSummaries.filter { it.addressLine1 == expectedPremisesAddress.addressLine1 }
+            expectedPremisesAddress.addressLine1
+          }
+          "addressLine2" -> {
+            expectedPremisesSummaryAddress = premisesSummaries.filter { it.addressLine2 == expectedPremisesAddress.addressLine2 }
+            expectedPremisesAddress.addressLine2
+          }
           else -> error("unexpected value $addressLineField")
         }
 
         assertUrlReturnsPremises(
           jwt,
           "/cas3/premises/summary?postcodeOrAddress=$addressLine",
-          listOf(expectedPremisesSummaryAddress),
+          expectedPremisesSummaryAddress,
         )
 
         // filter premises with the partial premises address
         val expectedPremisesPartialAddress = premises.take(6).first()
 
-        val expectedPremisesSummaryPartialAddress = premisesSummaries.take(6).first()
-
-        val partialAddressLine = when (addressLineField) {
-          "addressLine1" -> expectedPremisesPartialAddress.addressLine1
-          "addressLine2" -> expectedPremisesPartialAddress.addressLine2!!
+        val partialAddressLineToSearchBy = when (addressLineField) {
+          "addressLine1" -> {
+            val partialAddressLine = expectedPremisesPartialAddress.addressLine1.split(" ").last()
+            expectedPremisesSummaryAddress = premisesSummaries.filter { it.addressLine1.contains(partialAddressLine) }
+            partialAddressLine
+          }
+          "addressLine2" -> {
+            val partialAddressLine = expectedPremisesPartialAddress.addressLine2?.split(" ")?.last()
+            expectedPremisesSummaryAddress = premisesSummaries.filter { it.addressLine2?.contains(partialAddressLine!!) == true }
+            partialAddressLine
+          }
           else -> error("unexpected value $addressLineField")
         }
 
         assertUrlReturnsPremises(
           jwt,
-          "/cas3/premises/summary?postcodeOrAddress=${partialAddressLine.split(" ").last()}",
-          listOf(expectedPremisesSummaryPartialAddress),
+          "/cas3/premises/summary?postcodeOrAddress=$partialAddressLineToSearchBy",
+          expectedPremisesSummaryAddress,
         )
       }
     }
@@ -645,23 +660,6 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       return Pair(allPremises.sortedBy { it.id }, premisesSummary.sortedBy { it.id })
     }
 
-    private fun getListPremisesByStatus(
-      probationRegion: ProbationRegionEntity,
-      probationDeliveryUnit: ProbationDeliveryUnitEntity,
-      localAuthorityArea: LocalAuthorityAreaEntity,
-      numberOfPremises: Int,
-      propertyStatus: PropertyStatus,
-    ): List<TemporaryAccommodationPremisesEntity> {
-      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
-        withProbationRegion(probationRegion)
-        withProbationDeliveryUnit(probationDeliveryUnit)
-        withLocalAuthorityArea(localAuthorityArea)
-        withStatus(propertyStatus)
-      }
-
-      return premises
-    }
-
     private fun createBedspaces(premises: TemporaryAccommodationPremisesEntity, status: Cas3BedspaceStatus, withoutEndDate: Boolean = false): List<BedEntity> {
       var startDate = LocalDate.now().minusDays(30)
       var endDate: LocalDate? = null
@@ -706,6 +704,125 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       bedspaceCount = bedspaceCount,
       localAuthorityAreaName = premises.localAuthorityArea?.name!!,
     )
+  }
+
+  @Nested
+  inner class GetPremisesById {
+    @Test
+    fun `Get Premises by ID returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val premises = getListPremisesByStatus(
+          probationRegion = user.probationRegion,
+          probationDeliveryUnit = probationDeliveryUnit,
+          localAuthorityArea = localAuthorityArea,
+          numberOfPremises = 5,
+          propertyStatus = PropertyStatus.active,
+        ).map { premises ->
+          // online bedspaces
+          createBedspaceInPremises(premises, startDate = LocalDate.now().randomDateBefore(360), endDate = null)
+          createBedspaceInPremises(premises, startDate = LocalDate.now().randomDateBefore(360), endDate = LocalDate.now().plusDays(1).randomDateAfter(90))
+
+          // upcoming bedspaces
+          createBedspaceInPremises(premises, startDate = LocalDate.now().randomDateAfter(30), endDate = null)
+
+          // archived bedspaces
+          createBedspaceInPremises(
+            premises,
+            startDate = LocalDate.now().minusDays(180).randomDateBefore(120),
+            endDate = LocalDate.now().minusDays(1).randomDateBefore(90),
+          )
+
+          premises
+        }
+
+        val premisesToGet = premises.drop(1).first()
+
+        val expectedPremises = Cas3Premises(
+          id = premisesToGet.id,
+          reference = premisesToGet.name,
+          addressLine1 = premisesToGet.addressLine1,
+          addressLine2 = premisesToGet.addressLine2,
+          postcode = premisesToGet.postcode,
+          town = premisesToGet.town,
+          probationRegion = ProbationRegion(user.probationRegion.id, user.probationRegion.name),
+          probationDeliveryUnit = ProbationDeliveryUnit(probationDeliveryUnit.id, probationDeliveryUnit.name),
+          localAuthorityArea = LocalAuthorityArea(
+            localAuthorityArea.id,
+            localAuthorityArea.identifier,
+            localAuthorityArea.name,
+          ),
+          startDate = premisesToGet.startDate,
+          status = Cas3PremisesStatus.online,
+          characteristics = premisesToGet.characteristics.sortedBy { it.id }.map { characteristic ->
+            Characteristic(
+              id = characteristic.id,
+              name = characteristic.name,
+              propertyName = characteristic.propertyName,
+              serviceScope = Characteristic.ServiceScope.temporaryMinusAccommodation,
+              modelScope = Characteristic.ModelScope.premises,
+            )
+          },
+          notes = premisesToGet.notes,
+          turnaroundWorkingDayCount = premisesToGet.turnaroundWorkingDayCount,
+          totalOnlineBedspaces = 2,
+          totalUpcomingBedspaces = 1,
+          totalArchivedBedspaces = 1,
+        )
+
+        val responseBody = webTestClient.get()
+          .uri("/cas3/premises/${premisesToGet.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremises))
+      }
+    }
+
+    @Test
+    fun `Get Premises by ID returns Not Found with correct body`() {
+      val idToRequest = UUID.randomUUID().toString()
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/cas3/premises/$idToRequest")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectHeader().contentType("application/problem+json")
+        .expectStatus()
+        .isNotFound
+        .expectBody()
+        .jsonPath("title").isEqualTo("Not Found")
+        .jsonPath("status").isEqualTo(404)
+        .jsonPath("detail").isEqualTo("No Premises with an ID of $idToRequest could be found")
+    }
+
+    @Test
+    fun `Get Premises by ID for a premises not in the user's region returns 403 Forbidden`() {
+      givenAUser { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+
+        webTestClient.get()
+          .uri("/cas3/premises/${premises.drop(1).first().id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
   }
 
   @Nested
@@ -937,7 +1054,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           notes = bedspace.room.notes,
         )
 
-        val responseBosy = webTestClient.get()
+        val responseBody = webTestClient.get()
           .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
@@ -947,7 +1064,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .responseBody
           .blockFirst()
 
-        assertThat(responseBosy).isEqualTo(objectMapper.writeValueAsString(expectedBedspace))
+        assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedBedspace))
       }
     }
 
