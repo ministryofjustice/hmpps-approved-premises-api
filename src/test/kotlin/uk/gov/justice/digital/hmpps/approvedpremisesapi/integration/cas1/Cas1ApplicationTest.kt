@@ -482,9 +482,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .bodyAsListOfObjects<Cas1ApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
-          assertThat(responseBody[0].arrivalDate).isEqualTo(date3.toInstant())
-          assertThat(responseBody[1].arrivalDate).isEqualTo(date2.toInstant())
-          assertThat(responseBody[2].arrivalDate).isEqualTo(date1.toInstant())
+          assertThat(responseBody[0].arrivalDate).isEqualTo("2022-12-24")
+          assertThat(responseBody[1].arrivalDate).isEqualTo("2022-09-24")
+          assertThat(responseBody[2].arrivalDate).isEqualTo("2022-08-24")
         }
       }
     }
@@ -535,9 +535,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .bodyAsListOfObjects<Cas1ApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(3)
-          assertThat(responseBody[0].arrivalDate).isEqualTo(date1.toInstant())
-          assertThat(responseBody[1].arrivalDate).isEqualTo(date2.toInstant())
-          assertThat(responseBody[2].arrivalDate).isEqualTo(date3.toInstant())
+          assertThat(responseBody[0].arrivalDate).isEqualTo("2022-08-24")
+          assertThat(responseBody[1].arrivalDate).isEqualTo("2022-09-24")
+          assertThat(responseBody[2].arrivalDate).isEqualTo("2022-12-24")
         }
       }
     }
