@@ -384,33 +384,6 @@ class UserAccessServiceTest {
   }
 
   @Nested
-  inner class CurrentUserCanManageUsers {
-
-    @ParameterizedTest
-    @EnumSource(ServiceName::class, names = ["approvedPremises"], mode = EnumSource.Mode.EXCLUDE)
-    fun `currentUserCanManageUsers returns false if serviceName is not ApprovedPremises`(serviceName: ServiceName) {
-      user.addRoleForUnitTest(CAS1_JANITOR)
-      assertThat(userAccessService.currentUserCanManageUsers(serviceName)).isFalse()
-    }
-
-    @ParameterizedTest
-    @EnumSource(UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
-    fun `currentUserCanManageUsers returns false if user does not have CAS1_USER_MANAGEMENT permission`(userRole: UserRole) {
-      user.addRoleForUnitTest(userRole)
-
-      assertThat(userAccessService.currentUserCanManageUsers(ServiceName.approvedPremises)).isFalse()
-    }
-
-    @ParameterizedTest
-    @EnumSource(UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.INCLUDE)
-    fun `currentUserCanManageUsers returns true if serviceName is ApprovedPremises and user has CAS1_USER_MANAGEMENT permission`(userRole: UserRole) {
-      user.addRoleForUnitTest(userRole)
-
-      assertThat(userAccessService.currentUserCanManageUsers(ServiceName.approvedPremises)).isTrue()
-    }
-  }
-
-  @Nested
   inner class UserCanManagePremisesBookings {
 
     @Test

@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -36,18 +36,15 @@ class Cas1UsersController(
   }
 
   override fun deleteUser(id: UUID): ResponseEntity<Unit> {
-    if (!userAccessService.currentUserCanManageUsers(ServiceName.approvedPremises)) {
-      throw ForbiddenProblem()
-    }
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_MANAGEMENT)
+
     return ResponseEntity.ok(
       userService.deleteUser(id),
     )
   }
 
   override fun updateUser(id: UUID, cas1UpdateUser: Cas1UpdateUser): ResponseEntity<User> {
-    if (!userAccessService.currentUserCanManageUsers(ServiceName.approvedPremises)) {
-      throw ForbiddenProblem()
-    }
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_MANAGEMENT)
 
     val userEntity = extractEntityFromCasResult(
       userService.updateUser(

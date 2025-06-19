@@ -21,19 +21,6 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
   @Nested
   inner class GetUsers {
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET to users with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        webTestClient.get()
-          .uri("/users")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
 
     @ParameterizedTest
     @EnumSource(
@@ -386,22 +373,6 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
   @Nested
   inner class GetUsersSummary {
-    @ParameterizedTest
-    @EnumSource(
-      value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
-    )
-    fun `GET user summary with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        webTestClient.get()
-          .uri("/users/summary")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
 
     @ParameterizedTest
     @EnumSource(
@@ -691,19 +662,6 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
   @Nested
   inner class SearchByUserName {
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET to user search with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        webTestClient.get()
-          .uri("/users/search?name=som")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
 
     @ParameterizedTest
     @EnumSource(
@@ -769,19 +727,6 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
 
   @Nested
   inner class SearchByDeliusUserName {
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET to user search delius username with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        webTestClient.get()
-          .uri("/users/delius?name=som")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
 
     @ParameterizedTest
     @EnumSource(
