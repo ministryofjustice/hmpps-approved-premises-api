@@ -1370,4 +1370,51 @@ class UserAccessServiceTest {
       assertThat(userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)).isFalse
     }
   }
+
+  @Nested
+  inner class CurrentUserCanChangeBookingDate {
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_CRU_MEMBER" ])
+    fun `returns true if the given premises is an Approved Premises and the current user has the CRU_MEMBER role`(role: UserRole) {
+      currentRequestIsFor(ServiceName.approvedPremises)
+
+      user.addRoleForUnitTest(role)
+
+      assertThat(userAccessService.currentUserCanChangeBookingDate(approvedPremises)).isTrue
+    }
+
+    @Test
+    fun `returns false if the given premises is an Approved Premises and the current user has no suitable role`() {
+      currentRequestIsFor(ServiceName.approvedPremises)
+
+      assertThat(userAccessService.currentUserCanChangeBookingDate(approvedPremises)).isFalse
+    }
+
+    @Test
+    fun `returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+      assertThat(userAccessService.currentUserCanChangeBookingDate(temporaryAccommodationPremisesInUserRegion)).isTrue
+    }
+
+    @Test
+    fun `returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+      assertThat(userAccessService.currentUserCanChangeBookingDate(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    }
+
+    @Test
+    fun `returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      assertThat(userAccessService.currentUserCanChangeBookingDate(temporaryAccommodationPremisesInUserRegion)).isFalse
+      assertThat(userAccessService.currentUserCanChangeBookingDate(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    }
+  }
 }
