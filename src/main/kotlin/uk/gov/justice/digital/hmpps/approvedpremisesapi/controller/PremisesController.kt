@@ -415,6 +415,8 @@ class PremisesController(
     bookingId: UUID,
     body: NewArrival,
   ): ResponseEntity<Arrival> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     val user = usersService.getUserForRequest()
@@ -513,6 +515,8 @@ class PremisesController(
     bookingId: UUID,
     body: NewConfirmation,
   ): ResponseEntity<Confirmation> {
+    requestContextService.ensureCas3Request()
+
     val user = usersService.getUserForRequest()
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
@@ -548,6 +552,8 @@ class PremisesController(
     bookingId: UUID,
     body: NewDeparture,
   ): ResponseEntity<Departure> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     val user = usersService.getUserForRequest()
