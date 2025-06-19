@@ -107,7 +107,7 @@ paths:
     get:
       tags:
         - Operations on premises
-      summary: Returns all bookings for an approved premises
+      summary: Returns all bookings for CAS3
       operationId: premisesPremisesIdBookingsGet
       parameters:
         - name: premisesId

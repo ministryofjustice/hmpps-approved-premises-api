@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -111,6 +112,7 @@ class PremisesController(
   private val bedSummaryTransformer: BedSummaryTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
+  private val requestContextService: RequestContextService,
 ) : PremisesApiDelegate {
   @Transactional
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
@@ -299,6 +301,8 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Booking>> = runBlocking {
+    requestContextService.ensureCas3Request()
+
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
