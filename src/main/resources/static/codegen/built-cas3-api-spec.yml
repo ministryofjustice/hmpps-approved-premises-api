@@ -3369,6 +3369,7 @@ components:
         - cas1_booking_withdraw
         - cas1_change_request_list
         - cas1_change_request_view
+        - cas1_offline_application_view
         - cas1_out_of_service_bed_create
         - cas1_out_of_service_bed_create_bed_on_hold
         - cas1_out_of_service_bed_cancel

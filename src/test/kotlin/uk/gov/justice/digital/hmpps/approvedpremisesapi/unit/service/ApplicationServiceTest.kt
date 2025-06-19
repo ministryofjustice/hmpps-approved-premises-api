@@ -2181,7 +2181,7 @@ class ApplicationServiceTest {
   @Test
   fun `getOfflineApplicationForUsername where user has any of roles WORKFLOW_MANAGER, ASSESSOR, FUTURE_MANAGER and passes LAO check returns Success result with entity from db`() {
     listOf(
-      UserRole.CAS1_WORKFLOW_MANAGER,
+      UserRole.CAS1_CRU_MEMBER,
       UserRole.CAS1_ASSESSOR,
       UserRole.CAS1_FUTURE_MANAGER,
     ).forEach { role ->

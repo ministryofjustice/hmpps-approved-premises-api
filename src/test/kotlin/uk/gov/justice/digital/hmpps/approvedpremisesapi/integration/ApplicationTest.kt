@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -809,41 +811,45 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-  }
 
-  @Test
-  fun `Get single offline application returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-        }
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+    )
+    fun `Get single offline application returns 200 with correct body`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+          }
 
-        apDeliusContextAddResponseToUserAccessCall(
-          listOf(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-          ),
-          userEntity.deliusUsername,
-        )
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${offlineApplicationEntity.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${offlineApplicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
+          val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
 
-        assertThat(responseBody).matches {
-          offlineApplicationEntity.id == it.id &&
-            offlineApplicationEntity.crn == it.person.crn &&
-            offlineApplicationEntity.createdAt.toInstant() == it.createdAt
+          assertThat(responseBody).matches {
+            offlineApplicationEntity.id == it.id &&
+              offlineApplicationEntity.crn == it.person.crn &&
+              offlineApplicationEntity.createdAt.toInstant() == it.createdAt
+          }
         }
       }
     }
