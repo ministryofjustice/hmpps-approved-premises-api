@@ -308,7 +308,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, premises)) {
       throw ForbiddenProblem()
     }
 
@@ -360,7 +360,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, premises)) {
       throw ForbiddenProblem()
     }
 
@@ -421,7 +421,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -520,7 +520,7 @@ class PremisesController(
     val user = usersService.getUserForRequest()
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -558,7 +558,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -593,7 +593,7 @@ class PremisesController(
 
     when (booking.premises) {
       is TemporaryAccommodationPremisesEntity -> {
-        if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+        if (!userAccessService.currentUserCanManageCas3PremisesBookings(booking.premises)) {
           throw ForbiddenProblem()
         }
 
@@ -866,7 +866,7 @@ class PremisesController(
 
     when (booking.premises) {
       is TemporaryAccommodationPremisesEntity -> {
-        if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+        if (!userAccessService.currentUserCanManageCas3PremisesBookings(booking.premises)) {
           throw ForbiddenProblem()
         }
 

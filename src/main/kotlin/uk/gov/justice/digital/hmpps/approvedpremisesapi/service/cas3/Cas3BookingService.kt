@@ -474,7 +474,7 @@ class Cas3BookingService(
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: return CasResult.NotFound("Premises", premisesId.toString())
 
-    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, premises)) {
       return CasResult.Unauthorised()
     }
 

@@ -67,20 +67,19 @@ class UserAccessService(
 
   fun currentUserCanChangeBookingDate(premises: PremisesEntity) = when (premises) {
     is ApprovedPremisesEntity -> userService.getUserForRequest().hasPermission(UserPermission.CAS1_BOOKING_CHANGE_DATES)
-    is TemporaryAccommodationPremisesEntity -> currentUserCanManagePremisesBookings(premises)
+    is TemporaryAccommodationPremisesEntity -> currentUserCanManageCas3PremisesBookings(premises)
     else -> false
   }
 
-  fun currentUserCanManagePremisesBookings(premises: PremisesEntity) = userCanManagePremisesBookings(userService.getUserForRequest(), premises)
+  fun currentUserCanManageCas3PremisesBookings(premises: PremisesEntity) = userCanManageCas3PremisesBookings(userService.getUserForRequest(), premises)
 
   fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
     is ApprovedPremisesEntity -> true
-    is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
+    is TemporaryAccommodationPremisesEntity -> userCanManageCas3PremisesBookings(user, booking.premises)
     else -> false
   }
 
-  fun userCanManagePremisesBookings(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER)
+  fun userCanManageCas3PremisesBookings(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
@@ -95,7 +94,7 @@ class UserAccessService(
    */
   fun userMayCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
     is ApprovedPremisesEntity -> user.hasPermission(UserPermission.CAS1_BOOKING_WITHDRAW)
-    is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
+    is TemporaryAccommodationPremisesEntity -> userCanManageCas3PremisesBookings(user, booking.premises)
     else -> false
   }
 
