@@ -1798,7 +1798,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `post ApplicationTimelineNote with JWT returns 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         val applicationId = UUID.randomUUID()
 
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
