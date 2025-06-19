@@ -362,6 +362,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FutureBooking'
+  /premises/{premisesId}:
+    get:
+      tags:
+        - Premises
+      summary: Returns a premises
+      operationId: getPremisesById
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Premises'
   /premises/{premisesId}/bedspaces:
     get:
       tags:
@@ -5165,6 +5186,70 @@ components:
         - id
         - reference
         - characteristics
+    Cas3Premises:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+          example: Hope House
+        addressLine1:
+          type: string
+          example: one something street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        town:
+          type: string
+          example: Braintree
+        postcode:
+          type: string
+          example: LS1 3AD
+        localAuthorityArea:
+          $ref: '#/components/schemas/LocalAuthorityArea'
+        probationRegion:
+          $ref: '#/components/schemas/ProbationRegion'
+        probationDeliveryUnit:
+          $ref: '#/components/schemas/ProbationDeliveryUnit'
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Characteristic'
+        startDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: Start date of the property.
+        status:
+          $ref: '#/components/schemas/Cas3PremisesStatus'
+        notes:
+          type: string
+          example: some notes about this property
+        turnaroundWorkingDayCount:
+          type: integer
+          example: 2
+        totalOnlineBedspaces:
+          type: integer
+          example: 5
+        totalUpcomingBedspaces:
+          type: integer
+          example: 1
+        totalArchivedBedspaces:
+          type: integer
+          example: 2
+      required:
+        - id
+        - reference
+        - addressLine1
+        - postcode
+        - probationRegion
+        - probationDeliveryUnit
+        - status
+        - totalOnlineBedspaces
+        - totalUpcomingBedspaces
+        - totalArchivedBedspaces
     Cas3NewBedspace:
       type: object
       properties:

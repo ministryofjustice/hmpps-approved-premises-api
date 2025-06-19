@@ -226,6 +226,70 @@ components:
         - id
         - reference
         - characteristics
+    Cas3Premises:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+          example: Hope House
+        addressLine1:
+          type: string
+          example: one something street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        town:
+          type: string
+          example: Braintree
+        postcode:
+          type: string
+          example: LS1 3AD
+        localAuthorityArea:
+          $ref: '_shared.yml#/components/schemas/LocalAuthorityArea'
+        probationRegion:
+          $ref: '_shared.yml#/components/schemas/ProbationRegion'
+        probationDeliveryUnit:
+          $ref: '_shared.yml#/components/schemas/ProbationDeliveryUnit'
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Characteristic'
+        startDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: Start date of the property.
+        status:
+          $ref: 'cas3-schemas.yml#/components/schemas/Cas3PremisesStatus'
+        notes:
+          type: string
+          example: some notes about this property
+        turnaroundWorkingDayCount:
+          type: integer
+          example: 2
+        totalOnlineBedspaces:
+          type: integer
+          example: 5
+        totalUpcomingBedspaces:
+          type: integer
+          example: 1
+        totalArchivedBedspaces:
+          type: integer
+          example: 2
+      required:
+        - id
+        - reference
+        - addressLine1
+        - postcode
+        - probationRegion
+        - probationDeliveryUnit
+        - status
+        - totalOnlineBedspaces
+        - totalUpcomingBedspaces
+        - totalArchivedBedspaces
     Cas3NewBedspace:
       type: object
       properties:

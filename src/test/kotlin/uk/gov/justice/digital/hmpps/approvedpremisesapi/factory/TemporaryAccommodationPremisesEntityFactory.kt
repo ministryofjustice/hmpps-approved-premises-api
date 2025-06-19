@@ -24,20 +24,19 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var postcode: Yielded<String> = { randomPostCode() }
   private var addressLine1: Yielded<String> = { randomPremisesAddress() }
-  private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
-  private var town: Yielded<String> = { randomStringUpperCase(10) }
+  private var addressLine2: Yielded<String>? = null
+  private var town: Yielded<String>? = null
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var emailAddress: Yielded<String> = { randomStringUpperCase(10) }
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
   private var startDate: Yielded<LocalDate?>? = null
-  private var turnaroundWorkingDayCount: Yielded<Int>? = null
+  private var turnaroundWorkingDayCount: Yielded<Int> = { 2 }
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
 
   fun withDefaults() = apply {
     withProbationRegion(ProbationRegionEntityFactory().withDefaults().produce())
-    withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().produce())
   }
 
   fun withId(id: UUID) = apply {
@@ -138,12 +137,12 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     latitude = null,
     longitude = null,
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
-    localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
+    localAuthorityArea = this.localAuthorityArea?.invoke(),
     bookings = mutableListOf(),
     lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
-    addressLine2 = this.addressLine2(),
-    town = this.town(),
+    addressLine2 = this.addressLine2?.invoke(),
+    town = this.town?.invoke(),
     notes = this.notes(),
     emailAddress = this.emailAddress(),
     rooms = mutableListOf(),
@@ -151,6 +150,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
     startDate = this.startDate?.invoke(),
-    turnaroundWorkingDayCount = this.turnaroundWorkingDayCount?.invoke() ?: 2,
+    turnaroundWorkingDayCount = this.turnaroundWorkingDayCount.invoke(),
   )
 }
