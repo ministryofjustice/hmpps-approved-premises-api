@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations.Constants.MAX_WITHDRAWAL_COUNT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractMessageFromCasResult
 import java.time.LocalDate
@@ -20,7 +19,7 @@ class Cas1WithdrawableTreeOperations(
   private val bookingRepository: BookingRepository,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
-  private val placementApplicationService: PlacementApplicationService,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -84,7 +83,7 @@ class Cas1WithdrawableTreeOperations(
         }
       }
       WithdrawableEntityType.PlacementApplication -> {
-        val result = placementApplicationService.withdrawPlacementApplication(
+        val result = cas1PlacementApplicationService.withdrawPlacementApplication(
           id = node.entityId,
           userProvidedReason = null,
           context,

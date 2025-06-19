@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
@@ -26,14 +26,14 @@ import java.util.UUID
 
 class Cas1RequestForPlacementServiceTest {
   private val applicationService = mockk<ApplicationService>()
-  private val placementApplicationService = mockk<PlacementApplicationService>()
+  private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
   private val placementRequestService = mockk<PlacementRequestService>()
   private val requestForPlacementTransformer = mockk<RequestForPlacementTransformer>()
   private val cas1WithdrawableService = mockk<Cas1WithdrawableService>()
 
   private val cas1RequestForPlacementService = Cas1RequestForPlacementService(
     applicationService,
-    placementApplicationService,
+    cas1PlacementApplicationService,
     placementRequestService,
     requestForPlacementTransformer,
     cas1WithdrawableService,
@@ -79,7 +79,7 @@ class Cas1RequestForPlacementServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       every {
-        placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+        cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
       } returns placementApplications
 
       placementApplications.forEach {
@@ -128,7 +128,7 @@ class Cas1RequestForPlacementServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       every {
-        placementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+        cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
       } returns listOf()
 
       every {

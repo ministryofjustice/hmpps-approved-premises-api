@@ -31,10 +31,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -51,10 +51,10 @@ class TasksController(
   private val assessmentService: AssessmentService,
   private val taskTransformer: TaskTransformer,
   private val offenderService: OffenderService,
-  private val placementApplicationService: PlacementApplicationService,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val enumConverterFactory: EnumConverterFactory,
   private val userTransformer: UserTransformer,
-  private val taskService: TaskService,
+  private val cas1TaskService: Cas1TaskService,
 ) : TasksApiDelegate {
 
   override fun tasksGet(
@@ -86,8 +86,8 @@ class TasksController(
       TaskEntityType.entries
     }
 
-    val (typedTasks, metadata) = taskService.getAll(
-      TaskService.TaskFilterCriteria(
+    val (typedTasks, metadata) = cas1TaskService.getAll(
+      Cas1TaskService.TaskFilterCriteria(
         allocatedFilter = allocatedFilter,
         apAreaId = apAreaId,
         cruManagementAreaId = cruManagementAreaId,
@@ -151,7 +151,7 @@ class TasksController(
 
       TaskType.placementApplication -> {
         val placementApplication = extractEntityFromCasResult(
-          placementApplicationService.getApplication(id),
+          cas1PlacementApplicationService.getApplication(id),
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
 
@@ -170,7 +170,7 @@ class TasksController(
       taskInfo.requiredPermission,
     )
 
-    val workload = taskService.getUserWorkloads(users.map { it.id })
+    val workload = cas1TaskService.getUserWorkloads(users.map { it.id })
     val transformedAllocatableUsers = users.map {
       userTransformer.transformJpaToAPIUserWithWorkload(it, workload[it.id]!!)
     }
@@ -209,7 +209,7 @@ class TasksController(
     }
 
     val reallocatedTask = extractEntityFromCasResult(
-      taskService.reallocateTask(
+      cas1TaskService.reallocateTask(
         requestUser = user,
         taskType = type,
         userToAllocateToId = userId,
@@ -227,7 +227,7 @@ class TasksController(
     val type = toTaskType(taskType)
 
     ensureEntityFromCasResultIsSuccess(
-      taskService.deallocateTask(user, type, id),
+      cas1TaskService.deallocateTask(user, type, id),
     )
 
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)

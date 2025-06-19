@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository
 
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.xssf.streaming.SXSSFWorkbook

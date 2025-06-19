@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.Called
 import io.mockk.Runs
@@ -27,23 +27,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.util.Optional
 import java.util.UUID
 
-class AppealServiceTest {
+class Cas1AppealServiceTest {
   private val appealRepository = mockk<AppealRepository>()
   private val assessmentService = mockk<AssessmentService>()
   private val cas1AppealEmailService = mockk<Cas1AppealEmailService>()
   private val cas1AppealDomainEventService = mockk<Cas1AppealDomainEventService>()
 
-  private val appealService = AppealService(
+  private val cas1AppealService = Cas1AppealService(
     appealRepository,
     assessmentService,
     cas1AppealEmailService,
@@ -77,7 +77,7 @@ class AppealServiceTest {
     fun `Returns NotFound if the appeal does not exist`() {
       every { appealRepository.findById(any()) } returns Optional.empty()
 
-      val result = appealService.getAppeal(UUID.randomUUID(), application)
+      val result = cas1AppealService.getAppeal(UUID.randomUUID(), application)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -89,7 +89,7 @@ class AppealServiceTest {
 
       every { appealRepository.findById(appeal.id) } returns Optional.of(appeal)
 
-      val result = appealService.getAppeal(appeal.id, application)
+      val result = cas1AppealService.getAppeal(appeal.id, application)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -103,7 +103,7 @@ class AppealServiceTest {
 
       every { appealRepository.findById(appeal.id) } returns Optional.of(appeal)
 
-      val result = appealService.getAppeal(appeal.id, application)
+      val result = cas1AppealService.getAppeal(appeal.id, application)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -121,7 +121,7 @@ class AppealServiceTest {
 
     @Test
     fun `Returns Unauthorised if the creating user does not have the CAS1_APPEALS_MANAGER role`() {
-      val result = appealService.createAppeal(
+      val result = cas1AppealService.createAppeal(
         LocalDate.now(),
         "Some information about why the appeal is being made",
         AppealDecision.accepted,
@@ -144,7 +144,7 @@ class AppealServiceTest {
 
       application.status = status
 
-      val result = appealService.createAppeal(
+      val result = cas1AppealService.createAppeal(
         LocalDate.now().plusDays(1),
         "Some information about why the appeal is being made",
         AppealDecision.accepted,
@@ -164,7 +164,7 @@ class AppealServiceTest {
     fun `Returns FieldValidationError if the appeal date is in the future`() {
       createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
-      val result = appealService.createAppeal(
+      val result = cas1AppealService.createAppeal(
         LocalDate.now().plusDays(1),
         "Some information about why the appeal is being made",
         AppealDecision.accepted,
@@ -186,7 +186,7 @@ class AppealServiceTest {
     fun `Returns FieldValidationError if the appeal detail is blank`(appealDetail: String) {
       createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
-      val result = appealService.createAppeal(
+      val result = cas1AppealService.createAppeal(
         LocalDate.now(),
         appealDetail,
         AppealDecision.accepted,
@@ -208,7 +208,7 @@ class AppealServiceTest {
     fun `Returns FieldValidationError if the decision detail is blank`(decisionDetail: String) {
       createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
-      val result = appealService.createAppeal(
+      val result = cas1AppealService.createAppeal(
         LocalDate.now(),
         "Some information about why the appeal is being made",
         AppealDecision.accepted,
@@ -238,7 +238,7 @@ class AppealServiceTest {
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
 
-        val result = appealService.createAppeal(
+        val result = cas1AppealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
           AppealDecision.accepted,
@@ -273,7 +273,7 @@ class AppealServiceTest {
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
 
-        val result = appealService.createAppeal(
+        val result = cas1AppealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
           AppealDecision.rejected,
@@ -305,7 +305,7 @@ class AppealServiceTest {
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
 
-        val result = appealService.createAppeal(
+        val result = cas1AppealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
           AppealDecision.rejected,
@@ -337,7 +337,7 @@ class AppealServiceTest {
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
 
-        val result = appealService.createAppeal(
+        val result = cas1AppealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
           AppealDecision.accepted,

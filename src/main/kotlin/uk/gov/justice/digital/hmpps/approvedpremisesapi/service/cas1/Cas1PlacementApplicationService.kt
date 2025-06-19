@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import arrow.core.Either
 import jakarta.transaction.Transactional
@@ -24,13 +24,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import java.time.Clock
 import java.time.OffsetDateTime
@@ -42,7 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 
 @Service
 @Suppress("ReturnCount")
-class PlacementApplicationService(
+class Cas1PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
@@ -52,7 +48,7 @@ class PlacementApplicationService(
   private val userAccessService: UserAccessService,
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
-  private val taskDeadlineService: TaskDeadlineService,
+  private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val clock: Clock,
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
 ) {
@@ -161,7 +157,7 @@ class PlacementApplicationService(
       dueAt = null,
     )
 
-    newPlacementApplication.dueAt = taskDeadlineService.getDeadline(newPlacementApplication)
+    newPlacementApplication.dueAt = cas1TaskDeadlineService.getDeadline(newPlacementApplication)
 
     placementApplicationRepository.save(newPlacementApplication)
     cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
@@ -308,7 +304,7 @@ class PlacementApplicationService(
       submissionGroupId = UUID.randomUUID()
     }
 
-    submittedPlacementApplication.dueAt = taskDeadlineService.getDeadline(submittedPlacementApplication)
+    submittedPlacementApplication.dueAt = cas1TaskDeadlineService.getDeadline(submittedPlacementApplication)
 
     val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 

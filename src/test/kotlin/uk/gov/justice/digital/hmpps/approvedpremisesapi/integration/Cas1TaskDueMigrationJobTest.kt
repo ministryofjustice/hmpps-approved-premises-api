@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -26,7 +26,7 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
   lateinit var migrationJobService: MigrationJobService
 
   @Autowired
-  lateinit var taskDeadlineService: TaskDeadlineService
+  lateinit var cas1TaskDeadlineService: Cas1TaskDeadlineService
 
   lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
@@ -65,21 +65,21 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
       val updatedAssessment = assessmentTestRepository.findByIdOrNull(it.id)!!
       assertThat(updatedAssessment.dueAt).isNotNull()
       assertThat(updatedAssessment.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        .isEqualTo(taskDeadlineService.getDeadline(it)?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .isEqualTo(cas1TaskDeadlineService.getDeadline(it)?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
 
     placementRequests.forEach {
       val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(it.id)!!
       assertThat(updatedPlacementRequest.dueAt).isNotNull()
       assertThat(updatedPlacementRequest.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        .isEqualTo(taskDeadlineService.getDeadline(it).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .isEqualTo(cas1TaskDeadlineService.getDeadline(it).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
 
     placementApplications.forEach {
       val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(it.id)!!
       assertThat(updatedPlacementApplication.dueAt).isNotNull()
       assertThat(updatedPlacementApplication.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        .isEqualTo(taskDeadlineService.getDeadline(it).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        .isEqualTo(cas1TaskDeadlineService.getDeadline(it).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
   }
 

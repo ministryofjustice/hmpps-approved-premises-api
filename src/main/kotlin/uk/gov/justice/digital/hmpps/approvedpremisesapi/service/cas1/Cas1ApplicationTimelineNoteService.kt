@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
@@ -8,7 +8,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class ApplicationTimelineNoteService(
+class Cas1ApplicationTimelineNoteService(
   private val applicationTimelineNoteRepository: ApplicationTimelineNoteRepository,
 ) {
 

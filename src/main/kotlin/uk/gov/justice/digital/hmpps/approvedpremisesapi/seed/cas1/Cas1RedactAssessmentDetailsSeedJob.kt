@@ -7,14 +7,14 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import java.util.UUID
 
 @Component
 class Cas1RemoveAssessmentDetailsSeedJob(
   private val assessmentRepository: AssessmentRepository,
   private val objectMapper: ObjectMapper,
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
 ) : SeedJob<Cas1RemoveAssessmentDetailsSeedCsvRow>(
   requiredHeaders = setOf(
     "assessment_id",
@@ -36,7 +36,7 @@ class Cas1RemoveAssessmentDetailsSeedJob(
     assessmentRepository.save(assessment)
 
     if (assessment.data != null || assessment.document != null) {
-      applicationTimelineNoteService.saveApplicationTimelineNote(
+      cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
         applicationId = assessment.application.id,
         note = "Assessment details redacted",
         user = null,

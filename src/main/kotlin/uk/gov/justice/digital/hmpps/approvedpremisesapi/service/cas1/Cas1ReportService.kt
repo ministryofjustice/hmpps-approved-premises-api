@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Over
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.ExcelJdbcResultSetConsumer
 import java.io.OutputStream
 import java.time.Clock
 import java.time.LocalDate

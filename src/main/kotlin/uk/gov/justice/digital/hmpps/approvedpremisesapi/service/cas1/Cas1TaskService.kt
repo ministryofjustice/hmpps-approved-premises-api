@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
@@ -23,6 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -30,12 +33,12 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class TaskService(
+class Cas1TaskService(
   private val assessmentService: AssessmentService,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val userTransformer: UserTransformer,
-  private val placementApplicationService: PlacementApplicationService,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val taskRepository: TaskRepository,
   private val assessmentRepository: AssessmentRepository,
   private val placementApplicationRepository: PlacementApplicationRepository,
@@ -164,7 +167,7 @@ class TaskService(
         )
       }
       TaskType.placementApplication -> {
-        placementApplicationService.reallocateApplication(assigneeUser, taskId)
+        cas1PlacementApplicationService.reallocateApplication(assigneeUser, taskId)
       }
     }
 
@@ -211,6 +214,7 @@ class TaskService(
     )
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun entityToReallocation(entity: Any, taskType: TaskType): Reallocation {
     val allocatedToUser = when (entity) {
       is AssessmentEntity -> entity.allocatedToUser

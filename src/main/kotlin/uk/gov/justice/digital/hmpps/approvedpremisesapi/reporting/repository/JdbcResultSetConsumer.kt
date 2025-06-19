@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository
 
 import java.sql.ResultSet
 

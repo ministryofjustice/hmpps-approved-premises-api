@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
@@ -30,7 +30,7 @@ class Cas1PlacementApplicationsController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val offenderService: OffenderService,
-  private val placementApplicationService: PlacementApplicationService,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val objectMapper: ObjectMapper,
   private val withdrawalService: Cas1WithdrawableService,
@@ -49,7 +49,7 @@ class Cas1PlacementApplicationsController(
     }
 
     val placementApplication = extractEntityFromCasResult(
-      placementApplicationService.createPlacementApplication(application, user),
+      cas1PlacementApplicationService.createPlacementApplication(application, user),
     )
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
@@ -58,7 +58,7 @@ class Cas1PlacementApplicationsController(
   override fun placementApplicationsIdGet(id: UUID): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()
 
-    val result = placementApplicationService.getApplication(id)
+    val result = cas1PlacementApplicationService.getApplication(id)
     val placementApplication = extractEntityFromCasResult(result)
 
     if (offenderService.canAccessOffender(placementApplication.application.crn, user.cas1LaoStrategy()) != true) {
@@ -74,7 +74,7 @@ class Cas1PlacementApplicationsController(
   ): ResponseEntity<PlacementApplication> {
     val serializedData = objectMapper.writeValueAsString(updatePlacementApplication.data)
 
-    val result = placementApplicationService.updateApplication(id, serializedData)
+    val result = cas1PlacementApplicationService.updateApplication(id, serializedData)
 
     val placementApplication = extractEntityFromCasResult(result)
 
@@ -87,7 +87,7 @@ class Cas1PlacementApplicationsController(
   ): ResponseEntity<List<PlacementApplication>> {
     val serializedData = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
-    val result = placementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, submitPlacementApplication.placementDates)
+    val result = cas1PlacementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, submitPlacementApplication.placementDates)
 
     val placementApplications = extractEntityFromCasResult(result)
 
@@ -98,7 +98,7 @@ class Cas1PlacementApplicationsController(
     id: UUID,
     placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
   ): ResponseEntity<PlacementApplication> {
-    val result = placementApplicationService.recordDecision(id, placementApplicationDecisionEnvelope)
+    val result = cas1PlacementApplicationService.recordDecision(id, placementApplicationDecisionEnvelope)
 
     val placementApplication = extractEntityFromCasResult(result)
 

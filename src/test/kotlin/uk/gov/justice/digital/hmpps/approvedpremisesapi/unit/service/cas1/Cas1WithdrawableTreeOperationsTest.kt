@@ -26,8 +26,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
@@ -44,7 +44,7 @@ class Cas1WithdrawableTreeOperationsTest {
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockCas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
   private val mockCas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
-  private val mockPlacementApplicationService = mockk<PlacementApplicationService>()
+  private val mockCas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
 
   private val service = Cas1WithdrawableTreeOperations(
     mockPlacementRequestService,
@@ -52,7 +52,7 @@ class Cas1WithdrawableTreeOperationsTest {
     mockBookingRepository,
     mockCas1SpaceBookingService,
     mockCas1SpaceBookingRepository,
-    mockPlacementApplicationService,
+    mockCas1PlacementApplicationService,
   )
 
   val probationRegion = ProbationRegionEntityFactory()
@@ -190,7 +190,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
+      mockCas1PlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
     } returns mockk<CasResult<PlacementApplicationEntity>>()
 
     every {
@@ -212,7 +212,7 @@ class Cas1WithdrawableTreeOperationsTest {
     service.withdrawDescendantsOfRootNode(tree, context)
 
     verify {
-      mockPlacementApplicationService.withdrawPlacementApplication(
+      mockCas1PlacementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         null,
         context,
@@ -260,7 +260,7 @@ class Cas1WithdrawableTreeOperationsTest {
       )
     }
 
-    confirmVerified(mockPlacementApplicationService)
+    confirmVerified(mockCas1PlacementApplicationService)
     confirmVerified(mockPlacementRequestService)
     confirmVerified(mockBookingService)
     confirmVerified(mockCas1SpaceBookingService)
@@ -396,7 +396,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
+      mockCas1PlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
     } returns mockk<CasResult<PlacementApplicationEntity>>()
 
     every {
@@ -413,7 +413,7 @@ class Cas1WithdrawableTreeOperationsTest {
     service.withdrawDescendantsOfRootNode(tree, context)
 
     verify {
-      mockPlacementApplicationService.withdrawPlacementApplication(
+      mockCas1PlacementApplicationService.withdrawPlacementApplication(
         placementApplicationWithdrawable.id,
         null,
         context,
@@ -439,7 +439,7 @@ class Cas1WithdrawableTreeOperationsTest {
       )
     }
 
-    confirmVerified(mockPlacementApplicationService)
+    confirmVerified(mockCas1PlacementApplicationService)
     confirmVerified(mockPlacementRequestService)
     confirmVerified(mockBookingService)
   }
@@ -555,7 +555,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
+      mockCas1PlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
     } returns CasResult.Unauthorised()
 
     every {

@@ -192,7 +192,7 @@ tasks.register<JavaExec>("generateCas1Roles") {
   group = "build"
   description = "Generates the built-cas1-roles.json file using Cas1RolesFileGenerator."
 
-  mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1UserRoleJsonFileGenerator")
+  mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserRoleJsonFileGenerator")
 
   classpath = sourceSets["main"].runtimeClasspath
 

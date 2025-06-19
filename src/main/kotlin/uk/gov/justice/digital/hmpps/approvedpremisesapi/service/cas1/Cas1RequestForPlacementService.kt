@@ -8,14 +8,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import java.util.UUID
 
 @Component
 class Cas1RequestForPlacementService(
   private val applicationService: ApplicationService,
-  private val placementApplicationService: PlacementApplicationService,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val placementRequestService: PlacementRequestService,
   private val requestForPlacementTransformer: RequestForPlacementTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
@@ -26,7 +25,7 @@ class Cas1RequestForPlacementService(
 
     check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
 
-    val placementApplications = placementApplicationService.getAllSubmittedNonReallocatedApplications(applicationId)
+    val placementApplications = cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(applicationId)
     val placementRequests = placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)
 
     val result =

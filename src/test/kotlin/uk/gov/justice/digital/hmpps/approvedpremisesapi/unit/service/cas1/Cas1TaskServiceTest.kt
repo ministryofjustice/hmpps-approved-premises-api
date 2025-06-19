@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
 import io.mockk.mockk
@@ -38,11 +38,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -50,23 +50,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.util.UUID
 
-class TaskServiceTest {
+class Cas1TaskServiceTest {
   private val assessmentServiceMock = mockk<AssessmentService>()
   private val userServiceMock = mockk<UserService>()
   private val userAccessServiceMock = mockk<UserAccessService>()
   private val userTransformerMock = mockk<UserTransformer>()
-  private val placementApplicationServiceMock = mockk<PlacementApplicationService>()
+  private val cas1PlacementApplicationServiceMock = mockk<Cas1PlacementApplicationService>()
   private val taskRepositoryMock = mockk<TaskRepository>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val placementApplicationRepositoryMock = mockk<PlacementApplicationRepository>()
   private val userRepositoryMock = mockk<UserRepository>()
 
-  private val taskService = TaskService(
+  private val cas1TaskService = Cas1TaskService(
     assessmentServiceMock,
     userServiceMock,
     userAccessServiceMock,
     userTransformerMock,
-    placementApplicationServiceMock,
+    cas1PlacementApplicationServiceMock,
     taskRepositoryMock,
     assessmentRepositoryMock,
     placementApplicationRepositoryMock,
@@ -99,7 +99,7 @@ class TaskServiceTest {
 
     every { userAccessServiceMock.userCanReallocateTask(any()) } returns false
 
-    val result = taskService.reallocateTask(requestUser, TaskType.assessment, UUID.randomUUID(), UUID.randomUUID())
+    val result = cas1TaskService.reallocateTask(requestUser, TaskType.assessment, UUID.randomUUID(), UUID.randomUUID())
 
     assertThatCasResult(result).isUnauthorised()
   }
@@ -111,7 +111,7 @@ class TaskServiceTest {
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
     every { userServiceMock.updateUserFromDelius(assigneeUserId, ServiceName.approvedPremises) } returns CasResult.NotFound("task", "id")
 
-    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
+    val result = cas1TaskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
 
     assertThatCasResult(result).isNotFound("user", "55aa66be-0819-494e-955b-90b9aaa4f0c6")
   }
@@ -145,7 +145,7 @@ class TaskServiceTest {
       user = transformedUser,
     )
 
-    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, assessment.id)
+    val result = cas1TaskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, assessment.id)
 
     assertThatCasResult(result).isSuccess().with {
       assertThat(it).isEqualTo(reallocation)
@@ -174,7 +174,7 @@ class TaskServiceTest {
       .produce()
 
     every {
-      placementApplicationServiceMock.reallocateApplication(assigneeUser, placementApplication.id)
+      cas1PlacementApplicationServiceMock.reallocateApplication(assigneeUser, placementApplication.id)
     } returns CasResult.Success(
       placementApplication,
     )
@@ -188,7 +188,7 @@ class TaskServiceTest {
       user = transformedUser,
     )
 
-    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementApplication, assigneeUser.id, placementApplication.id)
+    val result = cas1TaskService.reallocateTask(requestUserWithPermission, TaskType.placementApplication, assigneeUser.id, placementApplication.id)
 
     assertThatCasResult(result).isSuccess().with {
       assertThat(it).isEqualTo(reallocation)
@@ -207,7 +207,7 @@ class TaskServiceTest {
 
     every { userAccessServiceMock.userCanDeallocateTask(any()) } returns false
 
-    val result = taskService.deallocateTask(requestUser, TaskType.assessment, UUID.randomUUID())
+    val result = cas1TaskService.deallocateTask(requestUser, TaskType.assessment, UUID.randomUUID())
 
     assertThatCasResult(result).isUnauthorised()
   }
@@ -226,7 +226,7 @@ class TaskServiceTest {
 
     every { assessmentServiceMock.deallocateAssessment(assessment.id) } returns CasResult.Success(assessment)
 
-    val result = taskService.deallocateTask(requestUserWithPermission, TaskType.assessment, assessment.id)
+    val result = cas1TaskService.deallocateTask(requestUserWithPermission, TaskType.assessment, assessment.id)
 
     assertThatCasResult(result).isSuccess()
   }
@@ -301,8 +301,8 @@ class TaskServiceTest {
 
     every { getMetadata(page, pageCriteria) } returns metadata
 
-    val result = taskService.getAll(
-      TaskService.TaskFilterCriteria(
+    val result = cas1TaskService.getAll(
+      Cas1TaskService.TaskFilterCriteria(
         AllocatedFilter.allocated,
         apAreaId,
         cruManagementAreaId,

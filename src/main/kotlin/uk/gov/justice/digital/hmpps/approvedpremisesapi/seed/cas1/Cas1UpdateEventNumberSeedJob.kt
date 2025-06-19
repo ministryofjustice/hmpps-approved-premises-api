@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import java.util.UUID
 
 /**
@@ -36,7 +36,7 @@ import java.util.UUID
  */
 @Component
 class Cas1UpdateEventNumberSeedJob(
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val applicationRepository: ApplicationRepository,
   private val domainEventRepository: DomainEventRepository,
   private val objectMapper: ObjectMapper,
@@ -86,7 +86,7 @@ class Cas1UpdateEventNumberSeedJob(
 
     updateDomainEvents(applicationId, updatedEventNumber)
 
-    applicationTimelineNoteService.saveApplicationTimelineNote(
+    cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
       applicationId = row.applicationId,
       note = "Application Support have updated the application to use event number '$updatedEventNumber'. Previous event number was '$previousEventNumber'",
       user = null,

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository
 
 import com.opencsv.CSVWriterBuilder
 import com.opencsv.bean.CsvBindByName
