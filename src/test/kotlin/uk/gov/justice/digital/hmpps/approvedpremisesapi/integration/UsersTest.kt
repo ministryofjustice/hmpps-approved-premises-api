@@ -22,7 +22,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
   @Nested
   inner class GetUsers {
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -38,7 +38,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `GET users with an unapproved role is forbidden`(role: UserRole) {
@@ -67,7 +67,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns full list ordered by name`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -99,7 +99,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by region`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -148,7 +148,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by user's AP area`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -199,7 +199,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by user's CRU management area`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -258,7 +258,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -290,14 +290,14 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by roles`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER)) { future_manager, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { reportViewer, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER)) { futureManager, _ ->
           givenAUser { _, _ ->
             givenAUser(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
-                .uri("/users?roles=cru_member,future_manager")
+                .uri("/users?roles=report_viewer,future_manager")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -306,7 +306,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(cruMember, future_manager).map {
+                    listOf(reportViewer, futureManager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
                   ),
@@ -318,7 +318,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by qualifications`(role: UserRole) {
       givenAUser(qualifications = listOf(UserQualification.EMERGENCY)) { emergencyUser, _ ->
         givenAUser(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
@@ -346,7 +346,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by role and qualifications`(
       role: UserRole,
     ) {
@@ -389,7 +389,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
     )
     fun `GET user summary with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
@@ -406,7 +406,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `GET user summary with an unapproved role is forbidden`(role: UserRole) {
@@ -435,7 +435,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET user summary with an approved role returns full list ordered by name`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -467,7 +467,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET user summary with an approved role returns list filtered by region`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -514,7 +514,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns list filtered by user's AP area`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -563,7 +563,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
@@ -595,14 +595,14 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by roles`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { reportViewer, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_FUTURE_MANAGER)) { future_manager, _ ->
           givenAUser { _, _ ->
             givenAUser(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
-                .uri("/users/summary?roles=cru_member,future_manager")
+                .uri("/users/summary?roles=report_viewer,future_manager")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -611,7 +611,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    listOf(cruMember, future_manager).map {
+                    listOf(reportViewer, future_manager).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
                   ),
@@ -623,7 +623,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by qualifications`(role: UserRole) {
       givenAUser(qualifications = listOf(UserQualification.EMERGENCY)) { emergencyUser, _ ->
         givenAUser(qualifications = listOf(UserQualification.PIPE)) { _, _ ->
@@ -651,7 +651,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by role and qualifications`(
       role: UserRole,
     ) {
@@ -692,7 +692,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
   @Nested
   inner class SearchByUserName {
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to user search with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -708,7 +708,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_USER_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `GET to user search with an unapproved role is forbidden`(role: UserRole) {
@@ -737,7 +737,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to search users with approved role returns a user`(role: UserRole) {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "SomeUserName", surname = "")),
@@ -770,7 +770,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
   @Nested
   inner class SearchByDeliusUserName {
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to user search delius username with X-Service-Name other than approved-premises is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -815,7 +815,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to search users delius username with an approved role returns a user`(role: UserRole) {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "SOME"),
@@ -843,7 +843,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to search for a delius username that does not exist with an approved role returns 404`(
       role: UserRole,
     ) {
