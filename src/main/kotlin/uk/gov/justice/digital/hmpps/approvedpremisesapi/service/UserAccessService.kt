@@ -149,14 +149,6 @@ class UserAccessService(
     else -> false
   }
 
-  fun currentUserCanManageUsers(xServiceName: ServiceName): Boolean {
-    val user = userService.getUserForRequest()
-    return (
-      xServiceName == ServiceName.approvedPremises &&
-        user.hasPermission(UserPermission.CAS1_USER_MANAGEMENT)
-      )
-  }
-
   /**
    * This function only checks if the user has the correct permissions to withdraw the given application.
    *
