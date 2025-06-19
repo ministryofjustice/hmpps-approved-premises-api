@@ -3412,7 +3412,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"])
     fun `CAS1 Date Change with correct role returns 200, persists date change and raises domain event`(role: UserRole) {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 

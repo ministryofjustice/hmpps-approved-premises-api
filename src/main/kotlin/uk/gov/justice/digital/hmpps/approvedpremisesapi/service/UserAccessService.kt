@@ -65,6 +65,12 @@ class UserAccessService(
     else -> false
   }
 
+  fun currentUserCanChangeBookingDate(premises: PremisesEntity) = when (premises) {
+    is ApprovedPremisesEntity -> userService.getUserForRequest().hasPermission(UserPermission.CAS1_BOOKING_CHANGE_DATES)
+    is TemporaryAccommodationPremisesEntity -> currentUserCanManagePremisesBookings(premises)
+    else -> false
+  }
+
   fun currentUserCanManagePremisesBookings(premises: PremisesEntity) = userCanManagePremisesBookings(userService.getUserForRequest(), premises)
 
   fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {

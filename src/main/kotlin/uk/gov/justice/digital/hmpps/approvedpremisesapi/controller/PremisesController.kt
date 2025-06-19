@@ -587,6 +587,8 @@ class PremisesController(
     bookingId: UUID,
     body: NewExtension,
   ): ResponseEntity<Extension> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     when (booking.premises) {
@@ -619,7 +621,7 @@ class PremisesController(
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+    if (!userAccessService.currentUserCanChangeBookingDate(booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -858,6 +860,8 @@ class PremisesController(
     bookingId: UUID,
     body: NewTurnaround,
   ): ResponseEntity<Turnaround> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     when (booking.premises) {
