@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -38,7 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-@SuppressWarnings("LargeClass")
+@SuppressWarnings("LargeClass", "LongParameterList")
 class BookingSearchTest : IntegrationTestBase() {
   @Test
   fun `Searching for bookings without JWT returns 401`() {
@@ -70,6 +72,9 @@ class BookingSearchTest : IntegrationTestBase() {
         val expectedBookingSearchResult =
           createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn, "${offenderDetails.firstName} ${offenderDetails.surname}")
         val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
+
+        apDeliusContextAddListCaseSummaryToBulkResponse(emptyList(), listOf("S121978"))
+        apDeliusContextAddResponseToUserAccessCall(emptyList(), username = userEntity.deliusUsername)
 
         // when CRN is upper case
         callApiAndAssertResponse("/bookings/search?crnOrName=$crn", jwt, expectedResponse, true)
@@ -640,7 +645,7 @@ class BookingSearchTest : IntegrationTestBase() {
       }
 
       // Assert bookings page 1
-      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 10, 0)
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortOrder, 10, 0)
 
       var bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       var expectedResponse = BookingSearchResults(
@@ -667,7 +672,7 @@ class BookingSearchTest : IntegrationTestBase() {
         .json(objectMapper.writeValueAsString(expectedResponse), true)
 
       // Assert bookings page 2
-      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 5, 10)
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortOrder, 5, 10)
 
       bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       expectedResponse = BookingSearchResults(
@@ -743,7 +748,7 @@ class BookingSearchTest : IntegrationTestBase() {
       }
 
       // Assert bookings page 1
-      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 10, 0)
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortOrder, 10, 0)
 
       var bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       var expectedResponse = BookingSearchResults(
@@ -769,7 +774,7 @@ class BookingSearchTest : IntegrationTestBase() {
         .json(objectMapper.writeValueAsString(expectedResponse), true)
 
       // Assert bookings page 2
-      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 5, 10)
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortOrder, 5, 10)
 
       bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       expectedResponse = BookingSearchResults(
@@ -873,7 +878,7 @@ class BookingSearchTest : IntegrationTestBase() {
       }
 
       // Assert bookings page 1
-      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 10, 0)
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortOrder, 10, 0)
 
       var bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       var expectedResponse = BookingSearchResults(
@@ -899,7 +904,7 @@ class BookingSearchTest : IntegrationTestBase() {
         .json(objectMapper.writeValueAsString(expectedResponse), true)
 
       // Assert bookings page 2
-      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, sortOrder, 5, 10)
+      mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortOrder, 5, 10)
 
       bookingSearchResults = getExpectedResponse(allBookings, temporaryAccommodationApplications)
       expectedResponse = BookingSearchResults(
@@ -1225,6 +1230,7 @@ class BookingSearchTest : IntegrationTestBase() {
   private fun mockApDeliusContextCasesSummary(
     applications: MutableList<TemporaryAccommodationApplicationEntity>,
     offendersCrnAndName: Map<String, Name>,
+    username: String,
     sortOrder: SortOrder,
     take: Int,
     skip: Int,
@@ -1246,6 +1252,10 @@ class BookingSearchTest : IntegrationTestBase() {
     }
 
     apDeliusContextAddListCaseSummaryToBulkResponse(cases)
+    apDeliusContextAddResponseToUserAccessCall(
+      casesAccess = cases.map { CaseAccessFactory().withCrn(it.crn).withAccess().produce() },
+      username = username,
+    )
   }
 
   private fun getSortedBooking(bookings: MutableList<BookingEntity>, sortBy: BookingSearchSortField, sortOrder: SortOrder) = when (sortBy) {

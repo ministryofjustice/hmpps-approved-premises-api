@@ -610,6 +610,13 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: cruManagementAreaId
+          in: query
+          required: false
+          description: ID of the cru management are to filter by
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
@@ -2031,6 +2038,21 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
+  /applications/me:
+    get:
+      tags:
+        - Applications
+      summary: Lists all applications that the user has created
+      operationId: getApplicationsMe
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1ApplicationSummary'
 
   /applications:
     get:
@@ -2038,6 +2060,8 @@ paths:
         - Applications
       summary: Lists all applications that the user has created
       operationId: getApplicationsForUser
+      deprecated: true
+      description: Deprecated, use GET /cas1/applications/me instead.
       responses:
         200:
           description: successful operation
@@ -8466,83 +8490,84 @@ components:
         - application
         - createdFromAppeal
     Cas1Application:
-          properties:
-            id:
-              type: string
-              format: uuid
-            person:
-              $ref: '#/components/schemas/Person'
-            createdAt:
-              type: string
-              format: date-time
-            isWomensApplication:
-              type: boolean
-            isPipeApplication:
-              deprecated: true
-              description: Use apType
-              type: boolean
-            isEmergencyApplication:
-              type: boolean
-            isEsapApplication:
-              deprecated: true
-              description: Use apType
-              type: boolean
-            apType:
-              $ref: '#/components/schemas/ApType'
-            arrivalDate:
-              type: string
-              format: date-time
-            risks:
-              $ref: '#/components/schemas/PersonRisks'
-            createdByUserId:
-              type: string
-              format: uuid
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
-            data:
-              $ref: '#/components/schemas/Unit'
-            document:
-              $ref: '#/components/schemas/Unit'
-            status:
-              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
-            assessmentId:
-              type: string
-              format: uuid
-            assessmentDecision:
-              $ref: '#/components/schemas/AssessmentDecision'
-            assessmentDecisionDate:
-              type: string
-              format: date
-            submittedAt:
-              type: string
-              format: date-time
-            personStatusOnSubmission:
-              $ref: '#/components/schemas/PersonStatus'
-            apArea:
-              $ref: '#/components/schemas/ApArea'
-            cruManagementArea:
-              $ref: '#/components/schemas/Cas1CruManagementArea'
-            applicantUserDetails:
-              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
-            caseManagerIsNotApplicant:
-              description: "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details"
-              type: boolean
-            caseManagerUserDetails:
-              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
-            licenceExpiryDate:
-              type: string
-              format: date
-          required:
-            - id
-            - person
-            - createdAt
-            - createdByUserId
-            - schemaVersion
-            - outdatedSchema
-            - status
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        isWomensApplication:
+          type: boolean
+        isPipeApplication:
+          deprecated: true
+          description: Use apType
+          type: boolean
+        isEmergencyApplication:
+          type: boolean
+        isEsapApplication:
+          deprecated: true
+          description: Use apType
+          type: boolean
+        apType:
+          $ref: '#/components/schemas/ApType'
+        arrivalDate:
+          type: string
+          format: date-time
+        risks:
+          $ref: '#/components/schemas/PersonRisks'
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Unit'
+        document:
+          $ref: '#/components/schemas/Unit'
+        status:
+          $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
+        assessmentId:
+          type: string
+          format: uuid
+        assessmentDecision:
+          $ref: '#/components/schemas/AssessmentDecision'
+        assessmentDecisionDate:
+          type: string
+          format: date
+        submittedAt:
+          type: string
+          format: date-time
+        personStatusOnSubmission:
+          $ref: '#/components/schemas/PersonStatus'
+        apArea:
+          $ref: '#/components/schemas/ApArea'
+        cruManagementArea:
+          $ref: '#/components/schemas/Cas1CruManagementArea'
+        applicantUserDetails:
+          $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+        caseManagerIsNotApplicant:
+          description: "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details"
+          type: boolean
+        caseManagerUserDetails:
+          $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+        licenceExpiryDate:
+          type: string
+          format: date
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
     Cas1UpdateAssessment:
       type: object
       properties:
@@ -8663,6 +8688,7 @@ components:
       required:
         - reason
     Cas1OASysMetadata:
+      type: object
       properties:
         assessmentMetadata:
           $ref: '#/components/schemas/Cas1OASysAssessmentMetadata'

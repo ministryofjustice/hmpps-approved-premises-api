@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -30,7 +30,7 @@ import kotlin.random.Random
 
 class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
-  private lateinit var applicationService: ApplicationService
+  private lateinit var cas1ApplicationService: Cas1ApplicationService
 
   private lateinit var crn1: String
   private lateinit var crn2: String
@@ -209,7 +209,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(
+      val (result, metadata) = cas1ApplicationService.getAllApprovedPremisesApplications(
         page + 1,
         null,
         null,
@@ -234,7 +234,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @Test
   fun `findAllApprovedPremisesSummaries filters by CRN`() {
     val expectedApplications = allApplications.filter { it.crn == crn1 }
-    val result = applicationService.getAllApprovedPremisesApplications(
+    val result = cas1ApplicationService.getAllApprovedPremisesApplications(
       1,
       crn1,
       null,
@@ -252,7 +252,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @Test
   fun `findAllApprovedPremisesSummaries filters by name`() {
     val expectedApplications = allApplications.filter { it.name == name }
-    val result = applicationService.getAllApprovedPremisesApplications(
+    val result = cas1ApplicationService.getAllApprovedPremisesApplications(
       1,
       name,
       null,
@@ -272,7 +272,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   fun `findAllApprovedPremisesSummaries filters by status`(status: ApprovedPremisesApplicationStatus) {
     val expectedApplications = allApplications.filter { it.status == status }
 
-    val result = applicationService.getAllApprovedPremisesApplications(
+    val result = cas1ApplicationService.getAllApprovedPremisesApplications(
       1,
       null,
       null,
@@ -298,7 +298,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val expectedApplications = allApplications.filter { statuses.contains(it.status) }
     assertThat(expectedApplications).hasSizeGreaterThan(2)
 
-    val result = applicationService.getAllApprovedPremisesApplications(
+    val result = cas1ApplicationService.getAllApprovedPremisesApplications(
       1,
       null,
       null,
@@ -317,7 +317,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   fun `findAllApprovedPremisesSummaries filters by AP Area`() {
     val expectedApplications = allApplications.filter { it.apArea?.id == apArea.id }
 
-    val result = applicationService.getAllApprovedPremisesApplications(
+    val result = cas1ApplicationService.getAllApprovedPremisesApplications(
       1,
       null,
       null,
@@ -337,7 +337,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   fun `findAllApprovedPremisesSummaries filters by release type`(releaseType: ReleaseTypeOption) {
     val expectedApplications = allApplications.filter { it.releaseType == releaseType.name }
 
-    val result = applicationService.getAllApprovedPremisesApplications(
+    val result = cas1ApplicationService.getAllApprovedPremisesApplications(
       1,
       null,
       null,
@@ -355,7 +355,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @Test
   fun `findAllApprovedPremisesSummaries handles pagination`() {
     allApplications.forEachIndexed { index, application ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(
+      val (result, metadata) = cas1ApplicationService.getAllApprovedPremisesApplications(
         index + 1,
         null,
         null,
@@ -384,7 +384,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(
+      val (result, metadata) = cas1ApplicationService.getAllApprovedPremisesApplications(
         page + 1,
         null,
         SortDirection.asc,
@@ -413,7 +413,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(
+      val (result, metadata) = cas1ApplicationService.getAllApprovedPremisesApplications(
         page + 1,
         null,
         SortDirection.desc,

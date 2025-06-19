@@ -110,6 +110,7 @@ class Cas1PremisesController(
   override fun getPremisesSummaries(
     gender: Cas1ApprovedPremisesGender?,
     apAreaId: UUID?,
+    cruManagementAreaId: UUID?,
   ): ResponseEntity<List<Cas1PremisesBasicSummary>> = ResponseEntity
     .ok()
     .body(
@@ -120,6 +121,7 @@ class Cas1PremisesController(
           null -> null
         },
         apAreaId,
+        cruManagementAreaId,
       ).map {
         cas1PremisesTransformer.toPremiseBasicSummary(it)
       },

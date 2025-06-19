@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -30,6 +31,7 @@ fun IntegrationTestBase.givenAnApprovedPremises(
   characteristics: List<CharacteristicEntity> = emptyList(),
   gender: ApprovedPremisesGender = ApprovedPremisesGender.MAN,
   id: UUID = UUID.randomUUID(),
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
 ): ApprovedPremisesEntity = approvedPremisesEntityFactory
   .produceAndPersist {
     withId(id)
@@ -47,5 +49,5 @@ fun IntegrationTestBase.givenAnApprovedPremises(
     withLongitude(longitude)
     withCharacteristics(characteristics.toMutableList())
     withGender(gender)
-    withCruManagementArea(givenACas1CruManagementArea())
+    withCruManagementArea(cruManagementArea ?: givenACas1CruManagementArea())
   }
