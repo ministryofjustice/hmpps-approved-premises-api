@@ -215,7 +215,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts an arrival to a specified booking
+      summary: Posts an arrival to a specified booking for CAS3
       operationId: premisesPremisesIdBookingsBookingIdArrivalsPost
       parameters:
         - name: premisesId
@@ -359,7 +359,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts a departure to a specified booking
+      summary: Posts a departure to a specified booking for CAS3
       operationId: premisesPremisesIdBookingsBookingIdDeparturesPost
       parameters:
         - name: premisesId

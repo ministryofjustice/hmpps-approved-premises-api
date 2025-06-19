@@ -1867,6 +1867,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -1929,6 +1930,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -1953,7 +1955,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Arrival updates arrival and departure date for a Temporary Accommodation booking`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { userEntity.probationRegion }
@@ -1980,6 +1982,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -2012,11 +2015,8 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Arrival and departure date for a Temporary Accommodation booking and emit arrival domain event for new arrival`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { userEntity.probationRegion }
-        }
+      givenAnOffender { offenderDetails, _ ->
+        val premises = givenATemporaryAccommodationPremises(region = userEntity.probationRegion)
 
         val bed = bedEntityFactory.produceAndPersist {
           withYieldedRoom {
@@ -2039,6 +2039,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -2078,7 +2079,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Arrival updates arrival for a Temporary Accommodation booking with existing arrival and updated domain event send`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { userEntity.probationRegion }
@@ -2107,6 +2108,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -2250,12 +2252,7 @@ class BookingTest : IntegrationTestBase() {
         givenAnOffender { offenderDetails, inmateDetails ->
           val booking = bookingEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
-            withYieldedPremises {
-              temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withYieldedProbationRegion { userEntity.probationRegion }
-              }
-            }
+            withPremises(givenATemporaryAccommodationPremises(region = userEntity.probationRegion))
             withServiceName(ServiceName.temporaryAccommodation)
             withArrivalDate(LocalDate.parse("2022-08-10"))
             withDepartureDate(LocalDate.parse("2022-08-30"))
@@ -2272,6 +2269,7 @@ class BookingTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("$baseUrl/${booking.premises.id}/bookings/${booking.id}/departures")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .bodyValue(
               NewDeparture(
                 dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
@@ -2336,6 +2334,7 @@ class BookingTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .bodyValue(
               NewDeparture(
                 dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
@@ -3082,6 +3081,7 @@ class BookingTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .bodyValue(
               NewExtension(
                 newDepartureDate = LocalDate.parse("2022-07-16"),
@@ -3152,6 +3152,7 @@ class BookingTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .bodyValue(
               NewExtension(
                 newDepartureDate = LocalDate.parse("2022-07-13"),
@@ -3213,6 +3214,7 @@ class BookingTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .bodyValue(
               NewExtension(
                 newDepartureDate = LocalDate.parse("2022-07-16"),
@@ -3282,6 +3284,7 @@ class BookingTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("/premises/${premises.id}/bookings/${booking.id}/extensions")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .bodyValue(
               NewExtension(
                 newDepartureDate = LocalDate.parse("2022-07-13"),
@@ -3409,7 +3412,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER"])
     fun `CAS1 Date Change with correct role returns 200, persists date change and raises domain event`(role: UserRole) {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -3478,66 +3481,6 @@ class BookingTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_WORKFLOW_MANAGER"])
-  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles FUTURE_MANAGER, WORKFLOW_MANAGER`(
-    role: UserRole,
-  ) {
-    givenAUser(roles = listOf(role)) { userEntity, jwt ->
-      val booking = bookingEntityFactory.produceAndPersist {
-        withYieldedPremises {
-          givenAnApprovedPremises()
-        }
-        withServiceName(ServiceName.approvedPremises)
-      }
-
-      webTestClient.post()
-        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewConfirmation(
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
-        .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
-        .jsonPath("$.notes").isEqualTo(null)
-        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
-    }
-  }
-
-  @Test
-  fun `Create Confirmation on Approved Premises Booking on a premises that does not exist returns 404 Not Found`() {
-    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-      val booking = bookingEntityFactory.produceAndPersist {
-        withYieldedPremises {
-          givenAnApprovedPremises()
-        }
-        withServiceName(ServiceName.approvedPremises)
-      }
-
-      val premisesId = UUID.randomUUID()
-
-      webTestClient.post()
-        .uri("/premises/$premisesId/bookings/${booking.id}/confirmations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewConfirmation(
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isNotFound
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
-    }
-  }
-
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking returns OK with correct body`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
@@ -3556,6 +3499,7 @@ class BookingTest : IntegrationTestBase() {
       webTestClient.post()
         .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewConfirmation(
             notes = null,
@@ -3615,6 +3559,7 @@ class BookingTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewConfirmation(
               notes = null,
@@ -3776,6 +3721,7 @@ class BookingTest : IntegrationTestBase() {
     webTestClient.post()
       .uri(url)
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(requestBody)
       .exchange()
       .expectStatus()
@@ -3834,6 +3780,7 @@ class BookingTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         NewExtension(
           newDepartureDate = LocalDate.parse(newDate),
