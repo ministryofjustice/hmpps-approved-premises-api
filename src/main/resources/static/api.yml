@@ -1549,28 +1549,6 @@ paths:
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
 
-  /applications/{applicationId}/assessment:
-    get:
-      tags:
-        - Operations on applications
-      summary: Get the assessment for an application
-      operationId: applicationsApplicationIdAssessmentGet
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Assessment'
-
   /applications/{applicationId}/withdrawablesWithNotes:
     get:
       tags:
