@@ -95,7 +95,7 @@ class Cas1PremisesService(
     return Cas1PremiseOverbookingCalculator().calculate(overbookedDays)
   }
 
-  fun getPremises(gender: ApprovedPremisesGender?, apAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId)
+  fun getPremises(gender: ApprovedPremisesGender?, apAreaId: UUID?, cruManagementAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId, cruManagementAreaId)
 
   fun findPremiseById(id: UUID) = premisesRepository.findByIdOrNull(id)
 

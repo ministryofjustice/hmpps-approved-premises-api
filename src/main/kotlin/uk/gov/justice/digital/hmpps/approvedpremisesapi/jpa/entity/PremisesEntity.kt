@@ -110,14 +110,16 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
           LEFT JOIN r.beds b on (b.endDate IS NULL OR b.endDate > CURRENT_DATE) 
           LEFT JOIN p.probationRegion region
           LEFT JOIN region.apArea apArea
+          LEFT JOIN p.cruManagementArea cruManagementArea
         WHERE 
           status != 'archived' AND 
           (:gender IS NULL OR p.gender = :gender)
           AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId) 
+          AND(cast(:cruManagementAreaId as text) IS NULL OR cruManagementArea.id = :cruManagementAreaId)
           GROUP BY p.id, p.name, p.apCode, apArea.id, apArea.name, p.fullAddress, p.addressLine1, p.addressLine2, p.town, p.postcode
       """,
   )
-  fun findForSummaries(gender: ApprovedPremisesGender?, apAreaId: UUID?): List<ApprovedPremisesBasicSummary>
+  fun findForSummaries(gender: ApprovedPremisesGender?, apAreaId: UUID?, cruManagementAreaId: UUID?): List<ApprovedPremisesBasicSummary>
 
   fun findByQCode(qcode: String): ApprovedPremisesEntity?
 }

@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -44,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -213,6 +215,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var premises1ManInArea1: ApprovedPremisesEntity
     lateinit var premises2WomanInArea2: ApprovedPremisesEntity
     lateinit var premises3ManInArea2: ApprovedPremisesEntity
+    lateinit var cruManagementArea: Cas1CruManagementAreaEntity
 
     lateinit var apArea1: ApAreaEntity
     lateinit var apArea2: ApAreaEntity
@@ -221,6 +224,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
     fun setupTestData() {
       apArea1 = givenAnApArea(name = "the ap area name 1")
       apArea2 = givenAnApArea(name = "the ap area name 2")
+
+      cruManagementArea = givenACas1CruManagementArea()
 
       val region1 = givenAProbationRegion(
         apArea = apArea1,
@@ -249,6 +254,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         gender = ApprovedPremisesGender.MAN,
         region = region2,
         supportsSpaceBookings = true,
+        cruManagementArea = cruManagementArea,
       )
 
       givenAnApprovedPremises(
@@ -401,6 +407,27 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       val summaries = webTestClient.get()
         .uri("/cas1/premises/summary?gender=man&apAreaId=${apArea2.id}&")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1PremisesBasicSummary>()
+
+      assertThat(summaries).hasSize(1)
+
+      assertThat(summaries[0].id).isEqualTo(premises3ManInArea2.id)
+      assertThat(summaries[0].name).isEqualTo("the premises name 3")
+      assertThat(summaries[0].apCode).isEqualTo(premises3ManInArea2.apCode)
+      assertThat(summaries[0].apArea.name).isEqualTo("the ap area name 2")
+      assertThat(summaries[0].bedCount).isEqualTo(0)
+    }
+
+    @Test
+    fun `filter by cruManagementId`() {
+      val (_, jwt) = givenAUser()
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/summary?cruManagementAreaId=${cruManagementArea.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
