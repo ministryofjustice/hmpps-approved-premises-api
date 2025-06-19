@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA
@@ -100,6 +102,22 @@ class UserAccessServiceTest {
 
   val temporaryAccommodationPremisesNotInUserRegion = TemporaryAccommodationPremisesEntityFactory()
     .withProbationRegion(anotherProbationRegion)
+    .withLocalAuthorityArea(
+      LocalAuthorityEntityFactory()
+        .produce(),
+    )
+    .produce()
+
+  val cas3PremisesInUserRegion = Cas3PremisesEntityFactory()
+    .withProbationDeliveryUnit(ProbationDeliveryUnitEntityFactory().withProbationRegion(probationRegion).produce())
+    .withLocalAuthorityArea(
+      LocalAuthorityEntityFactory()
+        .produce(),
+    )
+    .produce()
+
+  val cas3PremisesNotInUserRegion = Cas3PremisesEntityFactory()
+    .withProbationDeliveryUnit(ProbationDeliveryUnitEntityFactory().withProbationRegion(anotherProbationRegion).produce())
     .withLocalAuthorityArea(
       LocalAuthorityEntityFactory()
         .produce(),
@@ -487,6 +505,52 @@ class UserAccessServiceTest {
         userAccessService.userCanManagePremisesBookings(
           user,
           temporaryAccommodationPremisesNotInUserRegion,
+        ),
+      ).isFalse
+    }
+
+    @Test
+    fun `userCanManagePremisesBookings returns true if the given cas3Premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+      assertThat(
+        userAccessService.userCanManagePremisesBookings(
+          user,
+          cas3PremisesInUserRegion,
+        ),
+      ).isTrue
+    }
+
+    @Test
+    fun `userCanManagePremisesBookings returns false if the given cas3Premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+
+      assertThat(
+        userAccessService.userCanManagePremisesBookings(
+          user,
+          cas3PremisesNotInUserRegion,
+        ),
+      ).isFalse
+    }
+
+    @Test
+    fun `userCanManagePremisesBookings returns false if the given casPremises is a CAS3 premises and the user does not have a suitable role`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+      assertThat(
+        userAccessService.userCanManagePremisesBookings(
+          user,
+          cas3PremisesInUserRegion,
+        ),
+      ).isFalse
+      assertThat(
+        userAccessService.userCanManagePremisesBookings(
+          user,
+          cas3PremisesNotInUserRegion,
         ),
       ).isFalse
     }

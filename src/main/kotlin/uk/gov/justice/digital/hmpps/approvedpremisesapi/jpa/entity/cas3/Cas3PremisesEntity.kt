@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
@@ -23,7 +24,7 @@ import java.util.UUID
 @Entity
 @Table(name = "cas3_premises")
 @Inheritance(strategy = InheritanceType.JOINED)
-class Cas3PremisesEntity(
+data class Cas3PremisesEntity(
   @Id
   val id: UUID,
   var name: String,
@@ -36,18 +37,21 @@ class Cas3PremisesEntity(
   var status: PropertyStatus,
   var notes: String,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
 
-  @OneToMany(mappedBy = "premises")
+  @OneToMany(mappedBy = "premises", fetch = FetchType.LAZY)
   var bedspaces: MutableList<Cas3BedspacesEntity>,
 
-  @ManyToMany
+  @OneToMany(mappedBy = "premises", fetch = FetchType.LAZY)
+  var bookings: MutableList<Cas3BookingEntity>,
+
+  @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
     name = "cas3_premises_characteristic_assignments",
     joinColumns = [JoinColumn(name = "premises_id")],

@@ -115,7 +115,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BedspaceEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ConfirmationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3DepartureEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ExtensionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3NonArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
@@ -208,7 +216,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
@@ -241,7 +257,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationJsonSchemaTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3ArrivalTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedspaceTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BookingTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3ConfirmationTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3DepartureTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3ExtensionTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3TurnaroundTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3VoidBedspaceCancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3VoidBedspaceReasonTestRepository
@@ -338,6 +361,27 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var bookingRepository: BookingTestRepository
+
+  @Autowired
+  lateinit var cas3ArrivalTestRepository: Cas3ArrivalTestRepository
+
+  @Autowired
+  lateinit var cas3BedspaceTestRepository: Cas3BedspaceTestRepository
+
+  @Autowired
+  lateinit var cas3BookingRepository: Cas3BookingTestRepository
+
+  @Autowired
+  lateinit var cas3CancellationTestRepository: Cas3CancellationTestRepository
+
+  @Autowired
+  lateinit var cas3DepartureTestRepository: Cas3DepartureTestRepository
+
+  @Autowired
+  lateinit var cas3ExtensionTestRepository: Cas3ExtensionTestRepository
+
+  @Autowired
+  lateinit var cas3NonArrivalTestRepository: Cas3NonArrivalTestRepository
 
   @Autowired
   lateinit var bedMoveRepository: BedMoveRepository
@@ -585,6 +629,14 @@ abstract class IntegrationTestBase {
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
   lateinit var approvedPremisesEntityFactory: PersistedFactory<ApprovedPremisesEntity, UUID, ApprovedPremisesEntityFactory>
   lateinit var temporaryAccommodationPremisesEntityFactory: PersistedFactory<TemporaryAccommodationPremisesEntity, UUID, TemporaryAccommodationPremisesEntityFactory>
+  lateinit var cas3ArrivalEntityFactory: PersistedFactory<Cas3ArrivalEntity, UUID, Cas3ArrivalEntityFactory>
+  lateinit var cas3BedspaceEntityFactory: PersistedFactory<Cas3BedspacesEntity, UUID, Cas3BedspaceEntityFactory>
+  lateinit var cas3BookingEntityFactory: PersistedFactory<Cas3BookingEntity, UUID, Cas3BookingEntityFactory>
+  lateinit var cas3CancellationEntityFactory: PersistedFactory<Cas3CancellationEntity, UUID, Cas3CancellationEntityFactory>
+  lateinit var cas3DepartureEntityFactory: PersistedFactory<Cas3DepartureEntity, UUID, Cas3DepartureEntityFactory>
+  lateinit var cas3ExtensionEntityFactory: PersistedFactory<Cas3ExtensionEntity, UUID, Cas3ExtensionEntityFactory>
+  lateinit var cas3NonArrivalEntityFactory: PersistedFactory<Cas3NonArrivalEntity, UUID, Cas3NonArrivalEntityFactory>
+  lateinit var cas3PremisesEntityFactory: PersistedFactory<Cas3PremisesEntity, UUID, Cas3PremisesEntityFactory>
   lateinit var bookingEntityFactory: PersistedFactory<BookingEntity, UUID, BookingEntityFactory>
   lateinit var arrivalEntityFactory: PersistedFactory<ArrivalEntity, UUID, ArrivalEntityFactory>
   lateinit var cas3ConfirmationEntityFactory: PersistedFactory<Cas3ConfirmationEntity, UUID, Cas3ConfirmationEntityFactory>
@@ -700,6 +752,14 @@ abstract class IntegrationTestBase {
     localAuthorityEntityFactory = PersistedFactory({ LocalAuthorityEntityFactory() }, localAuthorityAreaRepository)
     approvedPremisesEntityFactory = PersistedFactory({ ApprovedPremisesEntityFactory() }, approvedPremisesRepository)
     temporaryAccommodationPremisesEntityFactory = PersistedFactory({ TemporaryAccommodationPremisesEntityFactory() }, temporaryAccommodationPremisesRepository)
+    cas3ArrivalEntityFactory = PersistedFactory({ Cas3ArrivalEntityFactory() }, cas3ArrivalTestRepository)
+    cas3BedspaceEntityFactory = PersistedFactory({ Cas3BedspaceEntityFactory() }, cas3BedspaceTestRepository)
+    cas3BookingEntityFactory = PersistedFactory({ Cas3BookingEntityFactory() }, cas3BookingRepository)
+    cas3CancellationEntityFactory = PersistedFactory({ Cas3CancellationEntityFactory() }, cas3CancellationTestRepository)
+    cas3DepartureEntityFactory = PersistedFactory({ Cas3DepartureEntityFactory() }, cas3DepartureTestRepository)
+    cas3ExtensionEntityFactory = PersistedFactory({ Cas3ExtensionEntityFactory() }, cas3ExtensionTestRepository)
+    cas3NonArrivalEntityFactory = PersistedFactory({ Cas3NonArrivalEntityFactory() }, cas3NonArrivalTestRepository)
+    cas3PremisesEntityFactory = PersistedFactory({ Cas3PremisesEntityFactory() }, cas3PremisesRepository)
     bookingEntityFactory = PersistedFactory({ BookingEntityFactory() }, bookingRepository)
     arrivalEntityFactory = PersistedFactory({ ArrivalEntityFactory() }, arrivalRepository)
     cas3ConfirmationEntityFactory = PersistedFactory({ Cas3ConfirmationEntityFactory() }, confirmationRepository)
