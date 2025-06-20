@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 
@@ -65,6 +66,13 @@ class Cas3VoidBedspaceEntity(
   @ManyToOne
   @JoinColumn(name = "bed_id")
   var bed: BedEntity,
+
+  @ManyToOne
+  @JoinColumn(name = "bedspace_id")
+  var bedspace: Cas3BedspacesEntity?,
+  var cancellationDate: OffsetDateTime?,
+  var cancellationNotes: String?,
+
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

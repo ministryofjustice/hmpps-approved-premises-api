@@ -443,6 +443,9 @@ class Cas3PremisesService(
         referenceNumber = referenceNumber,
         notes = notes,
         cancellation = null,
+        cancellationDate = null,
+        cancellationNotes = null,
+        bedspace = null,
       ),
     )
 
