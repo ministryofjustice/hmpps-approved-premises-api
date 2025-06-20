@@ -313,7 +313,7 @@ class WithdrawalTest : IntegrationTestBase() {
     @Test
     fun `Returns all possible types when a user can manage bookings, with space booking arrivals in CAS1 blocking bookings`() {
       givenAUser { applicant, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
           givenAUser { requestForPlacementAssessor, _ ->
             givenAnOffender { offenderDetails, _ ->
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
@@ -423,7 +423,7 @@ class WithdrawalTest : IntegrationTestBase() {
     @Test
     fun `Returns all possible types when a user can manage bookings, with space booking non arrivals blocking bookings`() {
       givenAUser { applicant, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
           givenAUser { requestForPlacementAssessor, _ ->
             givenAnOffender { offenderDetails, _ ->
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
@@ -627,7 +627,7 @@ class WithdrawalTest : IntegrationTestBase() {
     @Test
     fun `Returns all possible types when a user can manage bookings, with booking arrivals in CAS1 and Delius blocking bookings`() {
       givenAUser { applicant, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
           givenAUser { requestForPlacementAssessor, _ ->
             givenAnOffender { offenderDetails, _ ->
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)

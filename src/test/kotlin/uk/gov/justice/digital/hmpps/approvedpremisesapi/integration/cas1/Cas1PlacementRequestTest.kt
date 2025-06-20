@@ -1548,10 +1548,10 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
+    fun `Withdraw Placement Request without CAS1_CRU_MEMBER returns 403`() {
       givenAUser { creator, _ ->
-        givenAUser { user, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
+        givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, UserRole.CAS1_JANITOR)) { user, jwt ->
+          givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = user) {
               givenAPlacementRequest(
                 placementRequestAllocatedTo = user,
@@ -1580,7 +1580,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     @SuppressWarnings("MaxLineLength")
     @Test
     fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, raises domain event, sends email to CRU and Applicant if it represents dates included on application on submission`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
