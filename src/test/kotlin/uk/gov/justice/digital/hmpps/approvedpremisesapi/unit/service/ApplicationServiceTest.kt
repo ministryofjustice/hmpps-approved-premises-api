@@ -2116,7 +2116,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `getOfflineApplicationForUsername where where caller is not one of one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
+  fun `getOfflineApplicationForUsername where where caller is not one of one of roles CAS1_CRU_MEMBER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
@@ -2141,9 +2141,9 @@ class ApplicationServiceTest {
   @ParameterizedTest
   @EnumSource(
     value = UserRole::class,
-    names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+    names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
   )
-  fun `getOfflineApplicationForUsername where user has one of roles WORKFLOW_MANAGER, ASSESSOR, FUTURE_MANAGER but does not pass LAO check returns Unauthorised result`(
+  fun `getOfflineApplicationForUsername where user has one of roles CAS1_CRU_MEMBER, ASSESSOR, FUTURE_MANAGER but does not pass LAO check returns Unauthorised result`(
     role: UserRole,
   ) {
     val distinguishedName = "SOMEPERSON"
@@ -2178,47 +2178,45 @@ class ApplicationServiceTest {
     assertThat(result is CasResult.Unauthorised).isTrue
   }
 
-  @Test
-  fun `getOfflineApplicationForUsername where user has any of roles WORKFLOW_MANAGER, ASSESSOR, FUTURE_MANAGER and passes LAO check returns Success result with entity from db`() {
-    listOf(
-      UserRole.CAS1_CRU_MEMBER,
-      UserRole.CAS1_ASSESSOR,
-      UserRole.CAS1_FUTURE_MANAGER,
-    ).forEach { role ->
-      val distinguishedName = "SOMEPERSON"
-      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
-      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+  @ParameterizedTest
+  @EnumSource(
+    value = UserRole::class,
+    names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+  )
+  fun `getOfflineApplicationForUsername where user has permission of roles CAS1_CRU_MEMBER, ASSESSOR, FUTURE_MANAGER and passes LAO check returns Success result with entity from db`(role: UserRole) {
+    val distinguishedName = "SOMEPERSON"
+    val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      val userEntity = UserEntityFactory()
-        .withId(userId)
-        .withDeliusUsername(distinguishedName)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-        .apply {
-          roles += UserRoleAssignmentEntityFactory()
-            .withUser(this)
-            .withRole(role)
-            .produce()
-        }
+    val userEntity = UserEntityFactory()
+      .withId(userId)
+      .withDeliusUsername(distinguishedName)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(role)
+          .produce()
+      }
 
-      val applicationEntity = OfflineApplicationEntityFactory()
-        .produce()
+    val applicationEntity = OfflineApplicationEntityFactory()
+      .produce()
 
-      every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
-      every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
-      every { mockOffenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns true
+    every { mockOfflineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
+    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+    every { mockOffenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns true
 
-      val result = applicationService.getOfflineApplicationForUsername(applicationId, distinguishedName)
+    val result = applicationService.getOfflineApplicationForUsername(applicationId, distinguishedName)
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
+    assertThat(result is CasResult.Success).isTrue
+    result as CasResult.Success
 
-      assertThat(result.value).isEqualTo(applicationEntity)
-    }
+    assertThat(result.value).isEqualTo(applicationEntity)
   }
 
   @Nested
