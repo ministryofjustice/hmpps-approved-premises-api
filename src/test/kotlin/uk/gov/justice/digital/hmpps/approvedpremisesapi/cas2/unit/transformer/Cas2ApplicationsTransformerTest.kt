@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.NomisUserTransformer
@@ -45,7 +45,7 @@ class Cas2ApplicationsTransformerTest {
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
   private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
   private val mockAssessmentsTransformer = mockk<AssessmentsTransformer>()
-  private val nomisUserService = mockk<NomisUserService>()
+  private val cas2UserService = mockk<Cas2UserService>()
   private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
 
   private val objectMapper = ObjectMapper().apply {
@@ -61,7 +61,7 @@ class Cas2ApplicationsTransformerTest {
     mockStatusUpdateTransformer,
     mockTimelineEventsTransformer,
     mockAssessmentsTransformer,
-    nomisUserService,
+    cas2UserService,
     offenderManagementUnitRepository,
   )
 
@@ -151,7 +151,7 @@ class Cas2ApplicationsTransformerTest {
     fun `transformJpaToApi transforms a submitted CAS2 application correctly without status updates`() {
       val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
-      every { nomisUserService.getNomisUserById(any()) } returns nomisUserEntity
+      every { cas2UserService.getNomisUserById(any()) } returns nomisUserEntity
       val prison = OffenderManagementUnitEntityFactory().produce()
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
@@ -196,7 +196,7 @@ class Cas2ApplicationsTransformerTest {
       val prison = OffenderManagementUnitEntityFactory().produce()
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
-      every { nomisUserService.getNomisUserById(any()) } returns nomisUserEntity
+      every { cas2UserService.getNomisUserById(any()) } returns nomisUserEntity
 
       val application = submittedCas2ApplicationFactory.withAssessment(Cas2AssessmentEntityFactory().produce())
         .withReferringPrisonCode("PRI")
@@ -223,7 +223,7 @@ class Cas2ApplicationsTransformerTest {
     fun `transformJpaToApi transforms a submitted CAS2 application correctly which has been transferred`() {
       val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
-      every { nomisUserService.getNomisUserById(any()) } returns nomisUserEntity
+      every { cas2UserService.getNomisUserById(any()) } returns nomisUserEntity
       val prison = OffenderManagementUnitEntityFactory().produce()
       val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison")
         .withEmail("test@test.co.uk").produce()
