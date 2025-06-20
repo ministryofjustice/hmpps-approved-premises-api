@@ -66,6 +66,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         "Alcohol",
         "Thinking and Behavioural",
         "Attitude",
+        "Health",
       )
     }
 
@@ -313,6 +314,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToOASysQuestion(
         needsDetails = null,
         includeOptionalSections = emptyList(),
+        health = null,
       )
 
       assertThat(result).containsExactlyInAnyOrder(
@@ -374,7 +376,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = true, linkedToReoffending = null, thinkingBehaviouralIssuesDetails = "thinking behavioural answer")
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -436,7 +438,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -468,7 +470,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -508,6 +510,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToOASysQuestion(
         needsDetails,
         includeOptionalSections = listOf(3, 6, 7, 10, 11, 12),
+        health = null,
       )
 
       assertThat(result).containsExactlyInAnyOrder(
@@ -573,6 +576,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToOASysQuestion(
         needsDetails,
         includeOptionalSections = listOf(6, 7, 10, 11, 12),
+        health = null,
       )
 
       assertThat(result).containsExactlyInAnyOrder(
