@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import java.time.LocalDate
 import java.util.UUID
@@ -19,7 +19,7 @@ import java.util.UUID
 @Service
 class Cas1UpdateActualArrivalDateSeedJob(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val domainEventRepository: DomainEventRepository,
   private val objectMapper: ObjectMapper,
 ) : SeedJob<Cas1UpdateActualArrivalDateSeedJobCsvRow>(
@@ -62,7 +62,7 @@ class Cas1UpdateActualArrivalDateSeedJob(
     updateDomainEvent(spaceBooking)
 
     spaceBooking.application?.let {
-      applicationTimelineNoteService.saveApplicationTimelineNote(
+      cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(
         applicationId = it.id,
         note = "Actual arrival date for booking at '${spaceBooking.premises.name}' has been updated from $currentDate to $updatedDate by application support",
         user = null,

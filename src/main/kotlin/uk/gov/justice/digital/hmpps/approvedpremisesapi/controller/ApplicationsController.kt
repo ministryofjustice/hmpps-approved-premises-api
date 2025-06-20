@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
@@ -42,17 +41,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
@@ -61,7 +59,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.WithdrawableTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -79,18 +76,16 @@ class ApplicationsController(
   private val cas1ApplicationService: Cas1ApplicationService,
   private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
-  private val assessmentTransformer: AssessmentTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
   private val documentTransformer: DocumentTransformer,
-  private val assessmentService: AssessmentService,
   private val userService: UserService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
-  private val appealService: AppealService,
+  private val cas1AppealService: Cas1AppealService,
   private val appealTransformer: AppealTransformer,
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val documentService: DocumentService,
 ) : ApplicationsApiDelegate {
@@ -292,7 +287,7 @@ class ApplicationsController(
     body: NewApplicationTimelineNote,
   ): ResponseEntity<ApplicationTimelineNote> {
     val user = userService.getUserForRequest()
-    val savedNote = applicationTimelineNoteService.saveApplicationTimelineNote(applicationId, body.note, user)
+    val savedNote = cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(applicationId, body.note, user)
 
     return ResponseEntity.ok(applicationTimelineNoteTransformer.transformJpaToApi(savedNote))
   }
@@ -374,7 +369,7 @@ class ApplicationsController(
     val application =
       extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
 
-    val appeal = when (val getAppealResult = appealService.getAppeal(appealId, application)) {
+    val appeal = when (val getAppealResult = cas1AppealService.getAppeal(appealId, application)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(appealId, "Appeal")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> getAppealResult.entity
@@ -397,7 +392,7 @@ class ApplicationsController(
         "An appeal cannot be created when the application does not have an assessment",
       )
 
-    val createAppealResult = appealService.createAppeal(
+    val createAppealResult = cas1AppealService.createAppeal(
       appealDate = body.appealDate,
       appealDetail = body.appealDetail,
       decision = body.decision,
@@ -412,26 +407,6 @@ class ApplicationsController(
     return ResponseEntity
       .created(URI.create("/applications/${application.id}/appeals/${appeal.id}"))
       .body(appealTransformer.transformJpaToApi(appeal))
-  }
-
-  override fun applicationsApplicationIdAssessmentGet(applicationId: UUID): ResponseEntity<Assessment> {
-    val user = userService.getUserForRequest()
-
-    val assessment = when (
-      val applicationResult =
-        assessmentService.getAssessmentForUserAndApplication(
-          user,
-          applicationId,
-        )
-    ) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
-
-    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
-
-    return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
   }
 
   override fun applicationsApplicationIdWithdrawablesWithNotesGet(

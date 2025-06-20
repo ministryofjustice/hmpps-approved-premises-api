@@ -192,7 +192,7 @@ tasks.register<JavaExec>("generateCas1Roles") {
   group = "build"
   description = "Generates the built-cas1-roles.json file using Cas1RolesFileGenerator."
 
-  mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1UserRoleJsonFileGenerator")
+  mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserRoleJsonFileGenerator")
 
   classpath = sourceSets["main"].runtimeClasspath
 
@@ -291,6 +291,14 @@ registerAdditionalOpenApiGenerateTask(
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
   apiSuffix = "Cas3",
+)
+
+registerAdditionalOpenApiGenerateTask(
+  name = "openApiGenerateCas3v2Namespace",
+  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3v2-api-spec.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.v2",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
+  apiSuffix = "Cas3v2",
 )
 
 registerAdditionalOpenApiGenerateTask(
@@ -415,6 +423,11 @@ tasks.register("openApiPreCompilation") {
     inputSpec = "cas3-api.yml",
     inputSchemas = "cas3-schemas.yml",
   )
+  buildSpecWithSharedComponentsAppended(
+    outputFileName = "built-cas3v2-api-spec.yml",
+    inputSpec = "cas3v2-api.yml",
+    inputSchemas = "cas3-schemas.yml",
+  )
 }
 
 tasks.get("openApiGenerate").dependsOn(
@@ -425,6 +438,7 @@ tasks.get("openApiGenerate").dependsOn(
   "openApiGenerateCas2Namespace",
   "openApiGenerateCas2v2Namespace",
   "openApiGenerateCas3Namespace",
+  "openApiGenerateCas3v2Namespace",
 )
 
 tasks.get("openApiGenerate").doLast {

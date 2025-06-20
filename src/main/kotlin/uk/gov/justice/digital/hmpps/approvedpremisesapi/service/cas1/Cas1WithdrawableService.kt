@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -24,7 +23,7 @@ import java.util.UUID
 class Cas1WithdrawableService(
   private val applicationService: ApplicationService,
   private val placementRequestService: PlacementRequestService,
-  private val placementApplicationService: PlacementApplicationService,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val bookingService: BookingService,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1WithdrawableTreeBuilder: Cas1WithdrawableTreeBuilder,
@@ -125,7 +124,7 @@ class Cas1WithdrawableService(
     user: UserEntity,
     userProvidedReason: PlacementApplicationWithdrawalReason?,
   ): CasResult<PlacementApplicationEntity> {
-    val placementApplication = placementApplicationService.getApplicationOrNull(placementApplicationId)
+    val placementApplication = cas1PlacementApplicationService.getApplicationOrNull(placementApplicationId)
       ?: return CasResult.NotFound(entityType = "PlacementApplication", id = placementApplicationId.toString())
 
     val withdrawalContext = WithdrawalContext(
@@ -138,7 +137,7 @@ class Cas1WithdrawableService(
       cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user).rootNode,
       withdrawalContext,
     ) {
-      placementApplicationService.withdrawPlacementApplication(placementApplicationId, userProvidedReason, withdrawalContext)
+      cas1PlacementApplicationService.withdrawPlacementApplication(placementApplicationId, userProvidedReason, withdrawalContext)
     }
   }
 

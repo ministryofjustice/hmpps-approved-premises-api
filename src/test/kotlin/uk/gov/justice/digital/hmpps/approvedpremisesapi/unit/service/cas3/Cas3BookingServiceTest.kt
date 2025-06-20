@@ -253,7 +253,7 @@ class Cas3BookingServiceTest {
     @Test
     fun `findFutureBookingsForPremises returns Unauthorised if the user cannot view the bookings`() {
       every { mockCas3PremisesService.getPremises(premises.id) } returns premises
-      every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns false
+      every { mockUserAccessService.userCanManageCas3PremisesBookings(user, premises) } returns false
 
       val result = cas3BookingService.findFutureBookingsForPremises(premises.id, listOf(BookingStatus.provisional), user)
 
@@ -303,7 +303,7 @@ class Cas3BookingServiceTest {
           user.cas3LaoStrategy(),
         )
       } returns listOf(fullPersonSummaryInfo, restrictedPersonSummaryInfo)
-      every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns true
+      every { mockUserAccessService.userCanManageCas3PremisesBookings(user, premises) } returns true
       every {
         mockBookingRepository.findFutureBookingsByPremisesIdAndStatus(
           ServiceName.temporaryAccommodation.value,

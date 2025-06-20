@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 
 @Component
@@ -38,5 +40,12 @@ class Cas3BedspaceTransformer(
     endDate = bed.endDate,
     notes = bed.room.notes,
     characteristics = bed.room.characteristics.map(characteristicTransformer::transformJpaToApi),
+  )
+
+  fun transformJpaToApi(jpa: Cas3BedspacesEntity) = Bed(
+    id = jpa.id,
+    name = jpa.reference,
+    code = null,
+    bedEndDate = jpa.endDate,
   )
 }

@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -31,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -53,7 +51,7 @@ class PlacementRequestService(
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
-  private val taskDeadlineService: TaskDeadlineService,
+  private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val offenderService: OffenderService,
   private val clock: Clock,
@@ -233,7 +231,7 @@ class PlacementRequestService(
       dueAt = null,
     )
 
-    placementRequest.dueAt = taskDeadlineService.getDeadline(placementRequest)
+    placementRequest.dueAt = cas1TaskDeadlineService.getDeadline(placementRequest)
 
     val updatedPlacementRequest = placementRequestRepository.save(placementRequest)
 

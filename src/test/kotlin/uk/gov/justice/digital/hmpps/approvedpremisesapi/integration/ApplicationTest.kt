@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -66,8 +68,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -75,10 +75,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -813,41 +811,45 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-  }
 
-  @Test
-  fun `Get single offline application returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-        }
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+    )
+    fun `Get single offline application returns 200 with correct body`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+          }
 
-        apDeliusContextAddResponseToUserAccessCall(
-          listOf(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .produce(),
-          ),
-          userEntity.deliusUsername,
-        )
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${offlineApplicationEntity.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${offlineApplicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
+          val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
 
-        assertThat(responseBody).matches {
-          offlineApplicationEntity.id == it.id &&
-            offlineApplicationEntity.crn == it.person.crn &&
-            offlineApplicationEntity.createdAt.toInstant() == it.createdAt
+          assertThat(responseBody).matches {
+            offlineApplicationEntity.id == it.id &&
+              offlineApplicationEntity.crn == it.person.crn &&
+              offlineApplicationEntity.createdAt.toInstant() == it.createdAt
+          }
         }
       }
     }
@@ -1777,90 +1779,6 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(persistedApplicationSubmittedEvents).singleElement()
             assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
             assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
-          }
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class GetAssessmentForApplication {
-    @Test
-    fun `Get assessment for application returns an application's assessment when the requesting user is the allocated user`() {
-      givenAUser { applicant, _ ->
-        givenAUser { user, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            val (application, assessment) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
-
-            webTestClient.get()
-              .uri("/applications/${application.id}/assessment")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  assessmentTransformer.transformJpaToApi(
-                    assessment,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get assessment for application returns an application's assessment when the requesting user is a workflow manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { applicant, _ ->
-          givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { assignee, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
-              val (application, assessment) = produceAndPersistApplicationAndAssessment(
-                applicant,
-                assignee,
-                offenderDetails,
-              )
-
-              webTestClient.get()
-                .uri("/applications/${application.id}/assessment")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    assessmentTransformer.transformJpaToApi(
-                      assessment,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                    ),
-                  ),
-                )
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get assessment for an application returns 403 if the user does not have permission`() {
-      givenAUser { applicant, _ ->
-        givenAUser { assignee, _ ->
-          givenAUser { _, jwt ->
-            givenAnOffender { offenderDetails, _ ->
-
-              val (application, _) = produceAndPersistApplicationAndAssessment(applicant, assignee, offenderDetails)
-
-              webTestClient.get()
-                .uri("/applications/${application.id}/assessment")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isForbidden
-            }
           }
         }
       }
@@ -2885,38 +2803,5 @@ class ApplicationTest : IntegrationTestBase() {
     )
 
     return application
-  }
-
-  private fun produceAndPersistApplicationAndAssessment(
-    applicant: UserEntity,
-    assignee: UserEntity,
-    offenderDetails: OffenderDetailSummary,
-  ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(applicant)
-      withApplicationSchema(applicationSchema)
-      withSubmittedAt(OffsetDateTime.now())
-    }
-
-    val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-      withAllocatedToUser(assignee)
-      withApplication(application)
-      withAssessmentSchema(assessmentSchema)
-    }
-
-    assessment.schemaUpToDate = true
-    application.assessments.add(assessment)
-
-    return Pair(application, assessment)
   }
 }

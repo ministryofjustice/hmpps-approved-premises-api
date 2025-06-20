@@ -15,8 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -272,23 +270,6 @@ class Cas3PremisesSearch : Cas3IntegrationTestBase() {
     )
 
     return Pair(allPremises.sortedBy { it.id }, premisesSearchResults)
-  }
-
-  private fun getListPremisesByStatus(
-    probationRegion: ProbationRegionEntity,
-    probationDeliveryUnit: ProbationDeliveryUnitEntity,
-    localAuthorityArea: LocalAuthorityAreaEntity,
-    numberOfPremises: Int,
-    propertyStatus: PropertyStatus,
-  ): List<TemporaryAccommodationPremisesEntity> {
-    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
-      withProbationRegion(probationRegion)
-      withProbationDeliveryUnit(probationDeliveryUnit)
-      withLocalAuthorityArea(localAuthorityArea)
-      withStatus(propertyStatus)
-    }
-
-    return premises
   }
 
   private fun createBedspacesAndBedspacesSearchResult(premises: TemporaryAccommodationPremisesEntity, status: Cas3BedspaceStatus, withoutEndDate: Boolean = false): List<Cas3BedspacePremisesSearchResult> {

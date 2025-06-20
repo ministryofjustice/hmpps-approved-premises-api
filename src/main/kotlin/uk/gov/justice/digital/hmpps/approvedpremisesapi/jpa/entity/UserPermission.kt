@@ -29,6 +29,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList),
   CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView),
 
+  CAS1_OFFLINE_APPLICATION_VIEW(ApprovedPremisesUserPermission.offlineApplicationView),
+
   CAS1_OUT_OF_SERVICE_BED_CREATE(ApprovedPremisesUserPermission.outOfServiceBedCreate),
   CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD(ApprovedPremisesUserPermission.outOfServiceBedCreateBedOnHold),
   CAS1_OUT_OF_SERVICE_BED_CANCEL(ApprovedPremisesUserPermission.outOfServiceBedCancel),
@@ -54,6 +56,10 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_VIEW_CRU_DASHBOARD(ApprovedPremisesUserPermission.viewCruDashboard),
   CAS1_VIEW_MANAGE_TASKS(ApprovedPremisesUserPermission.viewManageTasks),
   CAS1_VIEW_OUT_OF_SERVICE_BEDS(ApprovedPremisesUserPermission.viewOutOfServiceBeds),
+
+  /**
+   * Also allows for space booking modification
+   */
   CAS1_SPACE_BOOKING_CREATE(ApprovedPremisesUserPermission.spaceBookingCreate),
   CAS1_SPACE_BOOKING_LIST(ApprovedPremisesUserPermission.spaceBookingList),
   CAS1_SPACE_BOOKING_RECORD_ARRIVAL(ApprovedPremisesUserPermission.spaceBookingRecordArrival),

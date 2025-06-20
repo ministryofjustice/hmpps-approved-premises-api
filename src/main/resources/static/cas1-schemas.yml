@@ -1518,7 +1518,7 @@ components:
           type: boolean
         arrivalDate:
           type: string
-          format: date-time
+          format: date
         risks:
           $ref: '_shared.yml#/components/schemas/PersonRisks'
         createdByUserId:

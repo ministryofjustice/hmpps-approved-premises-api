@@ -105,7 +105,7 @@ paths:
     get:
       tags:
         - Operations on premises
-      summary: Returns all bookings for an approved premises
+      summary: Returns all bookings for CAS3
       operationId: premisesPremisesIdBookingsGet
       parameters:
         - name: premisesId
@@ -133,7 +133,7 @@ paths:
     post:
       tags:
         - Operations on premises
-      summary: Adds a new booking for an approved premises
+      summary: Adds a new booking for CAS3
       operationId: premisesPremisesIdBookingsPost
       parameters:
         - name: premisesId
@@ -213,7 +213,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts an arrival to a specified booking
+      summary: Posts an arrival to a specified booking for CAS3
       operationId: premisesPremisesIdBookingsBookingIdArrivalsPost
       parameters:
         - name: premisesId
@@ -357,7 +357,7 @@ paths:
     post:
       tags:
         - Operations on bookings
-      summary: Posts a departure to a specified booking
+      summary: Posts a departure to a specified booking for CAS3
       operationId: premisesPremisesIdBookingsBookingIdDeparturesPost
       parameters:
         - name: premisesId
@@ -828,35 +828,6 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/PersonAcctAlert'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
-  /people/{crn}/oasys/selection:
-    get:
-      deprecated: true
-      tags:
-        - OASys
-      summary: Returns the importable sections of OASys including details of links to harm and reoffending. This is only used by CAS1, which should use /cas1/people/CRN/oasys/supporting-information-metadata instead.
-      operationId: peopleCrnOasysSelectionGet
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch latest OASys selection
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/OASysSection'
         404:
           description: invalid CRN
           content:
@@ -1548,28 +1519,6 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-
-  /applications/{applicationId}/assessment:
-    get:
-      tags:
-        - Operations on applications
-      summary: Get the assessment for an application
-      operationId: applicationsApplicationIdAssessmentGet
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Assessment'
 
   /applications/{applicationId}/withdrawablesWithNotes:
     get:

@@ -168,11 +168,13 @@ class BookingTransformerTest {
     .withOffenderNo("NOMS321")
     .produce()
 
+  private val nullConfirmationEntity: Cas3ConfirmationEntity? = null
+
   init {
     every { mockArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockNonArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockCancellationTransformer.transformJpaToApi(null) } returns null
-    every { mockCas3ConfirmationTransformer.transformJpaToApi(null) } returns null
+    every { mockCas3ConfirmationTransformer.transformJpaToApi(nullConfirmationEntity) } returns null
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
 
     every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(

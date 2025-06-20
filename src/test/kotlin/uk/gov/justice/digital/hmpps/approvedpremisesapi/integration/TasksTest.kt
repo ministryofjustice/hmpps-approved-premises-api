@@ -56,7 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserWorkload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
@@ -107,8 +107,8 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER"])
-      fun `Get all tasks returns 200 when have CAS1_WORKFLOW_MANAGER or CAS1_CRU_MEMBER roles`(role: UserRole) {
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"])
+      fun `Get all tasks returns 200 when have CAS1_CRU_MEMBER roles`(role: UserRole) {
         givenAUser(roles = listOf(role)) { _, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
@@ -151,7 +151,7 @@ class TasksTest {
 
       @Test
       fun `Get all tasks returns 200 when no type retains original sort order`() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
 
@@ -240,7 +240,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -397,7 +397,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -520,7 +520,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -643,7 +643,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -759,7 +759,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -929,7 +929,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -1085,7 +1085,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails1, _ ->
               givenAnOffender { offenderDetails2, _ ->
@@ -1253,7 +1253,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -1394,7 +1394,7 @@ class TasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -1966,7 +1966,7 @@ class TasksTest {
 
     @Test
     fun `Unknown task type for an application returns 404`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAnAssessmentForApprovedPremises(
             allocatedToUser = user,
@@ -1987,7 +1987,7 @@ class TasksTest {
     @Test
     fun `Assessment Task UserWithWorkload only returns users with ASSESSOR role`() {
       val (creator, _) = givenAUser()
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
       val (assessor, _) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
       )
@@ -2042,7 +2042,7 @@ class TasksTest {
 
     @Test
     fun `Placement Application Task returns 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2089,7 +2089,7 @@ class TasksTest {
 
     @Test
     fun `Placement Application Task UserWithWorkload only returns users with ASSESSOR roles`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
 
         val (assessorUser1, _) = givenAUser(
           roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2143,7 +2143,7 @@ class TasksTest {
 
     @Test
     fun `Assessment Task UserWithWorkload for an appealed application oly returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { user, _ ->
@@ -2207,7 +2207,7 @@ class TasksTest {
 
     @Test
     fun `Assessment Task UserWithWorkload for an appealed application returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { janitor, _ ->
@@ -2301,7 +2301,7 @@ class TasksTest {
 
     @Test
     fun `Placement Application Task UserWithWorkload ignoring inactive users`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2472,7 +2472,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Reallocate application to different assessor without WORKFLOW_MANAGER role returns 403`() {
+    fun `Reallocate application to different assessor without CAS1_CRU_MEMBER role returns 403`() {
       givenAUser { _, jwt ->
         webTestClient.post()
           .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
@@ -2491,7 +2491,7 @@ class TasksTest {
 
     @Test
     fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one, sends emails`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { currentlyAllocatedUser, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2546,7 +2546,7 @@ class TasksTest {
 
     @Test
     fun `Reallocate assessment to different assessor returns an error if the assessment has already been allocated`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2585,7 +2585,7 @@ class TasksTest {
 
     @Test
     fun `Reallocating a placement application to different assessor returns 201, creates new placement application, deallocates old one`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2704,7 +2704,7 @@ class TasksTest {
 
     @Test
     fun `Deallocate Approved Premises assessment returns 403 Forbidden`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAUser { _, _ ->
             givenAnAssessmentForApprovedPremises(

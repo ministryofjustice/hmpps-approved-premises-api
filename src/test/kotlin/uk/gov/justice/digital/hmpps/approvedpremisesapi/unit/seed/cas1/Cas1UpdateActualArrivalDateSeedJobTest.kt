@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateActualArrivalDateSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateActualArrivalDateSeedJobCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -30,7 +30,7 @@ class Cas1UpdateActualArrivalDateSeedJobTest {
   private lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   @MockK
-  private lateinit var applicationTimelineNoteService: ApplicationTimelineNoteService
+  private lateinit var cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService
 
   @MockK
   private lateinit var domainEventService: DomainEventRepository

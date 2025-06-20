@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
@@ -45,7 +45,7 @@ import java.util.UUID
 class Cas1WithdrawableServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val placementRequestService = mockk<PlacementRequestService>()
-  private val placementApplicationService = mockk<PlacementApplicationService>()
+  private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
   private val bookingService = mockk<BookingService>()
   private val cas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
   private val cas1WithdrawableTreeBuilder = mockk<Cas1WithdrawableTreeBuilder>()
@@ -54,7 +54,7 @@ class Cas1WithdrawableServiceTest {
   private val cas1WithdrawableService = Cas1WithdrawableService(
     applicationService,
     placementRequestService,
-    placementApplicationService,
+    cas1PlacementApplicationService,
     bookingService,
     cas1SpaceBookingService,
     cas1WithdrawableTreeBuilder,
@@ -556,7 +556,7 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun success() {
-      every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
+      every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(
         WithdrawableTreeNode(
@@ -570,7 +570,7 @@ class Cas1WithdrawableServiceTest {
       every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
       every {
-        placementApplicationService.withdrawPlacementApplication(any(), any(), any())
+        cas1PlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
       } returns CasResult.Success(placementApplication)
 
       val context = WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.PlacementApplication, placementApplication.id)
@@ -584,7 +584,7 @@ class Cas1WithdrawableServiceTest {
       assertThat(result is CasResult.Success)
 
       verify {
-        placementApplicationService.withdrawPlacementApplication(
+        cas1PlacementApplicationService.withdrawPlacementApplication(
           placementApplication.id,
           withdrawalReason,
           context,
@@ -598,7 +598,7 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if user may not directly withdraw()`() {
-      every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
+      every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(
         WithdrawableTreeNode(
@@ -618,7 +618,7 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if not withdrawable()`() {
-      every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
+      every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(
         WithdrawableTreeNode(
@@ -639,7 +639,7 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if blocked()`() {
-      every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
+      every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(
         WithdrawableTreeNode(
