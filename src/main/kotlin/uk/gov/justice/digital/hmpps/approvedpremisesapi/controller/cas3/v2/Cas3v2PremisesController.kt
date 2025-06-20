@@ -5,7 +5,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.v2.PremisesCas3v2Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -26,7 +26,7 @@ class Cas3v2PremisesController(
   private val bookingTransformer: Cas3BookingTransformer,
 ) : PremisesCas3v2Delegate {
 
-  override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Booking>> = runBlocking {
+  override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Cas3Booking>> = runBlocking {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
