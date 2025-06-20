@@ -278,7 +278,7 @@ class Cas1SimpleApiClient {
     placementRequestId: UUID,
     body: WithdrawPlacementRequest,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/placement-requests/$placementRequestId/withdrawal")
