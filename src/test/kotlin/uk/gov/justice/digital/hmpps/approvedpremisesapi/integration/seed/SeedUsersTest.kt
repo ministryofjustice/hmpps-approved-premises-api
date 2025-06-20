@@ -377,7 +377,7 @@ class SeedUsersTest : SeedTestBase() {
               description = randomStringMultiCaseWithNumbers(10),
             ),
           ),
-          roles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR),
+          roles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_ASSESSOR),
           qualifications = listOf(UserQualification.EMERGENCY, UserQualification.LAO),
         ),
         SeedInfo(
