@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -36,7 +36,6 @@ class UsersController(
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
   ) = getUsers(
-    xServiceName,
     roles,
     qualifications,
     probationRegionId,
@@ -59,7 +58,6 @@ class UsersController(
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
   ) = getUsers(
-    xServiceName,
     roles,
     qualifications,
     probationRegionId,
@@ -72,7 +70,6 @@ class UsersController(
   }
 
   private fun <T> getUsers(
-    xServiceName: ServiceName,
     roles: List<ApprovedPremisesUserRole>?,
     qualifications: List<UserQualification>?,
     probationRegionId: UUID?,
@@ -83,9 +80,7 @@ class UsersController(
     cruManagementAreaId: UUID? = null,
     resultTransformer: (UserEntity) -> T,
   ): ResponseEntity<List<T>> {
-    if (!userAccessService.currentUserCanListUsers(xServiceName)) {
-      throw ForbiddenProblem()
-    }
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     val (users, metadata) = userService.getUsers(
       qualifications?.map(::transformApiQualification),
@@ -106,9 +101,7 @@ class UsersController(
   }
 
   override fun usersSearchGet(name: String, xServiceName: ServiceName): ResponseEntity<List<User>> {
-    if (!userAccessService.currentUserCanListUsers(xServiceName)) {
-      throw ForbiddenProblem()
-    }
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     return ResponseEntity.ok(
       userService.getUsersByPartialName(name)
@@ -117,9 +110,7 @@ class UsersController(
   }
 
   override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
-    if (!userAccessService.currentUserCanListUsers(xServiceName)) {
-      throw ForbiddenProblem()
-    }
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     val getUserResponse = userService.getExistingUserOrCreate(name)
     return when (getUserResponse) {

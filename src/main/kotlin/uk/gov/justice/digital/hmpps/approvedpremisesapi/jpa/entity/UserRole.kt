@@ -67,7 +67,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_BOOKING_WITHDRAW,
       UserPermission.CAS1_PREMISES_VIEW,
       UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-      UserPermission.CAS1_USER_LIST,
       UserPermission.CAS1_VIEW_CRU_DASHBOARD,
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
     ),
