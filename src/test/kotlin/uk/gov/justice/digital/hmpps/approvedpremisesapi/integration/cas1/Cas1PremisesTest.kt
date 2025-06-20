@@ -1098,7 +1098,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, mode = EnumSource.Mode.EXCLUDE, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA" ])
+    @EnumSource(value = UserRole::class, mode = EnumSource.Mode.EXCLUDE, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA" ])
     fun `Role without CAS1_VIEW_PREMISES is denied`(role: UserRole) {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
