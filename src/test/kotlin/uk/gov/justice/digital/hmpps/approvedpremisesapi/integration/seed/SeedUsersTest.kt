@@ -211,7 +211,7 @@ class SeedUsersTest : SeedTestBase() {
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
               .withDeliusUsername("known-user")
-              .withRoles(listOf("WORKFLOW_MANAGEF"))
+              .withRoles(listOf("NOT_A_ROLE"))
               .withQualifications(listOf("PIPE"))
               .withRemoveExistingRowsAndQualifications(true)
               .produce(),
@@ -224,7 +224,7 @@ class SeedUsersTest : SeedTestBase() {
           it.message == "Unable to complete Seed Job" &&
           it.throwable != null &&
           it.throwable.message != null &&
-          it.throwable.message!!.contains("Unable to deserialize CSV at row: 1: Unrecognised User Role(s): [WORKFLOW_MANAGEF]")
+          it.throwable.message!!.contains("Unable to deserialize CSV at row: 1: Unrecognised User Role(s): [NOT_A_ROLE]")
       }
     }
 

@@ -60,12 +60,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_WORKFLOW_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.workflowManager,
-    listOf(
-      UserPermission.CAS1_ADHOC_BOOKING_CREATE,
-      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
-      UserPermission.CAS1_BOOKING_CHANGE_DATES,
-      UserPermission.CAS1_PREMISES_VIEW,
-    ),
+    emptyList(),
   ),
 
   CAS1_CRU_MEMBER(
