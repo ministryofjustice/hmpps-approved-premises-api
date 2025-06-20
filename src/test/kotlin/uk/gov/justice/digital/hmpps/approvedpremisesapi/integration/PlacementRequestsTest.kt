@@ -103,7 +103,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
     fun `Get dashboard without CAS1_VIEW_CRU_DASHBOARD permission returns 401`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -1576,15 +1576,15 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @EnumSource(
       value = UserRole::class,
       mode = EnumSource.Mode.INCLUDE,
-      names = ["CAS1_CRU_MEMBER", "CAS1_WORKFLOW_MANAGER", "CAS1_JANITOR"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR"],
     )
-    fun `Create a Booking from a PR allocated to other user and current user has the 'CAS1_BOOKING_CREATE' permission returns a 200`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+    fun `Create a Booking from a PR allocated to other user and current user has the 'CAS1_BOOKING_CREATE' permission returns a 200`(userRole: UserRole) {
+      givenAUser(roles = listOf(userRole)) { _, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {
               givenAPlacementRequest(
-                placementRequestAllocatedTo = user,
+                placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
