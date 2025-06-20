@@ -117,7 +117,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
     fun `Get dashboard without CAS1_VIEW_CRU_DASHBOARD permission returns 401`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -131,7 +131,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `should return 1 placement request when there are 0 active bookings`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
@@ -184,7 +184,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `should return 1 placement request when it has an active booking`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
@@ -239,7 +239,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `should return 1 placement request when it has an active space booking`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
@@ -298,7 +298,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `should return a placement request with the earliest space booking`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
@@ -364,7 +364,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `If status filter is not defined, returns the unmatched placement requests and withdrawn placement requests`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
@@ -402,8 +402,8 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `If status filter is 'notMatched', returns the unmatched placement requests, ignoring withdrawn`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, _ ->
           val (unmatchedPlacementRequest) = givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
@@ -431,8 +431,8 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `If status filter is 'matched', returns the matched placement requests, ignoring withdrawn`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { matchedOffender, matchedInmate ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAnOffender { matchedOffender, _ ->
 
           // withdrawn placement request with booking, ignored
           givenAPlacementRequest(
@@ -514,8 +514,8 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `If status filter is 'unableToMatch', returns the unable to match placement requests, ignoring withdrawn and those subsequently matched`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { unableToMatchOffender, unableToMatchInmate ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAnOffender { unableToMatchOffender, _ ->
 
           // withdrawn, ignore
           givenAPlacementRequest(
@@ -605,7 +605,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `Returns paginated placement requests`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val placementRequest = createPlacementRequest(offenderDetails, user)
 
@@ -636,7 +636,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by name via crnOrName when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender(
           offenderDetailsConfigBlock = {
             withFirstName("JOHN")
@@ -671,7 +671,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by crn via crnOrName when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { otherOffenderDetails, _ ->
           givenAnOffender { offenderDetails, inmateDetails ->
             val placementRequest = createPlacementRequest(offenderDetails, user)
@@ -701,7 +701,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by arrivalDateStart where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
           val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
@@ -734,7 +734,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by arrivalDateEnd where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val placementRequest1stJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
           val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
@@ -767,7 +767,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by tier where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
           val placementRequestA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
@@ -796,7 +796,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by CRU Management Area ID where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
 
           val cruArea1 = givenACas1CruManagementArea()
@@ -829,7 +829,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by requestType where type is standardRelease`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, isParole = true)
           val standardRelease = createPlacementRequest(offenderDetails, user, isParole = false)
@@ -857,7 +857,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by requestType where type is parole`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, isParole = false)
           val parole = createPlacementRequest(offenderDetails, user, isParole = true)
@@ -885,7 +885,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches using multiple criteria including CRU management area id where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offender1Details, inmate1Details ->
           givenAnOffender { offender2Details, _ ->
 
@@ -928,7 +928,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by duration when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val placementRequestWithOneDayDuration = createPlacementRequest(offenderDetails, user, duration = 1)
           val placementRequestWithFiveDayDuration = createPlacementRequest(offenderDetails, user, duration = 5)
@@ -961,7 +961,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by expectedArrival when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val placementRequestWithExpectedArrivalOfToday = createPlacementRequest(offenderDetails, user)
           val placementRequestWithExpectedArrivalInTwelveDays =
@@ -996,7 +996,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by requestType when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val placementRequest1WithStatusParole = createPlacementRequest(offenderDetails, user, isParole = true)
           val placementRequest2WithStatusStandard = createPlacementRequest(offenderDetails, user, isParole = false)
@@ -1026,7 +1026,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by personName when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
 
         val (offenderJohnSmithDetails, _) = givenAnOffender(
           offenderDetailsConfigBlock = {
@@ -1079,7 +1079,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by personRisksTier when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val placementRequest1TierB1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.b1)
           val placementRequest2TierA0 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
@@ -1112,7 +1112,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by createdAt when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val placementRequestCreatedToday = createPlacementRequest(offenderDetails, user)
           val placementRequestCreatedFiveDaysAgo =
@@ -1147,7 +1147,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by applicationSubmittedAt when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val placementRequestWithApplicationCreatedToday = createPlacementRequest(offenderDetails, user)
           val placementRequestWithApplicationCreatedTwelveDaysAgo =
