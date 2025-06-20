@@ -189,10 +189,12 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   fun hasPermission(permission: UserPermission) = permissions.contains(permission)
 
   companion object {
-    fun getAllRolesForService(service: ServiceName) = UserRole.values().filter { it.service == service }
+    fun getAllRolesForService(service: ServiceName) = entries.filter { it.service == service }
 
     fun valueOf(apiValue: ApprovedPremisesUserRole) = UserRole.entries.first { it.cas1ApiValue == apiValue }
 
-    fun getAllRolesForPermission(permission: UserPermission) = UserRole.values().filter { it.permissions.contains(permission) }
+    fun getAllRolesForPermission(permission: UserPermission) = entries.filter { it.permissions.contains(permission) }
+
+    fun getAllRolesExcept(vararg rolesToExclude: UserRole) = UserRole.entries.filter { !rolesToExclude.contains(it) }
   }
 }
