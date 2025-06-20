@@ -55,7 +55,7 @@ class Cas1SimpleApiClient {
     id: UUID,
     body: NewWithdrawal,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/applications/$id/withdrawal")

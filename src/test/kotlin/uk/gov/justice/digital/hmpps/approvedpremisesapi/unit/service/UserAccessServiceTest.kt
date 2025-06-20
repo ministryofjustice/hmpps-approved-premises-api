@@ -495,7 +495,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayCancelBooking returns true if the given premises is a CAS1 premises and the user has either the WORKFLOW_MANAGER, CRU_MEMBER or JANITOR user role`(
+    fun `userMayCancelBooking returns true if the given premises is a CAS1 premises and the user has either the CAS1_CRU_MEMBER, CRU_MEMBER or JANITOR user role`(
       role: UserRole,
     ) {
       currentRequestIsFor(ServiceName.approvedPremises)
@@ -503,7 +503,6 @@ class UserAccessServiceTest {
       user.addRoleForUnitTest(role)
 
       val canCancelBooking = listOf(
-        CAS1_WORKFLOW_MANAGER,
         CAS1_CRU_MEMBER,
         CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
         CAS1_JANITOR,
