@@ -737,7 +737,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     placementType: PlacementType,
     placementDates: List<PlacementDates>,
   ) {
-    val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     cas1SimpleApiClient.placementApplicationCreate(
       this,

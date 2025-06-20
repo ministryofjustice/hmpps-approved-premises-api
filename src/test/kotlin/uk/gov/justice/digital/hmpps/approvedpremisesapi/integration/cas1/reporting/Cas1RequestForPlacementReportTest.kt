@@ -716,7 +716,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     paroleDecisionDate: LocalDate,
     submittedAt: LocalDateTime,
   ) {
-    val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     clock.setNow(submittedAt)
 

@@ -333,7 +333,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `addAssessmentClarificationNote adds note to assessment allocated to different user for workflow managers`() {
+    fun `addAssessmentClarificationNote adds note to assessment allocated to different user`() {
       val user = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -341,13 +341,6 @@ class Cas1AssessmentServiceTest {
             .produce()
         }
         .produce()
-
-      user.roles.add(
-        UserRoleAssignmentEntityFactory()
-          .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-          .withUser(user)
-          .produce(),
-      )
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withApplication(

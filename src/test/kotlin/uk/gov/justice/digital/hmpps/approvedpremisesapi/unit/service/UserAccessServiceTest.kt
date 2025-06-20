@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -495,7 +494,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayCancelBooking returns true if the given premises is a CAS1 premises and the user has either the WORKFLOW_MANAGER, CRU_MEMBER or JANITOR user role`(
+    fun `userMayCancelBooking returns true if the given premises is a CAS1 premises and the user has either the CAS1_CRU_MEMBER, CRU_MEMBER or JANITOR user role`(
       role: UserRole,
     ) {
       currentRequestIsFor(ServiceName.approvedPremises)
@@ -503,7 +502,6 @@ class UserAccessServiceTest {
       user.addRoleForUnitTest(role)
 
       val canCancelBooking = listOf(
-        CAS1_WORKFLOW_MANAGER,
         CAS1_CRU_MEMBER,
         CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
         CAS1_JANITOR,
@@ -836,7 +834,7 @@ class UserAccessServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_REPORT_VIEWER"], mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = UserRole::class, names = ["CAS1_REPORT_VIEWER"], mode = EnumSource.Mode.EXCLUDE)
   fun `currentUserCanViewReport returns returns false if the current request has 'X-Service-Name' header with value 'approved-premises' and the user does not have the correct role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
 
@@ -862,10 +860,10 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS1_WORKFLOW_MANAGER role`() {
+  fun `userCanReallocateTask returns true if the current request has 'X-Service-Name' header with value 'approved-premises' and the user has the CAS1_CRU_MANAGER role`() {
     currentRequestIsFor(ServiceName.approvedPremises)
 
-    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
+    user.addRoleForUnitTest(CAS1_CRU_MEMBER)
 
     assertThat(userAccessService.userCanReallocateTask(user)).isTrue
   }
@@ -960,7 +958,7 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewAssessment returns true for an Approved Premises assessment if the user has the CAS1_WORKFLOW_MANAGER role`() {
+  fun `userCanViewAssessment always returns true for an Approved Premises assessment`() {
     currentRequestIsFor(ServiceName.approvedPremises)
 
     val application = ApprovedPremisesApplicationEntityFactory()
@@ -971,8 +969,6 @@ class UserAccessServiceTest {
       .withApplication(application)
       .withAllocatedToUser(anotherUserNotInRegion)
       .produce()
-
-    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
 
     assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
   }
@@ -1048,7 +1044,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawApplication returns true if submitted and has WORKFLOW_MANAGER, CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawApplication returns true if submitted and has CRU_MEMBER or JANITOR role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -1062,21 +1058,21 @@ class UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelApplication = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
+      val canCancelApplication = listOf(CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
 
       assertThat(userAccessService.userMayWithdrawApplication(otherUser, application)).isEqualTo(canCancelApplication)
     }
 
     @Test
-    fun `userMayWithdrawApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
-      val workflowManager = UserEntityFactory()
+    fun `userMayWithdrawApplication returns false if not submitted and has CAS1_CRU_MEMBER role`() {
+      val cruMember = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()
 
-      workflowManager.roles.add(
+      cruMember.roles.add(
         UserRoleAssignmentEntityFactory()
           .withUser(user)
-          .withRole(CAS1_WORKFLOW_MANAGER)
+          .withRole(CAS1_CRU_MEMBER)
           .produce(),
       )
 
@@ -1084,7 +1080,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      assertThat(userAccessService.userMayWithdrawApplication(workflowManager, application)).isFalse()
+      assertThat(userAccessService.userMayWithdrawApplication(cruMember, application)).isFalse()
     }
 
     @Test
@@ -1133,7 +1129,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userMayWithdrawPlacementRequest returns false if application was not created by user and doesn't have CAS1_WORKFLOW_MANAGER role`() {
+    fun `userMayWithdrawPlacementRequest returns false if application was not created by user and doesn't have CAS1_CRU_MEMBER role`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(anotherUserInRegion)
         .produce()
@@ -1159,7 +1155,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementRequest returns true if user has WORKFLOW_MANAGER, CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawPlacementRequest returns true if user has CAS1_CRU_MEMBER or JANITOR role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -1188,7 +1184,7 @@ class UserAccessServiceTest {
         )
         .produce()
 
-      val canWithdrawPlacementRequest = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
+      val canWithdrawPlacementRequest = listOf(CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
 
       assertThat(userAccessService.userMayWithdrawPlacementRequest(otherUser, placementRequest)).isEqualTo(canWithdrawPlacementRequest)
     }
@@ -1227,7 +1223,7 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementApplication returns true if submitted and has WORKFLOW_MANAGER, CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawPlacementApplication returns true if submitted and has CRU_MEMBER or JANITOR role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -1247,21 +1243,21 @@ class UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelPlacementApp = listOf(CAS1_WORKFLOW_MANAGER, CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
+      val canCancelPlacementApp = listOf(CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR).contains(role)
 
       assertThat(userAccessService.userMayWithdrawPlacementApplication(otherUser, placementApplication)).isEqualTo(canCancelPlacementApp)
     }
 
     @Test
-    fun `userMayWithdrawPlacementApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
-      val workflowManager = UserEntityFactory()
+    fun `userMayWithdrawPlacementApplication returns false if not submitted and has CAS1_CRU_MEMBER role`() {
+      val cruMember = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()
 
-      workflowManager.roles.add(
+      cruMember.roles.add(
         UserRoleAssignmentEntityFactory()
           .withUser(user)
-          .withRole(CAS1_WORKFLOW_MANAGER)
+          .withRole(CAS1_CRU_MEMBER)
           .produce(),
       )
 

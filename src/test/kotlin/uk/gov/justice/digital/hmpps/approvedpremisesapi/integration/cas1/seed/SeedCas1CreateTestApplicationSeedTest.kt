@@ -21,7 +21,7 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
 
   @Test
   fun `Create test application`() {
-    val (user) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_WORKFLOW_MANAGER))
+    val (user) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_CRU_MEMBER))
     val (offender) = givenAnOffender()
 
     val crn = offender.otherIds.crn

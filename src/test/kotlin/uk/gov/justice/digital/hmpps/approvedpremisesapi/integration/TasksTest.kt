@@ -95,7 +95,7 @@ class TasksTest {
       }
 
       @Test
-      fun `Get all tasks without workflow manager, matcher or assessor permissions returns 403`() {
+      fun `Get all tasks without cru member, matcher or assessor permissions returns 403`() {
         givenAUser { _, jwt ->
           webTestClient.get()
             .uri("/tasks")

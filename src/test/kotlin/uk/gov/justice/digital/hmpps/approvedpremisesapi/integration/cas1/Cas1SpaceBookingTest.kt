@@ -2174,7 +2174,7 @@ class Cas1SpaceBookingTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Cancellation with invalid role returns 401`(role: UserRole) {
