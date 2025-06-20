@@ -1465,11 +1465,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Create a Booking from a PR allocated to another user without 'CAS1_BOOKING_CREATE' permission returns a 403`() {
-      givenAUser(
-        roles = UserRole.entries.filter {
-          it != UserRole.CAS1_CRU_MEMBER && it != UserRole.CAS1_WORKFLOW_MANAGER && it != UserRole.CAS1_JANITOR
-        },
-      ) { _, jwt ->
+      givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_JANITOR)) { _, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {
