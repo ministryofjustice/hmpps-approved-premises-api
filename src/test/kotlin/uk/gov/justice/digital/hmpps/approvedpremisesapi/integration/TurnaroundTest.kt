@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -18,6 +19,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/premises/${UUID.randomUUID()}/bookings/${UUID.randomUUID()}/turnarounds")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewTurnaround(
             workingDays = 2,
@@ -44,6 +46,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${UUID.randomUUID()}/turnarounds")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewTurnaround(
             workingDays = 2,
@@ -83,6 +86,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewTurnaround(
             workingDays = -1,
@@ -125,6 +129,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/premises/$premisesId/bookings/${booking.id}/turnarounds")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewTurnaround(
             workingDays = -1,
@@ -175,6 +180,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewTurnaround(
             workingDays = 2,
@@ -230,6 +236,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewTurnaround(
             workingDays = 2,
@@ -273,6 +280,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
       webTestClient.post()
         .uri("/premises/${premises.id}/bookings/${booking.id}/turnarounds")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
           NewTurnaround(
             workingDays = 2,

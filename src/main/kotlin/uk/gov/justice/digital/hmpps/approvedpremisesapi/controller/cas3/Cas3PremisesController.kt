@@ -130,7 +130,7 @@ class Cas3PremisesController(
 
     val user = userService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 

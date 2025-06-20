@@ -308,7 +308,7 @@ class PremisesController(
 
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, premises)) {
       throw ForbiddenProblem()
     }
 
@@ -360,7 +360,7 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, premises)) {
       throw ForbiddenProblem()
     }
 
@@ -415,11 +415,13 @@ class PremisesController(
     bookingId: UUID,
     body: NewArrival,
   ): ResponseEntity<Arrival> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -513,10 +515,12 @@ class PremisesController(
     bookingId: UUID,
     body: NewConfirmation,
   ): ResponseEntity<Confirmation> {
+    requestContextService.ensureCas3Request()
+
     val user = usersService.getUserForRequest()
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -548,11 +552,13 @@ class PremisesController(
     bookingId: UUID,
     body: NewDeparture,
   ): ResponseEntity<Departure> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanManageCas3PremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -581,11 +587,13 @@ class PremisesController(
     bookingId: UUID,
     body: NewExtension,
   ): ResponseEntity<Extension> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     when (booking.premises) {
       is TemporaryAccommodationPremisesEntity -> {
-        if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+        if (!userAccessService.currentUserCanManageCas3PremisesBookings(booking.premises)) {
           throw ForbiddenProblem()
         }
 
@@ -613,7 +621,7 @@ class PremisesController(
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
     val user = usersService.getUserForRequest()
 
-    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+    if (!userAccessService.currentUserCanChangeBookingDate(booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -852,11 +860,13 @@ class PremisesController(
     bookingId: UUID,
     body: NewTurnaround,
   ): ResponseEntity<Turnaround> {
+    requestContextService.ensureCas3Request()
+
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
     when (booking.premises) {
       is TemporaryAccommodationPremisesEntity -> {
-        if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+        if (!userAccessService.currentUserCanManageCas3PremisesBookings(booking.premises)) {
           throw ForbiddenProblem()
         }
 
