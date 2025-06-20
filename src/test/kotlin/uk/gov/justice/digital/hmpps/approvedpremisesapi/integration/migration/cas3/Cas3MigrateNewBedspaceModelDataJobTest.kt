@@ -62,18 +62,18 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
 
   @Test
   fun `should migrate all data required to new cas3 bedspace model tables`() {
-    migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData, 1)
     val migratedPremises = assertExpectedNumberOfPremisesWereMigrated()
     assertThatAllCas3PremisesDataAndCas3BedspacesDataWasMigratedSuccessfully(migratedPremises)
   }
 
   @Test
   fun `running the migration job twice does not create duplicate rows`() {
-    migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData, 1)
     var migratedPremises = assertExpectedNumberOfPremisesWereMigrated()
     assertThatAllCas3PremisesDataAndCas3BedspacesDataWasMigratedSuccessfully(migratedPremises)
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData, 1)
     migratedPremises = assertExpectedNumberOfPremisesWereMigrated()
     assertThatAllCas3PremisesDataAndCas3BedspacesDataWasMigratedSuccessfully(migratedPremises)
   }

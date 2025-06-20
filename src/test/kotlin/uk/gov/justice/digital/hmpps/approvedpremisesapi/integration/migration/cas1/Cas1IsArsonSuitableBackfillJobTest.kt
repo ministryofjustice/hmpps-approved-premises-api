@@ -70,7 +70,7 @@ class Cas1IsArsonSuitableBackfillJobTest : IntegrationTestBase() {
       essentialCharacteristics = listOf(characteristicArsonOffences, characteristicArsonDesignated, characteristicArsonSuitable),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillArsonSuitable, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1BackfillArsonSuitable, 1)
 
     val noCriteriaUpdated = placementRequirementsRepository.findById(noCriteria.id).get()
     assertThat(noCriteriaUpdated.desirableCriteria).isEmpty()

@@ -56,7 +56,7 @@ class Cas1UpdateApplicationLicenceExpiryDateJobTest : IntegrationTestBase() {
       }
     }.take(10).toList()
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1ApplicationsLicenceExpiryDate, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1ApplicationsLicenceExpiryDate, 1)
 
     applications.forEach {
       val application = updateLicenceExpiryDateRepository.findByIdOrNull(it.id)!! as ApprovedPremisesApplicationEntity

@@ -36,7 +36,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
     apDeliusContextAddStaffDetailResponse(staffUserDetail2)
 
     val startTime = System.currentTimeMillis()
-    migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateAllUsersFromCommunityApi, 1)
     val endTime = System.currentTimeMillis()
 
     assertThat(endTime - startTime).isGreaterThan(50 * 2)
@@ -70,7 +70,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
 
     apDeliusContextAddStaffDetailResponse(staffUserDetail)
 
-    migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi)
+    migrationJobService.runMigrationJob(MigrationJobType.updateAllUsersFromCommunityApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!

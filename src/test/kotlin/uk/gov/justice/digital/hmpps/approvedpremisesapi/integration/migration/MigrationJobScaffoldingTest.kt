@@ -14,7 +14,7 @@ class MigrationJobScaffoldingTest : SeedTestBase() {
       .uri("/migration-job")
       .bodyValue(
         MigrationJobRequest(
-          jobType = MigrationJobType.allUsersFromCommunityApi,
+          jobType = MigrationJobType.updateAllUsersFromCommunityApi,
         ),
       )
       .exchange()

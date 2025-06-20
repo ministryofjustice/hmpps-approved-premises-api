@@ -67,7 +67,7 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
     val existingOffenders = cas1OffenderRepository.findAll()
     assertThat(existingOffenders.size).isEqualTo(0)
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1ApplicationsWithOffender, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1ApplicationsWithOffender, 1)
 
     val newOffenders = cas1OffenderRepository.findAll()
     assertThat(newOffenders.size).isEqualTo(1)
@@ -126,7 +126,7 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
     assertThat(existingOffenders.size).isEqualTo(1)
     assertThat(existingOffenders.first().name).isEqualTo("name")
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1ApplicationsWithOffender, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1ApplicationsWithOffender, 1)
 
     val offendersAfterMigration = cas1OffenderRepository.findAll()
     assertThat(offendersAfterMigration.size).isEqualTo(1)
@@ -176,7 +176,7 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
     val existingOffenders = cas1OffenderRepository.findAll()
     assertThat(existingOffenders.size).isEqualTo(0)
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1ApplicationsWithOffender, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1ApplicationsWithOffender, 1)
 
     val offendersAfterMigration = cas1OffenderRepository.findAll()
     assertThat(offendersAfterMigration.size).isEqualTo(1)

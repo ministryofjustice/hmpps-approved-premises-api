@@ -58,7 +58,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
       apDeliusContextAddListCaseSummaryToBulkResponse(cases)
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3ApplicationOffenderName, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3ApplicationOffenderName, 10)
 
       temporaryAccommodationApplications.forEach {
         val application = applicationRepository.findTemporaryAccommodationApplicationById(it.id)!!
@@ -108,7 +108,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
       apDeliusContextAddListCaseSummaryToBulkResponse(cases)
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3ApplicationOffenderName, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3ApplicationOffenderName, 10)
 
       temporaryAccommodationApplications.forEach {
         val application = applicationRepository.findTemporaryAccommodationApplicationById(it.id)!!
@@ -147,7 +147,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
       apDeliusContextEmptyCaseSummaryToBulkResponse(offenderDetails.otherIds.crn)
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3ApplicationOffenderName, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3ApplicationOffenderName, 10)
 
       Assertions.assertThat(logEntries)
         .withFailMessage("-> logEntries actually contains: $logEntries")
