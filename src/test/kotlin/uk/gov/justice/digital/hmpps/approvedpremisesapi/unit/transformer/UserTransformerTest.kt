@@ -19,10 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userManagement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.cruMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.reportViewer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.approvedPremises
@@ -39,8 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_USER_MANAGER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -156,7 +155,7 @@ class UserTransformerTest {
       user.addRoleForUnitTest(CAS1_CRU_MEMBER)
       user.addRoleForUnitTest(CAS1_CRU_MEMBER)
       user.addRoleForUnitTest(CAS1_CRU_MEMBER)
-      user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
+      user.addRoleForUnitTest(CAS1_REPORT_VIEWER)
       user.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
@@ -166,8 +165,8 @@ class UserTransformerTest {
 
       assertThat(result.roles).isEqualTo(
         listOf(
-          ApprovedPremisesUserRole.cruMember,
-          workflowManager,
+          cruMember,
+          reportViewer,
           appealsManager,
         ),
       )
@@ -295,7 +294,7 @@ class UserTransformerTest {
       user.addRoleForUnitTest(CAS1_CRU_MEMBER)
       user.addRoleForUnitTest(CAS1_CRU_MEMBER)
       user.addRoleForUnitTest(CAS1_CRU_MEMBER)
-      user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
+      user.addRoleForUnitTest(CAS1_REPORT_VIEWER)
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
 
@@ -309,8 +308,8 @@ class UserTransformerTest {
 
       assertThat(result.roles).isEqualTo(
         listOf(
-          ApprovedPremisesUserRole.cruMember,
-          workflowManager,
+          cruMember,
+          reportViewer,
         ),
       )
     }

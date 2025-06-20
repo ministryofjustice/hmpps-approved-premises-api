@@ -16,7 +16,7 @@ class ReallocationAtomicTest : IntegrationTestBase() {
 
   @Test
   fun `Database exception after setting reallocated on original Assessment results in that change being rolled back`() {
-    givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { requestUser, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
       givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { otherUser, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { assigneeUser, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
