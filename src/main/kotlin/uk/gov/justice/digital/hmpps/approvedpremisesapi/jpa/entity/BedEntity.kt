@@ -10,6 +10,8 @@ import jakarta.persistence.NamedNativeQuery
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -54,6 +56,18 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllCas1BedSummariesForPremises(premisesId: UUID): List<Cas1PremisesBedSummary>
+
+  @Query(
+    """
+        SELECT b.*
+        FROM beds b
+        INNER JOIN rooms r ON b.room_id = r.id
+        INNER JOIN premises p ON r.premises_id = p.id
+        WHERE p.service = :service
+    """,
+    nativeQuery = true,
+  )
+  fun findAllByService(service: String, pageable: Pageable): Slice<BedEntity>
 
   @Modifying
   @Query("UPDATE BedEntity b SET b.code = :code WHERE b.id = :id")
