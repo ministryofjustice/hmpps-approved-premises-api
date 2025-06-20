@@ -844,7 +844,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .isOk
             .bodyAsListOfObjects<Cas1ApplicationSummary>()
 
-          val sortedDates = createdApplications.map { it.createdAt.toString() }.sorted()
+          val sortedDates = createdApplications.map { it.createdAt.toInstant() }.sorted()
 
           assertThat(responseBody.count()).isEqualTo(12)
 
