@@ -132,7 +132,7 @@ class Cas1SimpleApiClient {
     assessmentId: UUID,
     targetUserId: UUID,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/tasks/assessment/$assessmentId/allocations")
@@ -244,7 +244,7 @@ class Cas1SimpleApiClient {
     placementApplicationId: UUID,
     body: NewReallocation,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/tasks/placement-application/$placementApplicationId/allocations")
