@@ -38,17 +38,7 @@ interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEnt
 
   fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
-  fun findByUserId(userId: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
-  fun findByUserIdAndSubmittedAtIsNotNull(userId: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
-  fun findByUserIdAndSubmittedAtIsNull(userId: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
   fun findByPrisonCode(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
-  fun findByPrisonCodeAndSubmittedAtIsNotNull(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
-  fun findByPrisonCodeAndSubmittedAtIsNull(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 
   fun findBySubmittedAtIsNotNull(pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 }

@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -320,127 +319,6 @@ class Cas2ApplicationServiceTest {
 
         )
       }
-    }
-  }
-
-  @Nested
-  inner class GetApplicationsWithPrisonCode {
-    val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
-    val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
-    val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
-    val user = NomisUserEntityFactory().produce()
-    val prisonCode = "BRI"
-
-    fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
-      every { page.content } returns listOf(applicationSummary)
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      val (applicationSummaries, _) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
-
-      assertThat(applicationSummaries).isEqualTo(listOf(applicationSummary))
-    }
-
-    @Test
-    fun `return all applications when prisonCode is specified and isSubmitted is null`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-
-      every {
-        mockApplicationSummaryRepository.findByPrisonCode(
-          prisonCode,
-          getPageableOrAllPages(pageCriteria),
-        )
-      } returns page
-
-      testPrisonCodeWithIsSubmitted(null)
-    }
-
-    @Test
-    fun `return submitted prison applications when prisonCode is specified and isSubmitted is true`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-
-      every {
-        mockApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(
-          prisonCode,
-          getPageableOrAllPages(pageCriteria),
-        )
-      } returns page
-
-      testPrisonCodeWithIsSubmitted(true)
-    }
-
-    @Test
-    fun `return unsubmitted prison applications when prisonCode is specified and isSubmitted is false`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-
-      every {
-        mockApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(
-          prisonCode,
-          getPageableOrAllPages(pageCriteria),
-        )
-      } returns page
-
-      testPrisonCodeWithIsSubmitted(false)
-    }
-  }
-
-  @Nested
-  inner class GetApplicationsWithoutPrisonCode {
-    val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
-    val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
-    val pageCriteria = PageCriteria(sortBy = "createdAt", sortDirection = SortDirection.asc, page = 3)
-    val user = NomisUserEntityFactory().withId(UUID.fromString(applicationSummary.getCreatedById())).produce()
-
-    fun testNullPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
-      every { page.content } returns listOf(applicationSummary)
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      val (applicationSummaries, _) = applicationService.getApplications(null, isSubmitted, user, pageCriteria)
-
-      assertThat(applicationSummaries).isEqualTo(listOf(applicationSummary))
-    }
-
-    @Test
-    fun `return submitted prison applications when prisonCode is null and isSubmitted is null`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-
-      every {
-        mockApplicationSummaryRepository.findByUserId(
-          applicationSummary.getCreatedById(),
-          getPageableOrAllPages(pageCriteria),
-        )
-      } returns page
-
-      testNullPrisonCodeWithIsSubmitted(null)
-    }
-
-    @Test
-    fun `return submitted prison applications when prisonCode is null and isSubmitted is true`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-
-      every {
-        mockApplicationSummaryRepository.findByUserIdAndSubmittedAtIsNotNull(
-          applicationSummary.getCreatedById(),
-          getPageableOrAllPages(pageCriteria),
-        )
-      } returns page
-
-      testNullPrisonCodeWithIsSubmitted(true)
-    }
-
-    @Test
-    fun `return unsubmitted prison applications when prisonCode is null and isSubmitted is false`() {
-      PaginationConfig(defaultPageSize = 10).postInit()
-
-      every {
-        mockApplicationSummaryRepository.findByUserIdAndSubmittedAtIsNull(
-          applicationSummary.getCreatedById(),
-          getPageableOrAllPages(pageCriteria),
-        )
-      } returns page
-
-      testNullPrisonCodeWithIsSubmitted(false)
     }
   }
 
