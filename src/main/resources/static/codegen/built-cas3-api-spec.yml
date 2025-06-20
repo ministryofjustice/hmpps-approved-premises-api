@@ -5210,11 +5210,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Characteristic'
+        bedspaceCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3BedspaceCharacteristic'
       required:
         - id
         - reference
         - status
-        - characteristics
     Cas3Premises:
       type: object
       properties:
@@ -5600,3 +5603,295 @@ components:
           format: date-time
       required:
         - hasApplicableAssessment
+    Cas3Booking:
+      allOf:
+        - $ref: '#/components/schemas/Cas3BookingBody'
+        - type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/Cas3BookingStatus'
+            extensions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas3Extension'
+            arrival:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Cas3Arrival'
+            departure:
+              description: The latest version of the departure, if it exists
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Cas3Departure'
+            departures:
+              description: The full history of the departure
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas3Departure'
+            nonArrival:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Cas3NonArrival'
+            cancellation:
+              description: The latest version of the cancellation, if it exists
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Cas3Cancellation'
+            cancellations:
+              description: The full history of the cancellation
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas3Cancellation'
+            confirmation:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Cas3Confirmation'
+            turnaround:
+              description: The latest version of the turnaround, if it exists
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/Cas3Turnaround'
+            turnarounds:
+              description: The full history of turnarounds
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas3Turnaround'
+            turnaroundStartDate:
+              type: string
+              format: date
+            effectiveEndDate:
+              type: string
+              format: date
+            applicationId:
+              type: string
+              format: uuid
+            assessmentId:
+              type: string
+              format: uuid
+            premises:
+              $ref: '#/components/schemas/Cas3BookingPremisesSummary'
+          required:
+            - status
+            - extensions
+            - departures
+            - cancellations
+            - premises
+    Cas3BookingBody:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        arrivalDate:
+          type: string
+          format: date
+        originalArrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        originalDepartureDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        bedspace:
+          $ref: '#/components/schemas/Cas3Bedspace'
+      required:
+        - id
+        - person
+        - arrivalDate
+        - originalArrivalDate
+        - departureDate
+        - originalDepartureDate
+        - createdAt
+        - bedspace
+    Cas3BookingStatus:
+      type: string
+      enum:
+        - arrived
+        - notMinusArrived
+        - departed
+        - cancelled
+        - provisional
+        - confirmed
+        - closed
+    Cas3Extension:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        previousDepartureDate:
+          type: string
+          format: date
+        newDepartureDate:
+          type: string
+          format: date
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - previousDepartureDate
+        - newDepartureDate
+        - createdAt
+    Cas3Arrival:
+      type: object
+      properties:
+        expectedDepartureDate:
+          type: string
+          format: date
+        arrivalDate:
+          type: string
+          format: date
+        arrivalTime:
+          type: string
+          format: time
+        notes:
+          type: string
+        bookingId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - type
+        - bookingId
+        - expectedDepartureDate
+        - createdAt
+        - arrivalDate
+        - arrivalTime
+    Cas3NonArrival:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        reason:
+          $ref: '#/components/schemas/NonArrivalReason'
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - date
+        - reason
+        - createdAt
+    Cas3Cancellation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        reason:
+          $ref: '#/components/schemas/CancellationReason'
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        premisesName:
+          type: string
+        otherReason:
+          type: string
+      required:
+        - bookingId
+        - date
+        - reason
+        - createdAt
+        - premisesName
+    Cas3Confirmation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - dateTime
+        - createdAt
+    Cas3Turnaround:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        workingDays:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - workingDays
+        - createdAt
+    Cas3BookingPremisesSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
+    Cas3BedspaceCharacteristic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 952790c0-21d7-4fd6-a7e1-9018f08d8bb0
+        description:
+          type: string
+          example: Is this premises catered (rather than self-catered)?
+        name:
+          type: string
+          example: isCatered
+      required:
+        - id
+        - description

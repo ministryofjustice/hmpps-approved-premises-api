@@ -47,6 +47,10 @@ class Cas3ExtensionEntityFactory : Factory<Cas3ExtensionEntity> {
     this.createdAt = { createdAt }
   }
 
+  fun withDefaults() = apply {
+    withBooking(Cas3BookingEntityFactory().withDefaults().produce())
+  }
+
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas3ExtensionEntity = Cas3ExtensionEntity(
     id = this.id(),

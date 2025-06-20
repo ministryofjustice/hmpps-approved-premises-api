@@ -7,7 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BedspaceEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceCharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -16,7 +19,8 @@ import java.time.LocalDate
 class Cas3BedspaceTransformerTest {
 
   private val characteristicTransformer = CharacteristicTransformer()
-  private val cas3BedspaceTransformer = Cas3BedspaceTransformer(characteristicTransformer)
+  private val cas3BedspaceCharacteristicTransformer = Cas3BedspaceCharacteristicTransformer()
+  private val cas3BedspaceTransformer = Cas3BedspaceTransformer(characteristicTransformer, cas3BedspaceCharacteristicTransformer)
 
   @Test
   fun `transformJpaToApi transforms the BedEntity into Cas3Bedspace correctly`() {
@@ -48,6 +52,31 @@ class Cas3BedspaceTransformerTest {
         status = Cas3BedspaceStatus.online,
         notes = room.notes,
         characteristics = emptyList(),
+      ),
+    )
+  }
+
+  @Test
+  fun `transformJpaToApi transforms the BedspaceEntity into Cas3Bedspace correctly`() {
+    val premises = Cas3PremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val result = cas3BedspaceTransformer.transformJpaToApi(bedspace)
+
+    assertThat(result).isEqualTo(
+      Cas3Bedspace(
+        id = bedspace.id,
+        reference = bedspace.reference,
+        startDate = bedspace.startDate,
+        endDate = bedspace.endDate,
+        notes = bedspace.notes,
+        status = Cas3BedspaceStatus.online,
+        bedspaceCharacteristics = bedspace.characteristics.map(cas3BedspaceCharacteristicTransformer::transformJpaToApi),
       ),
     )
   }

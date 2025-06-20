@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3NonArrivalEntity
@@ -50,6 +51,11 @@ class Cas3NonArrivalEntityFactory : Factory<Cas3NonArrivalEntity> {
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
+  }
+
+  fun withDefaults() = apply {
+    withReason(NonArrivalReasonEntityFactory().produce())
+    withBooking(Cas3BookingEntityFactory().withDefaults().produce())
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")

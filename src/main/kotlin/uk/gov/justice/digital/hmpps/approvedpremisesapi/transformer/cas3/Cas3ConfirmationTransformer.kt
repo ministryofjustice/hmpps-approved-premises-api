@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.v2.Cas3v2ConfirmationEntity
@@ -17,8 +18,8 @@ class Cas3ConfirmationTransformer {
     )
   }
 
-  fun transformJpaToApi(jpa: Cas3v2ConfirmationEntity?): Confirmation? = jpa?.let {
-    Confirmation(
+  fun transformJpaToApi(jpa: Cas3v2ConfirmationEntity?) = jpa?.let {
+    Cas3Confirmation(
       id = it.id,
       bookingId = it.booking.id,
       dateTime = it.dateTime.toInstant(),

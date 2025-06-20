@@ -82,6 +82,10 @@ data class Cas3BookingEntity(
   val arrival: Cas3ArrivalEntity?
     get() = arrivals.maxByOrNull { it.createdAt }
 
+  fun hasNonZeroDayTurnaround() = turnaround != null && turnaround!!.workingDayCount != 0
+
+  fun hasZeroDayTurnaround() = turnaround == null || turnaround!!.workingDayCount == 0
+
   fun isActive() = !isCancelled
 
   override fun equals(other: Any?): Boolean {
