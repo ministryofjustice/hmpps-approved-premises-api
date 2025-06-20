@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
 import io.mockk.every
+import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
@@ -20,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisStaffInform
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 
+@ExtendWith(MockKExtension::class)
 class NomisUserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockNomisUserRolesApiClient = mockk<NomisUserRolesApiClient>()
@@ -219,6 +222,7 @@ class NomisUserServiceTest {
           newUserData,
         )
         every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
+        every { mockUserRepository.findByNomisUsername(username) } returns null
 
         assertThat(userService.getUserByStaffId(newUserData.staffId)).matches {
           it.nomisUsername == username &&
@@ -230,6 +234,45 @@ class NomisUserServiceTest {
             !it.isActive &&
             it.activeCaseloadId == "456"
         }
+      }
+
+      @Test
+      fun `does not save when existing`() {
+        val username = "SOMEPERSON"
+
+        val newUserData = NomisUserDetailFactory()
+          .withUsername(username)
+          .withFirstName("Jim")
+          .withLastName("Jimmerson")
+          .withStaffId(5678)
+          .withAccountType("CLOSED")
+          .withEmail("example@example.com")
+          .withEnabled(false)
+          .withActive(false)
+          .withActiveCaseloadId("456")
+          .produce()
+        val generalAccount = NomisGeneralAccountFactory()
+          .withUsername(username)
+          .produce()
+        val nomisStaffInformation = NomisStaffInformationFactory()
+          .withNomisGeneralAccount(generalAccount)
+          .produce()
+
+        every { mockUserRepository.findByNomisStaffId(eq(newUserData.staffId)) } returns null
+        every { mockNomisUserRolesApiClient.getUserStaffInformation(eq(newUserData.staffId)) } returns ClientResult.Success(
+          HttpStatus.OK,
+          nomisStaffInformation,
+        )
+        every { mockNomisUserRolesApiClient.getUserDetails(eq(username)) } returns ClientResult.Success(
+          HttpStatus.OK,
+          newUserData,
+        )
+
+        val userEntity = NomisUserEntityFactory().produce()
+        every { mockUserRepository.findByNomisUsername(username) } returns userEntity
+
+        userService.getUserByStaffId(newUserData.staffId)
+        verify(exactly = 0) { mockUserRepository.save(any()) }
       }
     }
   }
