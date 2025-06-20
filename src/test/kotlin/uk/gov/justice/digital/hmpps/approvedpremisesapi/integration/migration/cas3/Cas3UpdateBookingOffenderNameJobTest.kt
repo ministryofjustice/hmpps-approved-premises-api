@@ -50,7 +50,7 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
       apDeliusContextAddListCaseSummaryToBulkResponse(cases1)
       apDeliusContextAddListCaseSummaryToBulkResponse(cases2)
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BookingOffenderName, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BookingOffenderName, 10)
 
       val savedBookings = bookingRepository.findAll()
       assertThat(savedBookings).hasSize(15)
@@ -89,7 +89,7 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
         }
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BookingOffenderName, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BookingOffenderName, 10)
 
       val savedBookings = bookingRepository.findAll()
       assertThat(savedBookings).hasSize(8)
@@ -117,7 +117,7 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
         withServiceName(temporaryAccommodation)
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BookingOffenderName, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BookingOffenderName, 10)
 
       Assertions.assertThat(logEntries)
         .withFailMessage("-> logEntries actually contains: $logEntries")

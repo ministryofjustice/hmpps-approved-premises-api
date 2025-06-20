@@ -102,7 +102,7 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
       )
     }
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1ApprovedPremisesAssessmentReportProperties, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1ApprovedPremisesAssessmentReportProperties, 1)
 
     val assessment1AfterUpdate = updateAssessmentReportPropertiesRepository.findByIdOrNull(assessment1.id)!!
     assertThat(assessment1AfterUpdate.agreeWithShortNoticeReason).isTrue

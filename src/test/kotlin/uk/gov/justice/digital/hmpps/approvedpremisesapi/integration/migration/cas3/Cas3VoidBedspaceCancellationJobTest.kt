@@ -69,7 +69,7 @@ class Cas3VoidBedspaceCancellationJobTest : MigrationJobTestBase() {
       val voidBedspaces = createVoidBedspaces(premises, 25)
 
       // this job needs to have ran first.
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceModelData)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData)
       val bedspaces = cas3BedspacesRepository.findAll().filter { it.premises.id == premises.id }
       assertThat(bedspaces).hasSize(voidBedspaces.size)
 
@@ -83,7 +83,7 @@ class Cas3VoidBedspaceCancellationJobTest : MigrationJobTestBase() {
         }
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3VoidBedspaceCancellationData, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3VoidBedspaceCancellationData, 10)
 
       val cancelledVoidBedspaces = cas3VoidBedspacesRepository.findAll().filter { it.cancellation != null }
       assertThat(cancelledVoidBedspaces).hasSize(20)

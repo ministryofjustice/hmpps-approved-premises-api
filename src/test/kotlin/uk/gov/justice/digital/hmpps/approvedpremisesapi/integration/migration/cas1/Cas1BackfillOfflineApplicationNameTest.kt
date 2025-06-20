@@ -34,7 +34,7 @@ class Cas1BackfillOfflineApplicationNameTest : MigrationJobTestBase() {
       ),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillOfflineApplicationName)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1BackfillOfflineApplicationName)
 
     val updatedApplication1 = offlineApplicationRepository.getReferenceById(application1.id)
     Assertions.assertThat(updatedApplication1.name).isEqualTo("John Doe")
@@ -55,7 +55,7 @@ class Cas1BackfillOfflineApplicationNameTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillOfflineApplicationName)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1BackfillOfflineApplicationName)
 
     val updatedApplication = offlineApplicationRepository.getReferenceById(application.id)
     Assertions.assertThat(updatedApplication.name).isEqualTo("Jane Doe")
@@ -68,7 +68,7 @@ class Cas1BackfillOfflineApplicationNameTest : MigrationJobTestBase() {
 
     apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillOfflineApplicationName)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1BackfillOfflineApplicationName)
 
     val updatedApplication = offlineApplicationRepository.getReferenceById(application.id)
     Assertions.assertThat(updatedApplication.name).isNull()
