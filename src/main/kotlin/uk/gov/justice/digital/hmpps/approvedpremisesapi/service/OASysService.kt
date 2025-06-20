@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -75,5 +76,15 @@ class OASysService(
       else -> risksToTheIndividualResult.throwException()
     }
     is ClientResult.Failure -> risksToTheIndividualResult.throwException()
+  }
+
+  fun getOASysHealthDetails(crn: String): CasResult<HealthDetails> = when (val healthDetailsResult = apOASysContextApiClient.getHealth(crn)) {
+    is ClientResult.Success -> CasResult.Success(healthDetailsResult.body)
+    is ClientResult.Failure.StatusCode -> when (healthDetailsResult.status) {
+      HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
+      HttpStatus.FORBIDDEN -> CasResult.Unauthorised()
+      else -> healthDetailsResult.throwException()
+    }
+    is ClientResult.Failure -> healthDetailsResult.throwException()
   }
 }
