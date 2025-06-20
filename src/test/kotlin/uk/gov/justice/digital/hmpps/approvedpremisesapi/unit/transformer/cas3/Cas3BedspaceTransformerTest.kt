@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceCharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -19,7 +20,8 @@ import java.time.LocalDate
 class Cas3BedspaceTransformerTest {
 
   private val characteristicTransformer = CharacteristicTransformer()
-  private val cas3BedspaceTransformer = Cas3BedspaceTransformer(characteristicTransformer)
+  private val cas3BedspaceCharacteristicTransformer = Cas3BedspaceCharacteristicTransformer()
+  private val cas3BedspaceTransformer = Cas3BedspaceTransformer(characteristicTransformer, cas3BedspaceCharacteristicTransformer)
 
   @Test
   fun `transformJpaToApi transforms the RoomEntity into a Cas3Bedspace without optional fields`() {
