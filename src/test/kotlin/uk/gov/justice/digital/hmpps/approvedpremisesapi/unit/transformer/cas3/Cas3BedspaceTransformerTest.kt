@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
@@ -48,6 +49,7 @@ class Cas3BedspaceTransformerTest {
       Cas3Bedspace(
         id = bed.id,
         reference = room.name,
+        status = Cas3BedspaceStatus.online,
         characteristics = room.characteristics.map(characteristicTransformer::transformJpaToApi),
       ),
     )
@@ -69,7 +71,7 @@ class Cas3BedspaceTransformerTest {
     val bed = BedEntityFactory()
       .withCode("BED 1")
       .withName("BED A")
-      .withStartDate(LocalDate.now())
+      .withStartDate(LocalDate.now().minusDays(5))
       .withEndDate(LocalDate.now().plusDays(1))
       .withRoom(room)
       .produce()
@@ -84,6 +86,7 @@ class Cas3BedspaceTransformerTest {
         reference = room.name,
         startDate = bed.startDate,
         endDate = bed.endDate,
+        status = Cas3BedspaceStatus.online,
         notes = room.notes,
         characteristics = room.characteristics.map(characteristicTransformer::transformJpaToApi),
       ),
@@ -142,6 +145,7 @@ class Cas3BedspaceTransformerTest {
         reference = room.name,
         startDate = bed.startDate,
         endDate = bed.endDate,
+        status = Cas3BedspaceStatus.online,
         notes = room.notes,
         characteristics = emptyList(),
       ),

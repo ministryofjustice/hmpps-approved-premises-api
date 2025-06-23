@@ -216,6 +216,8 @@ components:
           format: date
           example: 2024-12-30
           description: End date of the bedspace availability
+        status:
+          $ref: '#/components/schemas/Cas3BedspaceStatus'
         notes:
           type: string
         characteristics:
@@ -225,6 +227,7 @@ components:
       required:
         - id
         - reference
+        - status
         - characteristics
     Cas3Premises:
       type: object

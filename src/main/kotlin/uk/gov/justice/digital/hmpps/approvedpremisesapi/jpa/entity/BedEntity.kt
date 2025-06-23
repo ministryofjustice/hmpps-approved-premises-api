@@ -17,6 +17,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -202,6 +203,11 @@ data class BedEntity(
   fun isCas3BedspaceOnline() = (this.startDate == null || this.startDate!! <= LocalDate.now()) && (this.endDate == null || this.endDate!! > LocalDate.now())
   fun isCas3BedspaceUpcoming() = this.startDate?.isAfter(LocalDate.now()) == true
   fun isCas3BedspaceArchived() = this.endDate?.isBefore(LocalDate.now()) == true
+  fun getCas3BedspaceStatus() = when {
+    this.isCas3BedspaceUpcoming() -> Cas3BedspaceStatus.upcoming
+    this.isCas3BedspaceArchived() -> Cas3BedspaceStatus.archived
+    else -> Cas3BedspaceStatus.online
+  }
   override fun toString() = "BedEntity: $id"
 
   companion object {
