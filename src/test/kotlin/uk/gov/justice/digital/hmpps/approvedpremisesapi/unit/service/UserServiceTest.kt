@@ -331,7 +331,7 @@ class UserServiceTest {
 
       val roleAssignment = UserRoleAssignmentEntityFactory()
         .withUser(expectedUser)
-        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+        .withRole(UserRole.CAS1_REPORT_VIEWER)
         .produce()
 
       expectedUser.roles += roleAssignment

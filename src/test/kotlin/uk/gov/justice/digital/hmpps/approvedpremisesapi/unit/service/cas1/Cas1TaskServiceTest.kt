@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -34,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityTyp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -73,19 +71,7 @@ class Cas1TaskServiceTest {
     userRepositoryMock,
   )
 
-  private val requestUserWithPermission = UserEntityFactory()
-    .withYieldedProbationRegion {
-      ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-    }
-    .produce()
-    .apply {
-      roles += UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-        .withUser(this)
-        .produce()
-    }
+  private val requestUser = UserEntityFactory().withDefaults().produce()
 
   @Test
   fun `reallocateTask returns Unauthorised when requestUser does not have permissions to reallocate the task`() {
@@ -111,7 +97,7 @@ class Cas1TaskServiceTest {
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
     every { userServiceMock.updateUserFromDelius(assigneeUserId, ServiceName.approvedPremises) } returns CasResult.NotFound("task", "id")
 
-    val result = cas1TaskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
+    val result = cas1TaskService.reallocateTask(requestUser, TaskType.assessment, assigneeUserId, UUID.randomUUID())
 
     assertThatCasResult(result).isNotFound("user", "55aa66be-0819-494e-955b-90b9aaa4f0c6")
   }
@@ -130,7 +116,7 @@ class Cas1TaskServiceTest {
 
     every {
       assessmentServiceMock.reallocateAssessment(
-        allocatingUser = requestUserWithPermission,
+        allocatingUser = requestUser,
         assigneeUser = assigneeUser,
         id = assessment.id,
       )
@@ -145,7 +131,7 @@ class Cas1TaskServiceTest {
       user = transformedUser,
     )
 
-    val result = cas1TaskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, assessment.id)
+    val result = cas1TaskService.reallocateTask(requestUser, TaskType.assessment, assigneeUser.id, assessment.id)
 
     assertThatCasResult(result).isSuccess().with {
       assertThat(it).isEqualTo(reallocation)
@@ -188,7 +174,7 @@ class Cas1TaskServiceTest {
       user = transformedUser,
     )
 
-    val result = cas1TaskService.reallocateTask(requestUserWithPermission, TaskType.placementApplication, assigneeUser.id, placementApplication.id)
+    val result = cas1TaskService.reallocateTask(requestUser, TaskType.placementApplication, assigneeUser.id, placementApplication.id)
 
     assertThatCasResult(result).isSuccess().with {
       assertThat(it).isEqualTo(reallocation)
@@ -226,7 +212,7 @@ class Cas1TaskServiceTest {
 
     every { assessmentServiceMock.deallocateAssessment(assessment.id) } returns CasResult.Success(assessment)
 
-    val result = cas1TaskService.deallocateTask(requestUserWithPermission, TaskType.assessment, assessment.id)
+    val result = cas1TaskService.deallocateTask(requestUser, TaskType.assessment, assessment.id)
 
     assertThatCasResult(result).isSuccess()
   }

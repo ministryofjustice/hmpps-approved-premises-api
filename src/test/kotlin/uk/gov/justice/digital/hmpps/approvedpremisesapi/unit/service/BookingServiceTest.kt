@@ -1709,7 +1709,7 @@ class BookingServiceTest {
       val arrivalDate = LocalDate.parse("2023-02-22")
       val departureDate = LocalDate.parse("2023-02-23")
 
-      val workflowManager = UserEntityFactory()
+      val cruMember = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce().apply {
           this.roles.add(
@@ -1747,7 +1747,7 @@ class BookingServiceTest {
       every { mockCas1BookingEmailService.bookingMade(any(), any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
-        user = workflowManager,
+        user = cruMember,
         placementRequestId = placementRequest.id,
         bedId = null,
         premisesId = premises.id,
@@ -1761,7 +1761,7 @@ class BookingServiceTest {
         mockCas1BookingDomainEventService.bookingMade(
           application,
           booking,
-          workflowManager,
+          cruMember,
           placementRequest,
         )
       }

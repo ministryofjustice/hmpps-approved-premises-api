@@ -60,18 +60,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_WORKFLOW_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.workflowManager,
-    listOf(
-      UserPermission.CAS1_ADHOC_BOOKING_CREATE,
-      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
-      UserPermission.CAS1_BOOKING_CHANGE_DATES,
-      UserPermission.CAS1_BOOKING_WITHDRAW,
-      UserPermission.CAS1_PREMISES_VIEW,
-      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-      UserPermission.CAS1_TASKS_LIST,
-      UserPermission.CAS1_USER_LIST,
-      UserPermission.CAS1_VIEW_CRU_DASHBOARD,
-      UserPermission.CAS1_VIEW_MANAGE_TASKS,
-    ),
+    emptyList(),
   ),
 
   CAS1_CRU_MEMBER(
@@ -189,10 +178,12 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   fun hasPermission(permission: UserPermission) = permissions.contains(permission)
 
   companion object {
-    fun getAllRolesForService(service: ServiceName) = UserRole.values().filter { it.service == service }
+    fun getAllRolesForService(service: ServiceName) = entries.filter { it.service == service }
 
     fun valueOf(apiValue: ApprovedPremisesUserRole) = UserRole.entries.first { it.cas1ApiValue == apiValue }
 
-    fun getAllRolesForPermission(permission: UserPermission) = UserRole.values().filter { it.permissions.contains(permission) }
+    fun getAllRolesForPermission(permission: UserPermission) = entries.filter { it.permissions.contains(permission) }
+
+    fun getAllRolesExcept(vararg rolesToExclude: UserRole) = UserRole.entries.filter { !rolesToExclude.contains(it) }
   }
 }

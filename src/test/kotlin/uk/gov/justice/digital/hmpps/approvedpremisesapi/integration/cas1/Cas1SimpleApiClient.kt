@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -55,7 +54,7 @@ class Cas1SimpleApiClient {
     id: UUID,
     body: NewWithdrawal,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/applications/$id/withdrawal")
@@ -132,7 +131,7 @@ class Cas1SimpleApiClient {
     assessmentId: UUID,
     targetUserId: UUID,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/tasks/assessment/$assessmentId/allocations")
@@ -244,7 +243,7 @@ class Cas1SimpleApiClient {
     placementApplicationId: UUID,
     body: NewReallocation,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/tasks/placement-application/$placementApplicationId/allocations")
@@ -256,29 +255,12 @@ class Cas1SimpleApiClient {
       .isCreated
   }
 
-  fun placementApplicationWithdraw(
-    integrationTestBase: IntegrationTestBase,
-    placementApplicationId: UUID,
-    body: WithdrawPlacementApplication,
-  ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
-
-    integrationTestBase.webTestClient.post()
-      .uri("/placement-applications/$placementApplicationId/withdraw")
-      .header("Authorization", "Bearer $managerJwt")
-      .header("X-Service-Name", ServiceName.approvedPremises.value)
-      .bodyValue(body)
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
-
   fun placementRequestWithdraw(
     integrationTestBase: IntegrationTestBase,
     placementRequestId: UUID,
     body: WithdrawPlacementRequest,
   ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
       .uri("/placement-requests/$placementRequestId/withdrawal")

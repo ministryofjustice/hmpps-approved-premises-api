@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
@@ -46,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -188,61 +186,10 @@ class Cas1PlacementRequestServiceTest {
     }
 
     @Test
-    fun `returns Success when user can access offender and PlacementRequest is allocated to User`() {
+    fun `returns Success when user can access offender`() {
       val requestingUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(assigneeUser)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(assigneeUser)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(requestingUser)
-        .produce()
-
-      val mockCancellations = mockk<List<CancellationEntity>>()
-
-      every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
-      } returns true
-      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-      every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations
-
-      val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
-
-      assertThat(result is CasResult.Success).isTrue()
-
-      val (expectedPlacementRequest, expectedCancellations) = (result as CasResult.Success).value
-
-      assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
-      assertThat(expectedCancellations).isEqualTo(mockCancellations)
-    }
-
-    @Test
-    fun `returns Success when user can access offender and User has the WORKFLOW_MANAGER role`() {
-      val requestingUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-        .apply {
-          roles += UserRoleAssignmentEntityFactory()
-            .withUser(this)
-            .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-            .produce()
-        }
 
       val otherUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -1053,57 +1000,10 @@ class Cas1PlacementRequestServiceTest {
     }
 
     @Test
-    fun `returns Success when user can access offender and PlacementRequest is allocated to User`() {
+    fun `returns Success when user can access offender`() {
       val requestingUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(assigneeUser)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(assigneeUser)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(requestingUser)
-        .produce()
-
-      every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
-      } returns true
-      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-
-      val result = placementRequestService.getPlacementRequest(requestingUser, placementRequest.id)
-
-      assertThat(result is CasResult.Success).isTrue()
-
-      val expectedPlacementRequest = (result as CasResult.Success).value
-
-      assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
-    }
-
-    @Test
-    fun `returns Success when user can access offender and User has the WORKFLOW_MANAGER role`() {
-      val requestingUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-        .apply {
-          roles += UserRoleAssignmentEntityFactory()
-            .withUser(this)
-            .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-            .produce()
-        }
 
       val otherUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()

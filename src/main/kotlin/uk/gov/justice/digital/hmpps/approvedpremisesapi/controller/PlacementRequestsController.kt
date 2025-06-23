@@ -76,9 +76,7 @@ class PlacementRequestsController(
   ): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
-    if (!user.hasPermission(UserPermission.CAS1_VIEW_CRU_DASHBOARD)) {
-      throw ForbiddenProblem()
-    }
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_VIEW_CRU_DASHBOARD)
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
