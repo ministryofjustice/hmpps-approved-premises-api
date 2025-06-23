@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSortBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -306,6 +308,50 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$[0].bedspaceCount").isEqualTo(5)
           .jsonPath("$.length()").isEqualTo(1)
       }
+    }
+
+    @ParameterizedTest()
+    @EnumSource(value = Cas3PremisesSortBy::class)
+    fun `Get all Premises returns OK with correct premises sorted by PDU or LA`(sortBy: Cas3PremisesSortBy) {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, expectedPremisesSummaries) = getListPremisesWithIndividualPduAndLa(user.probationRegion)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?sortBy=${sortBy.name}",
+          expectedPremisesSummaries.sortedBy {
+            when (sortBy) {
+              Cas3PremisesSortBy.pdu -> it.pdu.lowercase()
+              Cas3PremisesSortBy.la -> it.localAuthorityAreaName?.lowercase()
+            }
+          },
+        )
+      }
+    }
+
+    private fun getListPremisesWithIndividualPduAndLa(probationRegion: ProbationRegionEntity): Pair<List<TemporaryAccommodationPremisesEntity>, List<Cas3PremisesSummary>> {
+      val premisesSummary = mutableListOf<Cas3PremisesSummary>()
+      val allPremises = mutableListOf<TemporaryAccommodationPremisesEntity>()
+
+      val localAuthorityArea = localAuthorityEntityFactory.produceAndPersistMultiple(5)
+
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersistMultiple(5) {
+        withProbationRegion(probationRegion)
+      }
+
+      localAuthorityArea.forEachIndexed { i, localAuthorityAreaEntity ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withProbationDeliveryUnit(probationDeliveryUnit[i])
+          withLocalAuthorityArea(localAuthorityAreaEntity)
+          withStatus(PropertyStatus.active)
+        }
+        val onlineBedspacesSummary = createBedspaces(premises, Cas3BedspaceStatus.online, true)
+        val upcomingBedspacesSummary = createBedspaces(premises, Cas3BedspaceStatus.upcoming, true)
+        premisesSummary.add(createPremisesSummary(premises, (onlineBedspacesSummary.size + upcomingBedspacesSummary.size)))
+      }
+
+      return Pair(allPremises.sortedBy { it.id }, premisesSummary.sortedBy { it.id })
     }
 
     @Test

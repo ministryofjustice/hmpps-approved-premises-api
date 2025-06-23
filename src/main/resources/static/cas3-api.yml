@@ -248,6 +248,10 @@ paths:
           description: postcode Or address to filter premises
           schema:
             type: string
+        - name: sortBy
+          in: query
+          schema:
+            $ref: 'cas3-schemas.yml#/components/schemas/Cas3PremisesSortBy'
       responses:
         200:
           description: successful operation

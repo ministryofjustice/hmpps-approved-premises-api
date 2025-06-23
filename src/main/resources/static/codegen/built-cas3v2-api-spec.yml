@@ -4912,6 +4912,11 @@ components:
         - pdu
         - bedspaceCount
         - status
+    Cas3PremisesSortBy:
+      type: string
+      enum:
+        - pdu
+        - la
     Cas3PremisesSearchResults:
       type: object
       properties:
