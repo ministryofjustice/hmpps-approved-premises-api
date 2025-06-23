@@ -198,6 +198,27 @@ components:
         - probationDeliveryUnits
         - startDate
         - durationDays
+    Cas3Bedspaces:
+      type: object
+      properties:
+        bedspaces:
+          type: array
+          items:
+            $ref: 'cas3-schemas.yml#/components/schemas/Cas3Bedspace'
+        totalOnlineBedspaces:
+          type: integer
+          example: 5
+        totalUpcomingBedspaces:
+          type: integer
+          example: 1
+        totalArchivedBedspaces:
+          type: integer
+          example: 2
+      required:
+        - bedspaces
+        - totalOnlineBedspaces
+        - totalUpcomingBedspaces
+        - totalArchivedBedspaces
     Cas3Bedspace:
       type: object
       properties:

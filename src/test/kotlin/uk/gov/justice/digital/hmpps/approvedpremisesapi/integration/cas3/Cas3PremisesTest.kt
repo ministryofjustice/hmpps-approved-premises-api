@@ -12,6 +12,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSortBy
@@ -905,7 +906,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             withEndDate(startDate.plusDays(2))
           }.apply { room.beds.add(this) }
 
-          if (bedspace.endDate!! >= LocalDate.now()) {
+          if (bedspace.endDate!! > LocalDate.now()) {
             expectedBedspaces.add(createCas3Bedspoace(bedspace, room, Cas3BedspaceStatus.online))
           } else {
             expectedBedspaces.add(createCas3Bedspoace(bedspace, room, Cas3BedspaceStatus.archived))
@@ -917,16 +918,34 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withBeds()
         }.apply { premises.rooms.add(this) }
 
-        val bedspace = bedEntityFactory.produceAndPersist {
+        val bedspaceWithoutEndDate = bedEntityFactory.produceAndPersist {
           withRoom(roomWithoutEndDate)
           withStartDate(LocalDate.now().randomDateBefore(180))
         }.apply { roomWithoutEndDate.beds.add(this) }
-        expectedBedspaces.add(createCas3Bedspoace(bedspace, roomWithoutEndDate, Cas3BedspaceStatus.online))
+        expectedBedspaces.add(createCas3Bedspoace(bedspaceWithoutEndDate, roomWithoutEndDate, Cas3BedspaceStatus.online))
+
+        val roomWithUpcomingBedspace = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBeds()
+        }.apply { premises.rooms.add(this) }
+
+        val upcomingBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(roomWithUpcomingBedspace)
+          withStartDate(LocalDate.now().plusDays(10))
+        }.apply { roomWithUpcomingBedspace.beds.add(this) }
+        expectedBedspaces.add(createCas3Bedspoace(upcomingBedspace, roomWithUpcomingBedspace, Cas3BedspaceStatus.upcoming))
+
+        val expectedCas3Bedspaces = Cas3Bedspaces(
+          bedspaces = expectedBedspaces,
+          totalOnlineBedspaces = 3,
+          totalUpcomingBedspaces = 1,
+          totalArchivedBedspaces = 3,
+        )
 
         assertUrlReturnsBedspaces(
           jwt,
           "/cas3/premises/$premisesId/bedspaces",
-          expectedBedspaces,
+          expectedCas3Bedspaces,
         )
       }
     }
@@ -964,16 +983,21 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withEndDate(LocalDate.now())
         }.apply { premises.rooms.first().beds.add(this) }
 
-        val expectedBedspaces = listOf(
-          Cas3Bedspace(
-            id = bed.id,
-            reference = room1.name,
-            startDate = bed.startDate,
-            characteristics = emptyList(),
-            endDate = bed.endDate,
-            status = Cas3BedspaceStatus.online,
-            notes = room1.notes,
+        val expectedBedspaces = Cas3Bedspaces(
+          bedspaces = listOf(
+            Cas3Bedspace(
+              id = bed.id,
+              reference = room1.name,
+              startDate = bed.startDate,
+              endDate = bed.endDate,
+              status = Cas3BedspaceStatus.archived,
+              characteristics = emptyList(),
+              notes = room1.notes,
+            ),
           ),
+          totalOnlineBedspaces = 0,
+          totalUpcomingBedspaces = 0,
+          totalArchivedBedspaces = 1,
         )
 
         assertUrlReturnsBedspaces(
@@ -1041,7 +1065,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     private fun assertUrlReturnsBedspaces(
       jwt: String,
       url: String,
-      expectedPremisesSummaries: List<Cas3Bedspace>,
+      expectedBedspaces: Cas3Bedspaces,
     ): WebTestClient.ResponseSpec {
       val response = webTestClient.get()
         .uri(url)
@@ -1055,7 +1079,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremisesSummaries))
+      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedBedspaces))
 
       return response
     }
