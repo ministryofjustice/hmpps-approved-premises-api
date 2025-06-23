@@ -33,14 +33,14 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
         withServiceName(temporaryAccommodation)
       }
 
-      val cases1 = bookings.take(10).map {
+      val cases1 = bookings.sortedBy { it.crn }.take(10).map {
         CaseSummaryFactory()
           .withCrn(it.crn)
           .withName(Name(forename = "Forename ${it.crn}", surname = "Surname ${it.crn}"))
           .produce()
       }
 
-      val cases2 = bookings.subList(10, 15).map {
+      val cases2 = bookings.sortedBy { it.crn }.subList(10, 15).map {
         CaseSummaryFactory()
           .withCrn(it.crn)
           .withName(Name(forename = "Forename ${it.crn}", surname = "Surname ${it.crn}"))
