@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -27,7 +26,6 @@ class Cas1OasysController(
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer,
-  private val featureFlagService: FeatureFlagService,
 ) : OAsysCas1Delegate {
 
   override fun metadata(crn: String): ResponseEntity<Cas1OASysMetadata> {
@@ -98,11 +96,7 @@ class Cas1OasysController(
   }
 
   private fun <EntityType> extractNullableOAsysResult(result: CasResult<EntityType>) = when (result) {
-    is CasResult.NotFound -> if (featureFlagService.getBooleanFlag("cas1-oasys-return-empty-oasys-responses")) {
-      null
-    } else {
-      throw NotFoundProblem(result.id, result.entityType)
-    }
+    is CasResult.NotFound -> null
     else -> extractEntityFromCasResult(result)
   }
 }
