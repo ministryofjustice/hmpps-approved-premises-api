@@ -36,6 +36,7 @@ class Cas3UpdateBedSpaceStartDateJob(
         slice = bedRepository.findAllByService(temporaryAccommodation.value, PageRequest.of(page, pageSize))
 
         currentSliceBeds = slice.map { it.id.toString() }.toSet()
+        migrationLogger.info("Updating bed(s) start_date with id(s) ${currentSliceBeds.joinToString()}")
 
         for (bed in slice.content) {
           if (bed.startDate == null) {
@@ -55,6 +56,8 @@ class Cas3UpdateBedSpaceStartDateJob(
                 migrationLogger.info("Updated start_date for bed id ${bed.id} from booking arrival_date")
               }
             }
+          } else {
+            migrationLogger.info("Bed start_date already set for bed id ${bed.id}")
           }
         }
         entityManager.clear()
