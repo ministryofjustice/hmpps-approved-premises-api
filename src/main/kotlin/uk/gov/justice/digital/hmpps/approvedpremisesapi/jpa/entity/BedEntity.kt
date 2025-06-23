@@ -65,6 +65,7 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
         INNER JOIN rooms r ON b.room_id = r.id
         INNER JOIN premises p ON r.premises_id = p.id
         WHERE p.service = :service
+        ORDER BY b.id
     """,
     nativeQuery = true,
   )
