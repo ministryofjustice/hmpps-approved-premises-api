@@ -28,6 +28,7 @@ class Cas3BedspaceTransformer(
       reference = jpa.name,
       startDate = bed.startDate,
       endDate = bed.endDate,
+      status = bed.getCas3BedspaceStatus(),
       notes = jpa.notes,
       characteristics = jpa.characteristics.map(characteristicTransformer::transformJpaToApi),
     )
@@ -38,6 +39,7 @@ class Cas3BedspaceTransformer(
     reference = bed.room.name,
     startDate = bed.startDate,
     endDate = bed.endDate,
+    status = bed.getCas3BedspaceStatus(),
     notes = bed.room.notes,
     characteristics = bed.room.characteristics.map(characteristicTransformer::transformJpaToApi),
   )

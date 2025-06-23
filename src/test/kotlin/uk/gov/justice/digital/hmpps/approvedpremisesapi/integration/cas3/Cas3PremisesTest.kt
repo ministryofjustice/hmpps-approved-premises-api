@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -848,13 +849,21 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedPremises { premises }
         }.apply { premises.rooms.addAll(this) }
 
+        val expectedBedspaces = mutableListOf<Cas3Bedspace>()
+
         premises.rooms.forEachIndexed { index, room ->
           val startDate = LocalDate.now().minusDays(index.toLong())
-          bedEntityFactory.produceAndPersist {
+          val bedspace = bedEntityFactory.produceAndPersist {
             withRoom(room)
             withStartDate(startDate)
             withEndDate(startDate.plusDays(2))
           }.apply { room.beds.add(this) }
+
+          if (bedspace.endDate!! >= LocalDate.now()) {
+            expectedBedspaces.add(createCas3Bedspoace(bedspace, room, Cas3BedspaceStatus.online))
+          } else {
+            expectedBedspaces.add(createCas3Bedspoace(bedspace, room, Cas3BedspaceStatus.archived))
+          }
         }
 
         val roomWithoutEndDate = roomEntityFactory.produceAndPersist {
@@ -862,22 +871,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withBeds()
         }.apply { premises.rooms.add(this) }
 
-        bedEntityFactory.produceAndPersist {
+        val bedspace = bedEntityFactory.produceAndPersist {
           withRoom(roomWithoutEndDate)
-          withStartDate(LocalDate.now())
+          withStartDate(LocalDate.now().randomDateBefore(180))
         }.apply { roomWithoutEndDate.beds.add(this) }
-
-        val expectedBedspaces = premises.rooms.map { room ->
-          val bed = room.beds.first()
-          Cas3Bedspace(
-            id = bed.id,
-            reference = room.name,
-            startDate = bed.startDate,
-            characteristics = emptyList(),
-            endDate = bed.endDate,
-            notes = room.notes,
-          )
-        }
+        expectedBedspaces.add(createCas3Bedspoace(bedspace, roomWithoutEndDate, Cas3BedspaceStatus.online))
 
         assertUrlReturnsBedspaces(
           jwt,
@@ -916,6 +914,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withRoom(room1)
+          withStartDate(LocalDate.now().randomDateBefore(320))
           withEndDate(LocalDate.now())
         }.apply { premises.rooms.first().beds.add(this) }
 
@@ -926,6 +925,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             startDate = bed.startDate,
             characteristics = emptyList(),
             endDate = bed.endDate,
+            status = Cas3BedspaceStatus.online,
             notes = room1.notes,
           ),
         )
@@ -1013,6 +1013,16 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
       return response
     }
+
+    private fun createCas3Bedspoace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus) = Cas3Bedspace(
+      id = bed.id,
+      reference = room.name,
+      startDate = bed.startDate,
+      characteristics = emptyList(),
+      endDate = bed.endDate,
+      status = bedspaceStatus,
+      notes = room.notes,
+    )
   }
 
   @Nested
@@ -1035,6 +1045,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           reference = bedspace.room.name,
           startDate = bedspace.startDate,
           endDate = bedspace.endDate,
+          status = Cas3BedspaceStatus.online,
           characteristics = listOf(
             Characteristic(
               id = roomCharacteristicOne.id,
