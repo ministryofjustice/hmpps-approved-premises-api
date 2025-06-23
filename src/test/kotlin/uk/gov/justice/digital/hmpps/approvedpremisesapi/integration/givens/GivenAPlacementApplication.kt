@@ -9,13 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @SuppressWarnings("LongParameterList")
@@ -37,7 +38,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   isWithdrawn: Boolean = false,
-  placementDates: List<PlacementDateEntity> = mutableListOf(),
+  placementDates: List<PlacementDate> = listOf(),
   application: ApprovedPremisesApplicationEntity? = null,
   apType: ApprovedPremisesType? = null,
 ): PlacementApplicationEntity {
@@ -70,7 +71,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     apType = apType,
   ).second
 
-  return placementApplicationFactory.produceAndPersist {
+  val placementApplication = placementApplicationFactory.produceAndPersist {
     withCreatedByUser(createdByUser)
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
@@ -88,8 +89,19 @@ fun IntegrationTestBase.givenAPlacementApplication(
     }
     withDueAt(dueAt)
     withIsWithdrawn(isWithdrawn)
-    withPlacementDates(placementDates.toMutableList())
   }
+
+  placementApplication.placementDates = placementDates
+    .map {
+      placementDateFactory.produceAndPersist {
+        withPlacementApplication(placementApplication)
+        withExpectedArrival(it.expectedArrival)
+        withDuration(it.duration)
+        withPlacementRequest(it.placementRequest)
+      }
+    }.toMutableList()
+
+  return placementApplication
 }
 
 @SuppressWarnings("LongParameterList")
@@ -103,8 +115,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
-  dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
-  placementDates: MutableList<PlacementDateEntity> = mutableListOf(),
+  placementDates: List<PlacementDate> = listOf(),
   application: ApprovedPremisesApplicationEntity? = null,
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit = { },
 ): PlacementApplicationEntity {
@@ -120,7 +131,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     decision = decision,
     reallocated = reallocated,
     placementType = placementType,
-    dueAt = dueAt,
+    dueAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
     placementDates = placementDates,
     application = application,
     isWithdrawn = false,
@@ -128,3 +139,9 @@ fun IntegrationTestBase.givenAPlacementApplication(
   block(placementApplication)
   return placementApplication
 }
+
+data class PlacementDate(
+  val expectedArrival: LocalDate,
+  val duration: Int,
+  val placementRequest: PlacementRequestEntity? = null,
+)

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ArsonSuitableToArsonOffencesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillOfflineApplicationName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixDatesLinkedToReallocatedPlacementRequestsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1IsArsonSuitableBackfillJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApplicationLicenceExpiryDateJob
@@ -63,6 +64,7 @@ class MigrationJobService(
         MigrationJobType.cas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
         MigrationJobType.cas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
         MigrationJobType.cas3VoidBedspaceCancellationData -> getBean(Cas3VoidBedspaceCancellationJob::class)
+        MigrationJobType.cas1FixDatesLinkedToReallocatedPlacementRequests -> getBean(Cas1FixDatesLinkedToReallocatedPlacementRequestsJob::class)
       }
 
       if (job.shouldRunInTransaction) {
