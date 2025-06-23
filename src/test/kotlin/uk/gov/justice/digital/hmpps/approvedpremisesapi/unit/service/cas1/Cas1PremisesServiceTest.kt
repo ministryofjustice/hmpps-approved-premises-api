@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -54,6 +55,9 @@ class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var bedRepository: BedRepository
+
+  @MockK
+  lateinit var cas1BedsRepository: Cas1BedsRepository
 
   @MockK
   lateinit var featureFlagService: FeatureFlagService

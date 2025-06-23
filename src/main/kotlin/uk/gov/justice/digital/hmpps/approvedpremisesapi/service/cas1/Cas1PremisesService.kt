@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvJdbcResultSetConsumer
@@ -33,6 +34,7 @@ class Cas1PremisesService(
   val featureFlagService: FeatureFlagService,
   val cas1OccupancyReportRepository: Cas1OccupancyReportRepository,
   private val clock: Clock,
+  private val cas1BedsRepository: Cas1BedsRepository,
 ) {
   companion object {
     private const val OVERBOOKING_RANGE_DURATION_WEEKS = 12L
@@ -133,7 +135,7 @@ class Cas1PremisesService(
     )
   }
 
-  fun getBeds(premisesId: UUID) = bedRepository.findAllCas1BedSummariesForPremises(premisesId)
+  fun getBeds(premisesId: UUID) = cas1BedsRepository.bedSummary(premisesId)
 
   data class Cas1PremisesInfo(
     val entity: ApprovedPremisesEntity,

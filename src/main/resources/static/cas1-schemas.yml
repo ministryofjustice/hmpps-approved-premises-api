@@ -1490,10 +1490,15 @@ components:
           type: string
         bedName:
           type: string
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - roomName
         - bedName
+        - characteristics
     Cas1ApplicationSummary:
       type: object
       properties:

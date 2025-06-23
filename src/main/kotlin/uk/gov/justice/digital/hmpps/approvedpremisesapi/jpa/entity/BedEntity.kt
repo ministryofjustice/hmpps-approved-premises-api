@@ -47,19 +47,6 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 
   @Query(
     """
-        SELECT b.id as id,
-        b.name as bedName,
-        r.name as roomName
-        FROM beds b
-        LEFT JOIN rooms r ON b.room_id = r.id
-        WHERE r.premises_id = :premisesId
-    """,
-    nativeQuery = true,
-  )
-  fun findAllCas1BedSummariesForPremises(premisesId: UUID): List<Cas1PremisesBedSummary>
-
-  @Query(
-    """
         SELECT b.*
         FROM beds b
         INNER JOIN rooms r ON b.room_id = r.id
@@ -224,12 +211,6 @@ open class DomainBedSummary(
   val bedBooked: Boolean,
   val bedOutOfService: Boolean,
 )
-
-interface Cas1PremisesBedSummary {
-  fun getId(): UUID
-  fun getBedName(): String
-  fun getRoomName(): String
-}
 
 data class Cas1PlanningBedSummary(
   val bedId: UUID,
