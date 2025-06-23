@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext
 
 import java.time.OffsetDateTime
 
+@Suppress("LongParameterList")
 class NeedsDetails(
   assessmentId: Long,
   assessmentType: String,

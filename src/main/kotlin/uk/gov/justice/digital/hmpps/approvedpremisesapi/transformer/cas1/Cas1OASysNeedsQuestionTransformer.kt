@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationQuestionMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
@@ -11,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 class Cas1OASysNeedsQuestionTransformer(val featureFlagService: FeatureFlagService) {
 
   fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails?) = needsDetails?.let {
-    toQuestionState(needsDetails).map {
+    toQuestionState(needsDetails, null).map {
       Cas1OASysSupportingInformationQuestionMetaData(
         section = it.sectionNumber,
         sectionLabel = it.sectionLabel,
@@ -22,7 +23,7 @@ class Cas1OASysNeedsQuestionTransformer(val featureFlagService: FeatureFlagServi
     }
   } ?: emptyList()
 
-  fun transformToOASysQuestion(needsDetails: NeedsDetails?, includeOptionalSections: List<Int>) = toQuestionState(needsDetails)
+  fun transformToOASysQuestion(needsDetails: NeedsDetails?, health: HealthDetails?, includeOptionalSections: List<Int>) = toQuestionState(needsDetails, health)
     .filter { !it.optional || includeOptionalSections.contains(it.sectionNumber) || needsDetails == null }
     .map {
       OASysQuestion(
@@ -43,7 +44,7 @@ class Cas1OASysNeedsQuestionTransformer(val featureFlagService: FeatureFlagServi
     val linkedToReOffending: Boolean?,
   )
 
-  private fun toQuestionState(needsDetails: NeedsDetails?) = listOf(
+  private fun toQuestionState(needsDetails: NeedsDetails?, healthDetails: HealthDetails?) = listOf(
     QuestionState(
       sectionNumber = 3,
       sectionLabel = OASysLabels.sectionToLabel.getValue("3"),
@@ -123,6 +124,16 @@ class Cas1OASysNeedsQuestionTransformer(val featureFlagService: FeatureFlagServi
       optional = isOptional(needsDetails?.linksToHarm?.attitudeLinkedToHarm),
       linkedToHarm = needsDetails?.linksToHarm?.attitudeLinkedToHarm,
       linkedToReOffending = needsDetails?.linksToReOffending?.attitudeLinkedToReOffending,
+    ),
+    QuestionState(
+      sectionNumber = 13,
+      sectionLabel = OASysLabels.sectionToLabel.getValue("13"),
+      questionNumber = "13.1",
+      questionLabel = OASysLabels.questionToLabel.getValue("13.1"),
+      answer = if (healthDetails?.health?.generalHealth == true) healthDetails.health.generalHealthSpecify else null,
+      optional = true,
+      linkedToHarm = null,
+      linkedToReOffending = null,
     ),
   )
 

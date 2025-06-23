@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -54,6 +55,11 @@ fun IntegrationTestBase.apOASysContextMockRiskManagementPlan404Call(crn: String)
 
 fun IntegrationTestBase.apOASysContextMockSuccessfulNeedsDetailsCall(crn: String, response: NeedsDetails) = mockSuccessfulGetCallWithJsonResponse(
   url = "/needs-details/$crn",
+  responseBody = response,
+)
+
+fun IntegrationTestBase.apOASysContextMockSuccessfulHealthDetailsCall(crn: String, response: HealthDetails) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/health-details/$crn",
   responseBody = response,
 )
 

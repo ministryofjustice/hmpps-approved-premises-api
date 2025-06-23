@@ -67,6 +67,7 @@ class Cas1OasysController(
       Cas1OASysGroupName.SUPPORTING_INFORMATION -> cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
         needsDetails = extractNullableOAsysResult(oaSysService.getOASysNeeds(crn)),
         includeOptionalSections = includeOptionalSections ?: emptyList(),
+        health = extractNullableOAsysResult(oaSysService.getOASysHealthDetails(crn)),
       )
       Cas1OASysGroupName.RISK_TO_SELF -> oaSysSectionsTransformer.riskToSelfAnswers(
         extractNullableOAsysResult(oaSysService.getOASysRiskToTheIndividual(crn))?.riskToTheIndividual,

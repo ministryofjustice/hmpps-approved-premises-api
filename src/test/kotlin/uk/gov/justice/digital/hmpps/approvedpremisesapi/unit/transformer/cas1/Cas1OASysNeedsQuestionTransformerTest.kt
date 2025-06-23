@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysSupportingInformationQuestionMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.HealthDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
@@ -66,6 +67,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         "Alcohol",
         "Thinking and Behavioural",
         "Attitude",
+        "Health",
       )
     }
 
@@ -141,6 +143,13 @@ class Cas1OASysNeedsQuestionTransformerTest {
           sectionLabel = "Attitude",
           inclusionOptional = false,
           oasysAnswerLinkedToHarm = true,
+          oasysAnswerLinkedToReOffending = null,
+        ),
+        Cas1OASysSupportingInformationQuestionMetaData(
+          section = 13,
+          sectionLabel = "Health",
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = null,
           oasysAnswerLinkedToReOffending = null,
         ),
       )
@@ -221,6 +230,13 @@ class Cas1OASysNeedsQuestionTransformerTest {
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
+        Cas1OASysSupportingInformationQuestionMetaData(
+          section = 13,
+          sectionLabel = "Health",
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = null,
+          oasysAnswerLinkedToReOffending = null,
+        ),
       )
     }
 
@@ -299,6 +315,13 @@ class Cas1OASysNeedsQuestionTransformerTest {
           oasysAnswerLinkedToHarm = linkedToHarm,
           oasysAnswerLinkedToReOffending = null,
         ),
+        Cas1OASysSupportingInformationQuestionMetaData(
+          section = 13,
+          sectionLabel = "Health",
+          inclusionOptional = true,
+          oasysAnswerLinkedToHarm = null,
+          oasysAnswerLinkedToReOffending = null,
+        ),
       )
     }
   }
@@ -313,6 +336,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToOASysQuestion(
         needsDetails = null,
         includeOptionalSections = emptyList(),
+        health = null,
       )
 
       assertThat(result).containsExactlyInAnyOrder(
@@ -356,6 +380,11 @@ class Cas1OASysNeedsQuestionTransformerTest {
           label = "Issues about attitudes contributing to risks of offending and harm",
           answer = null,
         ),
+        OASysQuestion(
+          questionNumber = "13.1",
+          label = "General Health - Any physical or mental health conditions",
+          answer = null,
+        ),
       )
     }
 
@@ -374,7 +403,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = true, linkedToReoffending = null, thinkingBehaviouralIssuesDetails = "thinking behavioural answer")
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -436,7 +465,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -468,7 +497,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -508,6 +537,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
       val result = transformer.transformToOASysQuestion(
         needsDetails,
         includeOptionalSections = listOf(3, 6, 7, 10, 11, 12),
+        health = null,
       )
 
       assertThat(result).containsExactlyInAnyOrder(
@@ -572,7 +602,8 @@ class Cas1OASysNeedsQuestionTransformerTest {
 
       val result = transformer.transformToOASysQuestion(
         needsDetails,
-        includeOptionalSections = listOf(6, 7, 10, 11, 12),
+        includeOptionalSections = listOf(6, 7, 10, 11, 12, 13),
+        health = HealthDetailsFactory().withGeneralHealth(generalHealth = true, generalHealthSpecify = "health answer").produce(),
       )
 
       assertThat(result).containsExactlyInAnyOrder(
@@ -615,6 +646,11 @@ class Cas1OASysNeedsQuestionTransformerTest {
           questionNumber = "12.9",
           label = "Issues about attitudes contributing to risks of offending and harm",
           answer = "attitude answer",
+        ),
+        OASysQuestion(
+          questionNumber = "13.1",
+          label = "General Health - Any physical or mental health conditions",
+          answer = "health answer",
         ),
       )
     }
