@@ -199,7 +199,7 @@ data class BedEntity(
   var createdAt: OffsetDateTime?,
 ) {
   fun isActive(now: LocalDate) = Companion.isActive(now, endDate)
-  fun isCas3BedspaceOnline() = this.startDate!! <= LocalDate.now() && (this.endDate == null || this.endDate!! > LocalDate.now())
+  fun isCas3BedspaceOnline() = (this.startDate == null || this.startDate!! <= LocalDate.now()) && (this.endDate == null || this.endDate!! > LocalDate.now())
   fun isCas3BedspaceUpcoming() = this.startDate?.isAfter(LocalDate.now()) == true
   fun isCas3BedspaceArchived() = this.endDate?.isBefore(LocalDate.now()) == true
   override fun toString() = "BedEntity: $id"
