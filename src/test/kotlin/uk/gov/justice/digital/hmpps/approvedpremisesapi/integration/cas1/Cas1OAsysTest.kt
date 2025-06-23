@@ -345,8 +345,6 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
       apOASysContextMockRiskToTheIndividual404Call(CRN)
 
-      mockFeatureFlagService.setFlag("cas1-oasys-use-new-questions", true)
-
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
         .header("Authorization", "Bearer $jwt")

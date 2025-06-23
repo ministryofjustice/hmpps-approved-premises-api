@@ -14,10 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummaryInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
 @Component
-class OASysSectionsTransformer(val featureFlagService: FeatureFlagService) {
+class OASysSectionsTransformer {
   fun transformToApi(
     offenceDetails: OffenceDetails,
     roshSummary: RoshSummary,
@@ -47,7 +46,7 @@ class OASysSectionsTransformer(val featureFlagService: FeatureFlagService) {
     OASysQuestion("Pattern of offending", "2.12", offenceDetails?.patternOffending),
   )
 
-  fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = if (roshSummary.isPreNod1057() || !cas1UseNewQuestions()) {
+  fun roshSummaryAnswers(roshSummary: RoshSummaryInner?) = if (roshSummary.isPreNod1057()) {
     roshSummaryAnswersPreNod1057(roshSummary)
   } else {
     roshSummaryAnswersPost1057(roshSummary)
@@ -69,7 +68,7 @@ class OASysSectionsTransformer(val featureFlagService: FeatureFlagService) {
     OASysQuestion("What circumstances are likely to reduce the risk", "R10.5", roshSummary?.riskReductionLikelyTo),
   )
 
-  fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = if (risksToTheIndividual.isPreNod1057() || !cas1UseNewQuestions()) {
+  fun riskToSelfAnswers(risksToTheIndividual: RiskToTheIndividualInner?) = if (risksToTheIndividual.isPreNod1057()) {
     riskToSelfAnswersPreNod1057(risksToTheIndividual)
   } else {
     riskToSelfAnswersPostNod1057(risksToTheIndividual)
@@ -210,8 +209,6 @@ class OASysSectionsTransformer(val featureFlagService: FeatureFlagService) {
 
     return supportingInformation
   }
-
-  private fun cas1UseNewQuestions() = featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions")
 
   private fun RoshSummaryInner?.isPreNod1057() = this?.riskGreatest != null || this?.riskIncreaseLikelyTo != null || this?.riskReductionLikelyTo != null
 
