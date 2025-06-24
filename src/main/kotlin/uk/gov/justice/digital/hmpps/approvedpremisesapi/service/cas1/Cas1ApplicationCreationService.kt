@@ -235,6 +235,10 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
+    if (application.isWithdrawn) {
+      return CasResult.GeneralValidationError("This application has been withdrawn")
+    }
+
     if (submitApplication.caseManagerIsNotApplicant == true && submitApplication.caseManagerUserDetails == null) {
       return CasResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
@@ -351,6 +355,10 @@ class Cas1ApplicationCreationService(
 
     if (application.submittedAt != null) {
       return CasResult.GeneralValidationError("This application has already been submitted")
+    }
+
+    if (application.isWithdrawn) {
+      return CasResult.GeneralValidationError("This application has been withdrawn")
     }
 
     application.apply {

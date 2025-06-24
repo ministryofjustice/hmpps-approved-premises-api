@@ -377,6 +377,33 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application has been withdrawn`() {
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      application.isWithdrawn = true
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          apType = null,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+          noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        ),
+        userForRequest = user,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("This application has been withdrawn")
+    }
+
+    @Test
     fun `updateApprovedPremisesApplication returns GeneralValidationError when application has AP type specified in multiple ways`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
@@ -691,6 +718,33 @@ class Cas1ApplicationCreationServiceTest {
       val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when application has been withdrawn`() {
+      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withIsWithdrawn(true)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        defaultSubmitApprovedPremisesApplication,
+        user,
+        apAreaId = UUID.randomUUID(),
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("This application has been withdrawn")
     }
 
     @Test
