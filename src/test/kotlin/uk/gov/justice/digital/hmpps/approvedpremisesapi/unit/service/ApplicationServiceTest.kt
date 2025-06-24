@@ -1,15 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
@@ -28,14 +23,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -50,14 +43,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Instant
 import java.time.LocalDate
@@ -72,12 +62,8 @@ class ApplicationServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockUserService = mockk<UserService>()
-  private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
-  private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
-  private val mockApplicationListener = mockk<ApplicationListener>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -86,12 +72,8 @@ class ApplicationServiceTest {
     mockOffenderService,
     mockOffenderRisksService,
     mockUserService,
-    mockAssessmentService,
     mockOfflineApplicationRepository,
     mockUserAccessService,
-    mockCas1ApplicationDomainEventService,
-    mockCas1ApplicationEmailService,
-    mockApplicationListener,
   )
 
   @Test
@@ -1058,248 +1040,6 @@ class ApplicationServiceTest {
     result as CasResult.Success
 
     assertThat(result.value).isEqualTo(applicationEntity)
-  }
-
-  @Nested
-  inner class WithdrawApprovedPremisesApplication {
-
-    @Test
-    fun `withdrawApprovedPremisesApplication returns NotFound if Application does not exist`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val applicationId = UUID.fromString("bb13d346-f278-43d7-9c23-5c4077c031ca")
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
-
-      val result = applicationService.withdrawApprovedPremisesApplication(
-        applicationId,
-        user,
-        "alternative_identified_placement_no_longer_required",
-        null,
-      )
-
-      assertThat(result is CasResult.NotFound).isTrue
-    }
-
-    @Test
-    fun `withdrawApprovedPremisesApplication returns GeneralValidationError if Application is not AP Application`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withProbationRegion(user.probationRegion)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-
-      val result = applicationService.withdrawApprovedPremisesApplication(
-        application.id,
-        user,
-        "alternative_identified_placement_no_longer_required",
-        null,
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val generalValidationError = (result as CasResult.GeneralValidationError).message
-
-      assertThat(generalValidationError).isEqualTo("onlyCas1Supported")
-    }
-
-    @Test
-    fun `withdrawApprovedPremisesApplication is idempotent and returns success if already withdrawn`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withIsWithdrawn(true)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-
-      val result =
-        applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
-
-      assertThat(result is CasResult.Success).isTrue
-    }
-
-    @Test
-    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, triggers domain event and email`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-      every { mockApplicationListener.preUpdate(any()) } returns Unit
-      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
-      every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
-
-      val result = applicationService.withdrawApprovedPremisesApplication(
-        application.id,
-        user,
-        "alternative_identified_placement_no_longer_required",
-        null,
-      )
-
-      assertThat(result is CasResult.Success).isTrue
-
-      verify {
-        mockApplicationRepository.save(
-          match {
-            it.id == application.id &&
-              it is ApprovedPremisesApplicationEntity &&
-              it.isWithdrawn &&
-              it.withdrawalReason == "alternative_identified_placement_no_longer_required"
-          },
-        )
-      }
-
-      verify { mockCas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
-      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application, user) }
-    }
-
-    @Test
-    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, triggers domain event when other reason is set`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-      every { mockApplicationListener.preUpdate(any()) } returns Unit
-      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
-      every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
-
-      val result =
-        applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
-
-      assertThat(result is CasResult.Success).isTrue
-
-      verify {
-        mockApplicationRepository.save(
-          match {
-            it.id == application.id &&
-              it is ApprovedPremisesApplicationEntity &&
-              it.isWithdrawn &&
-              it.withdrawalReason == "other" &&
-              it.otherWithdrawalReason == "Some other reason"
-          },
-        )
-      }
-
-      verify { mockCas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
-      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application, user) }
-    }
-
-    @Test
-    fun `withdrawApprovedPremisesApplication does not persist otherWithdrawalReason if withdrawlReason is not other`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-      every { mockApplicationListener.preUpdate(any()) } returns Unit
-      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } returns Unit
-      every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
-
-      applicationService.withdrawApprovedPremisesApplication(
-        application.id,
-        user,
-        "alternative_identified_placement_no_longer_required",
-        "Some other reason",
-      )
-
-      verify {
-        mockApplicationRepository.save(
-          match {
-            it.id == application.id &&
-              it is ApprovedPremisesApplicationEntity &&
-              it.isWithdrawn &&
-              it.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
-              it.otherWithdrawalReason == null
-          },
-        )
-      }
-
-      verify { mockCas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
-      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application, user) }
-    }
-  }
-
-  @Nested
-  inner class GetWithdrawableState {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    @Test
-    fun `getWithdrawableState withdrawable if application not withdrawn`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withIsWithdrawn(false)
-        .produce()
-
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-
-      val result = applicationService.getWithdrawableState(application, user)
-
-      assertThat(result.withdrawn).isFalse()
-      assertThat(result.withdrawable).isTrue()
-    }
-
-    @Test
-    fun `getWithdrawableState not withdrawable if application already withdrawn `() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withIsWithdrawn(true)
-        .produce()
-
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-
-      val result = applicationService.getWithdrawableState(application, user)
-
-      assertThat(result.withdrawn).isTrue()
-      assertThat(result.withdrawable).isFalse()
-    }
-
-    @ParameterizedTest
-    @CsvSource("true", "false")
-    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withIsWithdrawn(false)
-        .produce()
-
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns canWithdraw
-
-      val result = applicationService.getWithdrawableState(application, user)
-
-      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
-    }
   }
 
   private fun userWithUsername(username: String) = UserEntityFactory()

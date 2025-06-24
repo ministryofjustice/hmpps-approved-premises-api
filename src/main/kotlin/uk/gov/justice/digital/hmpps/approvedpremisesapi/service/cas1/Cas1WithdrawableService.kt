@@ -14,14 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import java.time.LocalDate
 import java.util.UUID
 
 @Service
 class Cas1WithdrawableService(
-  private val applicationService: ApplicationService,
+  private val cas1ApplicationService: Cas1ApplicationService,
   private val placementRequestService: PlacementRequestService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val bookingService: BookingService,
@@ -76,10 +75,7 @@ class Cas1WithdrawableService(
     withdrawalReason: String,
     otherReason: String?,
   ): CasResult<Unit> {
-    val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound(entityType = "Application", applicationId.toString())
-    if (application !is ApprovedPremisesApplicationEntity) {
-      return CasResult.GeneralValidationError("Only CAS1 Apps are supported")
-    }
+    val application = cas1ApplicationService.getApplication(applicationId) ?: return CasResult.NotFound(entityType = "Application", applicationId.toString())
 
     val withdrawalContext = WithdrawalContext(
       withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
@@ -91,7 +87,7 @@ class Cas1WithdrawableService(
       cas1WithdrawableTreeBuilder.treeForApp(application, user).rootNode,
       withdrawalContext,
     ) {
-      applicationService.withdrawApprovedPremisesApplication(applicationId, user, withdrawalReason, otherReason)
+      cas1ApplicationService.withdrawApprovedPremisesApplication(applicationId, user, withdrawalReason, otherReason)
     }
   }
 

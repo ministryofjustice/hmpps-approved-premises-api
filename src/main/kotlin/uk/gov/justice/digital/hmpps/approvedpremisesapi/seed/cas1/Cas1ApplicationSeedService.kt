@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -63,7 +62,6 @@ class Cas1ApplicationSeedService(
   private val bookingRepository: BookingRepository,
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
-  private val applicationService: ApplicationService,
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
   private val cas1ApplicationService: Cas1ApplicationService,
   private val userService: UserService,
@@ -310,7 +308,7 @@ class Cas1ApplicationSeedService(
   private fun withdrawApplication(
     application: ApprovedPremisesApplicationEntity,
   ) {
-    applicationService.withdrawApprovedPremisesApplication(
+    cas1ApplicationService.withdrawApprovedPremisesApplication(
       applicationId = application.id,
       user = application.createdByUser,
       withdrawalReason = "error_in_application",
