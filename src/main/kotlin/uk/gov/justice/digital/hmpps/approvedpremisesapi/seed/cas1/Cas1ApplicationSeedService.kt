@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
@@ -63,6 +64,7 @@ class Cas1ApplicationSeedService(
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
   private val applicationService: ApplicationService,
+  private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
   private val cas1ApplicationService: Cas1ApplicationService,
   private val userService: UserService,
   private val environmentService: EnvironmentService,
@@ -195,7 +197,7 @@ class Cas1ApplicationSeedService(
     val createdByUser = (userService.getExistingUserOrCreate(deliusUserName) as GetUserResponse.Success).user
 
     val newApplicationEntity = extractEntityFromCasResult(
-      applicationService.createApprovedPremisesApplication(
+      cas1ApplicationCreationService.createApprovedPremisesApplication(
         offenderDetails = personInfo.offenderDetailSummary,
         user = createdByUser,
         convictionId = 2500295345,
@@ -206,7 +208,7 @@ class Cas1ApplicationSeedService(
     )
 
     val updatedApplication = extractEntityFromCasResult(
-      applicationService.updateApprovedPremisesApplication(
+      cas1ApplicationCreationService.updateApprovedPremisesApplication(
         applicationId = newApplicationEntity.id,
         updateFields = ApplicationService.Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -238,7 +240,7 @@ class Cas1ApplicationSeedService(
   ) {
     val user = application.createdByUser
 
-    applicationService.submitApprovedPremisesApplication(
+    cas1ApplicationCreationService.submitApprovedPremisesApplication(
       applicationId = application.id,
       submitApplication = SubmitApprovedPremisesApplication(
         apType = ApType.normal,
@@ -349,7 +351,7 @@ class Cas1ApplicationSeedService(
     val personInfo = cache.getPersonInfo(crn)
     val offenderDetail = personInfo.offenderDetailSummary
 
-    val offlineApplication = applicationService.createOfflineApplication(
+    val offlineApplication = cas1ApplicationCreationService.createOfflineApplication(
       OfflineApplicationEntity(
         id = UUID.randomUUID(),
         crn = crn,

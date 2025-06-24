@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
@@ -36,6 +37,7 @@ class Cas1DuplicateApplicationSeedJob(
   private val applicationService: ApplicationService,
   private val offenderService: OffenderService,
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
+  private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
 ) : SeedJob<Cas1DuplicateApplicationSeedCsvRow>(
   requiredHeaders = setOf(
     "application_id",
@@ -79,7 +81,7 @@ class Cas1DuplicateApplicationSeedJob(
     val createdByUser = sourceApplication.createdByUser
 
     val newApplicationEntity = extractEntityFromCasResult(
-      applicationService.createApprovedPremisesApplication(
+      cas1ApplicationCreationService.createApprovedPremisesApplication(
         offenderDetails = personInfo.offenderDetailSummary,
         user = createdByUser,
         convictionId = sourceApplication.convictionId,
@@ -89,7 +91,7 @@ class Cas1DuplicateApplicationSeedJob(
       ),
     )
 
-    applicationService.updateApprovedPremisesApplication(
+    cas1ApplicationCreationService.updateApprovedPremisesApplication(
       applicationId = newApplicationEntity.id,
       updateFields = ApplicationService.Cas1ApplicationUpdateFields(
         isWomensApplication = sourceApplication.isWomensApplication,
