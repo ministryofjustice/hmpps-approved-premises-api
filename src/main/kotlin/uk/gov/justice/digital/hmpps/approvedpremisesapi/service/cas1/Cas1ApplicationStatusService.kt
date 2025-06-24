@@ -16,6 +16,11 @@ class Cas1ApplicationStatusService(
   val bookingRepository: BookingRepository,
 ) {
 
+  fun applicationWithdrawn(application: ApprovedPremisesApplicationEntity) {
+    application.status = ApprovedPremisesApplicationStatus.WITHDRAWN
+    applicationRepository.save(application)
+  }
+
   fun bookingMade(booking: BookingEntity) {
     val application = booking.application
     if (application != null) {

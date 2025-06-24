@@ -37,6 +37,26 @@ class Cas1ApplicationStatusServiceTest {
   private lateinit var service: Cas1ApplicationStatusService
 
   @Nested
+  inner class ApplicationWithdrawn {
+
+    @Test
+    fun `set status to WITHDRAWN`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      every { applicationRepository.save(any()) } returns application
+
+      service.applicationWithdrawn(application)
+
+      verify { applicationRepository.save(application) }
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
+    }
+  }
+
+  @Nested
   inner class BookingMade {
     @Test
     fun `if not linked to application (manual booking), do nothing`() {

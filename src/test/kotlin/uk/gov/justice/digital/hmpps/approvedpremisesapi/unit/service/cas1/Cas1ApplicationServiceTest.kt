@@ -20,13 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import java.util.UUID
 
 @SuppressWarnings("UnusedPrivateProperty")
@@ -43,7 +43,7 @@ class Cas1ApplicationServiceTest {
   private lateinit var offlineApplicationRepository: OfflineApplicationRepository
 
   @MockK
-  private lateinit var applicationListener: ApplicationListener
+  private lateinit var cas1ApplicationStatusService: Cas1ApplicationStatusService
 
   @MockK
   private lateinit var cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService
@@ -114,8 +114,8 @@ class Cas1ApplicationServiceTest {
 
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
       every { userAccessService.userMayWithdrawApplication(user, application) } returns true
-      every { applicationListener.preUpdate(any()) } returns Unit
       every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
+      every { cas1ApplicationStatusService.applicationWithdrawn(any()) } just Runs
       every { cas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
       every { cas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
 
@@ -139,6 +139,7 @@ class Cas1ApplicationServiceTest {
         )
       }
 
+      verify { cas1ApplicationStatusService.applicationWithdrawn(application) }
       verify { cas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
       verify { cas1ApplicationEmailService.applicationWithdrawn(application, user) }
     }
@@ -155,8 +156,8 @@ class Cas1ApplicationServiceTest {
 
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
       every { userAccessService.userMayWithdrawApplication(user, application) } returns true
-      every { applicationListener.preUpdate(any()) } returns Unit
       every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
+      every { cas1ApplicationStatusService.applicationWithdrawn(any()) } just Runs
       every { cas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
       every { cas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
 
@@ -176,6 +177,7 @@ class Cas1ApplicationServiceTest {
         )
       }
 
+      verify { cas1ApplicationStatusService.applicationWithdrawn(application) }
       verify { cas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
       verify { cas1ApplicationEmailService.applicationWithdrawn(application, user) }
     }
@@ -192,8 +194,8 @@ class Cas1ApplicationServiceTest {
 
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
       every { userAccessService.userMayWithdrawApplication(user, application) } returns true
-      every { applicationListener.preUpdate(any()) } returns Unit
       every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
+      every { cas1ApplicationStatusService.applicationWithdrawn(any()) } just Runs
       every { cas1ApplicationEmailService.applicationWithdrawn(any(), any()) } returns Unit
       every { cas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
 
@@ -216,6 +218,7 @@ class Cas1ApplicationServiceTest {
         )
       }
 
+      verify { cas1ApplicationStatusService.applicationWithdrawn(application) }
       verify { cas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
       verify { cas1ApplicationEmailService.applicationWithdrawn(application, user) }
     }

@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -28,7 +27,7 @@ class Cas1ApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val applicationRepository: ApplicationRepository,
   private val offlineApplicationRepository: OfflineApplicationRepository,
-  private val applicationListener: ApplicationListener,
+  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val assessmentService: AssessmentService,
@@ -106,10 +105,10 @@ class Cas1ApplicationService(
         null
       }
     }
-    applicationListener.preUpdate(updatedApplication)
 
     approvedPremisesApplicationRepository.save(updatedApplication)
 
+    cas1ApplicationStatusService.applicationWithdrawn(updatedApplication)
     cas1ApplicationDomainEventService.applicationWithdrawn(updatedApplication, withdrawingUser = user)
     cas1ApplicationEmailService.applicationWithdrawn(updatedApplication, user)
 
