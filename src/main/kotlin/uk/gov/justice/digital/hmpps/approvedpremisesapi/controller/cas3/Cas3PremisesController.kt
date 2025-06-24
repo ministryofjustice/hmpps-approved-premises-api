@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.PremisesCas3Del
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewDeparture
@@ -59,14 +60,23 @@ class Cas3PremisesController(
     return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises))
   }
 
-  override fun getPremisesBedspaces(premisesId: UUID): ResponseEntity<List<Cas3Bedspace>> {
+  override fun getPremisesBedspaces(premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
     val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
     if (!userAccessService.currentUserCanViewPremises(premises)) {
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(premises.rooms.mapNotNull(cas3BedspaceTransformer::transformJpaToApi))
+    val bedspaces = premises.rooms.flatMap { it.beds }
+
+    val result = Cas3Bedspaces(
+      bedspaces = bedspaces.map(cas3BedspaceTransformer::transformJpaToApi),
+      totalOnlineBedspaces = bedspaces.count { it.isCas3BedspaceOnline() },
+      totalUpcomingBedspaces = bedspaces.count { it.isCas3BedspaceUpcoming() },
+      totalArchivedBedspaces = bedspaces.count { it.isCas3BedspaceArchived() },
+    )
+
+    return ResponseEntity.ok(result)
   }
 
   override fun getPremisesBedspace(premisesId: UUID, bedspaceId: UUID): ResponseEntity<Cas3Bedspace> {

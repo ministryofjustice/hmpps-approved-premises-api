@@ -203,7 +203,7 @@ data class BedEntity(
   fun isActive(now: LocalDate) = Companion.isActive(now, endDate)
   fun isCas3BedspaceOnline() = (this.startDate == null || this.startDate!! <= LocalDate.now()) && (this.endDate == null || this.endDate!! > LocalDate.now())
   fun isCas3BedspaceUpcoming() = this.startDate?.isAfter(LocalDate.now()) == true
-  fun isCas3BedspaceArchived() = this.endDate?.isBefore(LocalDate.now()) == true
+  fun isCas3BedspaceArchived() = this.endDate != null && this.endDate!! <= LocalDate.now()
   fun getCas3BedspaceStatus() = when {
     this.isCas3BedspaceUpcoming() -> Cas3BedspaceStatus.upcoming
     this.isCas3BedspaceArchived() -> Cas3BedspaceStatus.archived
