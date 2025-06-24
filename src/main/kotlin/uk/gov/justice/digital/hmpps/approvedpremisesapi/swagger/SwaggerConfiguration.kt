@@ -46,7 +46,7 @@ class SwaggerConfiguration {
   fun cas1Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS1Shared")
     .displayName("CAS1 & Shared")
-    .pathsToExclude("/**/cas2/**", "/**/cas3/**", "/**/events/**")
+    .pathsToExclude("/**/cas2/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**")
     .addOpenApiCustomizer(errorResponsesCustomizer())
     .build()
 
@@ -63,7 +63,7 @@ class SwaggerConfiguration {
   fun cas2Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2Shared")
     .displayName("CAS2 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas3/**", "/**/events/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**")
     .addOpenApiCustomizer(errorResponsesCustomizer())
     .build()
 
@@ -87,7 +87,7 @@ class SwaggerConfiguration {
   fun cas3Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS3Shared")
     .displayName("CAS3 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/events/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2v2/**", "/**/events/**")
     .addOpenApiCustomizer(errorResponsesCustomizer())
     .build()
 
