@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -15,6 +16,7 @@ class PlacementDateEntityFactory : Factory<PlacementDateEntity> {
   private var placementApplication: Yielded<PlacementApplicationEntity?> = { null }
   private var expectedArrival: Yielded<LocalDate> = { LocalDate.now() }
   private var duration: Yielded<Int> = { 12 }
+  private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
 
   fun withPlacementApplication(placementApplication: PlacementApplicationEntity) = apply {
     this.placementApplication = { placementApplication }
@@ -28,11 +30,16 @@ class PlacementDateEntityFactory : Factory<PlacementDateEntity> {
     this.duration = { duration }
   }
 
+  fun withPlacementRequest(placementRequest: PlacementRequestEntity?) = apply {
+    this.placementRequest = { placementRequest }
+  }
+
   override fun produce(): PlacementDateEntity = PlacementDateEntity(
     id = this.id(),
     createdAt = this.createdAt(),
     placementApplication = this.placementApplication() ?: throw RuntimeException("Must provide a placementApplication"),
     expectedArrival = this.expectedArrival(),
     duration = this.duration(),
+    placementRequest = this.placementRequest(),
   )
 }
