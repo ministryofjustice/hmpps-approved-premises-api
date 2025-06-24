@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
@@ -83,7 +82,6 @@ class Cas1PlacementRequestServiceTest {
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
-  private val offenderService = mockk<OffenderService>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
@@ -97,7 +95,6 @@ class Cas1PlacementRequestServiceTest {
     cas1PlacementRequestDomainEventService,
     cas1TaskDeadlineServiceMock,
     cas1BookingDomainEventService,
-    offenderService,
     clock = Clock.systemDefaultZone(),
   )
 
@@ -219,8 +216,8 @@ class Cas1PlacementRequestServiceTest {
       val mockCancellations = mockk<List<CancellationEntity>>()
 
       every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
-      } returns true
+        userAccessService.ensureUserCanAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
+      } returns Unit
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations
 
@@ -1031,8 +1028,8 @@ class Cas1PlacementRequestServiceTest {
         .produce()
 
       every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
-      } returns true
+        userAccessService.ensureUserCanAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
+      } returns Unit
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
 
       val result = placementRequestService.getPlacementRequest(requestingUser, placementRequest.id)

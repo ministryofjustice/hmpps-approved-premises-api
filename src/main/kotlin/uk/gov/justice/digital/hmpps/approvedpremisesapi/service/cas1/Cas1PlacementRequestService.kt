@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -53,7 +52,6 @@ class PlacementRequestService(
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
-  private val offenderService: OffenderService,
   private val clock: Clock,
 ) {
 
@@ -132,9 +130,10 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return CasResult.NotFound("PlacementRequest", id.toString())
 
-    if (offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy()) != true) {
-      return CasResult.Unauthorised()
-    }
+    userAccessService.ensureUserCanAccessOffender(
+      crn = placementRequest.application.crn,
+      strategy = user.cas1LaoStrategy(),
+    )
 
     return CasResult.Success(placementRequest)
   }
@@ -147,9 +146,10 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return CasResult.NotFound("PlacementRequest", id.toString())
 
-    if (offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy()) != true) {
-      return CasResult.Unauthorised()
-    }
+    userAccessService.ensureUserCanAccessOffender(
+      crn = placementRequest.application.crn,
+      strategy = user.cas1LaoStrategy(),
+    )
 
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }

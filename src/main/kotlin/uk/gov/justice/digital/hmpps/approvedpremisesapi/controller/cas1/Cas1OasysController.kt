@@ -6,11 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OAsysCas1Delega
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplicationLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
@@ -20,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 
 @Service
 class Cas1OasysController(
-  private val offenderService: OffenderService,
   private val userService: UserService,
+  private val userAccessService: UserAccessService,
   private val cas1OASysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer,
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
@@ -81,18 +79,12 @@ class Cas1OasysController(
     )
   }
 
-  @SuppressWarnings("ThrowsCount")
   private fun ensureOffenderAccess(crn: String) {
-    when (
-      offenderService.canAccessOffender(
-        crn = crn,
-        laoStrategy = userService.getUserForRequest().cas1CreateApplicationLaoStrategy(),
-      )
-    ) {
-      null -> throw NotFoundProblem(crn, "Offender")
-      false -> throw ForbiddenProblem()
-      else -> Unit
-    }
+    userAccessService.ensureUserCanAccessOffender(
+      crn = crn,
+      strategy = userService.getUserForRequest().cas1CreateApplicationLaoStrategy(),
+      throwNotFound = true,
+    )
   }
 
   private fun <EntityType> extractNullableOAsysResult(result: CasResult<EntityType>) = when (result) {

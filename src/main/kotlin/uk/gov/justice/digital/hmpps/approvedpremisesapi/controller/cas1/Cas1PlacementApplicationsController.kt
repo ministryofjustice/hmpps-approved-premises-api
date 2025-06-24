@@ -13,10 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
@@ -28,8 +27,8 @@ import java.util.UUID
 @Service
 class Cas1PlacementApplicationsController(
   private val userService: UserService,
+  private val userAccessService: UserAccessService,
   private val applicationService: ApplicationService,
-  private val offenderService: OffenderService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val objectMapper: ObjectMapper,
@@ -56,14 +55,13 @@ class Cas1PlacementApplicationsController(
   }
 
   override fun placementApplicationsIdGet(id: UUID): ResponseEntity<PlacementApplication> {
-    val user = userService.getUserForRequest()
-
     val result = cas1PlacementApplicationService.getApplication(id)
     val placementApplication = extractEntityFromCasResult(result)
 
-    if (offenderService.canAccessOffender(placementApplication.application.crn, user.cas1LaoStrategy()) != true) {
-      throw ForbiddenProblem()
-    }
+    userAccessService.ensureUserCanAccessOffender(
+      crn = placementApplication.application.crn,
+      strategy = userService.getUserForRequest().cas1LaoStrategy(),
+    )
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }

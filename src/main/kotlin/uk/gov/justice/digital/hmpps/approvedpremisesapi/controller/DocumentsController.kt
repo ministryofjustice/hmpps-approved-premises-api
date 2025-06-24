@@ -26,7 +26,11 @@ class DocumentsController(
   override fun documentsCrnDocumentIdGet(crn: String, documentId: UUID): ResponseEntity<StreamingResponseBody> {
     val user = userService.getUserForRequest()
 
-    userAccessService.ensureUserCanAccessOffender(crn, user.cas1LaoStrategy())
+    userAccessService.ensureUserCanAccessOffender(
+      crn = crn,
+      strategy = user.cas1LaoStrategy(),
+      throwNotFound = true,
+    )
 
     val documentsMetaData = getDocuments(crn)
 
