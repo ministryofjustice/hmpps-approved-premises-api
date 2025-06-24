@@ -5,9 +5,12 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
@@ -36,6 +39,27 @@ class NomisUserServiceTest {
     mockUserRepository,
   )
 
+  val username = "SOMEPERSON"
+  val newUserData = NomisUserDetailFactory()
+    .withUsername(username)
+    .withFirstName("Jim")
+    .withLastName("Jimmerson")
+    .withStaffId(5678)
+    .withAccountType("CLOSED")
+    .withEmail("example@example.com")
+    .withEnabled(false)
+    .withActive(false)
+    .withActiveCaseloadId("456")
+    .produce()
+
+  val generalAccount = NomisGeneralAccountFactory()
+    .withUsername(username)
+    .produce()
+
+  val nomisStaffInformation = NomisStaffInformationFactory()
+    .withNomisGeneralAccount(generalAccount)
+    .produce()
+
   @Nested
   inner class GetUserForRequest {
 
@@ -44,7 +68,6 @@ class NomisUserServiceTest {
 
       @Test
       fun `does not update user if Nomis-User-Roles API returns same email and activeCaseLoadId`() {
-        val username = "SOMEPERSON"
         // setup auth service
         val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
         every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
@@ -83,7 +106,6 @@ class NomisUserServiceTest {
 
       @Test
       fun `updates user if Nomis-User-Roles API returns new data`() {
-        val username = "SOMEPERSON"
         // setup auth service
         val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
         every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
@@ -120,27 +142,14 @@ class NomisUserServiceTest {
 
     @Nested
     inner class WhenNewUser {
+
       @Test
       fun `saves and returns new User with details from Nomis-User-Roles API`() {
-        val username = "SOMEPERSON"
         // setup auth service
         val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
         every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
         every { mockPrincipal.token.tokenValue } returns "abc123"
         every { mockPrincipal.name } returns username
-
-        // setup nomis roles api
-        val newUserData = NomisUserDetailFactory()
-          .withUsername(username)
-          .withFirstName("Jim")
-          .withLastName("Jimmerson")
-          .withStaffId(5678)
-          .withAccountType("CLOSED")
-          .withEmail("example@example.com")
-          .withEnabled(false)
-          .withActive(false)
-          .withActiveCaseloadId("456")
-          .produce()
 
         every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe("abc123") } returns ClientResult.Success(
           HttpStatus.OK,
@@ -167,13 +176,23 @@ class NomisUserServiceTest {
   @Nested
   inner class GetUserByStaffId {
 
+    @BeforeEach
+    fun setup() {
+      every { mockNomisUserRolesApiClient.getUserStaffInformation(eq(newUserData.staffId)) } returns ClientResult.Success(
+        HttpStatus.OK,
+        nomisStaffInformation,
+      )
+      every { mockNomisUserRolesApiClient.getUserDetails(eq(username)) } returns ClientResult.Success(
+        HttpStatus.OK,
+        newUserData,
+      )
+    }
+
     @Nested
     inner class WhenExistingUser {
 
       @Test
       fun `returns user from database and does not create new user as already in database`() {
-        val username = "SOMEPERSON"
-
         val user = NomisUserEntityFactory()
           .withNomisUsername(username)
           .withName("Bob Robson")
@@ -192,35 +211,8 @@ class NomisUserServiceTest {
     inner class WhenNewUser {
       @Test
       fun `saves and returns new User with details from Nomis-User-Roles API`() {
-        val username = "SOMEPERSON"
-
-        val newUserData = NomisUserDetailFactory()
-          .withUsername(username)
-          .withFirstName("Jim")
-          .withLastName("Jimmerson")
-          .withStaffId(5678)
-          .withAccountType("CLOSED")
-          .withEmail("example@example.com")
-          .withEnabled(false)
-          .withActive(false)
-          .withActiveCaseloadId("456")
-          .produce()
-        val generalAccount = NomisGeneralAccountFactory()
-          .withUsername(username)
-          .produce()
-        val nomisStaffInformation = NomisStaffInformationFactory()
-          .withNomisGeneralAccount(generalAccount)
-          .produce()
-
         every { mockUserRepository.findByNomisStaffId(eq(newUserData.staffId)) } returns null
-        every { mockNomisUserRolesApiClient.getUserStaffInformation(eq(newUserData.staffId)) } returns ClientResult.Success(
-          HttpStatus.OK,
-          nomisStaffInformation,
-        )
-        every { mockNomisUserRolesApiClient.getUserDetails(eq(username)) } returns ClientResult.Success(
-          HttpStatus.OK,
-          newUserData,
-        )
+
         every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
         every { mockUserRepository.findByNomisUsername(username) } returns null
 
@@ -238,42 +230,39 @@ class NomisUserServiceTest {
 
       @Test
       fun `does not save when existing`() {
-        val username = "SOMEPERSON"
-
-        val newUserData = NomisUserDetailFactory()
-          .withUsername(username)
-          .withFirstName("Jim")
-          .withLastName("Jimmerson")
-          .withStaffId(5678)
-          .withAccountType("CLOSED")
-          .withEmail("example@example.com")
-          .withEnabled(false)
-          .withActive(false)
-          .withActiveCaseloadId("456")
-          .produce()
-        val generalAccount = NomisGeneralAccountFactory()
-          .withUsername(username)
-          .produce()
-        val nomisStaffInformation = NomisStaffInformationFactory()
-          .withNomisGeneralAccount(generalAccount)
-          .produce()
-
         every { mockUserRepository.findByNomisStaffId(eq(newUserData.staffId)) } returns null
-        every { mockNomisUserRolesApiClient.getUserStaffInformation(eq(newUserData.staffId)) } returns ClientResult.Success(
-          HttpStatus.OK,
-          nomisStaffInformation,
-        )
-        every { mockNomisUserRolesApiClient.getUserDetails(eq(username)) } returns ClientResult.Success(
-          HttpStatus.OK,
-          newUserData,
-        )
 
         val userEntity = NomisUserEntityFactory().produce()
         every { mockUserRepository.findByNomisUsername(username) } returns userEntity
 
-        userService.getUserByStaffId(newUserData.staffId)
+        val result = userService.getUserByStaffId(newUserData.staffId)
         verify(exactly = 0) { mockUserRepository.save(any()) }
+        assertThat(result).isEqualTo(userEntity)
       }
+    }
+
+    @Test
+    fun `returns gracefully if the username is existing`() {
+      val userEntity = NomisUserEntityFactory().produce()
+      every { mockUserRepository.findByNomisStaffId(newUserData.staffId) } returns null
+      every { mockUserRepository.save(any()) } throws DataIntegrityViolationException("DataIntegrityViolationException")
+      every { mockUserRepository.findByNomisUsername(username) } returns null andThen userEntity
+
+      val result = userService.getUserByStaffId(newUserData.staffId)
+      verify(exactly = 1) { mockUserRepository.save(any()) }
+      verify(exactly = 2) { mockUserRepository.findByNomisUsername(newUserData.username) }
+      assertThat(result).isEqualTo(userEntity)
+    }
+
+    @Test
+    fun `still throws exception when username is not existing`() {
+      every { mockUserRepository.findByNomisUsername(any()) } returns null
+      every { mockUserRepository.save(any()) } throws DataIntegrityViolationException("DataIntegrityViolationException")
+      every { mockUserRepository.findByNomisStaffId(newUserData.staffId) } returns null
+
+      assertThrows<IllegalStateException> { userService.getUserByStaffId(newUserData.staffId) }
+      verify(exactly = 1) { mockUserRepository.save(any()) }
+      verify(exactly = 2) { mockUserRepository.findByNomisUsername(newUserData.username) }
     }
   }
 }
