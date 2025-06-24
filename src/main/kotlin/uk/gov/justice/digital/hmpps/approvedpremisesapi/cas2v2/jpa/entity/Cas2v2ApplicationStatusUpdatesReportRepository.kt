@@ -22,7 +22,7 @@ interface Cas2v2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainE
         COALESCE(string_agg(details ->> 'name', '|'), '') as statusDetails,
         TO_CHAR(
           CAST(events.data -> 'eventDetails' ->> 'updatedAt' AS TIMESTAMP),
-          'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+          'YYYY-MM-DD"T"HH24:MI:SS'
          ) AS updatedAt
 
       FROM domain_events events
