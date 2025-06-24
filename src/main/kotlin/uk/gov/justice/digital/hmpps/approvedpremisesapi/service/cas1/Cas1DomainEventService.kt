@@ -313,6 +313,8 @@ class Cas1DomainEventService(
         assessmentId = domainEvent.assessmentId,
         bookingId = domainEvent.bookingId,
         cas1SpaceBookingId = domainEvent.cas1SpaceBookingId,
+        cas3PremisesId = null,
+        cas3BedspaceId = null,
         crn = domainEvent.crn,
         type = eventType,
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
