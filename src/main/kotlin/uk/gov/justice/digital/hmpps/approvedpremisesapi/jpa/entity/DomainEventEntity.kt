@@ -150,6 +150,10 @@ data class DomainEventEntity(
   val bookingId: UUID?,
   @Column(name = "cas1_space_booking_id")
   val cas1SpaceBookingId: UUID?,
+  @Column(name = "cas3_premises_id")
+  val cas3PremisesId: UUID?,
+  @Column(name = "cas3_bedspace_id")
+  val cas3BedspaceId: UUID?,
   val crn: String,
   @Enumerated(value = EnumType.STRING)
   val type: DomainEventType,
