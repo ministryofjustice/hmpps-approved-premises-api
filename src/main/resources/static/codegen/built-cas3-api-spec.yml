@@ -5599,3 +5599,66 @@ components:
           format: date-time
       required:
         - hasApplicableAssessment
+    Cas3VoidBedspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        bedId:
+          type: string
+          format: uuid
+        bedName:
+          type: string
+        roomName:
+          type: string
+        reason:
+          $ref: '#/components/schemas/Cas3VoidBedspaceReason'
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        status:
+          $ref: '#/components/schemas/Cas3VoidBedspaceStatus'
+        cancellationDate:
+          nullable: true
+          type: string
+          format: date
+        cancellationNotes:
+          nullable: true
+          type: string
+      required:
+        - id
+        - startDate
+        - endDate
+        - bedId
+        - bedName
+        - roomName
+        - reason
+        - status
+    Cas3VoidBedspaceReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Double Room with Single Occupancy - Other (Non-FM)
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - isActive
+    Cas3VoidBedspaceStatus:
+      type: string
+      enum:
+        - active
+        - cancelled
