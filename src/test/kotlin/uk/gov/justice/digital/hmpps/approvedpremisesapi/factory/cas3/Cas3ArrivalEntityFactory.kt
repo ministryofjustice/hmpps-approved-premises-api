@@ -54,6 +54,10 @@ class Cas3ArrivalEntityFactory : Factory<Cas3ArrivalEntity> {
     this.createdAt = { createdAt }
   }
 
+  fun withDefaults() = apply {
+    withBooking(Cas3BookingEntityFactory().withDefaults().produce())
+  }
+
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas3ArrivalEntity = Cas3ArrivalEntity(
     id = this.id(),

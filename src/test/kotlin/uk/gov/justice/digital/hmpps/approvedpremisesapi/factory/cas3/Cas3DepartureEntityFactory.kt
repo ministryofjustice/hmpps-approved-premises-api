@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
@@ -69,6 +71,12 @@ class Cas3DepartureEntityFactory : Factory<Cas3DepartureEntity> {
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
+  }
+
+  fun withDefaults() = apply {
+    withReason(DepartureReasonEntityFactory().produce())
+    withMoveOnCategory(MoveOnCategoryEntityFactory().produce())
+    withBooking(Cas3BookingEntityFactory().withDefaults().produce())
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")

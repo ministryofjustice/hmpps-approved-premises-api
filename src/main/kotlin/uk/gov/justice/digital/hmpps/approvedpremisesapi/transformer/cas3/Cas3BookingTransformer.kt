@@ -1,17 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingPremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BookingPremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.time.LocalDate
@@ -27,21 +24,16 @@ class Cas3BookingTransformer(
   private val extensionTransformer: Cas3ExtensionTransformer,
   private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
   private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
-  private val enumConverterFactory: EnumConverterFactory,
   private val workingDayService: WorkingDayService,
 ) {
 
-  fun transformJpaToApi(jpa: Cas3BookingEntity, personInfo: PersonInfoResult): Booking {
-    val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
-
-    return Booking(
+  fun transformJpaToApi(jpa: Cas3BookingEntity, personInfo: PersonInfoResult): Cas3Booking {
+    val hasNonZeroDayTurnaround = jpa.hasNonZeroDayTurnaround()
+    return Cas3Booking(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
       arrivalDate = jpa.arrivalDate,
       departureDate = jpa.departureDate,
-      serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),
-      // key worker is a legacy CAS1 only field that is no longer populated. This will be removed once migration to space bookings is complete
-      keyWorker = null,
       status = determineStatus(jpa),
       arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
       departure = departureTransformer.transformJpaToApi(jpa.departure),
@@ -51,7 +43,7 @@ class Cas3BookingTransformer(
       cancellations = jpa.cancellations.map { cancellationTransformer.transformJpaToApi(it)!! },
       confirmation = confirmationTransformer.transformJpaToApi(jpa.confirmation),
       extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi),
-      bed = cas3BedspaceTransformer.transformJpaToApi(jpa.bedspace),
+      bedspace = cas3BedspaceTransformer.transformJpaToApi(jpa.bedspace),
       originalArrivalDate = jpa.originalArrivalDate,
       originalDepartureDate = jpa.originalDepartureDate,
       createdAt = jpa.createdAt.toInstant(),
@@ -61,7 +53,7 @@ class Cas3BookingTransformer(
       effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
       applicationId = jpa.application?.id,
       assessmentId = jpa.application?.getLatestAssessment()?.id,
-      premises = jpa.premises.let { BookingPremisesSummary(it.id, it.name) },
+      premises = jpa.premises.let { Cas3BookingPremisesSummary(it.id, it.name) },
     )
   }
 
@@ -71,22 +63,22 @@ class Cas3BookingTransformer(
     listOf(DatePeriod(jpa.arrivalDate, jpa.departureDate)),
   )
 
-  fun determineStatus(jpa: Cas3BookingEntity): BookingStatus {
+  private fun determineStatus(jpa: Cas3BookingEntity): Cas3BookingStatus {
     val (hasNonZeroDayTurnaround, hasZeroDayTurnaround, turnaroundPeriodEnded) = isTurnaroundPeriodEnded(jpa)
     return when {
-      jpa.cancellation != null -> BookingStatus.cancelled
-      jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
-      jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
-      jpa.arrival != null -> BookingStatus.arrived
-      jpa.nonArrival != null -> BookingStatus.notMinusArrived
-      jpa.confirmation != null -> BookingStatus.confirmed
-      else -> BookingStatus.provisional
+      jpa.cancellation != null -> Cas3BookingStatus.cancelled
+      jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> Cas3BookingStatus.departed
+      jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> Cas3BookingStatus.closed
+      jpa.arrival != null -> Cas3BookingStatus.arrived
+      jpa.nonArrival != null -> Cas3BookingStatus.notMinusArrived
+      jpa.confirmation != null -> Cas3BookingStatus.confirmed
+      else -> Cas3BookingStatus.provisional
     }
   }
 
   private fun isTurnaroundPeriodEnded(jpa: Cas3BookingEntity): Triple<Boolean, Boolean, Boolean> {
-    val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
-    val hasZeroDayTurnaround = jpa.turnaround == null || jpa.turnaround!!.workingDayCount == 0
+    val hasNonZeroDayTurnaround = jpa.hasNonZeroDayTurnaround()
+    val hasZeroDayTurnaround = jpa.hasZeroDayTurnaround()
     val turnaroundPeriodEnded = if (!hasNonZeroDayTurnaround) {
       false
     } else {

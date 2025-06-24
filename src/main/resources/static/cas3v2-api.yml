@@ -27,4 +27,4 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Booking'
+                  $ref: 'cas3-schemas.yml#/components/schemas/Cas3Booking'
