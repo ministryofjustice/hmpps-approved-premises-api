@@ -12,7 +12,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.OrderBy
+import org.hibernate.annotations.SQLOrder
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -77,11 +77,11 @@ data class Cas2v2ApplicationEntity(
   var abandonedAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "application")
-  @OrderBy("createdAt DESC")
+  @SQLOrder("createdAt DESC")
   var statusUpdates: MutableList<Cas2v2StatusUpdateEntity>? = null,
 
   @OneToMany(mappedBy = "application")
-  @OrderBy("createdAt DESC")
+  @SQLOrder("createdAt DESC")
   var notes: MutableList<Cas2v2ApplicationNoteEntity>? = null,
 
   @OneToOne(mappedBy = "application")
