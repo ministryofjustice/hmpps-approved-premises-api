@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import jakarta.transaction.Transactional
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
@@ -58,7 +59,7 @@ class Cas2UserService(
     val userStaffInformation = getUserStaffInformation(staffId)
     val normalisedUsername = userStaffInformation.generalAccount.username.uppercase()
     val userDetail = getUserDetail(username = normalisedUsername)
-    return createNewUser(username = normalisedUsername, userDetail)
+    return ensureUserExists(username = normalisedUsername, userDetail)
   }
 
   private fun getUserDetail(username: String): NomisUserDetail = when (
@@ -95,25 +96,32 @@ class Cas2UserService(
       }
       return existingUser
     }
-    return createNewUser(username = normalisedUsername, nomisUserDetails)
+    return ensureUserExists(username = normalisedUsername, nomisUserDetails)
   }
 
-  private fun createNewUser(
+  private fun ensureUserExists(
     username: String,
     nomisUserDetails: NomisUserDetail,
-  ): NomisUserEntity = nomisUserRepository.save(
-    NomisUserEntity(
-      id = UUID.randomUUID(),
-      name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
-      nomisUsername = username,
-      nomisStaffId = nomisUserDetails.staffId,
-      accountType = nomisUserDetails.accountType,
-      email = nomisUserDetails.primaryEmail,
-      isEnabled = nomisUserDetails.enabled,
-      isActive = nomisUserDetails.active,
-      activeCaseloadId = nomisUserDetails.activeCaseloadId,
-    ),
-  )
+  ): NomisUserEntity {
+    return nomisUserRepository.findByNomisUsername(username) ?: try {
+      nomisUserRepository.save(
+        NomisUserEntity(
+          id = UUID.randomUUID(),
+          name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
+          nomisUsername = username,
+          nomisStaffId = nomisUserDetails.staffId,
+          accountType = nomisUserDetails.accountType,
+          email = nomisUserDetails.primaryEmail,
+          isEnabled = nomisUserDetails.enabled,
+          isActive = nomisUserDetails.active,
+          activeCaseloadId = nomisUserDetails.activeCaseloadId,
+        ),
+      )
+    } catch (ex: DataIntegrityViolationException) {
+      return nomisUserRepository.findByNomisUsername(username)
+        ?: throw IllegalStateException("User creation failed and username $username not found", ex)
+    }
+  }
 
   private fun existingUserDetailsHaveChanged(
     existingUser: NomisUserEntity,
