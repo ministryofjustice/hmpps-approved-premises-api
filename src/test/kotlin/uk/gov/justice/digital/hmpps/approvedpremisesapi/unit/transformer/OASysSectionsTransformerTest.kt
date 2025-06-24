@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -16,15 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 @ExtendWith(MockKExtension::class)
 class OASysSectionsTransformerTest {
-
-  @MockK
-  lateinit var featureFlagService: FeatureFlagService
-
   @InjectMockKs
   lateinit var oaSysSectionsTransformer: OASysSectionsTransformer
 
@@ -249,9 +242,7 @@ class OASysSectionsTransformerTest {
   inner class RiskToSelfAnswers {
 
     @Test
-    fun `transforms correctly, post NOD 1057 assessment, use new question feature flag on`() {
-      every { featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions") } returns true
-
+    fun `transforms correctly, post NOD 1057 assessment`() {
       val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
         withCurrentConcernsSelfHarmSuicide(null)
         withCurrentCustodyHostelCoping(null)
@@ -279,40 +270,6 @@ class OASysSectionsTransformerTest {
           label = "Analysis of vulnerabilities",
           questionNumber = "FA64",
           answer = "analysisVulnerabilitiesAnswer",
-        ),
-      )
-    }
-
-    @Test
-    fun `transforms correctly, post NOD 1057 assessment, feature flag off`() {
-      every { featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions") } returns false
-
-      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
-        withCurrentConcernsSelfHarmSuicide(null)
-        withCurrentCustodyHostelCoping(null)
-        withCurrentVulnerability(null)
-        withAnalysisSuicideSelfharm("analysisSuicideSelfHarmAnswer")
-        withAnalysisCoping("analysisCopingAnswer")
-        withAnalysisVulnerabilities("analysisVulnerabilitiesAnswer")
-      }.produce()
-
-      val result = oaSysSectionsTransformer.riskToSelfAnswers(risksToTheIndividualApiResponse.riskToTheIndividual)
-
-      assertThat(result).containsExactly(
-        OASysQuestion(
-          label = "Current concerns about self-harm or suicide",
-          questionNumber = "R8.1.1",
-          answer = null,
-        ),
-        OASysQuestion(
-          label = "Current concerns about Coping in Custody or Hostel",
-          questionNumber = "R8.2.1",
-          answer = null,
-        ),
-        OASysQuestion(
-          label = "Current concerns about Vulnerability",
-          questionNumber = "R8.3.1",
-          answer = null,
         ),
       )
     }
@@ -348,8 +305,6 @@ class OASysSectionsTransformerTest {
 
     @Test
     fun `return empty questions if no assessment available`() {
-      every { featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions") } returns true
-
       val result = oaSysSectionsTransformer.riskToSelfAnswers(null)
 
       assertThat(result).containsExactly(
@@ -376,9 +331,7 @@ class OASysSectionsTransformerTest {
   inner class RoshSummaryAnswers {
 
     @Test
-    fun `transforms correctly, post NOD 1057 assessment, use new question feature flag on`() {
-      every { featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions") } returns true
-
+    fun `transforms correctly, post NOD 1057 assessment`() {
       val roshSummaryApiResponse = RoshSummaryFactory().apply {
         withWhoAtRisk("Who is at risk answer")
         withNatureOfRisk("What is the nature of the risk answer")
@@ -417,52 +370,6 @@ class OASysSectionsTransformerTest {
           label = "Strengths and protective factors",
           questionNumber = "SUM10",
           answer = "strengths and protective answers",
-        ),
-      )
-    }
-
-    @Test
-    fun `transforms correctly, post NOD 1057 assessment, use new question feature flag off`() {
-      every { featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions") } returns false
-
-      val roshSummaryApiResponse = RoshSummaryFactory().apply {
-        withWhoAtRisk("Who is at risk answer")
-        withNatureOfRisk("What is the nature of the risk answer")
-        withRiskGreatest(null)
-        withRiskIncreaseLikelyTo(null)
-        withRiskReductionLikelyTo(null)
-        withFactorsSituationsLikelyToOffend("likely to offend answers")
-        withFactorsAnalysisOfRisk("analysis of risk answers")
-        withFactorsStrengthsAndProtective("strengths and protective answers")
-      }.produce()
-
-      val result = oaSysSectionsTransformer.roshSummaryAnswers(roshSummaryApiResponse.roshSummary)
-
-      assertThat(result).containsExactly(
-        OASysQuestion(
-          label = "Who is at risk",
-          questionNumber = "R10.1",
-          answer = "Who is at risk answer",
-        ),
-        OASysQuestion(
-          label = "What is the nature of the risk",
-          questionNumber = "R10.2",
-          answer = "What is the nature of the risk answer",
-        ),
-        OASysQuestion(
-          label = "When is the risk likely to be the greatest",
-          questionNumber = "R10.3",
-          answer = null,
-        ),
-        OASysQuestion(
-          label = "What circumstances are likely to increase risk",
-          questionNumber = "R10.4",
-          answer = null,
-        ),
-        OASysQuestion(
-          label = "What circumstances are likely to reduce the risk",
-          questionNumber = "R10.5",
-          answer = null,
         ),
       )
     }
@@ -512,8 +419,6 @@ class OASysSectionsTransformerTest {
 
     @Test
     fun `return empty questions if no assessment available`() {
-      every { featureFlagService.getBooleanFlag("cas1-oasys-use-new-questions") } returns true
-
       val result = oaSysSectionsTransformer.roshSummaryAnswers(null)
 
       assertThat(result).containsExactly(

@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockOffenceDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskManagementPlan404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRoSHSummary404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulHealthDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
@@ -72,41 +71,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Return 404 if offence details record can't be found for the CRN  (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockOffenceDetails404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/metadata")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
-    fun `Return 404 if needs record can't be found for the CRN (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
-      apOASysContextMockNeedsDetails404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/metadata")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
     fun `success when assessment not found`() {
       val (_, jwt) = givenAUser()
-
-      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
@@ -225,30 +191,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk Management Not Found, return 404  (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
-      apOASysContextMockRiskManagementPlan404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
     fun `Risk Management Not Found, return empty questions`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
       apOASysContextMockOffenceDetails404Call(CRN)
       apOASysContextMockRiskManagementPlan404Call(CRN)
-
-      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
@@ -302,29 +250,11 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Offence Details Not Found, return 404 (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-
-      apOASysContextMockOffenceDetails404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
     fun `Offence Details Not Found, return empty questions`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
       apOASysContextMockOffenceDetails404Call(CRN)
-
-      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
@@ -376,22 +306,6 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `ROSH Summary Not Found, return 404  (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
-      apOASysContextMockRoSHSummary404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/answers?group=roshSummary")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
     fun `ROSH Summary Success`() {
       val (_, jwt) = givenAUser()
 
@@ -424,47 +338,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk to self Not Found, return 404  (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
-      apOASysContextMockRiskToTheIndividual404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
-    fun `Risk to self Success Not Found, return 404  (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
-      apOASysContextMockRiskToTheIndividual404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
     fun `Risk to self Success Not Found, return empty questions`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
       apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
       apOASysContextMockRiskToTheIndividual404Call(CRN)
-
-      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
-      mockFeatureFlagService.setFlag("cas1-oasys-use-new-questions", true)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
@@ -517,30 +396,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Supporting Information Not Found, return 404  (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
-      apOASysContextMockNeedsDetails404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
     fun `Supporting Information Not Found, return empty questions`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
       apOASysContextMockOffenceDetails404Call(CRN)
       apOASysContextMockNeedsDetails404Call(CRN)
-
-      mockFeatureFlagService.setFlag("cas1-oasys-return-empty-oasys-responses", true)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=")
