@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.Chec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
@@ -88,6 +89,7 @@ class ApplicationsController(
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val documentService: DocumentService,
+  private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -213,7 +215,7 @@ class ApplicationsController(
     createWithRisks: Boolean?,
   ): CasResult<out ApplicationEntity> = when (serviceName) {
     ServiceName.approvedPremises ->
-      applicationService.createApprovedPremisesApplication(
+      cas1ApplicationCreationService.createApprovedPremisesApplication(
         personInfo.offenderDetailSummary,
         user,
         body.convictionId,
@@ -252,7 +254,7 @@ class ApplicationsController(
     val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = when (body) {
-      is UpdateApprovedPremisesApplication -> applicationService.updateApprovedPremisesApplication(
+      is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
         ApplicationService.Cas1ApplicationUpdateFields(
           data = serializedData,
@@ -326,7 +328,7 @@ class ApplicationsController(
           val user = userService.getUserForRequest()
           apAreaId = user.apArea!!.id
         }
-        applicationService.submitApprovedPremisesApplication(
+        cas1ApplicationCreationService.submitApprovedPremisesApplication(
           applicationId,
           submitApplication,
           userService.getUserForRequest(),
