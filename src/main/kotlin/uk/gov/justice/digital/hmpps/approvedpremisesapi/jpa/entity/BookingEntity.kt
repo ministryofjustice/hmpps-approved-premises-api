@@ -272,7 +272,9 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query(
     """
       SELECT * FROM  bookings b 
-      WHERE b.service='temporary-accommodation'""",
+      WHERE b.service='temporary-accommodation'
+      ORDER BY b.crn
+      """,
     nativeQuery = true,
   )
   fun <T : BookingEntity> findAllTemporaryAccommodationBookings(
