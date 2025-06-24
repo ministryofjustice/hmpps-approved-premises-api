@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -35,6 +36,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
@@ -1383,6 +1386,51 @@ class UserAccessServiceTest {
 
       assertThat(userAccessService.currentUserCanChangeBookingDate(temporaryAccommodationPremisesInUserRegion)).isFalse
       assertThat(userAccessService.currentUserCanChangeBookingDate(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    }
+  }
+
+  @Nested
+  inner class EnsureUserCanAccessOffender {
+    @Test
+    fun `can access, do nothing`() {
+      every {
+        offenderService.canAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"))
+      } returns true
+
+      userAccessService.ensureUserCanAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"))
+    }
+
+    @Test
+    fun `cannot access, throw forbidden problem`() {
+      every {
+        offenderService.canAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"))
+      } returns false
+
+      assertThatThrownBy {
+        userAccessService.ensureUserCanAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"))
+      }.isInstanceOf(ForbiddenProblem::class.java)
+    }
+
+    @Test
+    fun `no access result returned, throw forbidden problem if throwNotFound is false`() {
+      every {
+        offenderService.canAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"))
+      } returns null
+
+      assertThatThrownBy {
+        userAccessService.ensureUserCanAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"), throwNotFound = false)
+      }.isInstanceOf(ForbiddenProblem::class.java)
+    }
+
+    @Test
+    fun `no access result returned, throw not found problem if throwNotFound is true`() {
+      every {
+        offenderService.canAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"))
+      } returns null
+
+      assertThatThrownBy {
+        userAccessService.ensureUserCanAccessOffender("CRN1", LaoStrategy.CheckUserAccess("user"), throwNotFound = true)
+      }.isInstanceOf(NotFoundProblem::class.java)
     }
   }
 }

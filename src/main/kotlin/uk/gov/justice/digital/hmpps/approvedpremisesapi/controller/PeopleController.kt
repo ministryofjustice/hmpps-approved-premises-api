@@ -21,7 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.checkUserAccessLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
@@ -41,6 +43,7 @@ class PeopleController(
   private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
   private val oasysService: OASysService,
+  private val userAccessService: UserAccessService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -116,7 +119,11 @@ class PeopleController(
   }
 
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
-    ensureUserCanAccessOffenderInfo(crn)
+    userAccessService.ensureUserCanAccessOffender(
+      crn = crn,
+      strategy = userService.getUserForRequest().checkUserAccessLaoStrategy(),
+      throwNotFound = true,
+    )
 
     val needs = extractEntityFromCasResult(oasysService.getOASysNeeds(crn))
 
@@ -153,16 +160,16 @@ class PeopleController(
   }
 
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
-    ensureUserCanAccessOffenderInfo(crn)
+    userAccessService.ensureUserCanAccessOffender(
+      crn = crn,
+      strategy = userService.getUserForRequest().checkUserAccessLaoStrategy(),
+      throwNotFound = true,
+    )
 
     val caseDetail = offenderService.getCaseDetail(crn)
     return ResponseEntity.ok(
       offenceTransformer.transformToApi(extractEntityFromCasResult(caseDetail)),
     )
-  }
-
-  private fun ensureUserCanAccessOffenderInfo(crn: String) {
-    getOffenderDetails(crn)
   }
 
   private fun getOffenderDetails(crn: String): OffenderDetailSummary {

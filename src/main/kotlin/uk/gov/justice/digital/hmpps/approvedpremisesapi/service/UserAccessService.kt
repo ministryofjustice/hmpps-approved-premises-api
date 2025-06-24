@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import java.util.UUID
 
 @Service
@@ -31,6 +32,23 @@ class UserAccessService(
   fun ensureCurrentUserHasPermission(permission: UserPermission) {
     if (!currentUserHasPermission(permission)) {
       throw ForbiddenProblem("Permission ${permission.name} is required")
+    }
+  }
+
+  @SuppressWarnings("ThrowsCount")
+  fun ensureUserCanAccessOffender(
+    crn: String,
+    strategy: LaoStrategy,
+    throwNotFound: Boolean = false,
+  ) {
+    when (offenderService.canAccessOffender(crn, strategy)) {
+      true -> Unit
+      false -> throw ForbiddenProblem("Access to offender $crn is restricted")
+      null -> if (throwNotFound) {
+        throw NotFoundProblem(crn, "Offender")
+      } else {
+        throw ForbiddenProblem("Access to offender $crn is restricted")
+      }
     }
   }
 

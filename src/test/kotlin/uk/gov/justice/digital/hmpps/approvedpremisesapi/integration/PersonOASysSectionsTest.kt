@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
@@ -62,7 +63,9 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting oasys sections for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    apDeliusContextUserAccessEmptyResponse()
+
+    givenAUser { _, jwt ->
       val crn = "CRN123"
 
       webTestClient.get()

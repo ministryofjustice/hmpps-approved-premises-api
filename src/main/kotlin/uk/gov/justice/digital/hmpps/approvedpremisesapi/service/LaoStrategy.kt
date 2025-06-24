@@ -78,6 +78,8 @@ sealed interface LaoStrategy {
   data class CheckUserAccess(val deliusUsername: String) : LaoStrategy
 }
 
+fun UserEntity.checkUserAccessLaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
+
 /**
  * This strategy is _not_ applied when creating an application. In that case, use cas1CreateApplicationLaoStrategy, which
  * always applies [LaoStrategy.CheckUserAccess]
@@ -85,9 +87,9 @@ sealed interface LaoStrategy {
 fun UserEntity.cas1LaoStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LaoStrategy.NeverRestricted
 } else {
-  LaoStrategy.CheckUserAccess(this.deliusUsername)
+  checkUserAccessLaoStrategy()
 }
 
-fun UserEntity.cas1CreateApplicationLaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
+fun UserEntity.cas1CreateApplicationLaoStrategy() = checkUserAccessLaoStrategy()
 
-fun UserEntity.cas3LaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
+fun UserEntity.cas3LaoStrategy() = checkUserAccessLaoStrategy()

@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import java.time.LocalDate
@@ -57,7 +58,9 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting offences for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    apDeliusContextUserAccessEmptyResponse()
+
+    givenAUser { _, jwt ->
       val crn = "CRN123"
 
       webTestClient.get()

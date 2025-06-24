@@ -4,10 +4,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.PeopleCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3OASysGroup
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
@@ -16,15 +14,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 
 @Service
 class Cas3PeopleController(
-  private val offenderService: OffenderService,
   private val userService: UserService,
+  private val userAccessService: UserAccessService,
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val oaSysOffenceDetailsTransformer: Cas3OASysOffenceDetailsTransformer,
 ) : PeopleCas3Delegate {
 
   override fun riskManagement(crn: String): ResponseEntity<Cas3OASysGroup> {
-    ensureOffenderAccess(crn)
+    userAccessService.ensureUserCanAccessOffender(
+      crn = crn,
+      strategy = userService.getUserForRequest().cas3LaoStrategy(),
+      throwNotFound = true,
+    )
 
     val offenceDetails = extractEntityFromCasResult(oaSysService.getOASysOffenceDetails(crn))
 
@@ -40,19 +42,5 @@ class Cas3PeopleController(
         answers = answers,
       ),
     )
-  }
-
-  @SuppressWarnings("ThrowsCount")
-  private fun ensureOffenderAccess(crn: String) {
-    when (
-      offenderService.canAccessOffender(
-        crn = crn,
-        laoStrategy = userService.getUserForRequest().cas3LaoStrategy(),
-      )
-    ) {
-      null -> throw NotFoundProblem(crn, "Offender")
-      false -> throw ForbiddenProblem()
-      else -> Unit
-    }
   }
 }
