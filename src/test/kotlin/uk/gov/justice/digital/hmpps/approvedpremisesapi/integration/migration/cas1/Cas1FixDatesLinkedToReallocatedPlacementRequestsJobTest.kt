@@ -40,21 +40,27 @@ class Cas1FixDatesLinkedToReallocatedPlacementRequestsJobTest : MigrationJobTest
       expectedArrival = LocalDate.of(2024, 6, 1),
       duration = 1,
     ).first
-    val placementRequest1Reallocated = placementRequestRepository.save(placementRequest1.copy(id = UUID.randomUUID(), reallocatedAt = OffsetDateTime.now(), placementApplication = null))
+    val placementRequest1Reallocated = placementRequestRepository.save(
+      placementRequest1.copy(id = UUID.randomUUID(), reallocatedAt = OffsetDateTime.now()),
+    )
 
     val placementRequest2 = givenAPlacementRequest(
       placementApplication = placementAppWithMultipleDates,
       expectedArrival = LocalDate.of(2024, 7, 1),
       duration = 2,
     ).first
-    val placementRequest2Reallocated = placementRequestRepository.save(placementRequest2.copy(id = UUID.randomUUID(), reallocatedAt = OffsetDateTime.now(), placementApplication = null))
+    val placementRequest2Reallocated = placementRequestRepository.save(
+      placementRequest2.copy(id = UUID.randomUUID(), reallocatedAt = OffsetDateTime.now()),
+    )
 
     val placementRequest3 = givenAPlacementRequest(
       placementApplication = placementAppWithMultipleDates,
       expectedArrival = LocalDate.of(2024, 8, 1),
       duration = 3,
     ).first
-    val placementRequest3Reallocated = placementRequestRepository.save(placementRequest3.copy(id = UUID.randomUUID(), reallocatedAt = OffsetDateTime.now(), placementApplication = null))
+    val placementRequest3Reallocated = placementRequestRepository.save(
+      placementRequest3.copy(id = UUID.randomUUID(), reallocatedAt = OffsetDateTime.now()),
+    )
 
     val placementDate1 = placementAppWithMultipleDates.placementDates.first { it.duration == 1 }
     val placementDate2 = placementAppWithMultipleDates.placementDates.first { it.duration == 2 }
