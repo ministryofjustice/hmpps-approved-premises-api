@@ -216,6 +216,10 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
+    if (application.isInapplicable == true) {
+      return CasResult.GeneralValidationError("inapplicable applications cannot be submitted")
+    }
+
     if (submitApplication.isUsingLegacyApTypeFields && submitApplication.isUsingNewApTypeField) {
       return CasResult.GeneralValidationError("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
     }

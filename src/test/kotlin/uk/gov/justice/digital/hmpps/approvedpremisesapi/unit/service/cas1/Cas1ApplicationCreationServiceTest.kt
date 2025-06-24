@@ -694,6 +694,36 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when application is inapplicable`() {
+      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withIsInapplicable(true)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        defaultSubmitApprovedPremisesApplication,
+        user,
+        apAreaId = UUID.randomUUID(),
+      )
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("inapplicable applications cannot be submitted")
+    }
+
+    @Test
     fun `submitApprovedPremisesApplication returns GeneralValidationError when applicantIsNotCaseManager is true and no case manager details are provided`() {
       val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
