@@ -43,7 +43,7 @@ class Cas1FixDatesLinkedToReallocatedPlacementRequestsJob(
 
     migrationLogger.info("Fixing placement dates for placement app $placementAppId with ${placementDates.size} dates")
 
-    val unassignedPlacementRequests = placementApp.placementRequests.toMutableList()
+    val unassignedPlacementRequests = placementApp.placementRequests.filter { !it.isReallocated() }.toMutableList()
 
     placementDates.forEach { date ->
       val toAssign = unassignedPlacementRequests
@@ -51,10 +51,6 @@ class Cas1FixDatesLinkedToReallocatedPlacementRequestsJob(
 
       if (toAssign == null) {
         error("Couldn't find a placement request for placement date ${date.expectedArrival} with duration ${date.duration} linked to placement app $placementAppId")
-      }
-
-      if (toAssign.isReallocated()) {
-        error("Placement request ${toAssign.id} is unexpectedly reallocated")
       }
 
       migrationLogger.info("Reassigning placement date ${date.id} from reallocated PR ${date.placementRequest?.id} to ${toAssign.id}")
