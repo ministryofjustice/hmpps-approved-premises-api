@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -227,22 +225,6 @@ class ApplicationService(
     isConcerningArsonBehaviour = null,
     prisonReleaseTypes = null,
     probationDeliveryUnit = null,
-  )
-
-  data class Cas1ApplicationUpdateFields(
-    val isWomensApplication: Boolean?,
-    @Deprecated("use apType")
-    val isPipeApplication: Boolean?,
-    @Deprecated("use noticeType")
-    val isEmergencyApplication: Boolean?,
-    @Deprecated("use apType")
-    val isEsapApplication: Boolean?,
-    val apType: ApType?,
-    val releaseType: String?,
-    val arrivalDate: LocalDate?,
-    val data: String,
-    val isInapplicable: Boolean?,
-    val noticeType: Cas1ApplicationTimelinessCategory?,
   )
 
   fun updateApprovedPremisesApplicationStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus) {

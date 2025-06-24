@@ -210,7 +210,7 @@ class Cas1ApplicationSeedService(
     val updatedApplication = extractEntityFromCasResult(
       cas1ApplicationCreationService.updateApprovedPremisesApplication(
         applicationId = newApplicationEntity.id,
-        updateFields = ApplicationService.Cas1ApplicationUpdateFields(
+        updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           isWomensApplication = false,
           isPipeApplication = null,
           isEmergencyApplication = false,

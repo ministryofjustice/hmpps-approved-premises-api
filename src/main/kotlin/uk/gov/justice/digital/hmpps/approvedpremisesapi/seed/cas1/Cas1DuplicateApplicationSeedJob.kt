@@ -93,7 +93,7 @@ class Cas1DuplicateApplicationSeedJob(
 
     cas1ApplicationCreationService.updateApprovedPremisesApplication(
       applicationId = newApplicationEntity.id,
-      updateFields = ApplicationService.Cas1ApplicationUpdateFields(
+      updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
         isWomensApplication = sourceApplication.isWomensApplication,
         isPipeApplication = null,
         isEmergencyApplication = sourceApplication.isEmergencyApplication,
