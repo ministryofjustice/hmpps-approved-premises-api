@@ -490,3 +490,9 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
   }
 }
+
+tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configureEach {
+  source = source.asFileTree.matching {
+    exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
+  }
+}
