@@ -56,13 +56,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ),
   ),
 
-  @Deprecated("This role will be removed in the future. It will be superseded by Assessor, CRU Member and Future Manager")
-  CAS1_WORKFLOW_MANAGER(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.workflowManager,
-    emptyList(),
-  ),
-
   CAS1_CRU_MEMBER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.cruMember,

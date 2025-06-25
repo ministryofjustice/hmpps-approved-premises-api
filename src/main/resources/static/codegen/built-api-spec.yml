@@ -5986,7 +5986,6 @@ components:
       enum:
         - assessor
         - future_manager
-        - workflow_manager
         - change_request_dev
         - cru_member
         - cru_member_find_and_book_beta
