@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1Arson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillOfflineApplicationName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixDatesLinkedToReallocatedPlacementRequestsJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FlattenPlacementAppDatesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1IsArsonSuitableBackfillJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApplicationLicenceExpiryDateJob
@@ -42,29 +43,30 @@ class MigrationJobService(
 
     try {
       val job: MigrationJob = when (migrationJobType) {
-        MigrationJobType.allUsersFromCommunityApi -> getBean(UpdateAllUsersFromDeliusJob::class)
-        MigrationJobType.sentenceTypeAndSituation -> getBean(UpdateSentenceTypeAndSituationJob::class)
-        MigrationJobType.bookingStatus -> getBean(BookingStatusMigrationJob::class)
-        MigrationJobType.taskDueDates -> getBean(Cas1TaskDueMigrationJob::class)
-        MigrationJobType.usersPduByApi -> getBean(UpdateUsersPduJob::class)
-        MigrationJobType.cas2ApplicationsWithAssessments -> getBean(Cas2AssessmentMigrationJob::class)
-        MigrationJobType.cas2StatusUpdatesWithAssessments -> getBean(Cas2StatusUpdateMigrationJob::class)
-        MigrationJobType.cas2NotesWithAssessments -> getBean(Cas2NoteMigrationJob::class)
-        MigrationJobType.cas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
-        MigrationJobType.cas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
-        MigrationJobType.cas3BookingOffenderName -> getBean(Cas3UpdateBookingOffenderNameJob::class)
-        MigrationJobType.cas3BedspaceStartDate -> getBean(Cas3UpdateBedSpaceStartDateJob::class)
-        MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
-        MigrationJobType.cas1ApplicationsLicenceExpiryDate -> getBean(Cas1UpdateApplicationLicenceExpiryDateJob::class)
-        MigrationJobType.cas1BackfillOfflineApplicationName -> getBean(Cas1BackfillOfflineApplicationName::class)
-        MigrationJobType.cas1ArsonSuitableToArsonOffences -> getBean(Cas1ArsonSuitableToArsonOffencesJob::class)
-        MigrationJobType.cas1BackfillArsonSuitable -> getBean(Cas1IsArsonSuitableBackfillJob::class)
-        MigrationJobType.cas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
-        MigrationJobType.cas1RoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
-        MigrationJobType.cas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
-        MigrationJobType.cas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
-        MigrationJobType.cas3VoidBedspaceCancellationData -> getBean(Cas3VoidBedspaceCancellationJob::class)
-        MigrationJobType.cas1FixDatesLinkedToReallocatedPlacementRequests -> getBean(Cas1FixDatesLinkedToReallocatedPlacementRequestsJob::class)
+        MigrationJobType.updateAllUsersFromCommunityApi -> getBean(UpdateAllUsersFromDeliusJob::class)
+        MigrationJobType.updateSentenceTypeAndSituation -> getBean(UpdateSentenceTypeAndSituationJob::class)
+        MigrationJobType.updateBookingStatus -> getBean(BookingStatusMigrationJob::class)
+        MigrationJobType.updateTaskDueDates -> getBean(Cas1TaskDueMigrationJob::class)
+        MigrationJobType.updateUsersPduByApi -> getBean(UpdateUsersPduJob::class)
+        MigrationJobType.updateCas2ApplicationsWithAssessments -> getBean(Cas2AssessmentMigrationJob::class)
+        MigrationJobType.updateCas2StatusUpdatesWithAssessments -> getBean(Cas2StatusUpdateMigrationJob::class)
+        MigrationJobType.updateCas2NotesWithAssessments -> getBean(Cas2NoteMigrationJob::class)
+        MigrationJobType.updateCas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
+        MigrationJobType.updateCas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
+        MigrationJobType.updateCas3BookingOffenderName -> getBean(Cas3UpdateBookingOffenderNameJob::class)
+        MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedSpaceStartDateJob::class)
+        MigrationJobType.updateCas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
+        MigrationJobType.updateCas1ApplicationsLicenceExpiryDate -> getBean(Cas1UpdateApplicationLicenceExpiryDateJob::class)
+        MigrationJobType.updateCas1BackfillOfflineApplicationName -> getBean(Cas1BackfillOfflineApplicationName::class)
+        MigrationJobType.updateCas1ArsonSuitableToArsonOffences -> getBean(Cas1ArsonSuitableToArsonOffencesJob::class)
+        MigrationJobType.updateCas1BackfillArsonSuitable -> getBean(Cas1IsArsonSuitableBackfillJob::class)
+        MigrationJobType.updateCas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
+        MigrationJobType.updateCas1RoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
+        MigrationJobType.updateCas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
+        MigrationJobType.updateCas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
+        MigrationJobType.updateCas3VoidBedspaceCancellationData -> getBean(Cas3VoidBedspaceCancellationJob::class)
+        MigrationJobType.updateCas1FixDatesLinkedToReallocatedPlacementRequests -> getBean(Cas1FixDatesLinkedToReallocatedPlacementRequestsJob::class)
+        MigrationJobType.cas1FlattenPlacementAppsWithMultipleDates -> getBean(Cas1FlattenPlacementAppDatesJob::class)
       }
 
       if (job.shouldRunInTransaction) {

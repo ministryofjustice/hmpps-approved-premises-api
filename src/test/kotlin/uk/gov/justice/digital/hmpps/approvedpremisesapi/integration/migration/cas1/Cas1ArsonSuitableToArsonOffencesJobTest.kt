@@ -44,7 +44,7 @@ class Cas1ArsonSuitableToArsonOffencesJobTest : IntegrationTestBase() {
       essentialCharacteristics = listOf(characteristicEnSuite, characteristicArsonSuitable),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1ArsonSuitableToArsonOffences, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1ArsonSuitableToArsonOffences, 1)
 
     val noCriteriaUpdated = placementRequirementsRepository.findById(noCriteria.id).get()
     assertThat(noCriteriaUpdated.desirableCriteria).isEmpty()

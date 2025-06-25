@@ -52,16 +52,22 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
 
   @Query(
-    """
-    SELECT cast(pa.application_id as text) 
-    FROM placement_applications pa 
-    LEFT OUTER JOIN placement_requests pr ON pr.placement_application_id = pa.id
-    WHERE pa.decision = 'ACCEPTED' AND pr.id IS NULL
-    GROUP BY pa.application_id
+    value = """
+    with pa_with_date_count as (
+      select 
+      count(*) as date_count, 
+      pad.placement_application_id
+      from  placement_application_dates pad 
+      group by pad.placement_application_id
+    )
+    select 
+      placement_application_id
+    from pa_with_date_count 
+    where date_count > 1
     """,
     nativeQuery = true,
   )
-  fun findApplicationsThatHaveAnAcceptedPlacementApplicationWithoutACorrespondingPlacementRequest(): List<String>
+  fun findAllWithMultipleDates(): List<UUID>
 }
 
 @Repository

@@ -38,7 +38,7 @@ data class PlacementDateEntity(
 
   @OneToOne
   @JoinColumn(name = "placement_application_id")
-  val placementApplication: PlacementApplicationEntity,
+  var placementApplication: PlacementApplicationEntity,
 
   @OneToOne
   @JoinColumn(name = "placement_request_id")

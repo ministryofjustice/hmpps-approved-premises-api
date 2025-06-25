@@ -26,7 +26,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         assertBookingStatusIsNull(booking, approvedPremises)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatusIsNull(booking, approvedPremises)
       }
@@ -46,7 +46,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         assertBookingStatus(booking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(booking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
       }
@@ -61,7 +61,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         assertBookingStatusIsNull(booking, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(booking, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
       }
@@ -78,7 +78,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatusIsNull(booking1, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(booking2, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(booking1, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
         assertBookingStatus(booking2, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
@@ -96,7 +96,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatusIsNull(booking1, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(booking2, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(booking1, BookingStatus.departed, ServiceName.temporaryAccommodation)
         assertBookingStatus(booking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
@@ -114,7 +114,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatusIsNull(booking1, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(booking2, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(booking1, BookingStatus.provisional, ServiceName.temporaryAccommodation)
         assertBookingStatus(booking2, BookingStatus.provisional, ServiceName.temporaryAccommodation)
@@ -132,7 +132,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatusIsNull(booking1, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(booking2, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(booking1, BookingStatus.arrived, ServiceName.temporaryAccommodation)
         assertBookingStatus(booking2, BookingStatus.arrived, ServiceName.temporaryAccommodation)
@@ -150,7 +150,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatusIsNull(booking1, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(booking2, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(booking1, BookingStatus.confirmed, ServiceName.temporaryAccommodation)
         assertBookingStatus(booking2, BookingStatus.confirmed, ServiceName.temporaryAccommodation)
@@ -174,7 +174,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatusIsNull(confirmedBooking, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(provisionalBooking, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(departedBooking1, BookingStatus.departed, ServiceName.temporaryAccommodation)
         assertBookingStatus(departedBooking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
@@ -195,7 +195,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatusIsNull(cancelledBooking, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(provisionalBooking, ServiceName.temporaryAccommodation)
 
-        migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
+        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
         assertBookingStatus(provisionalBooking, BookingStatus.provisional, ServiceName.temporaryAccommodation)
         assertBookingStatus(cancelledBooking, BookingStatus.cancelled, ServiceName.temporaryAccommodation)

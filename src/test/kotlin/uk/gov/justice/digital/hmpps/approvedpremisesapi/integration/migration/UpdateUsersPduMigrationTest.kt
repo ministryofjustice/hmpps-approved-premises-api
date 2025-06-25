@@ -143,7 +143,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
     )
 
     val startTime = System.currentTimeMillis()
-    migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateUsersPduByApi, 1)
     val endTime = System.currentTimeMillis()
 
     Assertions.assertThat(endTime - startTime).isGreaterThan(50 * 2)
@@ -207,7 +207,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       ),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi)
+    migrationJobService.runMigrationJob(MigrationJobType.updateUsersPduByApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!
@@ -278,7 +278,7 @@ class UpdateUsersPduMigrationTest : MigrationJobTestBase() {
       ),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.usersPduByApi)
+    migrationJobService.runMigrationJob(MigrationJobType.updateUsersPduByApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!

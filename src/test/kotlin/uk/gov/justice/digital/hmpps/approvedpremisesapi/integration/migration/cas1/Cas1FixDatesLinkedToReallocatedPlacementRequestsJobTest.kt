@@ -75,7 +75,7 @@ class Cas1FixDatesLinkedToReallocatedPlacementRequestsJobTest : MigrationJobTest
     placementDate3.placementRequest = placementRequest3Reallocated
     placementDateRepository.save(placementDate3)
 
-    migrationJobService.runMigrationJob(MigrationJobType.cas1FixDatesLinkedToReallocatedPlacementRequests)
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas1FixDatesLinkedToReallocatedPlacementRequests)
 
     assertThat(placementDateRepository.findByIdOrNull(placementDate1.id)!!.placementRequest!!.id).isEqualTo(placementRequest1.id)
     assertThat(placementDateRepository.findByIdOrNull(placementDate2.id)!!.placementRequest!!.id).isEqualTo(placementRequest2.id)

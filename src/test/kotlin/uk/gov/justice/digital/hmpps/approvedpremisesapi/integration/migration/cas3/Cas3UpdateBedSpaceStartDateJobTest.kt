@@ -38,7 +38,7 @@ class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
         setCreatedAt(bed, OffsetDateTime.now().randomDateTimeBefore(360))
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceStartDate, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceStartDate, 10)
 
       val savedBeds = bedRepository.findAll()
       assertThat(savedBeds).hasSize(5)
@@ -70,7 +70,7 @@ class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
         }
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceStartDate, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceStartDate, 10)
 
       val savedBeds = bedRepository.findAll()
       assertThat(savedBeds).hasSize(5)
@@ -130,7 +130,7 @@ class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
         }
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceStartDate, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceStartDate, 10)
 
       val savedBeds = bedRepository.findAll()
       assertThat(savedBeds).hasSize(3)
@@ -162,7 +162,7 @@ class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
 
       setCreatedAt(bed, null)
 
-      migrationJobService.runMigrationJob(MigrationJobType.cas3BedspaceStartDate, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceStartDate, 10)
 
       val savedBed = bedRepository.findById(bed.id).get()
       assertThat(savedBed.startDate).isNull()
