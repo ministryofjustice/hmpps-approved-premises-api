@@ -95,7 +95,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         'PLACEMENT_APPLICATION' AS type,
         apa.name as person,
         u.name as allocated_to,
-        placement_application.submitted_at as completed_at,
+        placement_application.decision_made_at as completed_at,
         placement_application.decision as decision,
         pad.expected_arrival AS sorting_date,
         apa.ap_type AS ap_type

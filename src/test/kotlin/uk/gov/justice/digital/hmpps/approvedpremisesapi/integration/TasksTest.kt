@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -22,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
@@ -67,6 +65,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import kotlin.collections.sortedWith
 import kotlin.math.ceil
 
 class TasksTest {
@@ -1539,310 +1538,349 @@ class TasksTest {
 
       @Test
       fun `Get all tasks sorts by createdAt in ascending order by default`() {
-        val url = "/tasks?isCompleted=true"
+        val url = "/tasks?isCompleted=true&page=1&perPage=10"
 
-        println(objectMapper.writeValueAsString(tasksSortedByCreatedAt()))
-
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByCreatedAt(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskCreatedAt = tasks.values.map { getCreatedAt(it) }
+          .sortedWith(compareBy(nullsLast()) { it })
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(getCreatedAt(task)).isEqualTo(expectedTaskCreatedAt[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by createdAt in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByCreatedAt(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskCreatedAt = tasks.values.map { getCreatedAt(it) }
+          .sortedWith(compareBy(nullsLast()) { it })
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(getCreatedAt(task)).isEqualTo(expectedTaskCreatedAt[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by createdAt in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByCreatedAt(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskCreatedAt = tasks.values.map { getCreatedAt(it) }
+          .sortedWith(compareByDescending(nullsLast()) { it })
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(getCreatedAt(task)).isEqualTo(expectedTaskCreatedAt[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by dueAt in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByDueAt(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskDueAt = tasks.values.map { it.dueAt }.sorted()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.dueAt).isEqualTo(expectedTaskDueAt[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by dueAt in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByDueAt(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskDueAt = tasks.values.map { it.dueAt }.sortedDescending()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.dueAt).isEqualTo(expectedTaskDueAt[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by allocatedTo in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByAllocatedTo(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskAllocatedName = tasks.values.map { it.allocatedToStaffMember!!.name }.sorted()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.allocatedToStaffMember!!.name).isEqualTo(expectedTaskAllocatedName[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by allocatedTo in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByAllocatedTo(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskAllocatedName = tasks.values.map { it.allocatedToStaffMember!!.name }.sortedDescending()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.allocatedToStaffMember!!.name).isEqualTo(expectedTaskAllocatedName[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by person in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByPerson(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskPersonNames = tasks.values.map { it.personName }.sorted()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.personName).isEqualTo(expectedTaskPersonNames[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by person in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByPerson(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskPersonNames = tasks.values.map { it.personName }.sortedDescending()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.personName).isEqualTo(expectedTaskPersonNames[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by completedAt in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByCompletedAt(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskCompletedAts = tasks.values.map { it.outcomeRecordedAt }
+          .sortedWith(compareBy(nullsLast()) { it })
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.outcomeRecordedAt).isEqualTo(expectedTaskCompletedAts[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by completedAt in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByCompletedAt(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskCompletedAts = tasks.values.map { it.outcomeRecordedAt }
+          .sortedWith(compareByDescending(nullsLast()) { it })
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.outcomeRecordedAt).isEqualTo(expectedTaskCompletedAts[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by taskType in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByTaskType(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskTypes = tasks.values.map { it.taskType }.sorted()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.taskType).isEqualTo(expectedTaskTypes[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by expected arrival date in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByExpectedArrivalDate(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedArrivalDates = tasks.values.map { it.expectedArrivalDate.toString() }.sorted()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.expectedArrivalDate.toString()).isEqualTo(expectedArrivalDates[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by expected arrival date in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByExpectedArrivalDate(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedArrivalDates = tasks.values.map { it.expectedArrivalDate.toString() }.sortedDescending()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.expectedArrivalDate.toString()).isEqualTo(expectedArrivalDates[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by taskType in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByTaskType(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedTaskTypes = tasks.values.map { it.taskType }.sortedDescending()
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(task.taskType).isEqualTo(expectedTaskTypes[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by decision in ascending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=asc"
+        val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=asc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByDecision(),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedDecisions = tasks.values.map { getDecision(it) }
+          .sortedWith(compareBy(nullsLast()) { it })
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(getDecision(task)).isEqualTo(expectedDecisions[index])
+        }
       }
 
       @Test
       fun `Get all tasks sorts by decision in descending order`() {
-        val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=desc"
+        val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=desc&page=1&perPage=10"
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              tasksSortedByDecision(SortDirection.desc),
-            ),
-          )
+          .bodyAsListOfObjects<Task>()
+
+        val expectedDecisions = tasks.values.map { getDecision(it) }
+          .sortedWith(compareByDescending(nullsLast()) { it })
+
+        assertThat(response).hasSize(9)
+        response.forEachIndexed { index, task ->
+          assertThat(getDecision(task)).isEqualTo(expectedDecisions[index])
+        }
       }
 
       @Test
@@ -1857,16 +1895,12 @@ class TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
+        val expectedTaskApType = tasks.values.map { it.apType.value }.sorted()
+
         assertThat(response).hasSize(9)
-        assertThat(response[0].apType).isEqualTo(ApType.esap)
-        assertThat(response[1].apType).isEqualTo(ApType.esap)
-        assertThat(response[2].apType).isEqualTo(ApType.mhapElliottHouse)
-        assertThat(response[3].apType).isEqualTo(ApType.mhapStJosephs)
-        assertThat(response[4].apType).isEqualTo(ApType.mhapStJosephs)
-        assertThat(response[5].apType).isEqualTo(ApType.normal)
-        assertThat(response[6].apType).isEqualTo(ApType.normal)
-        assertThat(response[7].apType).isEqualTo(ApType.pipe)
-        assertThat(response[8].apType).isEqualTo(ApType.rfap)
+        response.forEachIndexed { index, task ->
+          assertThat(task.apType.value).isEqualTo(expectedTaskApType[index])
+        }
       }
 
       @Test
@@ -1881,69 +1915,25 @@ class TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
+        val expectedTaskApType = tasks.values.map { it.apType.value }.sortedDescending()
+
         assertThat(response).hasSize(9)
-        assertThat(response[0].apType).isEqualTo(ApType.rfap)
-        assertThat(response[1].apType).isEqualTo(ApType.pipe)
-        assertThat(response[2].apType).isEqualTo(ApType.normal)
-        assertThat(response[3].apType).isEqualTo(ApType.normal)
-        assertThat(response[4].apType).isEqualTo(ApType.mhapStJosephs)
-        assertThat(response[5].apType).isEqualTo(ApType.mhapStJosephs)
-        assertThat(response[6].apType).isEqualTo(ApType.mhapElliottHouse)
-        assertThat(response[7].apType).isEqualTo(ApType.esap)
-        assertThat(response[8].apType).isEqualTo(ApType.esap)
-      }
-
-      private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        val createdAt = when (val task = tasks[id]!!) {
-          is AssessmentTask -> assessments[id]!!.createdAt
-          is PlacementApplicationTask -> placementApplications[id]!!.createdAt
-          else -> fail("Unexpected task type ${task::class.qualifiedName}")
-        }
-
-        createdAt.toInstant()
-      }
-
-      private fun tasksSortedByExpectedArrivalDate(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        tasks[id]!!.expectedArrivalDate
-      }
-
-      private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        tasks[id]!!.dueAt
-      }
-
-      private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        tasks[id]!!.personName
-      }
-
-      private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        tasks[id]!!.allocatedToStaffMember!!.name
-      }
-
-      private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        tasks[id]!!.outcomeRecordedAt
-      }
-
-      private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        tasks[id]!!.taskType
-      }
-
-      private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
-        when (val task = tasks[id]!!) {
-          is AssessmentTask -> task.outcome?.value
-          is PlacementApplicationTask -> task.outcome?.value
-          else -> fail("Unexpected task type ${task::class.qualifiedName}")
+        response.forEachIndexed { index, task ->
+          assertThat(task.apType.value).isEqualTo(expectedTaskApType[index])
         }
       }
 
-      private fun <T : Comparable<T>> sortTasks(sortDirection: SortDirection, sortFunc: (UUID) -> T?) = tasks
-        .keys
-        .apply {
-          when (sortDirection) {
-            SortDirection.asc -> sortedBy(sortFunc)
-            SortDirection.desc -> sortedByDescending(sortFunc)
-          }
-        }
-        .map { tasks[it]!! }
+      private fun getDecision(task: Task): String? = when (task) {
+        is AssessmentTask -> task.outcome?.value
+        is PlacementApplicationTask -> task.outcome?.value
+        else -> fail()
+      }
+
+      private fun getCreatedAt(task: Task): OffsetDateTime = when (task) {
+        is AssessmentTask -> assessments[task.id]!!.createdAt
+        is PlacementApplicationTask -> placementApplications[task.id]!!.createdAt
+        else -> fail()
+      }
     }
   }
 
