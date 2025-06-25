@@ -315,44 +315,46 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @EnumSource(value = Cas3PremisesSortBy::class)
     fun `Get all Premises returns OK with correct premises sorted by PDU or LA`(sortBy: Cas3PremisesSortBy) {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val (premises, expectedPremisesSummaries) = getListPremisesWithIndividualPduAndLa(user.probationRegion)
+
+        val premisesSummary1 = getListPremisesWithIndividualPduAndLa(user.probationRegion, "PDU3", "LA1")
+        val premisesSummary2 = getListPremisesWithIndividualPduAndLa(user.probationRegion, "PDU1", "LA2")
+        val premisesSummary3 = getListPremisesWithIndividualPduAndLa(user.probationRegion, "PDU2", "LA3")
 
         assertUrlReturnsPremises(
           jwt,
           "/cas3/premises/summary?sortBy=${sortBy.name}",
-          expectedPremisesSummaries.sortedBy {
-            when (sortBy) {
-              Cas3PremisesSortBy.pdu -> it.pdu.lowercase()
-              Cas3PremisesSortBy.la -> it.localAuthorityAreaName?.lowercase()
+          when (sortBy) {
+            Cas3PremisesSortBy.pdu -> {
+              mutableListOf(premisesSummary2, premisesSummary3, premisesSummary1)
+            }
+            Cas3PremisesSortBy.la -> {
+              mutableListOf(premisesSummary1, premisesSummary2, premisesSummary3)
             }
           },
         )
       }
     }
 
-    private fun getListPremisesWithIndividualPduAndLa(probationRegion: ProbationRegionEntity): Pair<List<TemporaryAccommodationPremisesEntity>, List<Cas3PremisesSummary>> {
-      val premisesSummary = mutableListOf<Cas3PremisesSummary>()
-      val allPremises = mutableListOf<TemporaryAccommodationPremisesEntity>()
-
-      val localAuthorityArea = localAuthorityEntityFactory.produceAndPersistMultiple(5)
-
-      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersistMultiple(5) {
+    private fun getListPremisesWithIndividualPduAndLa(probationRegion: ProbationRegionEntity, pduName: String, laName: String): Cas3PremisesSummary {
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
+        withProbationDeliveryUnit(
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
+            withName(pduName)
+          },
+        )
+        withLocalAuthorityArea(
+          localAuthorityEntityFactory.produceAndPersist {
+            withName(laName)
+          },
+        )
+        withStatus(PropertyStatus.active)
       }
 
-      localAuthorityArea.forEachIndexed { i, localAuthorityAreaEntity ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(probationRegion)
-          withProbationDeliveryUnit(probationDeliveryUnit[i])
-          withLocalAuthorityArea(localAuthorityAreaEntity)
-          withStatus(PropertyStatus.active)
-        }
-        val onlineBedspacesSummary = createBedspaces(premises, Cas3BedspaceStatus.online, true)
-        val upcomingBedspacesSummary = createBedspaces(premises, Cas3BedspaceStatus.upcoming, true)
-        premisesSummary.add(createPremisesSummary(premises, (onlineBedspacesSummary.size + upcomingBedspacesSummary.size)))
-      }
-
-      return Pair(allPremises.sortedBy { it.id }, premisesSummary.sortedBy { it.id })
+      val onlineBedspacesSummary = createBedspaces(premises, Cas3BedspaceStatus.online, true)
+      val upcomingBedspacesSummary = createBedspaces(premises, Cas3BedspaceStatus.upcoming, true)
+      return createPremisesSummary(premises, (onlineBedspacesSummary.size + upcomingBedspacesSummary.size))
     }
 
     @Test
