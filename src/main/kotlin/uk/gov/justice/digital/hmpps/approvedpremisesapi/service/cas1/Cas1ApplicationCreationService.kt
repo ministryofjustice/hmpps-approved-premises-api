@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -37,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
@@ -432,4 +432,20 @@ class Cas1ApplicationCreationService(
 
   private val SubmitApprovedPremisesApplication.isUsingNewApTypeField: Boolean
     get() = apType != null
+
+  data class Cas1ApplicationUpdateFields(
+    val isWomensApplication: Boolean?,
+    @Deprecated("use apType")
+    val isPipeApplication: Boolean?,
+    @Deprecated("use noticeType")
+    val isEmergencyApplication: Boolean?,
+    @Deprecated("use apType")
+    val isEsapApplication: Boolean?,
+    val apType: ApType?,
+    val releaseType: String?,
+    val arrivalDate: LocalDate?,
+    val data: String,
+    val isInapplicable: Boolean?,
+    val noticeType: Cas1ApplicationTimelinessCategory?,
+  )
 }

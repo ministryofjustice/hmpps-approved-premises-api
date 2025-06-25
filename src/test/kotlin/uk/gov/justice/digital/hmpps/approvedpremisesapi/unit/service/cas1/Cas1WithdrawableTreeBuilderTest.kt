@@ -20,10 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInDelius
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
@@ -35,14 +35,14 @@ class Cas1WithdrawableTreeBuilderTest {
   private val placementRequestService = mockk<PlacementRequestService>()
   private val bookingService = mockk<BookingService>()
   private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
-  private val applicationService = mockk<ApplicationService>()
+  private val cas1ApplicationService = mockk<Cas1ApplicationService>()
   private val cas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
 
   private val service = Cas1WithdrawableTreeBuilder(
     placementRequestService,
     bookingService,
     cas1PlacementApplicationService,
-    applicationService,
+    cas1ApplicationService,
     cas1SpaceBookingService,
   )
 
@@ -79,7 +79,7 @@ class Cas1WithdrawableTreeBuilderTest {
   @Test
   fun `tree for app returns all potential elements`() {
     every {
-      applicationService.getWithdrawableState(application, user)
+      cas1ApplicationService.getWithdrawableState(application, user)
     } returns WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true)
 
     val initialPlacementRequest = createPlacementRequest()
@@ -144,7 +144,7 @@ Notes: []
   @Test
   fun `tree for app excludes placement request's bookings if bookings are adhoc or potentially adhoc`() {
     every {
-      applicationService.getWithdrawableState(application, user)
+      cas1ApplicationService.getWithdrawableState(application, user)
     } returns WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true)
 
     val initialPlacementRequest = createPlacementRequest()
@@ -205,7 +205,7 @@ Notes: []
   @Test
   fun `tree for app blocks withdrawal if booking has arrival in CAS1`() {
     every {
-      applicationService.getWithdrawableState(application, user)
+      cas1ApplicationService.getWithdrawableState(application, user)
     } returns WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true)
 
     val initialPlacementRequest = createPlacementRequest()
@@ -268,7 +268,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
   @Test
   fun `tree for app blocks withdrawal if booking has arrival in Delius`() {
     every {
-      applicationService.getWithdrawableState(application, user)
+      cas1ApplicationService.getWithdrawableState(application, user)
     } returns WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true)
 
     every {
@@ -308,7 +308,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival recorde
   @Test
   fun `tree for app blocks withdrawal if space booking has arrival in CAS1`() {
     every {
-      applicationService.getWithdrawableState(application, user)
+      cas1ApplicationService.getWithdrawableState(application, user)
     } returns WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true)
 
     val initialPlacementRequest = createPlacementRequest()

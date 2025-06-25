@@ -16,14 +16,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
@@ -43,7 +42,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class Cas1WithdrawableServiceTest {
-  private val applicationService = mockk<ApplicationService>()
+  private val cas1ApplicationService = mockk<Cas1ApplicationService>()
   private val placementRequestService = mockk<PlacementRequestService>()
   private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
   private val bookingService = mockk<BookingService>()
@@ -52,7 +51,7 @@ class Cas1WithdrawableServiceTest {
   private val cas1WithdrawableTreeOperations = mockk<Cas1WithdrawableTreeOperations>()
 
   private val cas1WithdrawableService = Cas1WithdrawableService(
-    applicationService,
+    cas1ApplicationService,
     placementRequestService,
     cas1PlacementApplicationService,
     bookingService,
@@ -276,7 +275,7 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun success() {
-      every { applicationService.getApplication(application.id) } returns application
+      every { cas1ApplicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTree(
         rootNode = WithdrawableTreeNode(
@@ -290,7 +289,7 @@ class Cas1WithdrawableServiceTest {
       every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
       every {
-        applicationService.withdrawApprovedPremisesApplication(any(), any(), any(), any())
+        cas1ApplicationService.withdrawApprovedPremisesApplication(any(), any(), any(), any())
       } returns CasResult.Success(Unit)
 
       every {
@@ -305,7 +304,7 @@ class Cas1WithdrawableServiceTest {
       assertThat(result is CasResult.Success)
 
       verify {
-        applicationService.withdrawApprovedPremisesApplication(
+        cas1ApplicationService.withdrawApprovedPremisesApplication(
           application.id,
           user,
           withdrawalReason,
@@ -322,21 +321,17 @@ class Cas1WithdrawableServiceTest {
     }
 
     @Test
-    fun `fails if not CAS1 application()`() {
-      every { applicationService.getApplication(application.id) } returns
-        TemporaryAccommodationApplicationEntityFactory()
-          .withProbationRegion(ProbationRegionEntityFactory().withDefaults().produce())
-          .withCreatedByUser(user)
-          .produce()
+    fun `fails if application not found`() {
+      every { cas1ApplicationService.getApplication(application.id) } returns null
 
       val result = cas1WithdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
-      assertThat(result is CasResult.GeneralValidationError)
+      assertThat(result is CasResult.NotFound)
     }
 
     @Test
     fun `fails if user may not directly withdraw()`() {
-      every { applicationService.getApplication(application.id) } returns application
+      every { cas1ApplicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTree(
         rootNode = WithdrawableTreeNode(
@@ -356,7 +351,7 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if not withdrawable()`() {
-      every { applicationService.getApplication(application.id) } returns application
+      every { cas1ApplicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTree(
         rootNode = WithdrawableTreeNode(
@@ -377,7 +372,7 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if blocked()`() {
-      every { applicationService.getApplication(application.id) } returns application
+      every { cas1ApplicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTree(
         rootNode = WithdrawableTreeNode(

@@ -256,7 +256,7 @@ class ApplicationsController(
     val applicationResult = when (body) {
       is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
-        ApplicationService.Cas1ApplicationUpdateFields(
+        Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           data = serializedData,
           isWomensApplication = body.isWomensApplication,
           isPipeApplication = body.isPipeApplication,

@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import java.util.UUID
 
@@ -31,7 +30,7 @@ class Cas1WithdrawableTreeBuilder(
   @Lazy private val placementRequestService: PlacementRequestService,
   @Lazy private val bookingService: BookingService,
   @Lazy private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
-  @Lazy private val applicationService: ApplicationService,
+  @Lazy private val cas1ApplicationService: Cas1ApplicationService,
   @Lazy private val cas1SpaceBookingService: Cas1SpaceBookingService,
 ) {
   fun treeForApp(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableTree {
@@ -54,7 +53,7 @@ class Cas1WithdrawableTreeBuilder(
         applicationId = application.id,
         entityType = WithdrawableEntityType.Application,
         entityId = application.id,
-        status = applicationService.getWithdrawableState(application, user),
+        status = cas1ApplicationService.getWithdrawableState(application, user),
         dates = emptyList(),
         children = children,
       ),

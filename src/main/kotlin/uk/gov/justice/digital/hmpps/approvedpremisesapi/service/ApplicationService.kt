@@ -1,16 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -19,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -28,9 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -52,12 +43,8 @@ class ApplicationService(
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
   private val userService: UserService,
-  private val assessmentService: AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val userAccessService: UserAccessService,
-  private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
-  private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
-  private val applicationListener: ApplicationListener,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -229,80 +216,9 @@ class ApplicationService(
     probationDeliveryUnit = null,
   )
 
-  data class Cas1ApplicationUpdateFields(
-    val isWomensApplication: Boolean?,
-    @Deprecated("use apType")
-    val isPipeApplication: Boolean?,
-    @Deprecated("use noticeType")
-    val isEmergencyApplication: Boolean?,
-    @Deprecated("use apType")
-    val isEsapApplication: Boolean?,
-    val apType: ApType?,
-    val releaseType: String?,
-    val arrivalDate: LocalDate?,
-    val data: String,
-    val isInapplicable: Boolean?,
-    val noticeType: Cas1ApplicationTimelinessCategory?,
-  )
-
   fun updateApprovedPremisesApplicationStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus) {
     applicationRepository.updateStatus(applicationId, status)
   }
-
-  /**
-   * This function should not be called directly. Instead, use [WithdrawableService.withdrawApplication] that
-   * will indirectly invoke this function. It will also ensure that:
-   *
-   * 1. The entity is withdrawable, and error if not
-   * 2. The user is allowed to withdraw it, and error if not
-   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
-   */
-  @Transactional
-  fun withdrawApprovedPremisesApplication(
-    applicationId: UUID,
-    user: UserEntity,
-    withdrawalReason: String,
-    otherReason: String?,
-  ): CasResult<Unit> {
-    val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound(entityType = "application", applicationId.toString())
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      return CasResult.GeneralValidationError("onlyCas1Supported")
-    }
-
-    if (application.isWithdrawn) {
-      return CasResult.Success(Unit)
-    }
-
-    val updatedApplication = application.apply {
-      this.isWithdrawn = true
-      this.withdrawalReason = withdrawalReason
-      this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
-        otherReason
-      } else {
-        null
-      }
-    }
-    applicationListener.preUpdate(updatedApplication)
-
-    applicationRepository.save(updatedApplication)
-
-    cas1ApplicationDomainEventService.applicationWithdrawn(updatedApplication, withdrawingUser = user)
-    cas1ApplicationEmailService.applicationWithdrawn(updatedApplication, user)
-
-    updatedApplication.assessments.map {
-      assessmentService.updateCas1AssessmentWithdrawn(it.id, user)
-    }
-
-    return CasResult.Success(Unit)
-  }
-
-  fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState = WithdrawableState(
-    withdrawable = !application.isWithdrawn,
-    withdrawn = application.isWithdrawn,
-    userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
-  )
 
   fun updateTemporaryAccommodationApplication(
     applicationId: UUID,
