@@ -1226,7 +1226,6 @@ class Cas1ApplicationCreationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
-      every { mockApplicationListener.preUpdate(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
         InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),

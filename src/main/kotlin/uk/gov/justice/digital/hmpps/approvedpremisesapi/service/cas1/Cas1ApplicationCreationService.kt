@@ -306,7 +306,6 @@ class Cas1ApplicationCreationService(
     cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, user.deliusUsername)
     assessmentService.createApprovedPremisesAssessment(application)
 
-    applicationListener.preUpdate(application)
     application = applicationRepository.save(application)
 
     cas1ApplicationEmailService.applicationSubmitted(application)
