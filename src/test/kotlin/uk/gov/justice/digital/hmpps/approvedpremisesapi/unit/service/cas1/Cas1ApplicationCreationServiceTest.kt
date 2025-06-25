@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
@@ -67,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
@@ -91,7 +91,7 @@ class Cas1ApplicationCreationServiceTest {
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
   private val mockPlacementApplicationAutomaticRepository = mockk<PlacementApplicationAutomaticRepository>()
-  private val mockApplicationListener = mockk<ApplicationListener>()
+  private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
   private val mockCas1OffenderService = mockk<Cas1OffenderService>()
@@ -111,7 +111,7 @@ class Cas1ApplicationCreationServiceTest {
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
     mockPlacementApplicationAutomaticRepository,
-    mockApplicationListener,
+    mockCas1ApplicationStatusService,
     Clock.systemDefaultZone(),
     mockLockableApplicationRepository,
     mockCas1CruManagementAreaRepository,
@@ -443,7 +443,7 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
 
-      val approvedPremisesApplication = result.value as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = result.value
 
       assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
       assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
@@ -455,6 +455,8 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
       assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
       assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+
+      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
     }
 
     @ParameterizedTest
@@ -495,7 +497,7 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
-      val approvedPremisesApplication = result.value as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = result.value
 
       assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
       assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
@@ -509,6 +511,8 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
       assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
       assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+
+      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
     }
 
     @ParameterizedTest
@@ -554,9 +558,11 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
 
-      val approvedPremisesApplication = result.value as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = result.value
 
       assertThat(approvedPremisesApplication.noticeType).isEqualTo(noticeType)
+
+      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
     }
 
     private fun setupMocksForSuccess() {
@@ -564,7 +570,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
       every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
-      every { mockApplicationListener.preUpdate(any()) } returns Unit
+      every { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     }
   }

@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -66,7 +65,7 @@ class Cas1ApplicationCreationService(
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val placementApplicationAutomaticRepository: PlacementApplicationAutomaticRepository,
-  private val applicationListener: ApplicationListener,
+  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
@@ -371,7 +370,8 @@ class Cas1ApplicationCreationService(
       this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)
     }
 
-    applicationListener.preUpdate(application)
+    cas1ApplicationStatusService.unsubmittedApplicationUpdated(application)
+
     val savedApplication = applicationRepository.save(application)
 
     return CasResult.Success(savedApplication)
