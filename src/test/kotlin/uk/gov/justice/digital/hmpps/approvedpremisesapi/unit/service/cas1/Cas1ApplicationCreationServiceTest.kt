@@ -377,6 +377,38 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(result.message).isEqualTo("This application has already been submitted")
     }
 
+    @EnumSource(
+      value = ApprovedPremisesApplicationStatus::class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = [ "STARTED", "INAPPLICABLE" ],
+    )
+    @ParameterizedTest
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application doesn't not have a suitable state`(status: ApprovedPremisesApplicationStatus) {
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      application.status = status
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          apType = null,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+          noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        ),
+        userForRequest = user,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("An application with the status $status cannot be updated.")
+    }
+
     @Test
     fun `updateApprovedPremisesApplication returns GeneralValidationError when application has AP type specified in multiple ways`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application

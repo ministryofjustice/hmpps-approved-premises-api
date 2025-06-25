@@ -355,6 +355,10 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
+    if (!listOf(ApprovedPremisesApplicationStatus.STARTED, ApprovedPremisesApplicationStatus.INAPPLICABLE).contains(application.status)) {
+      return CasResult.GeneralValidationError("An application with the status ${application.status} cannot be updated.")
+    }
+
     application.apply {
       this.isInapplicable = updateFields.isInapplicable
       this.isWomensApplication = updateFields.isWomensApplication
