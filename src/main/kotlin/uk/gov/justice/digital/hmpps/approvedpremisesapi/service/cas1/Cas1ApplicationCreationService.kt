@@ -215,8 +215,8 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
-    if (application.isInapplicable == true) {
-      return CasResult.GeneralValidationError("inapplicable applications cannot be submitted")
+    if (application.status != ApprovedPremisesApplicationStatus.STARTED) {
+      return CasResult.GeneralValidationError("Only an application with the 'STARTED' status can be submitted")
     }
 
     if (submitApplication.isUsingLegacyApTypeFields && submitApplication.isUsingNewApTypeField) {

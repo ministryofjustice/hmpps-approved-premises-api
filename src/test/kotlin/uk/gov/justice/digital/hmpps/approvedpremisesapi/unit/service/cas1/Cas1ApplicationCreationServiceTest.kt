@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
@@ -699,15 +700,20 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
     }
 
-    @Test
-    fun `submitApprovedPremisesApplication returns GeneralValidationError when application is inapplicable`() {
+    @EnumSource(
+      value = ApprovedPremisesApplicationStatus::class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = [ "STARTED" ],
+    )
+    @ParameterizedTest
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when application doesn't have status 'STARTED'`(state: ApprovedPremisesApplicationStatus) {
       val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
-        .withIsInapplicable(true)
+        .withStatus(state)
         .produce()
         .apply {
           schemaUpToDate = true
@@ -723,10 +729,7 @@ class Cas1ApplicationCreationServiceTest {
         apAreaId = UUID.randomUUID(),
       )
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("inapplicable applications cannot be submitted")
+      assertThatCasResult(result).isGeneralValidationError("Only an application with the 'STARTED' status can be submitted")
     }
 
     @Test
