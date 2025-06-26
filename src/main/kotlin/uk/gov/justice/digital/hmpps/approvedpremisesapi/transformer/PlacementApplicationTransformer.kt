@@ -35,6 +35,7 @@ class PlacementApplicationTransformer(
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
       type = PlacementApplicationType.additional,
+      placementDate = jpa.expectedArrival?.let { PlacementDates(jpa.expectedArrival!!, jpa.duration!!) },
       placementDates = jpa.placementDates.map { PlacementDates(it.expectedArrival, it.duration) },
     )
   }
