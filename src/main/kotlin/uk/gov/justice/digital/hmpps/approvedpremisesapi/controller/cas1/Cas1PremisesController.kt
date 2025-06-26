@@ -25,10 +25,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
@@ -45,6 +47,7 @@ import java.util.UUID
 @Service
 class Cas1PremisesController(
   private val userAccessService: UserAccessService,
+  private val userService: UserService,
   private val cas1PremisesService: Cas1PremisesService,
   private val cas1PremisesTransformer: Cas1PremisesTransformer,
   private val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
@@ -58,6 +61,7 @@ class Cas1PremisesController(
   private val staffMemberService: StaffMemberService,
   private val staffMemberTransformer: StaffMemberTransformer,
   private val clock: Clock,
+  private val spaceBookingService: Cas1SpaceBookingService,
 ) : PremisesCas1Delegate {
 
   override fun getOccupancyReport(): ResponseEntity<StreamingResponseBody> {
@@ -190,6 +194,16 @@ class Cas1PremisesController(
             date = date,
           ),
         ).map(cas1OutOfServiceBedSummaryTransformer::toCas1OutOfServiceBedSummary),
+        spaceBookingSummaries =
+        spaceBookingService.getSpaceBookingsByPremisesIdAndCriteriaForDate(
+          premises = premises,
+          date = date,
+          bookingsCriteriaFilter = bookingsCriteriaFilter,
+          bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
+          bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
+          excludeSpaceBookingId = excludeSpaceBookingId,
+          user = userService.getUserForRequest(),
+        ),
       ),
     )
   }

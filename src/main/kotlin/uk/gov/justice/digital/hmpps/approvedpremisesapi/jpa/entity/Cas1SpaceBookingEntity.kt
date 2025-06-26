@@ -235,6 +235,74 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     value = """
       SELECT 
       Cast(b.id as varchar),
+      b.crn as crn,
+      b.canonical_arrival_date as canonicalArrivalDate,
+      b.canonical_departure_date as canonicalDepartureDate,
+      b.expected_arrival_date as expectedArrivalDate,
+      b.expected_departure_date as expectedDepartureDate,
+      b.actual_arrival_date as actualArrivalDate,
+      b.actual_departure_date as actualDepartureDate,
+      b.non_arrival_confirmed_at AS nonArrivalConfirmedAtDateTime,
+      b.key_worker_staff_code AS keyWorkerStaffCode,
+      b.key_worker_assigned_at AS keyWorkerAssignedAt,
+      b.key_worker_name AS keyWorkerName,
+    CASE
+        WHEN apa.id IS NOT NULL THEN apa.name
+        ELSE offline_app.name
+        END AS personName,
+    b.delius_event_number AS deliusEventNumber,
+    b.cancellation_occurred_at IS NOT NULL AS cancelled,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+      CASE
+        WHEN apa.id IS NOT NULL THEN apa.name
+        ELSE offline_app.name
+      END as personName,
+      apa.release_type as releaseType, 
+      ( 
+        SELECT STRING_AGG (characteristics.property_name, ',')
+        FROM cas1_space_bookings_criteria sbc
+        LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+        WHERE sbc.space_booking_id = b.id 
+        GROUP by sbc.space_booking_id
+      ) AS characteristicsPropertyNamesCsv,
+      (
+        SELECT STRING_AGG(DISTINCT change_requests.type, ',')
+          FROM cas1_change_requests change_requests
+          WHERE change_requests.cas1_space_booking_id = b.id AND change_requests.resolved = false
+      ) AS openChangeRequestTypeNamesCsv
+      FROM cas1_space_bookings b
+      LEFT JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
+      LEFT JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
+      WHERE 
+        b.canonical_arrival_date <= :date AND 
+        b.canonical_departure_date > :date AND
+        b.premises_id = :premisesId AND 
+        b.cancellation_occurred_at IS NULL AND
+        b.non_arrival_confirmed_at IS NULL AND
+        (:excludeSpaceBookingId IS NULL OR b.id != :excludeSpaceBookingId) AND
+        (:criteriaCount = 0 OR 
+            (
+              SELECT COUNT(*) 
+              FROM cas1_space_bookings_criteria sbc
+              WHERE b.id = sbc.space_booking_id AND sbc.characteristic_id IN (:criteria)
+            ) = :criteriaCount
+        )
+    """,
+    nativeQuery = true,
+  )
+  fun findSpaceBookingsByPremisesIdAndCriteriaForDate(
+    premisesId: UUID,
+    date: LocalDate,
+    criteria: List<UUID>?,
+    criteriaCount: Int = criteria?.size ?: 0,
+    excludeSpaceBookingId: UUID?,
+    sort: Sort,
+  ): List<Cas1SpaceBookingSearchResult>
+
+  @Query(
+    value = """
+      SELECT 
+      Cast(b.id as varchar),
       b.canonical_arrival_date as canonicalArrivalDate,
       b.canonical_departure_date as canonicalDepartureDate
       FROM cas1_space_bookings b

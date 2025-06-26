@@ -11,7 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
@@ -59,6 +61,37 @@ class Cas1PremisesDayTransformerTest {
       ),
     )
 
+    val spaceBookingSummaries = listOf(
+      Cas1SpaceBookingSummary(
+        id = UUID.randomUUID(),
+        person = RestrictedPersonSummary(
+          crn = "crn",
+          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+        ),
+        canonicalArrivalDate = currentSearchDay.minusDays(1),
+        canonicalDepartureDate = currentSearchDay.plusDays(1),
+        tier = "Tier 1",
+        characteristics = listOf(
+          Cas1SpaceCharacteristic.isSingle,
+          Cas1SpaceCharacteristic.hasEnSuite,
+          Cas1SpaceCharacteristic.isIAP,
+        ),
+        premises = NamedId(UUID.randomUUID(), "premisesName"),
+        expectedArrivalDate = currentSearchDay.minusDays(1),
+        expectedDepartureDate = currentSearchDay.plusDays(1),
+        isCancelled = false,
+        openChangeRequestTypes = emptyList(),
+        actualArrivalDate = null,
+        actualDepartureDate = null,
+        isNonArrival = false,
+        keyWorkerAllocation = null,
+        status = null,
+        deliusEventNumber = UUID.randomUUID().toString(),
+        plannedTransferRequested = false,
+        appealRequested = false,
+      ),
+    )
+
     val outOfServiceBeds = listOf(
       Cas1OutOfServiceBedSummary(
         id = UUID.randomUUID(),
@@ -75,6 +108,7 @@ class Cas1PremisesDayTransformerTest {
       capacity,
       spaceBookings,
       outOfServiceBeds,
+      spaceBookingSummaries,
     )
 
     assertThat(result.forDate).isEqualTo(currentSearchDay)
@@ -83,5 +117,6 @@ class Cas1PremisesDayTransformerTest {
     assertThat(result.capacity).isEqualTo(capacity)
     assertThat(result.spaceBookings).isEqualTo(spaceBookings)
     assertThat(result.outOfServiceBeds).isEqualTo(outOfServiceBeds)
+    assertThat(result.spaceBookingSummaries).isEqualTo(spaceBookingSummaries)
   }
 }

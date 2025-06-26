@@ -462,9 +462,14 @@ components:
         capacity:
           $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
         spaceBookings:
+          deprecated: true
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingDaySummary'
+        spaceBookingSummaries:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummary'
         outOfServiceBeds:
           type: array
           items:
@@ -475,8 +480,10 @@ components:
         - nextDate
         - capacity
         - spaceBookings
+        - spaceBookingSummaries
         - outOfServiceBeds
     Cas1SpaceBookingDaySummary:
+      deprecated: true
       type: object
       properties:
         id:

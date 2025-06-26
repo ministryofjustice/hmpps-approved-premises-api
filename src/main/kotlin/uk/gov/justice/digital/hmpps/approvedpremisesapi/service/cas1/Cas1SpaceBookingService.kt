@@ -1,14 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlannedTransfer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
@@ -26,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -33,10 +40,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Genera
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ifError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.Instant
@@ -62,6 +72,8 @@ class Cas1SpaceBookingService(
   private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
   private val cas1SpaceBookingCreateService: Cas1SpaceBookingCreateService,
   private val cas1SpaceBookingUpdateService: Cas1SpaceBookingUpdateService,
+  private val offenderService: OffenderService,
+  private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
 ) {
   @Transactional
   fun createNewBooking(
@@ -400,6 +412,55 @@ class Cas1SpaceBookingService(
 
     return Success(Unit)
   }
+
+  fun getSpaceBookingsByPremisesIdAndCriteriaForDate(
+    premises: ApprovedPremisesEntity,
+    date: LocalDate,
+    bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
+    bookingsSortBy: Cas1SpaceBookingDaySummarySortField,
+    bookingsSortDirection: SortDirection,
+    excludeSpaceBookingId: UUID? = null,
+    user: UserEntity,
+  ): List<Cas1SpaceBookingSummary> {
+    val sort = Sort.by(
+      when (bookingsSortDirection) {
+        SortDirection.desc -> Sort.Direction.DESC
+        SortDirection.asc -> Sort.Direction.ASC
+      },
+      bookingsSortBy.value,
+    )
+
+    val spaceBookingsForDate = cas1SpaceBookingRepository.findSpaceBookingsByPremisesIdAndCriteriaForDate(
+      premisesId = premises.id,
+      date = date,
+      criteria = getBookingCharacteristicIds(bookingsCriteriaFilter),
+      sort = sort,
+      excludeSpaceBookingId = excludeSpaceBookingId,
+    )
+
+    val offenderSummaries = getOffenderSummariesForBookings(spaceBookingsForDate, user)
+
+    val spaceBookingSummaries =
+      spaceBookingsForDate.map { bookingSummary ->
+        spaceBookingTransformer.transformSearchResultToSummary(
+          searchResult = bookingSummary,
+          premises = premises,
+          personSummaryInfo = offenderSummaries.forCrn(bookingSummary.crn),
+        )
+      }
+    return spaceBookingSummaries
+  }
+
+  private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) = bookingsCriteriaFilter?.let { bookingCriteria ->
+    val characteristics = bookingCriteria.map { it.value }
+    characteristicService.getCharacteristicsByPropertyNames(characteristics, ServiceName.approvedPremises)
+      .map { characteristic -> characteristic.id }
+  }
+
+  private fun getOffenderSummariesForBookings(spaceBookings: List<Cas1SpaceBookingSearchResult>, user: UserEntity): List<PersonSummaryInfoResult> = offenderService.getPersonSummaryInfoResults(
+    crns = spaceBookings.map { it.crn }.toSet(),
+    laoStrategy = user.cas1LaoStrategy(),
+  )
 
   private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateShortenedSpaceBooking(
     shortenedBookingDetails: UpdateBookingDetails,
