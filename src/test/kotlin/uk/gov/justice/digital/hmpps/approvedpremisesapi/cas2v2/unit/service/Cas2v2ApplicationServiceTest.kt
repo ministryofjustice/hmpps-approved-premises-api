@@ -178,8 +178,8 @@ class Cas2v2ApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockCas2v2ApplicationSummaryRepository.findByPrisonCode(
-          prisonCode,
+        mockCas2v2ApplicationSummaryRepository.findAll(
+          any(),
           getPageableOrAllPages(pageCriteria),
         )
       } returns page
@@ -192,8 +192,8 @@ class Cas2v2ApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockCas2v2ApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(
-          prisonCode,
+        mockCas2v2ApplicationSummaryRepository.findAll(
+          any(),
           getPageableOrAllPages(pageCriteria),
         )
       } returns page
@@ -206,8 +206,8 @@ class Cas2v2ApplicationServiceTest {
       PaginationConfig(defaultPageSize = 10).postInit()
 
       every {
-        mockCas2v2ApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(
-          prisonCode,
+        mockCas2v2ApplicationSummaryRepository.findAll(
+          any(),
           getPageableOrAllPages(pageCriteria),
         )
       } returns page
