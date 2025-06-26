@@ -71,20 +71,14 @@ class PlacementApplicationTransformerTest {
       .withApplication(applicationMock)
       .withData(null)
       .withDocument(null)
+      .withExpectedArrival(LocalDate.of(2023, 12, 11))
+      .withDuration(30)
       .produce()
 
     placementApplication.placementDates.add(
       PlacementDateEntityFactory()
         .withExpectedArrival(LocalDate.of(2023, 12, 11))
         .withDuration(30)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    placementApplication.placementDates.add(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2024, 1, 31))
-        .withDuration(15)
         .withPlacementApplication(placementApplication)
         .produce(),
     )
@@ -105,12 +99,12 @@ class PlacementApplicationTransformerTest {
     assertThat(result.isWithdrawn).isFalse
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
+    assertThat(result.placementDate!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.placementDate!!.duration).isEqualTo(30)
 
-    assertThat(result.placementDates).hasSize(2)
+    assertThat(result.placementDates).hasSize(1)
     assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
     assertThat(result.placementDates[0].duration).isEqualTo(30)
-    assertThat(result.placementDates[1].expectedArrival).isEqualTo(LocalDate.of(2024, 1, 31))
-    assertThat(result.placementDates[1].duration).isEqualTo(15)
   }
 
   @Test
