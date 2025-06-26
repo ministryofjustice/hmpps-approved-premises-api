@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
@@ -58,29 +59,25 @@ class Cas2v2ApplicationService(
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
-  val repositoryUserFunctionMap = mapOf(
-    null to cas2v2ApplicationSummaryRepository::findByUserId,
-    true to cas2v2ApplicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
-    false to cas2v2ApplicationSummaryRepository::findByUserIdAndSubmittedAtIsNull,
-  )
-
-  val repositoryPrisonFunctionMap = mapOf(
-    null to cas2v2ApplicationSummaryRepository::findByPrisonCode,
-    true to cas2v2ApplicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNotNull,
-    false to cas2v2ApplicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNull,
-  )
-
   fun getCas2v2Applications(
     prisonCode: String?,
     isSubmitted: Boolean?,
     user: Cas2v2UserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
-    val response = if (prisonCode == null) {
-      repositoryUserFunctionMap.get(isSubmitted)!!(user.id.toString(), getPageableOrAllPages(pageCriteria))
-    } else {
-      repositoryPrisonFunctionMap.get(isSubmitted)!!(prisonCode, getPageableOrAllPages(pageCriteria))
+    var spec = when (prisonCode) {
+      null -> Cas2v2ApplicationSummarySpecifications.hasUserId(user.id.toString())
+      else -> Cas2v2ApplicationSummarySpecifications.hasPrisonCode(prisonCode)
+        // BAIL-WIP: We'll need tp look at this logic when we have HDC in the system too
+        .and(Cas2v2ApplicationSummarySpecifications.hasApplicationOrigin(ApplicationOrigin.prisonBail))
     }
+
+    if (isSubmitted != null) {
+      spec = spec.and(Cas2v2ApplicationSummarySpecifications.isSubmitted(isSubmitted))
+    }
+
+    val response = cas2v2ApplicationSummaryRepository.findAll(spec, getPageableOrAllPages(pageCriteria))
+
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import java.io.IOException
@@ -36,6 +37,7 @@ class Cas2v2ApplicationsSeedJob(
   private val jsonSchemaService: JsonSchemaService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
+  private val seedLogger: SeedLogger,
 ) : SeedJob<Cas2v2ApplicationSeedCsvRow>(
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "applicationOrigin", "bailHearingDate", "submittedAt", "statusUpdates", "location"),
 ) {
@@ -153,6 +155,7 @@ class Cas2v2ApplicationsSeedJob(
 
   private fun documentFor(state: String, nomsNumber: String): String {
     if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
+      seedLogger.info("Loading document for $nomsNumber from file: src/main/resources/db/seed/dev+test/cas2v2_application_data/document_$nomsNumber.json")
       return documentFixtureFor(nomsNumber)
     }
     return "{}"

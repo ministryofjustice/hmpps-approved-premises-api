@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -839,6 +840,10 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         excludedApplicationId == it.id
       }
 
+      responseBody.forEach {
+        println(it)
+      }
+
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
       Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("Awaiting decision")
@@ -1348,6 +1353,138 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         val result = objectMapper.readValue(resultBody, Cas2v2Application::class.java)
 
         Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetWithApplicationOrigin {
+    private val prisonCode1 = "ABC"
+    private val prisonCode2 = "DEF"
+
+    private fun createApplicationStack(prisonUser1: Cas2v2UserEntity, prisonUser2: Cas2v2UserEntity, courtUser: Cas2v2UserEntity) {
+      val applicationSchema =
+        cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+          withSchema(
+            schema,
+          )
+        }
+
+      createApplication(applicationSchema, prisonUser1, ApplicationOrigin.prisonBail, true, prisonCode1)
+      createApplication(applicationSchema, prisonUser1, ApplicationOrigin.prisonBail, false, prisonCode1)
+      createApplication(applicationSchema, prisonUser1, ApplicationOrigin.prisonBail, true, prisonCode2)
+      createApplication(applicationSchema, prisonUser1, ApplicationOrigin.prisonBail, false, prisonCode2)
+      createApplication(applicationSchema, prisonUser1, ApplicationOrigin.prisonBail, true)
+      createApplication(applicationSchema, prisonUser1, ApplicationOrigin.prisonBail, false)
+
+      createApplication(applicationSchema, prisonUser2, ApplicationOrigin.prisonBail, true, prisonCode1)
+      createApplication(applicationSchema, prisonUser2, ApplicationOrigin.prisonBail, false, prisonCode1)
+      createApplication(applicationSchema, prisonUser2, ApplicationOrigin.prisonBail, true, prisonCode2)
+      createApplication(applicationSchema, prisonUser2, ApplicationOrigin.prisonBail, false, prisonCode2)
+      createApplication(applicationSchema, prisonUser2, ApplicationOrigin.prisonBail, true)
+      createApplication(applicationSchema, prisonUser2, ApplicationOrigin.prisonBail, false)
+
+      createApplication(applicationSchema, courtUser, ApplicationOrigin.courtBail, true, prisonCode1)
+      createApplication(applicationSchema, courtUser, ApplicationOrigin.courtBail, false, prisonCode2)
+      createApplication(applicationSchema, courtUser, ApplicationOrigin.courtBail, true)
+      createApplication(applicationSchema, courtUser, ApplicationOrigin.courtBail, false)
+    }
+
+    private fun createApplication(
+      applicationSchema: Cas2v2ApplicationJsonSchemaEntity,
+      user: Cas2v2UserEntity,
+      applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
+      isSubmitted: Boolean = false,
+      referringPrisonCode: String? = null,
+    ): Cas2v2ApplicationEntity = when (isSubmitted) {
+      false -> when (referringPrisonCode) {
+        null -> cas2v2ApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withApplicationOrigin(applicationOrigin)
+        }
+        else -> cas2v2ApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withApplicationOrigin(applicationOrigin)
+          withReferringPrisonCode(referringPrisonCode)
+        }
+      }
+      else -> when (referringPrisonCode) {
+        null -> cas2v2ApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withApplicationOrigin(applicationOrigin)
+          withSubmittedAt(OffsetDateTime.now())
+        }
+        else -> cas2v2ApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withApplicationOrigin(applicationOrigin)
+          withSubmittedAt(OffsetDateTime.now())
+          withReferringPrisonCode(referringPrisonCode)
+        }
+      }
+    }
+
+    @Test
+    fun `test prison code provided and user has an active caseload id`() {
+      givenACas2v2NomisUser { prisonUser1, jwt ->
+        givenACas2v2NomisUser { prisonUser2, _ ->
+          givenACas2v2DeliusUser { courtUser, _ ->
+            createApplicationStack(prisonUser1, prisonUser2, courtUser)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2v2/applications?prisonCode=ABC")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2v2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+
+            Assertions.assertThat(responseBody.size).isEqualTo(4)
+            responseBody.forEach {
+              Assertions.assertThat(it.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+            }
+          }
+        }
+      }
+    }
+
+    fun `test prison code null and user has an active caseload id`() {
+      givenACas2v2NomisUser { prisonUser1, jwt ->
+        givenACas2v2NomisUser { prisonUser2, _ ->
+          givenACas2v2DeliusUser { courtUser, _ ->
+            createApplicationStack(prisonUser1, prisonUser2, courtUser)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2v2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2v2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+
+            Assertions.assertThat(responseBody.size).isEqualTo(4)
+            responseBody.forEach {
+              Assertions.assertThat(it.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+            }
+          }
+        }
       }
     }
   }
