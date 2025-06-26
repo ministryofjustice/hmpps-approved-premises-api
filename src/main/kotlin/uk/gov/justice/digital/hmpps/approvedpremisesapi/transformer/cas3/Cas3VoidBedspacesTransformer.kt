@@ -19,9 +19,9 @@ class Cas3VoidBedspacesTransformer(
     notes = jpa.notes,
     status = determineStatus(jpa),
     cancellation = jpa.cancellation?.let { cas3VoidBedspaceCancellationTransformer.transformJpaToApi(it) },
-    bedId = jpa.bed.id,
-    bedName = jpa.bed.name,
-    roomName = jpa.bed.room.name,
+    bedId = jpa.bed!!.id,
+    bedName = jpa.bed!!.name,
+    roomName = jpa.bed!!.room.name,
   )
 
   private fun determineStatus(jpa: Cas3VoidBedspaceEntity) = when {
