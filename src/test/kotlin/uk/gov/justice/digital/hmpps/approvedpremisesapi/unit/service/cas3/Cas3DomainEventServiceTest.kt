@@ -767,12 +767,12 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
+    every { cas3DomainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(eq(bookingEntity), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
-    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     cas3DomainEventService.saveBookingProvisionallyMadeEvent(bookingEntity, user)
 
@@ -843,12 +843,12 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
+    every { cas3DomainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(eq(bookingEntity), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
-    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     every { cas3DomainEventServiceConfig.emitForEvent(any()) } returns false
     cas3DomainEventService.saveBookingProvisionallyMadeEvent(bookingEntity, user)
@@ -903,12 +903,12 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
+    every { cas3DomainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(eq(bookingEntity), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
-    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     assertThatExceptionOfType(RuntimeException::class.java)
       .isThrownBy { cas3DomainEventService.saveBookingProvisionallyMadeEvent(bookingEntity, user) }

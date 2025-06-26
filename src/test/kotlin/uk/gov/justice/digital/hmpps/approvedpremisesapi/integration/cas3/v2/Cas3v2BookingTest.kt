@@ -4,16 +4,17 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas3Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
+import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3v2BookingTest : IntegrationTestBase() {
@@ -43,6 +44,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/cas3/v2/premises/${UUID.randomUUID()}/bookings")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .exchange()
       .expectStatus()
       .isNotFound
@@ -60,6 +62,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/cas3/v2/premises/${premises.id}/bookings")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isForbidden
@@ -78,6 +81,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/cas3/v2/premises/${premises.id}/bookings")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isForbidden
@@ -96,6 +100,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/cas3/v2/premises/${premises.id}/bookings")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -163,6 +168,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -203,6 +209,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       webTestClient.get()
         .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
         .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isOk
@@ -247,11 +254,109 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
           .expectBody()
           .json(expectedJson)
+      }
+    }
+  }
+
+  @Test
+  fun `Create Booking without JWT returns 401`() {
+    val cas3Premises = givenACas3Premises()
+    webTestClient.post()
+      .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
+      .bodyValue(
+        NewBooking(
+          crn = "a crn",
+          arrivalDate = LocalDate.parse("2022-08-12"),
+          departureDate = LocalDate.parse("2022-08-30"),
+          serviceName = ServiceName.temporaryAccommodation,
+          bedId = UUID.randomUUID(),
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Create Booking returns OK with correct body`() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val premises = cas3PremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationDeliveryUnit(pdu)
+        }
+
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          withReference("test-bed")
+          withPremises(premises)
+        }
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(user)
+          withCrn(offenderDetails.otherIds.crn)
+          withProbationRegion(user.probationRegion)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+        assessment.schemaUpToDate = true
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              departureDate = LocalDate.parse("2022-08-30"),
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bedspace.id,
+              assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.status").isEqualTo("provisional")
+          .jsonPath("$.arrival").isEqualTo(null)
+          .jsonPath("$.departure").isEqualTo(null)
+          .jsonPath("$.nonArrival").isEqualTo(null)
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.confirmation").isEqualTo(null)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.bedspace.id").isEqualTo(bedspace.id.toString())
+          .jsonPath("$.bedspace.reference").isEqualTo("test-bed")
+          .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
       }
     }
   }

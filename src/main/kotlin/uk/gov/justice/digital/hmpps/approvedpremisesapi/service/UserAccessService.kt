@@ -84,6 +84,10 @@ class UserAccessService(
     else -> false
   }
 
+  fun userCanManageCas3PremisesBookings(user: UserEntity, premises: Cas3PremisesEntity) =
+    userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationDeliveryUnit.probationRegion.id) &&
+      user.hasRole(UserRole.CAS3_ASSESSOR)
+
   fun userCanManagePremisesBookings(user: UserEntity, premises: Cas3PremisesEntity) = userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationDeliveryUnit.probationRegion.id) &&
     user.hasRole(UserRole.CAS3_ASSESSOR)
 

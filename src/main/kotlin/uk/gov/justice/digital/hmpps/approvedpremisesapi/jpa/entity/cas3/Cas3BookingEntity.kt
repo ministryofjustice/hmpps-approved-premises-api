@@ -12,9 +12,11 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.v2.Cas3v2ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.v2.Cas3v2TurnaroundEntity
 import java.time.LocalDate
@@ -42,7 +44,7 @@ data class Cas3BookingEntity(
   var confirmation: Cas3v2ConfirmationEntity?,
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "application_id")
-  var application: TemporaryAccommodationApplicationEntity?,
+  var application: ApplicationEntity?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var extensions: MutableList<Cas3ExtensionEntity>,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
@@ -118,3 +120,6 @@ data class Cas3BookingEntity(
 
   override fun toString() = "Cas3BookingEntity:$id"
 }
+
+@Repository
+interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID>

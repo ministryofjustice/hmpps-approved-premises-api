@@ -10,10 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogge
 
 @Component
 class Cas3VoidBedspaceCancellationJob(
-  private val cas3BedspacesRepository: Cas3BedspacesRepository,
-  private val cas3VoidBedspaceRepository: Cas3VoidBedspacesRepository,
-  private val cas3VoidBedspaceCancellationRepository: Cas3VoidBedspaceCancellationRepository,
-  private val migrationLogger: MigrationLogger,
+    private val cas3BedspacesRepository: Cas3BedspacesRepository,
+    private val cas3VoidBedspaceRepository: Cas3VoidBedspacesRepository,
+    private val cas3VoidBedspaceCancellationRepository: Cas3VoidBedspaceCancellationRepository,
+    private val migrationLogger: MigrationLogger,
 ) : MigrationJob() {
   override val shouldRunInTransaction = true
 
