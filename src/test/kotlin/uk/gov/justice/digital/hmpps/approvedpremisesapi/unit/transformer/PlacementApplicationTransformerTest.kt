@@ -97,11 +97,9 @@ class PlacementApplicationTransformerTest {
     assertThat(result.assessmentId).isEqualTo(assessment.id)
     assertThat(result.assessmentCompletedAt).isEqualTo(assessment.submittedAt!!.toInstant())
     assertThat(result.createdByUserId).isEqualTo(placementApplication.createdByUser.id)
-    assertThat(result.schemaVersion).isEqualTo(placementApplication.schemaVersion.id)
     assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
     assertThat(result.data).isNull()
     assertThat(result.document).isNull()
-    assertThat(result.outdatedSchema).isTrue
     assertThat(result.submittedAt).isNull()
     assertThat(result.canBeWithdrawn).isFalse
     assertThat(result.isWithdrawn).isFalse

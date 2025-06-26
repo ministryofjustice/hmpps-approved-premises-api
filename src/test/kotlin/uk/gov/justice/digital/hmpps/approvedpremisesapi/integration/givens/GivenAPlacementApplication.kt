@@ -4,7 +4,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
@@ -23,7 +22,6 @@ import java.time.OffsetDateTime
 fun IntegrationTestBase.givenAPlacementApplication(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
-  schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity? = null,
   crn: String = randomStringMultiCaseWithNumbers(8),
   allocatedToUser: UserEntity? = null,
   submittedAt: OffsetDateTime? = null,
@@ -75,11 +73,6 @@ fun IntegrationTestBase.givenAPlacementApplication(
     withCreatedByUser(createdByUser)
     withAllocatedToUser(allocatedToUser)
     withApplication(application)
-    withSchemaVersion(
-      schema ?: approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      },
-    )
     withSubmittedAt(submittedAt)
     withDecision(decision)
     withDecisionMadeAt(decisionMadeAt)
@@ -108,7 +101,6 @@ fun IntegrationTestBase.givenAPlacementApplication(
 fun IntegrationTestBase.givenAPlacementApplication(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity = givenAUser().first,
-  schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity? = null,
   crn: String = randomStringMultiCaseWithNumbers(8),
   allocatedToUser: UserEntity? = null,
   submittedAt: OffsetDateTime? = null,
@@ -122,9 +114,6 @@ fun IntegrationTestBase.givenAPlacementApplication(
   val placementApplication = givenAPlacementApplication(
     assessmentDecision = assessmentDecision,
     createdByUser = createdByUser,
-    schema = schema ?: approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    },
     crn = crn,
     allocatedToUser = allocatedToUser,
     submittedAt = submittedAt,

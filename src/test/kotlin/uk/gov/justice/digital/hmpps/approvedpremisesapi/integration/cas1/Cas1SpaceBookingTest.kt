@@ -2116,7 +2116,6 @@ class Cas1SpaceBookingTest {
 
       val placementApplication = placementApplicationFactory.produceAndPersist {
         withCreatedByUser(placementApplicationCreator)
-        withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist())
         withApplication(application)
       }
 

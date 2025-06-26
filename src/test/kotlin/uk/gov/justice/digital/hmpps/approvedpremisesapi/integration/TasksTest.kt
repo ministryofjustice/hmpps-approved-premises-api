@@ -117,9 +117,6 @@ class TasksTest {
               val task = givenAPlacementApplication(
                 createdByUser = otherUser,
                 allocatedToUser = otherUser,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
               )
@@ -165,9 +162,6 @@ class TasksTest {
               val task4 = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
               )
@@ -255,9 +249,6 @@ class TasksTest {
               val task4 = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
               )
@@ -423,9 +414,6 @@ class TasksTest {
               val placementApplication = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
                 apArea = apArea,
@@ -434,9 +422,6 @@ class TasksTest {
               givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
                 apArea = apArea2,
@@ -546,9 +531,6 @@ class TasksTest {
               val placementApplication = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
                 cruManagementArea = cruArea,
@@ -557,9 +539,6 @@ class TasksTest {
               givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
                 cruManagementArea = cruArea2,
@@ -665,9 +644,6 @@ class TasksTest {
               val allocatablePlacementApplication = givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
               )
@@ -675,9 +651,6 @@ class TasksTest {
               givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = otherUser,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
               )
@@ -810,9 +783,6 @@ class TasksTest {
                 givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
                 )
@@ -821,9 +791,6 @@ class TasksTest {
               repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
                 givenAPlacementApplication(
                   createdByUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
                 )
@@ -832,9 +799,6 @@ class TasksTest {
               repeat(counts[TaskType.placementApplication]!!["withdrawn"]!!) {
                 givenAPlacementApplication(
                   createdByUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
                   isWithdrawn = true,
@@ -962,9 +926,6 @@ class TasksTest {
                 val placementApplication = givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
                   requiredQualification = requiredQualification,
@@ -1110,9 +1071,6 @@ class TasksTest {
                 val placementApplication1 = givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
                   crn = offenderDetails1.otherIds.crn,
                   name = "SOMEONE",
                   submittedAt = OffsetDateTime.now(),
@@ -1121,9 +1079,6 @@ class TasksTest {
                 val placementApplication2 = givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
                   crn = offenderDetails2.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
                   name = "ANOTHER",
@@ -1277,9 +1232,6 @@ class TasksTest {
               val placementApplication1 = givenAPlacementApplication(
                 createdByUser = otherUser,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
               )
@@ -1287,9 +1239,6 @@ class TasksTest {
               val placementApplication2 = givenAPlacementApplication(
                 createdByUser = otherUser,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
                 decision = ACCEPTED,
@@ -1463,9 +1412,6 @@ class TasksTest {
               val placementApplication1 = givenAPlacementApplication(
                 createdByUser = otherUser,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
@@ -1487,9 +1433,6 @@ class TasksTest {
               val placementApplication2 = givenAPlacementApplication(
                 createdByUser = otherUser,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
@@ -2041,9 +1984,6 @@ class TasksTest {
               givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
               ) { placementApplication ->
 
@@ -2093,9 +2033,6 @@ class TasksTest {
           givenAPlacementApplication(
             createdByUser = assessorUser1,
             allocatedToUser = assessorUser1,
-            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
             crn = offenderDetails.otherIds.crn,
           ) { placementApplication ->
 
@@ -2304,9 +2241,6 @@ class TasksTest {
                 givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
                   crn = offenderDetails.otherIds.crn,
 
                 ) { placementApplication ->
@@ -2427,9 +2361,6 @@ class TasksTest {
       givenAPlacementApplication(
         createdByUser = createdByUser,
         allocatedToUser = allocatedUser,
-        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
         submittedAt = completedAt,
         crn = crn,
         decision = decision,
@@ -2584,9 +2515,6 @@ class TasksTest {
               givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
               ) { placementApplication ->

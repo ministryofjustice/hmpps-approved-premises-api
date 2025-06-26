@@ -1771,11 +1771,6 @@ class WithdrawalTest : IntegrationTestBase() {
     val placementApplication = placementApplicationFactory.produceAndPersist {
       withCreatedByUser(createdBy ?: application.createdByUser)
       withApplication(application)
-      withSchemaVersion(
-        approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
-      )
       withSubmittedAt(if (isSubmitted) OffsetDateTime.now() else null)
       withDecision(decision)
       withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)

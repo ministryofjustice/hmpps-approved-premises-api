@@ -95,7 +95,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
       .produceAndPersist {
         withApplication(application)
         withCreatedByUser(user)
-        withSchemaVersion(placementApplicationSchema)
         withSubmittedAt(OffsetDateTime.now())
         withDueAt(null)
       }

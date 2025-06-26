@@ -1027,7 +1027,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withIsWithdrawn(true)
     withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
     withReallocatedAt(null)
-    withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntity())
     withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
   }
 
@@ -1050,10 +1049,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
-  private fun approvedPremisesPlacementApplicationJsonSchemaEntity() = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
   }
 
