@@ -483,6 +483,7 @@ components:
         - spaceBookingSummaries
         - outOfServiceBeds
     Cas1SpaceBookingDaySummary:
+      deprecated: true
       type: object
       properties:
         id:

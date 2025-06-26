@@ -421,7 +421,7 @@ class Cas1SpaceBookingService(
     bookingsSortDirection: SortDirection,
     excludeSpaceBookingId: UUID? = null,
     user: UserEntity,
-  ): CasResult<List<Cas1SpaceBookingSummary>> {
+  ): List<Cas1SpaceBookingSummary> {
     val sort = Sort.by(
       when (bookingsSortDirection) {
         SortDirection.desc -> Sort.Direction.DESC
@@ -448,9 +448,7 @@ class Cas1SpaceBookingService(
           personSummaryInfo = offenderSummaries.forCrn(bookingSummary.crn),
         )
       }
-    return Success(
-      spaceBookingSummaries,
-    )
+    return spaceBookingSummaries
   }
 
   private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) = bookingsCriteriaFilter?.let { bookingCriteria ->

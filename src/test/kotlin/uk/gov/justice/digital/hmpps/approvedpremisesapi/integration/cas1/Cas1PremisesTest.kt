@@ -787,15 +787,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries.spaceBookings).hasSize(3)
       assertThat(summaries.spaceBookingSummaries).hasSize(3)
 
-      summaries.spaceBookings.zip(summaries.spaceBookingSummaries).forEach { (dayBooking, bookingSummary) ->
-        assertThat(dayBooking.id).isEqualTo(bookingSummary.id)
-        assertThat(dayBooking.person.crn).isEqualTo(bookingSummary.person.crn)
-        assertThat(dayBooking.essentialCharacteristics).isEqualTo(bookingSummary.characteristics)
-        assertThat(dayBooking.tier).isEqualTo(bookingSummary.tier)
-        assertThat(dayBooking.canonicalArrivalDate).isEqualTo(bookingSummary.canonicalArrivalDate)
-        assertThat(dayBooking.canonicalDepartureDate).isEqualTo(bookingSummary.canonicalDepartureDate)
-      }
-
       val summaryBookingOffline = summaries.spaceBookings[0]
       assertThat(summaryBookingOffline.id).isEqualTo(spaceBookingOfflineApplication.id)
       assertThat(summaryBookingOffline.tier).isEqualTo(null)
@@ -843,6 +834,53 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaryBookingOffender.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
       assertThat(summaryBookingOffender).isInstanceOf(FullPersonSummary::class.java)
       assertThat((summaryBookingOffender as FullPersonSummary).name).isEqualTo("${offenderA.name.forename} ${offenderA.name.surname}")
+
+      val bookingSummary1 = summaries.spaceBookingSummaries[0]
+      assertThat(bookingSummary1.id).isEqualTo(spaceBookingOfflineApplication.id)
+      assertThat(bookingSummary1.tier).isEqualTo(null)
+      assertThat(bookingSummary1.canonicalArrivalDate).isEqualTo(bookingSummary1.canonicalArrivalDate)
+      assertThat(bookingSummary1.canonicalDepartureDate).isEqualTo(bookingSummary1.canonicalDepartureDate)
+      assertThat(bookingSummary1.characteristics.size).isEqualTo(1)
+      assertThat(bookingSummary1.characteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_SINGLE_ROOM)
+
+      val offender1 = bookingSummary1.person
+      assertThat(offender1.crn).isEqualTo(offenderOffline.crn)
+      assertThat(offender1.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(offender1).isInstanceOf(FullPersonSummary::class.java)
+      assertThat((offender1 as FullPersonSummary).name).isEqualTo("${offenderOffline.name.forename} ${offenderOffline.name.surname}")
+
+      val bookingSummary2 = summaries.spaceBookingSummaries[1]
+      assertThat(bookingSummary2.id).isEqualTo(spaceBookingLate.id)
+      assertThat(bookingSummary2.tier).isEqualTo(tierB)
+      assertThat(bookingSummary2.canonicalArrivalDate).isEqualTo(spaceBookingLate.canonicalArrivalDate)
+      assertThat(bookingSummary2.canonicalDepartureDate).isEqualTo(spaceBookingLate.canonicalDepartureDate)
+      assertThat(bookingSummary2.characteristics.size).isEqualTo(3)
+      assertThat(bookingSummary2.characteristics.map { it.value }).containsExactlyInAnyOrder(
+        CAS1_PROPERTY_NAME_SINGLE_ROOM,
+        CAS1_PROPERTY_NAME_ENSUITE,
+        CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+      )
+
+      val offender2 = bookingSummary2.person
+      assertThat(offender2.crn).isEqualTo(offenderB.crn)
+      assertThat(offender2.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(offender2).isInstanceOf(FullPersonSummary::class.java)
+      assertThat((offender2 as FullPersonSummary).name).isEqualTo("${offenderB.name.forename} ${offenderB.name.surname}")
+
+      val bookingSummary3 = summaries.spaceBookings[2]
+      assertThat(bookingSummary3.id).isEqualTo(spaceBookingEarly.id)
+      assertThat(bookingSummary3.tier).isEqualTo(tierA)
+      assertThat(bookingSummary3.canonicalArrivalDate).isEqualTo(spaceBookingEarly.canonicalArrivalDate)
+      assertThat(bookingSummary3.canonicalDepartureDate).isEqualTo(spaceBookingEarly.canonicalDepartureDate)
+      assertThat(bookingSummary3.essentialCharacteristics.size).isEqualTo(1)
+      assertThat(bookingSummary3.essentialCharacteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_ARSON_SUITABLE)
+      assertThat(bookingSummary3.releaseType).isEqualTo(releaseTypeToBeDetermined)
+
+      val offender3 = bookingSummary3.person
+      assertThat(offender3.crn).isEqualTo(offenderA.crn)
+      assertThat(offender3.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(offender3).isInstanceOf(FullPersonSummary::class.java)
+      assertThat((offender3 as FullPersonSummary).name).isEqualTo("${offenderA.name.forename} ${offenderA.name.surname}")
     }
 
     @Test

@@ -194,16 +194,15 @@ class Cas1PremisesController(
             date = date,
           ),
         ).map(cas1OutOfServiceBedSummaryTransformer::toCas1OutOfServiceBedSummary),
-        spaceBookingSummaries = extractEntityFromCasResult(
-          spaceBookingService.getSpaceBookingsByPremisesIdAndCriteriaForDate(
-            premises = premises,
-            date = date,
-            bookingsCriteriaFilter = bookingsCriteriaFilter,
-            bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
-            bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
-            excludeSpaceBookingId = excludeSpaceBookingId,
-            user = userService.getUserForRequest(),
-          ),
+        spaceBookingSummaries =
+        spaceBookingService.getSpaceBookingsByPremisesIdAndCriteriaForDate(
+          premises = premises,
+          date = date,
+          bookingsCriteriaFilter = bookingsCriteriaFilter,
+          bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
+          bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
+          excludeSpaceBookingId = excludeSpaceBookingId,
+          user = userService.getUserForRequest(),
         ),
       ),
     )
