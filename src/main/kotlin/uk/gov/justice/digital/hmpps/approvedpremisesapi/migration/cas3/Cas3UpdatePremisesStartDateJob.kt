@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3
 
 import jakarta.persistence.EntityManager
+import org.springframework.data.domain.Limit
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
+import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Sort.Direction.ASC
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
@@ -15,6 +19,7 @@ class Cas3UpdatePremisesStartDateJob(
   private val entityManager: EntityManager,
   private val migrationLogger: MigrationLogger,
   private val premisesRepository: PremisesRepository,
+  private val bookingRepository: BookingRepository,
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
 
@@ -41,7 +46,7 @@ class Cas3UpdatePremisesStartDateJob(
               premisesRepository.save(tap)
             } else {
               migrationLogger.info("Using oldest booking arrival_date as start_date for premises id ${tap.id}")
-              val oldestBooking = tap.bookings.sortedBy { it.arrivalDate }.take(1).firstOrNull()
+              val oldestBooking = bookingRepository.findByPremisesId(tap.id, Sort.by(ASC, "arrivalDate"), Limit.of(1)).firstOrNull()
               if (oldestBooking == null) {
                 migrationLogger.info("No bookings found for premises id ${tap.id}")
               } else {
