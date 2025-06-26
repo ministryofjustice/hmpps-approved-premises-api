@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
@@ -87,15 +86,9 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withApplication(application)
         .withCreatedByUser(creator)
         .withAllocatedToUser(assessor)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationSubmitted(placementApplication)
 
@@ -165,15 +158,9 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withApplication(application)
         .withCreatedByUser(creator)
         .withAllocatedToUser(assessor)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationAllocated(placementApplication)
 
@@ -243,15 +230,9 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withApplication(application)
         .withCreatedByUser(creator)
         .withAllocatedToUser(assessor)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationAccepted(placementApplication)
 
@@ -323,14 +304,6 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .produce()
 
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
-
       service.placementApplicationRejected(placementApplication)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
@@ -386,15 +359,9 @@ class Cas1PlacementApplicationEmailServiceTest {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withCreatedByUser(creator)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
@@ -432,15 +399,9 @@ class Cas1PlacementApplicationEmailServiceTest {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withCreatedByUser(creator)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
@@ -477,15 +438,9 @@ class Cas1PlacementApplicationEmailServiceTest {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withCreatedByUser(creator)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
@@ -532,15 +487,9 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withApplication(application)
         .withCreatedByUser(creator)
         .withAllocatedToUser(assessor)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
@@ -570,52 +519,6 @@ class Cas1PlacementApplicationEmailServiceTest {
     }
 
     @Test
-    fun `placementApplicationWithdrawn sends an email with 'additionalDates' if multiple dates defined due to a legacy placement application`() {
-      val creator = createUser(emailAddress = null)
-      val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
-
-      val application = createApplicationForApplicant()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withCreatedByUser(creator)
-        .withAllocatedToUser(assessor)
-        .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2021, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
-
-      service.placementApplicationWithdrawn(
-        placementApplication = placementApplication,
-        wasBeingAssessedBy = assessor,
-        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
-      )
-
-      mockEmailNotificationService.assertEmailRequestCount(1)
-
-      val personalisation = mapOf(
-        "additionalDatesSet" to "yes",
-      )
-
-      mockEmailNotificationService.assertEmailRequested(
-        ASSESSOR_EMAIL,
-        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-        personalisation,
-        application,
-      )
-    }
-
-    @Test
     fun `placementApplicationWithdrawn sends an email if triggered by seed job`() {
       val creator = createUser(emailAddress = null)
       val applicant = createUser(emailAddress = APPLICANT_EMAIL)
@@ -624,15 +527,9 @@ class Cas1PlacementApplicationEmailServiceTest {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withCreatedByUser(creator)
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withExpectedArrival(LocalDate.of(2020, 3, 12))
-          .withDuration(10)
-          .withPlacementApplication(placementApplication)
-          .produce(),
-      )
 
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,

@@ -168,6 +168,8 @@ data class PlacementApplicationEntity(
 
   fun isBeingAssessed() = isActive() && decision == null
 
+  fun expectedDeparture() = expectedArrival?.plusDays(duration!!.toLong())
+
   override fun toString() = "PlacementApplicationEntity: $id"
 }
 
