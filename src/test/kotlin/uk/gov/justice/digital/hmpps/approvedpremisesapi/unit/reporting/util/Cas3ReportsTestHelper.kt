@@ -64,7 +64,7 @@ fun convertToCas3BedUtilisationBookingTurnaroundReportData(booking: BookingEntit
 )
 
 fun convertToCas3BedUtilisationLostBedReportData(voidBedspace: Cas3VoidBedspaceEntity): Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData = Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData(
-  bedId = voidBedspace.bed.id.toString(),
+  bedId = voidBedspace.bed!!.id.toString(),
   startDate = voidBedspace.startDate,
   endDate = voidBedspace.endDate,
   cancellationId = voidBedspace.cancellation?.id?.toString(),

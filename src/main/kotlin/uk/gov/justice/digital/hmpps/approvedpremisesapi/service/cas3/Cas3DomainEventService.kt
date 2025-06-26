@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
@@ -133,6 +134,17 @@ class Cas3DomainEventService(
 
   @Transactional
   fun saveBookingProvisionallyMadeEvent(booking: BookingEntity, user: UserEntity) {
+    val domainEvent = cas3DomainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
+    )
+  }
+
+  @Transactional
+  fun saveCas3BookingProvisionallyMadeEvent(booking: Cas3BookingEntity, user: UserEntity) {
     val domainEvent = cas3DomainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
     saveAndEmit(

@@ -90,7 +90,7 @@ class Cas3VoidBedspaceCancellationJobTest : MigrationJobTestBase() {
       cancelledVoidBedspaces.forEach {
         assertThat(it.cancellationDate).isEqualTo(it.cancellation!!.createdAt)
         assertThat(it.cancellationNotes).isEqualTo(it.cancellation!!.notes)
-        assertThat(it.bedspace!!.id).isEqualTo(it.bed.id)
+        assertThat(it.bedspace!!.id).isEqualTo(it.bed!!.id)
       }
 
       // should be called twice - 20 cancelled bedspaces with a page size of 10

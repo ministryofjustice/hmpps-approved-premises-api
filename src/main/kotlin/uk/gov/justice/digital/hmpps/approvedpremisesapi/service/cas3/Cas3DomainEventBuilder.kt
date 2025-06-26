@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
 import java.time.Instant
@@ -107,6 +108,42 @@ class Cas3DomainEventBuilder(
 
   fun getBookingProvisionallyMadeDomainEvent(
     booking: BookingEntity,
+    user: UserEntity,
+  ): DomainEvent<CAS3BookingProvisionallyMadeEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = booking.createdAt.toInstant(),
+      data = CAS3BookingProvisionallyMadeEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingProvisionallyMade,
+        eventDetails = CAS3BookingProvisionallyMadeEventDetails(
+          applicationId = application?.id,
+          applicationUrl = application.toUrl(),
+          bookingId = booking.id,
+          bookingUrl = booking.toUrl(),
+          personReference = PersonReference(
+            crn = booking.crn,
+            noms = booking.nomsNumber,
+          ),
+          expectedArrivedAt = booking.arrivalDate.atStartOfDay().toInstant(ZoneOffset.UTC),
+          notes = "",
+          bookedBy = populateStaffMember(user),
+        ),
+      ),
+    )
+  }
+
+  fun getBookingProvisionallyMadeDomainEvent(
+    booking: Cas3BookingEntity,
     user: UserEntity,
   ): DomainEvent<CAS3BookingProvisionallyMadeEvent> {
     val domainEventId = UUID.randomUUID()
@@ -416,6 +453,7 @@ class Cas3DomainEventBuilder(
   private fun TemporaryAccommodationApplicationEntity?.toUrl(): URI? = this?.let { URI(applicationUrlTemplate.replace("#applicationId", it.id.toString())) }
 
   private fun BookingEntity.toUrl(): URI = URI(bookingUrlTemplate.replace("#premisesId", this.premises.id.toString()).replace("#bookingId", this.id.toString()))
+  private fun Cas3BookingEntity.toUrl(): URI = URI(bookingUrlTemplate.replace("#premisesId", this.premises.id.toString()).replace("#bookingId", this.id.toString()))
 
   private fun populateStaffMember(it: UserEntity) = StaffMember(
     staffCode = it.deliusStaffCode,
