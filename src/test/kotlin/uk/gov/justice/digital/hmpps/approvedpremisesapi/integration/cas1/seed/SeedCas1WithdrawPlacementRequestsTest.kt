@@ -205,11 +205,6 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
     val placementApplication = placementApplicationFactory.produceAndPersist {
       withCreatedByUser(application.createdByUser)
       withApplication(application)
-      withSchemaVersion(
-        approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
-      )
       withSubmittedAt(if (isSubmitted) OffsetDateTime.now() else null)
       withDecision(if (isSubmitted) PlacementApplicationDecision.ACCEPTED else null)
       withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)

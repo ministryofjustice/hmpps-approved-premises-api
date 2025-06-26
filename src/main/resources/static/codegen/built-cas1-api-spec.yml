@@ -5826,11 +5826,6 @@ components:
             createdByUserId:
               type: string
               format: uuid
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
             createdAt:
               type: string
               format: date-time
@@ -5866,8 +5861,6 @@ components:
           required:
             - id
             - createdByUserId
-            - schemaVersion
-            - outdatedScheme
             - createdAt
             - assessmentId
             - assessmentCompletedAt

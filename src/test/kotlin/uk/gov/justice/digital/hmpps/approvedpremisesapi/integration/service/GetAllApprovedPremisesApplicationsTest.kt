@@ -187,11 +187,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
           placementApplicationFactory.produceAndPersist {
             withApplication(applicationWithPlacementApplication!!)
             withCreatedByUser(userEntity)
-            withSchemaVersion(
-              approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-            )
           }
 
           applicationIdsWithRequestsForPlacement = listOf(

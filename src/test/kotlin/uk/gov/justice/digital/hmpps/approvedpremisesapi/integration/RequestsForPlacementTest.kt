@@ -56,20 +56,17 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
           val unsubmittedPlacementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
-            withSchemaVersion(schema)
             withCreatedByUser(user)
           }
 
           val submittedPlacementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
-            withSchemaVersion(schema)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
           }
 
           val submittedButReallocatedPlacementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
-            withSchemaVersion(schema)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())
             withReallocatedAt(OffsetDateTime.now())
@@ -77,7 +74,6 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
           val withdrawnPlacementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
-            withSchemaVersion(schema)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())
             withIsWithdrawn(true)

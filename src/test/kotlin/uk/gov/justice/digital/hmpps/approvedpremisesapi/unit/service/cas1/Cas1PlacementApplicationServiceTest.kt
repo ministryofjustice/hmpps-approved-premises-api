@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
@@ -40,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
@@ -62,7 +60,6 @@ import java.util.UUID
 
 class Cas1PlacementApplicationServiceTest {
   private val placementApplicationRepository = mockk<PlacementApplicationRepository>()
-  private val jsonSchemaService = mockk<JsonSchemaService>()
   private val userService = mockk<UserService>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
   private val placementRequestService = mockk<PlacementRequestService>()
@@ -75,7 +72,6 @@ class Cas1PlacementApplicationServiceTest {
 
   private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
     placementApplicationRepository,
-    jsonSchemaService,
     userService,
     placementDateRepository,
     placementRequestService,
@@ -158,7 +154,6 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Submitting an application returns validation error if no dates defined`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
 
       val result = cas1PlacementApplicationService.submitApplication(
         placementApplication.id,
@@ -174,7 +169,6 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Submitting an application triggers allocation and sets a due date`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
@@ -205,7 +199,6 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Submitting an application saves a single date to a placement application, triggers emails and domain event`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
@@ -245,7 +238,6 @@ class Cas1PlacementApplicationServiceTest {
     @Test
     fun `Submitting an application saves multiple dates to individual placement applications and triggers emails and domain event per resultant placement application`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
@@ -528,7 +520,6 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(newPlacementApplication.createdByUser).isEqualTo(previousPlacementApplication.createdByUser)
         assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
         assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
-        assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
         assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
         assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
         assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
@@ -602,7 +593,6 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(newPlacementApplication.createdByUser).isEqualTo(previousPlacementApplication.createdByUser)
         assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
         assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
-        assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
         assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
         assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
         assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)

@@ -8,7 +8,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -24,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
@@ -40,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 @Suppress("ReturnCount")
 class Cas1PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
-  private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
   private val placementRequestService: PlacementRequestService,
@@ -80,8 +77,6 @@ class Cas1PlacementApplicationService(
         id = UUID.randomUUID(),
         application = application,
         createdByUser = user,
-        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
-        schemaUpToDate = true,
         data = null,
         document = null,
         createdAt = OffsetDateTime.now(),
@@ -102,14 +97,14 @@ class Cas1PlacementApplicationService(
 
     val createdApplication = placementApplicationRepository.save(placementApplication)
 
-    return success(createdApplication.apply { schemaUpToDate = true })
+    return success(createdApplication)
   }
 
   fun getApplication(id: UUID): CasResult<PlacementApplicationEntity> {
     val placementApplication =
       placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound("placement application", id.toString())
 
-    return CasResult.Success(setSchemaUpToDate(placementApplication))
+    return CasResult.Success(placementApplication)
   }
 
   fun getApplicationOrNull(id: UUID) = placementApplicationRepository.findByIdOrNull(id)
@@ -418,16 +413,6 @@ class Cas1PlacementApplicationService(
     ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
   }
 
-  private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
-    val latestSchema = jsonSchemaService.getNewestSchema(
-      ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java,
-    )
-
-    placementApplicationEntity.schemaUpToDate = placementApplicationEntity.schemaVersion.id == latestSchema.id
-
-    return placementApplicationEntity
-  }
-
   private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<CasResult<T>, PlacementApplicationEntity> {
     val placementApplication = placementApplicationRepository.findByIdOrNull(id)
       ?: return Either.Left(
@@ -453,15 +438,6 @@ class Cas1PlacementApplicationService(
   private fun <T> confirmApplicationCanBeUpdatedOrSubmitted(
     placementApplicationEntity: PlacementApplicationEntity,
   ): CasResult<T>? {
-    val latestSchema = jsonSchemaService.getNewestSchema(
-      ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java,
-    )
-    placementApplicationEntity.schemaUpToDate = placementApplicationEntity.schemaVersion.id == latestSchema.id
-
-    if (!placementApplicationEntity.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     if (placementApplicationEntity.submittedAt != null) {
       return CasResult.GeneralValidationError("This application has already been submitted")
     }

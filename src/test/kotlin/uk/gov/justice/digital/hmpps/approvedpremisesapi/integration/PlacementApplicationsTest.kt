@@ -192,10 +192,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `creating a placement application when the application belongs to the user returns successfully`() {
       givenAUser { user, jwt ->
         givenAnAssessmentForApprovedPremises(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
-          val schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           val rawResult = webTestClient.post()
             .uri("/cas1/placement-applications")
             .header("Authorization", "Bearer $jwt")
@@ -215,9 +211,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
           assertThat(body.applicationId).isEqualTo(application.id)
           assertThat(body.applicationId).isEqualTo(application.id)
-          assertThat(body.outdatedSchema).isEqualTo(false)
           assertThat(body.createdAt).isNotNull()
-          assertThat(body.schemaVersion).isEqualTo(schema.id)
         }
       }
     }
@@ -230,9 +224,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, _ ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
           webTestClient.get()
             .uri("/placement-request-applications/${placementApplicationEntity.id}")
@@ -266,9 +257,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           givenAPlacementApplication(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
-            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
           ) { placementApplicationEntity ->
             webTestClient.get()
               .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
@@ -292,9 +280,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           givenAPlacementApplication(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
-            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
           ) { placementApplicationEntity ->
             apDeliusContextAddResponseToUserAccessCall(
               listOf(
@@ -320,7 +305,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(body.id).isEqualTo(placementApplicationEntity.id)
             assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
             assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
-            assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
             assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
             assertThat(body.submittedAt).isNull()
           }
@@ -339,9 +323,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           givenAPlacementApplication(
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
-            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
           ) { placementApplicationEntity ->
             val rawResult = webTestClient.get()
               .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
@@ -358,7 +339,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(body.id).isEqualTo(placementApplicationEntity.id)
             assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
             assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
-            assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
             assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
             assertThat(body.submittedAt).isNull()
           }
@@ -371,9 +351,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
 
           apDeliusContextAddResponseToUserAccessCall(
@@ -400,7 +377,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           assertThat(body.id).isEqualTo(placementApplicationEntity.id)
           assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
           assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
-          assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
           assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
           assertThat(body.submittedAt).isNull()
         }
@@ -429,9 +405,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.put()
@@ -456,9 +429,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = userEntityFactory.produceAndPersist {
             withYieldedProbationRegion { givenAProbationRegion() }
           },
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.put()
@@ -481,9 +451,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -510,9 +477,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
 
           var application = placementApplicationEntity.application
@@ -541,9 +505,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
           val rawResult = webTestClient.put()
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
@@ -562,7 +523,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
           val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
           val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
-            schemaUpToDate = true,
             data = "{\"thingId\":123}",
           )
 
@@ -570,7 +530,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             expectedUpdatedPlacementApplication.id == it.id &&
               expectedUpdatedPlacementApplication.application.id == it.applicationId &&
               expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
-              expectedUpdatedPlacementApplication.schemaVersion.id == it.schemaVersion &&
               expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
               serializableToJsonNode(expectedUpdatedPlacementApplication.data) == serializableToJsonNode(it.data)
           }
@@ -611,9 +570,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.post()
@@ -643,9 +599,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
 
           var application = placementApplicationEntity.application
@@ -683,9 +636,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = userEntityFactory.produceAndPersist {
             withYieldedProbationRegion { givenAProbationRegion() }
           },
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.post()
@@ -715,9 +665,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -751,9 +698,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
           givenAnOffender(
             offenderDetailsConfigBlock = {
@@ -789,7 +733,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(body).hasSize(1)
 
             val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
-              schemaUpToDate = true,
               document = "{\"thingId\":123}",
             )
 
@@ -797,7 +740,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               expectedUpdatedPlacementApplication.id == it.id &&
                 expectedUpdatedPlacementApplication.application.id == it.applicationId &&
                 expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
-                expectedUpdatedPlacementApplication.schemaVersion.id == it.schemaVersion &&
                 expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
                 serializableToJsonNode(expectedUpdatedPlacementApplication.document) == serializableToJsonNode(it.document)
             }
@@ -837,9 +779,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
           createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
           givenAnOffender(
             offenderDetailsConfigBlock = {
@@ -1192,9 +1131,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         createdByUser = userEntityFactory.produceAndPersist {
           withYieldedProbationRegion { givenAProbationRegion() }
         },
-        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
         submittedAt = OffsetDateTime.now(),
         crn = offenderDetails.otherIds.crn,
         decision = decision,
@@ -1275,9 +1211,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = userEntityFactory.produceAndPersist {
             withYieldedProbationRegion { givenAProbationRegion() }
           },
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
 
@@ -1300,9 +1233,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         givenAPlacementApplication(
           createdByUser = user,
           submittedAt = OffsetDateTime.now(),
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
         ) { placementApplicationEntity ->
           val rawResult = webTestClient.post()
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
@@ -1323,7 +1253,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             placementApplicationEntity.id == it.id &&
               placementApplicationEntity.application.id == it.applicationId &&
               placementApplicationEntity.createdByUser.id == it.createdByUserId &&
-              placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
               placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
               serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
           }
@@ -1343,9 +1272,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         givenAUser { assessor, _ ->
           givenAPlacementApplication(
             createdByUser = applicant,
-            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
             decision = null,
             submittedAt = OffsetDateTime.now(),
             allocatedToUser = assessor,
@@ -1372,7 +1298,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               placementApplicationEntity.id == it.id &&
                 application.id == it.applicationId &&
                 placementApplicationEntity.createdByUser.id == it.createdByUserId &&
-                placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
                 placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
             }
@@ -1404,9 +1329,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
             givenAPlacementApplication(
               createdByUser = applicant,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
               decision = null,
               submittedAt = OffsetDateTime.now(),
               allocatedToUser = assessor,
@@ -1433,7 +1355,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 placementApplicationEntity.id == it.id &&
                   application.id == it.applicationId &&
                   placementApplicationEntity.createdByUser.id == it.createdByUserId &&
-                  placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
                   placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
                   serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
               }

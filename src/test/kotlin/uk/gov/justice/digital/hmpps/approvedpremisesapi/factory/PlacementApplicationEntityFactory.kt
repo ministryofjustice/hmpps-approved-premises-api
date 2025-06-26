@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -20,9 +19,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var createdByUser: Yielded<UserEntity>? = null
   private var allocatedToUser: Yielded<UserEntity?> = { null }
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
-  private var schemaVersion: Yielded<ApprovedPremisesPlacementApplicationJsonSchemaEntity> = {
-    ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory().produce()
-  }
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -60,10 +56,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
 
   fun withDocument(document: String?) = apply {
     this.document = { document }
-  }
-
-  fun withSchemaVersion(schemaVersion: ApprovedPremisesPlacementApplicationJsonSchemaEntity) = apply {
-    this.schemaVersion = { schemaVersion }
   }
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
@@ -114,8 +106,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
-    schemaVersion = this.schemaVersion(),
-    schemaUpToDate = false,
     data = this.data(),
     document = this.document(),
     createdAt = this.createdAt(),

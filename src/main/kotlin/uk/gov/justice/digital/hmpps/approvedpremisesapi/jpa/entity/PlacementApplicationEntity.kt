@@ -91,28 +91,25 @@ data class PlacementApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: UserEntity,
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "schema_version")
-  var schemaVersion: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
-
-  @Transient
-  var schemaUpToDate: Boolean,
-
   @Type(JsonType::class)
   var data: String?,
 
   @Type(JsonType::class)
   var document: String?,
 
+  // Note that this is mapped to timestamp. It should be timestamptz
   val createdAt: OffsetDateTime,
 
+  // Note that this is mapped to timestamp. It should be timestamptz
   var submittedAt: OffsetDateTime?,
 
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   var allocatedToUser: UserEntity?,
 
+  // Note that this is mapped to timestamp. It should be timestamptz
   var allocatedAt: OffsetDateTime?,
+  // Note that this is mapped to timestamp. It should be timestamptz
   var reallocatedAt: OffsetDateTime?,
 
   @Enumerated(value = EnumType.STRING)
@@ -152,8 +149,6 @@ data class PlacementApplicationEntity(
   fun isReallocated() = reallocatedAt != null
 
   fun isActive() = !isReallocated() && !isWithdrawn
-
-  fun isAccepted() = decision == PlacementApplicationDecision.ACCEPTED
 
   fun isInWithdrawableState() = isSubmitted() && isActive()
 
