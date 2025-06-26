@@ -228,10 +228,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val submittedPlacementApplication1 = createPlacementApplication(
               application,
-              dateSpans = listOf(
-                DateSpan(nowPlusDays(1), duration = 5),
-                DateSpan(nowPlusDays(10), duration = 10),
-              ),
+              dateSpan = DateSpan(nowPlusDays(1), duration = 5),
             )
 
             val submittedPlacementApplication2 = createPlacementApplication(
@@ -251,7 +248,7 @@ class WithdrawalTest : IntegrationTestBase() {
               reallocatedAt = OffsetDateTime.now(),
             )
 
-            val applicationWithAcceptedDecision = createPlacementApplication(
+            val placementApplicationWithAcceptedDecision = createPlacementApplication(
               application,
               DateSpan(nowPlusDays(50), duration = 6),
               decision = PlacementApplicationDecision.ACCEPTED,
@@ -264,7 +261,7 @@ class WithdrawalTest : IntegrationTestBase() {
               isWithdrawn = true,
             )
 
-            val applicationWithRejectedDecision = createPlacementApplication(
+            val placementApplicationWithRejectedDecision = createPlacementApplication(
               application,
               DateSpan(nowPlusDays(50), duration = 6),
               decision = PlacementApplicationDecision.REJECTED,
@@ -276,8 +273,8 @@ class WithdrawalTest : IntegrationTestBase() {
                 toWithdrawable(application),
                 toWithdrawable(submittedPlacementApplication1),
                 toWithdrawable(submittedPlacementApplication2),
-                toWithdrawable(applicationWithAcceptedDecision),
-                toWithdrawable(applicationWithRejectedDecision),
+                toWithdrawable(placementApplicationWithAcceptedDecision),
+                toWithdrawable(placementApplicationWithRejectedDecision),
               ),
             )
 
@@ -1524,7 +1521,7 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
       Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-      mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString()),
+      mapOf("startDate" to placementApplication.expectedArrival.toString()),
     )
 
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
@@ -1760,7 +1757,6 @@ class WithdrawalTest : IntegrationTestBase() {
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     dateSpan: DateSpan? = null,
-    dateSpans: List<DateSpan> = emptyList(),
     isSubmitted: Boolean = true,
     reallocatedAt: OffsetDateTime? = null,
     decision: PlacementApplicationDecision? = PlacementApplicationDecision.ACCEPTED,
@@ -1777,17 +1773,8 @@ class WithdrawalTest : IntegrationTestBase() {
       withReallocatedAt(reallocatedAt)
       withAllocatedToUser(allocatedTo)
       withIsWithdrawn(isWithdrawn)
-    }
-
-    if (isSubmitted) {
-      val dates = (listOfNotNull(dateSpan) + dateSpans).map {
-        placementDateFactory.produceAndPersist {
-          withPlacementApplication(placementApplication)
-          withExpectedArrival(it.start)
-          withDuration(it.duration)
-        }
-      }
-      placementApplication.placementDates.addAll(dates)
+      withExpectedArrival(dateSpan?.start)
+      withDuration(dateSpan?.duration)
     }
 
     return placementApplication
@@ -1907,7 +1894,14 @@ class WithdrawalTest : IntegrationTestBase() {
   fun toWithdrawable(placementApplication: PlacementApplicationEntity) = Withdrawable(
     placementApplication.id,
     WithdrawableType.placementApplication,
-    placementApplication.placementDates.map { toDatePeriod(it.expectedArrival, it.duration) },
+    listOfNotNull(
+      placementApplication.expectedArrival?.let {
+        toDatePeriod(
+          placementApplication.expectedArrival!!,
+          placementApplication.duration!!,
+        )
+      },
+    ),
   )
 
   fun toWithdrawable(booking: BookingEntity) = Withdrawable(
