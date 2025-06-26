@@ -69,7 +69,14 @@ class Cas1WithdrawableTreeBuilder(
         entityType = WithdrawableEntityType.PlacementApplication,
         entityId = placementApplication.id,
         status = cas1PlacementApplicationService.getWithdrawableState(placementApplication, user),
-        dates = placementApplication.placementDates.map { WithdrawableDatePeriod(it.expectedArrival, it.expectedDeparture()) },
+        dates = listOfNotNull(
+          placementApplication.expectedArrival?.let {
+            WithdrawableDatePeriod(
+              startDate = placementApplication.expectedArrival!!,
+              endDate = placementApplication.expectedDeparture()!!,
+            )
+          },
+        ),
         children = children,
       ),
     )
