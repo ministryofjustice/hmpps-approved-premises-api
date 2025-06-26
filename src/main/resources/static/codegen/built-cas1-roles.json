@@ -26,10 +26,6 @@
     ]
   },
   {
-    "name" : "workflow_manager",
-    "permissions" : [ ]
-  },
-  {
     "name" : "cru_member",
     "permissions" : [
       "cas1_adhoc_booking_create",
