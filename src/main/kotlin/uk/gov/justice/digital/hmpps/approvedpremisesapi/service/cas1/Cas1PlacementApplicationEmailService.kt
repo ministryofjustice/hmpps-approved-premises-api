@@ -99,8 +99,8 @@ class Cas1PlacementApplicationEmailService(
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
       "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
       "applicationArea" to application.apArea?.name,
-      "startDate" to placementApplication.expectedArrival.toString(),
-      "endDate" to placementApplication.expectedDeparture().toString(),
+      "startDate" to placementApplication.placementDates()?.expectedArrival.toString(),
+      "endDate" to placementApplication.placementDates()?.expectedDeparture().toString(),
       "additionalDatesSet" to "no",
     )
   }
