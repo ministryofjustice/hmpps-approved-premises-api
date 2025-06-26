@@ -24,6 +24,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
@@ -123,6 +124,7 @@ data class PlacementApplicationEntity(
    * Supporting multiple dates in a single Placement Application is legacy behaviour. Any new
    * placement application will have one and only one date in this collection
    */
+  @Deprecated("Use [expectedArrival] and [duration]")
   @OneToMany(mappedBy = "placementApplication", fetch = FetchType.LAZY)
   var placementDates: MutableList<PlacementDateEntity>,
 
@@ -142,6 +144,16 @@ data class PlacementApplicationEntity(
   var submissionGroupId: UUID?,
 
   var isWithdrawn: Boolean = false,
+
+  /**
+   * If [submittedAt] is not null, this value will be set
+   */
+  var expectedArrival: LocalDate? = null,
+
+  /**
+   * If [submittedAt] is not null, this value will be set
+   */
+  var duration: Int? = null,
 
   @Version
   var version: Long = 1,

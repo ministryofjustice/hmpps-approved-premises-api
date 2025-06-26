@@ -28,6 +28,7 @@ interface PlacementDateRepository : JpaRepository<PlacementDateEntity, UUID> {
   fun findPlacementAppIdsWithDatesLinkedToReallocatedPlacementRequest(): List<UUID>
 }
 
+@Deprecated("This is being replaced by date fields on the [PlacementApplicationEntity]")
 @Entity
 @Table(name = "placement_application_dates")
 data class PlacementDateEntity(

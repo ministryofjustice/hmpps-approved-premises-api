@@ -346,6 +346,9 @@ class Cas1PlacementApplicationService(
         ),
       )
 
+      placementApp.expectedArrival = apiDate.expectedArrival
+      placementApp.duration = apiDate.duration
+
       placementApp.placementDates = mutableListOf(placementDate)
     }
 
