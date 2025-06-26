@@ -7505,11 +7505,6 @@ components:
           format: date
         capacity:
           $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
-        spaceBookings:
-          deprecated: true
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceBookingDaySummary'
         spaceBookingSummaries:
           type: array
           items:
@@ -7526,39 +7521,6 @@ components:
         - spaceBookings
         - spaceBookingSummaries
         - outOfServiceBeds
-    Cas1SpaceBookingDaySummary:
-      deprecated: true
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        person:
-          $ref: "#/components/schemas/PersonSummary"
-        canonicalArrivalDate:
-          description: actual arrival date or, if not known, the expected arrival date
-          type: string
-          format: date
-        canonicalDepartureDate:
-          description: actual departure date or, if not known, the expected departure date
-          type: string
-          format: date
-        tier:
-          description: Risk rating tier level of corresponding application
-          type: string
-        releaseType:
-          type: string
-        essentialCharacteristics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
-      required:
-        - id
-        - person
-        - canonicalArrivalDate
-        - canonicalDepartureDate
-        - spaceType
-        - essentialCharacteristics
     Cas1SpaceBookingResidency:
       type: string
       enum:
