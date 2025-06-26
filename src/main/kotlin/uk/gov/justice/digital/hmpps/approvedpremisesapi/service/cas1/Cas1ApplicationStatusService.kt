@@ -16,6 +16,20 @@ class Cas1ApplicationStatusService(
   val bookingRepository: BookingRepository,
 ) {
 
+  fun unsubmittedApplicationUpdated(application: ApprovedPremisesApplicationEntity) {
+    application.status = if (application.isInapplicable == true) {
+      ApprovedPremisesApplicationStatus.INAPPLICABLE
+    } else {
+      ApprovedPremisesApplicationStatus.STARTED
+    }
+    applicationRepository.save(application)
+  }
+
+  fun applicationWithdrawn(application: ApprovedPremisesApplicationEntity) {
+    application.status = ApprovedPremisesApplicationStatus.WITHDRAWN
+    applicationRepository.save(application)
+  }
+
   fun bookingMade(booking: BookingEntity) {
     val application = booking.application
     if (application != null) {

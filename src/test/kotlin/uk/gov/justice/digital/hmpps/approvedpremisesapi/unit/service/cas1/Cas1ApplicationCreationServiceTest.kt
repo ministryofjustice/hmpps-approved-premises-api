@@ -50,7 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
@@ -67,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
@@ -91,7 +92,7 @@ class Cas1ApplicationCreationServiceTest {
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
   private val mockPlacementApplicationAutomaticRepository = mockk<PlacementApplicationAutomaticRepository>()
-  private val mockApplicationListener = mockk<ApplicationListener>()
+  private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
   private val mockCas1OffenderService = mockk<Cas1OffenderService>()
@@ -111,7 +112,7 @@ class Cas1ApplicationCreationServiceTest {
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
     mockPlacementApplicationAutomaticRepository,
-    mockApplicationListener,
+    mockCas1ApplicationStatusService,
     Clock.systemDefaultZone(),
     mockLockableApplicationRepository,
     mockCas1CruManagementAreaRepository,
@@ -376,6 +377,38 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(result.message).isEqualTo("This application has already been submitted")
     }
 
+    @EnumSource(
+      value = ApprovedPremisesApplicationStatus::class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = [ "STARTED", "INAPPLICABLE" ],
+    )
+    @ParameterizedTest
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application doesn't not have a suitable state`(status: ApprovedPremisesApplicationStatus) {
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      application.status = status
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          apType = null,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+          noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        ),
+        userForRequest = user,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("An application with the status $status cannot be updated.")
+    }
+
     @Test
     fun `updateApprovedPremisesApplication returns GeneralValidationError when application has AP type specified in multiple ways`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
@@ -443,7 +476,7 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
 
-      val approvedPremisesApplication = result.value as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = result.value
 
       assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
       assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
@@ -455,6 +488,8 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
       assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
       assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+
+      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
     }
 
     @ParameterizedTest
@@ -495,7 +530,7 @@ class Cas1ApplicationCreationServiceTest {
 
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
-      val approvedPremisesApplication = result.value as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = result.value
 
       assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
       assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
@@ -509,6 +544,8 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
       assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
       assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+
+      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
     }
 
     @ParameterizedTest
@@ -554,9 +591,11 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
 
-      val approvedPremisesApplication = result.value as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = result.value
 
       assertThat(approvedPremisesApplication.noticeType).isEqualTo(noticeType)
+
+      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
     }
 
     private fun setupMocksForSuccess() {
@@ -564,7 +603,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
       every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
-      every { mockApplicationListener.preUpdate(any()) } returns Unit
+      every { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     }
   }
@@ -691,6 +730,38 @@ class Cas1ApplicationCreationServiceTest {
       val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @EnumSource(
+      value = ApprovedPremisesApplicationStatus::class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = [ "STARTED" ],
+    )
+    @ParameterizedTest
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when application doesn't have status 'STARTED'`(state: ApprovedPremisesApplicationStatus) {
+      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withStatus(state)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        defaultSubmitApprovedPremisesApplication,
+        user,
+        apAreaId = UUID.randomUUID(),
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("Only an application with the 'STARTED' status can be submitted")
     }
 
     @Test
@@ -1196,7 +1267,6 @@ class Cas1ApplicationCreationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
-      every { mockApplicationListener.preUpdate(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
         InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),

@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -35,6 +37,64 @@ class Cas1ApplicationStatusServiceTest {
 
   @InjectMockKs
   private lateinit var service: Cas1ApplicationStatusService
+
+  @Nested
+  inner class UnsubmittedApplicationUpdated {
+    @Test
+    fun `if is inapplicable, set status to inapplicable`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .withIsInapplicable(true)
+        .produce()
+
+      every { applicationRepository.save(any()) } returns application
+
+      service.unsubmittedApplicationUpdated(application)
+
+      verify { applicationRepository.save(application) }
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.INAPPLICABLE)
+    }
+
+    @ParameterizedTest
+    @CsvSource("false", "null", nullValues = ["null"])
+    fun `if not inapplicable, set status to started`(inapplicable: Boolean?) {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .withIsInapplicable(inapplicable)
+        .produce()
+
+      every { applicationRepository.save(any()) } returns application
+
+      service.unsubmittedApplicationUpdated(application)
+
+      verify { applicationRepository.save(application) }
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+    }
+  }
+
+  @Nested
+  inner class ApplicationWithdrawn {
+
+    @Test
+    fun `set status to WITHDRAWN`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      every { applicationRepository.save(any()) } returns application
+
+      service.applicationWithdrawn(application)
+
+      verify { applicationRepository.save(application) }
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
+    }
+  }
 
   @Nested
   inner class BookingMade {

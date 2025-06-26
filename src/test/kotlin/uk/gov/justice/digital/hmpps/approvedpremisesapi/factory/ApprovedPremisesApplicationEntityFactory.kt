@@ -166,7 +166,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.arrivalDate = { arrivalDate }
   }
 
-  fun withIsInapplicable(isInapplicable: Boolean) = apply {
+  fun withIsInapplicable(isInapplicable: Boolean?) = apply {
     this.isInapplicable = { isInapplicable }
   }
 

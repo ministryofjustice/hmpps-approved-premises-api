@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -66,7 +65,7 @@ class Cas1ApplicationCreationService(
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val placementApplicationAutomaticRepository: PlacementApplicationAutomaticRepository,
-  private val applicationListener: ApplicationListener,
+  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
@@ -216,6 +215,10 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
+    if (application.status != ApprovedPremisesApplicationStatus.STARTED) {
+      return CasResult.GeneralValidationError("Only an application with the 'STARTED' status can be submitted")
+    }
+
     if (submitApplication.isUsingLegacyApTypeFields && submitApplication.isUsingNewApTypeField) {
       return CasResult.GeneralValidationError("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
     }
@@ -302,7 +305,6 @@ class Cas1ApplicationCreationService(
     cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, user.deliusUsername)
     assessmentService.createApprovedPremisesAssessment(application)
 
-    applicationListener.preUpdate(application)
     application = applicationRepository.save(application)
 
     cas1ApplicationEmailService.applicationSubmitted(application)
@@ -353,6 +355,10 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
+    if (!listOf(ApprovedPremisesApplicationStatus.STARTED, ApprovedPremisesApplicationStatus.INAPPLICABLE).contains(application.status)) {
+      return CasResult.GeneralValidationError("An application with the status ${application.status} cannot be updated.")
+    }
+
     application.apply {
       this.isInapplicable = updateFields.isInapplicable
       this.isWomensApplication = updateFields.isWomensApplication
@@ -368,7 +374,8 @@ class Cas1ApplicationCreationService(
       this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)
     }
 
-    applicationListener.preUpdate(application)
+    cas1ApplicationStatusService.unsubmittedApplicationUpdated(application)
+
     val savedApplication = applicationRepository.save(application)
 
     return CasResult.Success(savedApplication)
