@@ -1,0 +1,4 @@
+ALTER TABLE placement_applications DROP CONSTRAINT placement_applications_schema_version_fkey;
+ALTER TABLE placement_applications DROP COLUMN schema_version;
+
+DROP TABLE approved_premises_placement_application_json_schemas;

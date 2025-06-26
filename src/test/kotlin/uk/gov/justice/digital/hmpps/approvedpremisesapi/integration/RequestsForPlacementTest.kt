@@ -52,8 +52,6 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           allocatedToUser = null,
           createdByUser = user,
         ) { assessment, application ->
-          val schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist()
-
           val unsubmittedPlacementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
             withCreatedByUser(user)

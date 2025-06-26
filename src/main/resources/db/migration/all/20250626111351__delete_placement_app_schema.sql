@@ -1,0 +1,1 @@
+DELETE from json_schemas where type = 'APPROVED_PREMISES_PLACEMENT_APPLICATION';

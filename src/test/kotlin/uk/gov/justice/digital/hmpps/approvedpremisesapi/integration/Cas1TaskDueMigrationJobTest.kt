@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
@@ -30,7 +29,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
 
   lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
-  lateinit var placementApplicationSchema: ApprovedPremisesPlacementApplicationJsonSchemaEntity
 
   @BeforeEach
   fun setup() {
@@ -43,10 +41,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
-      withPermissiveSchema()
-    }
-
-    placementApplicationSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
   }
