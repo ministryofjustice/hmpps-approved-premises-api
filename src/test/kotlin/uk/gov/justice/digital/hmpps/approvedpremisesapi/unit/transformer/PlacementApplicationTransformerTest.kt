@@ -71,6 +71,7 @@ class PlacementApplicationTransformerTest {
       .withApplication(applicationMock)
       .withData(null)
       .withDocument(null)
+      .withSubmittedAt(OffsetDateTime.now())
       .withExpectedArrival(LocalDate.of(2023, 12, 11))
       .withDuration(30)
       .produce()
@@ -94,8 +95,8 @@ class PlacementApplicationTransformerTest {
     assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
     assertThat(result.data).isNull()
     assertThat(result.document).isNull()
-    assertThat(result.submittedAt).isNull()
-    assertThat(result.canBeWithdrawn).isFalse
+    assertThat(result.submittedAt).isNotNull()
+    assertThat(result.canBeWithdrawn).isTrue
     assertThat(result.isWithdrawn).isFalse
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
