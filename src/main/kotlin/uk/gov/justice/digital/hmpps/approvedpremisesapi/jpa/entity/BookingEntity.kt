@@ -153,6 +153,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findFutureBookingsByPremisesIdAndStatus(serviceName: String, premisesId: UUID, date: LocalDate, statuses: List<BookingStatus>): List<BookingEntity>
 
   fun findByBedId(id: UUID, by: Sort, limit: Limit): List<BookingEntity>
+  fun findByPremisesId(id: UUID, by: Sort, limit: Limit): List<BookingEntity>
 }
 
 @Repository
