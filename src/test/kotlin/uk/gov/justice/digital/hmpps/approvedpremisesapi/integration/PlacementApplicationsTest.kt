@@ -141,10 +141,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `creating a placement application when the assessment has been rejected returns an error`() {
       givenAUser { user, jwt ->
         givenAnAssessmentForApprovedPremises(decision = AssessmentDecision.REJECTED, allocatedToUser = user, createdByUser = user) { _, application ->
-          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           webTestClient.post()
             .uri("/cas1/placement-applications")
             .header("Authorization", "Bearer $jwt")
@@ -164,10 +160,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `creating a placement application for an expired application returns an error`() {
       givenAUser { user, jwt ->
         givenAnAssessmentForApprovedPremises(decision = AssessmentDecision.ACCEPTED, allocatedToUser = user, createdByUser = user, submittedAt = OffsetDateTime.now()) { _, application ->
-          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           application.status = ApprovedPremisesApplicationStatus.EXPIRED
           approvedPremisesApplicationRepository.save(application)
 
@@ -453,10 +445,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = user,
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
-          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           webTestClient.put()
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
@@ -667,10 +655,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = user,
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
-          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           webTestClient.post()
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
             .header("Authorization", "Bearer $jwt")

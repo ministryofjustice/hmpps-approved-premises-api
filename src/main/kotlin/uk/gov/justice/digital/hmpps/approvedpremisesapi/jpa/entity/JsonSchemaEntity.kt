@@ -94,13 +94,3 @@ class TemporaryAccommodationAssessmentJsonSchemaEntity(
   addedAt: OffsetDateTime,
   schema: String,
 ) : JsonSchemaEntity(id, addedAt, schema)
-
-@Entity
-@DiscriminatorValue("APPROVED_PREMISES_PLACEMENT_APPLICATION")
-@Table(name = "approved_premises_placement_application_json_schemas")
-@PrimaryKeyJoinColumn(name = "json_schema_id")
-class ApprovedPremisesPlacementApplicationJsonSchemaEntity(
-  id: UUID,
-  addedAt: OffsetDateTime,
-  schema: String,
-) : JsonSchemaEntity(id, addedAt, schema)
