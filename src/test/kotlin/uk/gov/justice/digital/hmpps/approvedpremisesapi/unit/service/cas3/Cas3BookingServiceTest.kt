@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3Confirm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -59,6 +60,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationRepository
@@ -81,6 +84,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.LocalDate
@@ -663,32 +668,6 @@ class Cas3BookingServiceTest {
         mockCas3DomainEventService.savePersonDepartedEvent(any(), user)
       }
     }
-  }
-
-  private fun createBooking(probationRegion: ProbationRegionEntity): BookingEntity {
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-22"))
-      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withProbationRegion(probationRegion)
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withApplication(
-        TemporaryAccommodationApplicationEntityFactory()
-          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
-          .withProbationRegion(probationRegion)
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withProbationRegion(probationRegion)
-              .produce(),
-          )
-          .produce(),
-      )
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .produce()
-    return bookingEntity
   }
 
   @Nested
@@ -1651,38 +1630,32 @@ class Cas3BookingServiceTest {
     fun `createBooking returns FieldValidationError if Bed ID is not provided`() {
       val crn = "CRN123"
       val assessmentId = UUID.randomUUID()
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, _) = createPremisesAndBedspace(bedspaceStartDate)
 
       val authorisableResult = cas3BookingService.createBooking(
         user,
         premises,
         crn,
         "NOMS123",
-        LocalDate.parse("2023-02-23"),
-        LocalDate.parse("2023-02-22"),
+        bedspaceStartDate.plusDays(10),
+        bedspaceStartDate.plusDays(90),
         bedId = null,
         assessmentId,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
-
-      assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.bedId", "empty"),
-      )
+      assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.bedId", "empty")
     }
 
     @Test
     fun `createBooking returns FieldValidationError if Departure Date is before Arrival Date`() {
       val crn = "CRN123"
       val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-22")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(15)
+      val departureDate = arrivalDate.minusDays(1)
       val assessmentId = UUID.randomUUID()
 
       every { mockBedRepository.findByIdOrNull(bedId) } returns null
@@ -1704,60 +1677,7 @@ class Cas3BookingServiceTest {
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
-
-      val authorisableResult = cas3BookingService.createBooking(
-        user,
-        premises,
-        crn,
-        "NOMS123",
-        LocalDate.parse("2023-02-23"),
-        LocalDate.parse("2023-02-22"),
-        bedId,
-        assessmentId,
-        false,
-      )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
-
-      assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.departureDate", "beforeBookingArrivalDate"),
-      )
-    }
-
-    @Test
-    fun `createBooking returns FieldValidationError if Bed does not exist`() {
-      val crn = "CRN123"
-      val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-22")
-      val assessmentId = UUID.randomUUID()
-
-      every { mockBedRepository.findByIdOrNull(bedId) } returns null
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedId, departureDate, null) } returns listOf()
-      every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bedId,
-          arrivalDate,
-          departureDate,
-          null,
-        )
-      } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
-
-      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, _) = createPremisesAndBedspace(bedspaceStartDate)
 
       val authorisableResult = cas3BookingService.createBooking(
         user,
@@ -1770,38 +1690,112 @@ class Cas3BookingServiceTest {
         assessmentId,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+      assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.departureDate", "beforeBookingArrivalDate")
+    }
 
-      assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.bedId", "doesNotExist"),
+    @Test
+    fun `createBooking returns FieldValidationError if Bed does not exist`() {
+      val crn = "CRN123"
+      val bedId = UUID.fromString("3b2f46de-a785-45ab-ac02-5e532c600647")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(3)
+      val departureDate = arrivalDate.randomDateAfter(12)
+      val assessmentId = UUID.randomUUID()
+
+      every { mockBedRepository.findByIdOrNull(bedId) } returns null
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedId, departureDate, null) } returns listOf()
+      every {
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+          bedId,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
+
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val (premises, _) = createPremisesAndBedspace(bedspaceStartDate)
+
+      val authorisableResult = cas3BookingService.createBooking(
+        user,
+        premises,
+        crn,
+        "NOMS123",
+        arrivalDate,
+        departureDate,
+        bedId,
+        assessmentId,
+        false,
       )
+
+      assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.bedId", "doesNotExist")
+    }
+
+    @Test
+    fun `createBooking returns FieldValidationError if Bedspace Start Date is after Booking Arrival Date`() {
+      val crn = "CRN123"
+      val bedId = UUID.randomUUID()
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateBefore(20)
+      val departureDate = arrivalDate.plusDays(84)
+
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
+
+      every { mockBedRepository.findByIdOrNull(bedId) } returns bedspace
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedId, departureDate, null) } returns listOf()
+      every {
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+          bedId,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val authorisableResult = cas3BookingService.createBooking(
+        user,
+        premises,
+        crn,
+        "NOMS123",
+        arrivalDate,
+        departureDate,
+        bedId,
+        assessment.id,
+        false,
+      )
+
+      assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.arrivalDate", "bookingArrivalDateBeforeBedspaceStartDate")
     }
 
     @Test
     fun `createBooking returns FieldValidationError if Application is provided and does not exist`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(15)
+      val departureDate = arrivalDate.randomDateAfter(45)
       val assessmentId = UUID.randomUUID()
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
-
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
+      val (premises, bed) = createPremisesAndBedspace(bedspaceStartDate)
 
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
@@ -1832,61 +1826,38 @@ class Cas3BookingServiceTest {
         assessmentId,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
-
-      assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.assessmentId", "doesNotExist"),
-      )
+      assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.assessmentId", "doesNotExist")
     }
 
     @Test
     fun `createBooking saves Booking and creates domain event`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(3)
+      val departureDate = arrivalDate.randomDateAfter(33)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -1901,14 +1872,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
-        application.id,
+        bedspace.id,
+        assessment.id,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
+      assertThatCasResult(authorisableResult).isSuccess()
 
       verify(exactly = 1) {
         mockBookingRepository.save(
@@ -1917,7 +1886,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional
           },
         )
@@ -1930,7 +1899,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application
+              it.application == assessment.application
           },
           user,
         )
@@ -1940,33 +1909,24 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking does not attach the application if no ID is provided`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(7)
+      val departureDate = arrivalDate.randomDateAfter(65)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
@@ -1988,14 +1948,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
+        bedspace.id,
         null,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
+      assertThatCasResult(authorisableResult).isSuccess()
 
       verify(exactly = 1) {
         mockBookingRepository.save(
@@ -2018,50 +1976,32 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking automatically creates a Turnaround of zero days if 'enableTurnarounds' is false`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(14)
+      val departureDate = arrivalDate.randomDateAfter(10)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .withTurnaroundWorkingDayCount(4)
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       val bookingSlot = slot<BookingEntity>()
       every { mockBookingRepository.save(capture(bookingSlot)) } answers { bookingSlot.captured }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -2076,14 +2016,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
-        application.id,
+        bedspace.id,
+        assessment.id,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
+      assertThatCasResult(authorisableResult).isSuccess()
 
       verify(exactly = 1) {
         mockBookingRepository.save(
@@ -2092,7 +2030,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional
           },
         )
@@ -2111,50 +2049,32 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking automatically creates a Turnaround of the number of working days specified on the premises if 'enableTurnarounds' is true`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(19)
+      val departureDate = arrivalDate.randomDateAfter(41)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .withTurnaroundWorkingDayCount(4)
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       val bookingSlot = slot<BookingEntity>()
       every { mockBookingRepository.save(capture(bookingSlot)) } answers { bookingSlot.captured }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -2169,14 +2089,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
-        application.id,
+        bedspace.id,
+        assessment.id,
         true,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
+      assertThatCasResult(authorisableResult).isSuccess()
 
       verify(exactly = 1) {
         mockBookingRepository.save(
@@ -2185,7 +2103,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional
           },
         )
@@ -2204,48 +2122,31 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking saves Booking and creates domain event and log error when closing assessment failed with authentication error`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(12)
+      val departureDate = arrivalDate.randomDateAfter(27)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -2263,14 +2164,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
-        application.id,
+        bedspace.id,
+        assessment.id,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
+      assertThatCasResult(authorisableResult).isSuccess()
 
       verify(exactly = 1) {
         mockBookingRepository.save(
@@ -2279,7 +2178,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional &&
               it.offenderName == "John Smith"
           },
@@ -2293,7 +2192,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application
+              it.application == assessment.application
           },
           user,
         )
@@ -2303,48 +2202,31 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking saves Booking and creates domain event and log error when closing assessment failed with field validation error`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(5)
+      val departureDate = arrivalDate.randomDateAfter(31)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -2359,14 +2241,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
-        application.id,
+        bedspace.id,
+        assessment.id,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
+      assertThatCasResult(authorisableResult).isSuccess()
 
       verify(exactly = 1) {
         mockBookingRepository.save(
@@ -2375,7 +2255,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional
           },
         )
@@ -2388,7 +2268,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application
+              it.application == assessment.application
           },
           user,
         )
@@ -2398,48 +2278,31 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking saves Booking and creates domain event and log error when closing assessment failed with runtime exception`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(16)
+      val departureDate = arrivalDate.randomDateAfter(77)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -2454,14 +2317,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
-        application.id,
+        bedspace.id,
+        assessment.id,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
+      assertThatCasResult(authorisableResult).isSuccess()
 
       verify(exactly = 1) {
         mockBookingRepository.save(
@@ -2470,7 +2331,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional
           },
         )
@@ -2483,7 +2344,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application
+              it.application == assessment.application
           },
           user,
         )
@@ -2493,34 +2354,25 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking not closing assessments and returns FieldValidationError if Application is provided and does not exist`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(2)
+      val departureDate = arrivalDate.randomDateAfter(54)
       val assessmentId = UUID.randomUUID()
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
@@ -2538,65 +2390,42 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
+        bedspace.id,
         assessmentId,
         false,
       )
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
 
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
-
-      assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.assessmentId", "doesNotExist"),
-      )
+      assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.assessmentId", "doesNotExist")
     }
 
     @Test
     fun `createBooking fail to save booking and not closing assessment when saving booking triggered Database exception`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(13)
+      val departureDate = arrivalDate.randomDateAfter(61)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate)
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } throws RuntimeException("DB exception")
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -2613,8 +2442,8 @@ class Cas3BookingServiceTest {
             "NOMS123",
             arrivalDate,
             departureDate,
-            bed.id,
-            application.id,
+            bedspace.id,
+            assessment.id,
             false,
           )
         }
@@ -2626,7 +2455,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional
           },
         )
@@ -2639,7 +2468,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application
+              it.application == assessment.application
           },
           user,
         )
@@ -2649,49 +2478,31 @@ class Cas3BookingServiceTest {
     @Test
     fun `createBooking throws conflict error when bedspace is archived for the requested bed`() {
       val crn = "CRN123"
-      val arrivalDate = LocalDate.parse("2023-02-23")
-      val departureDate = LocalDate.parse("2023-02-24")
+      val bedspaceStartDate = LocalDate.now().randomDateBefore(30)
+      val arrivalDate = bedspaceStartDate.randomDateAfter(14)
+      val departureDate = arrivalDate.randomDateAfter(35)
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val premises = TemporaryAccommodationPremisesEntityFactory()
-        .withUnitTestControlTestProbationAreaAndLocalAuthority()
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace(bedspaceStartDate, LocalDate.now())
+      val assessment = createAssessment(user)
 
-      val room = RoomEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val bed = BedEntityFactory()
-        .withRoom(room)
-        .withEndDate { LocalDate.now() }
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withProbationRegion(user.probationRegion)
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+      every { mockBedRepository.findByIdOrNull(bedspace.id) } returns bedspace
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bedspace.id, departureDate, null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-          bed.id,
+          bedspace.id,
           arrivalDate,
           departureDate,
           null,
         )
       } returns listOf()
-      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+      every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
@@ -2699,7 +2510,7 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
-      every { mockBedRepository.findArchivedBedByBedIdAndDate(any(), any()) } returns bed
+      every { mockBedRepository.findArchivedBedByBedIdAndDate(any(), any()) } returns bedspace
 
       val authorisableResult = cas3BookingService.createBooking(
         user,
@@ -2708,16 +2519,12 @@ class Cas3BookingServiceTest {
         "NOMS123",
         arrivalDate,
         departureDate,
-        bed.id,
-        application.id,
+        bedspace.id,
+        assessment.id,
         false,
       )
 
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-      authorisableResult as AuthorisableActionResult.Success
-      assertThat(authorisableResult.entity is ValidatableActionResult.ConflictError).isTrue
-      val validationError = authorisableResult.entity as ValidatableActionResult.ConflictError
-      assertThat(validationError.message).isEqualTo("BedSpace is archived from ${LocalDate.now()} which overlaps with the desired dates")
+      assertThatCasResult(authorisableResult).isConflictError().hasMessage("BedSpace is archived from ${LocalDate.now()} which overlaps with the desired dates")
 
       verify(exactly = 0) {
         mockBookingRepository.save(
@@ -2726,7 +2533,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application &&
+              it.application == assessment.application &&
               it.status == BookingStatus.provisional
           },
         )
@@ -2739,7 +2546,7 @@ class Cas3BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.application == application
+              it.application == assessment.application
           },
           user,
         )
@@ -2748,6 +2555,37 @@ class Cas3BookingServiceTest {
       verify {
         mockBedRepository.findArchivedBedByBedIdAndDate(any(), any())
       }
+    }
+
+    private fun createPremisesAndBedspace(bedspaceStartDate: LocalDate, bedspaceEndDate: LocalDate? = null): Pair<TemporaryAccommodationPremisesEntity, BedEntity> {
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bedspace = BedEntityFactory()
+        .withRoom(room)
+        .withStartDate(bedspaceStartDate)
+        .withEndDate(bedspaceEndDate)
+        .produce()
+
+      return Pair(premises, bedspace)
+    }
+
+    private fun createAssessment(user: UserEntity): TemporaryAccommodationAssessmentEntity {
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      return assessment
     }
   }
 
@@ -2838,5 +2676,31 @@ class Cas3BookingServiceTest {
       assertThat(result.entity.booking).isEqualTo(booking)
       assertThat(result.entity.workingDayCount).isEqualTo(2)
     }
+  }
+
+  private fun createBooking(probationRegion: ProbationRegionEntity): BookingEntity {
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-22"))
+      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+          .withProbationRegion(probationRegion)
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .produce(),
+      )
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+    return bookingEntity
   }
 }

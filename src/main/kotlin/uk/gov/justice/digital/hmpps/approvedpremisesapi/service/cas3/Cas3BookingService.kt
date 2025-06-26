@@ -38,9 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -79,6 +77,7 @@ class Cas3BookingService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
   fun createBooking(
     user: UserEntity,
@@ -90,111 +89,109 @@ class Cas3BookingService(
     bedId: UUID?,
     assessmentId: UUID?,
     enableTurnarounds: Boolean,
-  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    val validationResult = validated {
-      if (bedId == null) {
-        "$.bedId" hasValidationError "empty"
-        return@validated fieldValidationError
-      }
-
-      val expectedLastUnavailableDate =
-        workingDayService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
-      getBookingWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
-      }
-
-      getVoidBedspaceWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-      }
-
-      bedRepository.findArchivedBedByBedIdAndDate(bedId, departureDate)?.let {
-        return@validated it.id hasConflictError "BedSpace is archived from ${it.endDate} which overlaps with the desired dates"
-      }
-
-      val bedspace = bedRepository.findByIdOrNull(bedId)
-
-      if (bedspace == null) {
-        "$.bedId" hasValidationError "doesNotExist"
-      }
-
-      if (departureDate.isBefore(arrivalDate)) {
-        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
-      }
-
-      val application = when (assessmentId) {
-        null -> null
-        else -> {
-          val result = assessmentRepository.findByIdOrNull(assessmentId)
-          if (result == null) {
-            "$.assessmentId" hasValidationError "doesNotExist"
-          }
-          result?.application
-        }
-      }
-
-      if (validationErrors.any()) {
-        return@validated fieldValidationError
-      }
-
-      val personResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)
-      val offenderName = personResult.getPersonName()
-
-      if (offenderName == null) {
-        log.warn("Unable to get offender name for CRN $crn")
-      }
-
-      val bookingCreatedAt = OffsetDateTime.now()
-
-      val booking = bookingRepository.save(
-        BookingEntity(
-          id = UUID.randomUUID(),
-          crn = crn,
-          nomsNumber = nomsNumber,
-          arrivalDate = arrivalDate,
-          departureDate = departureDate,
-          keyWorkerStaffCode = null,
-          arrivals = mutableListOf(),
-          departures = mutableListOf(),
-          nonArrival = null,
-          cancellations = mutableListOf(),
-          confirmation = null,
-          extensions = mutableListOf(),
-          dateChanges = mutableListOf(),
-          premises = premises,
-          bed = bedspace,
-          service = ServiceName.temporaryAccommodation.value,
-          originalArrivalDate = arrivalDate,
-          originalDepartureDate = departureDate,
-          createdAt = bookingCreatedAt,
-          application = application,
-          offlineApplication = null,
-          turnarounds = mutableListOf(),
-          placementRequest = null,
-          status = BookingStatus.provisional,
-          offenderName = offenderName,
-        ),
-      )
-
-      val turnaround = cas3TurnaroundRepository.save(
-        Cas3TurnaroundEntity(
-          id = UUID.randomUUID(),
-          workingDayCount = when (enableTurnarounds) {
-            true -> premises.turnaroundWorkingDayCount
-            else -> 0
-          },
-          createdAt = bookingCreatedAt,
-          booking = booking,
-        ),
-      )
-
-      booking.turnarounds += turnaround
-
-      cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking, user)
-
-      success(booking)
+  ): CasResult<BookingEntity> = validatedCasResult {
+    if (bedId == null) {
+      "$.bedId" hasValidationError "empty"
+      return@validatedCasResult fieldValidationError
     }
 
-    return AuthorisableActionResult.Success(validationResult)
+    val expectedLastUnavailableDate =
+      workingDayService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
+    getBookingWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+      return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+    }
+
+    getVoidBedspaceWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+      return@validatedCasResult it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+    }
+
+    bedRepository.findArchivedBedByBedIdAndDate(bedId, departureDate)?.let {
+      return@validatedCasResult it.id hasConflictError "BedSpace is archived from ${it.endDate} which overlaps with the desired dates"
+    }
+
+    val bedspace = bedRepository.findByIdOrNull(bedId)
+
+    if (bedspace == null) {
+      "$.bedId" hasValidationError "doesNotExist"
+    } else if (bedspace.startDate != null && bedspace.startDate!!.isAfter(arrivalDate)) {
+      "$.arrivalDate" hasValidationError "bookingArrivalDateBeforeBedspaceStartDate"
+    }
+
+    if (departureDate.isBefore(arrivalDate)) {
+      "$.departureDate" hasValidationError "beforeBookingArrivalDate"
+    }
+
+    val application = when (assessmentId) {
+      null -> null
+      else -> {
+        val result = assessmentRepository.findByIdOrNull(assessmentId)
+        if (result == null) {
+          "$.assessmentId" hasValidationError "doesNotExist"
+        }
+        result?.application
+      }
+    }
+
+    if (validationErrors.any()) {
+      return@validatedCasResult fieldValidationError
+    }
+
+    val personResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)
+    val offenderName = personResult.getPersonName()
+
+    if (offenderName == null) {
+      log.warn("Unable to get offender name for CRN $crn")
+    }
+
+    val bookingCreatedAt = OffsetDateTime.now()
+
+    val booking = bookingRepository.save(
+      BookingEntity(
+        id = UUID.randomUUID(),
+        crn = crn,
+        nomsNumber = nomsNumber,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+        keyWorkerStaffCode = null,
+        arrivals = mutableListOf(),
+        departures = mutableListOf(),
+        nonArrival = null,
+        cancellations = mutableListOf(),
+        confirmation = null,
+        extensions = mutableListOf(),
+        dateChanges = mutableListOf(),
+        premises = premises,
+        bed = bedspace,
+        service = ServiceName.temporaryAccommodation.value,
+        originalArrivalDate = arrivalDate,
+        originalDepartureDate = departureDate,
+        createdAt = bookingCreatedAt,
+        application = application,
+        offlineApplication = null,
+        turnarounds = mutableListOf(),
+        placementRequest = null,
+        status = BookingStatus.provisional,
+        offenderName = offenderName,
+      ),
+    )
+
+    val turnaround = cas3TurnaroundRepository.save(
+      Cas3TurnaroundEntity(
+        id = UUID.randomUUID(),
+        workingDayCount = when (enableTurnarounds) {
+          true -> premises.turnaroundWorkingDayCount
+          else -> 0
+        },
+        createdAt = bookingCreatedAt,
+        booking = booking,
+      ),
+    )
+
+    booking.turnarounds += turnaround
+
+    cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking, user)
+
+    success(booking)
   }
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)

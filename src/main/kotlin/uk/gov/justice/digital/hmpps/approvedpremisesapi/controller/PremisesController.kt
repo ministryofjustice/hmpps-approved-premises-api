@@ -369,7 +369,7 @@ class PremisesController(
 
     if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: $crn")
 
-    val authorisableResult = when (premises) {
+    val createdBooking = when (premises) {
       is TemporaryAccommodationPremisesEntity -> {
         cas3BookingService.createBooking(
           user = user,
@@ -390,24 +390,7 @@ class PremisesController(
       else -> error("This endpoint does not support creating bookings for premise type: ${premises::class.qualifiedName}")
     }
 
-    val validatableResult = when (authorisableResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-      is AuthorisableActionResult.Success -> authorisableResult.entity
-    }
-
-    val createdBooking = when (validatableResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validatableResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validatableResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-        id = validatableResult.conflictingEntityId,
-        conflictReason = validatableResult.message,
-      )
-
-      is ValidatableActionResult.Success -> validatableResult.entity
-    }
-
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(createdBooking, personInfo))
+    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(extractEntityFromCasResult(createdBooking), personInfo))
   }
 
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
