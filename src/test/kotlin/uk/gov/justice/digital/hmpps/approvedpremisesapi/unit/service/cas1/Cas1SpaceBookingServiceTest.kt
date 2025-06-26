@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionsResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
@@ -65,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
@@ -87,6 +89,8 @@ class Cas1SpaceBookingServiceTest {
   private val cas1SpaceBookingActionsService = mockk<Cas1SpaceBookingActionsService>()
   private val cas1SpaceBookingCreateService = mockk<Cas1SpaceBookingCreateService>()
   private val cas1SpaceBookingUpdateService = mockk<Cas1SpaceBookingUpdateService>()
+  private val offenderService = mockk<OffenderService>()
+  private val cas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
 
   private val service = Cas1SpaceBookingService(
     cas1PremisesService,
@@ -103,6 +107,8 @@ class Cas1SpaceBookingServiceTest {
     cas1SpaceBookingActionsService,
     cas1SpaceBookingCreateService,
     cas1SpaceBookingUpdateService,
+    offenderService,
+    cas1SpaceBookingTransformer,
   )
 
   companion object CONSTANTS {

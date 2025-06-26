@@ -23,6 +23,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Service
+@Deprecated("Use the new Cas1SpaceBookingService instead")
 class Cas1SpaceBookingDaySummaryService(
   val userAccessService: UserAccessService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
@@ -33,6 +34,7 @@ class Cas1SpaceBookingDaySummaryService(
   private val cas1PremisesService: Cas1PremisesService,
 ) {
 
+  @Deprecated("Use the new Cas1SpaceBookingService instead", replaceWith = ReplaceWith("getSpaceBookingsByPremisesIdAndCriteriaForDate"))
   fun getBookingDaySummaries(
     premisesId: UUID,
     date: LocalDate,

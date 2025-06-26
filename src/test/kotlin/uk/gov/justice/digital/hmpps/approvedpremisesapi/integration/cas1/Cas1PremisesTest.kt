@@ -785,6 +785,16 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries.outOfServiceBeds.size).isEqualTo(3)
 
       assertThat(summaries.spaceBookings).hasSize(3)
+      assertThat(summaries.spaceBookingSummaries).hasSize(3)
+
+      summaries.spaceBookings.zip(summaries.spaceBookingSummaries).forEach { (dayBooking, bookingSummary) ->
+        assertThat(dayBooking.id).isEqualTo(bookingSummary.id)
+        assertThat(dayBooking.person.crn).isEqualTo(bookingSummary.person.crn)
+        assertThat(dayBooking.essentialCharacteristics).isEqualTo(bookingSummary.characteristics)
+        assertThat(dayBooking.tier).isEqualTo(bookingSummary.tier)
+        assertThat(dayBooking.canonicalArrivalDate).isEqualTo(bookingSummary.canonicalArrivalDate)
+        assertThat(dayBooking.canonicalDepartureDate).isEqualTo(bookingSummary.canonicalDepartureDate)
+      }
 
       val summaryBookingOffline = summaries.spaceBookings[0]
       assertThat(summaryBookingOffline.id).isEqualTo(spaceBookingOfflineApplication.id)

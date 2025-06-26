@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import java.time.LocalDate
 
 @Component
@@ -15,6 +16,7 @@ class Cas1PremisesDayTransformer {
     premisesCapacity: Cas1PremiseCapacityForDay,
     spaceBookings: List<Cas1SpaceBookingDaySummary>,
     outOfServiceBeds: List<Cas1OutOfServiceBedSummary>,
+    spaceBookingSummaries: List<Cas1SpaceBookingSummary>,
   ) = Cas1PremisesDaySummary(
     forDate = date,
     previousDate = date.minusDays(1),
@@ -22,5 +24,6 @@ class Cas1PremisesDayTransformer {
     capacity = premisesCapacity,
     spaceBookings = spaceBookings,
     outOfServiceBeds = outOfServiceBeds,
+    spaceBookingSummaries = spaceBookingSummaries,
   )
 }
