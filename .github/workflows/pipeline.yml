@@ -44,7 +44,7 @@ jobs:
   cas3_generate_types:
     needs: e2e
     name: Run the generate types job for the CAS3 UI
-    uses: ./.github/workflows/generate-cas3-ui-types.yml@main
+    uses: ./.github/workflows/generate-cas3-ui-types.yml
     secrets: inherit
 
   deploy_preprod:
