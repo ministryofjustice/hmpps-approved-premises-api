@@ -16,7 +16,10 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
+import org.hibernate.annotations.CreationTimestamp
 import org.locationtech.jts.geom.Point
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -25,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
@@ -83,6 +87,17 @@ SELECT
 
   @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
   fun getBedCount(premises: PremisesEntity): Int
+
+  @Query(
+    """
+    SELECT * FROM temporary_accommodation_premises tap
+    INNER JOIN premises p ON tap.premises_id = p.id
+    WHERE p.service = :service
+    ORDER BY p.id
+    """,
+    nativeQuery = true,
+  )
+  fun findTemporaryAccommodationPremisesByService(service: String, pageable: Pageable): Slice<TemporaryAccommodationPremisesEntity>
 }
 
 @Repository
@@ -171,6 +186,8 @@ abstract class PremisesEntity(
   var characteristics: MutableList<CharacteristicEntity>,
   @Enumerated(value = EnumType.STRING)
   var status: PropertyStatus,
+  @CreationTimestamp
+  var createdAt: OffsetDateTime? = null,
 )
 
 @SuppressWarnings("LongParameterList")
@@ -283,7 +300,7 @@ class TemporaryAccommodationPremisesEntity(
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
-  val startDate: LocalDate?,
+  var startDate: LocalDate?,
   @ManyToOne
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
