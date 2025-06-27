@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -291,22 +290,9 @@ class TaskTransformerTest {
 
     @Test
     fun `Placement application is correctly transformed`() {
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntity(
-          id = UUID.randomUUID(),
-          createdAt = OffsetDateTime.now(),
-          expectedArrival = LocalDate.of(2024, 5, 1),
-          duration = 12,
-          placementApplication = placementApplication,
-        ),
-        PlacementDateEntity(
-          id = UUID.randomUUID(),
-          createdAt = OffsetDateTime.now(),
-          expectedArrival = LocalDate.of(2024, 3, 23),
-          duration = 15,
-          placementApplication = placementApplication,
-        ),
-      )
+      placementApplication.submittedAt = OffsetDateTime.now()
+      placementApplication.expectedArrival = LocalDate.of(2024, 3, 23)
+      placementApplication.duration = 12
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
         getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
@@ -318,17 +304,8 @@ class TaskTransformerTest {
       assertThat(result.releaseType).isEqualTo(releaseType)
       assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.crn).isEqualTo(placementApplication.application.crn)
-      assertThat(result.placementDates).isEqualTo(
-        mutableListOf(
-          PlacementDates(
-            placementApplication.placementDates[0].expectedArrival,
-            placementApplication.placementDates[0].duration,
-          ),
-          PlacementDates(
-            placementApplication.placementDates[1].expectedArrival,
-            placementApplication.placementDates[1].duration,
-          ),
-        ),
+      assertThat(result.placementDates).containsExactly(
+        PlacementDates(LocalDate.of(2024, 3, 23), 12),
       )
       assertThat(result.dueDate).isEqualTo(placementApplication.dueAt!!.toLocalDate())
       assertThat(result.dueAt).isEqualTo(placementApplication.dueAt!!.toInstant())
