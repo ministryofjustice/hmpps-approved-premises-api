@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
@@ -75,14 +74,7 @@ class TaskTransformer(
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
-    placementDates = listOfNotNull(
-      placementApplication.placementDates()?.let {
-        PlacementDates(
-          expectedArrival = it.expectedArrival,
-          duration = it.duration,
-        )
-      },
-    ),
+    placementDates = listOfNotNull(placementApplication.placementDates()?.toApiType()),
     releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
