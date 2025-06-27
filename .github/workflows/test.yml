@@ -93,17 +93,39 @@ jobs:
           java-version: 21
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-      - name: run unit tests
+      - name: Run unit tests
         shell: bash
         run: ./gradlew unitTest
-      - name: upload the artifacts
-        if: always()
+      - name: Upload raw test reports on failure
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: upload kotlin test results
+          name: unit-test-results
           path: |
             build/test-results
             build/reports/tests
+      - name: Publish Test Report
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: './build/test-results/unitTest/*.xml'
+          use-suite-name: true
+          integrations-config: |
+            {
+              "junit-to-ctrf": {
+                "enabled": true,
+                "action": "convert",
+                "options": {
+                  "output": "./ctrf-reports/ctrf-report.json",
+                  "toolname": "junit-to-ctrf",
+                  "useSuiteName": true,
+                  "env": {
+                    "appName": "approved-premises-api"
+                  }
+                }
+              }
+            }
+        if: always()
+
 
   integration_test:
     name: Integration Test
@@ -181,13 +203,33 @@ jobs:
           echo "Prepared arguments for Gradle: $SPECS_LIST"
           ./gradlew integrationTest $SPECS_LIST
 
-      - name: upload the artifacts
-        if: always()
+      - name: Upload raw test reports on failure
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: integration-test-results-${{ matrix.shard }}-of-${{ strategy.job-total }}
           path: |
             build/test-results
             build/reports/tests
-  
 
+      - name: Publish Test Report
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: './build/test-results/integrationTest/*.xml'
+          use-suite-name: true
+          integrations-config: |
+            {
+              "junit-to-ctrf": {
+                "enabled": true,
+                "action": "convert",
+                "options": {
+                  "output": "./ctrf-reports/ctrf-report.json",
+                  "toolname": "junit-to-ctrf",
+                  "useSuiteName": true,
+                  "env": {
+                    "appName": "approved-premises-api"
+                  }
+                }
+              }
+            }
+        if: always()
