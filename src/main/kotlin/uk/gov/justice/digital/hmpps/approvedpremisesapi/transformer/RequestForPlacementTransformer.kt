@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 
 @Component
@@ -24,7 +23,7 @@ class RequestForPlacementTransformer(
     createdAt = placementApplicationEntity.createdAt.toInstant(),
     isWithdrawn = placementApplicationEntity.isWithdrawn,
     type = RequestForPlacementType.manual,
-    placementDates = placementApplicationEntity.placementDates.map { it.toPlacementDates() },
+    placementDates = listOfNotNull(placementApplicationEntity.placementDates()?.toApiType()),
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
     document = placementApplicationEntity.document?.let(objectMapper::readTree),
@@ -69,11 +68,6 @@ class RequestForPlacementTransformer(
       status = placementRequestEntity.deriveStatus(),
     )
   }
-
-  private fun PlacementDateEntity.toPlacementDates() = PlacementDates(
-    expectedArrival = expectedArrival,
-    duration = duration,
-  )
 
   private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
     this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
