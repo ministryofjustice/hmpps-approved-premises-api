@@ -41,6 +41,24 @@ jobs:
     uses: ./.github/workflows/e2e.yml
     secrets: inherit
 
+  cas1_generate_types:
+    needs: e2e
+    name: Run the generate types job for the CAS1 UI
+    uses: ./.github/workflows/generate-cas1-ui-types.yml
+    secrets: inherit
+
+  cas2_generate_types:
+    needs: e2e
+    name: Run the generate types job for the CAS2 UI
+    uses: ./.github/workflows/generate-cas2-ui-types.yml
+    secrets: inherit
+
+  cas2v2_generate_types:
+    needs: e2e
+    name: Run the generate types job for the CAS2v2 UI
+    uses: ./.github/workflows/generate-cas2v2-ui-types.yml
+    secrets: inherit
+
   cas3_generate_types:
     needs: e2e
     name: Run the generate types job for the CAS3 UI
