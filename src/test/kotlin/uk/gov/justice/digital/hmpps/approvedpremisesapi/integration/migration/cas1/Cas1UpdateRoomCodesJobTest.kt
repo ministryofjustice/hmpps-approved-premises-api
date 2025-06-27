@@ -38,7 +38,7 @@ class Cas1UpdateRoomCodesJobTest : IntegrationTestBase() {
       name = "3",
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.updateCas1RoomCodes)
+    migrationJobService.runMigrationJob(MigrationJobType.cas1UpdateRoomCodes)
 
     assertThat(roomRepository.findByIdOrNull(room1WithCorrectCode.id)!!.code).isEqualTo("Q001-1")
     assertThat(roomRepository.findByIdOrNull(room2WithIncorrectCode.id)!!.code).isEqualTo("Q001-2")

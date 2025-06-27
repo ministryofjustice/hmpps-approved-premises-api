@@ -12,8 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ArsonSuitableToArsonOffencesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillOfflineApplicationName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixDatesLinkedToReallocatedPlacementRequestsJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FlattenPlacementAppDatesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1IsArsonSuitableBackfillJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApplicationLicenceExpiryDateJob
@@ -63,12 +61,10 @@ class MigrationJobService(
         MigrationJobType.updateCas1ArsonSuitableToArsonOffences -> getBean(Cas1ArsonSuitableToArsonOffencesJob::class)
         MigrationJobType.updateCas1BackfillArsonSuitable -> getBean(Cas1IsArsonSuitableBackfillJob::class)
         MigrationJobType.updateCas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
-        MigrationJobType.updateCas1RoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
+        MigrationJobType.cas1UpdateRoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
         MigrationJobType.updateCas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
         MigrationJobType.updateCas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
         MigrationJobType.updateCas3VoidBedspaceCancellationData -> getBean(Cas3VoidBedspaceCancellationJob::class)
-        MigrationJobType.updateCas1FixDatesLinkedToReallocatedPlacementRequests -> getBean(Cas1FixDatesLinkedToReallocatedPlacementRequestsJob::class)
-        MigrationJobType.cas1FlattenPlacementAppsWithMultipleDates -> getBean(Cas1FlattenPlacementAppDatesJob::class)
       }
 
       if (job.shouldRunInTransaction) {

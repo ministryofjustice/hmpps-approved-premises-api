@@ -3903,12 +3903,10 @@ components:
         - update_cas1_arson_suitable_to_arson_offences
         - update_cas1_backfill_arson_suitable
         - update_cas1_approved_premises_assessment_report_properties
-        - update_cas1_room_codes
+        - cas1_update_room_codes
         - update_cas1_applications_with_offender
         - update_cas3_bedspace_model_data
         - update_cas3_void_bedspace_cancellation_data
-        - update_cas1_fix_dates_linked_to_reallocated_placement_requests
-        - cas1_flatten_placement_apps_with_multiple_dates
     PlacementDates:
       type: object
       properties:
