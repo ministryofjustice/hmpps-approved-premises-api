@@ -304,6 +304,9 @@ class TaskTransformerTest {
       assertThat(result.releaseType).isEqualTo(releaseType)
       assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.crn).isEqualTo(placementApplication.application.crn)
+      assertThat(result.dates).isEqualTo(
+        PlacementDates(LocalDate.of(2024, 3, 23), 12),
+      )
       assertThat(result.placementDates).containsExactly(
         PlacementDates(LocalDate.of(2024, 3, 23), 12),
       )
@@ -319,6 +322,9 @@ class TaskTransformerTest {
     fun `Placement types are transformed correctly`(placementType: JpaPlacementType) {
       val placementApplication = placementApplicationFactory
         .withPlacementType(placementType)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.now())
+        .withDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(
@@ -340,6 +346,9 @@ class TaskTransformerTest {
       val placementApplication = placementApplicationFactory
         .withData("{}")
         .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.now())
+        .withDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(
@@ -360,6 +369,9 @@ class TaskTransformerTest {
         .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
         .withDecision(decision)
         .withDecisionMadeAt(decisionMadeAt)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.now())
+        .withDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(
@@ -378,6 +390,9 @@ class TaskTransformerTest {
       val application = applicationFactory.withApArea(apArea).produce()
       val placementApplication = placementApplicationFactory
         .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.now())
+        .withDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(

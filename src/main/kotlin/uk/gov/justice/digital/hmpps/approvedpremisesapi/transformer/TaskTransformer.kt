@@ -74,6 +74,7 @@ class TaskTransformer(
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
+    dates = placementApplication.placementDates()!!.toApiType(),
     placementDates = listOfNotNull(placementApplication.placementDates()?.toApiType()),
     releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
     placementType = getPlacementType(placementApplication.placementType!!),

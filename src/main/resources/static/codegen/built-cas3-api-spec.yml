@@ -844,7 +844,11 @@ components:
               $ref: '#/components/schemas/ReleaseTypeOption'
             placementType:
               $ref: '#/components/schemas/PlacementType'
+            dates:
+              $ref: '#/components/schemas/PlacementDates'
             placementDates:
+              deprecated: true
+              description: Placement apps only have one set of placement dates, use 'dates' instead
               type: array
               items:
                 $ref: '#/components/schemas/PlacementDates'
@@ -855,6 +859,7 @@ components:
             - tier
             - releaseType
             - placementType
+            - dates
     TaskType:
       type: string
       enum:
