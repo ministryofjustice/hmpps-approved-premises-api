@@ -75,12 +75,14 @@ class TaskTransformer(
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
-    placementDates = placementApplication.placementDates.map {
-      PlacementDates(
-        expectedArrival = it.expectedArrival,
-        duration = it.duration,
-      )
-    },
+    placementDates = listOfNotNull(
+      placementApplication.placementDates()?.let {
+        PlacementDates(
+          expectedArrival = it.expectedArrival,
+          duration = it.duration,
+        )
+      },
+    ),
     releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
@@ -89,9 +91,7 @@ class TaskTransformer(
     probationDeliveryUnit = placementApplication.application.createdByUser.probationDeliveryUnit?.let {
       probationDeliveryUnitTransformer.transformJpaToApi(it)
     },
-    expectedArrivalDate = placementApplication.placementDates
-      .map { it.expectedArrival }
-      .minByOrNull { it },
+    expectedArrivalDate = placementApplication.placementDates()?.expectedArrival,
     apType = placementApplication.application.apType.asApiType(),
   )
 
