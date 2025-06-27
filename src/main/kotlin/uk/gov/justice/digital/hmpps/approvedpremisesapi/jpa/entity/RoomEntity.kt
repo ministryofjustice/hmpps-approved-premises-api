@@ -31,7 +31,7 @@ interface RoomRepository : JpaRepository<RoomEntity, UUID> {
 data class RoomEntity(
   @Id
   val id: UUID,
-  val name: String,
+  var name: String,
   val code: String?,
   var notes: String?,
   @ManyToOne
@@ -45,7 +45,7 @@ data class RoomEntity(
     joinColumns = [JoinColumn(name = "room_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val characteristics: MutableList<CharacteristicEntity>,
+  var characteristics: MutableList<CharacteristicEntity>,
 ) {
 
   override fun toString() = "RoomEntity: $id"

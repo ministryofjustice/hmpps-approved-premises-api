@@ -4797,6 +4797,21 @@ components:
         - reference
         - startDate
         - characteristicIds
+    Cas3UpdateBedspace:
+      type: object
+      properties:
+        reference:
+          type: string
+        notes:
+          type: string
+        characteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - reference
+        - characteristicIds
     PremisesFilters:
       type: object
       properties:

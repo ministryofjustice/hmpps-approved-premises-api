@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -112,9 +113,10 @@ class Cas3PremisesService(
       "$.name" hasValidationError "notUnique"
     }
 
-    val probationDeliveryUnit = tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
-      property hasValidationError err
-    }
+    val probationDeliveryUnit =
+      tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
+        property hasValidationError err
+      }
 
     if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
       "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
@@ -147,22 +149,7 @@ class Cas3PremisesService(
       turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2,
     )
 
-    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
-      val entity = characteristicService.getCharacteristic(uuid)
-
-      if (entity == null) {
-        "$.characteristics[$index]" hasValidationError "doesNotExist"
-      } else {
-        if (!characteristicService.modelScopeMatches(entity, premises)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
-        }
-        if (!characteristicService.serviceScopeMatches(entity, premises)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
-        }
-      }
-
-      entity
-    }
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
 
     if (validationErrors.any()) {
       return fieldValidationError
@@ -211,26 +198,12 @@ class Cas3PremisesService(
       validationErrors["$.probationRegionId"] = "doesNotExist"
     }
 
-    val probationDeliveryUnit = tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
-      validationErrors[property] = err
-    }
-
-    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
-      val entity = characteristicService.getCharacteristic(uuid)
-
-      if (entity == null) {
-        validationErrors["$.characteristics[$index]"] = "doesNotExist"
-      } else {
-        if (!characteristicService.modelScopeMatches(entity, premises)) {
-          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicModelScope"
-        }
-        if (!characteristicService.serviceScopeMatches(entity, premises)) {
-          validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicServiceScope"
-        }
+    val probationDeliveryUnit =
+      tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
+        validationErrors[property] = err
       }
 
-      entity
-    }
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
 
     if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
       validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
@@ -367,21 +340,7 @@ class Cas3PremisesService(
       "$.startDate" hasValidationError "invalidStartDateInTheFuture"
     }
 
-    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
-      val entity = characteristicService.getCharacteristic(uuid)
-
-      if (entity == null) {
-        "$.characteristics[$index]" hasValidationError "doesNotExist"
-      } else {
-        if (!characteristicService.modelScopeMatches(entity, room)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
-        } else if (!characteristicService.serviceScopeMatches(entity, room)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
-        }
-      }
-
-      entity
-    }
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, room, validationErrors)
 
     if (validationErrors.any()) {
       return fieldValidationError
@@ -403,6 +362,41 @@ class Cas3PremisesService(
     room.beds.add(bedspace)
 
     return success(bedspace)
+  }
+
+  fun updateBedspace(
+    premises: PremisesEntity,
+    bedspaceId: UUID,
+    bedspaceReference: String,
+    notes: String?,
+    characteristicIds: List<UUID>,
+  ): CasResult<BedEntity> = validatedCasResult {
+    val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
+      ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
+
+    var room = bedspace.room
+
+    if (bedspace.room.premises != premises) {
+      return CasResult.GeneralValidationError("The bedspace does not belong to the specified premises.")
+    }
+
+    if (bedspaceReference.isEmpty()) {
+      "$.reference" hasValidationError "empty"
+    }
+
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, room, validationErrors)
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    room.name = bedspaceReference
+    room.notes = notes
+    room.characteristics = characteristicEntities.map { it!! }.toMutableList()
+
+    val updatedRoom = roomRepository.save(room)
+
+    return success(updatedRoom.beds.first())
   }
 
   fun createVoidBedspaces(
@@ -553,5 +547,25 @@ class Cas3PremisesService(
     }
 
     return probationDeliveryUnit
+  }
+
+  private fun getAndValidateCharacteristics(
+    characteristicIds: List<UUID>,
+    modelScopeTarget: Any,
+    validationErrors: ValidationErrors,
+  ): List<CharacteristicEntity?> = characteristicIds.mapIndexed { index, uuid ->
+    val entity = characteristicService.getCharacteristic(uuid)
+
+    if (entity == null) {
+      validationErrors["$.characteristics[$index]"] = "doesNotExist"
+    } else {
+      if (!characteristicService.modelScopeMatches(entity, modelScopeTarget)) {
+        validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicModelScope"
+      } else if (!characteristicService.serviceScopeMatches(entity, modelScopeTarget)) {
+        validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicServiceScope"
+      }
+    }
+
+    entity
   }
 }
