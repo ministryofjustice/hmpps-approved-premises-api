@@ -1,0 +1,12 @@
+name: Test E2E Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  cas1_e2e_test:
+    name: "CAS1 E2E Tests 🧪"
+    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/e2e_tests.yml@feature-test/tmp-e2e-test-setup
+    secrets: inherit
