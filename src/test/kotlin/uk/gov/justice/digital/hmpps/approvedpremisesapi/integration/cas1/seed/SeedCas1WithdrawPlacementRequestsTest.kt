@@ -68,7 +68,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       givenAnOffender { offenderDetails, _ ->
         val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-        val placementApplication = createPlacementApplication(application, listOf(LocalDate.now() to 2))
+        val placementApplication = createPlacementApplication(application)
         val placementRequest1 = createPlacementRequest(application) {
           withExpectedArrival(LocalDate.of(2023, 1, 1))
           withPlacementApplication(placementApplication)
@@ -198,7 +198,6 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
-    placementDates: List<Pair<LocalDate, Int>> = emptyList(),
     isSubmitted: Boolean = true,
     configuration: (PlacementApplicationEntityFactory.() -> Unit)? = null,
   ): PlacementApplicationEntity {
@@ -208,18 +207,9 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       withSubmittedAt(if (isSubmitted) OffsetDateTime.now() else null)
       withDecision(if (isSubmitted) PlacementApplicationDecision.ACCEPTED else null)
       withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+      withExpectedArrival(LocalDate.now())
+      withDuration(2)
       configuration?.invoke(this)
-    }
-
-    if (isSubmitted) {
-      val dates = placementDates.map { (start, duration) ->
-        placementDateFactory.produceAndPersist {
-          withPlacementApplication(placementApplication)
-          withExpectedArrival(start)
-          withDuration(duration)
-        }
-      }
-      placementApplication.placementDates.addAll(dates)
     }
 
     return placementApplication
