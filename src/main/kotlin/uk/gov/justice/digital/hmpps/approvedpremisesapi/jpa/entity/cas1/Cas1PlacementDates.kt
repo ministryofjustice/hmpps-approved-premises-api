@@ -6,5 +6,5 @@ data class Cas1PlacementDates(
   val expectedArrival: LocalDate,
   val duration: Int,
 ) {
-  fun expectedDeparture() = expectedArrival.plusDays(duration.toLong())
+  fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 }
