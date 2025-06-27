@@ -19,6 +19,7 @@ class PlacementApplicationTransformer(
   fun transformJpaToApi(jpa: PlacementApplicationEntity): PlacementApplication {
     val assessment = jpa.application.getLatestAssessment()!!
     val application = jpa.application
+    val placementDates = jpa.placementDates()?.let { PlacementDates(it.expectedArrival, it.duration) }
 
     return PlacementApplication(
       id = jpa.id,
@@ -35,17 +36,19 @@ class PlacementApplicationTransformer(
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
       type = PlacementApplicationType.additional,
-      placementDate = jpa.placementDates()?.let { PlacementDates(it.expectedArrival, it.duration) },
-      placementDates = jpa.placementDates.map { PlacementDates(it.expectedArrival, it.duration) },
+      placementDate = placementDates,
+      placementDates = listOfNotNull(placementDates),
     )
   }
 
   fun transformToWithdrawable(placementApplication: PlacementApplicationEntity): Withdrawable = Withdrawable(
     placementApplication.id,
     WithdrawableType.placementApplication,
-    placementApplication.placementDates.map {
-      DatePeriod(it.expectedArrival, it.expectedDeparture())
-    },
+    listOfNotNull(
+      placementApplication.placementDates()?.let {
+        DatePeriod(it.expectedArrival, it.expectedDeparture())
+      },
+    ),
   )
 
   fun getWithdrawalReason(withdrawalReason: PlacementApplicationWithdrawalReason?): WithdrawPlacementRequestReason? = when (withdrawalReason) {
