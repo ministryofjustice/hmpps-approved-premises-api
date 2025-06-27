@@ -1,11 +1,8 @@
 name: Generate CAS2 UI Types
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/main/resources/static/codegen/built-cas2-api-spec.yml'
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   generate-ui:
