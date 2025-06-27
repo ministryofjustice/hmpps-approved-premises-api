@@ -106,6 +106,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_PLACEMENT_APPEAL_CREATE,
       UserPermission.CAS1_TRANSFER_CREATE,
       UserPermission.CAS1_SPACE_BOOKING_SHORTEN,
+      UserPermission.CAS1_EXTENSION_REQUEST,
     ),
   ),
 
