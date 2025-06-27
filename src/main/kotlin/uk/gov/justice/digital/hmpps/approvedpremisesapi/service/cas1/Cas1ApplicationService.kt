@@ -35,7 +35,7 @@ class Cas1ApplicationService(
 ) {
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
-  fun getApplicationsForCrn(crn: String, limit: Int) = approvedPremisesApplicationRepository.findByCrn(crn, Limit.of(limit))
+  fun getSubmittedApplicationsForCrn(crn: String, limit: Int) = approvedPremisesApplicationRepository.findByCrnAndSubmittedAtIsNotNull(crn, Limit.of(limit))
 
   fun getOfflineApplicationsForCrn(crn: String, limit: Int) = offlineApplicationRepository.findAllByCrn(crn, Limit.of(limit))
 

@@ -286,7 +286,7 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
 
   fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
 
-  fun findByCrn(crn: String, limit: Limit): List<ApprovedPremisesApplicationEntity>
+  fun findByCrnAndSubmittedAtIsNotNull(crn: String, limit: Limit): List<ApprovedPremisesApplicationEntity>
 
   @Query(
     """
