@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
@@ -118,6 +119,7 @@ class Cas1PlacementRequestCas1DomainEventServiceTest {
             assertThat(it.crn).isEqualTo(CRN)
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
+            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
