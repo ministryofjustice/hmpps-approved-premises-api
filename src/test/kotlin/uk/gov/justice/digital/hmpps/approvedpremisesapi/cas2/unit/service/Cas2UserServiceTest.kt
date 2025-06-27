@@ -15,7 +15,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.NomisUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
@@ -26,13 +26,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 
 @ExtendWith(MockKExtension::class)
-class NomisUserServiceTest {
+class Cas2UserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockNomisUserRolesApiClient = mockk<NomisUserRolesApiClient>()
   private val mockNomisUserRolesForRequesterApiClient = mockk<NomisUserRolesForRequesterApiClient>()
   private val mockUserRepository = mockk<NomisUserRepository>()
 
-  private val userService = NomisUserService(
+  private val userService = Cas2UserService(
     mockHttpAuthService,
     mockNomisUserRolesApiClient,
     mockNomisUserRolesForRequesterApiClient,

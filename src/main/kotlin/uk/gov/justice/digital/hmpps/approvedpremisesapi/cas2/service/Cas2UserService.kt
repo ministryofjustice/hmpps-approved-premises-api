@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import java.util.UUID
 
 @Service
-class NomisUserService(
+class Cas2UserService(
   private val httpAuthService: HttpAuthService,
   private val nomisUserRolesApiClient: NomisUserRolesApiClient,
   private val nomisUserRolesForRequesterApiClient: NomisUserRolesForRequesterApiClient,
