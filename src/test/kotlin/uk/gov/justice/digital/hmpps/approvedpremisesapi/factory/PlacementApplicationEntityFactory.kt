@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -32,6 +33,8 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
   private var submissionGroupId: Yielded<UUID> = { UUID.randomUUID() }
   private var isWithdrawn: Yielded<Boolean> = { false }
+  private var expectedArrival: Yielded<LocalDate?> = { null }
+  private var duration: Yielded<Int?> = { null }
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -102,6 +105,14 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.isWithdrawn = { isWithdrawn }
   }
 
+  fun withExpectedArrival(expectedArrival: LocalDate?) = apply {
+    this.expectedArrival = { expectedArrival }
+  }
+
+  fun withDuration(duration: Int?) = apply {
+    this.duration = { duration }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
@@ -122,5 +133,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     dueAt = this.dueAt(),
     submissionGroupId = this.submissionGroupId(),
     isWithdrawn = this.isWithdrawn(),
+    expectedArrival = this.expectedArrival(),
+    duration = this.duration(),
   )
 }

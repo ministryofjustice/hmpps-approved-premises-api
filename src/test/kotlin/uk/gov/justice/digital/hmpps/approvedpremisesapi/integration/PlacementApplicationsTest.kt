@@ -768,7 +768,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             offenderDetailsConfigBlock = {
               withCrn(placementApplicationEntity.application.crn)
             },
-          ) { offenderDetails, inmateDetails ->
+          ) { _, _ ->
             govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
             val arrival1 = LocalDate.of(2024, 1, 2)
@@ -816,6 +816,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val updatedEntity1 = placementApplicationRepository.findByIdOrNull(createdApp1Id)!!
             assertThat(updatedEntity1.placementDates[0].expectedArrival).isEqualTo(arrival1)
             assertThat(updatedEntity1.placementDates[0].duration).isEqualTo(duration1)
+            assertThat(updatedEntity1.expectedArrival).isEqualTo(arrival1)
+            assertThat(updatedEntity1.duration).isEqualTo(duration1)
             assertThat(updatedEntity1.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
 
@@ -823,6 +825,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!
             assertThat(updatedEntity2.placementDates[0].expectedArrival).isEqualTo(arrival2)
             assertThat(updatedEntity2.placementDates[0].duration).isEqualTo(duration2)
+            assertThat(updatedEntity2.expectedArrival).isEqualTo(arrival2)
+            assertThat(updatedEntity2.duration).isEqualTo(duration2)
             assertThat(updatedEntity2.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
 
@@ -830,6 +834,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val updatedEntity3 = placementApplicationRepository.findByIdOrNull(createdApp3Id)!!
             assertThat(updatedEntity3.placementDates[0].expectedArrival).isEqualTo(arrival3)
             assertThat(updatedEntity3.placementDates[0].duration).isEqualTo(duration3)
+            assertThat(updatedEntity3.expectedArrival).isEqualTo(arrival3)
+            assertThat(updatedEntity3.duration).isEqualTo(duration3)
             assertThat(updatedEntity3.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
 
@@ -1120,6 +1126,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         decision = decision,
         reallocated = false,
         placementType = placementType,
+        expectedArrival = LocalDate.now(),
+        duration = 12,
       )
 
       block(placementApplication)
