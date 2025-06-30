@@ -254,7 +254,7 @@ class ApplicationsController(
     val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = when (body) {
-      is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApprovedPremisesApplication(
+      is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           data = serializedData,
@@ -328,7 +328,7 @@ class ApplicationsController(
           val user = userService.getUserForRequest()
           apAreaId = user.apArea!!.id
         }
-        cas1ApplicationCreationService.submitApprovedPremisesApplication(
+        cas1ApplicationCreationService.submitApplication(
           applicationId,
           submitApplication,
           userService.getUserForRequest(),

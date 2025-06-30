@@ -206,7 +206,7 @@ class Cas1ApplicationSeedService(
     )
 
     val updatedApplication = extractEntityFromCasResult(
-      cas1ApplicationCreationService.updateApprovedPremisesApplication(
+      cas1ApplicationCreationService.updateApplication(
         applicationId = newApplicationEntity.id,
         updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -238,7 +238,7 @@ class Cas1ApplicationSeedService(
   ) {
     val user = application.createdByUser
 
-    cas1ApplicationCreationService.submitApprovedPremisesApplication(
+    cas1ApplicationCreationService.submitApplication(
       applicationId = application.id,
       submitApplication = SubmitApprovedPremisesApplication(
         apType = ApType.normal,

@@ -230,7 +230,7 @@ class Cas1ApplicationCreationServiceTest {
   }
 
   @Nested
-  inner class UpdateApplicationCas1 {
+  inner class UpdateApplication {
 
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
@@ -266,7 +266,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(
-        applicationService.updateApprovedPremisesApplication(
+        applicationService.updateApplication(
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
             isWomensApplication = false,
@@ -299,7 +299,7 @@ class Cas1ApplicationCreationServiceTest {
         }.produce()
 
       assertThat(
-        applicationService.updateApprovedPremisesApplication(
+        applicationService.updateApplication(
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
             isWomensApplication = false,
@@ -325,7 +325,7 @@ class Cas1ApplicationCreationServiceTest {
 
       application.schemaUpToDate = false
 
-      val result = applicationService.updateApprovedPremisesApplication(
+      val result = applicationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -354,7 +354,7 @@ class Cas1ApplicationCreationServiceTest {
 
       application.submittedAt = OffsetDateTime.now()
 
-      val result = applicationService.updateApprovedPremisesApplication(
+      val result = applicationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -389,7 +389,7 @@ class Cas1ApplicationCreationServiceTest {
 
       application.status = status
 
-      val result = applicationService.updateApprovedPremisesApplication(
+      val result = applicationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -416,7 +416,7 @@ class Cas1ApplicationCreationServiceTest {
 
       application.submittedAt = OffsetDateTime.now()
 
-      val result = applicationService.updateApprovedPremisesApplication(
+      val result = applicationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -456,7 +456,7 @@ class Cas1ApplicationCreationServiceTest {
         )
       } returns theCaseManagerUserDetailsEntity
 
-      val result = applicationService.updateApprovedPremisesApplication(
+      val result = applicationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -511,7 +511,7 @@ class Cas1ApplicationCreationServiceTest {
         )
       } returns theCaseManagerUserDetailsEntity
 
-      val result = applicationService.updateApprovedPremisesApplication(
+      val result = applicationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -567,7 +567,7 @@ class Cas1ApplicationCreationServiceTest {
         )
       } returns theCaseManagerUserDetailsEntity
 
-      val result = applicationService.updateApprovedPremisesApplication(
+      val result = applicationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
@@ -609,7 +609,7 @@ class Cas1ApplicationCreationServiceTest {
   }
 
   @Nested
-  inner class SubmitApplicationCas1 {
+  inner class SubmitApplication {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
     val apArea = ApAreaEntityFactory().produce()
@@ -646,7 +646,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(
-        applicationService.submitApprovedPremisesApplication(
+        applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
@@ -666,7 +666,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       assertThat(
-        applicationService.submitApprovedPremisesApplication(
+        applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
@@ -689,7 +689,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApprovedPremisesApplication(
+      val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
         user,
@@ -719,7 +719,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApprovedPremisesApplication(
+      val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
         user,
@@ -754,7 +754,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApprovedPremisesApplication(
+      val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
         user,
@@ -797,7 +797,7 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
-      val result = applicationService.submitApprovedPremisesApplication(
+      val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
         user,
@@ -844,7 +844,7 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
-      val result = applicationService.submitApprovedPremisesApplication(
+      val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
         user,
@@ -908,7 +908,7 @@ class Cas1ApplicationCreationServiceTest {
       } returns theCaseManagerUserDetailsEntity
 
       val result =
-        applicationService.submitApprovedPremisesApplication(
+        applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
@@ -1003,7 +1003,7 @@ class Cas1ApplicationCreationServiceTest {
       } returns theCaseManagerUserDetailsEntity
 
       val result =
-        applicationService.submitApprovedPremisesApplication(
+        applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
@@ -1087,7 +1087,7 @@ class Cas1ApplicationCreationServiceTest {
       } returns theCaseManagerUserDetailsEntity
 
       val result =
-        applicationService.submitApprovedPremisesApplication(
+        applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
@@ -1194,7 +1194,7 @@ class Cas1ApplicationCreationServiceTest {
       application.caseManagerUserDetails = existingCaseManagerUserDetails
 
       val result =
-        applicationService.submitApprovedPremisesApplication(
+        applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
@@ -1250,7 +1250,7 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) } returns Unit
 
-      val result = applicationService.submitApprovedPremisesApplication(
+      val result = applicationService.submitApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
         user,

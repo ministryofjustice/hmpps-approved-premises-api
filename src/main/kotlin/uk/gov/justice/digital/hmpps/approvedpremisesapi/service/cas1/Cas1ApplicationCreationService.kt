@@ -192,7 +192,7 @@ class Cas1ApplicationCreationService(
 
   @SuppressWarnings("CyclomaticComplexMethod", "ReturnCount")
   @Transactional
-  fun submitApprovedPremisesApplication(
+  fun submitApplication(
     applicationId: UUID,
     submitApplication: SubmitApprovedPremisesApplication,
     user: UserEntity,
@@ -324,7 +324,7 @@ class Cas1ApplicationCreationService(
 
   @SuppressWarnings("ReturnCount")
   @Transactional
-  fun updateApprovedPremisesApplication(
+  fun updateApplication(
     applicationId: UUID,
     updateFields: Cas1ApplicationUpdateFields,
     userForRequest: UserEntity,
