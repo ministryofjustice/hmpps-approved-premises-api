@@ -294,14 +294,6 @@ registerAdditionalOpenApiGenerateTask(
 )
 
 registerAdditionalOpenApiGenerateTask(
-  name = "openApiGenerateCas3v2Namespace",
-  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3v2-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.v2",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas3v2",
-)
-
-registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas2DomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/cas2-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
@@ -423,11 +415,6 @@ tasks.register("openApiPreCompilation") {
     inputSpec = "cas3-api.yml",
     inputSchemas = "cas3-schemas.yml",
   )
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-cas3v2-api-spec.yml",
-    inputSpec = "cas3v2-api.yml",
-    inputSchemas = "cas3-schemas.yml",
-  )
 }
 
 tasks.get("openApiGenerate").dependsOn(
@@ -438,7 +425,6 @@ tasks.get("openApiGenerate").dependsOn(
   "openApiGenerateCas2Namespace",
   "openApiGenerateCas2v2Namespace",
   "openApiGenerateCas3Namespace",
-  "openApiGenerateCas3v2Namespace",
 )
 
 tasks.get("openApiGenerate").doLast {
