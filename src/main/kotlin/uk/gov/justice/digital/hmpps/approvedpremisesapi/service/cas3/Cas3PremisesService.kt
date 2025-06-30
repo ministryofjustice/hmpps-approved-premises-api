@@ -421,6 +421,8 @@ class Cas3PremisesService(
     val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
     if (bed == null) {
       "$.bedId" hasValidationError "doesNotExist"
+    } else if (bed.endDate != null && startDate.isAfter(bed.endDate)) {
+      "$.startDate" hasValidationError "voidStartDateAfterBedspaceEndDate"
     }
 
     val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
