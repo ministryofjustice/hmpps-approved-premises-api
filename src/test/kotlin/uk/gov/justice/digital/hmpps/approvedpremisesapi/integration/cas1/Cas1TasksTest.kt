@@ -2168,7 +2168,7 @@ class Cas1TasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `If request is for a placement application only returns active users with ASSESSOR role, with correct workload`() {
+    fun `If request is for a placement application only returns active users with ASSESSOR role, with correct workload`(baseUrl: String) {
       // ignored, wrong role
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
@@ -2190,15 +2190,17 @@ class Cas1TasksTest {
 
       val numAppAssessPending = 3
       repeat(numAppAssessPending) {
-        createAssessment(null, allocatableUser, creatingUser, crn)
+        createAssessment(assessedAt = null, allocatableUser, creatingUser, crn)
       }
       // withdrawn, ignored
-      createAssessment(null, allocatableUser, creatingUser, crn, isWithdrawn = true)
+      createAssessment(assessedAt = null, allocatableUser, creatingUser, crn, isWithdrawn = true)
 
       val numPlacementAppAssessPending = 4
       repeat(numPlacementAppAssessPending) {
-        createPlacementApplication(null, allocatableUser, creatingUser, crn)
+        createPlacementApplication(assessedAt = null, allocatableUser, creatingUser, crn)
       }
+      // withdrawn, ignored
+      createPlacementApplication(assessedAt = null, allocatableUser, creatingUser, crn, isWithdrawn = true)
 
       val numAppAssessCompletedBetween1And7DaysAgo = 4
       repeat(numAppAssessCompletedBetween1And7DaysAgo) {
@@ -2284,6 +2286,7 @@ class Cas1TasksTest {
       allocatedUser: UserEntity,
       createdByUser: UserEntity,
       crn: String,
+      isWithdrawn: Boolean = false,
     ) {
       givenAPlacementApplication(
         createdByUser = createdByUser,
@@ -2291,6 +2294,7 @@ class Cas1TasksTest {
         submittedAt = assessedAt?.minusDays(1),
         decisionMadeAt = assessedAt,
         crn = crn,
+        isWithdrawn = isWithdrawn,
       )
     }
   }

@@ -303,6 +303,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         where
           placement_application.allocated_to_user_id = u.id
           and placement_application.reallocated_at is null
+          and placement_application.is_withdrawn != true
           and placement_application.decision_made_at is null
       ) as pendingPlacementApplications,
       (
