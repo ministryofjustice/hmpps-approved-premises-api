@@ -48,13 +48,13 @@ class Cas1PeopleController(
 
   @SuppressWarnings("MagicNumber")
   private fun buildPersonInfoWithTimeline(personInfo: PersonInfoResult.Success.Full, crn: String): Cas1PersonalTimeline {
-    val regularApplications = getRegularApplications(crn)
+    val regularSubmittedApplications = getRegularSubmittedApplications(crn)
     val offlineApplications = getOfflineApplications(crn)
-    val combinedApplications = (regularApplications + offlineApplications).take(TIMELINE_APPLICATION_LIMIT)
+    val combinedApplications = (regularSubmittedApplications + offlineApplications).take(TIMELINE_APPLICATION_LIMIT)
 
     if (combinedApplications.size == TIMELINE_APPLICATION_LIMIT) {
       sentryService.captureErrorMessage(
-        "Person Timeline results truncated to 50 applications. CRN: $crn. Regular: ${regularApplications.size}, Offline: ${offlineApplications.size}. Consider adding paging.",
+        "Person Timeline results truncated to 50 applications. CRN: $crn. Regular: ${regularSubmittedApplications.size}, Offline: ${offlineApplications.size}. Consider adding paging.",
       )
     }
 
@@ -70,8 +70,8 @@ class Cas1PeopleController(
     return cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, applicationTimelineModels)
   }
 
-  private fun getRegularApplications(crn: String) = cas1ApplicationService
-    .getApplicationsForCrn(crn, limit = TIMELINE_APPLICATION_LIMIT)
+  private fun getRegularSubmittedApplications(crn: String) = cas1ApplicationService
+    .getSubmittedApplicationsForCrn(crn, limit = TIMELINE_APPLICATION_LIMIT)
     .map { BoxedApplication.of(it) }
 
   private fun getOfflineApplications(crn: String) = cas1ApplicationService

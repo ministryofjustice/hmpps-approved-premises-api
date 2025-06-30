@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.OffsetDateTime
 import kotlin.collections.listOf
 
 class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
@@ -127,10 +128,19 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
   fun `Getting a personal timeline for a CRN returns OK with correct body`() {
     givenAUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        givenAnApplication(userEntity, crn = offenderDetails.otherIds.crn) { application ->
+        givenAnApplication(
+          userEntity,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = null,
+        )
+        givenAnApplication(
+          userEntity,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+        ) { submittedApplication ->
           val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
             withCrn(offenderDetails.otherIds.crn)
-            withApplicationId(application.id)
+            withApplicationId(submittedApplication.id)
           }
 
           val personInfoResult = PersonInfoResult.Success.Full(
@@ -154,8 +164,8 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                   person = personTransformer.transformModelToPersonApi(personInfoResult),
                   applications = listOf(
                     Cas1ApplicationTimeline(
-                      id = application.id,
-                      createdAt = application.createdAt.toInstant(),
+                      id = submittedApplication.id,
+                      createdAt = submittedApplication.createdAt.toInstant(),
                       status = Cas1ApplicationStatus.started,
                       isOfflineApplication = false,
                       createdBy = ApprovedPremisesUser(
@@ -199,7 +209,7 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                           associatedUrls = listOf(
                             Cas1TimelineEventAssociatedUrl(
                               type = Cas1TimelineEventUrlType.application,
-                              url = "http://frontend/applications/${application.id}",
+                              url = "http://frontend/applications/${submittedApplication.id}",
                             ),
                           ),
                         ),
@@ -212,7 +222,7 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                           associatedUrls = listOf(
                             Cas1TimelineEventAssociatedUrl(
                               type = Cas1TimelineEventUrlType.application,
-                              url = "http://frontend/applications/${application.id}",
+                              url = "http://frontend/applications/${submittedApplication.id}",
                             ),
                           ),
                         ),
@@ -232,7 +242,13 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
     val (user, jwt) = givenAUser()
     val (offenderDetails, inmateDetails) = givenAnOffender()
 
-    repeat(60) { givenAnApplication(user, crn = offenderDetails.otherIds.crn) }
+    repeat(60) {
+      givenAnApplication(
+        user,
+        crn = offenderDetails.otherIds.crn,
+        submittedAt = OffsetDateTime.now(),
+      )
+    }
 
     val result = webTestClient.get()
       .uri("/cas1/people/${offenderDetails.otherIds.crn}/timeline")
@@ -282,7 +298,11 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
           withNomsNumber(null)
         },
       ) { offenderDetails, _ ->
-        givenAnApplication(userEntity, crn = offenderDetails.otherIds.crn) { application ->
+        givenAnApplication(
+          userEntity,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+        ) { application ->
           val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
             withCrn(offenderDetails.otherIds.crn)
             withApplicationId(application.id)
