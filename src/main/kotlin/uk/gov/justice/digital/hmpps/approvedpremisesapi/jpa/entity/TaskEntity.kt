@@ -303,8 +303,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         where
           placement_application.allocated_to_user_id = u.id
           and placement_application.reallocated_at is null
-          and placement_application.submitted_at is null
-          and placement_application.decision is null
+          and placement_application.decision_made_at is null
       ) as pendingPlacementApplications,
       (
         SELECT
@@ -314,7 +313,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         where
           placement_application.allocated_to_user_id = u.id
           and placement_application.reallocated_at is null
-          and placement_application.submitted_at > current_date - interval '7' day
+          and placement_application.decision_made_at > current_date - interval '7' day
       ) as completedPlacementApplicationsInTheLastSevenDays,
       (
         SELECT
@@ -324,7 +323,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         where
           placement_application.allocated_to_user_id = u.id
           and placement_application.reallocated_at is null
-          and placement_application.submitted_at > current_date - interval '30' day
+          and placement_application.decision_made_at > current_date - interval '30' day
       ) as completedPlacementApplicationsInTheLastThirtyDays
     FROM
       users u

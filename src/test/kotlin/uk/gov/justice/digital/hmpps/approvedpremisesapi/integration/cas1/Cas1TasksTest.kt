@@ -2288,7 +2288,8 @@ class Cas1TasksTest {
       givenAPlacementApplication(
         createdByUser = createdByUser,
         allocatedToUser = allocatedUser,
-        submittedAt = assessedAt,
+        submittedAt = assessedAt?.minusDays(1),
+        decisionMadeAt = assessedAt,
         crn = crn,
       )
     }
