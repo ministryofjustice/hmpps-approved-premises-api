@@ -1746,10 +1746,9 @@ class ApplicationTest : IntegrationTestBase() {
                   .bodyValue(
                     SubmitApprovedPremisesApplication(
                       translatedDocument = {},
-                      isPipeApplication = true,
+                      apType = ApType.pipe,
                       isWomensApplication = true,
                       isEmergencyApplication = true,
-                      isEsapApplication = true,
                       targetLocation = "SW1A 1AA",
                       releaseType = ReleaseTypeOption.licence,
                       sentenceType = SentenceTypeOption.nonStatutory,

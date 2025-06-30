@@ -157,10 +157,9 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     fun `applicationSubmitted success`() {
       val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = true,
+        apType = ApType.pipe,
         isWomensApplication = false,
         isEmergencyApplication = false,
-        isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -228,10 +227,9 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     fun `applicationSubmitted doesn't save null metadata values`() {
       val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = true,
+        apType = ApType.pipe,
         isWomensApplication = false,
         isEmergencyApplication = false,
-        isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",

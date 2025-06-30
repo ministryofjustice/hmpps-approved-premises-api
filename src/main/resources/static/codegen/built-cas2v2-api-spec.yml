@@ -2534,19 +2534,11 @@ components:
         - $ref: '#/components/schemas/SubmitApplication'
         - type: object
           properties:
-            isPipeApplication:
-              deprecated: true
-              description: Use apType
-              type: boolean
             isWomensApplication:
               type: boolean
             isEmergencyApplication:
               deprecated: true
               description: noticeType should be used to indicate if this an emergency application
-              type: boolean
-            isEsapApplication:
-              deprecated: true
-              description: Use apType
               type: boolean
             apType:
               $ref: '#/components/schemas/ApType'
@@ -2584,6 +2576,7 @@ components:
             - targetLocation
             - releaseType
             - sentenceType
+            - apType
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'

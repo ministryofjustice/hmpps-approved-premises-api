@@ -219,21 +219,6 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("Only an application with the 'STARTED' status can be submitted")
     }
 
-    if (submitApplication.isUsingLegacyApTypeFields && submitApplication.isUsingNewApTypeField) {
-      return CasResult.GeneralValidationError("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
-    }
-
-    val apType = when {
-      submitApplication.isUsingLegacyApTypeFields -> when {
-        submitApplication.isPipeApplication == true -> ApprovedPremisesType.PIPE
-        submitApplication.isEsapApplication == true -> ApprovedPremisesType.ESAP
-        else -> ApprovedPremisesType.NORMAL
-      }
-
-      submitApplication.isUsingNewApTypeField -> submitApplication.apType!!.asApprovedPremisesType()
-      else -> ApprovedPremisesType.NORMAL
-    }
-
     if (application.submittedAt != null) {
       return CasResult.GeneralValidationError("This application has already been submitted")
     }
@@ -271,7 +256,7 @@ class Cas1ApplicationCreationService(
     val apArea = apAreaRepository.findByIdOrNull(apAreaId)!!
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
-      this.apType = apType
+      this.apType = submitApplication.apType.asApprovedPremisesType()
       submittedAt = now
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
@@ -432,12 +417,6 @@ class Cas1ApplicationCreationService(
     this.isUsingNewApTypeField -> this.apType!!.asApprovedPremisesType()
     else -> ApprovedPremisesType.NORMAL
   }
-
-  private val SubmitApprovedPremisesApplication.isUsingLegacyApTypeFields: Boolean
-    get() = isPipeApplication != null || isEsapApplication != null
-
-  private val SubmitApprovedPremisesApplication.isUsingNewApTypeField: Boolean
-    get() = apType != null
 
   data class Cas1ApplicationUpdateFields(
     val isWomensApplication: Boolean?,

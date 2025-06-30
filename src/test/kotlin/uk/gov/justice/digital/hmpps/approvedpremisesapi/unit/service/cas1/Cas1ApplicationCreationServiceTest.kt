@@ -621,16 +621,15 @@ class Cas1ApplicationCreationServiceTest {
 
     private var defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
       translatedDocument = {},
-      isPipeApplication = true,
       isWomensApplication = false,
       isEmergencyApplication = false,
-      isEsapApplication = false,
       targetLocation = "SW1A 1AA",
       releaseType = ReleaseTypeOption.licence,
       type = "CAS1",
       sentenceType = SentenceTypeOption.nonStatutory,
       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
       caseManagerIsNotApplicant = false,
+      apType = ApType.normal,
     )
 
     private val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
@@ -783,10 +782,9 @@ class Cas1ApplicationCreationServiceTest {
 
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = true,
+        apType = ApType.normal,
         isWomensApplication = false,
         isEmergencyApplication = false,
-        isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -810,53 +808,6 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
 
-    @Test
-    fun `submitApprovedPremisesApplication returns GeneralValidationError when application has AP type specified in multiple ways`() {
-      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
-        translatedDocument = {},
-        isPipeApplication = true,
-        isWomensApplication = false,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        apType = ApType.normal,
-        targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
-        type = "CAS1",
-        sentenceType = SentenceTypeOption.nonStatutory,
-        applicantUserDetails = null,
-        caseManagerIsNotApplicant = false,
-      )
-
-      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
-
-      val result = applicationService.submitApplication(
-        applicationId,
-        defaultSubmitApprovedPremisesApplication,
-        user,
-        apAreaId = UUID.randomUUID(),
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
-    }
-
     @ParameterizedTest
     @EnumSource(value = SituationOption::class)
     @NullSource
@@ -866,10 +817,9 @@ class Cas1ApplicationCreationServiceTest {
     ) {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = true,
+        apType = ApType.pipe,
         isWomensApplication = false,
         isEmergencyApplication = false,
-        isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -956,10 +906,9 @@ class Cas1ApplicationCreationServiceTest {
     fun `submitApprovedPremisesApplication sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = true,
+        apType = ApType.pipe,
         isWomensApplication = false,
         isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
-        isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -1043,10 +992,8 @@ class Cas1ApplicationCreationServiceTest {
     fun `submitApprovedPremisesApplication sets apType correctly`(apType: ApType) {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = null,
         isWomensApplication = false,
         isEmergencyApplication = false,
-        isEsapApplication = null,
         apType = apType,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
@@ -1127,10 +1074,9 @@ class Cas1ApplicationCreationServiceTest {
     fun `submitApprovedPremisesApplication updates existing application user details`() {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = true,
+        apType = ApType.pipe,
         isWomensApplication = false,
         isEmergencyApplication = false,
-        isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",
@@ -1213,10 +1159,9 @@ class Cas1ApplicationCreationServiceTest {
     fun `updateApprovedPremisesApplication if applicant is now case manager, removes existing case manager user details`() {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
-        isPipeApplication = true,
+        apType = ApType.pipe,
         isWomensApplication = false,
         isEmergencyApplication = false,
-        isEsapApplication = false,
         targetLocation = "SW1A 1AA",
         releaseType = ReleaseTypeOption.licence,
         type = "CAS1",

@@ -561,10 +561,9 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .bodyValue(
         SubmitApprovedPremisesApplication(
           translatedDocument = {},
-          isPipeApplication = false,
+          apType = ApType.normal,
           isWomensApplication = false,
           isEmergencyApplication = false,
-          isEsapApplication = false,
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
