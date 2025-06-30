@@ -131,6 +131,7 @@ class RoomServiceTest {
     assertThat(result.entity.beds).hasSize(1)
     assertThat(result.entity.beds[0].room).isEqualTo(result.entity)
     assertThat(result.entity.beds[0].name).isEqualTo("default-bed")
+    assertThat(result.entity.beds[0].startDate).isEqualTo(LocalDate.now())
     assertThat(result.entity.beds[0].endDate).isEqualTo(LocalDate.now())
   }
 

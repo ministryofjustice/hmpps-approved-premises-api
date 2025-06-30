@@ -188,7 +188,7 @@ class RoomService(
       name = bedName,
       code = null,
       room = room,
-      startDate = null,
+      startDate = LocalDate.now(),
       endDate = bedEndDate,
       createdAt = OffsetDateTime.now(),
     ),
