@@ -27,12 +27,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationRepository
@@ -218,6 +220,158 @@ class Cas3PremisesServiceTest {
       val result = premisesService.createBedspace(premises, bedspace.name, bedspace.startDate!!, null, listOf(premisesCharacteristic.id))
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")
+    }
+  }
+
+  @Nested
+  inner class UpdateBedspace {
+    @Test
+    fun `When update a bedspace returns Success with correct result when validation passed`() {
+      val characteristicEntityFactory = CharacteristicEntityFactory()
+      val (premises, bedspace) = createPremisesAndBedspace()
+      val updateBedspaceReference = randomStringMultiCaseWithNumbers(10)
+      val updateBedspaceNotes = randomStringMultiCaseWithNumbers(100)
+      val updateBedspaceCharacteristic = characteristicEntityFactory
+        .withModelScope("room")
+        .withServiceScope(ServiceName.temporaryAccommodation.value)
+        .produceMany()
+        .take(3)
+        .toList()
+
+      val updatedRoom = RoomEntity(
+        id = bedspace.room.id,
+        name = updateBedspaceReference,
+        code = bedspace.room.code,
+        notes = updateBedspaceNotes,
+        characteristics = updateBedspaceCharacteristic.toMutableList(),
+        premises = premises,
+        beds = mutableListOf(),
+      )
+
+      val updatedBedspace = BedEntity(
+        id = bedspace.id,
+        name = "default-bed",
+        code = bedspace.code,
+        startDate = bedspace.startDate,
+        endDate = bedspace.endDate,
+        room = updatedRoom,
+        createdAt = bedspace.createdAt,
+      )
+
+      updatedRoom.beds.add(updatedBedspace)
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { characteristicServiceMock.getCharacteristic(any()) } answers {
+        val characteristicId = it.invocation.args[0] as UUID
+        updateBedspaceCharacteristic.firstOrNull { it.id == characteristicId }
+      }
+      every { characteristicServiceMock.modelScopeMatches(any(), any()) } returns true
+      every { characteristicServiceMock.serviceScopeMatches(any(), any()) } returns true
+      every { roomRepositoryMock.save(any()) } returns updatedRoom
+
+      val result = premisesService.updateBedspace(premises, bedspace.id, updateBedspaceReference, updateBedspaceNotes, updateBedspaceCharacteristic.map { it.id })
+
+      assertThatCasResult(result).isSuccess().with { bed ->
+        assertThat(bed.room.name).isEqualTo(updateBedspaceReference)
+        assertThat(bed.room.notes).isEqualTo(updateBedspaceNotes)
+        assertThat(bed.room).isEqualTo(updatedRoom)
+        assertThat(bed.room.premises).isEqualTo(premises)
+      }
+    }
+
+    @Test
+    fun `When updating a non existing bedspace returns a NotFound with the correct message`() {
+      val (premises, _) = createPremisesAndBedspace()
+      val nonExistingBedspaceId = UUID.randomUUID()
+
+      every { bedRepositoryMock.findByIdOrNull(nonExistingBedspaceId) } returns null
+
+      val result = premisesService.updateBedspace(premises, nonExistingBedspaceId, randomStringMultiCaseWithNumbers(10), randomStringMultiCaseWithNumbers(100), emptyList())
+
+      assertThatCasResult(result).isNotFound("Bedspace", nonExistingBedspaceId)
+    }
+
+    @Test
+    fun `When updating a bedspace that belongs to different premises returns a NotFound with the correct message`() {
+      val anotherPremises = temporaryAccommodationPremisesFactory.produce()
+      val (_, bedspace) = createPremisesAndBedspace()
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+
+      val result = premisesService.updateBedspace(anotherPremises, bedspace.id, randomStringMultiCaseWithNumbers(10), randomStringMultiCaseWithNumbers(100), emptyList())
+
+      assertThatCasResult(result).isGeneralValidationError("The bedspace does not belong to the specified premises.")
+    }
+
+    @Test
+    fun `When update a bedspace with an empty bedspace reference returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+
+      val result = premisesService.updateBedspace(premises, bedspace.id, "", randomStringMultiCaseWithNumbers(100), emptyList())
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "empty")
+    }
+
+    @Test
+    fun `When update a bedspace with a wrong model scope characteristic returns FieldValidationError with the correct message`() {
+      val characteristicEntityFactory = CharacteristicEntityFactory()
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      val premisesCharacteristic = characteristicEntityFactory
+        .withModelScope("premises")
+        .withServiceScope(ServiceName.temporaryAccommodation.value)
+        .produce()
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
+      every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns false
+
+      val result = premisesService.updateBedspace(premises, bedspace.id, randomStringMultiCaseWithNumbers(10), null, listOf(premisesCharacteristic.id))
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicModelScope")
+    }
+
+    @Test
+    fun `When update a bedspace with a wrong service scope characteristic returns FieldValidationError with the correct message`() {
+      val characteristicEntityFactory = CharacteristicEntityFactory()
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      val premisesCharacteristic = characteristicEntityFactory
+        .withModelScope("room")
+        .withServiceScope(ServiceName.approvedPremises.value)
+        .produce()
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
+      every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns true
+      every { characteristicServiceMock.serviceScopeMatches(premisesCharacteristic, any()) } returns false
+
+      val result = premisesService.updateBedspace(premises, bedspace.id, randomStringMultiCaseWithNumbers(10), null, listOf(premisesCharacteristic.id))
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")
+    }
+
+    private fun createPremisesAndBedspace(): Pair<TemporaryAccommodationPremisesEntity, BedEntity> {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+
+      val room = RoomEntityFactory()
+        .withName(randomStringMultiCaseWithNumbers(10))
+        .withPremises(premises)
+        .produce()
+
+      val bedspace = BedEntityFactory()
+        .withRoom(room)
+        .withStartDate(LocalDate.now().minusDays(5))
+        .produce()
+
+      return Pair(premises, bedspace)
     }
   }
 
