@@ -1,10 +1,13 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.v2.PremisesCas3v2Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -17,17 +20,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BookingTransformer
 import java.util.UUID
 
-@Service
+@RestController
+@RequestMapping("\${api.base-path:}/cas3/v2")
 class Cas3v2PremisesController(
   private val usersService: UserService,
   private val userAccessService: UserAccessService,
   private val cas3PremisesService: Cas3v2PremisesService,
   private val offenderService: OffenderService,
   private val bookingTransformer: Cas3BookingTransformer,
-) : PremisesCas3v2Delegate {
+) {
 
-  override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Cas3Booking>> = runBlocking {
-    val premises = cas3PremisesService.getPremises(premisesId)
+  @GetMapping(value = ["/premises/{premisesId}/bookings"], produces = ["application/json"])
+  @ResponseBody
+  fun getPremises(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3Booking>> = runBlocking {
+    val premises = cas3PremisesService.getPremises(premisesId!!)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     val user = usersService.getUserForRequest()
@@ -46,7 +52,8 @@ class Cas3v2PremisesController(
       premises.bookings.map { booking ->
         bookingTransformer.transformJpaToApi(
           jpa = booking,
-          personInfo = personInfoResults.firstOrNull { pi -> pi.crn == booking.crn } ?: PersonInfoResult.Unknown(booking.crn),
+          personInfo = personInfoResults.firstOrNull { pi -> pi.crn == booking.crn }
+            ?: PersonInfoResult.Unknown(booking.crn),
         )
       },
     )
