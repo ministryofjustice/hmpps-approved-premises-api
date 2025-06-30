@@ -544,6 +544,45 @@ class Cas3PremisesServiceTest {
       assertThat(result.entity.referenceNumber).isEqualTo("12345")
       assertThat(result.entity.notes).isEqualTo("notes")
     }
+
+    @Test
+    fun `createVoidBedspaces returns error when void start date is after bed end date`() {
+      val premisesEntity = temporaryAccommodationPremisesFactory.produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premisesEntity)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withYieldedRoom { room }
+        .withEndDate(LocalDate.parse("2022-08-24"))
+        .produce()
+
+      premisesEntity.rooms += room
+      room.beds += bed
+
+      val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory()
+        .produce()
+
+      every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
+
+      every { cas3VoidBedspacesRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspaceEntity }
+
+      val result = premisesService.createVoidBedspaces(
+        premises = premisesEntity,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = voidBedspaceReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        bedId = bed.id,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.startDate", "voidStartDateAfterBedspaceEndDate"),
+      )
+    }
   }
 
   @Nested
