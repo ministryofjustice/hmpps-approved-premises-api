@@ -1833,18 +1833,6 @@ components:
         - id
         - name
         - isActive
-    DateCapacity:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date
-        availableBeds:
-          type: integer
-          example: 10
-      required:
-        - date
-        - availableBeds
     PersonRisks:
       type: object
       properties:
