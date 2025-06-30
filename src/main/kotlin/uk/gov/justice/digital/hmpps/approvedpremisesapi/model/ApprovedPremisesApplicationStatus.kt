@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 
 enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesApplicationStatus) {
   STARTED(ApiApprovedPremisesApplicationStatus.started),
-  SUBMITTED(ApiApprovedPremisesApplicationStatus.submitted),
   REJECTED(ApiApprovedPremisesApplicationStatus.rejected),
   AWAITING_ASSESSMENT(ApiApprovedPremisesApplicationStatus.awaitingAssesment),
   UNALLOCATED_ASSESSMENT(ApiApprovedPremisesApplicationStatus.unallocatedAssesment),
@@ -46,7 +45,6 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
   fun toCas1Status(): Cas1ApplicationStatus = when (this) {
     EXPIRED -> Cas1ApplicationStatus.expired
     STARTED -> Cas1ApplicationStatus.started
-    SUBMITTED -> Cas1ApplicationStatus.submitted
     REJECTED -> Cas1ApplicationStatus.rejected
     AWAITING_ASSESSMENT -> Cas1ApplicationStatus.awaitingAssesment
     UNALLOCATED_ASSESSMENT -> Cas1ApplicationStatus.unallocatedAssesment

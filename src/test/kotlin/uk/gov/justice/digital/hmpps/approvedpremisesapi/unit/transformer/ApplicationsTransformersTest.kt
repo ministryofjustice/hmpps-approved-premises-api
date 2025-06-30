@@ -450,7 +450,7 @@ class ApplicationsTransformersTest {
       override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
       override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
       override fun getTier(): String? = null
-      override fun getStatus(): String = ApprovedPremisesApplicationStatus.SUBMITTED.toString()
+      override fun getStatus(): String = ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT.toString()
       override fun getIsWithdrawn(): Boolean = true
       override fun getReleaseType(): String? = releaseTypeOption?.let { releaseTypeOption.toString() }
       override fun getHasRequestsForPlacement(): Boolean = true
@@ -650,7 +650,7 @@ class ApplicationsTransformersTest {
       override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
       override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
       override fun getTier(): String? = null
-      override fun getStatus(): String = ApprovedPremisesApplicationStatus.SUBMITTED.toString()
+      override fun getStatus(): String = ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT.toString()
       override fun getIsWithdrawn(): Boolean = true
       override fun getReleaseType(): String? = releaseTypeOption?.let { releaseTypeOption.toString() }
       override fun getHasRequestsForPlacement(): Boolean = true
@@ -671,7 +671,6 @@ class ApplicationsTransformersTest {
     fun applicationStatusArgs() = listOf(
       ApiApprovedPremisesApplicationStatus.assesmentInProgress to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
       ApiApprovedPremisesApplicationStatus.started to ApprovedPremisesApplicationStatus.STARTED,
-      ApiApprovedPremisesApplicationStatus.submitted to ApprovedPremisesApplicationStatus.SUBMITTED,
       ApiApprovedPremisesApplicationStatus.rejected to ApprovedPremisesApplicationStatus.REJECTED,
       ApiApprovedPremisesApplicationStatus.awaitingAssesment to ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT,
       ApiApprovedPremisesApplicationStatus.unallocatedAssesment to ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT,

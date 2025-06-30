@@ -47,7 +47,7 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
         val unsubmittedApplicationsNewerThan6Months = createApplicationsWithCreatedAtDate(user, ApprovedPremisesApplicationStatus.STARTED, 5) {
           OffsetDateTime.now().randomDateTimeBeyond(0, 179)
         }
-        val applicationsWithOtherStatus = createApplicationsWithCreatedAtDate(user, ApprovedPremisesApplicationStatus.SUBMITTED, 2) {
+        val applicationsWithOtherStatus = createApplicationsWithCreatedAtDate(user, ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT, 2) {
           OffsetDateTime.now().randomDateTimeBeyond(180, 365)
         }
         applicationsWithOtherStatus.addAll(
