@@ -46,8 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.ACCEPTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.REJECTED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAW
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -2201,10 +2199,6 @@ class Cas1TasksTest {
       repeat(numPlacementAppAssessPending) {
         createPlacementApplication(null, allocatableUser, creatingUser, crn)
       }
-      createPlacementApplication(null, allocatableUser, creatingUser, crn, decision = ACCEPTED)
-      createPlacementApplication(null, allocatableUser, creatingUser, crn, decision = REJECTED)
-      createPlacementApplication(null, allocatableUser, creatingUser, crn, decision = WITHDRAW)
-      createPlacementApplication(null, allocatableUser, creatingUser, crn, decision = WITHDRAWN_BY_PP)
 
       val numAppAssessCompletedBetween1And7DaysAgo = 4
       repeat(numAppAssessCompletedBetween1And7DaysAgo) {
@@ -2230,10 +2224,6 @@ class Cas1TasksTest {
         createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
       }
 
-      val numPendingTasks = numAppAssessPending + numPlacementAppAssessPending
-      val numTasksCompletedInTheLast7Days = numAppAssessCompletedBetween1And7DaysAgo + numPlacementAppAssessCompletedBetween1And7DaysAgo
-      val numTasksCompletedInTheLast30Days = numAppAssessCompletedBetween8And30DaysAgo + numPlacementAppAssessCompletedBetween8And30DaysAgo + numTasksCompletedInTheLast7Days
-
       webTestClient.get()
         .uri("$baseUrl/placement-application/${placementApplication.id}")
         .header("Authorization", "Bearer $jwt")
@@ -2252,9 +2242,9 @@ class Cas1TasksTest {
                 userTransformer.transformJpaToAPIUserWithWorkload(
                   allocatableUser,
                   UserWorkload(
-                    numPendingTasks,
-                    numTasksCompletedInTheLast7Days,
-                    numTasksCompletedInTheLast30Days,
+                    numTasksPending = 7,
+                    numTasksCompleted7Days = 6,
+                    numTasksCompleted30Days = 13,
                   ),
                 ),
               ),
@@ -2264,7 +2254,7 @@ class Cas1TasksTest {
     }
 
     private fun createAssessment(
-      completedAt: OffsetDateTime?,
+      assessedAt: OffsetDateTime?,
       allocatedUser: UserEntity,
       createdByUser: UserEntity,
       crn: String,
@@ -2276,13 +2266,13 @@ class Cas1TasksTest {
         crn = crn,
         decision = null,
         reallocated = false,
-        submittedAt = completedAt,
+        submittedAt = assessedAt,
         isWithdrawn = isWithdrawn,
       )
     }
 
     private fun createPlacementApplication(
-      completedAt: OffsetDateTime?,
+      assessedAt: OffsetDateTime?,
       allocatedUser: UserEntity,
       createdByUser: UserEntity,
       crn: String,
@@ -2291,7 +2281,7 @@ class Cas1TasksTest {
       givenAPlacementApplication(
         createdByUser = createdByUser,
         allocatedToUser = allocatedUser,
-        submittedAt = completedAt,
+        submittedAt = assessedAt,
         crn = crn,
         decision = decision,
       )
