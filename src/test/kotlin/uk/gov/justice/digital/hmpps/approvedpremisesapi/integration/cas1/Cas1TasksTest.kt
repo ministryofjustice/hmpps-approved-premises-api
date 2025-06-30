@@ -43,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.ACCEPTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.REJECTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -2193,6 +2192,7 @@ class Cas1TasksTest {
       repeat(numAppAssessPending) {
         createAssessment(null, allocatableUser, creatingUser, crn)
       }
+      // withdrawn, ignored
       createAssessment(null, allocatableUser, creatingUser, crn, isWithdrawn = true)
 
       val numPlacementAppAssessPending = 4
@@ -2222,6 +2222,14 @@ class Cas1TasksTest {
       repeat(numPlacementAppAssessCompletedBetween8And30DaysAgo) {
         val days = kotlin.random.Random.nextInt(8, 30).toLong()
         createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
+      }
+
+      // completed after 30 days ago, ignored
+      repeat(10) {
+        createAssessment(OffsetDateTime.now().minusDays(31), allocatableUser, creatingUser, crn)
+      }
+      repeat(10) {
+        createPlacementApplication(OffsetDateTime.now().minusDays(31), allocatableUser, creatingUser, crn)
       }
 
       webTestClient.get()
@@ -2276,14 +2284,12 @@ class Cas1TasksTest {
       allocatedUser: UserEntity,
       createdByUser: UserEntity,
       crn: String,
-      decision: PlacementApplicationDecision? = null,
     ) {
       givenAPlacementApplication(
         createdByUser = createdByUser,
         allocatedToUser = allocatedUser,
         submittedAt = assessedAt,
         crn = crn,
-        decision = decision,
       )
     }
   }
