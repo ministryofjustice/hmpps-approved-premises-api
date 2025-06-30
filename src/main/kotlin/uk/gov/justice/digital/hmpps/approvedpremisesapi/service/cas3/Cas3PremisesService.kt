@@ -399,6 +399,7 @@ class Cas3PremisesService(
     return success(updatedRoom.beds.first())
   }
 
+  @Suppress("ComplexCondition")
   fun createVoidBedspaces(
     premises: PremisesEntity,
     startDate: LocalDate,
@@ -415,7 +416,7 @@ class Cas3PremisesService(
     val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
     if (bed == null) {
       "$.bedId" hasValidationError "doesNotExist"
-    } else if (bed.endDate != null && startDate.isAfter(bed.endDate)) {
+    } else if (bed.endDate != null && startDate >= bed.endDate) {
       "$.startDate" hasValidationError "voidStartDateAfterBedspaceEndDate"
     }
 
