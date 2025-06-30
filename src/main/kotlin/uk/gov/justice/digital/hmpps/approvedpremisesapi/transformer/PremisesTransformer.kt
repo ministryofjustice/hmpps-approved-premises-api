@@ -54,7 +54,7 @@ class PremisesTransformer(
       status = jpa.status,
       pdu = jpa.probationDeliveryUnit?.name ?: "Not specified",
       probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) },
-      turnaroundWorkingDayCount = jpa.turnaroundWorkingDayCount,
+      turnaroundWorkingDayCount = jpa.turnaroundWorkingDays,
     )
     else -> throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")
   }

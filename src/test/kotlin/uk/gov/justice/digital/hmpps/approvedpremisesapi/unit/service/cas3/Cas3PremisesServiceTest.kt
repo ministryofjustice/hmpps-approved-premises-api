@@ -993,7 +993,7 @@ class Cas3PremisesServiceTest {
         )?.toEither(),
         characteristicIds = premises.characteristics.map { it.id },
         status = PropertyStatus.archived,
-        turnaroundWorkingDayCount = premises.turnaroundWorkingDayCount,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
         notes = premises.notes,
       )
 

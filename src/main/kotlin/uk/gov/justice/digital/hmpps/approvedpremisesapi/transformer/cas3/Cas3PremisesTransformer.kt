@@ -31,7 +31,7 @@ class Cas3PremisesTransformer(
     startDate = premisesEntity.startDate,
     status = premisesEntity.status.transformStatus(),
     notes = premisesEntity.notes,
-    turnaroundWorkingDayCount = premisesEntity.turnaroundWorkingDayCount,
+    turnaroundWorkingDays = premisesEntity.turnaroundWorkingDays,
     totalOnlineBedspaces = premisesEntity.getTotalOnlineBedspaces(),
     totalUpcomingBedspaces = premisesEntity.getTotalUpcomingBedspaces(),
     totalArchivedBedspaces = premisesEntity.getTotalArchivedBedspaces(),

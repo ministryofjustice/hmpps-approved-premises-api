@@ -96,7 +96,7 @@ class Cas3BookingService(
     }
 
     val expectedLastUnavailableDate =
-      workingDayService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
+      workingDayService.addWorkingDays(departureDate, premises.turnaroundWorkingDays)
     getBookingWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
       return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
     }
@@ -179,7 +179,7 @@ class Cas3BookingService(
       Cas3TurnaroundEntity(
         id = UUID.randomUUID(),
         workingDayCount = when (enableTurnarounds) {
-          true -> premises.turnaroundWorkingDayCount
+          true -> premises.turnaroundWorkingDays
           else -> 0
         },
         createdAt = bookingCreatedAt,

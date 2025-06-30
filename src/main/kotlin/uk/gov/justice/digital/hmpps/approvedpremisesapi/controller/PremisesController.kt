@@ -230,7 +230,7 @@ class PremisesController(
             characteristicIds = body.characteristicIds,
             status = body.status,
             probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-            turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
+            turnaroundWorkingDays = body.turnaroundWorkingDayCount,
           ),
         )
 
@@ -253,7 +253,7 @@ class PremisesController(
             characteristicIds = body.characteristicIds,
             status = body.status,
             probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-            turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
+            turnaroundWorkingDays = body.turnaroundWorkingDayCount,
           ),
         )
 

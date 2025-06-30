@@ -66,6 +66,7 @@ class PremisesService(
     }.associateBy { it.date }
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   fun createNewPremises(
     addressLine1: String,
     addressLine2: String?,
@@ -81,7 +82,7 @@ class PremisesService(
     characteristicIds: List<UUID>,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?,
+    turnaroundWorkingDays: Int?,
   ) = validated {
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
@@ -128,7 +129,7 @@ class PremisesService(
       property hasValidationError err
     }
 
-    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
       "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
     }
 
@@ -156,7 +157,7 @@ class PremisesService(
       characteristics = mutableListOf(),
       status = status,
       probationDeliveryUnit = probationDeliveryUnit,
-      turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2,
+      turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->

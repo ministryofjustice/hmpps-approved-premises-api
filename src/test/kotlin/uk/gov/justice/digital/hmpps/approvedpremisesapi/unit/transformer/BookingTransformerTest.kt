@@ -126,7 +126,7 @@ class BookingTransformerTest {
     status = PropertyStatus.active,
     probationDeliveryUnit = null,
     startDate = null,
-    turnaroundWorkingDayCount = 2,
+    turnaroundWorkingDays = 2,
   )
 
   private val baseBookingEntity = BookingEntity(

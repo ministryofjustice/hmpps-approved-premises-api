@@ -819,7 +819,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             )
           },
           notes = premisesToGet.notes,
-          turnaroundWorkingDayCount = premisesToGet.turnaroundWorkingDayCount,
+          turnaroundWorkingDays = premisesToGet.turnaroundWorkingDays,
           totalOnlineBedspaces = 2,
           totalUpcomingBedspaces = 1,
           totalArchivedBedspaces = 1,

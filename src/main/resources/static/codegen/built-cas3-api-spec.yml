@@ -5256,7 +5256,7 @@ components:
         notes:
           type: string
           example: some notes about this property
-        turnaroundWorkingDayCount:
+        turnaroundWorkingDays:
           type: integer
           example: 2
         totalOnlineBedspaces:

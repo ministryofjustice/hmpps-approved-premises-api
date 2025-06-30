@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
@@ -304,7 +305,8 @@ class TemporaryAccommodationPremisesEntity(
   @ManyToOne
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
-  var turnaroundWorkingDayCount: Int,
+  @Column(name = "turnaround_working_day_count")
+  var turnaroundWorkingDays: Int,
 ) : PremisesEntity(
   id,
   name,

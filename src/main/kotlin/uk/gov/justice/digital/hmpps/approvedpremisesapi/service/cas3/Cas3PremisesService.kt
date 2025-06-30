@@ -78,7 +78,7 @@ class Cas3PremisesService(
     characteristicIds: List<UUID>,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?,
+    turnaroundWorkingDays: Int?,
   ) = validated {
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
@@ -118,7 +118,7 @@ class Cas3PremisesService(
         property hasValidationError err
       }
 
-    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
       "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
     }
 
@@ -146,7 +146,7 @@ class Cas3PremisesService(
       characteristics = mutableListOf(),
       status = status,
       probationDeliveryUnit = probationDeliveryUnit!!,
-      turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2,
+      turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
     )
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
@@ -174,7 +174,7 @@ class Cas3PremisesService(
     notes: String?,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?,
+    turnaroundWorkingDays: Int?,
   ): AuthorisableActionResult<ValidatableActionResult<TemporaryAccommodationPremisesEntity>> {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return AuthorisableActionResult.NotFound()
@@ -205,7 +205,7 @@ class Cas3PremisesService(
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
 
-    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
       validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
     }
 
@@ -239,8 +239,8 @@ class Cas3PremisesService(
       it.notes = if (notes.isNullOrEmpty()) "" else notes
       it.status = status
       it.probationDeliveryUnit = probationDeliveryUnit!!
-      if (turnaroundWorkingDayCount != null) {
-        it.turnaroundWorkingDayCount = turnaroundWorkingDayCount!!
+      if (turnaroundWorkingDays != null) {
+        it.turnaroundWorkingDays = turnaroundWorkingDays
       }
     }
 
