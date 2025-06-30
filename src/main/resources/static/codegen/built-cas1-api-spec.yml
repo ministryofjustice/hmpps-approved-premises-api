@@ -4239,7 +4239,6 @@ components:
       type: string
       enum:
         - started
-        - submitted
         - rejected
         - awaitingAssesment
         - unallocatedAssesment

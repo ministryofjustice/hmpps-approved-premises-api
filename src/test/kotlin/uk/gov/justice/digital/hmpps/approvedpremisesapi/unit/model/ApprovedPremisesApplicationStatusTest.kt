@@ -11,7 +11,6 @@ class ApprovedPremisesApplicationStatusTest {
   @CsvSource(
     value = [
       "started,STARTED",
-      "submitted,SUBMITTED",
       "rejected,REJECTED",
       "awaitingAssesment,AWAITING_ASSESSMENT",
       "unallocatedAssesment,UNALLOCATED_ASSESSMENT",

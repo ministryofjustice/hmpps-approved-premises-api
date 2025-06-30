@@ -73,7 +73,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withIsWomensApplication(false)
             withReleaseType("rotl")
             withSubmittedAt(OffsetDateTime.parse("2023-04-19T09:34:00+01:00"))
-            withStatus(ApprovedPremisesApplicationStatus.SUBMITTED)
+            withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
           }
 
           val results = realApplicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
@@ -95,7 +95,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             assertThat(it.getCreatedByUserId()).isEqualTo(submittedApplication.createdByUser.id)
             assertThat(it.getCreatedAt()).isEqualTo(submittedApplication.createdAt.toInstant())
             assertThat(it.getSubmittedAt()).isEqualTo(submittedApplication.submittedAt?.toInstant())
-            assertThat(it.getStatus()).isEqualTo("SUBMITTED")
+            assertThat(it.getStatus()).isEqualTo("AWAITING_ASSESSMENT")
           }
 
           assertThat(results).noneMatch {
