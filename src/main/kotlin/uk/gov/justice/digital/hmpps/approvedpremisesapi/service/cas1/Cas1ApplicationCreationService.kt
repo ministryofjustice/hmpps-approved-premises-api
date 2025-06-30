@@ -271,7 +271,6 @@ class Cas1ApplicationCreationService(
     val apArea = apAreaRepository.findByIdOrNull(apAreaId)!!
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
-      this.isEmergencyApplication = isEmergencyApplication
       this.apType = apType
       submittedAt = now
       document = serializedTranslatedDocument
