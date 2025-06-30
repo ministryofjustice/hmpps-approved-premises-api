@@ -1,13 +1,8 @@
 name: Generate CAS1 UI Types
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/main/resources/static/codegen/built-api-spec.yml'
-      - 'src/main/resources/static/codegen/built-cas1-api-spec.yml'
-      - 'src/main/resources/static/codegen/built-cas1-roles.json'
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   generate-ui:
