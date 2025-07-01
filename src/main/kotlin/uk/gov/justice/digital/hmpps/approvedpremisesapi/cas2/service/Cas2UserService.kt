@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
@@ -44,7 +43,7 @@ class Cas2UserService(
     val authenticatedPrincipal = httpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
     val jwt = authenticatedPrincipal.token.tokenValue
     val username = authenticatedPrincipal.name
-    val userType = Cas2v2UserType.fromString(authenticatedPrincipal.authenticationSource())
+    val userType = Cas2UserType.fromString(authenticatedPrincipal.authenticationSource())
 
     return getCas2UserForUsername(username, jwt, userType)
   }
@@ -131,13 +130,13 @@ class Cas2UserService(
       existingUser.activeCaseloadId != nomisUserDetails.activeCaseloadId
     )
 
-  fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2v2UserType): Cas2UserEntity {
+  fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType): Cas2UserEntity {
     val normalisedUsername = username.uppercase()
 
     val userEntity = when (userType) {
-      Cas2v2UserType.NOMIS -> getCas2UserEntityForNomisUser(normalisedUsername, jwt)
-      Cas2v2UserType.DELIUS -> getCas2UserEntityForDeliusUser(normalisedUsername)
-      Cas2v2UserType.EXTERNAL -> getCas2UserEntityForExternalUser(normalisedUsername, jwt)
+      Cas2UserType.NOMIS -> getCas2UserEntityForNomisUser(normalisedUsername, jwt)
+      Cas2UserType.DELIUS -> getCas2UserEntityForDeliusUser(normalisedUsername)
+      Cas2UserType.EXTERNAL -> getCas2UserEntityForExternalUser(normalisedUsername, jwt)
     }
 
     return userEntity
