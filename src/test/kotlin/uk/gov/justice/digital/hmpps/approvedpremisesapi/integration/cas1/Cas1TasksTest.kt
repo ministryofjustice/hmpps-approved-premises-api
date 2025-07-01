@@ -2168,6 +2168,26 @@ class Cas1TasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
+    fun `If request is for a placement application that is not submitted, return not found because a task doesn't yet exist to complete`(baseUrl: String) {
+      val (creatingUser, jwt) = givenAUser()
+
+      val placementApplication = givenAPlacementApplication(
+        createdByUser = creatingUser,
+        allocatedToUser = creatingUser,
+        crn = "cRN123",
+        submittedAt = null,
+      )
+
+      webTestClient.get()
+        .uri("$baseUrl/placement-application/${placementApplication.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `If request is for a placement application only returns active users with ASSESSOR role, with correct workload`(baseUrl: String) {
       // ignored, wrong role
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
@@ -2186,6 +2206,7 @@ class Cas1TasksTest {
         createdByUser = creatingUser,
         allocatedToUser = creatingUser,
         crn = crn,
+        submittedAt = OffsetDateTime.now(),
       )
 
       val numAppAssessPending = 3
