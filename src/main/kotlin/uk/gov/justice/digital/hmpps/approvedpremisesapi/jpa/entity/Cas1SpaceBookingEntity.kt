@@ -324,14 +324,14 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     """
     SELECT b FROM Cas1SpaceBookingEntity b
     LEFT JOIN FETCH b.criteria
-    WHERE b.premises.id = :premisesId
+    WHERE b.premises.id IN (:premisesIds)
     AND b.cancellationOccurredAt IS NULL 
     AND b.canonicalArrivalDate <= :rangeEndInclusive
     AND b.canonicalDepartureDate >= :rangeStartInclusive 
   """,
   )
   fun findNonCancelledBookingsInRange(
-    premisesId: UUID,
+    premisesIds: List<UUID>,
     rangeStartInclusive: LocalDate,
     rangeEndInclusive: LocalDate,
   ): List<Cas1SpaceBookingEntity>

@@ -184,12 +184,14 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
   inner class Capacity {
 
     lateinit var premises1: ApprovedPremisesEntity
+    lateinit var premises2: ApprovedPremisesEntity
 
     private lateinit var premises1BookingCrn1: Cas1SpaceBookingEntity
 
     @BeforeEach
     fun setupTestData() {
       premises1 = givenAnApprovedPremises(name = "Premises 1")
+      premises2 = givenAnApprovedPremises(name = "Premises 2")
 
       createRoom(
         premises = premises1,
@@ -278,6 +280,25 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 11))
         withCanonicalDepartureDate(date(2020, 5, 12))
+        withCriteria(
+          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
+          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
+        )
+      }
+
+      createSpaceBooking(crn = "PREMISES2-CRN10") {
+        withPremises(premises2)
+        withCanonicalArrivalDate(date(2020, 4, 1))
+        withCanonicalDepartureDate(date(2020, 6, 29))
+        withCriteria(
+          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        )
+      }
+
+      createSpaceBooking(crn = "PREMISES2-CRN11") {
+        withPremises(premises2)
+        withCanonicalArrivalDate(date(2020, 5, 1))
+        withCanonicalDepartureDate(date(2020, 5, 9))
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
           findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
