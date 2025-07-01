@@ -22,6 +22,7 @@ class HttpAuthService {
 
   fun getCas2AuthenticatedPrincipalOrThrow(): AuthAwareAuthenticationToken = getPrincipalOrThrow(listOf("nomis", "auth"))
 
+  // BAIL-WIP This function is only called from the CAS2v2 services. It can be removed when we remove those services.
   fun getCas2v2AuthenticatedPrincipalOrThrow(): AuthAwareAuthenticationToken = getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
 
   fun getDeliusPrincipalOrThrow(): AuthAwareAuthenticationToken = getPrincipalOrThrow(listOf("delius"))
