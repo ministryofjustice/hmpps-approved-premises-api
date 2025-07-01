@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -36,6 +37,7 @@ import java.util.stream.Stream
 
 class UserAllocatorTest {
   private val mockUserRepository = mockk<UserRepository>()
+  private val mockTaskRepository = mockk<TaskRepository>()
   private val mockSentryService = mockk<SentryService>()
 
   @BeforeEach
@@ -43,18 +45,18 @@ class UserAllocatorTest {
     every { mockUserRepository.findActiveUsersWithQualification(UserQualification.EMERGENCY) } returns listOf(user1)
     every { mockUserRepository.findActiveUsersWithRole(UserRole.CAS1_CRU_MEMBER) } returns listOf(user2)
 
-    every { mockUserRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(listOf(user1.id)) } returns user1
-    every { mockUserRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(listOf(user2.id)) } returns user2
+    every { mockTaskRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(listOf(user1.id)) } returns user1
+    every { mockTaskRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(listOf(user2.id)) } returns user2
 
-    every { mockUserRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(listOf(user1.id)) } returns user1
-    every { mockUserRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(listOf(user2.id)) } returns user2
+    every { mockTaskRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(listOf(user1.id)) } returns user1
+    every { mockTaskRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(listOf(user2.id)) } returns user2
   }
 
   @Nested
   inner class GetUserForAssessmentAllocation {
     @Test
     fun `Returns null when no rules are active`() {
-      val userAllocator = UserAllocator(listOf(), mockUserRepository, mockSentryService)
+      val userAllocator = UserAllocator(listOf(), mockUserRepository, mockTaskRepository, mockSentryService)
 
       val result = userAllocator.getUserForAssessmentAllocation(assessment)
 
@@ -67,7 +69,7 @@ class UserAllocatorTest {
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,
     ) {
-      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockTaskRepository, mockSentryService)
 
       if (expectedUserEntity != null) {
         every { mockUserRepository.findByDeliusUsername(expectedUserEntity.deliusUsername) } returns expectedUserEntity
@@ -101,7 +103,7 @@ class UserAllocatorTest {
       every { mockUserRepository.findByDeliusUsername(user2.deliusUsername) } returns user2
       every { mockSentryService.captureErrorMessage(any()) } returns Unit
 
-      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockTaskRepository, mockSentryService)
 
       val result = userAllocator.getUserForAssessmentAllocation(assessment)
 
@@ -124,7 +126,7 @@ class UserAllocatorTest {
   inner class GetUserForPlacementApplicationAllocation {
     @Test
     fun `Returns null when no rules are active`() {
-      val userAllocator = UserAllocator(listOf(), mockUserRepository, mockSentryService)
+      val userAllocator = UserAllocator(listOf(), mockUserRepository, mockTaskRepository, mockSentryService)
 
       val result = userAllocator.getUserForPlacementApplicationAllocation(placementApplication)
 
@@ -137,7 +139,7 @@ class UserAllocatorTest {
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,
     ) {
-      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockTaskRepository, mockSentryService)
 
       if (expectedUserEntity != null) {
         every { mockUserRepository.findByDeliusUsername(expectedUserEntity.deliusUsername) } returns expectedUserEntity
@@ -171,7 +173,7 @@ class UserAllocatorTest {
       every { mockUserRepository.findByDeliusUsername(user2.deliusUsername) } returns user2
       every { mockSentryService.captureErrorMessage(any()) } returns Unit
 
-      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockTaskRepository, mockSentryService)
 
       val result = userAllocator.getUserForPlacementApplicationAllocation(placementApplication)
 

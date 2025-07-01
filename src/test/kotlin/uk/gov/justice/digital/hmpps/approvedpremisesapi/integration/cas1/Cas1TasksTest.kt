@@ -43,11 +43,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.ACCEPTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.REJECTED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAW
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -2005,7 +2002,7 @@ class Cas1TasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Assessment Task UserWithWorkload only returns users with ASSESSOR role`(baseUrl: String) {
+    fun `If request is for an application only returns active users with ASSESSOR role`(baseUrl: String) {
       val (creator, _) = givenAUser()
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
       val (assessor, _) = givenAUser(
@@ -2062,104 +2059,7 @@ class Cas1TasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Placement Application Task returns 200`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
-        givenAUser { user, _ ->
-          givenAUser(
-            roles = listOf(UserRole.CAS1_ASSESSOR),
-          ) { allocatableUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementApplication ->
-
-                webTestClient.get()
-                  .uri("$baseUrl/placement-application/${placementApplication.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      TaskWrapper(
-                        task = taskTransformer.transformPlacementApplicationToTask(
-                          placementApplication,
-                          getOffenderSummaries(offenderDetails),
-                        ),
-                        users = listOf(
-                          userTransformer.transformJpaToAPIUserWithWorkload(
-                            allocatableUser,
-                            UserWorkload(0, 0, 0),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Placement Application Task UserWithWorkload only returns users with ASSESSOR roles`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
-
-        val (assessorUser1, _) = givenAUser(
-          roles = listOf(UserRole.CAS1_ASSESSOR),
-        )
-
-        val (assessorUser2, _) = givenAUser(
-          roles = listOf(UserRole.CAS1_ASSESSOR),
-        )
-
-        givenAnOffender { offenderDetails, _ ->
-          givenAPlacementApplication(
-            createdByUser = assessorUser1,
-            allocatedToUser = assessorUser1,
-            crn = offenderDetails.otherIds.crn,
-          ) { placementApplication ->
-
-            webTestClient.get()
-              .uri("$baseUrl/placement-application/${placementApplication.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  TaskWrapper(
-                    task = taskTransformer.transformPlacementApplicationToTask(
-                      placementApplication,
-                      getOffenderSummaries(offenderDetails),
-                    ),
-                    users = listOf(
-                      userTransformer.transformJpaToAPIUserWithWorkload(
-                        assessorUser1,
-                        UserWorkload(1, 0, 0),
-                      ),
-                      userTransformer.transformJpaToAPIUserWithWorkload(
-                        assessorUser2,
-                        UserWorkload(0, 0, 0),
-                      ),
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Assessment Task UserWithWorkload for an appealed application oly returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
+    fun `If request is for an appealed application only returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
@@ -2224,7 +2124,7 @@ class Cas1TasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Assessment Task UserWithWorkload for an appealed application returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
+    fun `If request is for an appealed application returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
@@ -2268,166 +2168,103 @@ class Cas1TasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Assessment Task UserWithWorkload for an accepted application only returns users with ASSESSOR role`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        givenAUser(
-          roles = listOf(UserRole.CAS1_REPORT_VIEWER),
-        ) { user, _ ->
-          givenAUser(
-            roles = listOf(UserRole.CAS1_ASSESSOR),
-          ) { allocatableUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              givenAnAssessmentForApprovedPremises(
-                allocatedToUser = user,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                decision = AssessmentDecision.ACCEPTED,
-                dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
-              ) { assessment, _ ->
-                webTestClient.get()
-                  .uri("$baseUrl/assessment/${assessment.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      TaskWrapper(
-                        task = taskTransformer.transformAssessmentToTask(
-                          assessment,
-                          getOffenderSummaries(offenderDetails),
-                        ),
-                        users = listOf(
-                          userTransformer.transformJpaToAPIUserWithWorkload(
-                            allocatableUser,
-                            UserWorkload(
-                              0,
-                              0,
-                              0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-              }
-            }
-          }
-        }
+    fun `If request is for a placement application only returns active users with ASSESSOR role, with correct workload`(baseUrl: String) {
+      // ignored, wrong role
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      // ignored, inactive
+      givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR), isActive = false)
+
+      val (allocatableUser, _) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
+
+      val (creatingUser, jwt) = givenAUser()
+
+      val (offenderDetails) = givenAnOffender()
+      val crn = offenderDetails.otherIds.crn
+
+      val placementApplication = givenAPlacementApplication(
+        createdByUser = creatingUser,
+        allocatedToUser = creatingUser,
+        crn = crn,
+      )
+
+      val numAppAssessPending = 3
+      repeat(numAppAssessPending) {
+        createAssessment(assessedAt = null, allocatableUser, creatingUser, crn)
       }
-    }
+      // withdrawn, ignored
+      createAssessment(assessedAt = null, allocatableUser, creatingUser, crn, isWithdrawn = true)
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Placement Application Task UserWithWorkload ignoring inactive users`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
-        givenAUser { user, _ ->
-          givenAUser(
-            roles = listOf(UserRole.CAS1_ASSESSOR),
-          ) { allocatableUser, _ ->
-            givenAUser(
-              roles = listOf(UserRole.CAS1_ASSESSOR),
-              isActive = false,
-            ) { _, _ ->
-              givenAnOffender { offenderDetails, _ ->
-                givenAPlacementApplication(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  crn = offenderDetails.otherIds.crn,
-
-                ) { placementApplication ->
-                  val crn = offenderDetails.otherIds.crn
-                  val numAssessmentsPending = 3
-                  repeat(numAssessmentsPending) {
-                    createAssessment(null, allocatableUser, user, crn)
-                  }
-                  createAssessment(null, allocatableUser, user, crn, isWithdrawn = true)
-
-                  val numPlacementApplicationsPending = 4
-                  repeat(numPlacementApplicationsPending) {
-                    createPlacementApplication(null, allocatableUser, user, crn)
-                  }
-                  createPlacementApplication(null, allocatableUser, user, crn, decision = ACCEPTED)
-                  createPlacementApplication(null, allocatableUser, user, crn, decision = REJECTED)
-                  createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAW)
-                  createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAWN_BY_PP)
-
-                  val numAssessmentsCompletedBetween1And7DaysAgo = 4
-                  repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
-                    val days = Random.nextInt(1, 7).toLong()
-                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
-                  val numPlacementApplicationsCompletedBetween1And7DaysAgo = 2
-                  repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
-                    val days = Random.nextInt(1, 7).toLong()
-                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
-                  val numAssessmentsCompletedBetween8And30DaysAgo = 4
-                  repeat(numAssessmentsCompletedBetween8And30DaysAgo) {
-                    val days = Random.nextInt(8, 30).toLong()
-                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
-                  val numPlacementApplicationsCompletedBetween8And30DaysAgo = 3
-                  repeat(numPlacementApplicationsCompletedBetween8And30DaysAgo) {
-                    val days = Random.nextInt(8, 30).toLong()
-                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
-                  val numPendingTasks = listOf(
-                    numAssessmentsPending,
-                    numPlacementApplicationsPending,
-                  ).sum()
-                  val numTasksCompletedInTheLast7Days = listOf(
-                    numAssessmentsCompletedBetween1And7DaysAgo,
-                    numPlacementApplicationsCompletedBetween1And7DaysAgo,
-                  ).sum()
-                  val numTasksCompletedInTheLast30Days = listOf(
-                    numTasksCompletedInTheLast7Days,
-                    numAssessmentsCompletedBetween8And30DaysAgo,
-                    numPlacementApplicationsCompletedBetween8And30DaysAgo,
-                  ).sum()
-
-                  webTestClient.get()
-                    .uri("$baseUrl/placement-application/${placementApplication.id}")
-                    .header("Authorization", "Bearer $jwt")
-                    .exchange()
-                    .expectStatus()
-                    .isOk
-                    .expectBody()
-                    .json(
-                      objectMapper.writeValueAsString(
-                        TaskWrapper(
-                          task = taskTransformer.transformPlacementApplicationToTask(
-                            placementApplication,
-                            getOffenderSummaries(offenderDetails),
-                          ),
-                          users = listOf(
-                            userTransformer.transformJpaToAPIUserWithWorkload(
-                              allocatableUser,
-                              UserWorkload(
-                                numPendingTasks,
-                                numTasksCompletedInTheLast7Days,
-                                numTasksCompletedInTheLast30Days,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                }
-              }
-            }
-          }
-        }
+      val numPlacementAppAssessPending = 4
+      repeat(numPlacementAppAssessPending) {
+        createPlacementApplication(assessedAt = null, allocatableUser, creatingUser, crn)
       }
+      // withdrawn, ignored
+      createPlacementApplication(assessedAt = null, allocatableUser, creatingUser, crn, isWithdrawn = true)
+
+      val numAppAssessCompletedBetween1And7DaysAgo = 4
+      repeat(numAppAssessCompletedBetween1And7DaysAgo) {
+        val days = kotlin.random.Random.nextInt(1, 7).toLong()
+        createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
+      }
+
+      val numPlacementAppAssessCompletedBetween1And7DaysAgo = 2
+      repeat(numPlacementAppAssessCompletedBetween1And7DaysAgo) {
+        val days = kotlin.random.Random.nextInt(1, 7).toLong()
+        createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
+      }
+
+      val numAppAssessCompletedBetween8And30DaysAgo = 4
+      repeat(numAppAssessCompletedBetween8And30DaysAgo) {
+        val days = kotlin.random.Random.nextInt(8, 30).toLong()
+        createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
+      }
+
+      val numPlacementAppAssessCompletedBetween8And30DaysAgo = 3
+      repeat(numPlacementAppAssessCompletedBetween8And30DaysAgo) {
+        val days = kotlin.random.Random.nextInt(8, 30).toLong()
+        createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
+      }
+
+      // completed after 30 days ago, ignored
+      repeat(10) {
+        createAssessment(OffsetDateTime.now().minusDays(31), allocatableUser, creatingUser, crn)
+      }
+      repeat(10) {
+        createPlacementApplication(OffsetDateTime.now().minusDays(31), allocatableUser, creatingUser, crn)
+      }
+
+      webTestClient.get()
+        .uri("$baseUrl/placement-application/${placementApplication.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            TaskWrapper(
+              task = taskTransformer.transformPlacementApplicationToTask(
+                placementApplication,
+                getOffenderSummaries(offenderDetails),
+              ),
+              users = listOf(
+                userTransformer.transformJpaToAPIUserWithWorkload(
+                  allocatableUser,
+                  UserWorkload(
+                    numTasksPending = 7,
+                    numTasksCompleted7Days = 6,
+                    numTasksCompleted30Days = 13,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
     }
 
     private fun createAssessment(
-      completedAt: OffsetDateTime?,
+      assessedAt: OffsetDateTime?,
       allocatedUser: UserEntity,
       createdByUser: UserEntity,
       crn: String,
@@ -2439,24 +2276,25 @@ class Cas1TasksTest {
         crn = crn,
         decision = null,
         reallocated = false,
-        submittedAt = completedAt,
+        submittedAt = assessedAt,
         isWithdrawn = isWithdrawn,
       )
     }
 
     private fun createPlacementApplication(
-      completedAt: OffsetDateTime?,
+      assessedAt: OffsetDateTime?,
       allocatedUser: UserEntity,
       createdByUser: UserEntity,
       crn: String,
-      decision: PlacementApplicationDecision? = null,
+      isWithdrawn: Boolean = false,
     ) {
       givenAPlacementApplication(
         createdByUser = createdByUser,
         allocatedToUser = allocatedUser,
-        submittedAt = completedAt,
+        submittedAt = assessedAt?.minusDays(1),
+        decisionMadeAt = assessedAt,
         crn = crn,
-        decision = decision,
+        isWithdrawn = isWithdrawn,
       )
     }
   }

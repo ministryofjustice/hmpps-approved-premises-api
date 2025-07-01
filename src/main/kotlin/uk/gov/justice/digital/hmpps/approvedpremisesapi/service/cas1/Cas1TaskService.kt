@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -42,7 +41,6 @@ class Cas1TaskService(
   private val taskRepository: TaskRepository,
   private val assessmentRepository: AssessmentRepository,
   private val placementApplicationRepository: PlacementApplicationRepository,
-  private val userRepository: UserRepository,
 ) {
 
   data class TaskFilterCriteria(
@@ -197,7 +195,7 @@ class Cas1TaskService(
     }
   }
 
-  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> = userRepository.findWorkloadForUserIds(userIds).associate {
+  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> = taskRepository.findWorkloadForUserIds(userIds).associate {
     it.getUserId() to UserWorkload(
       numTasksPending = listOf(
         it.getPendingAssessments(),

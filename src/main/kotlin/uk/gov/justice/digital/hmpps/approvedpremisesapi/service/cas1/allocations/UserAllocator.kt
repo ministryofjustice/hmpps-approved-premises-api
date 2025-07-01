@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -15,6 +16,7 @@ import java.util.UUID
 class UserAllocator(
   private val userAllocatorRules: List<UserAllocatorRule>,
   private val userRepository: UserRepository,
+  private val taskRepository: TaskRepository,
   private val sentryService: SentryService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -25,12 +27,12 @@ class UserAllocator(
 
   fun getUserForAssessmentAllocation(assessmentEntity: AssessmentEntity): UserEntity? = getUserForAllocation(
     evaluate = { userAllocatorRule -> userAllocatorRule.evaluateAssessment(assessmentEntity) },
-    selectUser = { suitableUsers -> userRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(suitableUsers) },
+    selectUser = { suitableUsers -> taskRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(suitableUsers) },
   )
 
   fun getUserForPlacementApplicationAllocation(placementApplicationEntity: PlacementApplicationEntity): UserEntity? = getUserForAllocation(
     evaluate = { userAllocatorRule -> userAllocatorRule.evaluatePlacementApplication(placementApplicationEntity) },
-    selectUser = { suitableUsers -> userRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(suitableUsers) },
+    selectUser = { suitableUsers -> taskRepository.findUserWithLeastPlacementApplicationsPendingOrCompletedInLastWeek(suitableUsers) },
   )
 
   private fun getUserForAllocation(evaluate: (UserAllocatorRule) -> UserAllocatorRuleOutcome, selectUser: (List<UUID>) -> UserEntity?): UserEntity? {
