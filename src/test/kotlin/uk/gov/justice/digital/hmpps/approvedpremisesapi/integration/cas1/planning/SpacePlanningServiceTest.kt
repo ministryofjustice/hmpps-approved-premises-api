@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -18,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
@@ -40,69 +40,41 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
   @Nested
   inner class Plan {
 
-    lateinit var premiseId: UUID
+    lateinit var premises1: ApprovedPremisesEntity
 
     @BeforeEach
     fun setupTestData() {
-      val premises = givenAnApprovedPremises(
+      premises1 = givenAnApprovedPremises(
         id = UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"),
         name = "Premises 1",
       )
 
-      premiseId = premises.id
-
-      val room1 = roomEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withCharacteristics(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
-      }.apply { premises.rooms.add(this) }
-      room1.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 1 - Bed 1")
-          withYieldedRoom { room1 }
-        },
+      createRoom(
+        premises = premises1,
+        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_ARSON_SUITABLE, CAS1_PROPERTY_NAME_ENSUITE, CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        beds = listOf(RequiredBed("Room 1 - Bed 1")),
       )
 
-      val room2 = roomEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withCharacteristics(
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
-      }.apply { premises.rooms.add(this) }
-      room2.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 2 - Bed 1")
-          withYieldedRoom { room2 }
-        },
+      createRoom(
+        premises = premises1,
+        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        beds = listOf(RequiredBed("Room 2 - Bed 1")),
       )
 
-      val room3 = roomEntityFactory.produceAndPersist { withPremises(premises) }.apply { premises.rooms.add(this) }
-      room3.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 3 - Bed 1")
-          withYieldedRoom { room3 }
-        },
+      val premises1Room3 = createRoom(
+        premises = premises1,
+        characteristicPropertyNames = emptyList(),
+        beds = listOf(
+          RequiredBed("Room 3 - Bed 1"),
+          RequiredBed("Room 3 - Bed 2"),
+          RequiredBed("Room 3 - Bed 3"),
+          RequiredBed("Room 3 - Bed 4", endDate = date(2020, 5, 8)),
+        ),
       )
-      room3.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 3 - Bed 2")
-          withYieldedRoom { room3 }
-        },
-      )
-
-      val room3Bed3 = bedEntityFactory.produceAndPersist {
-        withName("Room 3 - Bed 3")
-        withYieldedRoom { room3 }
-      }
-
-      room3.beds.add(room3Bed3)
 
       cas1OutOfServiceBedEntityFactory.produceAndPersist {
         withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(room3Bed3)
+        withBed(premises1Room3.beds.first { it.name == "Room 3 - Bed 3" })
       }.apply {
         this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -118,16 +90,8 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         }
       }
 
-      room3.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 3 - Bed 4")
-          withEndDate(date(2020, 5, 8))
-          withYieldedRoom { room3 }
-        },
-      )
-
       createSpaceBooking(crn = "CRN1") {
-        withPremises(premises)
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 4))
         withCanonicalDepartureDate(date(2020, 5, 11))
         withCriteria(
@@ -136,13 +100,13 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
       }
 
       createSpaceBooking(crn = "CRN2") {
-        withPremises(premises)
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 6))
         withCanonicalDepartureDate(date(2020, 5, 9))
       }
 
       createSpaceBooking(crn = "CRN3") {
-        withPremises(premises)
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 7))
         withCanonicalDepartureDate(date(2020, 5, 20))
         withCriteria(
@@ -151,7 +115,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
       }
 
       createSpaceBooking(crn = "CRN4") {
-        withPremises(premises)
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 1))
         withCanonicalDepartureDate(date(2020, 5, 29))
         withCriteria(
@@ -160,9 +124,29 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
       }
 
       createSpaceBooking(crn = "CRN5") {
-        withPremises(premises)
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 1))
         withCanonicalDepartureDate(date(2020, 5, 9))
+        withCriteria(
+          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
+          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
+        )
+      }
+
+      createSpaceBooking(crn = "OUTOFRANGEBEFORE") {
+        withPremises(premises1)
+        withCanonicalArrivalDate(date(2020, 5, 1))
+        withCanonicalDepartureDate(date(2020, 5, 5))
+        withCriteria(
+          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
+          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
+        )
+      }
+
+      createSpaceBooking(crn = "OUTOFRANGEAFTER") {
+        withPremises(premises1)
+        withCanonicalArrivalDate(date(2020, 5, 11))
+        withCanonicalDepartureDate(date(2020, 5, 12))
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
           findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
@@ -173,7 +157,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
     @Test
     fun success() {
       val criteria = SpacePlanningService.PlanCriteria(
-        premises = approvedPremisesRepository.findByIdOrNull(premiseId)!!,
+        premises = premises1,
         range = DateRange(
           fromInclusive = date(2020, 5, 6),
           toInclusive = date(2020, 5, 10),
@@ -213,67 +197,38 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
 
     lateinit var premises1: ApprovedPremisesEntity
 
-    private lateinit var bookingCrn1: Cas1SpaceBookingEntity
+    private lateinit var premises1BookingCrn1: Cas1SpaceBookingEntity
 
     @BeforeEach
     fun setupTestData() {
-      premises1 = givenAnApprovedPremises(
-        id = UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"),
-        name = "Premises 1",
+      premises1 = givenAnApprovedPremises(name = "Premises 1")
+
+      createRoom(
+        premises = premises1,
+        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_ARSON_SUITABLE, CAS1_PROPERTY_NAME_ENSUITE, CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        beds = listOf(RequiredBed("Premises 1 - Room 1 - Bed 1")),
       )
 
-      val room1 = roomEntityFactory.produceAndPersist {
-        withPremises(premises1)
-        withCharacteristics(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
-      }.apply { premises1.rooms.add(this) }
-      room1.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 1 - Bed 1")
-          withYieldedRoom { room1 }
-        },
+      createRoom(
+        premises = premises1,
+        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        beds = listOf(RequiredBed("Premises 1 - Room 2 - Bed 1")),
       )
 
-      val room2 = roomEntityFactory.produceAndPersist {
-        withPremises(premises1)
-        withCharacteristics(
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
-      }.apply { premises1.rooms.add(this) }
-      room2.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 2 - Bed 1")
-          withYieldedRoom { room2 }
-        },
+      val premises1Room3 = createRoom(
+        premises = premises1,
+        characteristicPropertyNames = emptyList(),
+        beds = listOf(
+          RequiredBed("Premises 1 - Room 3 - Bed 1"),
+          RequiredBed("Premises 1 - Room 3 - Bed 2"),
+          RequiredBed("Premises 1 - Room 3 - Bed 3"),
+          RequiredBed("Premises 1 - Room 3 - Bed 4", endDate = date(2020, 5, 8)),
+        ),
       )
-
-      val room3 = roomEntityFactory.produceAndPersist { withPremises(premises1) }.apply { premises1.rooms.add(this) }
-      room3.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 3 - Bed 1")
-          withYieldedRoom { room3 }
-        },
-      )
-      room3.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 3 - Bed 2")
-          withYieldedRoom { room3 }
-        },
-      )
-
-      val room3Bed3 = bedEntityFactory.produceAndPersist {
-        withName("Room 3 - Bed 3")
-        withYieldedRoom { room3 }
-      }
-
-      room3.beds.add(room3Bed3)
 
       cas1OutOfServiceBedEntityFactory.produceAndPersist {
         withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(room3Bed3)
+        withBed(premises1Room3.beds.first { it.name == "Premises 1 - Room 3 - Bed 3" })
       }.apply {
         this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -289,15 +244,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         }
       }
 
-      room3.beds.add(
-        bedEntityFactory.produceAndPersist {
-          withName("Room 3 - Bed 4")
-          withEndDate(date(2020, 5, 8))
-          withYieldedRoom { room3 }
-        },
-      )
-
-      bookingCrn1 = createSpaceBooking(crn = "PREMISES1-CRN1") {
+      premises1BookingCrn1 = createSpaceBooking(crn = "PREMISES1-CRN1") {
         withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 4))
         withCanonicalDepartureDate(date(2020, 5, 11))
@@ -359,7 +306,6 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
           findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
         )
       }
-
     }
 
     @Test
@@ -451,7 +397,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
           fromInclusive = date(2020, 5, 6),
           toInclusive = date(2020, 5, 10),
         ),
-        excludeSpaceBookingId = bookingCrn1.id,
+        excludeSpaceBookingId = premises1BookingCrn1.id,
       )
 
       assertThat(capacity.premise.id).isEqualTo(premises1.id)
@@ -548,5 +494,32 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
 
       configuration.invoke(this)
     }
+  }
+
+  data class RequiredBed(val name: String, val endDate: LocalDate? = null)
+
+  private fun createRoom(
+    premises: ApprovedPremisesEntity,
+    characteristicPropertyNames: List<String>,
+    beds: List<RequiredBed>,
+  ): RoomEntity {
+    val room = roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCharacteristics(characteristicPropertyNames.map { findCharacteristic(it) }.toMutableList())
+    }
+
+    premises.rooms.add(room)
+
+    beds.forEach { bed ->
+      room.beds.add(
+        bedEntityFactory.produceAndPersist {
+          withName(bed.name)
+          withEndDate { bed.endDate }
+          withYieldedRoom { room }
+        },
+      )
+    }
+
+    return room
   }
 }
