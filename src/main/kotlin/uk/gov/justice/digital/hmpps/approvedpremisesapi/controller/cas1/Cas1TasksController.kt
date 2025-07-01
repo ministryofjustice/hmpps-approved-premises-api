@@ -153,6 +153,11 @@ class Cas1TasksController(
         val placementApplication = extractEntityFromCasResult(
           cas1PlacementApplicationService.getApplication(id),
         )
+
+        if(!placementApplication.isSubmitted()) {
+          throw NotFoundProblem(id,"Task")
+        }
+
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
 
         TaskInfo(
