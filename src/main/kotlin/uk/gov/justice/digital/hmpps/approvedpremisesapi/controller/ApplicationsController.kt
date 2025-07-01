@@ -254,14 +254,12 @@ class ApplicationsController(
     val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = when (body) {
-      is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApprovedPremisesApplication(
+      is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApplication(
         applicationId = applicationId,
         Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           data = serializedData,
           isWomensApplication = body.isWomensApplication,
-          isPipeApplication = body.isPipeApplication,
           isEmergencyApplication = body.isEmergencyApplication,
-          isEsapApplication = body.isEsapApplication,
           apType = body.apType,
           releaseType = body.releaseType?.name,
           arrivalDate = body.arrivalDate,
@@ -328,7 +326,7 @@ class ApplicationsController(
           val user = userService.getUserForRequest()
           apAreaId = user.apArea!!.id
         }
-        cas1ApplicationCreationService.submitApprovedPremisesApplication(
+        cas1ApplicationCreationService.submitApplication(
           applicationId,
           submitApplication,
           userService.getUserForRequest(),

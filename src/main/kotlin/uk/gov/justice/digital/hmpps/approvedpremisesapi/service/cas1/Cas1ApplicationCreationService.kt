@@ -192,7 +192,7 @@ class Cas1ApplicationCreationService(
 
   @SuppressWarnings("CyclomaticComplexMethod", "ReturnCount")
   @Transactional
-  fun submitApprovedPremisesApplication(
+  fun submitApplication(
     applicationId: UUID,
     submitApplication: SubmitApprovedPremisesApplication,
     user: UserEntity,
@@ -217,21 +217,6 @@ class Cas1ApplicationCreationService(
 
     if (application.status != ApprovedPremisesApplicationStatus.STARTED) {
       return CasResult.GeneralValidationError("Only an application with the 'STARTED' status can be submitted")
-    }
-
-    if (submitApplication.isUsingLegacyApTypeFields && submitApplication.isUsingNewApTypeField) {
-      return CasResult.GeneralValidationError("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
-    }
-
-    val apType = when {
-      submitApplication.isUsingLegacyApTypeFields -> when {
-        submitApplication.isPipeApplication == true -> ApprovedPremisesType.PIPE
-        submitApplication.isEsapApplication == true -> ApprovedPremisesType.ESAP
-        else -> ApprovedPremisesType.NORMAL
-      }
-
-      submitApplication.isUsingNewApTypeField -> submitApplication.apType!!.asApprovedPremisesType()
-      else -> ApprovedPremisesType.NORMAL
     }
 
     if (application.submittedAt != null) {
@@ -271,8 +256,7 @@ class Cas1ApplicationCreationService(
     val apArea = apAreaRepository.findByIdOrNull(apAreaId)!!
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
-      this.isEmergencyApplication = isEmergencyApplication
-      this.apType = apType
+      this.apType = submitApplication.apType.asApprovedPremisesType()
       submittedAt = now
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
@@ -325,7 +309,7 @@ class Cas1ApplicationCreationService(
 
   @SuppressWarnings("ReturnCount")
   @Transactional
-  fun updateApprovedPremisesApplication(
+  fun updateApplication(
     applicationId: UUID,
     updateFields: Cas1ApplicationUpdateFields,
     userForRequest: UserEntity,
@@ -335,12 +319,6 @@ class Cas1ApplicationCreationService(
 
     if (application !is ApprovedPremisesApplicationEntity) {
       return CasResult.GeneralValidationError("onlyCas1Supported")
-    }
-
-    if (updateFields.isUsingLegacyApTypeFields && updateFields.isUsingNewApTypeField) {
-      return CasResult.GeneralValidationError(
-        "`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`",
-      )
     }
 
     if (application.createdByUser.id != userForRequest.id) {
@@ -363,7 +341,7 @@ class Cas1ApplicationCreationService(
       this.isInapplicable = updateFields.isInapplicable
       this.isWomensApplication = updateFields.isWomensApplication
       this.isEmergencyApplication = updateFields.isEmergencyApplication
-      this.apType = updateFields.deriveApType()
+      this.apType = updateFields.apType?.asApprovedPremisesType() ?: ApprovedPremisesType.NORMAL
       this.releaseType = updateFields.releaseType
       this.arrivalDate = if (updateFields.arrivalDate !== null) {
         OffsetDateTime.of(updateFields.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
@@ -418,36 +396,10 @@ class Cas1ApplicationCreationService(
       Cas1ApplicationTimelinessCategory.standard
     }
 
-  private val Cas1ApplicationUpdateFields.isUsingLegacyApTypeFields: Boolean
-    get() = isPipeApplication != null || isEsapApplication != null
-
-  private val Cas1ApplicationUpdateFields.isUsingNewApTypeField: Boolean
-    get() = apType != null
-
-  private fun Cas1ApplicationUpdateFields.deriveApType() = when {
-    this.isUsingLegacyApTypeFields -> when {
-      this.isPipeApplication == true -> ApprovedPremisesType.PIPE
-      this.isEsapApplication == true -> ApprovedPremisesType.ESAP
-      else -> ApprovedPremisesType.NORMAL
-    }
-    this.isUsingNewApTypeField -> this.apType!!.asApprovedPremisesType()
-    else -> ApprovedPremisesType.NORMAL
-  }
-
-  private val SubmitApprovedPremisesApplication.isUsingLegacyApTypeFields: Boolean
-    get() = isPipeApplication != null || isEsapApplication != null
-
-  private val SubmitApprovedPremisesApplication.isUsingNewApTypeField: Boolean
-    get() = apType != null
-
   data class Cas1ApplicationUpdateFields(
     val isWomensApplication: Boolean?,
-    @Deprecated("use apType")
-    val isPipeApplication: Boolean?,
     @Deprecated("use noticeType")
     val isEmergencyApplication: Boolean?,
-    @Deprecated("use apType")
-    val isEsapApplication: Boolean?,
     val apType: ApType?,
     val releaseType: String?,
     val arrivalDate: LocalDate?,

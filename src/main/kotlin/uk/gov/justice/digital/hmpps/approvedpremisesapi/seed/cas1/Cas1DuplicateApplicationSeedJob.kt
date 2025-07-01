@@ -91,13 +91,11 @@ class Cas1DuplicateApplicationSeedJob(
       ),
     )
 
-    cas1ApplicationCreationService.updateApprovedPremisesApplication(
+    cas1ApplicationCreationService.updateApplication(
       applicationId = newApplicationEntity.id,
       updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
         isWomensApplication = sourceApplication.isWomensApplication,
-        isPipeApplication = null,
         isEmergencyApplication = sourceApplication.isEmergencyApplication,
-        isEsapApplication = null,
         apType = sourceApplication.apType.asApiType(),
         releaseType = sourceApplication.releaseType,
         arrivalDate = sourceApplication.arrivalDate?.toLocalDate(),

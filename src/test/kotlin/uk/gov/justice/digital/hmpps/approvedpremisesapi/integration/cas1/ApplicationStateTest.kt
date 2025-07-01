@@ -520,7 +520,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
         UpdateApprovedPremisesApplication(
           data = mapOf("thingId" to 123),
           isWomensApplication = false,
-          isPipeApplication = true,
+          apType = ApType.pipe,
           type = UpdateApplicationType.CAS1,
           isInapplicable = true,
         ),
@@ -561,10 +561,9 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .bodyValue(
         SubmitApprovedPremisesApplication(
           translatedDocument = {},
-          isPipeApplication = false,
+          apType = ApType.normal,
           isWomensApplication = false,
           isEmergencyApplication = false,
-          isEsapApplication = false,
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
