@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 
 @RestController
@@ -40,5 +39,4 @@ data class ClassesToInclude(
   val bookingSearchSortField: BookingSearchSortField,
   val cas3ReportType: Cas3ReportType,
   val assessmentSortField: AssessmentSortField,
-  val oasysSection: OASysSection,
 )

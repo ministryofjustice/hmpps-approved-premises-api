@@ -3709,22 +3709,6 @@ components:
         - assessmentState
         - dateStarted
         - rosh
-    OASysSection:
-      type: object
-      properties:
-        section:
-          type: integer
-          example: 10
-        name:
-          type: string
-          example: Emotional wellbeing
-        linkedToHarm:
-          type: boolean
-        linkedToReOffending:
-          type: boolean
-      required:
-        - section
-        - name
     OASysAssessmentState:
       type: string
       enum:
