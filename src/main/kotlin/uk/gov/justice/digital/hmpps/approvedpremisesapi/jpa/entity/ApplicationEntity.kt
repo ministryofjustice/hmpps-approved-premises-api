@@ -18,6 +18,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Limit
@@ -344,8 +345,7 @@ abstract class ApplicationEntity(
 
   var nomsNumber: String?,
 
-  // This is in place for optimistic locking (using @Version). We have temporarily disabled this
-  // functionality whilst we put protections in the CAS1 UI to reduce duplicate form submissions
+  @Version
   var version: Long = 1,
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
