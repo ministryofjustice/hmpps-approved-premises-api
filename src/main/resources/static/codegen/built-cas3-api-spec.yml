@@ -238,6 +238,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ReferralHistoryNote'
+  /premises:
+    post:
+      tags:
+        - Premises
+      summary: Add a new premises
+      operationId: createPremises
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3NewPremises'
+        required: true
+      responses:
+        201:
+          description: new premises added
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Premises'
+
+      x-codegen-request-body-name: body
   /premises/summary:
     get:
       tags:
@@ -5279,6 +5300,45 @@ components:
         - totalOnlineBedspaces
         - totalUpcomingBedspaces
         - totalArchivedBedspaces
+    Cas3NewPremises:
+      type: object
+      properties:
+        reference:
+          type: string
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        town:
+          type: string
+        postcode:
+          type: string
+        localAuthorityAreaId:
+          type: string
+          format: uuid
+        probationRegionId:
+          type: string
+          format: uuid
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
+        characteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notes:
+          type: string
+          example: some notes about this property
+        turnaroundWorkingDays:
+          type: integer
+      required:
+        - reference
+        - addressLine1
+        - postcode
+        - probationRegionId
+        - probationDeliveryUnitId
+        - characteristicIds
     Cas3NewBedspace:
       type: object
       properties:

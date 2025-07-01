@@ -217,7 +217,7 @@ class PremisesController(
 
     when (xServiceName) {
       ServiceName.temporaryAccommodation -> {
-        premises = extractResultEntityOrThrow(
+        premises = extractEntityFromCasResult(
           cas3PremisesService.createNewPremises(
             addressLine1 = body.addressLine1,
             addressLine2 = body.addressLine2,
