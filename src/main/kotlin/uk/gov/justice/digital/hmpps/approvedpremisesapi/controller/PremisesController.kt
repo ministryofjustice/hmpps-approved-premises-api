@@ -52,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
@@ -169,24 +168,15 @@ class PremisesController(
       is AuthorisableActionResult.Success -> updatePremisesResult.entity
     }
 
-    val bodyName = body.name
-    if (bodyName != null && serviceName == ServiceName.temporaryAccommodation) {
-      validationResult = when (val renamePremisesResult = cas3PremisesService.renamePremises(premisesId, bodyName)) {
-        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
-        is AuthorisableActionResult.Success -> renamePremisesResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      }
-    }
-
     val updatedPremises = when (validationResult) {
-      is CasResult.GeneralValidationError<*> -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is CasResult.FieldValidationError<*> -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is CasResult.ConflictError<*> -> throw ConflictProblem(
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
         id = validationResult.conflictingEntityId,
         conflictReason = validationResult.message,
       )
 
-      is CasResult.Success<*> -> validationResult.entity
+      is ValidatableActionResult.Success -> validationResult.entity
     }
 
     val totalBeds = when (serviceName) {

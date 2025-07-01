@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -53,7 +52,6 @@ class Cas3PremisesService(
   private val roomRepository: RoomRepository,
   private val bedspaceRepository: BedRepository,
   private val characteristicService: CharacteristicService,
-  private val featureFlagService: FeatureFlagService
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
@@ -259,6 +257,7 @@ class Cas3PremisesService(
     return success(premises)
   }
 
+  @Deprecated("This function is replaced by updatePremises in the same class")
   @SuppressWarnings("CyclomaticComplexMethod")
   fun updatePremises(
     premisesId: UUID,
@@ -273,97 +272,11 @@ class Cas3PremisesService(
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
     turnaroundWorkingDays: Int?,
-  ): AuthorisableActionResult<CasResult<TemporaryAccommodationPremisesEntity>> {
-    if (featureFlagService.getBooleanFlag("cas3-new-update-premises-function")) {
-      val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
-        ?: return AuthorisableActionResult.NotFound()
-
-      val validationErrors = ValidationErrors()
-
-      val localAuthorityArea = when (localAuthorityAreaId) {
-        null -> null
-        else -> {
-          val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
-          if (localAuthorityArea == null) {
-            validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
-          }
-          localAuthorityArea
-        }
-      }
-
-      val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
-
-      if (probationRegion == null) {
-        validationErrors["$.probationRegionId"] = "doesNotExist"
-      }
-
-      val probationDeliveryUnit =
-        tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
-          validationErrors[property] = err
-        }
-
-      val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
-
-      if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
-        validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
-      }
-
-      if (status == PropertyStatus.archived) {
-        val futureBookings = bookingRepository.findFutureBookingsByPremisesIdAndStatus(
-          ServiceName.temporaryAccommodation.value,
-          premisesId,
-          LocalDate.now(),
-          listOf(BookingStatus.arrived, BookingStatus.confirmed, BookingStatus.provisional),
-        )
-
-        if (futureBookings.any()) {
-          validationErrors["$.status"] = "existingBookings"
-        }
-      }
-
-      if (validationErrors.any()) {
-        return AuthorisableActionResult.Success(
-          ValidatableActionResult.FieldValidationError(validationErrors),
-        )
-      }
-
-      premises.let {
-        it.addressLine1 = addressLine1
-        it.addressLine2 = addressLine2
-        it.town = town
-        it.postcode = postcode
-        it.localAuthorityArea = localAuthorityArea
-        it.probationRegion = probationRegion!!
-        it.characteristics = characteristicEntities.map { it!! }.toMutableList()
-        it.notes = if (notes.isNullOrEmpty()) "" else notes
-        it.probationDeliveryUnit = probationDeliveryUnit!!
-        if (turnaroundWorkingDayCount != null) {
-          it.turnaroundWorkingDayCount = turnaroundWorkingDayCount!!
-        }
-      }
-
-      if (status == PropertyStatus.archived) {
-        premises.rooms.forEach { room ->
-          room.beds.forEach { bed ->
-            bed.endDate = LocalDate.now()
-          }
-        }
-      }
-
-      val savedPremises = premisesRepository.save(premises)
-
-      return AuthorisableActionResult.Success(
-        CasResult.Success(savedPremises),
-      )
-
-    } else {
-
-
+  ): AuthorisableActionResult<ValidatableActionResult<TemporaryAccommodationPremisesEntity>> {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return AuthorisableActionResult.NotFound()
 
     val validationErrors = ValidationErrors()
-
     val localAuthorityArea = when (localAuthorityAreaId) {
       null -> null
       else -> {
@@ -374,24 +287,18 @@ class Cas3PremisesService(
         localAuthorityArea
       }
     }
-
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
-
     if (probationRegion == null) {
       validationErrors["$.probationRegionId"] = "doesNotExist"
     }
-
     val probationDeliveryUnit =
       tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
         validationErrors[property] = err
       }
-
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
-
     if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
       validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
     }
-
     if (status == PropertyStatus.archived) {
       val futureBookings = bookingRepository.findFutureBookingsByPremisesIdAndStatus(
         ServiceName.temporaryAccommodation.value,
@@ -399,18 +306,15 @@ class Cas3PremisesService(
         LocalDate.now(),
         listOf(BookingStatus.arrived, BookingStatus.confirmed, BookingStatus.provisional),
       )
-
       if (futureBookings.any()) {
         validationErrors["$.status"] = "existingBookings"
       }
     }
-
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors),
       )
     }
-
     premises.let {
       it.addressLine1 = addressLine1
       it.addressLine2 = addressLine2
@@ -426,7 +330,6 @@ class Cas3PremisesService(
         it.turnaroundWorkingDays = turnaroundWorkingDays
       }
     }
-
     if (status == PropertyStatus.archived) {
       premises.rooms.forEach { room ->
         room.beds.forEach { bed ->
@@ -434,14 +337,76 @@ class Cas3PremisesService(
         }
       }
     }
-
     val savedPremises = premisesRepository.save(premises)
 
     return AuthorisableActionResult.Success(
-      CasResult.Success(savedPremises),
+      ValidatableActionResult.Success(savedPremises),
     )
   }
-}
+
+  @SuppressWarnings("CyclomaticComplexMethod")
+  fun updatePremises(
+    premisesId: UUID,
+    addressLine1: String,
+    addressLine2: String?,
+    town: String?,
+    postcode: String,
+    localAuthorityAreaId: UUID?,
+    probationRegionId: UUID,
+    characteristicIds: List<UUID>,
+    notes: String?,
+    probationDeliveryUnitIdentifier: Either<String, UUID>?,
+    turnaroundWorkingDays: Int?,
+  ): CasResult<TemporaryAccommodationPremisesEntity> {
+    val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
+      ?: return CasResult.NotFound("Premises", premisesId.toString())
+
+    val validationErrors = ValidationErrors()
+    val localAuthorityArea = when (localAuthorityAreaId) {
+      null -> null
+      else -> {
+        val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
+        if (localAuthorityArea == null) {
+          validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
+        }
+        localAuthorityArea
+      }
+    }
+    val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
+    if (probationRegion == null) {
+      validationErrors["$.probationRegionId"] = "doesNotExist"
+    }
+    val probationDeliveryUnit =
+      tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
+        validationErrors[property] = err
+      }
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
+      validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
+    }
+
+    if (validationErrors.any()) {
+      return CasResult.FieldValidationError(validationErrors)
+    }
+    premises.let {
+      it.addressLine1 = addressLine1
+      it.addressLine2 = addressLine2
+      it.town = town
+      it.postcode = postcode
+      it.localAuthorityArea = localAuthorityArea
+      it.probationRegion = probationRegion!!
+      it.characteristics = characteristicEntities.map { it!! }.toMutableList()
+      it.notes = if (notes.isNullOrEmpty()) "" else notes
+      it.probationDeliveryUnit = probationDeliveryUnit!!
+      if (turnaroundWorkingDays != null) {
+        it.turnaroundWorkingDays = turnaroundWorkingDays
+      }
+    }
+
+    val savedPremises = premisesRepository.save(premises)
+
+    return CasResult.Success(savedPremises)
+  }
 
   fun renamePremises(
     premisesId: UUID,
