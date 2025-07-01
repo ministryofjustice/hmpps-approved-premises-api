@@ -1641,7 +1641,7 @@ class BookingTest : IntegrationTestBase() {
           withYieldedProbationRegion {
             userEntity.probationRegion
           }
-          withTurnaroundWorkingDayCount(2)
+          withTurnaroundWorkingDays(2)
         }
 
         val bed = bedEntityFactory.produceAndPersist {

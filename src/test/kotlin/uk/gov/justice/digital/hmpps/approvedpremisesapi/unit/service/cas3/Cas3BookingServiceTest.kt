@@ -2113,7 +2113,7 @@ class Cas3BookingServiceTest {
         mockCas3TurnaroundRepository.save(
           match {
             it.booking == bookingSlot.captured &&
-              it.workingDayCount == premises.turnaroundWorkingDayCount
+              it.workingDayCount == premises.turnaroundWorkingDays
           },
         )
       }

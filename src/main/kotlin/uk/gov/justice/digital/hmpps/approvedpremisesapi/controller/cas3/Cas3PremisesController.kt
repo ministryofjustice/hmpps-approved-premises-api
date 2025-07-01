@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSortBy
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -51,6 +53,30 @@ class Cas3PremisesController(
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
   private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
 ) : PremisesCas3Delegate {
+  override fun createPremises(body: Cas3NewPremises): ResponseEntity<Cas3Premises> {
+    if (!userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, body.probationRegionId)) {
+      throw ForbiddenProblem()
+    }
+
+    val premises = extractEntityFromCasResult(
+      cas3PremisesService.createNewPremises(
+        reference = body.reference,
+        addressLine1 = body.addressLine1,
+        addressLine2 = body.addressLine2,
+        town = body.town,
+        postcode = body.postcode,
+        localAuthorityAreaId = body.localAuthorityAreaId,
+        probationRegionId = body.probationRegionId,
+        probationDeliveryUnitId = body.probationDeliveryUnitId,
+        characteristicIds = body.characteristicIds,
+        notes = body.notes,
+        turnaroundWorkingDays = body.turnaroundWorkingDays,
+      ),
+    )
+
+    return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises), HttpStatus.CREATED)
+  }
+
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas3Premises> {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")

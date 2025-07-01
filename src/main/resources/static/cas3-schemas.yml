@@ -294,7 +294,7 @@ components:
         notes:
           type: string
           example: some notes about this property
-        turnaroundWorkingDayCount:
+        turnaroundWorkingDays:
           type: integer
           example: 2
         totalOnlineBedspaces:
@@ -317,6 +317,45 @@ components:
         - totalOnlineBedspaces
         - totalUpcomingBedspaces
         - totalArchivedBedspaces
+    Cas3NewPremises:
+      type: object
+      properties:
+        reference:
+          type: string
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        town:
+          type: string
+        postcode:
+          type: string
+        localAuthorityAreaId:
+          type: string
+          format: uuid
+        probationRegionId:
+          type: string
+          format: uuid
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
+        characteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notes:
+          type: string
+          example: some notes about this property
+        turnaroundWorkingDays:
+          type: integer
+      required:
+        - reference
+        - addressLine1
+        - postcode
+        - probationRegionId
+        - probationDeliveryUnitId
+        - characteristicIds
     Cas3NewBedspace:
       type: object
       properties:

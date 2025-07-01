@@ -236,6 +236,27 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/ReferralHistoryNote'
+  /premises:
+    post:
+      tags:
+        - Premises
+      summary: Add a new premises
+      operationId: createPremises
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3NewPremises'
+        required: true
+      responses:
+        201:
+          description: new premises added
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3Premises'
+
+      x-codegen-request-body-name: body
   /premises/summary:
     get:
       tags:

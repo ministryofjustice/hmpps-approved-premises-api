@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSortBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesStatus
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3Fut
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -53,6 +55,133 @@ import java.util.UUID
 class Cas3PremisesTest : Cas3IntegrationTestBase() {
   @Autowired
   lateinit var cas3FutureBookingTransformer: Cas3FutureBookingTransformer
+
+  @Nested
+  inner class CreatePremises {
+    @Test
+    fun `Create new premises returns 201 Created with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val characteristics = characteristicEntityFactory.produceAndPersistMultiple(5) {
+          withModelScope("premises")
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+          withName(randomStringMultiCaseWithNumbers(10))
+        }
+
+        val characteristicIds = characteristics.map { it.id }.sortedBy { it }
+
+        val newPremises = Cas3NewPremises(
+          reference = randomStringMultiCaseWithNumbers(10),
+          addressLine1 = randomStringMultiCaseWithNumbers(25),
+          addressLine2 = randomStringMultiCaseWithNumbers(12),
+          town = randomStringMultiCaseWithNumbers(10),
+          postcode = randomPostCode(),
+          localAuthorityAreaId = null,
+          probationRegionId = user.probationRegion.id,
+          probationDeliveryUnitId = pdu.id,
+          characteristicIds = characteristicIds,
+          notes = randomStringLowerCase(100),
+          turnaroundWorkingDays = 3,
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newPremises)
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath("reference").isEqualTo(newPremises.reference)
+          .jsonPath("addressLine1").isEqualTo(newPremises.addressLine1)
+          .jsonPath("addressLine2").isEqualTo(newPremises.addressLine2)
+          .jsonPath("town").isEqualTo(newPremises.town)
+          .jsonPath("postcode").isEqualTo(newPremises.postcode)
+          .jsonPath("localAuthorityArea").isEmpty()
+          .jsonPath("probationRegion.id").isEqualTo(newPremises.probationRegionId.toString())
+          .jsonPath("probationDeliveryUnit.id").isEqualTo(newPremises.probationDeliveryUnitId.toString())
+          .jsonPath("notes").isEqualTo(newPremises.notes)
+          .jsonPath("turnaroundWorkingDays").isEqualTo(newPremises.turnaroundWorkingDays.toString())
+          .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+          .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "premises" })
+          .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { ServiceName.temporaryAccommodation.value })
+          .jsonPath("characteristics[*].name").isEqualTo(characteristics.map { it.name })
+      }
+    }
+
+    @Test
+    fun `When a new premises is created with default values for optional properties returns 201 Created with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val newPremises = Cas3NewPremises(
+          reference = randomStringMultiCaseWithNumbers(10),
+          addressLine1 = randomStringMultiCaseWithNumbers(25),
+          addressLine2 = null,
+          town = null,
+          postcode = randomPostCode(),
+          localAuthorityAreaId = null,
+          probationRegionId = user.probationRegion.id,
+          probationDeliveryUnitId = pdu.id,
+          characteristicIds = emptyList(),
+          notes = null,
+          turnaroundWorkingDays = null,
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newPremises)
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath("reference").isEqualTo(newPremises.reference)
+          .jsonPath("addressLine1").isEqualTo(newPremises.addressLine1)
+          .jsonPath("addressLine2").isEmpty()
+          .jsonPath("town").isEmpty()
+          .jsonPath("postcode").isEqualTo(newPremises.postcode)
+          .jsonPath("localAuthorityArea").isEmpty()
+          .jsonPath("probationRegion.id").isEqualTo(newPremises.probationRegionId.toString())
+          .jsonPath("probationDeliveryUnit.id").isEqualTo(newPremises.probationDeliveryUnitId.toString())
+          .jsonPath("notes").isEmpty()
+          .jsonPath("turnaroundWorkingDays").isEqualTo("2")
+      }
+    }
+
+    @Test
+    fun `Create new Premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+        val anotherProbationRegion = probationRegionEntityFactory.produceAndPersist()
+
+        val newPremises = Cas3NewPremises(
+          reference = randomStringMultiCaseWithNumbers(10),
+          addressLine1 = randomStringMultiCaseWithNumbers(25),
+          postcode = randomPostCode(),
+          probationRegionId = anotherProbationRegion.id,
+          probationDeliveryUnitId = pdu.id,
+          characteristicIds = emptyList(),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(newPremises)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
 
   @Nested
   inner class GetFutureBookings {
@@ -819,7 +948,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             )
           },
           notes = premisesToGet.notes,
-          turnaroundWorkingDayCount = premisesToGet.turnaroundWorkingDayCount,
+          turnaroundWorkingDays = premisesToGet.turnaroundWorkingDays,
           totalOnlineBedspaces = 2,
           totalUpcomingBedspaces = 1,
           totalArchivedBedspaces = 1,

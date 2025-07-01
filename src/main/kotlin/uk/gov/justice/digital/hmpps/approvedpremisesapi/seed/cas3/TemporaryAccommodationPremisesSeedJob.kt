@@ -112,7 +112,7 @@ class TemporaryAccommodationPremisesSeedJob(
         characteristics = mutableListOf(),
         probationDeliveryUnit = probationDeliveryUnit,
         status = PropertyStatus.active,
-        turnaroundWorkingDayCount = 2,
+        turnaroundWorkingDays = 2,
         startDate = null,
       ),
     )

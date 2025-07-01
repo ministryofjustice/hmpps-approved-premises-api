@@ -65,6 +65,7 @@ class Cas3PremisesService(
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }
 
+  @Deprecated("This function is replaced by createNewPremises in the same class")
   @SuppressWarnings("CyclomaticComplexMethod")
   fun createNewPremises(
     addressLine1: String,
@@ -78,8 +79,8 @@ class Cas3PremisesService(
     characteristicIds: List<UUID>,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?,
-  ) = validated {
+    turnaroundWorkingDays: Int?,
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
       "$.probationRegionId" hasValidationError "doesNotExist"
@@ -118,7 +119,7 @@ class Cas3PremisesService(
         property hasValidationError err
       }
 
-    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
       "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
     }
 
@@ -137,7 +138,7 @@ class Cas3PremisesService(
       longitude = null,
       probationRegion = probationRegion!!,
       localAuthorityArea = localAuthorityArea,
-      startDate = null,
+      startDate = LocalDate.now(),
       bookings = mutableListOf(),
       lostBeds = mutableListOf(),
       notes = if (notes.isNullOrEmpty()) "" else notes,
@@ -146,7 +147,7 @@ class Cas3PremisesService(
       characteristics = mutableListOf(),
       status = status,
       probationDeliveryUnit = probationDeliveryUnit!!,
-      turnaroundWorkingDayCount = turnaroundWorkingDayCount ?: 2,
+      turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
     )
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
@@ -155,6 +156,101 @@ class Cas3PremisesService(
       return fieldValidationError
     }
     // end of validation
+    premises.characteristics.addAll(characteristicEntities.map { it!! })
+    premisesRepository.save(premises)
+
+    return success(premises)
+  }
+
+  @SuppressWarnings("CyclomaticComplexMethod")
+  fun createNewPremises(
+    reference: String,
+    addressLine1: String,
+    addressLine2: String?,
+    town: String?,
+    postcode: String,
+    localAuthorityAreaId: UUID?,
+    probationRegionId: UUID,
+    probationDeliveryUnitId: UUID,
+    characteristicIds: List<UUID>,
+    notes: String?,
+    turnaroundWorkingDays: Int?,
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
+    val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
+    if (probationRegion == null) {
+      "$.probationRegionId" hasValidationError "doesNotExist"
+    }
+
+    val localAuthorityArea = when (localAuthorityAreaId) {
+      null -> null
+      else -> {
+        val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
+        if (localAuthorityArea == null) {
+          "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+        }
+        localAuthorityArea
+      }
+    }
+
+    val probationDeliveryUnit = probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
+
+    if (probationDeliveryUnit == null) {
+      "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
+    }
+
+    // start of validation
+    if (reference.isEmpty()) {
+      "$.reference" hasValidationError "empty"
+    } else if (!premisesRepository.nameIsUniqueForType(reference, TemporaryAccommodationPremisesEntity::class.java)) {
+      "$.reference" hasValidationError "notUnique"
+    }
+
+    if (addressLine1.isEmpty()) {
+      "$.address" hasValidationError "empty"
+    }
+
+    if (postcode.isEmpty()) {
+      "$.postcode" hasValidationError "empty"
+    }
+
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
+      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val premises = TemporaryAccommodationPremisesEntity(
+      id = UUID.randomUUID(),
+      name = reference,
+      addressLine1 = addressLine1,
+      addressLine2 = addressLine2,
+      town = town,
+      postcode = postcode,
+      latitude = null,
+      longitude = null,
+      probationRegion = probationRegion!!,
+      localAuthorityArea = localAuthorityArea,
+      startDate = LocalDate.now(),
+      bookings = mutableListOf(),
+      lostBeds = mutableListOf(),
+      notes = if (notes.isNullOrEmpty()) "" else notes,
+      emailAddress = null,
+      rooms = mutableListOf(),
+      characteristics = mutableListOf(),
+      status = PropertyStatus.active,
+      probationDeliveryUnit = probationDeliveryUnit!!,
+      turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
+    )
+
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+    // end of validation
+
     premises.characteristics.addAll(characteristicEntities.map { it!! })
     premisesRepository.save(premises)
 
@@ -174,7 +270,7 @@ class Cas3PremisesService(
     notes: String?,
     status: PropertyStatus,
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?,
+    turnaroundWorkingDays: Int?,
   ): AuthorisableActionResult<ValidatableActionResult<TemporaryAccommodationPremisesEntity>> {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return AuthorisableActionResult.NotFound()
@@ -205,7 +301,7 @@ class Cas3PremisesService(
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
 
-    if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
       validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
     }
 
@@ -239,8 +335,8 @@ class Cas3PremisesService(
       it.notes = if (notes.isNullOrEmpty()) "" else notes
       it.status = status
       it.probationDeliveryUnit = probationDeliveryUnit!!
-      if (turnaroundWorkingDayCount != null) {
-        it.turnaroundWorkingDayCount = turnaroundWorkingDayCount!!
+      if (turnaroundWorkingDays != null) {
+        it.turnaroundWorkingDays = turnaroundWorkingDays
       }
     }
 
