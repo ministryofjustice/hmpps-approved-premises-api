@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
@@ -23,9 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 /**
@@ -72,23 +71,12 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         ),
       )
 
-      cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(premises1Room3.beds.first { it.name == "Room 3 - Bed 3" })
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(givenAUser().first)
-          withOutOfServiceBed(this@apply)
-          withStartDate(date(2020, 5, 7))
-          withEndDate(date(2020, 5, 8))
-          withReason(
-            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
-              withName("refurb")
-            },
-          )
-        }
-      }
+      givenAnOutOfServiceBed(
+        bed = premises1Room3.beds.first { it.name == "Room 3 - Bed 3" },
+        startDate = date(2020, 5, 7),
+        endDate = date(2020, 5, 8),
+        reason = "refurb",
+      )
 
       createSpaceBooking(crn = "CRN1") {
         withPremises(premises1)
@@ -226,23 +214,12 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         ),
       )
 
-      cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(premises1Room3.beds.first { it.name == "Premises 1 - Room 3 - Bed 3" })
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(givenAUser().first)
-          withOutOfServiceBed(this@apply)
-          withStartDate(date(2020, 5, 7))
-          withEndDate(date(2020, 5, 8))
-          withReason(
-            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
-              withName("refurb")
-            },
-          )
-        }
-      }
+      givenAnOutOfServiceBed(
+        bed = premises1Room3.beds.first { it.name == "Premises 1 - Room 3 - Bed 3" },
+        startDate = date(2020, 5, 7),
+        endDate = date(2020, 5, 8),
+        reason = "refurb",
+      )
 
       premises1BookingCrn1 = createSpaceBooking(crn = "PREMISES1-CRN1") {
         withPremises(premises1)
