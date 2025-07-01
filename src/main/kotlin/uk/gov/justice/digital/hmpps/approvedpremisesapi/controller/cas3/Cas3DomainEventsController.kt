@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainE
 import java.util.UUID
 
 @RestController
+@RequestMapping("\${api.base-path:}")
 class Cas3DomainEventsController(
   private val cas3DomainEventService: Cas3DomainEventService,
 ) {
