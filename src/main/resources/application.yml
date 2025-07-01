@@ -331,4 +331,5 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
+  cas3-new-update-premises-function: true
 

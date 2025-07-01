@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
@@ -178,14 +179,14 @@ class PremisesController(
     }
 
     val updatedPremises = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+      is CasResult.GeneralValidationError<*> -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is CasResult.FieldValidationError<*> -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is CasResult.ConflictError<*> -> throw ConflictProblem(
         id = validationResult.conflictingEntityId,
         conflictReason = validationResult.message,
       )
 
-      is ValidatableActionResult.Success -> validationResult.entity
+      is CasResult.Success<*> -> validationResult.entity
     }
 
     val totalBeds = when (serviceName) {

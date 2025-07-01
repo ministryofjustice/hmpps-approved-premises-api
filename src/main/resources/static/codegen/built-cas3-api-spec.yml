@@ -408,6 +408,40 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas3Premises'
+    put:
+      tags:
+        - Operations on premises
+      summary: Updates a premises
+      operationId: updatePremises
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information to update the premises with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3UpdatePremises'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Premises'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      x-codegen-request-body-name: body
   /premises/{premisesId}/bedspaces:
     get:
       tags:
@@ -5459,6 +5493,45 @@ components:
         - bookingId
         - roomId
         - isSexualRisk
+    Cas3UpdatePremises:
+      type: object
+      properties:
+        reference:
+          type: string
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        town:
+          type: string
+        postcode:
+          type: string
+        localAuthorityAreaId:
+          type: string
+          format: uuid
+        probationRegionId:
+          type: string
+          format: uuid
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
+        characteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notes:
+          type: string
+          example: some notes about this property
+        turnaroundWorkingDayCount:
+          type: integer
+      required:
+        - reference
+        - addressLine1
+        - postcode
+        - probationRegionId
+        - probationDeliveryUnitId
+        - characteristicIds
     Cas3PremisesSummary:
       type: object
       properties:

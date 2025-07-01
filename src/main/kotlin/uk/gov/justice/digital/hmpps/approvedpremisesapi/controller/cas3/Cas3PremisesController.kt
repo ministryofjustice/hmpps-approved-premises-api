@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
+import arrow.core.Ior
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -26,12 +27,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
@@ -91,6 +101,64 @@ class Cas3PremisesController(
     )
 
     return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises), HttpStatus.CREATED)
+  }
+
+  @Transactional
+  override fun updatePremises(premisesId: UUID, body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    if (!userAccessService.currentUserCanManagePremises(premises) || !userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, body.probationRegionId)) {
+      throw ForbiddenProblem()
+    }
+
+    val updatePremisesResult = cas3PremisesService
+      .updatePremises(
+        premisesId,
+        body.addressLine1,
+        body.addressLine2,
+        body.town,
+        body.postcode,
+        body.localAuthorityAreaId,
+        body.probationRegionId,
+        body.characteristicIds,
+        body.notes,
+        body.status,
+        Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
+        body.turnaroundWorkingDayCount,
+      )
+
+    val bodyName = body.reference
+    val validationResult = when (val renamePremisesResult = cas3PremisesService.renamePremises(premisesId, bodyName)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
+      is AuthorisableActionResult.Success -> renamePremisesResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    val updatedPremises = when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validationResult.conflictingEntityId,
+        conflictReason = validationResult.message,
+      )
+
+      is ValidatableActionResult.Success -> validationResult.entity
+    }
+
+    val totalBeds =  cas3PremisesService.getBedspaceCount(updatedPremises)
+
+    return ResponseEntity.ok(
+      cas3PremisesTransformer.transformJpaToApi(
+        updatedPremises,
+        totalBeds = totalBeds,
+        availableBedsForToday = totalBeds,
+      )
+    )
   }
 
   @GetMapping("/premises/{premisesId}")
