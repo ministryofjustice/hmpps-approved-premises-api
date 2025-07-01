@@ -211,16 +211,35 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         beds = listOf(
           RequiredBed("Premises 1 - Room 3 - Bed 1"),
           RequiredBed("Premises 1 - Room 3 - Bed 2"),
-          RequiredBed("Premises 1 - Room 3 - Bed 3"),
-          RequiredBed("Premises 1 - Room 3 - Bed 4", endDate = date(2020, 5, 8)),
+          RequiredBed("Premises 1 - Room 3 - Bed 3 - OOSB"),
+          RequiredBed("Premises 1 - Room 3 - Bed 4 - Ended", endDate = date(2020, 5, 8)),
         ),
       )
 
       givenAnOutOfServiceBed(
-        bed = premises1Room3.beds.first { it.name == "Premises 1 - Room 3 - Bed 3" },
+        bed = premises1Room3.beds.first { it.name == "Premises 1 - Room 3 - Bed 3 - OOSB" },
         startDate = date(2020, 5, 7),
         endDate = date(2020, 5, 8),
         reason = "refurb",
+      )
+
+      createRoom(
+        premises = premises2,
+        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_ARSON_SUITABLE, CAS1_PROPERTY_NAME_ENSUITE, CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        beds = listOf(RequiredBed("Premises 2 - Room 1 - Bed 1")),
+      )
+
+      val premises2Room2 = createRoom(
+        premises = premises2,
+        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_ARSON_SUITABLE, CAS1_PROPERTY_NAME_ENSUITE, CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        beds = listOf(RequiredBed("Premises 2 - Room 1 - Bed 2 - OOSB")),
+      )
+
+      givenAnOutOfServiceBed(
+        bed = premises2Room2.beds.first { it.name == "Premises 2 - Room 1 - Bed 2 - OOSB" },
+        startDate = date(2020, 5, 7),
+        endDate = date(2020, 5, 8),
+        reason = "painting",
       )
 
       premises1BookingCrn1 = createSpaceBooking(crn = "PREMISES1-CRN1") {

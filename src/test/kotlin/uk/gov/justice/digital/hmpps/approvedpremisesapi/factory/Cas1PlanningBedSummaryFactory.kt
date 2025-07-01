@@ -1,19 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
-import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlanningBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.util.UUID
 
 class Cas1PlanningBedSummaryFactory : Factory<Cas1PlanningBedSummary> {
-  private var bedId: Yielded<UUID> = { UUID.randomUUID() }
-  private var bedName: Yielded<String> = { randomStringUpperCase(10) }
-  private var bedEndDate: Yielded<LocalDate> = { LocalDate.now() }
-  private var roomId: Yielded<UUID> = { UUID.randomUUID() }
-  private var roomName: Yielded<String> = { randomStringUpperCase(10) }
-  private var characteristicsPropertyNames: Yielded<List<String>> = { emptyList() }
+  private var bedId = { UUID.randomUUID() }
+  private var bedName = { randomStringUpperCase(10) }
+  private var bedEndDate = { LocalDate.now() }
+  private var roomId = { UUID.randomUUID() }
+  private var roomName = { randomStringUpperCase(10) }
+  private var characteristicsPropertyNames = { emptyList<String>() }
+  private var premisesId = { UUID.randomUUID() }
 
   fun withBedId(id: UUID) = apply {
     this.bedId = { id }
@@ -46,5 +46,6 @@ class Cas1PlanningBedSummaryFactory : Factory<Cas1PlanningBedSummary> {
     this.roomId(),
     this.roomName(),
     this.characteristicsPropertyNames(),
+    this.premisesId(),
   )
 }

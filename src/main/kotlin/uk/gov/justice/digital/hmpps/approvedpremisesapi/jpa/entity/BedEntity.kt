@@ -67,9 +67,9 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 class Cas1BedsRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
-  fun bedSummary(premisesId: UUID): List<Cas1PlanningBedSummary> {
+  fun bedSummary(premisesIds: List<UUID>): List<Cas1PlanningBedSummary> {
     val params = mutableMapOf<String, Any>(
-      "premisesId" to premisesId,
+      "premisesIds" to premisesIds,
     )
 
     return jdbcTemplate.query(
@@ -80,12 +80,13 @@ class Cas1BedsRepository(
         b.end_date AS bed_end_date,
         r.id AS room_id,
         r.name AS room_name,
-        ARRAY_REMOVE(ARRAY_AGG(c.property_name),null) AS characteristics
+        ARRAY_REMOVE(ARRAY_AGG(c.property_name),null) AS characteristics,
+        r.premises_id AS premises_id
       FROM rooms r
       INNER JOIN beds b ON b.room_id = r.id
       LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = r.id 
       LEFT OUTER JOIN "characteristics" c ON c.id = room_chars.characteristic_id 
-      WHERE r.premises_id = :premisesId
+      WHERE r.premises_id IN (:premisesIds)
       GROUP BY b.id, b."name", r.id, r."name"
       """.trimIndent(),
       params,
@@ -97,6 +98,7 @@ class Cas1BedsRepository(
         roomId = rs.getUUID("room_id"),
         roomName = rs.getString("room_name"),
         characteristicsPropertyNames = SqlUtil.toStringList(rs.getArray("characteristics")),
+        premisesId = rs.getUUID("premises_id"),
       )
     }
   }
@@ -219,4 +221,5 @@ data class Cas1PlanningBedSummary(
   val roomId: UUID,
   val roomName: String,
   val characteristicsPropertyNames: List<String>,
+  val premisesId: UUID,
 )
