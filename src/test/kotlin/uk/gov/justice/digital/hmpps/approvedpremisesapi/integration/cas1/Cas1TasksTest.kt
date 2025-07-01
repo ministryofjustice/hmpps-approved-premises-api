@@ -2166,7 +2166,6 @@ class Cas1TasksTest {
       }
     }
 
-
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `If request is for a placement application that is not submitted, return not found because a task doesn't yet exist to complete`(baseUrl: String) {
@@ -2186,7 +2185,6 @@ class Cas1TasksTest {
         .expectStatus()
         .isNotFound
     }
-
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
@@ -2320,8 +2318,6 @@ class Cas1TasksTest {
         isWithdrawn = isWithdrawn,
       )
     }
-
-
   }
 
   @Nested

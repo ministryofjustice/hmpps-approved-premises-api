@@ -154,8 +154,8 @@ class Cas1TasksController(
           cas1PlacementApplicationService.getApplication(id),
         )
 
-        if(!placementApplication.isSubmitted()) {
-          throw NotFoundProblem(id,"Task")
+        if (!placementApplication.isSubmitted()) {
+          throw NotFoundProblem(id, "Task")
         }
 
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
