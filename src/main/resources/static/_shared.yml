@@ -1821,6 +1821,8 @@ components:
         - withdrawn
     ApprovedPremisesApplicationStatus:
       type: string
+      deprecated: true
+      description: We should use Cas1ApplicationStatus instead, which duplicates this
       enum:
         - started
         - rejected
