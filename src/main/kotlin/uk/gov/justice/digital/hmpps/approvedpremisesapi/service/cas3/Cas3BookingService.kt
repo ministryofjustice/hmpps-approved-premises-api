@@ -113,7 +113,10 @@ class Cas3BookingService(
 
     if (bedspace == null) {
       "$.bedId" hasValidationError "doesNotExist"
-    } else if (bedspace.startDate != null && bedspace.startDate!!.isAfter(arrivalDate)) {
+    } else if (featureFlagService.getBooleanFlag("cas3-validate-booking-arrival-after-bedspace-start-date") &&
+      bedspace.startDate != null &&
+      bedspace.startDate!!.isAfter(arrivalDate)
+    ) {
       "$.arrivalDate" hasValidationError "bookingArrivalDateBeforeBedspaceStartDate"
     }
 
