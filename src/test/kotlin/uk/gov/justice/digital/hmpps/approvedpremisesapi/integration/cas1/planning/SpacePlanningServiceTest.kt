@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
@@ -210,27 +211,25 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
   @Nested
   inner class Capacity {
 
-    lateinit var premiseId: UUID
+    lateinit var premises1: ApprovedPremisesEntity
 
     private lateinit var bookingCrn1: Cas1SpaceBookingEntity
 
     @BeforeEach
     fun setupTestData() {
-      val premises = givenAnApprovedPremises(
+      premises1 = givenAnApprovedPremises(
         id = UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"),
         name = "Premises 1",
       )
 
-      premiseId = premises.id
-
       val room1 = roomEntityFactory.produceAndPersist {
-        withPremises(premises)
+        withPremises(premises1)
         withCharacteristics(
           findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
           findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
           findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
         )
-      }.apply { premises.rooms.add(this) }
+      }.apply { premises1.rooms.add(this) }
       room1.beds.add(
         bedEntityFactory.produceAndPersist {
           withName("Room 1 - Bed 1")
@@ -239,11 +238,11 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
       )
 
       val room2 = roomEntityFactory.produceAndPersist {
-        withPremises(premises)
+        withPremises(premises1)
         withCharacteristics(
           findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
         )
-      }.apply { premises.rooms.add(this) }
+      }.apply { premises1.rooms.add(this) }
       room2.beds.add(
         bedEntityFactory.produceAndPersist {
           withName("Room 2 - Bed 1")
@@ -251,7 +250,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         },
       )
 
-      val room3 = roomEntityFactory.produceAndPersist { withPremises(premises) }.apply { premises.rooms.add(this) }
+      val room3 = roomEntityFactory.produceAndPersist { withPremises(premises1) }.apply { premises1.rooms.add(this) }
       room3.beds.add(
         bedEntityFactory.produceAndPersist {
           withName("Room 3 - Bed 1")
@@ -298,8 +297,8 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         },
       )
 
-      bookingCrn1 = createSpaceBooking(crn = "CRN1") {
-        withPremises(premises)
+      bookingCrn1 = createSpaceBooking(crn = "PREMISES1-CRN1") {
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 4))
         withCanonicalDepartureDate(date(2020, 5, 11))
         withCriteria(
@@ -307,14 +306,14 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         )
       }
 
-      createSpaceBooking(crn = "CRN2") {
-        withPremises(premises)
+      createSpaceBooking(crn = "PREMISES1-CRN2") {
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 6))
         withCanonicalDepartureDate(date(2020, 5, 9))
       }
 
-      createSpaceBooking(crn = "CRN3") {
-        withPremises(premises)
+      createSpaceBooking(crn = "PREMISES1-CRN3") {
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 7))
         withCanonicalDepartureDate(date(2020, 5, 20))
         withCriteria(
@@ -322,8 +321,8 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         )
       }
 
-      createSpaceBooking(crn = "CRN4") {
-        withPremises(premises)
+      createSpaceBooking(crn = "PREMISES1-CRN4") {
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 1))
         withCanonicalDepartureDate(date(2020, 5, 29))
         withCriteria(
@@ -331,8 +330,8 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         )
       }
 
-      createSpaceBooking(crn = "CRN5") {
-        withPremises(premises)
+      createSpaceBooking(crn = "PREMISES1-CRN5") {
+        withPremises(premises1)
         withCanonicalArrivalDate(date(2020, 5, 1))
         withCanonicalDepartureDate(date(2020, 5, 9))
         withCriteria(
@@ -340,12 +339,33 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
           findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
         )
       }
+
+      createSpaceBooking(crn = "PREMISES1-OUTOFRANGEBEFORE") {
+        withPremises(premises1)
+        withCanonicalArrivalDate(date(2020, 5, 1))
+        withCanonicalDepartureDate(date(2020, 5, 5))
+        withCriteria(
+          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
+          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
+        )
+      }
+
+      createSpaceBooking(crn = "PREMISES1-OUTOFRANGEAFTER") {
+        withPremises(premises1)
+        withCanonicalArrivalDate(date(2020, 5, 11))
+        withCanonicalDepartureDate(date(2020, 5, 12))
+        withCriteria(
+          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
+          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
+        )
+      }
+
     }
 
     @Test
     fun success() {
       val capacity = spacePlanner.capacity(
-        premises = approvedPremisesRepository.findByIdOrNull(premiseId)!!,
+        premises = premises1,
         rangeInclusive = DateRange(
           fromInclusive = date(2020, 5, 6),
           toInclusive = date(2020, 5, 10),
@@ -353,7 +373,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         excludeSpaceBookingId = null,
       )
 
-      assertThat(capacity.premise.id).isEqualTo(premiseId)
+      assertThat(capacity.premise.id).isEqualTo(premises1.id)
       assertThat(capacity.byDay).hasSize(5)
 
       val day1Capacity = capacity.byDay[0]
@@ -426,7 +446,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
     @Test
     fun `success, excluding a space booking`() {
       val capacity = spacePlanner.capacity(
-        premises = approvedPremisesRepository.findByIdOrNull(premiseId)!!,
+        premises = premises1,
         rangeInclusive = DateRange(
           fromInclusive = date(2020, 5, 6),
           toInclusive = date(2020, 5, 10),
@@ -434,7 +454,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         excludeSpaceBookingId = bookingCrn1.id,
       )
 
-      assertThat(capacity.premise.id).isEqualTo(premiseId)
+      assertThat(capacity.premise.id).isEqualTo(premises1.id)
       assertThat(capacity.byDay).hasSize(5)
 
       val day1Capacity = capacity.byDay[0]
