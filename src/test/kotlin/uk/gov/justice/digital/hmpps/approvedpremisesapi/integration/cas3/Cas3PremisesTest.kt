@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
@@ -49,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.util.UUID
 
@@ -179,6 +181,161 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdatePremises {
+    @Test
+    fun `Update premises returns 200 OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val premisesCharacteristics = getPremisesCharacteristics().toMutableList()
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+          withProbationDeliveryUnit(probationDeliveryUnit)
+          withLocalAuthorityArea(localAuthorityArea)
+          withStatus(PropertyStatus.active)
+          withAddressLine2(randomStringUpperCase(10))
+          withCharacteristics(
+            mutableListOf(
+              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+            ),
+          )
+        }
+
+        val updatedPremises = Cas3UpdatePremises(
+          reference = premises.name,
+          addressLine1 = premises.addressLine1,
+          addressLine2 = premises.addressLine2,
+          postcode = premises.postcode,
+          town = premises.town,
+          notes = premises.notes,
+          probationRegionId = premises.probationRegion?.id!!,
+          probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+          localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+          characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
+            characteristic.id
+          },
+          turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        )
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(updatedPremises)
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("reference").isEqualTo(updatedPremises.reference)
+          .jsonPath("addressLine1").isEqualTo(updatedPremises.addressLine1)
+          .jsonPath("addressLine2").isEqualTo(updatedPremises.addressLine2)
+          .jsonPath("town").isEqualTo(updatedPremises.town)
+          .jsonPath("postcode").isEqualTo(updatedPremises.postcode)
+          .jsonPath("localAuthorityArea.id").isEqualTo(updatedPremises.localAuthorityAreaId.toString())
+          .jsonPath("probationRegion.id").isEqualTo(updatedPremises.probationRegionId.toString())
+          .jsonPath("probationDeliveryUnit.id").isEqualTo(updatedPremises.probationDeliveryUnitId.toString())
+          .jsonPath("notes").isEqualTo(updatedPremises.notes)
+          .jsonPath("turnaroundWorkingDays").isEqualTo(updatedPremises.turnaroundWorkingDayCount.toString())
+          .jsonPath("characteristics[*].id").isEqualTo(updatedPremises.characteristicIds.map { it.toString() })
+      }
+    }
+
+    @Test
+    fun `Update premises returns 403 Forbidden when user access is not allowed as they are out of region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+        val probationRegion = probationRegionEntityFactory.produceAndPersist()
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+        }
+
+        val premisesCharacteristics = getPremisesCharacteristics().toMutableList()
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withProbationDeliveryUnit(probationDeliveryUnit)
+          withLocalAuthorityArea(localAuthorityArea)
+          withStatus(PropertyStatus.active)
+          withAddressLine2(randomStringUpperCase(10))
+          withCharacteristics(
+            mutableListOf(
+              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
+            ),
+          )
+        }
+
+        val updatedPremises = Cas3UpdatePremises(
+          reference = premises.name,
+          addressLine1 = premises.addressLine1,
+          addressLine2 = premises.addressLine2,
+          postcode = premises.postcode,
+          town = premises.town,
+          notes = premises.notes,
+          probationRegionId = premises.probationRegion?.id!!,
+          probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+          localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+          characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
+            characteristic.id
+          },
+          turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        )
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(updatedPremises)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+          .expectBody()
+          .jsonPath("detail").isEqualTo("You are not authorized to access this endpoint")
+      }
+    }
+
+    @Test
+    fun `Update premises returns 404 when premises to update is not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+        val updatedPremises = Cas3UpdatePremises(
+          reference = "reference",
+          addressLine1 = "addressLine1",
+          addressLine2 = "addressLine2",
+          postcode = "postcode",
+          town = "town",
+          notes = "notes",
+          probationRegionId = user.probationRegion?.id!!,
+          probationDeliveryUnitId = probationDeliveryUnit?.id!!,
+          localAuthorityAreaId = localAuthorityArea?.id!!,
+          characteristicIds = emptyList(),
+          turnaroundWorkingDayCount = 2,
+        )
+
+        val id = UUID.randomUUID()
+
+        webTestClient.put()
+          .uri("/cas3/premises/$id")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(updatedPremises)
+          .exchange()
+          .expectStatus()
+          .isNotFound()
+          .expectBody()
+          .jsonPath("detail").isEqualTo("No Premises with an ID of $id could be found")
       }
     }
   }

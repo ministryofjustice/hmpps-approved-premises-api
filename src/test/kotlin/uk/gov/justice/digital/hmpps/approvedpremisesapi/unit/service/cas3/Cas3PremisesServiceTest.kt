@@ -330,6 +330,314 @@ class Cas3PremisesServiceTest {
   }
 
   @Nested
+  inner class UpdatePremises {
+    @Test
+    fun `When update a premises returns Success with correct result when validation passed`() {
+      val premises = updatePremisesEntity()
+      mockCommonPremisesDependencies(premises)
+      every { premisesRepositoryMock.save(any()) } returns premises
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+      )
+
+      assertThatCasResult(result).isSuccess()
+        .with { updatedPremises ->
+          assertThat(updatedPremises.id).isNotNull()
+          assertThat(updatedPremises.addressLine1).isEqualTo(premises.addressLine1)
+          assertThat(updatedPremises.addressLine2).isEqualTo(premises.addressLine2)
+          assertThat(updatedPremises.town).isEqualTo(premises.town)
+          assertThat(updatedPremises.postcode).isEqualTo(premises.postcode)
+          assertThat(updatedPremises.localAuthorityArea).isEqualTo(premises.localAuthorityArea)
+          assertThat(updatedPremises.probationRegion).isEqualTo(premises.probationRegion)
+          assertThat(updatedPremises.probationDeliveryUnit?.id).isEqualTo(premises.probationDeliveryUnit?.id)
+          assertThat(updatedPremises.notes).isEqualTo(premises.notes)
+          assertThat(updatedPremises.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
+          assertThat(updatedPremises.characteristics).isEmpty()
+        }
+    }
+
+    @Test
+    fun `When update a premises with a non exist probation region returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+      val nonExistProbationRegionId = UUID.randomUUID()
+      val localAuthorityArea = premises.localAuthorityArea!!
+      val probationDeliveryUnit = premises.probationDeliveryUnit!!
+
+      every { probationRegionRepositoryMock.findByIdOrNull(nonExistProbationRegionId) } returns null
+      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
+      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id,
+        probationRegionId = nonExistProbationRegionId,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationRegionId", "doesNotExist")
+    }
+
+    @Test
+    fun `When update a premises with a non exist local authority returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+      val probationRegion = premises.probationRegion
+      val probationDeliveryUnit = premises.probationDeliveryUnit!!
+      val nonExistLocalAuthorityId = UUID.randomUUID()
+
+      every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
+      every { localAuthorityAreaRepositoryMock.findByIdOrNull(nonExistLocalAuthorityId) } returns null
+      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = nonExistLocalAuthorityId,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.localAuthorityAreaId", "doesNotExist")
+    }
+
+    @Test
+    fun `When update a premises with a non exist probation delivery unit returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+      val probationRegion = premises.probationRegion
+      val localAuthorityArea = premises.localAuthorityArea!!
+      val nonExistPduId = UUID.randomUUID()
+
+      every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
+      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
+      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(nonExistPduId, probationRegion.id) } returns null
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = nonExistPduId,
+        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationDeliveryUnitId", "doesNotExist")
+    }
+
+    @Test
+    fun `When update a premises with empty address returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+
+      mockCommonPremisesDependencies(premises)
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = "",
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+      )
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.address", "empty")
+    }
+
+    @Test
+    fun `When update a premises with empty postcode returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+
+      mockCommonPremisesDependencies(premises)
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = "",
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.postcode", "empty")
+    }
+
+    @Test
+    fun `When update a premises with turnaround working days in negative returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+
+      mockCommonPremisesDependencies(premises)
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = -2,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.turnaroundWorkingDayCount", "isNotAPositiveInteger")
+    }
+
+    @Test
+    fun `When update a premises with a non exist characteristic returns FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+      val nonExistCharacteristicId = UUID.randomUUID()
+
+      mockCommonPremisesDependencies(premises)
+      every { characteristicServiceMock.getCharacteristic(nonExistCharacteristicId) } returns null
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = listOf(nonExistCharacteristicId),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = -2,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "doesNotExist")
+    }
+
+    @Test
+    fun `When update a bedspace with a wrong model scope characteristic returns FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+      val characteristicEntityFactory = CharacteristicEntityFactory()
+
+      val premisesCharacteristic = characteristicEntityFactory
+        .withModelScope("room")
+        .withServiceScope(ServiceName.temporaryAccommodation.value)
+        .produce()
+
+      mockCommonPremisesDependencies(premises)
+      every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
+      every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns false
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = listOf(premisesCharacteristic.id),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = -2,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicModelScope")
+    }
+
+    @Test
+    fun `When create a new bedspace with a wrong service scope characteristic returns FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+      val characteristicEntityFactory = CharacteristicEntityFactory()
+
+      val premisesCharacteristic = characteristicEntityFactory
+        .withModelScope("premises")
+        .withServiceScope(ServiceName.approvedPremises.value)
+        .produce()
+
+      mockCommonPremisesDependencies(premises)
+      every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
+      every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns true
+      every { characteristicServiceMock.serviceScopeMatches(premisesCharacteristic, any()) } returns false
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = listOf(premisesCharacteristic.id),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDayCount = -2,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")
+    }
+
+    private fun updatePremisesEntity(): TemporaryAccommodationPremisesEntity {
+      val probationRegion = ProbationRegionEntityFactory()
+        .withApArea(ApAreaEntityFactory().produce())
+        .produce()
+
+      val localAuthority = LocalAuthorityEntityFactory()
+        .produce()
+
+      val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      return temporaryAccommodationPremisesFactory
+        .withService(ServiceName.temporaryAccommodation.value)
+        .withProbationRegion(probationRegion)
+        .withProbationDeliveryUnit(probationDeliveryUnit)
+        .withLocalAuthorityArea(localAuthority)
+        .produce()
+    }
+
+    private fun mockCommonPremisesDependencies(premises: TemporaryAccommodationPremisesEntity) {
+      val probationRegion = premises.probationRegion
+      val localAuthorityArea = premises.localAuthorityArea!!
+      val probationDeliveryUnit = premises.probationDeliveryUnit!!
+      every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
+      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
+      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit
+    }
+  }
+
+  @Nested
   inner class CreateBedspace {
     @Test
     fun `When create a new bedspace returns Success with correct result when validation passed`() {

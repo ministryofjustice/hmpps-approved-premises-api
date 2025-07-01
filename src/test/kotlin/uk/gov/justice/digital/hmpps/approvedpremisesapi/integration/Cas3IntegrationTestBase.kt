@@ -111,7 +111,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     return randomCharacteristic
   }
 
-  private fun getPremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
+  fun getPremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
     modelScope = "premises",
     serviceScope = ServiceName.temporaryAccommodation.value,
   )

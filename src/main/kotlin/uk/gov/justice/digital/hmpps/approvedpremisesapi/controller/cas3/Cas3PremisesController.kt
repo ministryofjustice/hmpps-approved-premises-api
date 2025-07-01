@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
@@ -91,6 +92,34 @@ class Cas3PremisesController(
     )
 
     return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises), HttpStatus.CREATED)
+  }
+
+  @Transactional
+  @PutMapping("/premises/{premisesId}")
+  fun updatePremises(@PathVariable premisesId: UUID, @RequestBody body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    return cas3PremisesService.updatePremises(
+      premises = premises,
+      addressLine1 = body.addressLine1,
+      addressLine2 = body.addressLine2,
+      town = body.town,
+      postcode = body.postcode,
+      localAuthorityAreaId = body.localAuthorityAreaId,
+      probationRegionId = body.probationRegionId,
+      characteristicIds = body.characteristicIds,
+      notes = body.notes,
+      probationDeliveryUnitId = body.probationDeliveryUnitId,
+      turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
+    )
+      .let { extractEntityFromCasResult(it) }
+      .let { cas3PremisesTransformer.transformDomainToApi(it) }
+      .let { ResponseEntity.ok(it) }
   }
 
   @GetMapping("/premises/{premisesId}")
