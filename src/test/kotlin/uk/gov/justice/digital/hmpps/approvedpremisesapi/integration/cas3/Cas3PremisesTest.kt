@@ -1120,7 +1120,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             Cas3Bedspace(
               id = bed.id,
               reference = room1.name,
-              startDate = bed.startDate,
+              startDate = bed.startDate!!,
               endDate = bed.endDate,
               status = Cas3BedspaceStatus.archived,
               characteristics = emptyList(),
@@ -1219,7 +1219,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     private fun createCas3Bedspoace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus) = Cas3Bedspace(
       id = bed.id,
       reference = room.name,
-      startDate = bed.startDate,
+      startDate = bed.startDate!!,
       characteristics = emptyList(),
       endDate = bed.endDate,
       status = bedspaceStatus,
@@ -1245,7 +1245,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val expectedBedspace = Cas3Bedspace(
           id = bedspace.id,
           reference = bedspace.room.name,
-          startDate = bedspace.startDate,
+          startDate = bedspace.startDate!!,
           endDate = bedspace.endDate,
           status = Cas3BedspaceStatus.online,
           characteristics = listOf(

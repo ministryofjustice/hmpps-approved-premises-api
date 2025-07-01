@@ -47,7 +47,7 @@ class Cas3BedspaceTransformerTest {
       Cas3Bedspace(
         id = bed.id,
         reference = room.name,
-        startDate = bed.startDate,
+        startDate = bed.startDate!!,
         endDate = bed.endDate,
         status = Cas3BedspaceStatus.online,
         notes = room.notes,
@@ -72,7 +72,7 @@ class Cas3BedspaceTransformerTest {
       Cas3Bedspace(
         id = bedspace.id,
         reference = bedspace.reference,
-        startDate = bedspace.startDate,
+        startDate = bedspace.startDate!!,
         endDate = bedspace.endDate,
         notes = bedspace.notes,
         status = Cas3BedspaceStatus.online,
