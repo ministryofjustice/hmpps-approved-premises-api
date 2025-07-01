@@ -19,7 +19,7 @@ import java.util.UUID
 @Service(
   "uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3.DomainEventsController",
 )
-class DomainEventsController(
+class Cas3DomainEventsController(
   private val cas3DomainEventService: Cas3DomainEventService,
 ) : CAS3EventsApiDelegate {
   override fun eventsCas3BookingCancelledEventIdGet(eventId: UUID): ResponseEntity<CAS3BookingCancelledEvent> {
