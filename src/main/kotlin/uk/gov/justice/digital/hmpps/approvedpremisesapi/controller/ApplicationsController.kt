@@ -259,9 +259,7 @@ class ApplicationsController(
         Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           data = serializedData,
           isWomensApplication = body.isWomensApplication,
-          isPipeApplication = body.isPipeApplication,
           isEmergencyApplication = body.isEmergencyApplication,
-          isEsapApplication = body.isEsapApplication,
           apType = body.apType,
           releaseType = body.releaseType?.name,
           arrivalDate = body.arrivalDate,

@@ -270,9 +270,7 @@ class Cas1ApplicationCreationServiceTest {
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
             isWomensApplication = false,
-            isPipeApplication = null,
             isEmergencyApplication = false,
-            isEsapApplication = false,
             apType = null,
             releaseType = null,
             arrivalDate = null,
@@ -303,9 +301,7 @@ class Cas1ApplicationCreationServiceTest {
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
             isWomensApplication = false,
-            isPipeApplication = null,
             isEmergencyApplication = false,
-            isEsapApplication = false,
             apType = null,
             releaseType = null,
             arrivalDate = null,
@@ -329,9 +325,7 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isPipeApplication = null,
           isEmergencyApplication = false,
-          isEsapApplication = false,
           apType = null,
           releaseType = null,
           arrivalDate = null,
@@ -358,9 +352,7 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isPipeApplication = null,
           isEmergencyApplication = false,
-          isEsapApplication = false,
           apType = null,
           releaseType = null,
           arrivalDate = null,
@@ -393,9 +385,7 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isPipeApplication = null,
           isEmergencyApplication = false,
-          isEsapApplication = false,
           apType = null,
           releaseType = null,
           arrivalDate = null,
@@ -407,89 +397,6 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       assertThatCasResult(result).isGeneralValidationError("An application with the status $status cannot be updated.")
-    }
-
-    @Test
-    fun `updateApprovedPremisesApplication returns GeneralValidationError when application has AP type specified in multiple ways`() {
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      application.submittedAt = OffsetDateTime.now()
-
-      val result = applicationService.updateApplication(
-        applicationId = applicationId,
-        Cas1ApplicationUpdateFields(
-          isWomensApplication = false,
-          isPipeApplication = null,
-          isEmergencyApplication = false,
-          isEsapApplication = false,
-          apType = ApType.normal,
-          releaseType = null,
-          arrivalDate = null,
-          data = "{}",
-          isInapplicable = null,
-          noticeType = null,
-        ),
-        userForRequest = user,
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      result as CasResult.GeneralValidationError
-      assertThat(result.message).isEqualTo("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
-    }
-
-    @Test
-    fun `updateApprovedPremisesApplication returns Success with updated Application when using legacy AP type fields`() {
-      setupMocksForSuccess()
-
-      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
-      every {
-        mockCas1ApplicationUserDetailsRepository.save(
-          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
-        )
-      } returns theApplicantUserDetailsEntity
-
-      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
-      every {
-        mockCas1ApplicationUserDetailsRepository.save(
-          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
-        )
-      } returns theCaseManagerUserDetailsEntity
-
-      val result = applicationService.updateApplication(
-        applicationId = applicationId,
-        Cas1ApplicationUpdateFields(
-          isWomensApplication = false,
-          isPipeApplication = true,
-          isEmergencyApplication = false,
-          isEsapApplication = false,
-          apType = null,
-          releaseType = "rotl",
-          arrivalDate = LocalDate.parse("2023-04-17"),
-          data = updatedData,
-          isInapplicable = false,
-          noticeType = Cas1ApplicationTimelinessCategory.emergency,
-        ),
-        userForRequest = user,
-      )
-
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
-      val approvedPremisesApplication = result.value
-
-      assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
-      assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
-      assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
-      assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
-      assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
-      assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
-      assertThat(approvedPremisesApplication.applicantUserDetails).isNull()
-      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
-      assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
-      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
-
-      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
     }
 
     @ParameterizedTest
@@ -515,9 +422,7 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isPipeApplication = null,
           isEmergencyApplication = false,
-          isEsapApplication = null,
           apType = apType,
           releaseType = "rotl",
           arrivalDate = LocalDate.parse("2023-04-17"),
@@ -571,10 +476,8 @@ class Cas1ApplicationCreationServiceTest {
         applicationId = applicationId,
         Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isPipeApplication = true,
           isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
-          isEsapApplication = false,
-          apType = null,
+          apType = ApType.pipe,
           releaseType = "rotl",
           arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
             LocalDate.now().plusDays(10)

@@ -321,12 +321,6 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
-    if (updateFields.isUsingLegacyApTypeFields && updateFields.isUsingNewApTypeField) {
-      return CasResult.GeneralValidationError(
-        "`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`",
-      )
-    }
-
     if (application.createdByUser.id != userForRequest.id) {
       return CasResult.Unauthorised()
     }
@@ -347,7 +341,7 @@ class Cas1ApplicationCreationService(
       this.isInapplicable = updateFields.isInapplicable
       this.isWomensApplication = updateFields.isWomensApplication
       this.isEmergencyApplication = updateFields.isEmergencyApplication
-      this.apType = updateFields.deriveApType()
+      this.apType = updateFields.apType?.asApprovedPremisesType() ?: ApprovedPremisesType.NORMAL
       this.releaseType = updateFields.releaseType
       this.arrivalDate = if (updateFields.arrivalDate !== null) {
         OffsetDateTime.of(updateFields.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
@@ -402,30 +396,10 @@ class Cas1ApplicationCreationService(
       Cas1ApplicationTimelinessCategory.standard
     }
 
-  private val Cas1ApplicationUpdateFields.isUsingLegacyApTypeFields: Boolean
-    get() = isPipeApplication != null || isEsapApplication != null
-
-  private val Cas1ApplicationUpdateFields.isUsingNewApTypeField: Boolean
-    get() = apType != null
-
-  private fun Cas1ApplicationUpdateFields.deriveApType() = when {
-    this.isUsingLegacyApTypeFields -> when {
-      this.isPipeApplication == true -> ApprovedPremisesType.PIPE
-      this.isEsapApplication == true -> ApprovedPremisesType.ESAP
-      else -> ApprovedPremisesType.NORMAL
-    }
-    this.isUsingNewApTypeField -> this.apType!!.asApprovedPremisesType()
-    else -> ApprovedPremisesType.NORMAL
-  }
-
   data class Cas1ApplicationUpdateFields(
     val isWomensApplication: Boolean?,
-    @Deprecated("use apType")
-    val isPipeApplication: Boolean?,
     @Deprecated("use noticeType")
     val isEmergencyApplication: Boolean?,
-    @Deprecated("use apType")
-    val isEsapApplication: Boolean?,
     val apType: ApType?,
     val releaseType: String?,
     val arrivalDate: LocalDate?,

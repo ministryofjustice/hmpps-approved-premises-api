@@ -210,9 +210,7 @@ class Cas1ApplicationSeedService(
         applicationId = newApplicationEntity.id,
         updateFields = Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
           isWomensApplication = false,
-          isPipeApplication = null,
           isEmergencyApplication = false,
-          isEsapApplication = null,
           apType = ApType.normal,
           releaseType = "licence",
           arrivalDate = LocalDate.of(2025, 12, 12),

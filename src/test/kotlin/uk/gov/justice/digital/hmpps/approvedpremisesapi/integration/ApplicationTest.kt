@@ -1166,7 +1166,7 @@ class ApplicationTest : IntegrationTestBase() {
                 UpdateApprovedPremisesApplication(
                   data = mapOf("thingId" to 123),
                   isWomensApplication = false,
-                  isPipeApplication = true,
+                  apType = ApType.pipe,
                   type = UpdateApplicationType.CAS1,
                 ),
               )
