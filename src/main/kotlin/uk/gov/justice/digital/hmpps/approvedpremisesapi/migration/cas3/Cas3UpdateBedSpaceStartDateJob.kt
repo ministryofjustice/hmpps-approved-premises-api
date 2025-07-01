@@ -46,10 +46,15 @@ class Cas3UpdateBedSpaceStartDateJob(
               val updatedBed = bed.copy(startDate = bed.createdAt!!.toLocalDate()!!)
               bedRepository.save(updatedBed)
             } else {
-              migrationLogger.info("Using oldest booking arrival_date as start_date for bed id ${bed.id}")
               val oldestBooking = bookingRepository.findByBedId(bed.id, Sort.by(ASC, "arrivalDate"), Limit.of(1))
               if (oldestBooking.isEmpty()) {
-                migrationLogger.info("No bookings found for bed id ${bed.id}")
+                if (bed.endDate != null) {
+                  val updatedBed = bed.copy(startDate = bed.endDate)
+                  bedRepository.save(updatedBed)
+                  migrationLogger.info("Using oldest booking arrival_date as start_date for bed id ${bed.id}")
+                } else {
+                  migrationLogger.info("No bookings found for bed ID ${bed.id}, and the bedspace doesn't have a start or end date.")
+                }
               } else {
                 val updatedBed = bed.copy(startDate = oldestBooking[0].arrivalDate)
                 bedRepository.save(updatedBed)
