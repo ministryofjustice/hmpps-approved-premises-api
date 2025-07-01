@@ -168,6 +168,15 @@ class PremisesController(
       is AuthorisableActionResult.Success -> updatePremisesResult.entity
     }
 
+    val bodyName = body.name
+    if (bodyName != null && serviceName == ServiceName.temporaryAccommodation) {
+      validationResult = when (val renamePremisesResult = cas3PremisesService.renamePremises(premisesId, bodyName)) {
+        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
+        is AuthorisableActionResult.Success -> renamePremisesResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      }
+    }
+
     val updatedPremises = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)

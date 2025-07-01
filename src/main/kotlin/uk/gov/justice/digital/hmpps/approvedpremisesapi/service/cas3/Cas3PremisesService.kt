@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import arrow.core.Either
+import arrow.core.Ior
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -355,7 +356,7 @@ class Cas3PremisesService(
     probationRegionId: UUID,
     characteristicIds: List<UUID>,
     notes: String?,
-    probationDeliveryUnitIdentifier: Either<String, UUID>?,
+    probationDeliveryUnitId: UUID,
     turnaroundWorkingDays: Int?,
   ): CasResult<TemporaryAccommodationPremisesEntity> {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
@@ -377,7 +378,7 @@ class Cas3PremisesService(
       validationErrors["$.probationRegionId"] = "doesNotExist"
     }
     val probationDeliveryUnit =
-      tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
+      tryGetProbationDeliveryUnit(Ior.fromNullables(null, probationDeliveryUnitId)?.toEither(), probationRegionId) { property, err ->
         validationErrors[property] = err
       }
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)

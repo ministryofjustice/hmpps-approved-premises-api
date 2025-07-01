@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
-import arrow.core.Ior
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -118,7 +117,7 @@ class Cas3PremisesController(
         probationRegionId = body.probationRegionId,
         characteristicIds = body.characteristicIds,
         notes = body.notes,
-        probationDeliveryUnitIdentifier = Ior.fromNullables(null, body.probationDeliveryUnitId)?.toEither(),
+        probationDeliveryUnitId = body.probationDeliveryUnitId,
         turnaroundWorkingDays = body.turnaroundWorkingDayCount,
       )
 
