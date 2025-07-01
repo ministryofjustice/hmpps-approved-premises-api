@@ -276,7 +276,6 @@ class Cas3PremisesService(
   ): AuthorisableActionResult<ValidatableActionResult<TemporaryAccommodationPremisesEntity>> {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return AuthorisableActionResult.NotFound()
-
     val validationErrors = ValidationErrors()
     val localAuthorityArea = when (localAuthorityAreaId) {
       null -> null
@@ -361,6 +360,7 @@ class Cas3PremisesService(
   ): CasResult<TemporaryAccommodationPremisesEntity> {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return CasResult.NotFound("Premises", premisesId.toString())
+    println("hello")
 
     val validationErrors = ValidationErrors()
     val localAuthorityArea = when (localAuthorityAreaId) {
@@ -389,6 +389,8 @@ class Cas3PremisesService(
     if (validationErrors.any()) {
       return CasResult.FieldValidationError(validationErrors)
     }
+    println("hello2")
+
     premises.let {
       it.addressLine1 = addressLine1
       it.addressLine2 = addressLine2
@@ -405,6 +407,8 @@ class Cas3PremisesService(
     }
 
     val savedPremises = premisesRepository.save(premises)
+    println("hello3")
+    println(premises)
 
     return CasResult.Success(savedPremises)
   }

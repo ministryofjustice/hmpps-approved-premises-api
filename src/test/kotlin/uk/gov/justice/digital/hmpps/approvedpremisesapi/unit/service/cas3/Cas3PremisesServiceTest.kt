@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.allocations.UserAllocatorTest.Companion.probationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -315,6 +316,266 @@ class Cas3PremisesServiceTest {
       probationDeliveryUnitId = probationDeliveryUnitId!!,
       characteristicIds = characteristicIds,
       notes = premises.notes,
+      turnaroundWorkingDays = turnaroundWorkingDays,
+    )
+
+    private fun mockCommonPremisesDependencies(premises: TemporaryAccommodationPremisesEntity, isUniqueReference: Boolean = true) {
+      val probationRegion = premises.probationRegion
+      val localAuthorityArea = premises.localAuthorityArea!!
+      val probationDeliveryUnit = premises.probationDeliveryUnit!!
+      every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
+      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
+      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns isUniqueReference
+    }
+  }
+
+  @Nested
+  inner class UpdatePremises {
+    @Test
+    fun `When update a premises returns Success with correct result when validation passed`() {
+      val probationDeliveryUnitId = UUID.randomUUID()
+      val premises = updatePremisesEntity(probationDeliveryUnitId)
+      val town = "NEW TOWN"
+      mockCommonPremisesDependencies(premises)
+      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns premises
+      every { premisesRepositoryMock.save(any()) } returns null
+
+      val result = premisesService.updatePremises(
+        premisesId = premises.id,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = probationDeliveryUnitId,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays
+      )
+
+      assertThatCasResult(result).isSuccess().with { newPremises ->
+        println(newPremises)
+        assertThat(newPremises.id).isNotNull()
+        assertThat(newPremises.name).isEqualTo(premises.name)
+        assertThat(newPremises.addressLine1).isEqualTo(premises.addressLine1)
+        assertThat(newPremises.addressLine2).isEqualTo(premises.addressLine2)
+        assertThat(newPremises.town).isEqualTo(town)
+        assertThat(newPremises.postcode).isEqualTo(premises.postcode)
+        assertThat(newPremises.localAuthorityArea).isEqualTo(premises.localAuthorityArea)
+        assertThat(newPremises.probationRegion).isEqualTo(premises.probationRegion)
+        assertThat(newPremises.probationDeliveryUnit?.id).isEqualTo(premises.probationDeliveryUnit?.id)
+        assertThat(newPremises.status).isEqualTo(PropertyStatus.active)
+        assertThat(newPremises.notes).isEqualTo(premises.notes)
+        assertThat(newPremises.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
+        assertThat(newPremises.characteristics).isEmpty()
+        assertThat(newPremises.startDate).isEqualTo(LocalDate.now())
+      }
+    }
+
+//    @Test
+//    fun `When creating a new premises with a non exist probation region returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//      val nonExistProbationRegionId = UUID.randomUUID()
+//      val localAuthorityArea = premises.localAuthorityArea!!
+//      val probationDeliveryUnit = premises.probationDeliveryUnit!!
+//
+//      every { probationRegionRepositoryMock.findByIdOrNull(nonExistProbationRegionId) } returns null
+//      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
+//      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
+//      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
+//
+//      val result = callCreateNewPremises(premises, probationRegionId = nonExistProbationRegionId)
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationRegionId", "doesNotExist")
+//    }
+//
+//    @Test
+//    fun `When creating a new premises with a non exist local authority returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//      val probationRegion = premises.probationRegion
+//      val probationDeliveryUnit = premises.probationDeliveryUnit!!
+//      val nonExistLocalAuthorityId = UUID.randomUUID()
+//
+//      every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
+//      every { localAuthorityAreaRepositoryMock.findByIdOrNull(nonExistLocalAuthorityId) } returns null
+//      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
+//      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
+//
+//      val result = callCreateNewPremises(premises, localAuthorityId = nonExistLocalAuthorityId)
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.localAuthorityAreaId", "doesNotExist")
+//    }
+//
+//    @Test
+//    fun `When creating a new premises with a non exist probation delivery unit returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//      val probationRegion = premises.probationRegion
+//      val localAuthorityArea = premises.localAuthorityArea!!
+//      val nonExistPduId = UUID.randomUUID()
+//
+//      every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
+//      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
+//      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(nonExistPduId, probationRegion.id) } returns null
+//      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
+//
+//      val result = callCreateNewPremises(premises, probationDeliveryUnitId = nonExistPduId)
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationDeliveryUnitId", "doesNotExist")
+//    }
+//
+//    @Test
+//    fun `When creating a new premises with empty reference returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//
+//      mockCommonPremisesDependencies(premises)
+//
+//      val result = callCreateNewPremises(premises, reference = "")
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "empty")
+//    }
+//
+//    @Test
+//    fun `When creating a new premises with existing premises reference returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//
+//      mockCommonPremisesDependencies(premises, isUniqueReference = false)
+//
+//      val result = callCreateNewPremises(premises)
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "notUnique")
+//    }
+//
+//    @Test
+//    fun `When creating a new premises with empty address returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//
+//      mockCommonPremisesDependencies(premises)
+//
+//      val result = callCreateNewPremises(premises, address1 = "")
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.address", "empty")
+//    }
+//
+//    @Test
+//    fun `When creating a new premises with empty postcode returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//
+//      mockCommonPremisesDependencies(premises)
+//
+//      val result = callCreateNewPremises(premises, postcode = "")
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.postcode", "empty")
+//    }
+//
+//    @Test
+//    fun `When creating a new premises with turnaround working days in negative returns a FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//
+//      mockCommonPremisesDependencies(premises)
+//
+//      val result = callCreateNewPremises(premises, turnaroundWorkingDays = -2)
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.turnaroundWorkingDays", "isNotAPositiveInteger")
+//    }
+//
+//    @Test
+//    fun `When create a new premises with a non exist characteristic returns FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//      val nonExistCharacteristicId = UUID.randomUUID()
+//
+//      mockCommonPremisesDependencies(premises)
+//      every { characteristicServiceMock.getCharacteristic(nonExistCharacteristicId) } returns null
+//
+//      val result = callCreateNewPremises(premises, characteristicIds = listOf(nonExistCharacteristicId))
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "doesNotExist")
+//    }
+//
+//    @Test
+//    fun `When create a new bedspace with a wrong model scope characteristic returns FieldValidationError with the correct message`() {
+//      val premises = updatePremisesEntity()
+//      val characteristicEntityFactory = CharacteristicEntityFactory()
+//
+//      val premisesCharacteristic = characteristicEntityFactory
+//        .withModelScope("room")
+//        .withServiceScope(ServiceName.temporaryAccommodation.value)
+//        .produce()
+//
+//      mockCommonPremisesDependencies(premises)
+//      every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
+//      every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns false
+//
+//      val result = callCreateNewPremises(premises, characteristicIds = listOf(premisesCharacteristic.id))
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicModelScope")
+//    }
+//
+//    @Test
+//    fun `When create a new bedspace with a wrong service scope characteristic returns FieldValidationError with the correct message`() {
+//      val premises = createPremisesEntity()
+//      val characteristicEntityFactory = CharacteristicEntityFactory()
+//
+//      val premisesCharacteristic = characteristicEntityFactory
+//        .withModelScope("premises")
+//        .withServiceScope(ServiceName.approvedPremises.value)
+//        .produce()
+//
+//      mockCommonPremisesDependencies(premises)
+//      every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
+//      every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns true
+//      every { characteristicServiceMock.serviceScopeMatches(premisesCharacteristic, any()) } returns false
+//
+//      val result = callCreateNewPremises(premises, characteristicIds = listOf(premisesCharacteristic.id))
+//
+//      assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")
+//    }
+
+    private fun updatePremisesEntity(probationDeliveryUnitId: UUID): TemporaryAccommodationPremisesEntity {
+      val probationRegion = ProbationRegionEntityFactory()
+        .withApArea(ApAreaEntityFactory().produce())
+        .produce()
+
+      val localAuthority = LocalAuthorityEntityFactory()
+        .produce()
+
+      val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+        .withProbationRegion(probationRegion)
+        .withId(probationDeliveryUnitId)
+        .produce()
+
+      return temporaryAccommodationPremisesFactory
+        .withService(ServiceName.temporaryAccommodation.value)
+        .withProbationRegion(probationRegion)
+        .withProbationDeliveryUnit(probationDeliveryUnit)
+        .withLocalAuthorityArea(localAuthority)
+        .produce()
+    }
+
+    @SuppressWarnings("LongParameterList")
+    private fun callUpdatePremises(
+      premises: TemporaryAccommodationPremisesEntity,
+      probationRegionId: UUID = premises.probationRegion.id,
+      localAuthorityId: UUID? = premises.localAuthorityArea?.id,
+      probationDeliveryUnitId: UUID = premises.probationDeliveryUnit?.id!!,
+      address1: String = premises.addressLine1,
+      address2: String? = premises.addressLine2,
+      town: String? = premises.town,
+      postcode: String = premises.postcode,
+      turnaroundWorkingDays: Int = premises.turnaroundWorkingDays,
+      characteristicIds: List<UUID> = emptyList(),
+    ) = premisesService.updatePremises(
+      premisesId = premises.id,
+      addressLine1 = address1,
+      addressLine2 = address2,
+      town = town,
+      postcode = postcode,
+      localAuthorityAreaId = localAuthorityId,
+      probationRegionId = probationRegionId,
+      characteristicIds = characteristicIds,
+      notes = premises.notes,
+      probationDeliveryUnitId = probationDeliveryUnitId,
       turnaroundWorkingDays = turnaroundWorkingDays,
     )
 
