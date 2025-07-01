@@ -7,51 +7,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 
 @Service
 class HttpAuthService {
-  fun getNomisPrincipalOrThrow(): AuthAwareAuthenticationToken {
+
+  fun getPrincipalOrThrow(acceptableSources: List<String>): AuthAwareAuthenticationToken {
     val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
 
-    if (principal.token.claims["auth_source"] != "nomis") {
+    if (!acceptableSources.contains(principal.token.claims["auth_source"])) {
       throw ForbiddenProblem()
     }
 
     return principal
   }
 
-  fun getCas2AuthenticatedPrincipalOrThrow(): AuthAwareAuthenticationToken {
-    val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
-    if (!listOf("nomis", "auth").contains(principal.token.claims["auth_source"])) {
-      throw ForbiddenProblem()
-    }
+  fun getNomisPrincipalOrThrow(): AuthAwareAuthenticationToken = getPrincipalOrThrow(listOf("nomis"))
 
-    return principal
-  }
+  fun getCas2AuthenticatedPrincipalOrThrow(): AuthAwareAuthenticationToken = getPrincipalOrThrow(listOf("nomis", "auth"))
 
-  fun getCas2v2AuthenticatedPrincipalOrThrow(): AuthAwareAuthenticationToken {
-    val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
-    if (!listOf("auth", "delius", "nomis").contains(principal.token.claims["auth_source"])) {
-      throw ForbiddenProblem()
-    }
+  // BAIL-WIP This function is only called from the CAS2v2 services. It can be removed when we remove those services.
+  fun getCas2v2AuthenticatedPrincipalOrThrow(): AuthAwareAuthenticationToken = getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
 
-    return principal
-  }
-
-  fun getDeliusPrincipalOrThrow(): AuthAwareAuthenticationToken {
-    val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
-
-    if (principal.token.claims["auth_source"] != "delius") {
-      throw ForbiddenProblem()
-    }
-
-    return principal
-  }
+  fun getDeliusPrincipalOrThrow(): AuthAwareAuthenticationToken = getPrincipalOrThrow(listOf("delius"))
 
   fun getDeliusPrincipalOrNull(): AuthAwareAuthenticationToken? {
-    val principal = SecurityContextHolder.getContext().authentication as? AuthAwareAuthenticationToken ?: return null
-
-    if (principal.token.claims["auth_source"] != "delius") {
-      return null
-    }
-
-    return principal
+    val principal = SecurityContextHolder.getContext().authentication as? AuthAwareAuthenticationToken
+    return if (principal?.token?.claims?.get("auth_source") != "delius") null else principal
   }
 }
