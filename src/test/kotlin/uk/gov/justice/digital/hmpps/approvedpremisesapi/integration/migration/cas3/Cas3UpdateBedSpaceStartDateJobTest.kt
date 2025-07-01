@@ -10,8 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.Period
 
 class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
 
@@ -141,7 +143,7 @@ class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
   }
 
   @Test
-  fun `beds with null startDate and no bookings remain unchanged`() {
+  fun `beds with null startDate and no bookings is set to endDate`() {
     givenAUser { user, jwt ->
 
       val premisesTemporaryAccommodation = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -154,10 +156,13 @@ class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
         withName("Test Room")
       }
 
+      val endDte = LocalDate.now().minus(Period.ofDays(randomInt(5, 30)))
+
       val bed = bedEntityFactory.produceAndPersist {
         withRoom(room)
         withName("Bed with no bookings")
         withStartDate(null)
+        withEndDate(endDte)
       }
 
       setCreatedAt(bed, null)
@@ -165,7 +170,7 @@ class Cas3UpdateBedSpaceStartDateJobTest : MigrationJobTestBase() {
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceStartDate, 10)
 
       val savedBed = bedRepository.findById(bed.id).get()
-      assertThat(savedBed.startDate).isNull()
+      assertThat(savedBed.startDate).isEqualTo(endDte)
     }
   }
 
