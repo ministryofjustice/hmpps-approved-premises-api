@@ -1918,6 +1918,7 @@ paths:
 
   /tasks:
     get:
+      deprecated: true
       tags:
         - Task data
       summary: List all tasks
@@ -2026,6 +2027,7 @@ paths:
 
   /tasks/{taskType}/{id}:
     get:
+      deprecated: true
       tags:
         - Application data
       summary: Gets a task for an application
@@ -2054,6 +2056,7 @@ paths:
 
   /tasks/{taskType}/{id}/allocations:
     post:
+      deprecated: true
       tags:
         - Operations on applications
       summary: Reallocates a task for an application
@@ -2100,6 +2103,7 @@ paths:
 
       x-codegen-request-body-name: body
     delete:
+      deprecated: true
       tags:
         - Operations on applications
       summary: Unallocates a task for an application
