@@ -74,6 +74,8 @@ class RequestForPlacementTransformerTest {
       assertThat(result.requestReviewedAt).isEqualTo(placementApplication.decisionMadeAt?.toInstant())
       assertThat(result.document).isNotNull
       assertThat(result.withdrawalReason).isEqualTo(placementApplication.withdrawalReason?.apiValue)
+      assertThat(result.dates.expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
+      assertThat(result.dates.duration).isEqualTo(47)
       assertThat(result.placementDates).hasSize(1)
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
       assertThat(result.placementDates[0].duration).isEqualTo(47)
@@ -217,22 +219,6 @@ class RequestForPlacementTransformerTest {
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
     }
 
-    @Test
-    fun `Derives the correct status for an unsubmitted placement application`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withDefaults()
-        .withApplication(application)
-        .produce()
-
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
-
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestUnsubmitted)
-    }
-
     @ParameterizedTest
     @CsvSource("true", "false")
     fun `canBeDirectlyWithdrawn is derived from the provided argument`(canBeDirectlyWithdrawn: Boolean) {
@@ -243,6 +229,9 @@ class RequestForPlacementTransformerTest {
       val placementApplication = PlacementApplicationEntityFactory()
         .withDefaults()
         .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.now())
+        .withDuration(5)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(

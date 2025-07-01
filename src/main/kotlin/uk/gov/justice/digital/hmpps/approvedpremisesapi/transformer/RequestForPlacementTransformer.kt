@@ -23,7 +23,8 @@ class RequestForPlacementTransformer(
     createdAt = placementApplicationEntity.createdAt.toInstant(),
     isWithdrawn = placementApplicationEntity.isWithdrawn,
     type = RequestForPlacementType.manual,
-    placementDates = listOfNotNull(placementApplicationEntity.placementDates()?.toApiType()),
+    dates = placementApplicationEntity.placementDates()!!.toApiType(),
+    placementDates = listOfNotNull(placementApplicationEntity.placementDates()!!.toApiType()),
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
     document = placementApplicationEntity.document?.let(objectMapper::readTree),
@@ -54,6 +55,10 @@ class RequestForPlacementTransformer(
       createdAt = placementRequestEntity.createdAt.toInstant(),
       isWithdrawn = placementRequestEntity.isWithdrawn,
       type = RequestForPlacementType.automatic,
+      dates = PlacementDates(
+        expectedArrival = placementRequestEntity.expectedArrival,
+        duration = placementRequestEntity.duration,
+      ),
       placementDates = listOf(
         PlacementDates(
           expectedArrival = placementRequestEntity.expectedArrival,
