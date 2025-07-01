@@ -67,13 +67,27 @@ class SpacePlanningService(
     rangeInclusive: DateRange,
     excludeSpaceBookingId: UUID?,
   ): PremiseCapacitySummary {
-    val bedStatesForEachDay = bedStatesForEachDay(premises, rangeInclusive)
-    val bookingsForEachDay = spaceBookingsForEachDay(premises, rangeInclusive, excludeSpaceBookingId)
+    val dayBedStates = bedStatesForEachDay(premises, rangeInclusive)
+    val dayBookings = spaceBookingsForEachDay(premises, rangeInclusive, excludeSpaceBookingId)
 
+    return premisesCapacity(
+      premises,
+      rangeInclusive,
+      dayBedStates,
+      dayBookings,
+    )
+  }
+
+  private fun premisesCapacity(
+    premises: ApprovedPremisesEntity,
+    rangeInclusive: DateRange,
+    dayBedStates: List<DayBedStates>,
+    dayBookings: List<DayBookings>,
+  ): PremiseCapacitySummary {
     val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
-      val bedStates = bedStatesForEachDay.forDay(day).bedStates
+      val bedStates = dayBedStates.forDay(day).bedStates
       val availableBeds = bedStates.findActive()
-      val bookings = bookingsForEachDay.forDay(day).bookings
+      val bookings = dayBookings.forDay(day).bookings
       PremiseCapacityForDay(
         day = day,
         totalBedCount = bedStates.totalBedCount(),
@@ -146,7 +160,7 @@ class SpacePlanningService(
           spacePlanningModelsFactory.spaceBookingsForDay(
             day = it,
             spaceBookingsToConsider = spaceBookingsToConsider,
-          )
+          ),
         )
       }
   }
