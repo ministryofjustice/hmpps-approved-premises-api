@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
@@ -28,7 +29,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/booking-cancelled/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3BookingCancelledEventIdGet(eventId: UUID): ResponseEntity<CAS3BookingCancelledEvent> {
+  fun eventsCas3BookingCancelledEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3BookingCancelledEvent> {
     val event = cas3DomainEventService.getBookingCancelledEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -40,7 +41,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/booking-confirmed/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3BookingConfirmedEventIdGet(eventId: UUID): ResponseEntity<CAS3BookingConfirmedEvent> {
+  fun eventsCas3BookingConfirmedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3BookingConfirmedEvent> {
     val event = cas3DomainEventService.getBookingConfirmedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -52,7 +53,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/booking-provisionally-made/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3BookingProvisionallyMadeEventIdGet(eventId: UUID): ResponseEntity<CAS3BookingProvisionallyMadeEvent> {
+  fun eventsCas3BookingProvisionallyMadeEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3BookingProvisionallyMadeEvent> {
     val event = cas3DomainEventService.getBookingProvisionallyMadeEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -64,7 +65,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/person-arrived/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3PersonArrivedEventIdGet(eventId: UUID): ResponseEntity<CAS3PersonArrivedEvent> {
+  fun eventsCas3PersonArrivedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3PersonArrivedEvent> {
     val event = cas3DomainEventService.getPersonArrivedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -76,7 +77,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/person-arrived-updated/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3PersonArrivedUpdatedEventIdGet(eventId: UUID): ResponseEntity<CAS3PersonArrivedUpdatedEvent> {
+  fun eventsCas3PersonArrivedUpdatedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3PersonArrivedUpdatedEvent> {
     val event = cas3DomainEventService.getPersonArrivedUpdatedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -88,7 +89,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/person-departed/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3PersonDepartedEventIdGet(eventId: UUID): ResponseEntity<CAS3PersonDepartedEvent> {
+  fun eventsCas3PersonDepartedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3PersonDepartedEvent> {
     val event = cas3DomainEventService.getPersonDepartedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -100,7 +101,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/referral-submitted/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3ReferralSubmittedEventIdGet(eventId: UUID): ResponseEntity<CAS3ReferralSubmittedEvent> {
+  fun eventsCas3ReferralSubmittedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3ReferralSubmittedEvent> {
     val event = cas3DomainEventService.getReferralSubmittedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -112,7 +113,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/person-departure-updated/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3PersonDepartureUpdatedEventIdGet(eventId: UUID): ResponseEntity<CAS3PersonDepartureUpdatedEvent> {
+  fun eventsCas3PersonDepartureUpdatedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3PersonDepartureUpdatedEvent> {
     val event = cas3DomainEventService.getPersonDepartureUpdatedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -124,7 +125,7 @@ class Cas3DomainEventsController(
     value = ["/events/cas3/booking-cancelled-updated/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsCas3BookingCancelledUpdatedEventIdGet(eventId: UUID): ResponseEntity<CAS3BookingCancelledUpdatedEvent> {
+  fun eventsCas3BookingCancelledUpdatedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<CAS3BookingCancelledUpdatedEvent> {
     val event = cas3DomainEventService.getBookingCancelledUpdatedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
