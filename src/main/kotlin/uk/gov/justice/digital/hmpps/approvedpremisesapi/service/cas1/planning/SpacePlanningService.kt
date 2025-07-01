@@ -39,7 +39,7 @@ class SpacePlanningService(
     val dayPlans = range.orderedDatesInRange().map { day ->
       val bedStates = bedStatesForEachDay.forDay(day).bedStates
       val availableBeds = bedStates.filter { it.isActive() }.map { it.bed }.toSet()
-      val bookings = bookingsForEachDay[day]!!.toSet()
+      val bookings = bookingsForEachDay.forDay(day).bookings.toSet()
 
       SpaceDayPlan(
         day = day,
@@ -73,7 +73,7 @@ class SpacePlanningService(
     val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
       val bedStates = bedStatesForEachDay.forDay(day).bedStates
       val availableBeds = bedStates.findActive()
-      val bookings = bookingsForEachDay[day]!!
+      val bookings = bookingsForEachDay.forDay(day).bookings
       PremiseCapacityForDay(
         day = day,
         totalBedCount = bedStates.totalBedCount(),
@@ -131,7 +131,7 @@ class SpacePlanningService(
     premises: ApprovedPremisesEntity,
     range: DateRange,
     excludeSpaceBookingId: UUID? = null,
-  ): Map<LocalDate, List<SpaceBooking>> {
+  ): List<DayBookings> {
     val spaceBookingsToConsider = spaceBookingRepository.findNonCancelledBookingsInRange(
       premisesId = premises.id,
       rangeStartInclusive = range.fromInclusive,
@@ -140,15 +140,15 @@ class SpacePlanningService(
 
     return range.orderedDatesInRange()
       .toList()
-      .associateBy(
-        keySelector = { it },
-        valueTransform = { day ->
+      .map {
+        DayBookings(
+          date = it,
           spacePlanningModelsFactory.spaceBookingsForDay(
-            day = day,
+            day = it,
             spaceBookingsToConsider = spaceBookingsToConsider,
           )
-        },
-      )
+        )
+      }
   }
 
   data class SpacePlan(
@@ -197,4 +197,11 @@ class SpacePlanningService(
   private fun List<DayBedStates>.forDay(day: LocalDate) = this.first { it.date == day }
   private fun List<BedDayState>.findActive() = this.filter { it.isActive() }
   private fun List<BedDayState>.totalBedCount() = this.count { it.isActive() || it.isTemporarilyInactive() }
+
+  private data class DayBookings(
+    val date: LocalDate,
+    val bookings: List<SpaceBooking>,
+  )
+
+  private fun List<DayBookings>.forDay(day: LocalDate) = this.first { it.date == day }
 }
