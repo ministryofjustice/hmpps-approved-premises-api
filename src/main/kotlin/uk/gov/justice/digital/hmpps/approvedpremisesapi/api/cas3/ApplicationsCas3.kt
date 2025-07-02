@@ -1,0 +1,140 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3
+
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
+import io.swagger.v3.oas.annotations.*
+import io.swagger.v3.oas.annotations.media.*
+import io.swagger.v3.oas.annotations.responses.*
+import org.springframework.http.ResponseEntity
+
+import org.springframework.web.bind.annotation.*
+
+
+import kotlin.collections.List
+
+@RestController
+interface ApplicationsCas3 {
+
+    fun getDelegate(): ApplicationsCas3Delegate = object: ApplicationsCas3Delegate {}
+
+    @Operation(
+        tags = ["Operations on application",],
+        summary = "Soft delete a draft application",
+        operationId = "deleteApplication",
+        description = """""",
+        responses = [
+            ApiResponse(responseCode = "200", description = "successful operation"),
+            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))])
+        ]
+    )
+    @RequestMapping(
+            method = [RequestMethod.DELETE],
+            value = ["/applications/{applicationId}"],
+            produces = ["application/problem+json"]
+    )
+    fun deleteApplication(@Parameter(description = "Id of the application", required = true) @PathVariable("applicationId") applicationId: java.util.UUID): ResponseEntity<Unit> {
+        return getDelegate().deleteApplication(applicationId)
+    }
+
+    @Operation(
+        tags = ["Operations on applications",],
+        summary = "Gets a single application by its ID",
+        operationId = "getApplicationById",
+        description = """""",
+        responses = [
+            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas3Application::class))])
+        ]
+    )
+    @RequestMapping(
+            method = [RequestMethod.GET],
+            value = ["/applications/{applicationId}"],
+            produces = ["application/json"]
+    )
+    fun getApplicationById(@Parameter(description = "ID of the application", required = true) @PathVariable("applicationId") applicationId: java.util.UUID): ResponseEntity<Cas3Application> {
+        return getDelegate().getApplicationById(applicationId)
+    }
+
+    @Operation(
+        tags = ["Operations on all applications",],
+        summary = "Lists all applications that the user has created",
+        operationId = "getApplicationsForUser",
+        description = """""",
+        responses = [
+            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas3ApplicationSummary::class)))])
+        ]
+    )
+    @RequestMapping(
+            method = [RequestMethod.GET],
+            value = ["/applications"],
+            produces = ["application/json"]
+    )
+    fun getApplicationsForUser(): ResponseEntity<List<Cas3ApplicationSummary>> {
+        return getDelegate().getApplicationsForUser()
+    }
+
+    @Operation(
+        tags = ["Operations on applications",],
+        summary = "Creates an application",
+        operationId = "postApplication",
+        description = """""",
+        responses = [
+            ApiResponse(responseCode = "201", description = "successful operation", content = [Content(schema = Schema(implementation = Cas3Application::class))]),
+            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+            ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))])
+        ]
+    )
+    @RequestMapping(
+            method = [RequestMethod.POST],
+            value = ["/applications"],
+            produces = ["application/json", "application/problem+json"],
+            consumes = ["application/json"]
+    )
+    fun postApplication(@Parameter(description = "Information to create a blank application with", required = true) @RequestBody body: Cas3NewApplication, @RequestParam(value = "createWithRisks", required = false) createWithRisks: kotlin.Boolean?): ResponseEntity<Cas3Application> {
+        return getDelegate().postApplication(body, createWithRisks)
+    }
+
+    @Operation(
+        tags = ["Application data",],
+        summary = "Submits an Application",
+        operationId = "postApplicationSubmission",
+        description = """""",
+        responses = [
+            ApiResponse(responseCode = "200", description = "successfully submitted the application"),
+            ApiResponse(responseCode = "400", description = "application has already been submitted", content = [Content(schema = Schema(implementation = ValidationError::class))])
+        ]
+    )
+    @RequestMapping(
+            method = [RequestMethod.POST],
+            value = ["/applications/{applicationId}/submission"],
+            produces = ["application/problem+json"],
+            consumes = ["application/json"]
+    )
+    fun postApplicationSubmission(@Parameter(description = "Id of the application", required = true) @PathVariable("applicationId") applicationId: java.util.UUID,@Parameter(description = "Information needed to submit an application", required = true) @RequestBody cas3SubmitApplication: Cas3SubmitApplication): ResponseEntity<Unit> {
+        return getDelegate().postApplicationSubmission(applicationId, cas3SubmitApplication)
+    }
+
+    @Operation(
+        tags = ["Operations on applications",],
+        summary = "Updates an application",
+        operationId = "putApplication",
+        description = """""",
+        responses = [
+            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas3Application::class))]),
+            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))])
+        ]
+    )
+    @RequestMapping(
+            method = [RequestMethod.PUT],
+            value = ["/applications/{applicationId}"],
+            produces = ["application/json", "application/problem+json"],
+            consumes = ["application/json"]
+    )
+    fun putApplication(@Parameter(description = "ID of the application", required = true) @PathVariable("applicationId") applicationId: java.util.UUID,@Parameter(description = "Information to update the application with", required = true) @RequestBody body: Cas3UpdateApplication): ResponseEntity<Cas3Application> {
+        return getDelegate().putApplication(applicationId, body)
+    }
+}
