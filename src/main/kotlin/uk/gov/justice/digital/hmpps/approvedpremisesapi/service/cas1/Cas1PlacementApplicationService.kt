@@ -40,7 +40,7 @@ class Cas1PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val userAllocator: UserAllocator,
   private val userAccessService: UserAccessService,
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,

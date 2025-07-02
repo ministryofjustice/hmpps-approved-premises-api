@@ -21,7 +21,7 @@ import java.util.UUID
 @Service
 class Cas1WithdrawableService(
   private val cas1ApplicationService: Cas1ApplicationService,
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val bookingService: BookingService,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
@@ -96,7 +96,7 @@ class Cas1WithdrawableService(
     placementRequestId: UUID,
     user: UserEntity,
     userProvidedReason: PlacementRequestWithdrawalReason?,
-  ): CasResult<PlacementRequestService.PlacementRequestAndCancellations> {
+  ): CasResult<Cas1PlacementRequestService.PlacementRequestAndCancellations> {
     val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
       ?: return CasResult.NotFound(entityType = "PlacementRequest", id = placementRequestId.toString())
 

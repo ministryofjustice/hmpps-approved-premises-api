@@ -19,7 +19,7 @@ import java.util.UUID
  */
 @Service
 class Cas1SpaceBookingCreateService(
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PremisesService: Cas1PremisesService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,

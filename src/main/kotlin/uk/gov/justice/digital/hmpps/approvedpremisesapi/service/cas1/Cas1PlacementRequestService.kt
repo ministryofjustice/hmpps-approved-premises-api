@@ -41,7 +41,7 @@ import java.util.UUID
 
 @Service
 @Suppress("TooGenericExceptionThrown")
-class PlacementRequestService(
+class Cas1PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,

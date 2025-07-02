@@ -32,9 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService.PlacementRequestAndCancellations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService.PlacementRequestAndCancellations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
@@ -48,7 +48,7 @@ import java.util.UUID
 @Service
 class PlacementRequestsController(
   private val userService: UserService,
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderService: OffenderService,
@@ -79,7 +79,7 @@ class PlacementRequestsController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_VIEW_CRU_DASHBOARD)
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
+      Cas1PlacementRequestService.AllActiveSearchCriteria(
         status = status,
         crn = crn,
         crnOrName = crnOrName,

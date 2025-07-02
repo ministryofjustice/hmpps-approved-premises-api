@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 @Service
 class Cas1WithdrawableTreeOperations(
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val bookingService: BookingService,
   private val bookingRepository: BookingRepository,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,

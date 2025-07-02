@@ -83,9 +83,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
@@ -107,7 +107,7 @@ class AssessmentServiceTest {
   private val referralRejectionReasonRepositoryMock = mockk<ReferralRejectionReasonRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
   private val offenderServiceMock = mockk<OffenderService>()
-  private val placementRequestServiceMock = mockk<PlacementRequestService>()
+  private val placementRequestServiceMock = mockk<Cas1PlacementRequestService>()
   private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
   private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
@@ -2353,7 +2353,7 @@ class AssessmentServiceTest {
     private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
     private val offenderServiceMock = mockk<OffenderService>()
-    private val placementRequestServiceMock = mockk<PlacementRequestService>()
+    private val placementRequestServiceMock = mockk<Cas1PlacementRequestService>()
     private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
     private val userAllocatorMock = mockk<UserAllocator>()
     private val objectMapperMock = spyk<ObjectMapper>()

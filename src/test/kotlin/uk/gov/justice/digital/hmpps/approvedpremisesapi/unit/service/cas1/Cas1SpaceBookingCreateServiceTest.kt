@@ -21,10 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCreatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.TransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -34,7 +34,7 @@ import java.util.UUID
 
 class Cas1SpaceBookingCreateServiceTest {
   private val cas1PremisesService = mockk<Cas1PremisesService>()
-  private val placementRequestService = mockk<PlacementRequestService>()
+  private val placementRequestService = mockk<Cas1PlacementRequestService>()
   private val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val cas1BookingEmailService = mockk<Cas1BookingEmailService>()

@@ -21,8 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
@@ -34,7 +34,7 @@ import java.util.UUID
 @Service
 class Cas1PlacementRequestsController(
   private val userService: UserService,
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer,
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderService: OffenderService,
@@ -61,7 +61,7 @@ class Cas1PlacementRequestsController(
     }
 
     val (requests, metadata) = placementRequestService.getAllCas1Active(
-      PlacementRequestService.AllActiveSearchCriteria(
+      Cas1PlacementRequestService.AllActiveSearchCriteria(
         status = status,
         crnOrName = crnOrName,
         tier = tier?.value,

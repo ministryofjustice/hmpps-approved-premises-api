@@ -59,7 +59,7 @@ import kotlin.collections.toSet
 @Service
 class Cas1SpaceBookingService(
   private val cas1PremisesService: Cas1PremisesService,
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
