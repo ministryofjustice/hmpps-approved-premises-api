@@ -24,11 +24,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableDatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -43,7 +43,7 @@ import java.util.UUID
 
 class Cas1WithdrawableServiceTest {
   private val cas1ApplicationService = mockk<Cas1ApplicationService>()
-  private val placementRequestService = mockk<PlacementRequestService>()
+  private val placementRequestService = mockk<Cas1PlacementRequestService>()
   private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
   private val bookingService = mockk<BookingService>()
   private val cas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
@@ -438,7 +438,7 @@ class Cas1WithdrawableServiceTest {
       every {
         placementRequestService.withdrawPlacementRequest(any(), any(), any())
       } returns CasResult.Success(
-        PlacementRequestService.PlacementRequestAndCancellations(
+        Cas1PlacementRequestService.PlacementRequestAndCancellations(
           placementRequest,
           emptyList(),
         ),

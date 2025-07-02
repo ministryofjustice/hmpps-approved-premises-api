@@ -28,9 +28,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
@@ -39,7 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import java.util.UUID
 
 class Cas1WithdrawableTreeOperationsTest {
-  private val mockPlacementRequestService = mockk<PlacementRequestService>()
+  private val mockPlacementRequestService = mockk<Cas1PlacementRequestService>()
   private val mockBookingService = mockk<BookingService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockCas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
@@ -195,7 +195,7 @@ class Cas1WithdrawableTreeOperationsTest {
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
-    } returns CasResult.Success(mockk<PlacementRequestService.PlacementRequestAndCancellations>())
+    } returns CasResult.Success(mockk<Cas1PlacementRequestService.PlacementRequestAndCancellations>())
 
     every {
       mockBookingService.createCas1Cancellation(any(), any(), null, any(), any(), any())
@@ -401,7 +401,7 @@ class Cas1WithdrawableTreeOperationsTest {
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
-    } returns CasResult.Success(mockk<PlacementRequestService.PlacementRequestAndCancellations>())
+    } returns CasResult.Success(mockk<Cas1PlacementRequestService.PlacementRequestAndCancellations>())
 
     every {
       mockBookingService.createCas1Cancellation(any(), any(), null, any(), any(), any())

@@ -15,9 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.OffsetDateTime
@@ -27,7 +27,7 @@ import java.util.UUID
 class Cas1RequestForPlacementServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
-  private val placementRequestService = mockk<PlacementRequestService>()
+  private val placementRequestService = mockk<Cas1PlacementRequestService>()
   private val requestForPlacementTransformer = mockk<RequestForPlacementTransformer>()
   private val cas1WithdrawableService = mockk<Cas1WithdrawableService>()
 

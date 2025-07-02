@@ -27,7 +27,7 @@ import java.util.UUID
  **/
 @Component
 class Cas1WithdrawableTreeBuilder(
-  @Lazy private val placementRequestService: PlacementRequestService,
+  @Lazy private val placementRequestService: Cas1PlacementRequestService,
   @Lazy private val bookingService: BookingService,
   @Lazy private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   @Lazy private val cas1ApplicationService: Cas1ApplicationService,

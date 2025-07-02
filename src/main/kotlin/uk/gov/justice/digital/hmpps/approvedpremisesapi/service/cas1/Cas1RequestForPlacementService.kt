@@ -15,7 +15,7 @@ import java.util.UUID
 class Cas1RequestForPlacementService(
   private val applicationService: ApplicationService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val requestForPlacementTransformer: RequestForPlacementTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) {

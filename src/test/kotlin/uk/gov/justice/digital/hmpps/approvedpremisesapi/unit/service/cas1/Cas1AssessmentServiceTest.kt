@@ -53,8 +53,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -72,7 +72,7 @@ class Cas1AssessmentServiceTest {
   private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
   private val offenderServiceMock = mockk<OffenderService>()
-  private val placementRequestServiceMock = mockk<PlacementRequestService>()
+  private val placementRequestServiceMock = mockk<Cas1PlacementRequestService>()
   private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()

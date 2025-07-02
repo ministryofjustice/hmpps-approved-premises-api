@@ -44,7 +44,7 @@ class Cas1AssessmentService(
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
-  private val placementRequestService: PlacementRequestService,
+  private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,

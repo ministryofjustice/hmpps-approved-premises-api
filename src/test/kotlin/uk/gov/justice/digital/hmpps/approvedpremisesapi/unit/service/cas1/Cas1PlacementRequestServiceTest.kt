@@ -55,8 +55,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -85,7 +85,7 @@ class Cas1PlacementRequestServiceTest {
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val offenderService = mockk<OffenderService>()
 
-  private val placementRequestService = PlacementRequestService(
+  private val placementRequestService = Cas1PlacementRequestService(
     placementRequestRepository,
     bookingNotMadeRepository,
     placementRequirementsRepository,
@@ -769,7 +769,7 @@ class Cas1PlacementRequestServiceTest {
       every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name) } returns page
 
       val (requests, metadata) = placementRequestService.getAllActive(
-        PlacementRequestService.AllActiveSearchCriteria(
+        Cas1PlacementRequestService.AllActiveSearchCriteria(
           PlacementRequestStatus.matched,
         ),
         PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
@@ -800,7 +800,7 @@ class Cas1PlacementRequestServiceTest {
       } returns page
 
       val (requests, metadata) = placementRequestService.getAllActive(
-        PlacementRequestService.AllActiveSearchCriteria(
+        Cas1PlacementRequestService.AllActiveSearchCriteria(
           PlacementRequestStatus.matched,
         ),
         PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
@@ -834,7 +834,7 @@ class Cas1PlacementRequestServiceTest {
       } returns page
 
       val (requests, metadata) = placementRequestService.getAllActive(
-        PlacementRequestService.AllActiveSearchCriteria(
+        Cas1PlacementRequestService.AllActiveSearchCriteria(
           PlacementRequestStatus.matched,
           null,
           null,
@@ -869,7 +869,7 @@ class Cas1PlacementRequestServiceTest {
       every { placementRequestRepository.allForDashboard(crn = crn, pageable = pageRequest) } returns page
 
       val (requests, metadata) = placementRequestService.getAllActive(
-        PlacementRequestService.AllActiveSearchCriteria(
+        Cas1PlacementRequestService.AllActiveSearchCriteria(
           crn = crn,
         ),
         PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
@@ -900,7 +900,7 @@ class Cas1PlacementRequestServiceTest {
       every { placementRequestRepository.allForDashboard(tier = tier, pageable = pageRequest) } returns page
 
       val (requests, metadata) = placementRequestService.getAllActive(
-        PlacementRequestService.AllActiveSearchCriteria(
+        Cas1PlacementRequestService.AllActiveSearchCriteria(
           tier = tier,
         ),
         PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
@@ -936,7 +936,7 @@ class Cas1PlacementRequestServiceTest {
       } returns page
 
       val (requests, metadata) = placementRequestService.getAllActive(
-        PlacementRequestService.AllActiveSearchCriteria(
+        Cas1PlacementRequestService.AllActiveSearchCriteria(
           arrivalDateStart = startDate,
         ),
         PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
@@ -967,7 +967,7 @@ class Cas1PlacementRequestServiceTest {
       every { placementRequestRepository.allForDashboard(arrivalDateTo = endDate, pageable = pageRequest) } returns page
 
       val (requests, metadata) = placementRequestService.getAllActive(
-        PlacementRequestService.AllActiveSearchCriteria(
+        Cas1PlacementRequestService.AllActiveSearchCriteria(
           arrivalDateEnd = endDate,
         ),
         PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
