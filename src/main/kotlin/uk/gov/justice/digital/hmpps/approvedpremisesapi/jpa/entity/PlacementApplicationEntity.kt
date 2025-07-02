@@ -24,6 +24,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementDates
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -128,12 +129,12 @@ data class PlacementApplicationEntity(
   var isWithdrawn: Boolean = false,
 
   /**
-   * If [submittedAt] is not null, this value will be set
+   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
    */
   var expectedArrival: LocalDate? = null,
 
   /**
-   * If [submittedAt] is not null, this value will be set
+   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
    */
   var duration: Int? = null,
 
@@ -149,6 +150,15 @@ data class PlacementApplicationEntity(
   fun isSubmitted() = submittedAt != null
 
   fun isBeingAssessed() = isActive() && decision == null
+
+  fun placementDates() = if (isSubmitted()) {
+    Cas1PlacementDates(
+      expectedArrival = expectedArrival!!,
+      duration = duration!!,
+    )
+  } else {
+    null
+  }
 
   override fun toString() = "PlacementApplicationEntity: $id"
 }
