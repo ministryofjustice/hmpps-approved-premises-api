@@ -121,14 +121,14 @@ class SpacePlanningService(
   )
 
   private fun bedStatesForEachDay(
-    allPremises: List<ApprovedPremisesEntity>,
+    forPremises: List<ApprovedPremisesEntity>,
     range: DateRange,
   ): List<PremisesDayBedStates> {
-    val allPremisesIds = allPremises.map { it.id }
+    val allPremisesIds = forPremises.map { it.id }
     val outOfServiceBedRecordsToConsider = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesIds(allPremisesIds)
     val beds = cas1BedsRepository.bedSummary(allPremisesIds)
 
-    return allPremises.map { premises ->
+    return forPremises.map { premises ->
       PremisesDayBedStates(
         premises = premises,
         bedStates = range.orderedDatesInRange()
@@ -148,17 +148,17 @@ class SpacePlanningService(
   }
 
   private fun spaceBookingsForEachDay(
-    allPremises: List<ApprovedPremisesEntity>,
+    forPremises: List<ApprovedPremisesEntity>,
     range: DateRange,
     excludeSpaceBookingId: UUID? = null,
   ): List<PremisesDayBookings> {
     val nonCancelledBookingsInRange = spaceBookingRepository.findNonCancelledBookingsInRange(
-      premisesIds = allPremises.map { it.id },
+      premisesIds = forPremises.map { it.id },
       rangeStartInclusive = range.fromInclusive,
       rangeEndInclusive = range.toInclusive,
     ).filter { it.id != excludeSpaceBookingId }
 
-    return allPremises.map { premises ->
+    return forPremises.map { premises ->
       PremisesDayBookings(
         premises = premises,
         dayBookings = range.orderedDatesInRange()
