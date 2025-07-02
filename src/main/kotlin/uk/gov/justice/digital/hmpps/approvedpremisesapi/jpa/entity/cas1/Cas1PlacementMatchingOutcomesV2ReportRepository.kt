@@ -54,19 +54,10 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
         rfp.* 
       FROM raw_requests_for_placements rfp
       
-      LEFT OUTER JOIN placement_application_dates pad ON pad.id = rfp.internal_placement_application_date_id
-      
       -- this is required because placement applications can have many dates linked to different placement requests
       INNER JOIN placement_requests pr ON (
-        (
-          rfp.internal_placement_request_id IS NOT NULL AND
-          pr.id = rfp.internal_placement_request_id
-        ) 
-        OR
-        (
-          rfp.internal_placement_application_date_id IS NOT NULL AND 
-          pr.id = pad.placement_request_id
-        )
+        rfp.internal_placement_request_id IS NOT NULL AND
+        pr.id = rfp.internal_placement_request_id
       )
       
       LEFT OUTER JOIN LATERAL (
@@ -154,7 +145,7 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
         (pr.expected_arrival >= :startDateTimeInclusive AND pr.expected_arrival <= :endDateTimeInclusive)
       """.trimIndent(),
       placementApplicationsRangeConstraints = """
-        (pa_date.expected_arrival >= :startDateTimeInclusive AND pa_date.expected_arrival <= :endDateTimeInclusive)
+        (pa.expected_arrival >= :startDateTimeInclusive AND pa.expected_arrival <= :endDateTimeInclusive)
       """.trimIndent(),
     )
 

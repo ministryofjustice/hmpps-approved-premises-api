@@ -34,7 +34,6 @@ class Cas1RequestForPlacementReportRepository(
   
   SELECT 
     pr.id AS internal_placement_request_id,
-    null AS internal_placement_application_date_id,
     CONCAT('placement_request:',paa.id) AS request_for_placement_id, 
     'STANDARD' AS request_for_placement_type,
     to_char(paa.expected_arrival_date, 'YYYY-MM-DD') AS requested_arrival_date,
@@ -85,8 +84,7 @@ class Cas1RequestForPlacementReportRepository(
 UNION ALL
        
   SELECT 
-    null AS internal_placement_request_id,
-    pa_date.id AS internal_placement_application_date_id,
+    pr.id AS internal_placement_request_id,
     CONCAT('placement_application:',pa.id) AS request_for_placement_id,
     CASE
       WHEN pa.placement_type = '0' THEN 'ROTL'
@@ -94,8 +92,8 @@ UNION ALL
       WHEN pa.placement_type = '2' THEN 'ADDITIONAL_PLACEMENT'
       ELSE ''
     END AS request_for_placement_type, 
-    to_char(pa_date.expected_arrival, 'YYYY-MM-DD') AS requested_arrival_date,
-    pa_date.duration AS requested_duration_days,
+    to_char(pa.expected_arrival, 'YYYY-MM-DD') AS requested_arrival_date,
+    pa.duration AS requested_duration_days,
     to_char(CAST(pa.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     to_char(CAST(pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as timestamp), 'YYYY-MM-DD') AS parole_decision_date,
     to_char(CAST(pa.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,
@@ -109,8 +107,8 @@ UNION ALL
   
     placement_applications pa
     INNER JOIN raw_applications_report ON raw_applications_report.application_id = pa.application_id
-    INNER JOIN placement_application_dates pa_date ON pa.id = pa_date.placement_application_id
     INNER JOIN approved_premises_applications apa ON pa.application_id = apa.id
+    LEFT OUTER JOIN placement_requests pr ON pr.placement_application_id = pa.id AND pr.reallocated_at IS NULL
     LEFT OUTER JOIN LATERAL (
       SELECT d.occurred_at,
              m.value as placement_application_id
