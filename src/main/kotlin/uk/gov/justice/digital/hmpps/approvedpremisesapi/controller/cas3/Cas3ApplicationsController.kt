@@ -41,7 +41,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping(
-  "\${api.base-path:}/cas3}",
+  "\${api.base-path:}/cas3",
   produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
 )
 class Cas3ApplicationsController(
@@ -155,7 +155,7 @@ class Cas3ApplicationsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  @DeleteMapping("/applications/{applicationId}]")
+  @DeleteMapping("/applications/{applicationId}")
   fun deleteApplication(@PathVariable applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(
     extractEntityFromCasResult(cas3ApplicationService.markApplicationAsDeleted(applicationId)),
   )

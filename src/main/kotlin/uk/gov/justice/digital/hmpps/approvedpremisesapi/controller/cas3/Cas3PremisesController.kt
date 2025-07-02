@@ -47,9 +47,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.time.ZoneOffset
 import java.util.UUID
 
+@SuppressWarnings("LongParameterList", "ThrowsCount")
 @RestController
 @RequestMapping(
-  "\${api.base-path:}/cas3}",
+  "\${api.base-path:}/cas3",
   produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
 )
 class Cas3PremisesController(
@@ -224,9 +225,9 @@ class Cas3PremisesController(
     consumes = [MediaType.APPLICATION_JSON_VALUE],
   )
   fun postPremisesBookingDeparture(
-    premisesId: UUID,
-    bookingId: UUID,
-    body: Cas3NewDeparture,
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+    @RequestBody body: Cas3NewDeparture,
   ): ResponseEntity<Cas3Departure> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
