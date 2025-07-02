@@ -253,6 +253,7 @@ components:
         - id
         - reference
         - status
+        - startDate
     Cas3Premises:
       type: object
       properties:

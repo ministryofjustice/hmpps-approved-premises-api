@@ -15,7 +15,7 @@ class Cas3BedspaceTransformer(
   fun transformJpaToApi(bed: BedEntity) = Cas3Bedspace(
     id = bed.id,
     reference = bed.room.name,
-    startDate = bed.startDate,
+    startDate = bed.startDate!!,
     endDate = bed.endDate,
     status = bed.getCas3BedspaceStatus(),
     notes = bed.room.notes,
@@ -25,7 +25,7 @@ class Cas3BedspaceTransformer(
   fun transformJpaToApi(jpa: Cas3BedspacesEntity) = Cas3Bedspace(
     id = jpa.id,
     reference = jpa.reference,
-    startDate = jpa.startDate,
+    startDate = jpa.startDate!!,
     endDate = jpa.endDate,
     notes = jpa.notes,
     status = Cas3BedspaceStatus.online, // sets online as default for now - will change when we get there

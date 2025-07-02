@@ -170,7 +170,7 @@ class Cas3BookingTransformerTest {
   private val bedspaceModel = Cas3Bedspace(
     id = bedspaceEntity.id,
     reference = bedspaceEntity.reference,
-    startDate = bedspaceEntity.startDate,
+    startDate = bedspaceEntity.startDate!!,
     endDate = bedspaceEntity.endDate,
     notes = bedspaceEntity.notes,
     status = Cas3BedspaceStatus.online,
