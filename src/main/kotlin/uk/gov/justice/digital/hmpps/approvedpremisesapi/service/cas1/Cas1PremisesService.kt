@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.io.OutputStream
 import java.time.Clock
@@ -102,14 +103,18 @@ class Cas1PremisesService(
 
   fun premiseExistsById(id: UUID) = premisesRepository.existsById(id)
 
-  fun getPremiseCapacity(
-    premisesId: UUID,
+  fun getPremisesCapacities(
+    premisesIds: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
     excludeSpaceBookingId: UUID?,
-  ): CasResult<SpacePlanningService.PremiseCapacitySummary> {
-    val premises = premisesRepository.findByIdOrNull(premisesId)
-      ?: return CasResult.NotFound("premises", premisesId.toString())
+  ): CasResult<List<PremiseCapacitySummary>> {
+    val premises = premisesRepository.findAllById(premisesIds)
+
+    if (premises.size != premisesIds.size) {
+      val missingIds = premisesIds - premises.map { it.id }
+      return CasResult.GeneralValidationError("Could not resolve all premises IDs. Missing IDs are $missingIds")
+    }
 
     if (startDate.isAfter(endDate)) {
       return CasResult.GeneralValidationError("Start Date $startDate should be before End Date $endDate")
@@ -118,7 +123,7 @@ class Cas1PremisesService(
     val dateRange = if (ChronoUnit.YEARS.between(startDate, endDate) > 1) {
       log.warn(
         """Capacity requested for more than 2 years, will only return the first few years. 
-        |Arrival Date: $startDate, Departure Date: $endDate, Premises: ${premises.name}
+        |Arrival Date: $startDate, Departure Date: $endDate
         """.trimMargin(),
       )
       DateRange(startDate, startDate.plusYears(2).minusDays(1))
@@ -128,7 +133,7 @@ class Cas1PremisesService(
 
     return CasResult.Success(
       spacePlanningService.capacity(
-        premises = premises,
+        forPremises = premises,
         rangeInclusive = dateRange,
         excludeSpaceBookingId = excludeSpaceBookingId,
       ),
