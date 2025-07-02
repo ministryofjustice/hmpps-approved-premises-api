@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyBedFactory.Cas1SiteSurveyBed
 import java.io.File
+import java.time.LocalDate
 import java.util.UUID
 import kotlin.Boolean
 
@@ -75,9 +76,13 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
       } else {
         if (existingBed.room.code != it.roomCode) {
           bedErrors.add("Bed ${it.bedCode} already exists in room ${existingBed.room.code} but is being added to room ${it.roomCode}.")
+        } else if (existingBed.endDate != null) {
+          updateBed(existingBed, newEndDate = null)
         }
       }
     }
+
+    expireRemovedBeds(beds, premises)
 
     if (bedErrors.isNotEmpty()) {
       error(bedErrors.joinToString(","))
@@ -188,6 +193,16 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     }
   }
 
+  private data class ApprovedPremisesBedForComparison(
+    val endDate: LocalDate?,
+  ) {
+    companion object {
+      fun fromEntity(entity: BedEntity): ApprovedPremisesBedForComparison = ApprovedPremisesBedForComparison(
+        endDate = entity.endDate,
+      )
+    }
+  }
+
   private fun updateRoom(existingRoom: RoomEntity, newRoom: RoomInfo) {
     val beforeChange = ApprovedPremisesRoomForComparison.fromEntity(existingRoom)
 
@@ -220,6 +235,30 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
       ),
     )
     changesLog.info("Created new bed with code ${bed.bedCode} and name ${bed.bedName} in room code ${bed.roomCode}.")
+  }
+
+  private fun expireRemovedBeds(beds: List<BedInfo>, premises: ApprovedPremisesEntity) {
+    val existingUnexpiredBeds = bedRepository.findByRoomPremisesIdAndEndDateIsNull(premises.id)
+    val existingBedCodes = existingUnexpiredBeds.map { it.code }.toSet()
+    val newBedCodes = beds.map { it.bedCode }.toSet()
+    val expiredBedCodes = existingBedCodes.minus(newBedCodes)
+
+    expiredBedCodes.forEach { bedCode ->
+      updateBed(existingUnexpiredBeds.first { it.code == bedCode }, LocalDate.now())
+    }
+  }
+
+  private fun updateBed(bed: BedEntity, newEndDate: LocalDate?) {
+    val beforeChange = ApprovedPremisesBedForComparison.fromEntity(bed)
+
+    val updatedBed = bedRepository.save(bed.apply { this.endDate = newEndDate })
+
+    val afterChange = ApprovedPremisesBedForComparison.fromEntity(updatedBed)
+
+    val diff = javers.compare(beforeChange, afterChange)
+    if (diff.hasChanges()) {
+      changesLog.info("Changes for bed ${bed.name} with code ${bed.code}: ${diff.prettyPrint()}")
+    }
   }
 
   private fun findExistingPremisesByQCodeOrThrow(qCode: String): ApprovedPremisesEntity = approvedPremisesRepository.findByQCode(qCode)
