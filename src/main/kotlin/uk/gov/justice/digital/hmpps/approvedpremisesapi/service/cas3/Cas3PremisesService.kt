@@ -357,25 +357,23 @@ class Cas3PremisesService(
     notes: String?,
     probationDeliveryUnitId: UUID,
     turnaroundWorkingDays: Int?,
-  ): CasResult<TemporaryAccommodationPremisesEntity> {
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return CasResult.NotFound("Premises", premisesId.toString())
-    println("hello")
 
-    val validationErrors = ValidationErrors()
     val localAuthorityArea = when (localAuthorityAreaId) {
       null -> null
       else -> {
         val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
         if (localAuthorityArea == null) {
-          validationErrors["$.localAuthorityAreaId"] = "doesNotExist"
+          "$.localAuthorityAreaId" hasValidationError "doesNotExist"
         }
         localAuthorityArea
       }
     }
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
-      validationErrors["$.probationRegionId"] = "doesNotExist"
+      "$.probationRegionId" hasValidationError "doesNotExist"
     }
     val probationDeliveryUnit =
       tryGetProbationDeliveryUnit(Ior.fromNullables(null, probationDeliveryUnitId)?.toEither(), probationRegionId) { property, err ->
@@ -383,13 +381,17 @@ class Cas3PremisesService(
       }
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
     if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
-      validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
+      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
     }
-
+    if (addressLine1.isEmpty()) {
+      "$.address" hasValidationError "empty"
+    }
+    if (postcode.isEmpty()) {
+      "$.postcode" hasValidationError "empty"
+    }
     if (validationErrors.any()) {
-      return CasResult.FieldValidationError(validationErrors)
+      return fieldValidationError
     }
-    println("hello2")
 
     premises.let {
       it.addressLine1 = addressLine1
@@ -407,10 +409,8 @@ class Cas3PremisesService(
     }
 
     val savedPremises = premisesRepository.save(premises)
-    println("hello3")
-    println(premises)
 
-    return CasResult.Success(savedPremises)
+    return success(savedPremises)
   }
 
   fun renamePremises(
