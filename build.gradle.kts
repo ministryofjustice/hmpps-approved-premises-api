@@ -301,14 +301,6 @@ registerAdditionalOpenApiGenerateTask(
   useTags = true,
 )
 
-registerAdditionalOpenApiGenerateTask(
-  name = "openApiGenerateCas3DomainEvents",
-  ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model",
-  useTags = true,
-)
-
 fun registerAdditionalOpenApiGenerateTask(
   name: String,
   ymlPath: String,
@@ -418,7 +410,6 @@ tasks.register("openApiPreCompilation") {
 }
 
 tasks.get("openApiGenerate").dependsOn(
-  "openApiGenerateCas3DomainEvents",
   "openApiGenerateCas2DomainEvents",
   "openApiPreCompilation",
   "openApiGenerateCas1Namespace",
