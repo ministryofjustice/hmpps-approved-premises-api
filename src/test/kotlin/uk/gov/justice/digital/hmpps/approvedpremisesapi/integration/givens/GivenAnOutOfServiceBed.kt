@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -11,6 +12,7 @@ fun IntegrationTestBase.givenAnOutOfServiceBed(
   startDate: LocalDate = LocalDate.now(),
   endDate: LocalDate = LocalDate.now(),
   cancelled: Boolean = false,
+  reason: String = randomStringMultiCaseWithNumbers(6),
 ): Cas1OutOfServiceBedEntity {
   val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
     withCreatedAt(OffsetDateTime.now())
@@ -23,7 +25,11 @@ fun IntegrationTestBase.givenAnOutOfServiceBed(
       withOutOfServiceBed(this@apply)
       withStartDate(startDate)
       withEndDate(endDate)
-      withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+      withReason(
+        cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
+          withName(reason)
+        },
+      )
     }
   }
 
