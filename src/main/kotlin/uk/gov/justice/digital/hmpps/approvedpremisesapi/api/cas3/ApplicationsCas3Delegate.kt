@@ -5,8 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity

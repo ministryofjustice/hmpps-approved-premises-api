@@ -14,8 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
