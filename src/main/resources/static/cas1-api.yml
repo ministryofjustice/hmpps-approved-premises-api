@@ -2409,7 +2409,7 @@ paths:
           description: Returns tasks that match the given type. BookingAppeal is not supported. Deprecated - use 'types'
           deprecated: true
           schema:
-            $ref: '_shared.yml#/components/schemas/TaskType'
+            $ref: 'cas1-schemas.yml#/components/schemas/TaskType'
         - name: types
           in: query
           required: false
@@ -2417,7 +2417,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '_shared.yml#/components/schemas/TaskType'
+              $ref: 'cas1-schemas.yml#/components/schemas/TaskType'
         - name: page
           in: query
           required: false
@@ -2434,7 +2434,7 @@ paths:
           required: false
           description: Which field to sort the results by. If not provided will sort by createdAt
           schema:
-            $ref: '_shared.yml#/components/schemas/TaskSortField'
+            $ref: 'cas1-schemas.yml#/components/schemas/TaskSortField'
         - name: sortDirection
           in: query
           required: false
@@ -2446,7 +2446,7 @@ paths:
           required: false
           description: Allows filtering on allocated, unallocated, or both
           schema:
-            $ref: '_shared.yml#/components/schemas/AllocatedFilter'
+            $ref: 'cas1-schemas.yml#/components/schemas/AllocatedFilter'
         - name: apAreaId
           in: query
           required: false
@@ -2493,7 +2493,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Task'
+                  $ref: 'cas1-schemas.yml#/components/schemas/Task'
           headers:
             X-Pagination-CurrentPage:
               $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
@@ -2529,7 +2529,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/TaskWrapper'
+                $ref: 'cas1-schemas.yml#/components/schemas/TaskWrapper'
   /tasks/{taskType}/{id}/allocations:
     post:
       tags:
@@ -2560,7 +2560,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/NewReallocation'
+              $ref: 'cas1-schemas.yml#/components/schemas/NewReallocation'
         required: false
       responses:
         201:
@@ -2568,7 +2568,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Reallocation'
+                $ref: 'cas1-schemas.yml#/components/schemas/Reallocation'
         400:
           description: invalid params
           content:

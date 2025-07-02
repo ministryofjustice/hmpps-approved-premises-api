@@ -1940,6 +1940,158 @@ components:
           format: date-time
       required:
         - hasApplicableAssessment
+    TaskWrapper:
+      type: object
+      properties:
+        task:
+          $ref: '#/components/schemas/Task'
+        users:
+          type: array
+          description: Users to whom this task can be allocated
+          items:
+            $ref: '_shared.yml#/components/schemas/UserWithWorkload'
+      required:
+        - task
+        - users
+    Task:
+      type: object
+      properties:
+        taskType:
+          $ref: '#/components/schemas/TaskType'
+        id:
+          type: string
+          format: uuid
+          example: 6abb5fa3-e93f-4445-887b-30d081688f44
+        applicationId:
+          type: string
+          format: uuid
+          example: 6abb5fa3-e93f-4445-887b-30d081688f44
+        personSummary:
+          $ref: '_shared.yml#/components/schemas/PersonSummary'
+        personName:
+          type: string
+          deprecated: true
+          description: Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.
+        crn:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          deprecated: true
+          description: The Due date of the task - this is deprecated in favour of the `dueAt` field
+        dueAt:
+          type: string
+          format: date-time
+        expectedArrivalDate:
+          type: string
+          format: date
+        allocatedToStaffMember:
+          $ref: '_shared.yml#/components/schemas/ApprovedPremisesUser'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        apArea:
+          $ref: '_shared.yml#/components/schemas/ApArea'
+        probationDeliveryUnit:
+          $ref: '_shared.yml#/components/schemas/ProbationDeliveryUnit'
+        outcomeRecordedAt:
+          type: string
+          format: date-time
+        apType:
+          $ref: '_shared.yml#/components/schemas/ApType'
+      discriminator:
+        propertyName: taskType
+        mapping:
+          Assessment: '#/components/schemas/AssessmentTask'
+          PlacementApplication: '#/components/schemas/PlacementApplicationTask'
+      required:
+        - id
+        - taskType
+        - applicationId
+        - personName
+        - personSummary
+        - dueDate
+        - status
+        - crn
+        - dueAt
+        - apType
+    TaskStatus:
+      type: string
+      enum:
+        - not_started
+        - in_progress
+        - complete
+        - info_requested
+    TaskSortField:
+      type: string
+      enum:
+        - createdAt
+        - dueAt
+        - person
+        - allocatedTo
+        - completedAt
+        - taskType
+        - decision
+        - expectedArrivalDate
+        - apType
+    AssessmentTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+        - type: object
+          properties:
+            createdFromAppeal:
+              type: boolean
+            outcome:
+              $ref: '_shared.yml#/components/schemas/AssessmentDecision'
+          required:
+            - createdFromAppeal
+    PlacementApplicationTask:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+        - type: object
+          properties:
+            tier:
+              $ref: '_shared.yml#/components/schemas/RiskTierEnvelope'
+            releaseType:
+              $ref: '_shared.yml#/components/schemas/ReleaseTypeOption'
+            placementType:
+              $ref: '_shared.yml#/components/schemas/PlacementType'
+            placementDates:
+              type: array
+              items:
+                $ref: '_shared.yml#/components/schemas/PlacementDates'
+            outcome:
+              $ref: '_shared.yml#/components/schemas/PlacementApplicationDecision'
+          required:
+            - id
+            - tier
+            - releaseType
+            - placementType
+    TaskType:
+      type: string
+      enum:
+        - Assessment
+        - PlacementApplication
+    NewReallocation:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+    Reallocation:
+      type: object
+      properties:
+        user:
+          $ref: '_shared.yml#/components/schemas/ApprovedPremisesUser'
+        taskType:
+          $ref: '#/components/schemas/TaskType'
+      required:
+        - user
+        - taskType
+    AllocatedFilter:
+      type: string
+      enum:
+        - allocated
+        - unallocated
 
 
 
