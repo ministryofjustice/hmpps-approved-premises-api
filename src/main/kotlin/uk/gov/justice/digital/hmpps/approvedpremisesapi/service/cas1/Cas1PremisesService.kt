@@ -99,6 +99,8 @@ class Cas1PremisesService(
 
   fun getPremises(gender: ApprovedPremisesGender?, apAreaId: UUID?, cruManagementAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId, cruManagementAreaId)
 
+  fun getAllPremisesIds() = premisesRepository.findAllIds()
+
   fun findPremiseById(id: UUID) = premisesRepository.findByIdOrNull(id)
 
   fun premiseExistsById(id: UUID) = premisesRepository.existsById(id)

@@ -131,6 +131,31 @@ class Cas1PremisesController(
       },
     )
 
+  /*
+  This is a spike endpoint to test performance
+  against a prod-like dataset. It will need refining
+  once requirements are fully understood
+   */
+  override fun getCapacities(
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): ResponseEntity<List<Cas1PremiseCapacity>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
+
+    val capacities = extractEntityFromCasResult(
+      cas1PremisesService.getPremisesCapacities(
+        premisesIds = cas1PremisesService.getAllPremisesIds(),
+        startDate = startDate,
+        endDate = endDate,
+        excludeSpaceBookingId = null,
+      ),
+    )
+
+    return ResponseEntity.ok().body(
+      capacities.map { cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(it) },
+    )
+  }
+
   override fun getCapacity(
     premisesId: UUID,
     startDate: LocalDate,
