@@ -17,15 +17,6 @@ interface PlacementDateRepository : JpaRepository<PlacementDateEntity, UUID> {
 
   @Query("SELECT p FROM PlacementDateEntity p WHERE p.placementApplication = :placementApplication")
   fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity): List<PlacementDateEntity>
-
-  @Query(
-    """select pad.placement_application_id 
-       from placement_application_dates pad 
-       inner join placement_requests pr on pr.id = pad.placement_request_id 
-       where pr.reallocated_at is not null""",
-    nativeQuery = true,
-  )
-  fun findPlacementAppIdsWithDatesLinkedToReallocatedPlacementRequest(): List<UUID>
 }
 
 @Deprecated("This is being replaced by date fields on the [PlacementApplicationEntity]")

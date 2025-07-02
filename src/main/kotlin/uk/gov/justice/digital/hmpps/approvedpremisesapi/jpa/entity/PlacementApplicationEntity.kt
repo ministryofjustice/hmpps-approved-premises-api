@@ -51,24 +51,6 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   @Modifying
   @Query("UPDATE PlacementApplicationEntity p SET p.dueAt = :dueAt WHERE p.id = :id")
   fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
-
-  @Query(
-    value = """
-    with pa_with_date_count as (
-      select 
-      count(*) as date_count, 
-      pad.placement_application_id
-      from  placement_application_dates pad 
-      group by pad.placement_application_id
-    )
-    select 
-      placement_application_id
-    from pa_with_date_count 
-    where date_count > 1
-    """,
-    nativeQuery = true,
-  )
-  fun findAllWithMultipleDates(): List<UUID>
 }
 
 @Repository
