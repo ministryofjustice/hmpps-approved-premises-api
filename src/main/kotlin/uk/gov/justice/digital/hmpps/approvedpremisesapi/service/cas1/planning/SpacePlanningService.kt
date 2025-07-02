@@ -66,16 +66,24 @@ class SpacePlanningService(
     premises: ApprovedPremisesEntity,
     rangeInclusive: DateRange,
     excludeSpaceBookingId: UUID?,
-  ): PremiseCapacitySummary {
-    val dayBedStates = bedStatesForEachDay(listOf(premises), rangeInclusive)
-    val dayBookings = spaceBookingsForEachDay(listOf(premises), rangeInclusive, excludeSpaceBookingId)
+  ) = capacity(listOf(premises), rangeInclusive, excludeSpaceBookingId)[0]
 
-    return premisesCapacity(
-      premises,
-      rangeInclusive,
-      dayBedStates.forPremises(premises),
-      dayBookings.forPremises(premises),
-    )
+  fun capacity(
+    forPremises: List<ApprovedPremisesEntity>,
+    rangeInclusive: DateRange,
+    excludeSpaceBookingId: UUID?,
+  ): List<PremiseCapacitySummary> {
+    val dayBedStates = bedStatesForEachDay(forPremises, rangeInclusive)
+    val dayBookings = spaceBookingsForEachDay(forPremises, rangeInclusive, excludeSpaceBookingId)
+
+    return forPremises.map { premises ->
+      premisesCapacity(
+        premises,
+        rangeInclusive,
+        dayBedStates.forPremises(premises),
+        dayBookings.forPremises(premises),
+      )
+    }
   }
 
   private fun premisesCapacity(
