@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -342,8 +343,8 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every {
-        placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
-      } returns CasResult.Success(emptyList())
+        placementRequestService.createPlacementRequestFromPlacementApplication(any(), any())
+      } returns CasResult.Success(PlacementRequestEntityFactory().withDefaults().produce())
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
       every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit
@@ -360,7 +361,7 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
 
-      verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
+      verify { placementRequestService.createPlacementRequestFromPlacementApplication(placementApplication, "decisionSummary accepted") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
       verify {
         cas1PlacementApplicationDomainEventService.placementApplicationAssessed(

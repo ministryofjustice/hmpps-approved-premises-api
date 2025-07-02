@@ -1018,8 +1018,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
             `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
               `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
-                `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
-
                   webTestClient.post()
                     .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
                     .header("Authorization", "Bearer $jwt")
@@ -1044,22 +1042,22 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
 
                   assertThat(createdPlacementRequests.size).isEqualTo(1)
+                  assertThat(createdPlacementRequests[0].placementApplication!!.id).isEqualTo(updatedPlacementApplication.id)
+                  assertThat(updatedPlacementApplication.placementRequests[0].id).isEqualTo(createdPlacementRequests[0].id)
 
-                  val createdPlacementApplication = createdPlacementRequests[0]
-                  assertThat(updatedPlacementApplication.placementDates[0].placementRequest!!.id).isEqualTo(createdPlacementApplication.id)
+                  val createdPlacementRequest = createdPlacementRequests[0]
 
-                  assertThat(createdPlacementApplication.allocatedToUser).isNull()
-                  assertThat(createdPlacementApplication.application.id).isEqualTo(placementApplicationEntity.application.id)
-                  assertThat(createdPlacementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
-                  assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
-                  assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
-                  assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+                  assertThat(createdPlacementRequest.allocatedToUser).isNull()
+                  assertThat(createdPlacementRequest.application.id).isEqualTo(placementApplicationEntity.application.id)
+                  assertThat(createdPlacementRequest.expectedArrival).isEqualTo(placementApplicationEntity.expectedArrival)
+                  assertThat(createdPlacementRequest.duration).isEqualTo(placementApplicationEntity.duration)
+                  assertThat(createdPlacementRequest.isParole).isEqualTo(isParole)
+                  assertThat(createdPlacementRequest.placementRequirements.id).isEqualTo(placementRequirements.id)
 
                   emailAsserter.assertEmailsRequestedCount(1)
                   emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_ACCEPTED_V2)
                 }
               }
-            }
           }
         }
       }
@@ -1154,6 +1152,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       block(placementRequirements)
     }
 
+    @Deprecated("Don't use placement dates")
     private fun `Given placement dates`(
       placementApplicationEntity: PlacementApplicationEntity,
       block: (placementDates: PlacementDateEntity) -> Unit,

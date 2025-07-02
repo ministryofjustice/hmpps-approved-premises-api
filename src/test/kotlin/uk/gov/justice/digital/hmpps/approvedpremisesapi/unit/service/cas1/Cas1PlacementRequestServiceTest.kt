@@ -39,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -75,7 +74,6 @@ class Cas1PlacementRequestServiceTest {
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
-  private val placementDateRepository = mockk<PlacementDateRepository>()
   private val cancellationRepository = mockk<CancellationRepository>()
   private val userAccessService = mockk<UserAccessService>()
   private val applicationService = mockk<ApplicationService>()
@@ -89,7 +87,6 @@ class Cas1PlacementRequestServiceTest {
     placementRequestRepository,
     bookingNotMadeRepository,
     placementRequirementsRepository,
-    placementDateRepository,
     cancellationRepository,
     userAccessService,
     applicationService,
@@ -164,6 +161,42 @@ class Cas1PlacementRequestServiceTest {
       assertThat(placementRequest.allocatedToUser).isNull()
 
       verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
+    }
+  }
+
+  @Nested
+  inner class CreatePlacementRequestFromPlacementApplication {
+
+    @Test
+    fun success() {
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withExpectedArrival(LocalDate.of(2018, 12, 1))
+        .withDuration(5)
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory().withDefaults().produce()
+
+      every {
+        placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)
+      } returns placementRequirements
+
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns OffsetDateTime.now()
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
+
+      val result = placementRequestService.createPlacementRequestFromPlacementApplication(
+        placementApplication = placementApplication,
+        notes = "the notes",
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.expectedArrival).isEqualTo(LocalDate.of(2018, 12, 1))
+        assertThat(it.duration).isEqualTo(5)
+      }
     }
   }
 
