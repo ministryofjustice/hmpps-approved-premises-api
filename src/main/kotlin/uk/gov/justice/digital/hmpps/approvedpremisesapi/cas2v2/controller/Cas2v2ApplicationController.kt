@@ -58,7 +58,10 @@ class Cas2v2ApplicationController(
     @RequestParam crn: String?,
     @RequestParam nomsNumber: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
-    val user = userService.getUserForRequest()
+    val user = when (limitByUser) {
+      null, true -> userService.getUserForRequest()
+      false -> null
+    }
 
     val effectiveLimitByUser = limitByUser ?: true
     if (effectiveLimitByUser && userService.requiresCaseLoadIdCheck()) {
