@@ -1,9 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ReportsCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedUsage
@@ -33,17 +36,22 @@ import java.util.UUID
 private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 3
 private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 6
 
-@Service("Cas3ReportsController")
-class ReportsController(
+@RestController
+@RequestMapping("\${api.base-path:}/cas3")
+class Cas3ReportsController(
   private val userAccessService: UserAccessService,
   private val cas3ReportService: Cas3ReportService,
-) : ReportsCas3Delegate {
+) {
 
-  override fun reportsReportNameGet(
-    reportName: Cas3ReportType,
-    startDate: LocalDate,
-    endDate: LocalDate,
-    probationRegionId: UUID?,
+  @GetMapping(
+    "/reports/{reportName}",
+    produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+  )
+  fun reportsReportNameGet(
+    @PathVariable reportName: Cas3ReportType,
+    @RequestParam startDate: LocalDate,
+    @RequestParam endDate: LocalDate,
+    @RequestParam probationRegionId: UUID?,
   ): ResponseEntity<StreamingResponseBody> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()
