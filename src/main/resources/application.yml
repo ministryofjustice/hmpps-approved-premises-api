@@ -331,4 +331,3 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
-

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import arrow.core.Either
+import arrow.core.Ior
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -257,6 +258,7 @@ class Cas3PremisesService(
     return success(premises)
   }
 
+  @Deprecated("This function is replaced by updatePremises in the same class")
   @SuppressWarnings("CyclomaticComplexMethod")
   fun updatePremises(
     premisesId: UUID,
@@ -274,9 +276,7 @@ class Cas3PremisesService(
   ): AuthorisableActionResult<ValidatableActionResult<TemporaryAccommodationPremisesEntity>> {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return AuthorisableActionResult.NotFound()
-
     val validationErrors = ValidationErrors()
-
     val localAuthorityArea = when (localAuthorityAreaId) {
       null -> null
       else -> {
@@ -287,24 +287,18 @@ class Cas3PremisesService(
         localAuthorityArea
       }
     }
-
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
-
     if (probationRegion == null) {
       validationErrors["$.probationRegionId"] = "doesNotExist"
     }
-
     val probationDeliveryUnit =
       tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
         validationErrors[property] = err
       }
-
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
-
     if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
       validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
     }
-
     if (status == PropertyStatus.archived) {
       val futureBookings = bookingRepository.findFutureBookingsByPremisesIdAndStatus(
         ServiceName.temporaryAccommodation.value,
@@ -312,18 +306,15 @@ class Cas3PremisesService(
         LocalDate.now(),
         listOf(BookingStatus.arrived, BookingStatus.confirmed, BookingStatus.provisional),
       )
-
       if (futureBookings.any()) {
         validationErrors["$.status"] = "existingBookings"
       }
     }
-
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors),
       )
     }
-
     premises.let {
       it.addressLine1 = addressLine1
       it.addressLine2 = addressLine2
@@ -339,7 +330,6 @@ class Cas3PremisesService(
         it.turnaroundWorkingDays = turnaroundWorkingDays
       }
     }
-
     if (status == PropertyStatus.archived) {
       premises.rooms.forEach { room ->
         room.beds.forEach { bed ->
@@ -347,12 +337,78 @@ class Cas3PremisesService(
         }
       }
     }
-
     val savedPremises = premisesRepository.save(premises)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedPremises),
     )
+  }
+
+  @SuppressWarnings("CyclomaticComplexMethod")
+  fun updatePremises(
+    premises: TemporaryAccommodationPremisesEntity,
+    addressLine1: String,
+    addressLine2: String?,
+    town: String?,
+    postcode: String,
+    localAuthorityAreaId: UUID?,
+    probationRegionId: UUID,
+    characteristicIds: List<UUID>,
+    notes: String?,
+    probationDeliveryUnitId: UUID,
+    turnaroundWorkingDays: Int?,
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
+    val localAuthorityArea = when (localAuthorityAreaId) {
+      null -> null
+      else -> {
+        val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
+        if (localAuthorityArea == null) {
+          "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+        }
+        localAuthorityArea
+      }
+    }
+    val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
+    if (probationRegion == null) {
+      "$.probationRegionId" hasValidationError "doesNotExist"
+    }
+    val probationDeliveryUnit =
+      tryGetProbationDeliveryUnit(Ior.fromNullables(null, probationDeliveryUnitId)?.toEither(), probationRegionId) { property, err ->
+        validationErrors[property] = err
+      }
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
+      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
+    }
+    if (addressLine1.isEmpty()) {
+      "$.address" hasValidationError "empty"
+    }
+    if (postcode.isEmpty()) {
+      "$.postcode" hasValidationError "empty"
+    }
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    premises
+      .let {
+        it.addressLine1 = addressLine1
+        it.addressLine2 = addressLine2
+        it.town = town
+        it.postcode = postcode
+        it.localAuthorityArea = localAuthorityArea
+        it.probationRegion = probationRegion!!
+        it.characteristics = characteristicEntities.map { it!! }.toMutableList()
+        it.notes = if (notes.isNullOrEmpty()) "" else notes
+        it.probationDeliveryUnit = probationDeliveryUnit!!
+        if (turnaroundWorkingDays != null) {
+          it.turnaroundWorkingDays = turnaroundWorkingDays
+        }
+      }
+
+    val savedPremises = premisesRepository.save(premises)
+
+    return success(savedPremises)
   }
 
   fun renamePremises(

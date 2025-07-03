@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -91,6 +92,34 @@ class Cas3PremisesController(
     )
 
     return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises), HttpStatus.CREATED)
+  }
+
+  @Transactional
+  @PutMapping("/premises/{premisesId}")
+  fun updatePremises(@PathVariable premisesId: UUID, @RequestBody body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises) || !userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, body.probationRegionId)) {
+      throw ForbiddenProblem()
+    }
+
+    return cas3PremisesService.updatePremises(
+      premises = premises,
+      addressLine1 = body.addressLine1,
+      addressLine2 = body.addressLine2,
+      town = body.town,
+      postcode = body.postcode,
+      localAuthorityAreaId = body.localAuthorityAreaId,
+      probationRegionId = body.probationRegionId,
+      characteristicIds = body.characteristicIds,
+      notes = body.notes,
+      probationDeliveryUnitId = body.probationDeliveryUnitId,
+      turnaroundWorkingDays = body.turnaroundWorkingDayCount,
+    )
+      .let { extractEntityFromCasResult(it) }
+      .let { cas3PremisesTransformer.transformDomainToApi(it) }
+      .let { ResponseEntity.ok(it) }
   }
 
   @GetMapping("/premises/{premisesId}")
