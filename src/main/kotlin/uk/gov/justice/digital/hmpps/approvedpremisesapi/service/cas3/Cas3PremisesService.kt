@@ -346,6 +346,7 @@ class Cas3PremisesService(
 
   @SuppressWarnings("CyclomaticComplexMethod")
   fun updatePremises(
+    premises: TemporaryAccommodationPremisesEntity,
     premisesId: UUID,
     addressLine1: String,
     addressLine2: String?,
@@ -358,8 +359,6 @@ class Cas3PremisesService(
     probationDeliveryUnitId: UUID,
     turnaroundWorkingDays: Int?,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
-    val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
-      ?: return CasResult.NotFound("Premises", premisesId.toString())
 
     val localAuthorityArea = when (localAuthorityAreaId) {
       null -> null
@@ -393,7 +392,8 @@ class Cas3PremisesService(
       return fieldValidationError
     }
 
-    premises.let {
+    premises
+      .let {
       it.addressLine1 = addressLine1
       it.addressLine2 = addressLine2
       it.town = town

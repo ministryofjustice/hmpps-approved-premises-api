@@ -106,38 +106,23 @@ class Cas3PremisesController(
       throw ForbiddenProblem()
     }
 
-    val updatePremisesResult = cas3PremisesService
-      .updatePremises(
-        premisesId = premisesId,
-        addressLine1 = body.addressLine1,
-        addressLine2 = body.addressLine2,
-        town = body.town,
-        postcode = body.postcode,
-        localAuthorityAreaId = body.localAuthorityAreaId,
-        probationRegionId = body.probationRegionId,
-        characteristicIds = body.characteristicIds,
-        notes = body.notes,
-        probationDeliveryUnitId = body.probationDeliveryUnitId,
-        turnaroundWorkingDays = body.turnaroundWorkingDayCount,
-      )
-
-    val updatedPremises = when (updatePremisesResult) {
-      is CasResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = updatePremisesResult.message)
-      is CasResult.FieldValidationError -> throw BadRequestProblem(invalidParams = updatePremisesResult.validationMessages)
-      is CasResult.ConflictError -> throw ConflictProblem(
-        id = updatePremisesResult.conflictingEntityId,
-        conflictReason = updatePremisesResult.message,
-      )
-      is CasResult.Success -> updatePremisesResult.value
-      is CasResult.NotFound<*> -> throw NotFoundProblem(premisesId, "Premises")
-      is CasResult.Unauthorised<*> -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(
-      cas3PremisesTransformer.transformDomainToApi(
-        updatedPremises,
-      ),
+    return cas3PremisesService.updatePremises(
+      oldPremises = premises,
+      premisesId = premisesId,
+      addressLine1 = body.addressLine1,
+      addressLine2 = body.addressLine2,
+      town = body.town,
+      postcode = body.postcode,
+      localAuthorityAreaId = body.localAuthorityAreaId,
+      probationRegionId = body.probationRegionId,
+      characteristicIds = body.characteristicIds,
+      notes = body.notes,
+      probationDeliveryUnitId = body.probationDeliveryUnitId,
+      turnaroundWorkingDays = body.turnaroundWorkingDayCount,
     )
+      .let { extractEntityFromCasResult(it) }
+      .let { cas3PremisesTransformer.transformDomainToApi(it) }
+      .let { ResponseEntity.ok(it) }
   }
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas3Premises> {
