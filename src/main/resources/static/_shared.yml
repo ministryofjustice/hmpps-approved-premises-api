@@ -3528,7 +3528,11 @@ components:
           $ref: '#/components/schemas/WithdrawPlacementRequestReason'
         type:
           $ref: '#/components/schemas/RequestForPlacementType'
+        dates:
+          $ref: '#/components/schemas/PlacementDates'
         placementDates:
+          deprecated: true
+          description: Requests for placements only have one set of placement dates, use 'dates' instead
           type: array
           items:
             $ref: '#/components/schemas/PlacementDates'
@@ -3541,6 +3545,7 @@ components:
         - canBeDirectlyWithdrawn
         - isWithdrawn
         - type
+        - dates
         - placementDates
         - status
     RequestForPlacementType:

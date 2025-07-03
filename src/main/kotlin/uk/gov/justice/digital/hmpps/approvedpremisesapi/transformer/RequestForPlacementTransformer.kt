@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 
 @Component
@@ -24,7 +23,8 @@ class RequestForPlacementTransformer(
     createdAt = placementApplicationEntity.createdAt.toInstant(),
     isWithdrawn = placementApplicationEntity.isWithdrawn,
     type = RequestForPlacementType.manual,
-    placementDates = placementApplicationEntity.placementDates.map { it.toPlacementDates() },
+    dates = placementApplicationEntity.placementDates()!!.toApiType(),
+    placementDates = listOf(placementApplicationEntity.placementDates()!!.toApiType()),
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
     document = placementApplicationEntity.document?.let(objectMapper::readTree),
@@ -55,6 +55,10 @@ class RequestForPlacementTransformer(
       createdAt = placementRequestEntity.createdAt.toInstant(),
       isWithdrawn = placementRequestEntity.isWithdrawn,
       type = RequestForPlacementType.automatic,
+      dates = PlacementDates(
+        expectedArrival = placementRequestEntity.expectedArrival,
+        duration = placementRequestEntity.duration,
+      ),
       placementDates = listOf(
         PlacementDates(
           expectedArrival = placementRequestEntity.expectedArrival,
@@ -69,11 +73,6 @@ class RequestForPlacementTransformer(
       status = placementRequestEntity.deriveStatus(),
     )
   }
-
-  private fun PlacementDateEntity.toPlacementDates() = PlacementDates(
-    expectedArrival = expectedArrival,
-    duration = duration,
-  )
 
   private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
     this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
