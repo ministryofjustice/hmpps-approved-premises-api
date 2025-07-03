@@ -6,12 +6,12 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param bookingId 
- * @param dateTime 
- * @param createdAt 
- * @param notes 
+ *
+ * @param id
+ * @param bookingId
+ * @param dateTime
+ * @param createdAt
+ * @param notes
  */
 data class Cas3Confirmation(
 
@@ -29,7 +29,5 @@ data class Cas3Confirmation(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("notes") val notes: String? = null
-    ) {
-
-}
+)
 

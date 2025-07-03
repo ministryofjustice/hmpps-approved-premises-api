@@ -7,31 +7,31 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param person 
- * @param arrivalDate 
- * @param originalArrivalDate 
- * @param departureDate 
- * @param originalDepartureDate 
- * @param createdAt 
- * @param bedspace 
- * @param status 
- * @param extensions 
+ *
+ * @param id
+ * @param person
+ * @param arrivalDate
+ * @param originalArrivalDate
+ * @param departureDate
+ * @param originalDepartureDate
+ * @param createdAt
+ * @param bedspace
+ * @param status
+ * @param extensions
  * @param departures The full history of the departure
  * @param cancellations The full history of the cancellation
- * @param premises 
- * @param arrival 
+ * @param premises
+ * @param arrival
  * @param departure The latest version of the departure, if it exists
- * @param nonArrival 
+ * @param nonArrival
  * @param cancellation The latest version of the cancellation, if it exists
- * @param confirmation 
+ * @param confirmation
  * @param turnaround The latest version of the turnaround, if it exists
  * @param turnarounds The full history of turnarounds
- * @param turnaroundStartDate 
- * @param effectiveEndDate 
- * @param applicationId 
- * @param assessmentId 
+ * @param turnaroundStartDate
+ * @param effectiveEndDate
+ * @param applicationId
+ * @param assessmentId
  */
 data class Cas3Booking(
 
@@ -106,7 +106,5 @@ data class Cas3Booking(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("assessmentId") val assessmentId: UUID? = null
-    ) {
-
-}
+)
 

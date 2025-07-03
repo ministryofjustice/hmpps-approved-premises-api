@@ -5,16 +5,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 /**
- * 
- * @param name 
- * @param crn 
- * @param personType 
- * @param days 
- * @param bookingId 
- * @param roomId 
- * @param isSexualRisk 
- * @param sex 
- * @param assessmentId 
+ *
+ * @param name
+ * @param crn
+ * @param personType
+ * @param days
+ * @param bookingId
+ * @param roomId
+ * @param isSexualRisk
+ * @param sex
+ * @param assessmentId
  */
 data class Cas3BedspaceSearchResultOverlap(
 
@@ -44,7 +44,5 @@ data class Cas3BedspaceSearchResultOverlap(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("assessmentId") val assessmentId: UUID? = null
-    ) {
-
-}
+)
 

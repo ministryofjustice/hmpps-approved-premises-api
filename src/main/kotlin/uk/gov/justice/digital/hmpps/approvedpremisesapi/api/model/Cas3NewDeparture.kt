@@ -6,11 +6,11 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * 
- * @param dateTime 
- * @param reasonId 
- * @param moveOnCategoryId 
- * @param notes 
+ *
+ * @param dateTime
+ * @param reasonId
+ * @param moveOnCategoryId
+ * @param notes
  */
 data class Cas3NewDeparture(
 
@@ -25,7 +25,5 @@ data class Cas3NewDeparture(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("notes") val notes: String? = null
-    ) {
-
-}
+)
 

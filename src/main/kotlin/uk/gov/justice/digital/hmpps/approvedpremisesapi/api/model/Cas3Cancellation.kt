@@ -7,15 +7,15 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 
- * @param bookingId 
- * @param date 
- * @param reason 
- * @param createdAt 
- * @param premisesName 
- * @param id 
- * @param notes 
- * @param otherReason 
+ *
+ * @param bookingId
+ * @param date
+ * @param reason
+ * @param createdAt
+ * @param premisesName
+ * @param id
+ * @param notes
+ * @param otherReason
  */
 data class Cas3Cancellation(
 
@@ -42,7 +42,5 @@ data class Cas3Cancellation(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("otherReason") val otherReason: String? = null
-    ) {
-
-}
+)
 

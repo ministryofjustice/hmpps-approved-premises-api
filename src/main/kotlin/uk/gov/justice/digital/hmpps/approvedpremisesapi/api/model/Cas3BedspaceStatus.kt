@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
-* 
-* Values: online,archived,upcoming
-*/
+ *
+ * Values: online,archived,upcoming
+ */
 enum class Cas3BedspaceStatus(@get:JsonValue val value: String) {
 
     online("online"),
@@ -17,7 +17,7 @@ enum class Cas3BedspaceStatus(@get:JsonValue val value: String) {
         @JvmStatic
         @JsonCreator
         fun forValue(value: String): Cas3BedspaceStatus {
-                return values().first{it -> it.value == value}
+            return values().first { it -> it.value == value }
         }
     }
 }

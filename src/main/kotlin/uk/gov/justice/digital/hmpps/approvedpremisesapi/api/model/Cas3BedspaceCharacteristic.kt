@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param description 
- * @param name 
+ *
+ * @param id
+ * @param description
+ * @param name
  */
 data class Cas3BedspaceCharacteristic(
 
@@ -20,7 +20,5 @@ data class Cas3BedspaceCharacteristic(
 
     @Schema(example = "isCatered", description = "")
     @get:JsonProperty("name") val name: String? = null
-    ) {
-
-}
+)
 

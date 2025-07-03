@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
-* 
-* Values: arrived,notMinusArrived,departed,cancelled,provisional,confirmed,closed
-*/
+ *
+ * Values: arrived,notMinusArrived,departed,cancelled,provisional,confirmed,closed
+ */
 enum class Cas3BookingStatus(@get:JsonValue val value: String) {
 
     arrived("arrived"),
@@ -21,7 +21,7 @@ enum class Cas3BookingStatus(@get:JsonValue val value: String) {
         @JvmStatic
         @JsonCreator
         fun forValue(value: String): Cas3BookingStatus {
-                return values().first{it -> it.value == value}
+            return values().first { it -> it.value == value }
         }
     }
 }

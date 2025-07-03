@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * Groups questions and answers from OAsys
- * @param assessmentMetadata 
- * @param answers 
+ * @param assessmentMetadata
+ * @param answers
  */
 data class Cas3OASysGroup(
 
@@ -15,7 +15,5 @@ data class Cas3OASysGroup(
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("answers", required = true) val answers: List<OASysQuestion>
-    ) {
-
-}
+)
 

@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param reference 
- * @param status 
+ *
+ * @param id
+ * @param reference
+ * @param status
  */
 data class Cas3BedspacePremisesSearchResult(
 
@@ -20,7 +20,5 @@ data class Cas3BedspacePremisesSearchResult(
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("status", required = true) val status: Cas3BedspaceStatus
-    ) {
-
-}
+)
 

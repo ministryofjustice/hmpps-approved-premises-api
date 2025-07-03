@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 
- * @param premises 
- * @param room 
- * @param bed 
- * @param overlaps 
+ *
+ * @param premises
+ * @param room
+ * @param bed
+ * @param overlaps
  */
 data class Cas3BedspaceSearchResult(
 
@@ -23,7 +23,5 @@ data class Cas3BedspaceSearchResult(
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("overlaps", required = true) val overlaps: List<Cas3BedspaceSearchResultOverlap>
-    ) {
-
-}
+)
 

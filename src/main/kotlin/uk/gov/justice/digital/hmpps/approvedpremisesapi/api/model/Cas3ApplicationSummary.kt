@@ -6,14 +6,14 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param person 
- * @param createdAt 
- * @param createdByUserId 
- * @param status 
- * @param submittedAt 
- * @param risks 
+ *
+ * @param id
+ * @param person
+ * @param createdAt
+ * @param createdByUserId
+ * @param status
+ * @param submittedAt
+ * @param risks
  */
 data class Cas3ApplicationSummary(
 
@@ -37,7 +37,5 @@ data class Cas3ApplicationSummary(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("risks") val risks: PersonRisks? = null
-    ) {
-
-}
+)
 

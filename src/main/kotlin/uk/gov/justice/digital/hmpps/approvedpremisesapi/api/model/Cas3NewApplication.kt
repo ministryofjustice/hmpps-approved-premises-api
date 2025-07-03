@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 
- * @param crn 
- * @param convictionId 
- * @param deliusEventNumber 
- * @param offenceId 
+ *
+ * @param crn
+ * @param convictionId
+ * @param deliusEventNumber
+ * @param offenceId
  */
 data class Cas3NewApplication(
 
@@ -23,7 +23,5 @@ data class Cas3NewApplication(
 
     @Schema(example = "M1502750438", description = "")
     @get:JsonProperty("offenceId") val offenceId: String? = null
-    ) {
-
-}
+)
 

@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 /**
- * 
- * @param includedCharacteristicIds 
- * @param excludedCharacteristicIds 
+ *
+ * @param includedCharacteristicIds
+ * @param excludedCharacteristicIds
  */
 data class BedspaceFilters(
 
@@ -16,7 +16,5 @@ data class BedspaceFilters(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("excludedCharacteristicIds") val excludedCharacteristicIds: List<UUID>? = null
-    ) {
-
-}
+)
 

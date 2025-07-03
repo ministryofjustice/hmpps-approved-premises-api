@@ -6,21 +6,21 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param person 
- * @param createdAt 
- * @param createdByUserId 
- * @param schemaVersion 
- * @param outdatedSchema 
- * @param status 
- * @param offenceId 
+ *
+ * @param id
+ * @param person
+ * @param createdAt
+ * @param createdByUserId
+ * @param schemaVersion
+ * @param outdatedSchema
+ * @param status
+ * @param offenceId
  * @param &#x60;data&#x60; Any object
  * @param document Any object
- * @param risks 
- * @param submittedAt 
- * @param arrivalDate 
- * @param assessmentId 
+ * @param risks
+ * @param submittedAt
+ * @param arrivalDate
+ * @param assessmentId
  */
 data class Cas3Application(
 
@@ -65,7 +65,5 @@ data class Cas3Application(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("assessmentId") val assessmentId: UUID? = null
-    ) {
-
-}
+)
 

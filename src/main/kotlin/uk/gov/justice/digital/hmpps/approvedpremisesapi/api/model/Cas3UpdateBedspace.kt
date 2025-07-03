@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 /**
- * 
- * @param reference 
- * @param characteristicIds 
- * @param notes 
+ *
+ * @param reference
+ * @param characteristicIds
+ * @param notes
  */
 data class Cas3UpdateBedspace(
 
@@ -20,7 +20,5 @@ data class Cas3UpdateBedspace(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("notes") val notes: String? = null
-    ) {
-
-}
+)
 

@@ -6,15 +6,15 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param reference 
+ *
+ * @param id
+ * @param reference
  * @param startDate Start date of the bedspace availability
- * @param status 
+ * @param status
  * @param endDate End date of the bedspace availability
- * @param notes 
- * @param characteristics 
- * @param bedspaceCharacteristics 
+ * @param notes
+ * @param characteristics
+ * @param bedspaceCharacteristics
  */
 data class Cas3Bedspace(
 
@@ -24,7 +24,11 @@ data class Cas3Bedspace(
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("reference", required = true) val reference: String,
 
-    @Schema(example = "Tue Jul 30 01:00:00 BST 2024", required = true, description = "Start date of the bedspace availability")
+    @Schema(
+        example = "Tue Jul 30 01:00:00 BST 2024",
+        required = true,
+        description = "Start date of the bedspace availability"
+    )
     @get:JsonProperty("startDate", required = true) val startDate: LocalDate,
 
     @Schema(example = "null", required = true, description = "")
@@ -41,7 +45,5 @@ data class Cas3Bedspace(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("bedspaceCharacteristics") val bedspaceCharacteristics: List<Cas3BedspaceCharacteristic>? = null
-    ) {
-
-}
+)
 

@@ -6,24 +6,24 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param reference 
- * @param addressLine1 
- * @param postcode 
- * @param probationRegion 
- * @param probationDeliveryUnit 
- * @param status 
- * @param totalOnlineBedspaces 
- * @param totalUpcomingBedspaces 
- * @param totalArchivedBedspaces 
- * @param addressLine2 
- * @param town 
- * @param localAuthorityArea 
- * @param characteristics 
+ *
+ * @param id
+ * @param reference
+ * @param addressLine1
+ * @param postcode
+ * @param probationRegion
+ * @param probationDeliveryUnit
+ * @param status
+ * @param totalOnlineBedspaces
+ * @param totalUpcomingBedspaces
+ * @param totalArchivedBedspaces
+ * @param addressLine2
+ * @param town
+ * @param localAuthorityArea
+ * @param characteristics
  * @param startDate Start date of the property.
- * @param notes 
- * @param turnaroundWorkingDays 
+ * @param notes
+ * @param turnaroundWorkingDays
  */
 data class Cas3Premises(
 
@@ -77,7 +77,5 @@ data class Cas3Premises(
 
     @Schema(example = "2", description = "")
     @get:JsonProperty("turnaroundWorkingDays") val turnaroundWorkingDays: Int? = null
-    ) {
-
-}
+)
 

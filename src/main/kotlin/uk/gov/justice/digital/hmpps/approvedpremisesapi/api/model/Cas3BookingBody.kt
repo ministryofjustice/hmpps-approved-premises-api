@@ -7,15 +7,15 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param person 
- * @param arrivalDate 
- * @param originalArrivalDate 
- * @param departureDate 
- * @param originalDepartureDate 
- * @param createdAt 
- * @param bedspace 
+ *
+ * @param id
+ * @param person
+ * @param arrivalDate
+ * @param originalArrivalDate
+ * @param departureDate
+ * @param originalDepartureDate
+ * @param createdAt
+ * @param bedspace
  */
 data class Cas3BookingBody(
 
@@ -42,7 +42,5 @@ data class Cas3BookingBody(
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("bedspace", required = true) val bedspace: Cas3Bedspace
-    ) {
-
-}
+)
 

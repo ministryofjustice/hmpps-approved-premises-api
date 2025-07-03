@@ -5,17 +5,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param reference 
- * @param addressLine1 
- * @param postcode 
- * @param pdu 
- * @param addressLine2 
- * @param town 
- * @param localAuthorityAreaName 
- * @param bedspaces 
- * @param totalArchivedBedspaces 
+ *
+ * @param id
+ * @param reference
+ * @param addressLine1
+ * @param postcode
+ * @param pdu
+ * @param addressLine2
+ * @param town
+ * @param localAuthorityAreaName
+ * @param bedspaces
+ * @param totalArchivedBedspaces
  */
 data class Cas3PremisesSearchResult(
 
@@ -48,7 +48,5 @@ data class Cas3PremisesSearchResult(
 
     @Schema(example = "4", description = "")
     @get:JsonProperty("totalArchivedBedspaces") val totalArchivedBedspaces: Int? = null
-    ) {
-
-}
+)
 

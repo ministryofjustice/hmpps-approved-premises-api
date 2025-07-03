@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
 /**
- * 
- * @param hasApplicableAssessment 
- * @param dateStarted 
- * @param dateCompleted 
+ *
+ * @param hasApplicableAssessment
+ * @param dateStarted
+ * @param dateCompleted
  */
 data class Cas3OASysAssessmentMetadata(
 
@@ -20,7 +20,5 @@ data class Cas3OASysAssessmentMetadata(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("dateCompleted") val dateCompleted: Instant? = null
-    ) {
-
-}
+)
 

@@ -6,24 +6,24 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 
- * @param arrivalDate 
- * @param probationDeliveryUnitId 
+ *
+ * @param arrivalDate
+ * @param probationDeliveryUnitId
  * @param summaryData Any object
- * @param isRegisteredSexOffender 
- * @param needsAccessibleProperty 
- * @param hasHistoryOfArson 
- * @param isDutyToReferSubmitted 
- * @param dutyToReferSubmissionDate 
- * @param dutyToReferOutcome 
- * @param isApplicationEligible 
- * @param eligibilityReason 
- * @param dutyToReferLocalAuthorityAreaName 
- * @param personReleaseDate 
- * @param isHistoryOfSexualOffence 
- * @param isConcerningSexualBehaviour 
- * @param isConcerningArsonBehaviour 
- * @param prisonReleaseTypes 
+ * @param isRegisteredSexOffender
+ * @param needsAccessibleProperty
+ * @param hasHistoryOfArson
+ * @param isDutyToReferSubmitted
+ * @param dutyToReferSubmissionDate
+ * @param dutyToReferOutcome
+ * @param isApplicationEligible
+ * @param eligibilityReason
+ * @param dutyToReferLocalAuthorityAreaName
+ * @param personReleaseDate
+ * @param isHistoryOfSexualOffence
+ * @param isConcerningSexualBehaviour
+ * @param isConcerningArsonBehaviour
+ * @param prisonReleaseTypes
  * @param translatedDocument Any object
  */
 data class Cas3SubmitApplication(
@@ -81,7 +81,5 @@ data class Cas3SubmitApplication(
 
     @Schema(example = "null", description = "Any object")
     @get:JsonProperty("translatedDocument") val translatedDocument: Any? = null
-    ) {
-
-}
+)
 

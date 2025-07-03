@@ -7,13 +7,13 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param bookingId 
- * @param date 
- * @param reason 
- * @param createdAt 
- * @param notes 
+ *
+ * @param id
+ * @param bookingId
+ * @param date
+ * @param reason
+ * @param createdAt
+ * @param notes
  */
 data class Cas3NonArrival(
 
@@ -34,7 +34,5 @@ data class Cas3NonArrival(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("notes") val notes: String? = null
-    ) {
-
-}
+)
 

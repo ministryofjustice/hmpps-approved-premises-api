@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 
- * @param totalPremises 
- * @param results 
- * @param totalOnlineBedspaces 
- * @param totalUpcomingBedspaces 
+ *
+ * @param totalPremises
+ * @param results
+ * @param totalOnlineBedspaces
+ * @param totalUpcomingBedspaces
  */
 data class Cas3PremisesSearchResults(
 
@@ -23,7 +23,5 @@ data class Cas3PremisesSearchResults(
 
     @Schema(example = "3", description = "")
     @get:JsonProperty("totalUpcomingBedspaces") val totalUpcomingBedspaces: Int? = null
-    ) {
-
-}
+)
 

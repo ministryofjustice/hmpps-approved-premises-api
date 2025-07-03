@@ -6,11 +6,11 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param bookingId 
- * @param workingDays 
- * @param createdAt 
+ *
+ * @param id
+ * @param bookingId
+ * @param workingDays
+ * @param createdAt
  */
 data class Cas3Turnaround(
 
@@ -25,7 +25,5 @@ data class Cas3Turnaround(
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("createdAt", required = true) val createdAt: Instant
-    ) {
-
-}
+)
 

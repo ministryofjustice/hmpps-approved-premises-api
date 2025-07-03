@@ -29,6 +29,4 @@ data class FutureBooking(
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("bed") val bed: Bed? = null
-    ) {
-
-}
+)

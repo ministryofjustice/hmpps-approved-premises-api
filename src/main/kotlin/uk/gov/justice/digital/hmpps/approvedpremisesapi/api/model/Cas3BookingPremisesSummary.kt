@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 /**
- * 
- * @param id 
- * @param name 
+ *
+ * @param id
+ * @param name
  */
 data class Cas3BookingPremisesSummary(
 
@@ -16,7 +16,5 @@ data class Cas3BookingPremisesSummary(
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("name", required = true) val name: String
-    ) {
-
-}
+)
 
