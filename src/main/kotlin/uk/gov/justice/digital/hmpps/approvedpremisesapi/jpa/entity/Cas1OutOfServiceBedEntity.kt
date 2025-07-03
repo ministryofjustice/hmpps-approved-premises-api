@@ -80,8 +80,8 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     pageable: Pageable?,
   ): Page<String>
 
-  @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id = :premisesId AND c is NULL")
-  fun findAllActiveForPremisesId(premisesId: UUID): List<Cas1OutOfServiceBedEntity>
+  @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id IN (:premisesIds) AND c is NULL")
+  fun findAllActiveForPremisesIds(premisesIds: List<UUID>): List<Cas1OutOfServiceBedEntity>
 
   @Query(
     """

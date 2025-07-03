@@ -72,7 +72,7 @@ class Cas1PremisesServiceTest {
   lateinit var service: Cas1PremisesService
 
   companion object CONSTANTS {
-    val PREMISES_ID: UUID = UUID.randomUUID()
+    val PREMISES_ID: UUID = UUID.fromString("98fe68f2-a58e-4e55-9d0e-f40856ccde24")
   }
 
   @Nested
@@ -440,30 +440,30 @@ class Cas1PremisesServiceTest {
   }
 
   @Nested
-  inner class GetPremiseCapacity {
+  inner class GetPremisesCapacities {
 
     @Test
-    fun `premises not found return error`() {
-      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns null
+    fun `at least one premises not found return error`() {
+      every { approvedPremisesRepository.findAllById(listOf(PREMISES_ID)) } returns emptyList()
 
-      val result = service.getPremiseCapacity(
-        premisesId = PREMISES_ID,
+      val result = service.getPremisesCapacities(
+        premisesIds = listOf(PREMISES_ID),
         startDate = LocalDate.of(2020, 1, 2),
         endDate = LocalDate.of(2020, 1, 3),
         excludeSpaceBookingId = null,
       )
 
-      assertThatCasResult(result).isNotFound("premises", PREMISES_ID)
+      assertThatCasResult(result).isGeneralValidationError("Could not resolve all premises IDs. Missing IDs are [98fe68f2-a58e-4e55-9d0e-f40856ccde24]")
     }
 
     @Test
     fun `start before end date return error`() {
       every {
-        approvedPremisesRepository.findByIdOrNull(PREMISES_ID)
-      } returns ApprovedPremisesEntityFactory().withDefaults().produce()
+        approvedPremisesRepository.findAllById(listOf(PREMISES_ID))
+      } returns listOf(ApprovedPremisesEntityFactory().withDefaults().produce())
 
-      val result = service.getPremiseCapacity(
-        premisesId = PREMISES_ID,
+      val result = service.getPremisesCapacities(
+        premisesIds = listOf(PREMISES_ID),
         startDate = LocalDate.of(2020, 1, 4),
         endDate = LocalDate.of(2020, 1, 3),
         excludeSpaceBookingId = null,
@@ -473,34 +473,72 @@ class Cas1PremisesServiceTest {
     }
 
     @Test
-    fun success() {
+    fun `success, single premises`() {
       val premise = ApprovedPremisesEntityFactory().withDefaults().withId(PREMISES_ID).produce()
       val excludeSpaceBookingId = UUID.randomUUID()
 
-      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premise
+      every {
+        approvedPremisesRepository.findAllById(listOf(PREMISES_ID))
+      } returns listOf(premise)
 
       val capacityResponse = mockk<PremiseCapacitySummary>()
 
       every {
         spacePlanningService.capacity(
-          premises = premise,
+          forPremises = listOf(premise),
           rangeInclusive = DateRange(
             LocalDate.of(2020, 1, 2),
             LocalDate.of(2020, 1, 3),
           ),
           excludeSpaceBookingId = excludeSpaceBookingId,
         )
-      } returns capacityResponse
+      } returns listOf(capacityResponse)
 
-      val result = service.getPremiseCapacity(
-        premisesId = PREMISES_ID,
+      val result = service.getPremisesCapacities(
+        premisesIds = listOf(PREMISES_ID),
         startDate = LocalDate.of(2020, 1, 2),
         endDate = LocalDate.of(2020, 1, 3),
         excludeSpaceBookingId = excludeSpaceBookingId,
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(capacityResponse)
+        assertThat(it).isEqualTo(listOf(capacityResponse))
+      }
+    }
+
+    @Test
+    fun `success, multiple premises`() {
+      val premises1 = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val premises2 = ApprovedPremisesEntityFactory().withDefaults().produce()
+      val excludeSpaceBookingId = UUID.randomUUID()
+
+      every {
+        approvedPremisesRepository.findAllById(listOf(premises1.id, premises2.id))
+      } returns listOf(premises1, premises2)
+
+      val capacityResponse1 = mockk<PremiseCapacitySummary>()
+      val capacityResponse2 = mockk<PremiseCapacitySummary>()
+
+      every {
+        spacePlanningService.capacity(
+          forPremises = listOf(premises1, premises2),
+          rangeInclusive = DateRange(
+            LocalDate.of(2020, 2, 2),
+            LocalDate.of(2020, 2, 3),
+          ),
+          excludeSpaceBookingId = excludeSpaceBookingId,
+        )
+      } returns listOf(capacityResponse1, capacityResponse2)
+
+      val result = service.getPremisesCapacities(
+        premisesIds = listOf(premises1.id, premises2.id),
+        startDate = LocalDate.of(2020, 2, 2),
+        endDate = LocalDate.of(2020, 2, 3),
+        excludeSpaceBookingId = excludeSpaceBookingId,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(listOf(capacityResponse1, capacityResponse2))
       }
     }
 
@@ -509,30 +547,32 @@ class Cas1PremisesServiceTest {
       val premise = ApprovedPremisesEntityFactory().withDefaults().withId(PREMISES_ID).produce()
       val excludeSpaceBookingId = UUID.randomUUID()
 
-      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premise
+      every {
+        approvedPremisesRepository.findAllById(listOf(PREMISES_ID))
+      } returns listOf(premise)
 
       val capacityResponse = mockk<PremiseCapacitySummary>()
 
       every {
         spacePlanningService.capacity(
-          premises = premise,
+          forPremises = listOf(premise),
           rangeInclusive = DateRange(
             LocalDate.of(2020, 1, 2),
             LocalDate.of(2022, 1, 1),
           ),
           excludeSpaceBookingId = excludeSpaceBookingId,
         )
-      } returns capacityResponse
+      } returns listOf(capacityResponse)
 
-      val result = service.getPremiseCapacity(
-        premisesId = PREMISES_ID,
+      val result = service.getPremisesCapacities(
+        premisesIds = listOf(PREMISES_ID),
         startDate = LocalDate.of(2020, 1, 2),
         endDate = LocalDate.of(2023, 1, 3),
         excludeSpaceBookingId = excludeSpaceBookingId,
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(capacityResponse)
+        assertThat(it).isEqualTo(listOf(capacityResponse))
       }
     }
   }

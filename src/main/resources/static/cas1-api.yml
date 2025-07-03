@@ -575,6 +575,51 @@ paths:
       x-codegen-request-body-name: body
 
 
+  /premises/capacity:
+    get:
+      tags:
+        - premises
+      operationId: "getCapacities"
+      summary: Provides capacity information for a given date range for all premises
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date, inclusive
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date, inclusive. Should be within 2 years of the startDate. If it exceeds this threshold, capacity information will only be provided for 2 years.
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremiseCapacity'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        404:
+          description: one or more invalid premises IDs
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+      x-codegen-request-body-name: body
+
+
   /premises/occupancy-report:
     get:
       tags:

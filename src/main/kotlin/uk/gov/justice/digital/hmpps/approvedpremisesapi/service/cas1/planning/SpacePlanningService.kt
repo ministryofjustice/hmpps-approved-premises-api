@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlanningBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -33,13 +35,13 @@ class SpacePlanningService(
     val premises = criteria.premises
     val range = criteria.range
 
-    val bedStatesForEachDay = bedStatesForEachDay(premises, range)
-    val bookingsForEachDay = spaceBookingsForEachDay(premises, range)
+    val bedStatesForEachDay = bedStatesForEachDay(listOf(premises), range).forPremises(premises)
+    val bookingsForEachDay = spaceBookingsForEachDay(listOf(premises), range).forPremises(premises)
 
     val dayPlans = range.orderedDatesInRange().map { day ->
-      val bedStates = bedStatesForEachDay.forDay(day).bedStates
+      val bedStates = bedStatesForEachDay.forDay(day)
       val availableBeds = bedStates.filter { it.isActive() }.map { it.bed }.toSet()
-      val bookings = bookingsForEachDay.forDay(day).bookings.toSet()
+      val bookings = bookingsForEachDay.forDay(day).toSet()
 
       SpaceDayPlan(
         day = day,
@@ -51,7 +53,7 @@ class SpacePlanningService(
       )
     }.toList()
 
-    val beds = cas1BedsRepository.bedSummary(premises.id)
+    val beds = cas1BedsRepository.bedSummary(listOf(premises.id))
     val plan = SpacePlan(
       beds = spacePlanningModelsFactory.allBeds(beds),
       dayPlans = dayPlans,
@@ -66,28 +68,37 @@ class SpacePlanningService(
     premises: ApprovedPremisesEntity,
     rangeInclusive: DateRange,
     excludeSpaceBookingId: UUID?,
-  ): PremiseCapacitySummary {
-    val dayBedStates = bedStatesForEachDay(premises, rangeInclusive)
-    val dayBookings = spaceBookingsForEachDay(premises, rangeInclusive, excludeSpaceBookingId)
+  ) = capacity(listOf(premises), rangeInclusive, excludeSpaceBookingId)[0]
 
-    return premisesCapacity(
-      premises,
-      rangeInclusive,
-      dayBedStates,
-      dayBookings,
-    )
+  fun capacity(
+    forPremises: List<ApprovedPremisesEntity>,
+    rangeInclusive: DateRange,
+    excludeSpaceBookingId: UUID?,
+  ): List<PremiseCapacitySummary> {
+    val allPremisesDayBedStates = bedStatesForEachDay(forPremises, rangeInclusive)
+    val allPremisesDayBookings = spaceBookingsForEachDay(forPremises, rangeInclusive, excludeSpaceBookingId)
+
+    return forPremises.map { premises ->
+      calculatePremisesCapacity(
+        premises = premises,
+        rangeInclusive = rangeInclusive,
+        premisesDayBedStates = allPremisesDayBedStates.forPremises(premises),
+        premisesDayBookings = allPremisesDayBookings.forPremises(premises),
+      )
+    }
   }
 
-  private fun premisesCapacity(
+  private fun calculatePremisesCapacity(
     premises: ApprovedPremisesEntity,
     rangeInclusive: DateRange,
-    dayBedStates: List<DayBedStates>,
-    dayBookings: List<DayBookings>,
+    premisesDayBedStates: PremisesDayBedStates,
+    premisesDayBookings: PremisesDayBookings,
   ): PremiseCapacitySummary {
     val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
-      val bedStates = dayBedStates.forDay(day).bedStates
+      val bedStates = premisesDayBedStates.forDay(day)
+      val bookings = premisesDayBookings.forDay(day)
+
       val availableBeds = bedStates.findActive()
-      val bookings = dayBookings.forDay(day).bookings
       PremiseCapacityForDay(
         day = day,
         totalBedCount = bedStates.totalBedCount(),
@@ -114,55 +125,62 @@ class SpacePlanningService(
     characteristicPropertyName: String,
     availableBeds: List<BedDayState>,
     bookings: List<SpaceBooking>,
-  ): PremiseCharacteristicAvailability = PremiseCharacteristicAvailability(
+  ) = PremiseCharacteristicAvailability(
     characteristicPropertyName = characteristicPropertyName,
     availableBedCount = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
     bookingCount = bookings.count { it.hasCharacteristic(characteristicPropertyName) },
   )
 
   private fun bedStatesForEachDay(
-    premises: ApprovedPremisesEntity,
+    forPremises: List<ApprovedPremisesEntity>,
     range: DateRange,
-  ): List<DayBedStates> {
-    val outOfServiceBedRecordsToConsider = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premises.id)
-    val beds = cas1BedsRepository.bedSummary(premises.id)
+  ): List<PremisesDayBedStates> {
+    val allPremisesIds = forPremises.map { it.id }
+    val allPremisesOosbRecords = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesIds(allPremisesIds)
+    val allPremisesBeds = cas1BedsRepository.bedSummary(allPremisesIds)
 
-    return range.orderedDatesInRange()
-      .toList()
-      .map {
-        DayBedStates(
-          date = it,
-          bedStates = spacePlanningModelsFactory.allBedsDayState(
-            day = it,
-            beds = beds,
-            outOfServiceBedRecordsToConsider = outOfServiceBedRecordsToConsider,
-          ),
-        )
-      }
+    return forPremises.map { premises ->
+      PremisesDayBedStates(
+        premises = premises,
+        dayBedStates = range.orderedDatesInRange().map { day ->
+          DayBedStates(
+            date = day,
+            bedStates = spacePlanningModelsFactory.allBedsDayState(
+              day = day,
+              beds = allPremisesBeds.bedsForPremises(premises),
+              outOfServiceBedRecordsToConsider = allPremisesOosbRecords.oosbForPremises(premises),
+            ),
+          )
+        }.toList(),
+      )
+    }
   }
 
   private fun spaceBookingsForEachDay(
-    premises: ApprovedPremisesEntity,
+    forPremises: List<ApprovedPremisesEntity>,
     range: DateRange,
     excludeSpaceBookingId: UUID? = null,
-  ): List<DayBookings> {
-    val spaceBookingsToConsider = spaceBookingRepository.findNonCancelledBookingsInRange(
-      premisesId = premises.id,
+  ): List<PremisesDayBookings> {
+    val nonCancelledBookingsInRange = spaceBookingRepository.findNonCancelledBookingsInRange(
+      premisesIds = forPremises.map { it.id },
       rangeStartInclusive = range.fromInclusive,
       rangeEndInclusive = range.toInclusive,
     ).filter { it.id != excludeSpaceBookingId }
 
-    return range.orderedDatesInRange()
-      .toList()
-      .map {
-        DayBookings(
-          date = it,
-          spacePlanningModelsFactory.spaceBookingsForDay(
-            day = it,
-            spaceBookingsToConsider = spaceBookingsToConsider,
-          ),
-        )
-      }
+    return forPremises.map { premises ->
+      PremisesDayBookings(
+        premises = premises,
+        dayBookings = range.orderedDatesInRange().map { day ->
+          DayBookings(
+            date = day,
+            bookings = spacePlanningModelsFactory.spaceBookingsForDay(
+              day = day,
+              spaceBookingsToConsider = nonCancelledBookingsInRange.bookingsForPremises(premises),
+            ),
+          )
+        }.toList(),
+      )
+    }
   }
 
   data class SpacePlan(
@@ -203,19 +221,38 @@ class SpacePlanningService(
     fun isCharacteristicOverbooked(): Boolean = bookingCount > availableBedCount
   }
 
+  private data class PremisesDayBedStates(
+    val premises: ApprovedPremisesEntity,
+    val dayBedStates: List<DayBedStates>,
+  ) {
+    fun forDay(day: LocalDate) = dayBedStates.first { it.date == day }.bedStates
+  }
+
+  private fun List<PremisesDayBedStates>.forPremises(premises: ApprovedPremisesEntity) = this.first { it.premises.id == premises.id }
+
   private data class DayBedStates(
     val date: LocalDate,
     val bedStates: List<BedDayState>,
   )
 
-  private fun List<DayBedStates>.forDay(day: LocalDate) = this.first { it.date == day }
   private fun List<BedDayState>.findActive() = this.filter { it.isActive() }
   private fun List<BedDayState>.totalBedCount() = this.count { it.isActive() || it.isTemporarilyInactive() }
+
+  private data class PremisesDayBookings(
+    val premises: ApprovedPremisesEntity,
+    val dayBookings: List<DayBookings>,
+  ) {
+    fun forDay(day: LocalDate) = dayBookings.first { it.date == day }.bookings
+  }
+
+  private fun List<PremisesDayBookings>.forPremises(premises: ApprovedPremisesEntity) = this.first { it.premises.id == premises.id }
 
   private data class DayBookings(
     val date: LocalDate,
     val bookings: List<SpaceBooking>,
   )
 
-  private fun List<DayBookings>.forDay(day: LocalDate) = this.first { it.date == day }
+  private fun List<Cas1SpaceBookingEntity>.bookingsForPremises(premises: ApprovedPremisesEntity) = filter { it.premises.id == premises.id }
+  private fun List<Cas1PlanningBedSummary>.bedsForPremises(premises: ApprovedPremisesEntity) = filter { it.premisesId == premises.id }
+  private fun List<Cas1OutOfServiceBedEntity>.oosbForPremises(premises: ApprovedPremisesEntity) = filter { it.premises.id == premises.id }
 }

@@ -131,6 +131,31 @@ class Cas1PremisesController(
       },
     )
 
+  /*
+  This is a spike endpoint to test performance
+  against a prod-like dataset. It will need refining
+  once requirements are fully understood
+   */
+  override fun getCapacities(
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): ResponseEntity<List<Cas1PremiseCapacity>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
+
+    val capacities = extractEntityFromCasResult(
+      cas1PremisesService.getPremisesCapacities(
+        premisesIds = cas1PremisesService.getAllPremisesIds(),
+        startDate = startDate,
+        endDate = endDate,
+        excludeSpaceBookingId = null,
+      ),
+    )
+
+    return ResponseEntity.ok().body(
+      capacities.map { cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(it) },
+    )
+  }
+
   override fun getCapacity(
     premisesId: UUID,
     startDate: LocalDate,
@@ -139,8 +164,11 @@ class Cas1PremisesController(
   ): ResponseEntity<Cas1PremiseCapacity> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
-    val premiseCapacity = cas1PremisesService.getPremiseCapacity(
-      premisesId = premisesId,
+    cas1PremisesService.findPremiseById(premisesId)
+      ?: throw NotFoundProblem(premisesId.toString(), "premises")
+
+    val premiseCapacity = cas1PremisesService.getPremisesCapacities(
+      premisesIds = listOf(premisesId),
       startDate = startDate,
       endDate = endDate,
       excludeSpaceBookingId = excludeSpaceBookingId,
@@ -148,7 +176,7 @@ class Cas1PremisesController(
 
     return ResponseEntity.ok().body(
       cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-        premiseCapacity = extractEntityFromCasResult(premiseCapacity),
+        premiseCapacity = extractEntityFromCasResult(premiseCapacity)[0],
       ),
     )
   }
@@ -163,19 +191,20 @@ class Cas1PremisesController(
   ): ResponseEntity<Cas1PremisesDaySummary> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
     val premises = cas1PremisesService.findPremiseById(premisesId)
+      ?: throw NotFoundProblem(premisesId.toString(), "premises")
 
     return ResponseEntity.ok().body(
       cas1PremisesDayTransformer.toCas1PremisesDaySummary(
         date = date,
         premisesCapacity = cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
           premiseCapacity = extractEntityFromCasResult(
-            cas1PremisesService.getPremiseCapacity(
-              premisesId = premisesId,
+            cas1PremisesService.getPremisesCapacities(
+              premisesIds = listOf(premisesId),
               startDate = date,
               endDate = date,
               excludeSpaceBookingId = excludeSpaceBookingId,
             ),
-          ),
+          )[0],
         ).capacity.first(),
         spaceBookings = extractEntityFromCasResult(
           cas1SpaceBookingDaySummaryService.getBookingDaySummaries(
@@ -190,7 +219,7 @@ class Cas1PremisesController(
         outOfServiceBeds = extractEntityFromCasResult(
           cas1OutOfServiceBedSummaryService.getOutOfServiceBedSummaries(
             premisesId = premisesId,
-            apAreaId = premises?.probationRegion?.apArea!!.id,
+            apAreaId = premises.probationRegion.apArea!!.id,
             date = date,
           ),
         ).map(cas1OutOfServiceBedSummaryTransformer::toCas1OutOfServiceBedSummary),
