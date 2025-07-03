@@ -3870,6 +3870,7 @@ components:
         - update_cas1_applications_with_offender
         - update_cas3_bedspace_model_data
         - update_cas3_void_bedspace_cancellation_data
+        - cas1_capacity_performance_test
     PlacementDates:
       type: object
       properties:
