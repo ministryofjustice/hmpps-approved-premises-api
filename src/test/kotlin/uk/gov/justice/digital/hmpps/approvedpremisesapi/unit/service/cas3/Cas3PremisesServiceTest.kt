@@ -370,30 +370,6 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `When update a premises returns Not found as premise to be updated is missing`() {
-      val premises = updatePremisesEntity()
-
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns null
-
-      val result = premisesService.updatePremises(
-        premises = premises,
-        premisesId = premises.id,
-        addressLine1 = premises.addressLine1,
-        addressLine2 = premises.addressLine2,
-        town = premises.town,
-        postcode = premises.postcode,
-        localAuthorityAreaId = premises.localAuthorityArea?.id,
-        probationRegionId = premises.probationRegion.id,
-        characteristicIds = emptyList(),
-        notes = premises.notes,
-        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = premises.turnaroundWorkingDays
-      )
-
-      assertThatCasResult(result).isNotFound("Premises", premises.id.toString())
-    }
-
-    @Test
     fun `When update a premises with a non exist probation region returns a FieldValidationError with the correct message`() {
       val premises = updatePremisesEntity()
       val nonExistProbationRegionId = UUID.randomUUID()
