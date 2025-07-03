@@ -31,11 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
@@ -98,7 +95,8 @@ class Cas3PremisesController(
   }
 
   @Transactional
-  override fun updatePremises(premisesId: UUID, body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
+  @PutMapping("/premises/{premisesId}")
+  fun updatePremises(@PathVariable premisesId: UUID, @RequestBody body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -107,7 +105,7 @@ class Cas3PremisesController(
     }
 
     return cas3PremisesService.updatePremises(
-      oldPremises = premises,
+      premises = premises,
       premisesId = premisesId,
       addressLine1 = body.addressLine1,
       addressLine2 = body.addressLine2,
@@ -124,8 +122,6 @@ class Cas3PremisesController(
       .let { cas3PremisesTransformer.transformDomainToApi(it) }
       .let { ResponseEntity.ok(it) }
   }
-
-  override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas3Premises> {
 
   @GetMapping("/premises/{premisesId}")
   fun getPremisesById(@PathVariable premisesId: UUID): ResponseEntity<Cas3Premises> {
