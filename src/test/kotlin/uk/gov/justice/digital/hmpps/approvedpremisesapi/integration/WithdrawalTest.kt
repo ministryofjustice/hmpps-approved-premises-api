@@ -228,10 +228,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val submittedPlacementApplication1 = createPlacementApplication(
               application,
-              dateSpans = listOf(
-                DateSpan(nowPlusDays(1), duration = 5),
-                DateSpan(nowPlusDays(10), duration = 10),
-              ),
+              dateSpan = DateSpan(nowPlusDays(1), duration = 5),
             )
 
             val submittedPlacementApplication2 = createPlacementApplication(
@@ -1760,7 +1757,6 @@ class WithdrawalTest : IntegrationTestBase() {
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     dateSpan: DateSpan? = null,
-    dateSpans: List<DateSpan> = emptyList(),
     isSubmitted: Boolean = true,
     reallocatedAt: OffsetDateTime? = null,
     decision: PlacementApplicationDecision? = PlacementApplicationDecision.ACCEPTED,
@@ -1777,17 +1773,20 @@ class WithdrawalTest : IntegrationTestBase() {
       withReallocatedAt(reallocatedAt)
       withAllocatedToUser(allocatedTo)
       withIsWithdrawn(isWithdrawn)
+      withExpectedArrival(dateSpan?.start)
+      withDuration(dateSpan?.duration)
     }
 
-    if (isSubmitted) {
-      val dates = (listOfNotNull(dateSpan) + dateSpans).map {
-        placementDateFactory.produceAndPersist {
-          withPlacementApplication(placementApplication)
-          withExpectedArrival(it.start)
-          withDuration(it.duration)
-        }
-      }
-      placementApplication.placementDates.addAll(dates)
+    if (dateSpan != null) {
+      placementApplication.placementDates.addAll(
+        listOf(
+          placementDateFactory.produceAndPersist {
+            withPlacementApplication(placementApplication)
+            withExpectedArrival(dateSpan.start)
+            withDuration(dateSpan.duration)
+          },
+        ),
+      )
     }
 
     return placementApplication

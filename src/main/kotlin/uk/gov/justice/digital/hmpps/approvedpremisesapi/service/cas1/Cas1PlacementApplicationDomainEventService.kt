@@ -40,12 +40,11 @@ class Cas1PlacementApplicationDomainEventService(
     username: String,
   ) {
     checkNotNull(placementApplication.placementType)
-    require(placementApplication.placementDates.size == 1)
 
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = Instant.now()
     val application = placementApplication.application
-    val dates = placementApplication.placementDates[0]
+    val dates = placementApplication.placementDates()!!
 
     val placementType = when (placementApplication.placementType!!) {
       PlacementType.ROTL -> RequestForPlacementType.rotl
@@ -111,12 +110,14 @@ class Cas1PlacementApplicationDomainEventService(
       withdrawnAt = eventOccurredAt,
       withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
       withdrawalReason = placementApplication.withdrawalReason!!.name,
-      placementDates = placementApplication.placementDates.map {
-        DatePeriod(
-          it.expectedArrival,
-          it.expectedDeparture(),
-        )
-      },
+      placementDates = listOfNotNull(
+        placementApplication.placementDates()?.let {
+          DatePeriod(
+            it.expectedArrival,
+            it.expectedDeparture(),
+          )
+        },
+      ),
     )
 
     domainEventService.savePlacementApplicationWithdrawnEvent(
@@ -147,6 +148,8 @@ class Cas1PlacementApplicationDomainEventService(
     val eventOccurredAt = Instant.now()
     val application = placementApplication.application
 
+    val placementDates = placementApplication.placementDates()!!
+
     val placementApplicationAllocated = PlacementApplicationAllocated(
       applicationId = application.id,
       applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
@@ -158,12 +161,12 @@ class Cas1PlacementApplicationDomainEventService(
       allocatedAt = allocatedAt.toInstant(),
       allocatedTo = domainEventTransformer.toStaffMember(allocatedToUser),
       allocatedBy = allocatedByUser?.let { domainEventTransformer.toStaffMember(it) },
-      placementDates = placementApplication.placementDates.map {
+      placementDates = listOf(
         DatePeriod(
-          it.expectedArrival,
-          it.expectedDeparture(),
-        )
-      },
+          startDate = placementDates.expectedArrival,
+          endDate = placementDates.expectedDeparture(),
+        ),
+      ),
     )
 
     domainEventService.savePlacementApplicationAllocatedEvent(
@@ -191,7 +194,7 @@ class Cas1PlacementApplicationDomainEventService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = Instant.now()
     val application = placementApplication.application
-    val dates = placementApplication.placementDates[0]
+    val dates = placementApplication.placementDates()!!
 
     val assessor = assessedByUser.let { domainEventTransformer.toStaffMember(it) }
 
