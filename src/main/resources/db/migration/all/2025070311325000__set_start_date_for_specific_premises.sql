@@ -1,0 +1,1 @@
+UPDATE temporary_accommodation_premises SET start_date = '2023-09-04' WHERE premises_id = '4f3b9768-9feb-4789-a876-3d1f030b1355'
