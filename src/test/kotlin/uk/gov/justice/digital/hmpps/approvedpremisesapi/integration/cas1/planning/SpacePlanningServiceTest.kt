@@ -20,14 +20,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanRenderer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
-import java.util.UUID
 
 /**
  * Because the [SpacePlanningService] is mostly 'glue' code between the database and the [SpacePlanningModelsFactory],
@@ -37,150 +35,6 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var spacePlanner: SpacePlanningService
-
-  @Nested
-  inner class Plan {
-
-    lateinit var premises1: ApprovedPremisesEntity
-
-    @BeforeEach
-    fun setupTestData() {
-      premises1 = givenAnApprovedPremises(
-        id = UUID.fromString("0f9384e2-2f94-41d9-a79c-4e35e67111ec"),
-        name = "Premises 1",
-      )
-
-      createRoom(
-        premises = premises1,
-        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_ARSON_SUITABLE, CAS1_PROPERTY_NAME_ENSUITE, CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        beds = listOf(RequiredBed("Room 1 - Bed 1")),
-      )
-
-      createRoom(
-        premises = premises1,
-        characteristicPropertyNames = listOf(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        beds = listOf(RequiredBed("Room 2 - Bed 1")),
-      )
-
-      val premises1Room3 = createRoom(
-        premises = premises1,
-        characteristicPropertyNames = emptyList(),
-        beds = listOf(
-          RequiredBed("Room 3 - Bed 1"),
-          RequiredBed("Room 3 - Bed 2"),
-          RequiredBed("Room 3 - Bed 3"),
-          RequiredBed("Room 3 - Bed 4", endDate = date(2020, 5, 8)),
-        ),
-      )
-
-      givenAnOutOfServiceBed(
-        bed = premises1Room3.beds.first { it.name == "Room 3 - Bed 3" },
-        startDate = date(2020, 5, 7),
-        endDate = date(2020, 5, 8),
-        reason = "refurb",
-      )
-
-      createSpaceBooking(crn = "CRN1") {
-        withPremises(premises1)
-        withCanonicalArrivalDate(date(2020, 5, 4))
-        withCanonicalDepartureDate(date(2020, 5, 11))
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-        )
-      }
-
-      createSpaceBooking(crn = "CRN2") {
-        withPremises(premises1)
-        withCanonicalArrivalDate(date(2020, 5, 6))
-        withCanonicalDepartureDate(date(2020, 5, 9))
-      }
-
-      createSpaceBooking(crn = "CRN3") {
-        withPremises(premises1)
-        withCanonicalArrivalDate(date(2020, 5, 7))
-        withCanonicalDepartureDate(date(2020, 5, 20))
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
-      }
-
-      createSpaceBooking(crn = "CRN4") {
-        withPremises(premises1)
-        withCanonicalArrivalDate(date(2020, 5, 1))
-        withCanonicalDepartureDate(date(2020, 5, 29))
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
-      }
-
-      createSpaceBooking(crn = "CRN5") {
-        withPremises(premises1)
-        withCanonicalArrivalDate(date(2020, 5, 1))
-        withCanonicalDepartureDate(date(2020, 5, 9))
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
-          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
-        )
-      }
-
-      createSpaceBooking(crn = "OUTOFRANGEBEFORE") {
-        withPremises(premises1)
-        withCanonicalArrivalDate(date(2020, 5, 1))
-        withCanonicalDepartureDate(date(2020, 5, 5))
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
-          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
-        )
-      }
-
-      createSpaceBooking(crn = "OUTOFRANGEAFTER") {
-        withPremises(premises1)
-        withCanonicalArrivalDate(date(2020, 5, 11))
-        withCanonicalDepartureDate(date(2020, 5, 12))
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
-          findCharacteristic(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
-        )
-      }
-    }
-
-    @Test
-    fun success() {
-      val criteria = SpacePlanningService.PlanCriteria(
-        premises = premises1,
-        range = DateRange(
-          fromInclusive = date(2020, 5, 6),
-          toInclusive = date(2020, 5, 10),
-        ),
-      )
-
-      val plan = spacePlanner.plan(criteria)
-
-      assertThat(
-        SpacePlanRenderer.render(criteria, plan),
-      ).isEqualTo(
-        """
-        Space Plan for Premises 1 (0f9384e2-2f94-41d9-a79c-4e35e67111ec) from 2020-05-06 to 2020-05-10
-        
-        There are 3 days with unplanned bookings:
-        
-        2020-05-06 has 1
-        2020-05-07 has 2
-        2020-05-08 has 2
-        
-        | Room (6)             | **2020-05-06**<br/>capacity: 6<br/>planned: 3<br/>unplanned: 1         | **2020-05-07**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 2         | **2020-05-08**<br/>capacity: 4<br/>planned: 3<br/>unplanned: 2         | **2020-05-09**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 0         | **2020-05-10**<br/>capacity: 5<br/>planned: 3<br/>unplanned: 0         |
-        | -------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-        | **Room 1 - Bed 1**<br/>hasEnSuite<br/>isArsonSuitable<br/>isSingle | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     | **CRN1**<br/>hasEnSuite(r)<br/>isArsonSuitable(rb)<br/>isSingle(r)     |
-        | **Room 2 - Bed 1**<br/>isSingle | **CRN4**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              | **CRN3**<br/>isSingle(rb)                                              |
-        | **Room 3 - Bed 1**   | **CRN2**                                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
-        | **Room 3 - Bed 2**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
-        | **Room 3 - Bed 3**   |                                                                        | OOSB refurb                                                            | OOSB refurb                                                            | **CRN4**<br/>isSingle(b)                                               | **CRN4**<br/>isSingle(b)                                               |
-        | **Room 3 - Bed 4**   |                                                                        | **CRN4**<br/>isSingle(b)                                               | Bed Ended 2020-05-08                                                   | Bed Ended 2020-05-08                                                   | Bed Ended 2020-05-08                                                   |
-        | **unplanned**        | **CRN5**<br/>hasEnSuite<br/>isWheelchairDesignated                     | **CRN5**<br/>hasEnSuite<br/>isWheelchairDesignated<br/><br/>**CRN2**   | **CRN5**<br/>hasEnSuite<br/>isWheelchairDesignated<br/><br/>**CRN2**   |                                                                        |                                                                        |
-        """.trimIndent(),
-      )
-    }
-  }
 
   @Nested
   inner class Capacity {
