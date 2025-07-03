@@ -127,6 +127,8 @@ spring:
             token-uri: ${hmpps.auth.url}/oauth/token
 
 springdoc:
+  api-docs:
+    version: openapi_3_0
   swagger-ui:
     # advised by https://github.com/ministryofjustice/dps-gradle-spring-boot/blob/main/release-notes/7.x.md (7.1.4)
     version: 5.20.0
