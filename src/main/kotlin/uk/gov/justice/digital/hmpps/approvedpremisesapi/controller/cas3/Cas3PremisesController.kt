@@ -106,7 +106,6 @@ class Cas3PremisesController(
 
     return cas3PremisesService.updatePremises(
       premises = premises,
-      premisesId = premisesId,
       addressLine1 = body.addressLine1,
       addressLine2 = body.addressLine2,
       town = body.town,

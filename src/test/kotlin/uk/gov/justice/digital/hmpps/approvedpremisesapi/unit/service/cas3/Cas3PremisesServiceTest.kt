@@ -340,7 +340,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -382,7 +381,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -411,7 +409,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -440,7 +437,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -464,7 +460,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = "",
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -487,7 +482,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -511,7 +505,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -537,7 +530,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -569,7 +561,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -602,7 +593,6 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
-        premisesId = premises.id,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,

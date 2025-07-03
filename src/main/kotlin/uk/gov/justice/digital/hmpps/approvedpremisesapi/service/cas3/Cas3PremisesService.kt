@@ -347,7 +347,6 @@ class Cas3PremisesService(
   @SuppressWarnings("CyclomaticComplexMethod")
   fun updatePremises(
     premises: TemporaryAccommodationPremisesEntity,
-    premisesId: UUID,
     addressLine1: String,
     addressLine2: String?,
     town: String?,
