@@ -123,7 +123,7 @@ class AssessmentStateTest : IntegrationTestBase() {
 
   private fun TemporaryAccommodationAssessmentEntity.allocateToCurrentUser(jwt: String) {
     webTestClient.post()
-      .uri("tasks/assessment/${this.id}/allocations")
+      .uri("/cas1/tasks/assessment/${this.id}/allocations")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue({ })
@@ -155,7 +155,7 @@ class AssessmentStateTest : IntegrationTestBase() {
 
   private fun TemporaryAccommodationAssessmentEntity.deallocateUser(jwt: String) {
     webTestClient.delete()
-      .uri("tasks/assessment/${this.id}/allocations")
+      .uri("/cas1/tasks/assessment/${this.id}/allocations")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .exchange()
