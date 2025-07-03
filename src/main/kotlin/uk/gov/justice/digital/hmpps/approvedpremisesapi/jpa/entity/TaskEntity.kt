@@ -97,7 +97,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         u.name as allocated_to,
         placement_application.decision_made_at as completed_at,
         placement_application.decision as decision,
-        pad.expected_arrival AS sorting_date,
+        placement_application.expected_arrival AS sorting_date,
         apa.ap_type AS ap_type
       from
         placement_applications placement_application
@@ -105,13 +105,6 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         INNER JOIN approved_premises_applications apa ON application.id = apa.id
         LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_application.allocated_to_user_id
-        LEFT OUTER JOIN LATERAL (
-          SELECT pad.expected_arrival
-          FROM placement_application_dates pad
-          WHERE placement_application.id = pad.placement_application_id
-          ORDER BY created_at ASC
-          LIMIT 1
-        ) pad ON TRUE 
       WHERE
         'PLACEMENT_APPLICATION' in :taskTypes AND
         placement_application.submitted_at IS NOT NULL

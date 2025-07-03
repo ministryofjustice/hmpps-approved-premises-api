@@ -126,6 +126,8 @@ class Cas1TasksTest {
                 allocatedToUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               val expectedTasks = listOf(
@@ -173,6 +175,8 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               val (task5) = givenAnAssessmentForApprovedPremises(
@@ -260,6 +264,8 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               val (task5) = givenAnAssessmentForApprovedPremises(
@@ -433,6 +439,8 @@ class Cas1TasksTest {
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
                 apArea = apArea,
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               givenAPlacementApplication(
@@ -441,6 +449,8 @@ class Cas1TasksTest {
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
                 apArea = apArea2,
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               val assessments = listOf(
@@ -549,6 +559,8 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
                 cruManagementArea = cruArea,
               )
 
@@ -557,6 +569,8 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
                 cruManagementArea = cruArea2,
               )
 
@@ -665,6 +679,8 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               givenAPlacementApplication(
@@ -672,6 +688,8 @@ class Cas1TasksTest {
                 allocatedToUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               val assessments = listOf(
@@ -807,6 +825,8 @@ class Cas1TasksTest {
                   allocatedToUser = user,
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
+                  expectedArrival = LocalDate.now(),
+                  duration = 1,
                 )
               }
 
@@ -815,6 +835,8 @@ class Cas1TasksTest {
                   createdByUser = user,
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
+                  expectedArrival = LocalDate.now(),
+                  duration = 1,
                 )
               }
 
@@ -824,6 +846,8 @@ class Cas1TasksTest {
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
                   isWithdrawn = true,
+                  expectedArrival = LocalDate.now(),
+                  duration = 1,
                 )
               }
             }
@@ -972,6 +996,8 @@ class Cas1TasksTest {
                   allocatedToUser = user,
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
+                  expectedArrival = LocalDate.now(),
+                  duration = 1,
                   requiredQualification = requiredQualification,
                   noticeType = noticeType,
                 )
@@ -1134,6 +1160,8 @@ class Cas1TasksTest {
                   crn = offenderDetails1.otherIds.crn,
                   name = "SOMEONE",
                   submittedAt = OffsetDateTime.now(),
+                  expectedArrival = LocalDate.now(),
+                  duration = 1,
                 )
 
                 val placementApplication2 = givenAPlacementApplication(
@@ -1141,6 +1169,8 @@ class Cas1TasksTest {
                   allocatedToUser = user,
                   crn = offenderDetails2.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
+                  expectedArrival = LocalDate.now(),
+                  duration = 1,
                   name = "ANOTHER",
                 )
 
@@ -1300,6 +1330,8 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
               )
 
               val placementApplication2 = givenAPlacementApplication(
@@ -1307,6 +1339,8 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
                 decision = ACCEPTED,
               )
 
@@ -1478,27 +1512,20 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+                expectedArrival = LocalDate.of(2024, 5, 10),
+                duration = 12,
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 decision = REJECTED,
                 apType = ApprovedPremisesType.MHAP_ST_JOSEPHS,
               )
-
-              val placementDate1 = placementDateFactory.produceAndPersist {
-                withExpectedArrival(LocalDate.of(2024, 5, 10))
-                withPlacementApplication(placementApplication1)
-              }
-
-              val placementDate2 = placementDateFactory.produceAndPersist {
-                withExpectedArrival(LocalDate.of(2024, 7, 5))
-                withPlacementApplication(placementApplication1)
-              }
-              placementApplication1.placementDates = mutableListOf(placementDate1, placementDate2)
 
               val placementApplication2 = givenAPlacementApplication(
                 createdByUser = otherUser,
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+                expectedArrival = LocalDate.of(2024, 6, 10),
+                duration = 12,
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 decision = ACCEPTED,
                 apType = ApprovedPremisesType.NORMAL,
@@ -2207,6 +2234,8 @@ class Cas1TasksTest {
         allocatedToUser = creatingUser,
         crn = crn,
         submittedAt = OffsetDateTime.now(),
+        expectedArrival = LocalDate.now(),
+        duration = 2,
       )
 
       val numAppAssessPending = 3
@@ -2474,10 +2503,9 @@ class Cas1TasksTest {
                 allocatedToUser = user,
                 crn = offenderDetails.otherIds.crn,
                 submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.of(2012, 1, 1),
+                duration = 15,
               ) { placementApplication ->
-                val placementDate = placementDateFactory.produceAndPersist {
-                  withPlacementApplication(placementApplication)
-                }
 
                 webTestClient.post()
                   .uri("$baseUrl/placement-application/${placementApplication.id}/allocations")
@@ -2511,11 +2539,8 @@ class Cas1TasksTest {
                 assertThat(placementApplications.first { it.id == placementApplication.id }.reallocatedAt).isNotNull
                 assertThat(allocatedPlacementApplication).isNotNull
 
-                val placementDates = allocatedPlacementApplication!!.placementDates
-
-                assertThat(placementDates.size).isEqualTo(1)
-                assertThat(placementDates[0].expectedArrival).isEqualTo(placementDate.expectedArrival)
-                assertThat(placementDates[0].duration).isEqualTo(placementDate.duration)
+                assertThat(allocatedPlacementApplication!!.expectedArrival).isEqualTo(LocalDate.of(2012, 1, 1))
+                assertThat(allocatedPlacementApplication!!.duration).isEqualTo(15)
               }
             }
           }

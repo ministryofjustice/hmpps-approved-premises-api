@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -23,10 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 
@@ -44,22 +43,6 @@ class RequestForPlacementTransformerTest {
     private val user = UserEntityFactory()
       .withDefaults()
       .produce()
-
-    private fun assertPlacementDatesMatchPlacementDateEntities(
-      actual: List<PlacementDates>,
-      expected: List<PlacementDateEntity>,
-    ) {
-      assertThat(actual).hasSize(expected.size)
-      actual.zip(expected).forEach { (a, e) -> assertPlacementDateMatchesPlacementDateEntity(a, e) }
-    }
-
-    private fun assertPlacementDateMatchesPlacementDateEntity(
-      actual: PlacementDates,
-      expected: PlacementDateEntity,
-    ) {
-      assertThat(actual.expectedArrival).isEqualTo(expected.expectedArrival)
-      assertThat(actual.duration).isEqualTo(expected.duration)
-    }
   }
 
   @Nested
@@ -76,6 +59,8 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
+        .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withDuration(47)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -85,11 +70,15 @@ class RequestForPlacementTransformerTest {
       assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
       assertThat(result.isWithdrawn).isEqualTo(placementApplication.isWithdrawn)
       assertThat(result.type).isEqualTo(RequestForPlacementType.manual)
-      assertPlacementDatesMatchPlacementDateEntities(result.placementDates, placementApplication.placementDates)
       assertThat(result.submittedAt).isEqualTo(placementApplication.submittedAt?.toInstant())
       assertThat(result.requestReviewedAt).isEqualTo(placementApplication.decisionMadeAt?.toInstant())
       assertThat(result.document).isNotNull
       assertThat(result.withdrawalReason).isEqualTo(placementApplication.withdrawalReason?.apiValue)
+      assertThat(result.dates.expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
+      assertThat(result.dates.duration).isEqualTo(47)
+      assertThat(result.placementDates).hasSize(1)
+      assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
+      assertThat(result.placementDates[0].duration).isEqualTo(47)
 
       verify(exactly = 1) { objectMapper.readTree(placementApplication.document) }
     }
@@ -107,6 +96,8 @@ class RequestForPlacementTransformerTest {
         .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withIsWithdrawn(true)
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
+        .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withDuration(47)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -126,6 +117,8 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withDuration(47)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -177,6 +170,8 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecision(PlacementApplicationDecision.REJECTED)
+        .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withDuration(47)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -196,6 +191,8 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withDuration(47)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -213,27 +210,13 @@ class RequestForPlacementTransformerTest {
         .withDefaults()
         .withApplication(application)
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withDuration(47)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
-    }
-
-    @Test
-    fun `Derives the correct status for an unsubmitted placement application`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withDefaults()
-        .withApplication(application)
-        .produce()
-
-      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
-
-      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestUnsubmitted)
     }
 
     @ParameterizedTest
@@ -246,6 +229,9 @@ class RequestForPlacementTransformerTest {
       val placementApplication = PlacementApplicationEntityFactory()
         .withDefaults()
         .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.now())
+        .withDuration(5)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
