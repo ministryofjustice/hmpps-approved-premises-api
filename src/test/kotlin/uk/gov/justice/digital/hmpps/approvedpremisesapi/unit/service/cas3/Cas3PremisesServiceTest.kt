@@ -350,23 +350,23 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = premises.turnaroundWorkingDays
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isSuccess()
         .with { updatedPremises ->
-        assertThat(updatedPremises.id).isNotNull()
-        assertThat(updatedPremises.addressLine1).isEqualTo(premises.addressLine1)
-        assertThat(updatedPremises.addressLine2).isEqualTo(premises.addressLine2)
-        assertThat(updatedPremises.town).isEqualTo(premises.town)
-        assertThat(updatedPremises.postcode).isEqualTo(premises.postcode)
-        assertThat(updatedPremises.localAuthorityArea).isEqualTo(premises.localAuthorityArea)
-        assertThat(updatedPremises.probationRegion).isEqualTo(premises.probationRegion)
-        assertThat(updatedPremises.probationDeliveryUnit?.id).isEqualTo(premises.probationDeliveryUnit?.id)
-        assertThat(updatedPremises.notes).isEqualTo(premises.notes)
-        assertThat(updatedPremises.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
-        assertThat(updatedPremises.characteristics).isEmpty()
-      }
+          assertThat(updatedPremises.id).isNotNull()
+          assertThat(updatedPremises.addressLine1).isEqualTo(premises.addressLine1)
+          assertThat(updatedPremises.addressLine2).isEqualTo(premises.addressLine2)
+          assertThat(updatedPremises.town).isEqualTo(premises.town)
+          assertThat(updatedPremises.postcode).isEqualTo(premises.postcode)
+          assertThat(updatedPremises.localAuthorityArea).isEqualTo(premises.localAuthorityArea)
+          assertThat(updatedPremises.probationRegion).isEqualTo(premises.probationRegion)
+          assertThat(updatedPremises.probationDeliveryUnit?.id).isEqualTo(premises.probationDeliveryUnit?.id)
+          assertThat(updatedPremises.notes).isEqualTo(premises.notes)
+          assertThat(updatedPremises.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
+          assertThat(updatedPremises.characteristics).isEmpty()
+        }
     }
 
     @Test
@@ -392,7 +392,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = premises.turnaroundWorkingDays
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationRegionId", "doesNotExist")
@@ -421,7 +421,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = premises.turnaroundWorkingDays
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.localAuthorityAreaId", "doesNotExist")
@@ -450,12 +450,11 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = nonExistPduId,
-        turnaroundWorkingDays = premises.turnaroundWorkingDays
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationDeliveryUnitId", "doesNotExist")
     }
-
 
     @Test
     fun `When update a premises with empty address returns a FieldValidationError with the correct message`() {
@@ -475,7 +474,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = premises.turnaroundWorkingDays
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.address", "empty")
     }
@@ -498,7 +497,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = premises.turnaroundWorkingDays
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.postcode", "empty")
@@ -522,7 +521,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = -2
+        turnaroundWorkingDays = -2,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.turnaroundWorkingDays", "isNotAPositiveInteger")
@@ -548,7 +547,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = listOf(nonExistCharacteristicId),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = -2
+        turnaroundWorkingDays = -2,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "doesNotExist")
@@ -580,7 +579,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = listOf(premisesCharacteristic.id),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = -2
+        turnaroundWorkingDays = -2,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicModelScope")
@@ -613,7 +612,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = listOf(premisesCharacteristic.id),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDays = -2
+        turnaroundWorkingDays = -2,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")

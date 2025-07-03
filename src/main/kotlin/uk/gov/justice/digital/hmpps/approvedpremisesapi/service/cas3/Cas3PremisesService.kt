@@ -359,7 +359,6 @@ class Cas3PremisesService(
     probationDeliveryUnitId: UUID,
     turnaroundWorkingDays: Int?,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
-
     val localAuthorityArea = when (localAuthorityAreaId) {
       null -> null
       else -> {
@@ -394,19 +393,19 @@ class Cas3PremisesService(
 
     premises
       .let {
-      it.addressLine1 = addressLine1
-      it.addressLine2 = addressLine2
-      it.town = town
-      it.postcode = postcode
-      it.localAuthorityArea = localAuthorityArea
-      it.probationRegion = probationRegion!!
-      it.characteristics = characteristicEntities.map { it!! }.toMutableList()
-      it.notes = if (notes.isNullOrEmpty()) "" else notes
-      it.probationDeliveryUnit = probationDeliveryUnit!!
-      if (turnaroundWorkingDays != null) {
-        it.turnaroundWorkingDays = turnaroundWorkingDays
+        it.addressLine1 = addressLine1
+        it.addressLine2 = addressLine2
+        it.town = town
+        it.postcode = postcode
+        it.localAuthorityArea = localAuthorityArea
+        it.probationRegion = probationRegion!!
+        it.characteristics = characteristicEntities.map { it!! }.toMutableList()
+        it.notes = if (notes.isNullOrEmpty()) "" else notes
+        it.probationDeliveryUnit = probationDeliveryUnit!!
+        if (turnaroundWorkingDays != null) {
+          it.turnaroundWorkingDays = turnaroundWorkingDays
+        }
       }
-    }
 
     val savedPremises = premisesRepository.save(premises)
 

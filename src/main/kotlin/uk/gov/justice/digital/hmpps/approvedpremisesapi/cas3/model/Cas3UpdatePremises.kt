@@ -8,13 +8,13 @@ data class Cas3UpdatePremises(
 
   val addressLine1: String,
 
- val postcode: String,
+  val postcode: String,
 
   val probationRegionId: UUID,
 
   val probationDeliveryUnitId: UUID,
 
- val characteristicIds: List<UUID>,
+  val characteristicIds: List<UUID>,
 
   val addressLine2: String? = null,
 
@@ -24,5 +24,5 @@ data class Cas3UpdatePremises(
 
   val notes: String? = null,
 
-  val turnaroundWorkingDayCount: Int? = null
+  val turnaroundWorkingDayCount: Int? = null,
 )
