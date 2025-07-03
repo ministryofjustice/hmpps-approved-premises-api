@@ -25,6 +25,7 @@ class Cas3UpdatePremisesStartDateJobTest : MigrationJobTestBase() {
       }
 
       premisesTemporaryAccommodation.forEach {
+        it.startDate = null
         it.createdAt = OffsetDateTime.now().randomDateTimeBefore(360)
         temporaryAccommodationPremisesRepository.save(it)
       }
@@ -49,7 +50,6 @@ class Cas3UpdatePremisesStartDateJobTest : MigrationJobTestBase() {
       }
 
       premisesTemporaryAccommodation.createdAt = null
-
       temporaryAccommodationPremisesRepository.save(premisesTemporaryAccommodation)
 
       val oldestArrivalDate = LocalDate.now().randomDateBefore(60)
@@ -108,23 +108,35 @@ class Cas3UpdatePremisesStartDateJobTest : MigrationJobTestBase() {
         withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
       }
 
+      premisesTemporaryAccommodation.createdAt = null
+      temporaryAccommodationPremisesRepository.save(premisesTemporaryAccommodation)
+
       val room = roomEntityFactory.produceAndPersist {
         withPremises(premisesTemporaryAccommodation)
         withName("Test Room")
       }
 
-      val bed = bedEntityFactory.produceAndPersist {
+      val oldestBedStartDate = LocalDate.now().randomDateBefore(60)
+      val newerBedStartDate = LocalDate.now().randomDateAfter(59)
+
+      val bed1 = bedEntityFactory.produceAndPersist {
         withRoom(room)
         withName("Bed with no bookings")
-        withStartDate(null)
+        withStartDate(oldestBedStartDate)
       }
 
-      setCreatedAt(bed, null)
+      val bed2 = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+        withName("Bed with no bookings")
+        withStartDate(newerBedStartDate)
+      }
+
+      setCreatedAt(bed1, null)
+      setCreatedAt(bed2, null)
 
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3PremisesStartDate, 10)
 
-      val savedBed = bedRepository.findById(bed.id).get()
-      assertThat(savedBed.startDate).isNull()
+      assertThat(temporaryAccommodationPremisesRepository.findById(premisesTemporaryAccommodation.id).get().startDate).isEqualTo(oldestBedStartDate)
     }
   }
 
