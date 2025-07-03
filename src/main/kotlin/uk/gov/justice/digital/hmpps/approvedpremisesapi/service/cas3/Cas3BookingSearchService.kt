@@ -12,13 +12,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -62,7 +61,6 @@ class Cas3BookingSearchService(
     bookingSearchResultDtos: List<BookingSearchResultDto>,
     user: UserEntity,
   ): List<BookingSearchResultDto> {
-
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       bookingSearchResultDtos.map { it.personCrn }.toSet(),
       user.cas3LaoStrategy(),
