@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -61,6 +62,7 @@ class Cas3BookingSearchService(
     bookingSearchResultDtos: List<BookingSearchResultDto>,
     user: UserEntity,
   ): List<BookingSearchResultDto> {
+
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       bookingSearchResultDtos.map { it.personCrn }.toSet(),
       user.cas3LaoStrategy(),
@@ -68,13 +70,8 @@ class Cas3BookingSearchService(
 
     return bookingSearchResultDtos
       .map { result -> result to offenderSummaries.first { it.crn == result.personCrn } }
-      .filter { (_, offenderSummary) -> offenderSummary !is PersonSummaryInfoResult.Success.Restricted }
       .map { (result, offenderSummary) ->
-        result
-        result.personName = when (offenderSummary) {
-          is PersonSummaryInfoResult.Success.Full -> "${offenderSummary.summary.name.forename} ${offenderSummary.summary.name.surname}"
-          else -> null
-        }
+        result.personName = getNameFromPersonSummaryInfoResult(offenderSummary)
         result
       }
   }
