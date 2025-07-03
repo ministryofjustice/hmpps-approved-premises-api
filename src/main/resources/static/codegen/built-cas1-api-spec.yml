@@ -5454,6 +5454,7 @@ components:
         - cas1_out_of_service_bed_cancel
         - cas1_placement_appeal_create
         - cas1_placement_appeal_assess
+        - cas1_placement_extension_request
         - cas1_placement_request_record_unable_to_match
         - cas1_process_an_appeal
         - cas1_transfer_create
@@ -7417,11 +7418,13 @@ components:
         - plannedTransferRequest
         - emergencyTransferCreate
         - shorten
+        - extensionRequest
       x-enum-varnames:
         - APPEAL_CREATE
         - PLANNED_TRANSFER_REQUEST
         - EMERGENCY_TRANSFER_CREATE
         - SHORTEN
+        - EXTENSION_REQUEST
     Cas1SpaceBookingSummarySortField:
       type: string
       enum:

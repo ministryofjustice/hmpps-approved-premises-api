@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionOutco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionOutcome.Unavailable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.APPEAL_CREATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.EMERGENCY_TRANSFER_CREATE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.EXTENSION_REQUEST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.PLANNED_TRANSFER_REQUEST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.SHORTEN
 
@@ -28,6 +29,7 @@ class Cas1SpaceBookingActionsService(
       plannedTransferRequest(spaceBooking, openChangeRequests),
       emergencyTransferCreate(spaceBooking),
       shortenBooking(spaceBooking),
+      extensionRequest(spaceBooking, openChangeRequests),
     )
 
     return ActionsResult(outcomes)
@@ -73,6 +75,30 @@ class Cas1SpaceBookingActionsService(
       unavailable("Space booking has already been transferred")
     } else {
       Available(SHORTEN)
+    }
+  }
+
+  private fun extensionRequest(
+    spaceBooking: Cas1SpaceBookingEntity,
+    openChangeRequests: List<Cas1ChangeRequestEntity>,
+  ): ActionOutcome {
+    val requiredPermission = UserPermission.CAS1_EXTENSION_REQUEST
+    fun unavailable(reason: String) = Unavailable(EXTENSION_REQUEST, reason)
+
+    return if (!userAccessService.currentUserHasPermission(requiredPermission)) {
+      unavailable("User must have permission '$requiredPermission'")
+    } else if (!spaceBooking.hasArrival()) {
+      unavailable("Space booking has not been marked as arrived")
+    } else if (spaceBooking.hasNonArrival()) {
+      unavailable("Space booking has been marked as non arrived")
+    } else if (spaceBooking.hasDeparted()) {
+      unavailable("Space booking has been marked as departed")
+    } else if (spaceBooking.isCancelled()) {
+      unavailable("Space booking has been cancelled")
+    } else if (openChangeRequests.any { it.type == ChangeRequestType.PLACEMENT_EXTENSION }) {
+      unavailable("There is an existing open change request of this type")
+    } else {
+      Available(EXTENSION_REQUEST)
     }
   }
 
@@ -137,4 +163,5 @@ enum class SpaceBookingAction(
   PLANNED_TRANSFER_REQUEST(Cas1SpaceBookingAction.PLANNED_TRANSFER_REQUEST),
   EMERGENCY_TRANSFER_CREATE(Cas1SpaceBookingAction.EMERGENCY_TRANSFER_CREATE),
   SHORTEN(Cas1SpaceBookingAction.SHORTEN),
+  EXTENSION_REQUEST(Cas1SpaceBookingAction.EXTENSION_REQUEST),
 }

@@ -429,6 +429,90 @@ class Cas1SpaceBookingActionsServiceTest {
     }
   }
 
+  @Nested
+  inner class ExtensionRequest {
+
+    var spaceBooking = Cas1SpaceBookingEntityFactory()
+      .withActualArrivalDate(LocalDate.now())
+      .withActualDepartureDate(null)
+      .withNonArrivalConfirmedAt(null)
+      .withCancellationOccurredAt(null)
+      .produce()
+
+    @Test
+    fun success() {
+      service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.EXTENSION_REQUEST)
+    }
+
+    @Test
+    fun `unavailable if user does not have correct permission`() {
+      userDoesntHavePermission(UserPermission.CAS1_EXTENSION_REQUEST)
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.EXTENSION_REQUEST,
+          message = "User must have permission 'CAS1_EXTENSION_REQUEST'",
+        )
+    }
+
+    @Test
+    fun `unavailable if does not have arrival`() {
+      spaceBooking.actualArrivalDate = null
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.EXTENSION_REQUEST,
+          message = "Space booking has not been marked as arrived",
+        )
+    }
+
+    @Test
+    fun `unavailable if has non arrival`() {
+      spaceBooking.nonArrivalConfirmedAt = Instant.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.EXTENSION_REQUEST,
+          message = "Space booking has been marked as non arrived",
+        )
+    }
+
+    @Test
+    fun `unavailable if has departure`() {
+      spaceBooking.actualDepartureDate = LocalDate.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.EXTENSION_REQUEST,
+          message = "Space booking has been marked as departed",
+        )
+    }
+
+    @Test
+    fun `unavailable if has cancellation`() {
+      spaceBooking.cancellationOccurredAt = LocalDate.now()
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.EXTENSION_REQUEST,
+          message = "Space booking has been cancelled",
+        )
+    }
+
+    @Test
+    fun `unavailable if pending extension request`() {
+      every { changeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns listOf(
+        Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_EXTENSION).produce(),
+      )
+
+      service.determineActions(spaceBooking)
+        .assertUnavailable(
+          action = SpaceBookingAction.EXTENSION_REQUEST,
+          message = "There is an existing open change request of this type",
+        )
+    }
+  }
+
   private fun userDoesntHavePermission(permission: UserPermission) {
     every { userAccessService.currentUserHasPermission(permission) } returns false
   }
