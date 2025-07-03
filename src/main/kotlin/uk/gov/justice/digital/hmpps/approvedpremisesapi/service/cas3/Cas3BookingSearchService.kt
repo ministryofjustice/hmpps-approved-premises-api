@@ -12,11 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -68,13 +68,8 @@ class Cas3BookingSearchService(
 
     return bookingSearchResultDtos
       .map { result -> result to offenderSummaries.first { it.crn == result.personCrn } }
-      .filter { (_, offenderSummary) -> offenderSummary !is PersonSummaryInfoResult.Success.Restricted }
       .map { (result, offenderSummary) ->
-        result
-        result.personName = when (offenderSummary) {
-          is PersonSummaryInfoResult.Success.Full -> "${offenderSummary.summary.name.forename} ${offenderSummary.summary.name.surname}"
-          else -> null
-        }
+        result.personName = getNameFromPersonSummaryInfoResult(offenderSummary)
         result
       }
   }
