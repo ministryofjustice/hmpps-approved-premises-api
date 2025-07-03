@@ -4,10 +4,10 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultRoomSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CharacteristicPair
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchResults
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CharacteristicPair
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
 
 @Component
