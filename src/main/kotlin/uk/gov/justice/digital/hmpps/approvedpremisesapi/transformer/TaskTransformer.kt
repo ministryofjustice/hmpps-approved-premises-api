@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
@@ -75,12 +74,8 @@ class TaskTransformer(
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
-    placementDates = placementApplication.placementDates.map {
-      PlacementDates(
-        expectedArrival = it.expectedArrival,
-        duration = it.duration,
-      )
-    },
+    dates = placementApplication.placementDates()!!.toApiType(),
+    placementDates = listOf(placementApplication.placementDates()!!.toApiType()),
     releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
@@ -89,9 +84,7 @@ class TaskTransformer(
     probationDeliveryUnit = placementApplication.application.createdByUser.probationDeliveryUnit?.let {
       probationDeliveryUnitTransformer.transformJpaToApi(it)
     },
-    expectedArrivalDate = placementApplication.placementDates
-      .map { it.expectedArrival }
-      .minByOrNull { it },
+    expectedArrivalDate = placementApplication.placementDates()!!.expectedArrival,
     apType = placementApplication.application.apType.asApiType(),
   )
 
