@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.PeopleCas3Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -14,16 +17,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
-@Service
+@RestController
+@RequestMapping(
+  "\${api.base-path:}/cas3",
+  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
+)
 class Cas3PeopleController(
   private val offenderService: OffenderService,
   private val userService: UserService,
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val oaSysOffenceDetailsTransformer: Cas3OASysOffenceDetailsTransformer,
-) : PeopleCas3Delegate {
+) {
 
-  override fun riskManagement(crn: String): ResponseEntity<Cas3OASysGroup> {
+  @GetMapping("/people/{crn}/oasys/riskManagement")
+  fun riskManagement(@PathVariable crn: String): ResponseEntity<Cas3OASysGroup> {
     ensureOffenderAccess(crn)
 
     val offenceDetails = extractEntityFromCasResult(oaSysService.getOASysOffenceDetails(crn))

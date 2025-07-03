@@ -3,9 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ApplicationsCas3Delegate
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
@@ -31,7 +39,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.net.URI
 import java.util.UUID
 
-@Service
+@RestController
+@RequestMapping(
+  "\${api.base-path:}/cas3",
+  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
+)
 class Cas3ApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationService: ApplicationService,
@@ -39,9 +51,10 @@ class Cas3ApplicationsController(
   private val offenderService: OffenderService,
   private val cas3ApplicationTransformer: Cas3ApplicationTransformer,
   private val objectMapper: ObjectMapper,
-) : ApplicationsCas3Delegate {
+) {
 
-  override fun getApplicationsForUser(): ResponseEntity<List<Cas3ApplicationSummary>> {
+  @GetMapping("/applications")
+  fun getApplicationsForUser(): ResponseEntity<List<Cas3ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
     val applications = applicationService.getAllApplicationsForUsername(user, ServiceName.temporaryAccommodation)
@@ -54,7 +67,8 @@ class Cas3ApplicationsController(
     )
   }
 
-  override fun getApplicationById(applicationId: UUID): ResponseEntity<Cas3Application> {
+  @GetMapping("/applications/{applicationId}")
+  fun getApplicationById(@PathVariable applicationId: UUID): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
 
     val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
@@ -70,7 +84,14 @@ class Cas3ApplicationsController(
   }
 
   @Transactional
-  override fun postApplication(body: Cas3NewApplication, createWithRisks: Boolean?): ResponseEntity<Cas3Application> {
+  @PostMapping(
+    "/applications",
+    consumes = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun postApplication(
+    @RequestBody body: Cas3NewApplication,
+    @RequestParam createWithRisks: Boolean?,
+  ): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
 
     val personInfo =
@@ -99,7 +120,14 @@ class Cas3ApplicationsController(
   }
 
   @Transactional
-  override fun putApplication(applicationId: UUID, body: Cas3UpdateApplication): ResponseEntity<Cas3Application> {
+  @PutMapping(
+    "/applications/{applicationId}",
+    consumes = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun putApplication(
+    @PathVariable applicationId: UUID,
+    @RequestBody body: Cas3UpdateApplication,
+  ): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
@@ -114,16 +142,21 @@ class Cas3ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user, false))
   }
 
-  override fun postApplicationSubmission(
-    applicationId: UUID,
-    cas3SubmitApplication: Cas3SubmitApplication,
+  @PostMapping(
+    "/applications/{applicationId}/submission",
+    consumes = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun postApplicationSubmission(
+    @PathVariable applicationId: UUID,
+    @RequestBody cas3SubmitApplication: Cas3SubmitApplication,
   ): ResponseEntity<Unit> {
     ensureEntityFromCasResultIsSuccess(cas3ApplicationService.submitApplication(applicationId, cas3SubmitApplication))
 
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun deleteApplication(applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(
+  @DeleteMapping("/applications/{applicationId}")
+  fun deleteApplication(@PathVariable applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(
     extractEntityFromCasResult(cas3ApplicationService.markApplicationAsDeleted(applicationId)),
   )
 

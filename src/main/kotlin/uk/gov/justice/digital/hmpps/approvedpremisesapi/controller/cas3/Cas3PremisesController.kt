@@ -2,9 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.PremisesCas3Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceStatus
@@ -40,7 +47,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.time.ZoneOffset
 import java.util.UUID
 
-@Service
+@SuppressWarnings("LongParameterList", "ThrowsCount")
+@RestController
+@RequestMapping(
+  "\${api.base-path:}/cas3",
+  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
+)
 class Cas3PremisesController(
   private val userService: UserService,
   private val userAccessService: UserAccessService,
@@ -52,8 +64,12 @@ class Cas3PremisesController(
   private val cas3DepartureTransformer: Cas3DepartureTransformer,
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
   private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
-) : PremisesCas3Delegate {
-  override fun createPremises(body: Cas3NewPremises): ResponseEntity<Cas3Premises> {
+) {
+  @PostMapping(
+    "/premises",
+    consumes = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun createPremises(@RequestBody body: Cas3NewPremises): ResponseEntity<Cas3Premises> {
     if (!userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, body.probationRegionId)) {
       throw ForbiddenProblem()
     }
@@ -77,7 +93,8 @@ class Cas3PremisesController(
     return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises), HttpStatus.CREATED)
   }
 
-  override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas3Premises> {
+  @GetMapping("/premises/{premisesId}")
+  fun getPremisesById(@PathVariable premisesId: UUID): ResponseEntity<Cas3Premises> {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -88,7 +105,8 @@ class Cas3PremisesController(
     return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises))
   }
 
-  override fun getPremisesBedspaces(premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
+  @GetMapping("/premises/{premisesId}/bedspaces")
+  fun getPremisesBedspaces(@PathVariable premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
     val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
     if (!userAccessService.currentUserCanViewPremises(premises)) {
@@ -107,7 +125,11 @@ class Cas3PremisesController(
     return ResponseEntity.ok(result)
   }
 
-  override fun getPremisesBedspace(premisesId: UUID, bedspaceId: UUID): ResponseEntity<Cas3Bedspace> {
+  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
+  fun getPremisesBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
     val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
     if (!userAccessService.currentUserCanViewPremises(premises)) {
@@ -119,7 +141,11 @@ class Cas3PremisesController(
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace))
   }
 
-  override fun createBedspace(premisesId: UUID, newBedspace: Cas3NewBedspace): ResponseEntity<Cas3Bedspace> {
+  @PostMapping("/premises/{premisesId}/bedspaces", consumes = ["application/json"])
+  fun createBedspace(
+    @PathVariable premisesId: UUID,
+    @RequestBody newBedspace: Cas3NewBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
     val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
     if (!userAccessService.currentUserCanViewPremises(premises)) {
@@ -134,10 +160,11 @@ class Cas3PremisesController(
   }
 
   @Transactional
-  override fun updateBedspace(
-    premisesId: UUID,
-    bedspaceId: UUID,
-    updateBedspace: Cas3UpdateBedspace,
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}", consumes = ["application/json"])
+  fun updateBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @RequestBody updateBedspace: Cas3UpdateBedspace,
   ): ResponseEntity<Cas3Bedspace> {
     val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -152,7 +179,11 @@ class Cas3PremisesController(
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(updatedBedspace))
   }
 
-  override fun getPremisesSummary(postcodeOrAddress: String?, sortBy: Cas3PremisesSortBy?): ResponseEntity<List<Cas3PremisesSummary>> {
+  @GetMapping("/premises/summary")
+  fun getPremisesSummary(
+    @RequestParam postcodeOrAddress: String?,
+    @RequestParam sortBy: Cas3PremisesSortBy?,
+  ): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
     val premisesSummariesByPremisesId = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, premisesStatus = null).groupBy { it.id }
     val transformedSummaries = premisesSummariesByPremisesId.map { map ->
@@ -171,7 +202,11 @@ class Cas3PremisesController(
     )
   }
 
-  override fun searchPremises(postcodeOrAddress: String?, premisesStatus: Cas3PremisesStatus?): ResponseEntity<Cas3PremisesSearchResults> {
+  @GetMapping("/premises/search")
+  fun searchPremises(
+    @RequestParam postcodeOrAddress: String?,
+    @RequestParam premisesStatus: Cas3PremisesStatus?,
+  ): ResponseEntity<Cas3PremisesSearchResults> {
     val user = userService.getUserForRequest()
     val premisesById = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, premisesStatus).groupBy { it.id }
     val premisesSearchResults = cas3PremisesSearchResultsTransformer.transformDomainToCas3PremisesSearchResults(premisesById)
@@ -185,10 +220,14 @@ class Cas3PremisesController(
     return ResponseEntity.ok(sortedResults)
   }
 
-  override fun postPremisesBookingDeparture(
-    premisesId: UUID,
-    bookingId: UUID,
-    body: Cas3NewDeparture,
+  @PostMapping(
+    "/premises/{premisesId}/bookings/{bookingId}/departures",
+    consumes = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun postPremisesBookingDeparture(
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+    @RequestBody body: Cas3NewDeparture,
   ): ResponseEntity<Cas3Departure> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
@@ -212,9 +251,10 @@ class Cas3PremisesController(
     return ResponseEntity.ok(cas3DepartureTransformer.transformJpaToApi(departure))
   }
 
-  override fun getPremisesFutureBookings(
-    premisesId: UUID,
-    statuses: List<BookingStatus>,
+  @GetMapping("/premises/{premisesId}/future-bookings")
+  fun getPremisesFutureBookings(
+    @PathVariable premisesId: UUID,
+    @RequestParam statuses: List<BookingStatus>,
   ): ResponseEntity<List<FutureBooking>> {
     val user = userService.getUserForRequest()
 
