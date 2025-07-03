@@ -24,6 +24,8 @@ interface RoomRepository : JpaRepository<RoomEntity, UUID> {
   @Modifying
   @Query("UPDATE RoomEntity r SET r.code = :code WHERE r.id = :id")
   fun updateCode(id: UUID, code: String)
+
+  fun findAllByPremisesId(premisesId: UUID): List<RoomEntity>
 }
 
 @Entity

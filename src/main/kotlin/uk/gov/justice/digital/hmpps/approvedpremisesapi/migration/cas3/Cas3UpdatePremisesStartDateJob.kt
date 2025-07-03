@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
@@ -20,6 +21,7 @@ class Cas3UpdatePremisesStartDateJob(
   private val migrationLogger: MigrationLogger,
   private val premisesRepository: PremisesRepository,
   private val bookingRepository: BookingRepository,
+  private val roomRepository: RoomRepository,
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
 
@@ -37,26 +39,32 @@ class Cas3UpdatePremisesStartDateJob(
 
         currentSlice = slice.map { it.id.toString() }.toSet()
 
-        for (tap in slice.content) {
-          if (tap.startDate == null) {
-            migrationLogger.info("Updating premises start_date for premises id ${tap.id}")
-            if (tap.createdAt != null) {
-              migrationLogger.info("Using created_date as start_date for premises id ${tap.id}")
-              tap.startDate = tap.createdAt!!.toLocalDate()
-              premisesRepository.save(tap)
+        for (premises in slice.content) {
+          if (premises.startDate == null) {
+            migrationLogger.info("Updating premises start_date for premises id ${premises.id}")
+            if (premises.createdAt != null) {
+              premises.startDate = premises.createdAt!!.toLocalDate()
+              premisesRepository.save(premises)
+              migrationLogger.info("Updated start_date with created_date for premises id ${premises.id}")
             } else {
-              migrationLogger.info("Using oldest booking arrival_date as start_date for premises id ${tap.id}")
-              val oldestBooking = bookingRepository.findByPremisesId(tap.id, Sort.by(ASC, "arrivalDate"), Limit.of(1)).firstOrNull()
+              val oldestBooking = bookingRepository.findByPremisesId(premises.id, Sort.by(ASC, "arrivalDate"), Limit.of(1)).firstOrNull()
               if (oldestBooking == null) {
-                migrationLogger.info("No bookings found for premises id ${tap.id}")
+                val oldestBedspaceInPremises = roomRepository.findAllByPremisesId(premises.id).flatMap { it.beds }.sortedBy { it.startDate }.firstOrNull()
+                if (oldestBedspaceInPremises != null) {
+                  premises.startDate = oldestBedspaceInPremises.startDate
+                  premisesRepository.save(premises)
+                  migrationLogger.info("Updated start_date using oldest bedspace start_date for premises id ${premises.id}")
+                } else {
+                  migrationLogger.info("No bedspace found for premises id ${premises.id}")
+                }
               } else {
-                tap.startDate = oldestBooking.arrivalDate
-                premisesRepository.save(tap)
-                migrationLogger.info("Updated start_date for premises id ${tap.id} from booking arrival_date ${oldestBooking?.arrivalDate}")
+                premises.startDate = oldestBooking.arrivalDate
+                premisesRepository.save(premises)
+                migrationLogger.info("Updated start_date for premises id ${premises.id} from booking arrival_date ${oldestBooking?.arrivalDate}")
               }
             }
           } else {
-            migrationLogger.info("Premises start_date already set for premises id ${tap.id}")
+            migrationLogger.info("Premises start_date already set for premises id ${premises.id}")
           }
         }
         entityManager.clear()
