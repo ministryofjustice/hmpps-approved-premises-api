@@ -73,7 +73,7 @@ class Cas1PlacementReportRepository(
                 csb.cancellation_occurred_at >= :startDateTimeInclusive 
                 AND csb.cancellation_occurred_at <= :endDateTimeInclusive
             )
-        ORDER BY csb.expected_arrival_date ASC
+        ORDER BY csb.expected_arrival_date, placement_id ASC
 
       """
   }

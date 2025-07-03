@@ -414,7 +414,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
         crn = "StandardRFPMultipleTransfers",
-        arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 4),
+        arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
       )
       clock.setNow(LocalDateTime.of(2028, 2, 3, 4, 5, 7))
 
@@ -456,7 +456,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
-      assertThat(row.requested_arrival_date).isEqualTo("2020-02-04")
+      assertThat(row.requested_arrival_date).isEqualTo("2020-02-05")
       assertThat(row.crn).matches("StandardRFPMultipleTransfers")
 
       assertThat(row.first_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
