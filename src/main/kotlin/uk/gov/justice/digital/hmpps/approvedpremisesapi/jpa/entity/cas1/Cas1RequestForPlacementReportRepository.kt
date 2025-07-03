@@ -125,7 +125,7 @@ UNION ALL
     pa.submitted_at IS NOT NULL AND
     pa.reallocated_at IS NULL AND
     ($placementApplicationsRangeConstraints)
-    ORDER BY request_for_placement_submitted_date ASC     
+    ORDER BY request_for_placement_submitted_date,request_for_placement_id ASC     
 """
     return s
   }

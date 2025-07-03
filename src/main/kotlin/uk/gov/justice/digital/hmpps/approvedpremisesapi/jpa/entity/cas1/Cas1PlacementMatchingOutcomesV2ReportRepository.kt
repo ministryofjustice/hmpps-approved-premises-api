@@ -152,7 +152,7 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
     return """
       WITH raw_requests_for_placements AS ($cte)
       $CORE_QUERY
-      ORDER BY pr.expected_arrival ASC
+      ORDER BY pr.expected_arrival, pr.id ASC
     """.trimIndent()
   }
 
