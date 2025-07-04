@@ -414,9 +414,11 @@ class Cas3PremisesService(
     notes: String?,
     characteristicIds: List<UUID>,
   ): CasResult<BedEntity> = validatedCasResult {
+    val trimmedReference = bedspaceReference.trim()
+
     var room = RoomEntity(
       id = UUID.randomUUID(),
-      name = bedspaceReference.trim(),
+      name = trimmedReference,
       code = null,
       notes = notes,
       premises = premises,
@@ -426,6 +428,21 @@ class Cas3PremisesService(
 
     if (bedspaceReference.isEmpty()) {
       "$.reference" hasValidationError "empty"
+    }
+
+    if (trimmedReference.isNotEmpty() && trimmedReference.length < 3) {
+      "$.reference" hasValidationError "bedspaceReferenceNotMeetMinimumLength"
+    }
+
+    if (trimmedReference.isNotEmpty() && !trimmedReference.any { it.isLetterOrDigit() }) {
+      "$.reference" hasValidationError "bedspaceReferenceMustIncludeLetterOrNumber"
+    }
+
+    val existingBedspaceWithSameReference = premises.rooms.any { room ->
+      room.name.equals(trimmedReference, ignoreCase = true)
+    }
+    if (existingBedspaceWithSameReference) {
+      "$.reference" hasValidationError "bedspaceReferenceExists"
     }
 
     if (startDate.isBefore(LocalDate.now().minusDays(7))) {
@@ -460,6 +477,7 @@ class Cas3PremisesService(
     return success(bedspace)
   }
 
+  @SuppressWarnings("MagicNumber")
   fun updateBedspace(
     premises: PremisesEntity,
     bedspaceId: UUID,
@@ -471,6 +489,7 @@ class Cas3PremisesService(
       ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
 
     var room = bedspace.room
+    val trimmedReference = bedspaceReference.trim()
 
     if (bedspace.room.premises != premises) {
       return CasResult.GeneralValidationError("The bedspace does not belong to the specified premises.")
@@ -480,13 +499,28 @@ class Cas3PremisesService(
       "$.reference" hasValidationError "empty"
     }
 
+    if (trimmedReference.isNotEmpty() && trimmedReference.length < 3) {
+      "$.reference" hasValidationError "bedspaceReferenceNotMeetMinimumLength"
+    }
+
+    if (trimmedReference.isNotEmpty() && !trimmedReference.any { it.isLetterOrDigit() }) {
+      "$.reference" hasValidationError "bedspaceReferenceMustIncludeLetterOrNumber"
+    }
+
+    val existingBedspaceWithSameReference = premises.rooms.any { existingRoom ->
+      existingRoom.id != room.id && existingRoom.name.equals(trimmedReference, ignoreCase = true)
+    }
+    if (existingBedspaceWithSameReference) {
+      "$.reference" hasValidationError "bedspaceReferenceExists"
+    }
+
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, room, validationErrors)
 
     if (validationErrors.any()) {
       return fieldValidationError
     }
 
-    room.name = bedspaceReference
+    room.name = trimmedReference
     room.notes = notes
     room.characteristics = characteristicEntities.map { it!! }.toMutableList()
 
