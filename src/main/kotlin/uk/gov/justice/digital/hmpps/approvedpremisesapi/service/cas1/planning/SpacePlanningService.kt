@@ -18,51 +18,12 @@ import java.util.UUID
 @Service
 class SpacePlanningService(
   private val spacePlanningModelsFactory: SpacePlanningModelsFactory,
-  private val spaceBookingDayPlanner: SpaceBookingDayPlanner,
   private val outOfServiceBedService: Cas1OutOfServiceBedService,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1BedsRepository: Cas1BedsRepository,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
-
-  data class PlanCriteria(
-    val premises: ApprovedPremisesEntity,
-    val range: DateRange,
-  )
-
-  fun plan(criteria: PlanCriteria): SpacePlan {
-    val premises = criteria.premises
-    val range = criteria.range
-
-    val bedStatesForEachDay = bedStatesForEachDay(listOf(premises), range).forPremises(premises)
-    val bookingsForEachDay = spaceBookingsForEachDay(listOf(premises), range).forPremises(premises)
-
-    val dayPlans = range.orderedDatesInRange().map { day ->
-      val bedStates = bedStatesForEachDay.forDay(day)
-      val availableBeds = bedStates.filter { it.isActive() }.map { it.bed }.toSet()
-      val bookings = bookingsForEachDay.forDay(day).toSet()
-
-      SpaceDayPlan(
-        day = day,
-        bedStates = bedStates,
-        planningResult = spaceBookingDayPlanner.plan(
-          availableBeds,
-          bookings,
-        ),
-      )
-    }.toList()
-
-    val beds = cas1BedsRepository.bedSummary(listOf(premises.id))
-    val plan = SpacePlan(
-      beds = spacePlanningModelsFactory.allBeds(beds),
-      dayPlans = dayPlans,
-    )
-
-    log.debug(SpacePlanRenderer.render(criteria, plan))
-
-    return plan
-  }
 
   fun capacity(
     premises: ApprovedPremisesEntity,
@@ -182,17 +143,6 @@ class SpacePlanningService(
       )
     }
   }
-
-  data class SpacePlan(
-    val beds: List<Bed>,
-    val dayPlans: List<SpaceDayPlan>,
-  )
-
-  data class SpaceDayPlan(
-    val day: LocalDate,
-    val bedStates: List<BedDayState>,
-    val planningResult: DayPlannerResult,
-  )
 
   data class PremiseCapacitySummary(
     val premise: PremisesEntity,
