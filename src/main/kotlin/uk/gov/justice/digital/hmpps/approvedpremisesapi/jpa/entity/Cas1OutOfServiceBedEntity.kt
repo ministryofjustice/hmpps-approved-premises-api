@@ -80,8 +80,47 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     pageable: Pageable?,
   ): Page<String>
 
-  @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id IN (:premisesIds) AND c is NULL")
-  fun findAllActiveForPremisesIds(premisesIds: List<UUID>): List<Cas1OutOfServiceBedEntity>
+  @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id = :premisesId AND c is NULL")
+  fun findAllActiveForPremisesId(premisesId: UUID): List<Cas1OutOfServiceBedEntity>
+
+  @Query(
+"""
+  SELECT 
+  oosb.id as id,
+  oosb.bed_id as bedId,
+  oosb.premises_id as premisesId,
+  latest_rev.start_date as startDate,
+  latest_rev.end_date as endDate,
+  reason.name as reasonName
+  FROM cas1_out_of_service_beds oosb 
+  LEFT JOIN cas1_out_of_service_bed_cancellations cancellation ON cancellation.out_of_service_bed_id = oosb.id
+  INNER JOIN LATERAL (
+      SELECT 
+      rev.start_date,
+      rev.end_date,
+      rev.out_of_service_bed_reason_id
+      FROM cas1_out_of_service_bed_revisions rev
+      WHERE rev.out_of_service_bed_id = oosb.id
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) latest_rev on TRUE -- ON condition is mandatory with JOIN, but satisfied already in lateral join subquery
+  INNER JOIN cas1_out_of_service_bed_reasons reason ON reason.id = latest_rev.out_of_service_bed_reason_id
+  WHERE 
+  oosb.premises_id IN (:premisesIds) AND
+  cancellation.id is NULL
+""",
+    nativeQuery = true,
+  )
+  fun findSummariesForAllActiveForPremisesIds(premisesIds: List<UUID>): List<OutOfServiceBedSummary>
+
+  interface OutOfServiceBedSummary {
+    fun getId(): UUID
+    fun getBedId(): UUID
+    fun getPremisesId(): UUID
+    fun getStartDate(): LocalDate
+    fun getEndDate(): LocalDate
+    fun getReasonName(): String
+  }
 
   @Query(
     """
@@ -154,8 +193,4 @@ data class Cas1OutOfServiceBedEntity(
 
   val notes
     get() = latestRevision.notes
-
-  fun isApplicable(now: LocalDate, bedId: UUID): Boolean = bed.id == bedId &&
-    cancellation == null &&
-    (!now.isBefore(startDate) && !now.isAfter(endDate))
 }
