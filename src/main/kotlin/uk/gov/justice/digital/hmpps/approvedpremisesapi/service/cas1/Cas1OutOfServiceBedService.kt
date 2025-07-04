@@ -316,9 +316,9 @@ class Cas1OutOfServiceBedService(
     pageCriteria = pageCriteria,
   )
 
-  fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesIds(listOf(premisesId))
+  fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
 
-  fun getActiveOutOfServiceBedsForPremisesIds(premisesIds: List<UUID>) = outOfServiceBedRepository.findAllActiveForPremisesIds(premisesIds)
+  fun getActiveOutOfServiceBedsForPremisesIds(premisesIds: List<UUID>) = outOfServiceBedRepository.findSummariesForAllActiveForPremisesIds(premisesIds)
 
   fun getCurrentOutOfServiceBedsCountForPremisesId(premisesId: UUID): Int = outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
     premisesId = premisesId,
