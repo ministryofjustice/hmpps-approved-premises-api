@@ -1448,7 +1448,7 @@ components:
         mapping:
           Offline: '#/components/schemas/OfflineApplication'
           CAS1: '#/components/schemas/ApprovedPremisesApplication'
-          CAS2: '#/components/schemas/Cas2Application'
+          CAS2: 'Cas2Application'
           CAS2V2: '#/components/schemas/Cas2v2Application'
           CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
@@ -1513,36 +1513,6 @@ components:
       required:
         - id
     Cas2v2User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'Roger Smith'
-        username:
-          type: string
-          example: 'SMITHR_GEN'
-        authSource:
-          type: string
-          enum:
-            - nomis
-            - delius
-            - auth
-        email:
-          type: string
-          example: 'Roger.Smith@justice.gov.uk'
-        isActive:
-          type: boolean
-          example: true
-      required:
-        - id
-        - name
-        - username
-        - authSource
-        - isActive
-    Cas2User:
       type: object
       properties:
         id:
@@ -1735,7 +1705,7 @@ components:
         mapping:
           Offline: '#/components/schemas/OfflineApplicationSummary'
           CAS1: '#/components/schemas/ApprovedPremisesApplicationSummary'
-          CAS2: '#/components/schemas/Cas2ApplicationSummary'
+          CAS2: 'Cas2ApplicationSummary'
           CAS3: '#/components/schemas/TemporaryAccommodationApplicationSummary'
       required:
         - type
@@ -1907,7 +1877,7 @@ components:
         propertyName: type
         mapping:
           CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
-          CAS2: '#/components/schemas/UpdateCas2Application'
+          CAS2: 'UpdateCas2Application'
           CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
           CAS2V2: '#/components/schemas/UpdateCas2v2Application'
       required:
@@ -1960,7 +1930,7 @@ components:
         mapping:
           CAS1: '#/components/schemas/SubmitApprovedPremisesApplication'
           CAS3: '#/components/schemas/SubmitTemporaryAccommodationApplication'
-          CAS2: '#/components/schemas/SubmitCas2Application'
+          CAS2: 'SubmitCas2Application'
       # Ideally translatedDocument would be marked required here, but there is a bug
       # in open api generator that leads to the subclass marking this as kotlin.Any?
       # whilst in the superclass it has the type kotlin.Any. This leads to a compilation
