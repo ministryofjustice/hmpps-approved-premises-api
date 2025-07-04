@@ -3,10 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
- *
- * Values: referral,booking,bedUsage,bedOccupancy,futureBookings,futureBookingsCsv,bookingGap
- */
+@SuppressWarnings("EnumNaming", "ExplicitItLambdaParameter")
 enum class Cas3ReportType(@get:JsonValue val value: String) {
 
     referral("referral"),
@@ -25,4 +22,3 @@ enum class Cas3ReportType(@get:JsonValue val value: String) {
         }
     }
 }
-
