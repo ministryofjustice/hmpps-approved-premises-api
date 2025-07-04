@@ -36,7 +36,6 @@ fun IntegrationTestBase.givenAPlacementApplication(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   isWithdrawn: Boolean = false,
-  placementDates: List<PlacementDate> = listOf(),
   application: ApprovedPremisesApplicationEntity? = null,
   apType: ApprovedPremisesType? = null,
   expectedArrival: LocalDate? = null,
@@ -88,16 +87,6 @@ fun IntegrationTestBase.givenAPlacementApplication(
     withDuration(duration)
   }
 
-  placementApplication.placementDates = placementDates
-    .map {
-      placementDateFactory.produceAndPersist {
-        withPlacementApplication(placementApplication)
-        withExpectedArrival(it.expectedArrival)
-        withDuration(it.duration)
-        withPlacementRequest(it.placementRequest)
-      }
-    }.toMutableList()
-
   return placementApplication
 }
 
@@ -111,7 +100,6 @@ fun IntegrationTestBase.givenAPlacementApplication(
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
-  placementDates: List<PlacementDate> = listOf(),
   application: ApprovedPremisesApplicationEntity? = null,
   expectedArrival: LocalDate? = null,
   duration: Int? = null,
@@ -127,7 +115,6 @@ fun IntegrationTestBase.givenAPlacementApplication(
     reallocated = reallocated,
     placementType = placementType,
     dueAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
-    placementDates = placementDates,
     application = application,
     isWithdrawn = false,
     expectedArrival = expectedArrival,
