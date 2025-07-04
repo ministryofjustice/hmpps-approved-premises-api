@@ -40,8 +40,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import org.springframework.data.jpa.domain.Specification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 
 @Service("Cas2v2ApplicationService")
 class Cas2v2ApplicationService(
