@@ -60,7 +60,6 @@ class Cas1TimelineEventFactory : Factory<Cas1TimelineEvent> {
     id = this.id()?.toString()!!,
     occurredAt = this.occurredAt()!!,
     content = this.content(),
-    createdBy = this.createdBy(),
     associatedUrls = this.associatedUrls(),
     payload = this.payload(),
   )

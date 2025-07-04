@@ -24,7 +24,6 @@ class ApplicationTimelineNoteTransformer(
     id = jpa.id.toString(),
     occurredAt = jpa.createdAt.toInstant(),
     content = jpa.body,
-    createdBy = jpa.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
     associatedUrls = emptyList(),
     triggerSource = null,
   )

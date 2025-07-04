@@ -205,7 +205,6 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                           id = domainEvents[0].id.toString(),
                           occurredAt = domainEvents[0].occurredAt.toInstant(),
                           content = "The application was submitted",
-                          createdBy = null,
                           associatedUrls = listOf(
                             Cas1TimelineEventAssociatedUrl(
                               type = Cas1TimelineEventUrlType.application,
@@ -218,7 +217,6 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                           id = domainEvents[1].id.toString(),
                           occurredAt = domainEvents[1].occurredAt.toInstant(),
                           content = "The application was submitted",
-                          createdBy = null,
                           associatedUrls = listOf(
                             Cas1TimelineEventAssociatedUrl(
                               type = Cas1TimelineEventUrlType.application,
@@ -370,7 +368,6 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                           id = domainEvents[0].id.toString(),
                           occurredAt = domainEvents[0].occurredAt.toInstant(),
                           content = "The application was submitted",
-                          createdBy = null,
                           associatedUrls = listOf(
                             Cas1TimelineEventAssociatedUrl(
                               type = Cas1TimelineEventUrlType.application,
@@ -383,7 +380,6 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                           id = domainEvents[1].id.toString(),
                           occurredAt = domainEvents[1].occurredAt.toInstant(),
                           content = "The application was submitted",
-                          createdBy = null,
                           associatedUrls = listOf(
                             Cas1TimelineEventAssociatedUrl(
                               type = Cas1TimelineEventUrlType.application,
@@ -447,7 +443,6 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                         id = domainEvents[0].id.toString(),
                         occurredAt = domainEvents[0].occurredAt.toInstant(),
                         content = "The application was submitted",
-                        createdBy = null,
                         associatedUrls = listOf(
                           Cas1TimelineEventAssociatedUrl(
                             type = Cas1TimelineEventUrlType.application,
@@ -460,7 +455,6 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
                         id = domainEvents[1].id.toString(),
                         occurredAt = domainEvents[1].occurredAt.toInstant(),
                         content = "The application was submitted",
-                        createdBy = null,
                         associatedUrls = listOf(
                           Cas1TimelineEventAssociatedUrl(
                             type = Cas1TimelineEventUrlType.application,

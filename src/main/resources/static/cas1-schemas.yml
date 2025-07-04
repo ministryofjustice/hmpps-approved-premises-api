@@ -1043,10 +1043,6 @@ components:
         content:
           description: Timeline description. If a value is provided for 'payload', that should be instead be used to build a description
           type: string
-        createdBy:
-          deprecated: true
-          description: Use createdBySummary
-          $ref: '_shared.yml#/components/schemas/User'
         createdBySummary:
           $ref: '_shared.yml#/components/schemas/UserSummary'
         payload:
