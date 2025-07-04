@@ -1521,7 +1521,7 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
       Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-      mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString()),
+      mapOf("startDate" to placementApplication.placementDates()!!.expectedArrival.toString()),
     )
 
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
@@ -1763,33 +1763,17 @@ class WithdrawalTest : IntegrationTestBase() {
     allocatedTo: UserEntity? = null,
     isWithdrawn: Boolean = false,
     createdBy: UserEntity? = null,
-  ): PlacementApplicationEntity {
-    val placementApplication = placementApplicationFactory.produceAndPersist {
-      withCreatedByUser(createdBy ?: application.createdByUser)
-      withApplication(application)
-      withSubmittedAt(if (isSubmitted) OffsetDateTime.now() else null)
-      withDecision(decision)
-      withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
-      withReallocatedAt(reallocatedAt)
-      withAllocatedToUser(allocatedTo)
-      withIsWithdrawn(isWithdrawn)
-      withExpectedArrival(dateSpan?.start)
-      withDuration(dateSpan?.duration)
-    }
-
-    if (dateSpan != null) {
-      placementApplication.placementDates.addAll(
-        listOf(
-          placementDateFactory.produceAndPersist {
-            withPlacementApplication(placementApplication)
-            withExpectedArrival(dateSpan.start)
-            withDuration(dateSpan.duration)
-          },
-        ),
-      )
-    }
-
-    return placementApplication
+  ) = placementApplicationFactory.produceAndPersist {
+    withCreatedByUser(createdBy ?: application.createdByUser)
+    withApplication(application)
+    withSubmittedAt(if (isSubmitted) OffsetDateTime.now() else null)
+    withDecision(decision)
+    withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+    withReallocatedAt(reallocatedAt)
+    withAllocatedToUser(allocatedTo)
+    withIsWithdrawn(isWithdrawn)
+    withExpectedArrival(if (isSubmitted) dateSpan?.start else null)
+    withDuration(if (isSubmitted) dateSpan?.duration else null)
   }
 
   private fun createPlacementRequest(
@@ -1906,7 +1890,9 @@ class WithdrawalTest : IntegrationTestBase() {
   fun toWithdrawable(placementApplication: PlacementApplicationEntity) = Withdrawable(
     placementApplication.id,
     WithdrawableType.placementApplication,
-    placementApplication.placementDates.map { toDatePeriod(it.expectedArrival, it.duration) },
+    listOfNotNull(
+      placementApplication.placementDates()?.let { toDatePeriod(it.expectedArrival, it.duration) },
+    ),
   )
 
   fun toWithdrawable(booking: BookingEntity) = Withdrawable(

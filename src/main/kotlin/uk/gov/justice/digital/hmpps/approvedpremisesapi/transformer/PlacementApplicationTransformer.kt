@@ -41,11 +41,13 @@ class PlacementApplicationTransformer(
   }
 
   fun transformToWithdrawable(placementApplication: PlacementApplicationEntity): Withdrawable = Withdrawable(
-    placementApplication.id,
-    WithdrawableType.placementApplication,
-    placementApplication.placementDates.map {
-      DatePeriod(it.expectedArrival, it.expectedDeparture())
-    },
+    id = placementApplication.id,
+    type = WithdrawableType.placementApplication,
+    dates = listOfNotNull(
+      placementApplication.placementDates()?.let {
+        DatePeriod(it.expectedArrival, it.expectedDeparture())
+      },
+    ),
   )
 
   fun getWithdrawalReason(withdrawalReason: PlacementApplicationWithdrawalReason?): WithdrawPlacementRequestReason? = when (withdrawalReason) {
