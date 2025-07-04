@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -43,4 +44,15 @@ class Cas3BedspacesEntity(
 )
 
 @Repository
-interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID>
+interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID> {
+
+  @Query(
+    """
+    SELECT b 
+    FROM Cas3BedspacesEntity b 
+    WHERE b.id = :bedspaceId AND 
+    b.endDate IS NOT NULL AND b.endDate < :endDate
+  """,
+  )
+  fun findArchivedBedspaceByBedspaceIdAndDate(bedspaceId: UUID, endDate: LocalDate): Cas3BedspacesEntity?
+}
