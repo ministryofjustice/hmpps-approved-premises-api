@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.dataFrameForHeadersAndRows
+import java.time.LocalDate
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
@@ -728,5 +729,219 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.throwable != null &&
           it.throwable.message == "No premises with qcode 'INVALIDQCODE' found."
       }
+  }
+
+  @Test
+  fun `Removing a bed in a room of three beds sets the removed bed end date to today`() {
+    val qCode = "Q999"
+    val premises = givenAnApprovedPremises(qCode = qCode)
+    val roomCode = "$qCode-1"
+    val room = roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI01")
+      withName("1")
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI02")
+      withName("2")
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI03")
+      withName("3")
+    }
+
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01", "SWABI03"),
+      listOf(
+        "Room Number / Name",
+        "1",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+        "3",
+      ),
+    ).addQuestionsAndAnswers()
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI01", room.id)!!.endDate).isNull()
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI02", room.id)!!.endDate).isEqualTo(LocalDate.now())
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI03", room.id)!!.endDate).isNull()
+  }
+
+  @Test
+  fun `Removing two beds in a room of two beds sets the bed end dates to today`() {
+    val qCode = "Q999"
+    val premises = givenAnApprovedPremises(qCode = qCode)
+    val roomCode = "$qCode-1"
+    val room = roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI01")
+      withName("1")
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI02")
+      withName("2")
+    }
+
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed"),
+      listOf(
+        "Room Number / Name",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      ),
+    ).addQuestionsAndAnswers()
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI01", room.id)!!.endDate).isEqualTo(LocalDate.now())
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI02", room.id)!!.endDate).isEqualTo(LocalDate.now())
+  }
+
+  @Test
+  fun `Removing an already expired bed does not update the end date`() {
+    val qCode = "Q999"
+    val premises = givenAnApprovedPremises(qCode = qCode)
+    val roomCode = "$qCode-1"
+    val room = roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI01")
+      withName("1")
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI02")
+      withName("2")
+      withEndDate { LocalDate.now().minusDays(1) }
+    }
+
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01"),
+      listOf(
+        "Room Number / Name",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+      ),
+    ).addQuestionsAndAnswers()
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI01", room.id)!!.endDate).isNull()
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI02", room.id)!!.endDate).isEqualTo(LocalDate.now().minusDays(1))
+  }
+
+  @Test
+  fun `Adding back an expired bed resets the end date to null`() {
+    val qCode = "Q999"
+    val premises = givenAnApprovedPremises(qCode = qCode)
+    val roomCode = "$qCode-1"
+    val room = roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI01")
+      withName("1")
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room)
+      withCode("SWABI02")
+      withName("2")
+      withEndDate { LocalDate.now().minusDays(1) }
+    }
+
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01", "SWABI02"),
+      listOf(
+        "Room Number / Name",
+        "1",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+        "2",
+      ),
+    ).addQuestionsAndAnswers()
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI01", room.id)!!.endDate).isNull()
+    assertThat(bedRepository.findByCodeAndRoomId("SWABI02", room.id)!!.endDate).isNull()
   }
 }
