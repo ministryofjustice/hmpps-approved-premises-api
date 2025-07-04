@@ -57,13 +57,19 @@ class Cas2v2StartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2v2 applications")
-    cas2v2UserRepository.findAll().forEach { user ->
-      listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
-        listOf(ApplicationOrigin.homeDetentionCurfew, ApplicationOrigin.prisonBail, ApplicationOrigin.courtBail).forEach { applicationOrigin ->
-          createApplicationFor(cas2v2UserEntity = user, state = state, applicationOrigin = applicationOrigin)
+    cas2v2UserRepository.findAll()
+      .filter { user -> user.userType.authSource in listOf("nomis", "delius") }
+      .forEach { user ->
+        listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
+          listOf(
+            ApplicationOrigin.homeDetentionCurfew,
+            ApplicationOrigin.prisonBail,
+            ApplicationOrigin.courtBail,
+          ).forEach { applicationOrigin ->
+            createApplicationFor(cas2v2UserEntity = user, state = state, applicationOrigin = applicationOrigin)
+          }
         }
       }
-    }
   }
 
   private fun createApplicationFor(cas2v2UserEntity: Cas2v2UserEntity, state: String, applicationOrigin: ApplicationOrigin) {
