@@ -93,16 +93,16 @@ class Cas1PlacementApplicationEmailService(
 
   private fun getCommonPersonalisation(placementApplication: PlacementApplicationEntity): MutableMap<String, String?> {
     val application = placementApplication.application
-    val dates = placementApplication.placementDates
+    val dates = placementApplication.placementDates()
 
     return mutableMapOf(
       "crn" to application.crn,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
       "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
       "applicationArea" to application.apArea?.name,
-      "startDate" to dates.getOrNull(0)?.expectedArrival.toString(),
-      "endDate" to dates.getOrNull(0)?.expectedDeparture().toString(),
-      "additionalDatesSet" to if (dates.size > 1) "yes" else "no",
+      "startDate" to dates?.expectedArrival.toString(),
+      "endDate" to dates?.expectedDeparture().toString(),
+      "additionalDatesSet" to "no",
     )
   }
 }
