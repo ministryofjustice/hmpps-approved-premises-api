@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3OASysAssessmentMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3OASysAssessmentMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 
 @Service

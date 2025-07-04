@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas3
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NonArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3NonArrivalTransformer
