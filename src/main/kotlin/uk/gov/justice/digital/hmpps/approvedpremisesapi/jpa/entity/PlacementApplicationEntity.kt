@@ -104,10 +104,10 @@ data class PlacementApplicationEntity(
   var placementType: PlacementType?,
 
   /**
-   * Supporting multiple dates in a single Placement Application is legacy behaviour. Any new
-   * placement application will have one and only one date in this collection
+   * Supporting multiple dates in a single Placement Application was a legacy behaviour. All
+   * placement applications now have one and only one date in this collection
    */
-  @Deprecated("Use [expectedArrival] and [duration]")
+  @Deprecated("Use [placementDates()] instead")
   @OneToMany(mappedBy = "placementApplication", fetch = FetchType.LAZY)
   var placementDates: MutableList<PlacementDateEntity>,
 

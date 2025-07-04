@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
@@ -86,17 +85,12 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .withDecision(null)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.of(2024, 5, 3))
+        .withDuration(7)
         .withCreatedByUser(user)
         .withPlacementType(placementType)
         .produce()
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2024, 5, 3))
-          .withDuration(7)
-          .produce(),
-      )
 
       val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername = USERNAME)
       every { apDeliusContextApiClient.getStaffDetail(USERNAME) } returns ClientResult.Success(
@@ -143,6 +137,9 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
       .withApplication(application)
       .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
       .withDecision(null)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrival(LocalDate.of(2024, 5, 3))
+      .withDuration(7)
       .withCreatedByUser(user)
       .withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
       .produce()
@@ -167,14 +164,6 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
 
     @Test
     fun `it creates a domain event`() {
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2024, 5, 3))
-          .withDuration(7)
-          .produce(),
-      )
-
       val withdrawnBy = WithdrawnByFactory().produce()
       every { domainEventTransformer.toWithdrawnBy(user) } returns withdrawnBy
       every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
@@ -238,19 +227,6 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
         .withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
         .produce()
 
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2024, 5, 3))
-          .withDuration(7)
-          .produce(),
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2025, 2, 2))
-          .withDuration(14)
-          .produce(),
-      )
-
       assertThrows<IllegalArgumentException> { service.placementApplicationAllocated(placementApplication, user) }
     }
 
@@ -313,25 +289,15 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
         .withApplication(application)
         .withAllocatedToUser(allocatedToUser)
         .withDecision(null)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.of(2024, 5, 3))
+        .withDuration(7)
         .withCreatedByUser(allocatedByUser)
         .withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
         .produce()
         .apply {
           allocatedAt = OffsetDateTime.now()
         }
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2024, 5, 3))
-          .withDuration(7)
-          .produce(),
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2025, 2, 2))
-          .withDuration(14)
-          .produce(),
-      )
 
       val allocatedBy = StaffMemberFactory().produce()
       val allocatedTo = StaffMemberFactory().produce()
@@ -363,10 +329,6 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
                 DatePeriod(
                   LocalDate.of(2024, 5, 3),
                   LocalDate.of(2024, 5, 10),
-                ),
-                DatePeriod(
-                  LocalDate.of(2025, 2, 2),
-                  LocalDate.of(2025, 2, 16),
                 ),
               )
           },
@@ -461,21 +423,14 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
       assertThat(exception.message).isEqualTo("PlacementApplicationDecision was null")
     }
 
-    private fun getPlacementApplicationWithDecision(decision: PlacementApplicationDecision?): PlacementApplicationEntity {
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .withDecision(decision)
-        .withCreatedByUser(user)
-        .produce()
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2024, 5, 3))
-          .withDuration(7)
-          .produce(),
-      )
-      return placementApplication
-    }
+    private fun getPlacementApplicationWithDecision(decision: PlacementApplicationDecision?) = PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+      .withDecision(decision)
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrival(LocalDate.of(2024, 5, 3))
+      .withDuration(7)
+      .produce()
   }
 }
