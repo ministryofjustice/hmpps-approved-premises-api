@@ -277,22 +277,6 @@ registerAdditionalOpenApiGenerateTask(
   apiSuffix = "Cas2v2",
 )
 
-registerAdditionalOpenApiGenerateTask(
-  name = "openApiGenerateCas2Namespace",
-  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas2",
-)
-
-registerAdditionalOpenApiGenerateTask(
-  name = "openApiGenerateCas2DomainEvents",
-  ymlPath = "$rootDir/src/main/resources/static/cas2-domain-events-api.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model",
-  useTags = true,
-)
-
 fun registerAdditionalOpenApiGenerateTask(
   name: String,
   ymlPath: String,
@@ -333,7 +317,6 @@ tasks.register("openApiPreCompilation") {
       .readFileToString(file, "UTF-8")
       .replace("_shared.yml#/components", "#/components")
       .replace("cas1-schemas.yml#/components", "#/components")
-      .replace("cas2-schemas.yml#/components", "#/components")
       .replace("cas2v2-schemas.yml#/components", "#/components")
     FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
   }
@@ -384,11 +367,6 @@ tasks.register("openApiPreCompilation") {
     inputSchemas = "cas1-schemas.yml",
   )
   buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-cas2-api-spec.yml",
-    inputSpec = "cas2-api.yml",
-    inputSchemas = "cas2-schemas.yml",
-  )
-  buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas2v2-api-spec.yml",
     inputSpec = "cas2v2-api.yml",
     inputSchemas = "cas2v2-schemas.yml",
@@ -396,10 +374,8 @@ tasks.register("openApiPreCompilation") {
 }
 
 tasks.get("openApiGenerate").dependsOn(
-  "openApiGenerateCas2DomainEvents",
   "openApiPreCompilation",
   "openApiGenerateCas1Namespace",
-  "openApiGenerateCas2Namespace",
   "openApiGenerateCas2v2Namespace",
 )
 
