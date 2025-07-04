@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
@@ -237,7 +236,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
         .produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withCrn(TestConstants.CRN)
+        .withCrn(CRN)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
@@ -252,19 +251,6 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
         .apply {
           allocatedAt = OffsetDateTime.now()
         }
-
-      placementApplication.placementDates = mutableListOf(
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2024, 5, 3))
-          .withDuration(7)
-          .produce(),
-        PlacementDateEntityFactory()
-          .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2025, 2, 2))
-          .withDuration(14)
-          .produce(),
-      )
 
       assertThrows<IllegalArgumentException> { service.placementApplicationAllocated(placementApplication, user) }
     }
