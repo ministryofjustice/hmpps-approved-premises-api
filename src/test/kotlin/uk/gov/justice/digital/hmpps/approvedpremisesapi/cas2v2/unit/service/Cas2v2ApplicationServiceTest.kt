@@ -6,8 +6,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -16,7 +18,9 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -32,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
@@ -54,7 +59,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -168,20 +172,27 @@ class Cas2v2ApplicationServiceTest {
       every { page.totalPages } returns 10
       every { page.totalElements } returns 100
 
-      val (applicationSummaries, _) = cas2v2ApplicationService.getCas2v2Applications(prisonCode, isSubmitted, user, pageCriteria)
+      val (applicationSummaries, _) = cas2v2ApplicationService.getCas2v2Applications(
+        prisonCode,
+        isSubmitted,
+        null,
+        user,
+        pageCriteria,
+      )
 
       assertThat(applicationSummaries).isEqualTo(listOf(cas2v2ApplicationSummary))
+    }
+
+    @AfterEach
+    fun tearDown() {
+      unmockkStatic(Cas2v2ApplicationSummarySpecifications::class)
     }
 
     @Test
     fun `return all applications when prisonCode is specified and isSubmitted is null`() {
       PaginationConfig(defaultPageSize = 10).postInit()
-
       every {
-        mockCas2v2ApplicationSummaryRepository.findByPrisonCode(
-          prisonCode,
-          getPageableOrAllPages(pageCriteria),
-        )
+        mockCas2v2ApplicationSummaryRepository.findAll(any<Specification<Cas2v2ApplicationSummaryEntity>>(), any<Pageable>())
       } returns page
 
       testPrisonCodeWithIsSubmitted(null)
@@ -190,12 +201,8 @@ class Cas2v2ApplicationServiceTest {
     @Test
     fun `return submitted prison applications when prisonCode is specified and isSubmitted is true`() {
       PaginationConfig(defaultPageSize = 10).postInit()
-
       every {
-        mockCas2v2ApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNotNull(
-          prisonCode,
-          getPageableOrAllPages(pageCriteria),
-        )
+        mockCas2v2ApplicationSummaryRepository.findAll(any<Specification<Cas2v2ApplicationSummaryEntity>>(), any<Pageable>())
       } returns page
 
       testPrisonCodeWithIsSubmitted(true)
@@ -204,12 +211,8 @@ class Cas2v2ApplicationServiceTest {
     @Test
     fun `return unsubmitted prison applications when prisonCode is specified and isSubmitted is false`() {
       PaginationConfig(defaultPageSize = 10).postInit()
-
       every {
-        mockCas2v2ApplicationSummaryRepository.findByPrisonCodeAndSubmittedAtIsNull(
-          prisonCode,
-          getPageableOrAllPages(pageCriteria),
-        )
+        mockCas2v2ApplicationSummaryRepository.findAll(any<Specification<Cas2v2ApplicationSummaryEntity>>(), any<Pageable>())
       } returns page
 
       testPrisonCodeWithIsSubmitted(false)
