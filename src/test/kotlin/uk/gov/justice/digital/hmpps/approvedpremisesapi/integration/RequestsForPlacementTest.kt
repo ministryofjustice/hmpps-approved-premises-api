@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -61,6 +62,8 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withExpectedArrival(LocalDate.now())
+            withDuration(1)
           }
 
           val submittedButReallocatedPlacementApplication = placementApplicationFactory.produceAndPersist {
@@ -68,6 +71,8 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())
             withReallocatedAt(OffsetDateTime.now())
+            withExpectedArrival(LocalDate.now())
+            withDuration(1)
           }
 
           val withdrawnPlacementApplication = placementApplicationFactory.produceAndPersist {
@@ -76,6 +81,8 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.now())
             withIsWithdrawn(true)
             withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
+            withExpectedArrival(LocalDate.now())
+            withDuration(1)
           }
 
           val placementRequirements = placementRequirementsFactory.produceAndPersist {
