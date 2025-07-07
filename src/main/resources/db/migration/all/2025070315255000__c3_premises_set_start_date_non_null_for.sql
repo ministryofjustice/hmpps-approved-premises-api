@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_premises ALTER COLUMN start_date SET NOT NULL;

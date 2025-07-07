@@ -9,7 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.TemporaryAccommodationPremisesSeedCsvRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
@@ -169,6 +171,8 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         "School nearby",
         // Sample of characteristics
         "Optional notes",
+        "Email Address",
+        "Start Date",
       )
       .newRow()
 
@@ -186,6 +190,8 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         .withUnquotedField(it.characteristics.contains("Park nearby").toString().uppercase())
         .withUnquotedField(it.characteristics.contains("School nearby").toString().uppercase())
         .withQuotedField(it.notes)
+        .withQuotedField(it.emailAddress ?: "test@example.com")
+        .withQuotedField(it.startDate.toString())
         .newRow()
     }
 
@@ -205,6 +211,7 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
   private var characteristics: Yielded<List<String>> = { listOf() }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var emailAddress: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
+  private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(10) }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -246,6 +253,10 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
     this.notes = { notes }
   }
 
+  fun withStartDate(startDate: LocalDate) = apply {
+    this.startDate = { startDate }
+  }
+
   override fun produce() = TemporaryAccommodationPremisesSeedCsvRow(
     name = this.name(),
     addressLine1 = this.addressLine1(),
@@ -258,5 +269,6 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
     characteristics = this.characteristics(),
     notes = this.notes(),
     emailAddress = this.emailAddress(),
+    startDate = this.startDate(),
   )
 }
