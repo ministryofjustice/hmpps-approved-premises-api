@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3.v2
 
 import org.hamcrest.core.IsNull.nullValue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -35,6 +36,241 @@ class Cas3v2BookingTest : IntegrationTestBase() {
   @BeforeEach
   fun before() {
     probationRegion = givenAProbationRegion()
+  }
+
+  @Nested
+  inner class GetBookingForPremises {
+
+    @Test
+    fun `Get a booking for a premises without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas3/v2/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get a booking for a premises returns 403 Forbidden when not a CAS3_ASSESSOR`() {
+      givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val premises = givenACas3Premises(
+            probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            },
+          )
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(
+              cas3BedspaceEntityFactory.produceAndPersist {
+                withPremises(premises)
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @Test
+    fun `Get a booking for a premises not in the user's region returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          val premises = givenACas3Premises(
+            probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(probationRegion)
+            },
+          )
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(
+              cas3BedspaceEntityFactory.produceAndPersist {
+                withPremises(premises)
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @Test
+    fun `Get a booking belonging to another premises returns not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val premises = givenACas3Premises(
+            probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            },
+          )
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(
+              cas3BedspaceEntityFactory.produceAndPersist {
+                withPremises(premises)
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${UUID.randomUUID()}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+        }
+      }
+    }
+
+    @Test
+    fun `Get a booking for a premises returns OK with the correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val premises = givenACas3Premises(
+            probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            },
+          )
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(
+              cas3BedspaceEntityFactory.produceAndPersist {
+                withPremises(premises)
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                bookingTransformer.transformJpaToApi(
+                  booking,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          },
+        )
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(
+            cas3BedspaceEntityFactory.produceAndPersist {
+              withPremises(premises)
+            },
+          )
+          withCrn("SOME-CRN")
+          withServiceName(ServiceName.temporaryAccommodation)
+        }
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              bookingTransformer.transformJpaToApi(
+                booking,
+                PersonInfoResult.NotFound("SOME-CRN"),
+              ),
+            ),
+          )
+      }
+    }
+
+    @Test
+    fun `Get a booking for a premises returns OK with the correct body when the NOMS number is null`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withNomsNumber(null)
+          },
+        ) { offenderDetails, _ ->
+          val premises = givenACas3Premises(
+            probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            },
+          )
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(
+              cas3BedspaceEntityFactory.produceAndPersist {
+                withPremises(premises)
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withNomsNumber(null)
+            withServiceName(ServiceName.temporaryAccommodation)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                bookingTransformer.transformJpaToApi(
+                  booking,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                ),
+              ),
+            )
+        }
+      }
+    }
   }
 
   @Test
