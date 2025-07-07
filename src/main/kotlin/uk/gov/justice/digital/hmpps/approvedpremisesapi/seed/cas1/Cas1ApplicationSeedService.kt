@@ -171,7 +171,6 @@ class Cas1ApplicationSeedService(
       ApplicationState.WITHDRAWN_AFTER_SUBMISSION -> {
         val application = createApplicationPendingSubmission(deliusUserName, crn)
         submitApplication(application)
-        assessAndAcceptApplication(application)
         withdrawApplication(application)
       }
       ApplicationState.EXPIRED_BEFORE_SUBMISSION -> {
