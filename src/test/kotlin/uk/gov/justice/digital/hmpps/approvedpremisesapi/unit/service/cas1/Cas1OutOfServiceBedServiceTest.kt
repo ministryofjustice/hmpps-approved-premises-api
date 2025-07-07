@@ -891,15 +891,14 @@ class Cas1OutOfServiceBedServiceTest {
   inner class GetActiveOutOfServiceBedsForPremisesId {
     @Test
     fun `Delegates to repository method`() {
-      val expectedList = mockk<List<Cas1OutOfServiceBedEntity>>()
-      every { outOfServiceBedRepository.findAllActiveForPremisesIds(any()) } returns expectedList
-
       val premisesId = UUID.randomUUID()
+
+      val expectedList = mockk<List<Cas1OutOfServiceBedEntity>>()
+      every { outOfServiceBedRepository.findAllActiveForPremisesId(premisesId) } returns expectedList
 
       val result = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premisesId)
 
       assertThat(result).isEqualTo(expectedList)
-      verify(exactly = 1) { outOfServiceBedRepository.findAllActiveForPremisesIds(listOf(premisesId)) }
     }
   }
 

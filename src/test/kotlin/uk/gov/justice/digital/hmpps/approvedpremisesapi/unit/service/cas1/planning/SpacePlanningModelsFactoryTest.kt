@@ -3,14 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.plann
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1PlanningBedSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.OutOfServiceBedSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
@@ -21,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 class SpacePlanningModelsFactoryTest {
 
@@ -189,77 +186,75 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `exclude out of service beds`() {
-      val roomEntity = RoomEntityFactory()
-        .withDefaults()
-        .withName("the room name")
-        .produce()
+      val activeBed1Id = UUID.randomUUID()
+      val oosbBed1Id = UUID.randomUUID()
+      val oosbBed2Id = UUID.randomUUID()
 
-      val bed1EntityActive = BedEntityFactory()
-        .withDefaults()
-        .withName("the active bed name")
-        .produce().apply {
-          roomEntity.beds.add(this)
-        }
-
-      val bed2EntityOutOfService = BedEntityFactory()
-        .withDefaults()
-        .withName("the oosb bed name")
-        .produce().apply {
-          roomEntity.beds.add(this)
-        }
-
-      val bed1ActiveSummary = Cas1PlanningBedSummaryFactory()
-        .withBedId(bed1EntityActive.id)
-        .withBedName("the active bed name")
-        .withRoomName("the room name")
+      val activeBed1 = Cas1PlanningBedSummaryFactory()
+        .withBedId(activeBed1Id)
+        .withBedName("active bed 1")
         .withBedEndDate(LocalDate.of(2020, 4, 5))
         .produce()
 
-      val bed2EndedYesterdaySummary = Cas1PlanningBedSummaryFactory()
-        .withBedId(bed2EntityOutOfService.id)
-        .withBedName("the oosb bed name")
-        .withRoomName("the room name")
+      val oosbBed1 = Cas1PlanningBedSummaryFactory()
+        .withBedId(oosbBed1Id)
+        .withBedName("oosb bed 1")
+        .withBedEndDate(LocalDate.of(2020, 4, 3))
+        .produce()
+
+      val oosbBed2 = Cas1PlanningBedSummaryFactory()
+        .withBedId(oosbBed2Id)
+        .withBedName("oosb bed 2")
         .withBedEndDate(LocalDate.of(2020, 4, 3))
         .produce()
 
       val result = factory.allBedsDayState(
         day = LocalDate.of(2020, 4, 4),
-        beds = listOf(bed1ActiveSummary, bed2EndedYesterdaySummary),
+        beds = listOf(activeBed1, oosbBed1, oosbBed2),
         outOfServiceBedRecordsToConsider = listOf(
-          Cas1OutOfServiceBedEntityFactory()
-            .withBed(bed1EntityActive)
-            .produce().apply {
-              revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
-                .withDetailType(Cas1OutOfServiceBedRevisionType.INITIAL)
-                .withStartDate(LocalDate.of(2020, 4, 1))
-                .withEndDate(LocalDate.of(2020, 4, 3))
-                .withOutOfServiceBed(this)
-                .produce()
-            },
-          Cas1OutOfServiceBedEntityFactory()
-            .withBed(bed2EntityOutOfService)
-            .produce().apply {
-              revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
-                .withDetailType(Cas1OutOfServiceBedRevisionType.INITIAL)
-                .withStartDate(LocalDate.of(2020, 4, 3))
-                .withEndDate(LocalDate.of(2020, 4, 5))
-                .withOutOfServiceBed(this)
-                .produce()
-            },
+          // OOSB record that ends the day before we request for active bed 1
+          OutOfServiceBedSummaryFactory()
+            .withBedId(activeBed1Id)
+            .withStartDate(LocalDate.of(2020, 4, 1))
+            .withEndDate(LocalDate.of(2020, 4, 3))
+            .produce(),
+          // OOSB record that starts the day after we request for active bed 1
+          OutOfServiceBedSummaryFactory()
+            .withBedId(activeBed1Id)
+            .withStartDate(LocalDate.of(2020, 4, 5))
+            .withEndDate(LocalDate.of(2020, 4, 5))
+            .produce(),
+          // OOSB record that spans the day we request for oosb bed 1
+          OutOfServiceBedSummaryFactory()
+            .withBedId(oosbBed1Id)
+            .withStartDate(LocalDate.of(2020, 4, 3))
+            .withEndDate(LocalDate.of(2020, 4, 5))
+            .produce(),
+          // OOSB record on the day we request for oosb bed 2
+          OutOfServiceBedSummaryFactory()
+            .withBedId(oosbBed2Id)
+            .withStartDate(LocalDate.of(2020, 4, 4))
+            .withEndDate(LocalDate.of(2020, 4, 4))
+            .produce(),
         ),
       )
 
-      assertThat(result).hasSize(2)
+      assertThat(result).hasSize(3)
 
       val activeBedDayState = result[0]
       assertThat(activeBedDayState.inactiveReason).isNull()
-      assertThat(activeBedDayState.bed.id).isEqualTo(bed1EntityActive.id)
-      assertThat(activeBedDayState.bed.label).isEqualTo("the active bed name")
+      assertThat(activeBedDayState.bed.id).isEqualTo(activeBed1Id)
+      assertThat(activeBedDayState.bed.label).isEqualTo("active bed 1")
 
-      val inactiveBedDayState = result[1]
-      assertThat(inactiveBedDayState.inactiveReason).isInstanceOf(BedOutOfService::class.java)
-      assertThat(inactiveBedDayState.bed.id).isEqualTo(bed2EntityOutOfService.id)
-      assertThat(inactiveBedDayState.bed.label).isEqualTo("the oosb bed name")
+      val oosbBed1State = result[1]
+      assertThat(oosbBed1State.inactiveReason).isInstanceOf(BedOutOfService::class.java)
+      assertThat(oosbBed1State.bed.id).isEqualTo(oosbBed1Id)
+      assertThat(oosbBed1State.bed.label).isEqualTo("oosb bed 1")
+
+      val oosbBed2State = result[2]
+      assertThat(oosbBed2State.inactiveReason).isInstanceOf(BedOutOfService::class.java)
+      assertThat(oosbBed2State.bed.id).isEqualTo(oosbBed2Id)
+      assertThat(oosbBed2State.bed.label).isEqualTo("oosb bed 2")
     }
   }
 

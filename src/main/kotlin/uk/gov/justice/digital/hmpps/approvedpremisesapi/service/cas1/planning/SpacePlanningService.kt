@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository.OutOfServiceBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlanningBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -204,5 +204,5 @@ class SpacePlanningService(
 
   private fun List<Cas1SpaceBookingEntity>.bookingsForPremises(premises: ApprovedPremisesEntity) = filter { it.premises.id == premises.id }
   private fun List<Cas1PlanningBedSummary>.bedsForPremises(premises: ApprovedPremisesEntity) = filter { it.premisesId == premises.id }
-  private fun List<Cas1OutOfServiceBedEntity>.oosbForPremises(premises: ApprovedPremisesEntity) = filter { it.premises.id == premises.id }
+  private fun List<OutOfServiceBedSummary>.oosbForPremises(premises: ApprovedPremisesEntity) = filter { it.getPremisesId() == premises.id }
 }

@@ -7,6 +7,33 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+fun IntegrationTestBase.givenAnOutOfServiceBedWithMultipleRevisions(
+  bed: BedEntity,
+  revisions: List<OutOfServiceBedRevision>,
+): Cas1OutOfServiceBedEntity {
+  val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+    withCreatedAt(OffsetDateTime.now())
+    withBed(bed)
+  }
+
+  revisions.forEach { rev ->
+    outOfServiceBed.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+      withCreatedAt(rev.createdAt)
+      withCreatedBy(givenAUser().first)
+      withOutOfServiceBed(outOfServiceBed)
+      withStartDate(rev.startDate)
+      withEndDate(rev.endDate)
+      withReason(
+        cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
+          withName(rev.reason)
+        },
+      )
+    }
+  }
+
+  return outOfServiceBed
+}
+
 fun IntegrationTestBase.givenAnOutOfServiceBed(
   bed: BedEntity,
   startDate: LocalDate = LocalDate.now(),
@@ -43,3 +70,10 @@ fun IntegrationTestBase.givenAnOutOfServiceBed(
 
   return outOfServiceBed
 }
+
+data class OutOfServiceBedRevision(
+  val createdAt: OffsetDateTime,
+  val startDate: LocalDate,
+  val endDate: LocalDate,
+  val reason: String = randomStringMultiCaseWithNumbers(6),
+)

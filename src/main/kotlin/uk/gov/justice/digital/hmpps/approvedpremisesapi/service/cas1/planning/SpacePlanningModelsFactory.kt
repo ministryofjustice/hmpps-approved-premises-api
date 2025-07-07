@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository.OutOfServiceBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlanningBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
@@ -21,7 +21,7 @@ class SpacePlanningModelsFactory {
   fun allBedsDayState(
     day: LocalDate,
     beds: List<Cas1PlanningBedSummary>,
-    outOfServiceBedRecordsToConsider: List<Cas1OutOfServiceBedEntity>,
+    outOfServiceBedRecordsToConsider: List<OutOfServiceBedSummary>,
   ): List<BedDayState> = beds
     .map { bedSummary ->
       BedDayState(
@@ -44,10 +44,10 @@ class SpacePlanningModelsFactory {
       )
     }
 
-  private fun Cas1PlanningBedSummary.getInactiveReason(day: LocalDate, outOfServiceBedRecords: List<Cas1OutOfServiceBedEntity>): BedInactiveReason? {
+  private fun Cas1PlanningBedSummary.getInactiveReason(day: LocalDate, outOfServiceBedRecords: List<OutOfServiceBedSummary>): BedInactiveReason? {
     val outOfServiceRecord = this.findOutOfServiceRecord(day, outOfServiceBedRecords)
     return if (outOfServiceRecord != null) {
-      BedOutOfService(outOfServiceRecord.reason.name)
+      BedOutOfService(outOfServiceRecord.getReasonName())
     } else if (!BedEntity.isActive(day, this.bedEndDate)) {
       BedEnded(this.bedEndDate!!)
     } else {
@@ -57,8 +57,12 @@ class SpacePlanningModelsFactory {
 
   private fun Cas1PlanningBedSummary.findOutOfServiceRecord(
     day: LocalDate,
-    outOfServiceBedRecords: List<Cas1OutOfServiceBedEntity>,
-  ) = outOfServiceBedRecords.firstOrNull { it.isApplicable(day, bedId = this.bedId) }
+    outOfServiceBedRecords: List<OutOfServiceBedSummary>,
+  ) = outOfServiceBedRecords.firstOrNull {
+    it.getBedId() == this.bedId &&
+      !day.isBefore(it.getStartDate()) &&
+      !day.isAfter(it.getEndDate())
+  }
 
   private fun Cas1PlanningBedSummary.toBed() = Bed(
     id = this.bedId,
