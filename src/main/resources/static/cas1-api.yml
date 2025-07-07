@@ -50,7 +50,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
 
   /placement-requests/{placementRequestId}/planned-transfer:
     post:
@@ -517,7 +517,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
   /placement-requests/{id}:
     get:
       tags:
@@ -2080,7 +2080,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
   /applications/me:
     get:
       tags:
@@ -2547,7 +2547,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
   /tasks/{taskType}/{id}:
     get:
       tags:

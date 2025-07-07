@@ -1160,7 +1160,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
 
   /applications:
     post:
@@ -1644,7 +1644,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
         400:
           description: invalid params
           content:
@@ -2021,7 +2021,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
 
   /tasks/{taskType}/{id}:
     get:
@@ -2223,7 +2223,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
 
   /placement-requests/{id}:
     get:
