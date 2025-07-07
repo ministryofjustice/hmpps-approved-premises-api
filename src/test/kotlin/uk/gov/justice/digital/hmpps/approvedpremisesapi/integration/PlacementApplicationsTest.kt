@@ -1204,6 +1204,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             withYieldedProbationRegion { givenAProbationRegion() }
           },
           submittedAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 5,
         ) { placementApplicationEntity ->
 
           webTestClient.post()

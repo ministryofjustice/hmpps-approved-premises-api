@@ -6069,8 +6069,13 @@ components:
               $ref: '#/components/schemas/WithdrawPlacementRequestReason'
             type:
               $ref: '#/components/schemas/PlacementApplicationType'
+            dates:
+              description: Only populated once the placement application has been submitted
+              $ref: '#/components/schemas/PlacementDates'
             placementDates:
               type: array
+              deprecated: true
+              description: Deprecated, use dates. Only populated with values after the placement application has been submitted
               items:
                 $ref: '#/components/schemas/PlacementDates'
           required:

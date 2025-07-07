@@ -112,8 +112,12 @@ data class PlacementApplicationEntity(
   var placementDates: MutableList<PlacementDateEntity>,
 
   /**
-   * Supporting multiple placements requests in a single Placement Application is legacy behaviour. Any new
-   * placement application will have one and only one Placement Request in this collection
+   * It was previously possible to realloacte a PlacementRequest, which would create a copy
+   * of the placement request with the new allocation. This would result in multiple
+   * placement requests linked to a single placement application.
+   *
+   * If those reallocated placement requests were removed (or the FK nulled), this could
+   * be converted into a one to one relationship
    */
   @OneToMany(mappedBy = "placementApplication", fetch = FetchType.LAZY)
   var placementRequests: MutableList<PlacementRequestEntity>,

@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -71,23 +70,10 @@ class PlacementApplicationTransformerTest {
       .withApplication(applicationMock)
       .withData(null)
       .withDocument(null)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrival(LocalDate.of(2023, 12, 11))
+      .withDuration(30)
       .produce()
-
-    placementApplication.placementDates.add(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2023, 12, 11))
-        .withDuration(30)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    placementApplication.placementDates.add(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2024, 1, 31))
-        .withDuration(15)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
@@ -100,17 +86,17 @@ class PlacementApplicationTransformerTest {
     assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
     assertThat(result.data).isNull()
     assertThat(result.document).isNull()
-    assertThat(result.submittedAt).isNull()
-    assertThat(result.canBeWithdrawn).isFalse
+    assertThat(result.submittedAt).isNotNull()
+    assertThat(result.canBeWithdrawn).isTrue
     assertThat(result.isWithdrawn).isFalse
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
+    assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.dates!!.duration).isEqualTo(30)
 
-    assertThat(result.placementDates).hasSize(2)
+    assertThat(result.placementDates).hasSize(1)
     assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
     assertThat(result.placementDates[0].duration).isEqualTo(30)
-    assertThat(result.placementDates[1].expectedArrival).isEqualTo(LocalDate.of(2024, 1, 31))
-    assertThat(result.placementDates[1].duration).isEqualTo(15)
   }
 
   @Test
@@ -122,6 +108,9 @@ class PlacementApplicationTransformerTest {
       .withApplication(applicationMock)
       .withData(data)
       .withDocument(document)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrival(LocalDate.of(2023, 12, 11))
+      .withDuration(30)
       .produce()
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
@@ -129,6 +118,32 @@ class PlacementApplicationTransformerTest {
     assertThat(result.id).isEqualTo(placementApplication.id)
     assertThat(result.data).isEqualTo(objectMapper.readTree(data))
     assertThat(result.document).isEqualTo(objectMapper.readTree(document))
+    assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.dates!!.duration).isEqualTo(30)
+
+    assertThat(result.placementDates).hasSize(1)
+    assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.placementDates[0].duration).isEqualTo(30)
+  }
+
+  @Test
+  fun `transformJpaToApi converts correctly when not submitted`() {
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withApplication(applicationMock)
+      .withData(null)
+      .withDocument(null)
+      .withSubmittedAt(null)
+      .withExpectedArrival(null)
+      .withDuration(null)
+      .produce()
+
+    val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
+
+    assertThat(result.id).isEqualTo(placementApplication.id)
+    assertThat(result.submittedAt).isNull()
+    assertThat(result.dates).isNull()
+    assertThat(result.placementDates).isEmpty()
   }
 
   @Test
@@ -158,23 +173,10 @@ class PlacementApplicationTransformerTest {
       .withCreatedByUser(user)
       .withApplication(applicationMock)
       .withDecision(PlacementApplicationDecision.ACCEPTED)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrival(LocalDate.of(2023, 12, 11))
+      .withDuration(30)
       .produce()
-
-    jpa.placementDates.add(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2023, 12, 11))
-        .withDuration(30)
-        .withPlacementApplication(jpa)
-        .produce(),
-    )
-
-    jpa.placementDates.add(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2024, 1, 31))
-        .withDuration(15)
-        .withPlacementApplication(jpa)
-        .produce(),
-    )
 
     val result = placementApplicationTransformer.transformToWithdrawable(jpa)
 
@@ -186,10 +188,6 @@ class PlacementApplicationTransformerTest {
           DatePeriod(
             LocalDate.of(2023, 12, 11),
             LocalDate.of(2024, 1, 10),
-          ),
-          DatePeriod(
-            LocalDate.of(2024, 1, 31),
-            LocalDate.of(2024, 2, 15),
           ),
         ),
       ),
