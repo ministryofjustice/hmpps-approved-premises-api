@@ -75,7 +75,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
 
 
   /applications/{applicationId}:
@@ -305,7 +305,7 @@ paths:
             X-Pagination-TotalResults:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
 
     post:
       tags:
