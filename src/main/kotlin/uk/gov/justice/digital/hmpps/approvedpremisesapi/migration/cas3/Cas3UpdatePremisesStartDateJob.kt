@@ -7,6 +7,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.domain.Sort
 import org.springframework.data.domain.Sort.Direction.ASC
 import org.springframework.stereotype.Component
+import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -22,6 +23,7 @@ class Cas3UpdatePremisesStartDateJob(
   private val premisesRepository: PremisesRepository,
   private val bookingRepository: BookingRepository,
   private val roomRepository: RoomRepository,
+  private val transactionTemplate: TransactionTemplate,
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
 
@@ -49,13 +51,17 @@ class Cas3UpdatePremisesStartDateJob(
             } else {
               val oldestBooking = bookingRepository.findByPremisesId(premises.id, Sort.by(ASC, "arrivalDate"), Limit.of(1)).firstOrNull()
               if (oldestBooking == null) {
-                val oldestBedspaceInPremises = roomRepository.findAllByPremisesId(premises.id).flatMap { it.beds }.sortedBy { it.startDate }.firstOrNull()
-                if (oldestBedspaceInPremises != null) {
-                  premises.startDate = oldestBedspaceInPremises.startDate
-                  premisesRepository.save(premises)
-                  migrationLogger.info("Updated start_date using oldest bedspace start_date for premises id ${premises.id}")
-                } else {
-                  migrationLogger.info("No bedspace found for premises id ${premises.id}")
+                transactionTemplate.executeWithoutResult {
+                  val oldestBedspaceInPremises =
+                    roomRepository.findAllByPremisesId(premises.id).flatMap { it.beds }.sortedBy { it.startDate }
+                      .firstOrNull()
+                  if (oldestBedspaceInPremises != null) {
+                    premises.startDate = oldestBedspaceInPremises.startDate
+                    premisesRepository.save(premises)
+                    migrationLogger.info("Updated start_date using oldest bedspace start_date for premises id ${premises.id}")
+                  } else {
+                    migrationLogger.info("No bedspace found for premises id ${premises.id}")
+                  }
                 }
               } else {
                 premises.startDate = oldestBooking.arrivalDate
