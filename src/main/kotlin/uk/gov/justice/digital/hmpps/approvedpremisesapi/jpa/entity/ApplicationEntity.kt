@@ -330,15 +330,9 @@ abstract class ApplicationEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "schema_version")
-  var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
   var deletedAt: OffsetDateTime?,
-
-  @Transient
-  var schemaUpToDate: Boolean,
 
   @OneToMany(mappedBy = "application")
   var assessments: MutableList<AssessmentEntity>,
@@ -363,11 +357,9 @@ class ApprovedPremisesApplicationEntity(
   createdByUser: UserEntity,
   data: String?,
   document: String?,
-  schemaVersion: JsonSchemaEntity,
   createdAt: OffsetDateTime,
   submittedAt: OffsetDateTime?,
   deletedAt: OffsetDateTime?,
-  schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
   @Deprecated("Use noticeType=emergency instead")
@@ -440,11 +432,9 @@ class ApprovedPremisesApplicationEntity(
   createdByUser,
   data,
   document,
-  schemaVersion,
   createdAt,
   submittedAt,
   deletedAt,
-  schemaUpToDate,
   assessments,
   nomsNumber,
 ) {
@@ -512,11 +502,9 @@ class TemporaryAccommodationApplicationEntity(
   createdByUser: UserEntity,
   data: String?,
   document: String?,
-  schemaVersion: JsonSchemaEntity,
   createdAt: OffsetDateTime,
   submittedAt: OffsetDateTime?,
   deletedAt: OffsetDateTime?,
-  schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
   nomsNumber: String?,
   val convictionId: Long,
@@ -554,11 +542,9 @@ class TemporaryAccommodationApplicationEntity(
   createdByUser,
   data,
   document,
-  schemaVersion,
   createdAt,
   submittedAt,
   deletedAt,
-  schemaUpToDate,
   assessments,
   nomsNumber,
 ) {

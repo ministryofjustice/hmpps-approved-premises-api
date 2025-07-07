@@ -40,10 +40,6 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   arrivalDate: OffsetDateTime? = null,
   apType: ApprovedPremisesType? = null,
 ): Pair<ApprovedPremisesAssessmentEntity, ApprovedPremisesApplicationEntity> {
-  val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
     withAddedAt(OffsetDateTime.now())
@@ -52,7 +48,6 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
     withCreatedByUser(createdByUser)
-    withApplicationSchema(applicationSchema)
     withSubmittedAt(OffsetDateTime.now())
     withReleaseType("licence")
     withIsWithdrawn(isWithdrawn)
@@ -145,11 +140,6 @@ fun IntegrationTestBase.givenAnAssessmentForTemporaryAccommodation(
   createdAt: OffsetDateTime? = null,
   block: ((assessment: TemporaryAccommodationAssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null,
 ) {
-  val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-    withAddedAt(OffsetDateTime.now())
-  }
-
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
     withAddedAt(OffsetDateTime.now())
@@ -158,7 +148,6 @@ fun IntegrationTestBase.givenAnAssessmentForTemporaryAccommodation(
   val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
     withCreatedByUser(createdByUser)
-    withApplicationSchema(applicationSchema)
     withProbationRegion(createdByUser.probationRegion)
   }
 

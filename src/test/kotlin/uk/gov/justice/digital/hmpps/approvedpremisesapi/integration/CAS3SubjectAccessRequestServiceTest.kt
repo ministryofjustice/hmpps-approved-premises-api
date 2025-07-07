@@ -414,7 +414,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
       withPersonReleaseDate(LocalDate.parse(arrivedAtDateOnly))
       withCreatedByUser(user)
-      withApplicationSchema(temporaryAccommodationApplicationJsonSchemaEntity())
       withConvictionId(CONVICTION_ID)
       withName(NAME)
       withCreatedByUser(user)
@@ -437,9 +436,5 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withPrisonNameAtReferral("HMP Birmingham")
       withProbationDeliveryUnit(probationDeliveryUnitEntity(user))
     }
-  }
-
-  private fun temporaryAccommodationApplicationJsonSchemaEntity() = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
   }
 }

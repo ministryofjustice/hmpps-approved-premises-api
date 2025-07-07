@@ -13,20 +13,15 @@ class PlacementDatesQueryTest : IntegrationTestBase() {
   @Test
   fun `findAllByPlacementApplication only returns dates for placementApplication provided`() {
     givenAUser { user, _ ->
-      val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
 
       val application1 = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn("CRN123")
         withCreatedByUser(user)
-        withApplicationSchema(jsonSchema)
       }
 
       val application2 = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn("CRN456")
         withCreatedByUser(user)
-        withApplicationSchema(jsonSchema)
       }
 
       val placementApplication1 = placementApplicationFactory.produceAndPersist {

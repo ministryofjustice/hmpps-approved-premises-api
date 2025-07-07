@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class AssessmentStateTest : IntegrationTestBase() {
@@ -21,10 +20,6 @@ class AssessmentStateTest : IntegrationTestBase() {
   fun `A Temporary Accommodation assessment can transition between all assessment states correctly`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
 
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(userEntity.probationRegion)
@@ -33,7 +28,6 @@ class AssessmentStateTest : IntegrationTestBase() {
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
-          withApplicationSchema(applicationSchema)
           withProbationRegion(userEntity.probationRegion)
           withData(
             """

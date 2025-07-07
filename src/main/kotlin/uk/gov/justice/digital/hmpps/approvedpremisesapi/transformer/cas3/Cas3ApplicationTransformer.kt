@@ -30,8 +30,6 @@ class Cas3ApplicationTransformer(
       id = applicationEntity.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
       createdByUserId = applicationEntity.createdByUser.id,
-      schemaVersion = applicationEntity.schemaVersion.id,
-      outdatedSchema = !applicationEntity.schemaUpToDate,
       createdAt = applicationEntity.createdAt.toInstant(),
       submittedAt = applicationEntity.submittedAt?.toInstant(),
       arrivalDate = applicationEntity.arrivalDate?.toInstant(),

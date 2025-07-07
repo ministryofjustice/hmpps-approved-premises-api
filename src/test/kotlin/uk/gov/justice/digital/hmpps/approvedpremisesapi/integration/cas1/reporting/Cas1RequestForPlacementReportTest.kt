@@ -47,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -67,7 +66,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
-  lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
 
   lateinit var assessor: UserEntity
@@ -109,7 +107,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     assessor = assessorDetails.first
     assessorJwt = assessorDetails.second
 
-    applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
     standardRFPNotAssessed.createRequestForPlacement()
@@ -597,7 +594,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       withCreatedByUser(applicant)
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-      withApplicationSchema(applicationSchema)
       withData("{}")
       withOffenceId("offenceId")
       withRiskRatings(PersonRisksFactory().produce())

@@ -94,7 +94,6 @@ class InmateDetailsCacheRefreshServiceTest : IntegrationTestBase() {
     )
     approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
       withNomsNumber(inmateDetail.offenderNo)
     }
     return inmateDetail

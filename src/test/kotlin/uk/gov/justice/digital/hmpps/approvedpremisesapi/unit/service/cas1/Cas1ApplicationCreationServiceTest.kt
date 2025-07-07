@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
@@ -40,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
@@ -60,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
@@ -79,7 +76,6 @@ import java.util.UUID
 @SuppressWarnings("LargeClass")
 class Cas1ApplicationCreationServiceTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
-  private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockAssessmentService = mockk<AssessmentService>()
@@ -99,7 +95,6 @@ class Cas1ApplicationCreationServiceTest {
 
   private val applicationService = Cas1ApplicationCreationService(
     mockApplicationRepository,
-    mockJsonSchemaService,
     mockOffenderService,
     mockOffenderRisksService,
     mockAssessmentService,
@@ -153,8 +148,6 @@ class Cas1ApplicationCreationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
       val user = userWithUsername(username)
 
       every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
@@ -180,7 +173,6 @@ class Cas1ApplicationCreationServiceTest {
         lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
       )
 
-      every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
       every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
       every { mockCas1OffenderService.getOrCreateOffender(any(), any()) } returns cas1OffenderEntity
@@ -244,7 +236,6 @@ class Cas1ApplicationCreationServiceTest {
       }
       .produce()
 
-    val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
     val updatedData = """
       {
         "aProperty": "value"
@@ -252,14 +243,10 @@ class Cas1ApplicationCreationServiceTest {
     """
 
     val application = ApprovedPremisesApplicationEntityFactory()
-      .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
       .withCreatedAt(OffsetDateTime.now())
       .produce()
-      .apply {
-        schemaUpToDate = true
-      }
 
     @Test
     fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
@@ -286,7 +273,6 @@ class Cas1ApplicationCreationServiceTest {
     @Test
     fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val otherUser = UserEntityFactory()
         .withDeliusUsername(username)
@@ -315,36 +301,8 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `updateApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      application.schemaUpToDate = false
-
-      val result = applicationService.updateApplication(
-        applicationId = applicationId,
-        Cas1ApplicationUpdateFields(
-          isWomensApplication = false,
-          isEmergencyApplication = false,
-          apType = null,
-          releaseType = null,
-          arrivalDate = null,
-          data = "{}",
-          isInapplicable = null,
-          noticeType = null,
-        ),
-        userForRequest = user,
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      result as CasResult.GeneralValidationError
-      assertThat(result.message).isEqualTo("The schema version is outdated")
-    }
-
-    @Test
     fun `updateApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       application.submittedAt = OffsetDateTime.now()
 
@@ -377,7 +335,6 @@ class Cas1ApplicationCreationServiceTest {
     @ParameterizedTest
     fun `updateApprovedPremisesApplication returns GeneralValidationError when application doesn't not have a suitable state`(status: ApprovedPremisesApplicationStatus) {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       application.status = status
 
@@ -503,9 +460,6 @@ class Cas1ApplicationCreationServiceTest {
 
     private fun setupMocksForSuccess() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
-      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
       every { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(any()) } returns Unit
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     }
@@ -535,8 +489,6 @@ class Cas1ApplicationCreationServiceTest {
       apType = ApType.normal,
     )
 
-    private val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
     @BeforeEach
     fun setup() {
       every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
@@ -565,7 +517,6 @@ class Cas1ApplicationCreationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       assertThat(
         applicationService.submitApplication(
@@ -578,48 +529,14 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `submitApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = false
-        }
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.submitApplication(
-        applicationId,
-        defaultSubmitApprovedPremisesApplication,
-        user,
-        apAreaId = UUID.randomUUID(),
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-    }
-
-    @Test
     fun `submitApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
-      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApplication(
         applicationId,
@@ -641,20 +558,13 @@ class Cas1ApplicationCreationServiceTest {
     )
     @ParameterizedTest
     fun `submitApprovedPremisesApplication returns GeneralValidationError when application doesn't have status 'STARTED'`(state: ApprovedPremisesApplicationStatus) {
-      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withStatus(state)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApplication(
         applicationId,
@@ -668,20 +578,13 @@ class Cas1ApplicationCreationServiceTest {
 
     @Test
     fun `submitApprovedPremisesApplication returns GeneralValidationError when applicantIsNotCaseManager is true and no case manager details are provided`() {
-      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
@@ -735,14 +638,10 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       setupMocksForSuccess(application)
 
@@ -828,15 +727,11 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withCreatedAt(OffsetDateTime.now())
         .withSubmittedAt(null)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       setupMocksForSuccess(application)
 
@@ -910,15 +805,11 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withCreatedAt(OffsetDateTime.now())
         .withSubmittedAt(null)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       setupMocksForSuccess(application)
 
@@ -991,14 +882,10 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       setupMocksForSuccess(application)
 
@@ -1076,16 +963,12 @@ class Cas1ApplicationCreationServiceTest {
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .withApplicantUserDetails(Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "applicantName", "applicantEmail", "applicantPhone"))
         .withCaseManagerUserDetails(Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldCaseManEmail", "oldCaseManName", "oldCaseManPhone"))
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       setupMocksForSuccess(application)
 
@@ -1113,8 +996,6 @@ class Cas1ApplicationCreationServiceTest {
     private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
       every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
         InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),

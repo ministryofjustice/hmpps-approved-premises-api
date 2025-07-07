@@ -49,7 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -84,7 +83,6 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   lateinit var premises: ApprovedPremisesEntity
 
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
-  lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
 
   val bookingWithCanonicalArrivalDateWithinRange = BookingWithCanonicalArrivalDateWithinRange()
   val bookingWithCanonicalDepartureDateWithinRange = BookingWithCanonicalDepartureDateWithinRange()
@@ -135,7 +133,6 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       supportsSpaceBookings = true,
     )
 
-    applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
     bookingWithCanonicalArrivalDateWithinRange.createBooking()
@@ -674,7 +671,6 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       withCreatedByUser(applicant)
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-      withApplicationSchema(applicationSchema)
       withData("{}")
       withOffenceId("offenceId")
       withRiskRatings(PersonRisksFactory().produce())

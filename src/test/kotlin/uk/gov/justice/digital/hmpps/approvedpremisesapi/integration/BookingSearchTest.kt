@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
@@ -130,23 +129,18 @@ class BookingSearchTest : IntegrationTestBase() {
           },
         ) { offenderWithFixedName, _ ->
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           val offendersDetailSummary =
             offenderSequence.take(10).map { (offenderDetailSummary, _) -> offenderDetailSummary }.toList()
           val allBookings = mutableListOf<BookingEntity>()
           val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
 
           offendersDetailSummary.forEach {
-            setupApplicationData(it, userEntity, applicationSchema, temporaryAccommodationApplications, allBookings)
+            setupApplicationData(it, userEntity, temporaryAccommodationApplications, allBookings)
           }
 
           setupApplicationData(
             offenderWithFixedName,
             userEntity,
-            applicationSchema,
             temporaryAccommodationApplications,
             allBookings,
           )
@@ -206,7 +200,6 @@ class BookingSearchTest : IntegrationTestBase() {
   private fun setupApplicationData(
     it: OffenderDetailSummary,
     userEntity: UserEntity,
-    applicationSchema: TemporaryAccommodationApplicationJsonSchemaEntity,
     temporaryAccommodationApplications: MutableList<TemporaryAccommodationApplicationEntity>,
     allBookings: MutableList<BookingEntity>,
   ) {
@@ -216,7 +209,6 @@ class BookingSearchTest : IntegrationTestBase() {
       withCrn(it.otherIds.crn)
       withProbationRegion(userEntity.probationRegion)
       withCreatedByUser(userEntity)
-      withApplicationSchema(applicationSchema)
     }
     temporaryAccommodationApplications += application
 
@@ -241,10 +233,6 @@ class BookingSearchTest : IntegrationTestBase() {
 
         val totalResults = 15
         val pageSize = 10
-
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
 
         val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
           withProbationRegion(userEntity.probationRegion)
@@ -278,7 +266,6 @@ class BookingSearchTest : IntegrationTestBase() {
             withCrn(it.first.otherIds.crn)
             withProbationRegion(userEntity.probationRegion)
             withCreatedByUser(userEntity)
-            withApplicationSchema(applicationSchema)
           }
 
           temporaryAccommodationApplications += application
@@ -609,10 +596,6 @@ class BookingSearchTest : IntegrationTestBase() {
       val crns = mutableListOf<String>()
       repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
 
-      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val allBookings = mutableListOf<BookingEntity>()
       val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
       val offendersCrnAndName = crns.associateBy(
@@ -627,7 +610,6 @@ class BookingSearchTest : IntegrationTestBase() {
           withCrn(it)
           withProbationRegion(userEntity.probationRegion)
           withCreatedByUser(userEntity)
-          withApplicationSchema(applicationSchema)
         }
         temporaryAccommodationApplications += application
 
@@ -712,10 +694,6 @@ class BookingSearchTest : IntegrationTestBase() {
       val crns = mutableListOf<String>()
       repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
 
-      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val allBookings = mutableListOf<BookingEntity>()
       val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
       val offendersCrnAndName = crns.associateBy(
@@ -730,7 +708,6 @@ class BookingSearchTest : IntegrationTestBase() {
           withCrn(it)
           withProbationRegion(userEntity.probationRegion)
           withCreatedByUser(userEntity)
-          withApplicationSchema(applicationSchema)
         }
         temporaryAccommodationApplications += application
 
@@ -851,10 +828,6 @@ class BookingSearchTest : IntegrationTestBase() {
       val crns = mutableListOf<String>()
       repeat(15) { crns += randomStringMultiCaseWithNumbers(8) }
 
-      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val allBookings = mutableListOf<BookingEntity>()
       val temporaryAccommodationApplications = mutableListOf<TemporaryAccommodationApplicationEntity>()
       val offendersCrnAndName = crns.associateBy(
@@ -869,7 +842,6 @@ class BookingSearchTest : IntegrationTestBase() {
           withCrn(it)
           withProbationRegion(userEntity.probationRegion)
           withCreatedByUser(userEntity)
-          withApplicationSchema(applicationSchema)
         }
         temporaryAccommodationApplications += application
 

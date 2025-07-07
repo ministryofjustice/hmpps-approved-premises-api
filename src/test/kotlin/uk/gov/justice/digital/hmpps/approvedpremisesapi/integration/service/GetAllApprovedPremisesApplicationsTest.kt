@@ -50,17 +50,12 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
           crn2 = offenderDetails2.otherIds.crn
           apArea = givenAnApArea()
 
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
 
           allApplications = mutableListOf(
             approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
               withCrn(crn1)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(6))
@@ -74,7 +69,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               )
             },
             approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
               withCrn(crn2)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(3))
@@ -88,7 +82,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               )
             },
             approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
               withName(name)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(12))
@@ -102,7 +95,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               )
             },
             approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
               withApArea(apArea)
               withCreatedByUser(userEntity)
               withCreatedAt(OffsetDateTime.now().minusDays(9))
@@ -120,7 +112,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
           ApprovedPremisesApplicationStatus.entries.forEach { status ->
             allApplications.add(
               approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
                 withStatus(status)
                 withCreatedAt(OffsetDateTime.now().minusDays(Random.nextLong(1, 25)))
@@ -139,7 +130,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
           ReleaseTypeOption.entries.forEach {
             allApplications.add(
               approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
                 withCreatedAt(OffsetDateTime.now().minusDays(Random.nextLong(1, 25)))
                 withArrivalDate(OffsetDateTime.now().plusDays(Random.nextLong(1, 25)))

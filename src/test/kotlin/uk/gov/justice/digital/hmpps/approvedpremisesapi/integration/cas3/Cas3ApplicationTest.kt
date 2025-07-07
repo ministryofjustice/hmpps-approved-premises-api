@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -78,19 +77,11 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             givenAnOffender { offenderDetails, _ ->
               temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
-              val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
-
               val applicationInProgress =
-                createApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
+                createApplicationEntity(referrerUser, offenderDetails, probationRegion, null)
 
               val applicationSubmitted =
                 createApplicationEntity(
-                  applicationSchema,
                   referrerUser,
                   offenderDetails,
                   probationRegion,
@@ -98,7 +89,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                 )
 
               val anotherUsersApplication =
-                createApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+                createApplicationEntity(otherUser, offenderDetails, probationRegion, null)
 
               apDeliusContextAddResponseToUserAccessCall(
                 listOf(
@@ -154,19 +145,13 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             givenAnOffender { offenderDetails, _ ->
               temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
               val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 
               val applicationInProgress =
-                createApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
+                createApplicationEntity(referrerUser, offenderDetails, probationRegion, null)
 
               val applicationSubmitted =
                 createApplicationEntity(
-                  applicationSchema,
                   referrerUser,
                   offenderDetails,
                   probationRegion,
@@ -175,7 +160,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
               val applicationRejected =
                 createApplicationEntity(
-                  applicationSchema,
                   referrerUser,
                   offenderDetails,
                   probationRegion,
@@ -190,7 +174,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               }
 
               val anotherUsersApplication =
-                createApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+                createApplicationEntity(otherUser, offenderDetails, probationRegion, null)
 
               apDeliusContextAddResponseToUserAccessCall(
                 listOf(
@@ -235,13 +219,11 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     }
 
     private fun createApplicationEntity(
-      applicationSchema: TemporaryAccommodationApplicationJsonSchemaEntity,
       user: UserEntity,
       offenderDetails: OffenderDetailSummary,
       probationRegion: ProbationRegionEntity,
       submittedAt: OffsetDateTime?,
     ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(applicationSchema)
       withCreatedByUser(user)
       withSubmittedAt(submittedAt)
       withCrn(offenderDetails.otherIds.crn)
@@ -286,13 +268,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         givenAnOffender { offenderDetails, _ ->
           temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-            withSchema("{}")
-          }
-
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(newestJsonSchema)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withProbationRegion(userEntity.probationRegion)
@@ -314,8 +290,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             userEntity.deliusUsername,
           )
 
-          callCasApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
-          callCas3ApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
+          callCasApiAndAssertApiResponse(jwt, applicationEntity)
+          callCas3ApiAndAssertApiResponse(jwt, applicationEntity)
         }
       }
     }
@@ -327,13 +303,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           givenAnOffender { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema("{}")
-            }
-
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(createdByUser)
               withProbationRegion(createdByUser.probationRegion)
@@ -356,8 +326,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               userEntity.deliusUsername,
             )
 
-            callCasApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
-            callCas3ApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
+            callCasApiAndAssertApiResponse(jwt, applicationEntity)
+            callCas3ApiAndAssertApiResponse(jwt, applicationEntity)
           }
         }
       }
@@ -373,13 +343,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         ) { offenderDetails, _ ->
           temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-            withSchema("{}")
-          }
-
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(newestJsonSchema)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(createdByUser)
             withProbationRegion(createdByUser.probationRegion)
@@ -437,13 +401,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           ) { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema("{}")
-            }
-
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(createdByUser)
               withProbationRegion(createdByUser.probationRegion)
@@ -486,13 +444,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           givenAnOffender { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema("{}")
-            }
-
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(createdByUser)
               withProbationRegion(createdByUser.probationRegion)
@@ -534,13 +486,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           givenAnOffender { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema("{}")
-            }
-
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(createdByUser)
               withProbationRegion(createdByUser.probationRegion)
@@ -581,13 +527,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         givenAnOffender { offenderDetails, _ ->
           temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
-            withSchema("{}")
-          }
-
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(newestJsonSchema)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withProbationRegion(userEntity.probationRegion)
@@ -628,12 +568,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
           val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(schemaText())
-          }
-
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(submittingUser.probationRegion)
           }
@@ -641,7 +575,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withId(applicationId)
-            withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
             withProbationRegion(submittingUser.probationRegion)
             withName(offenderName)
@@ -703,7 +636,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     private fun callCasApiAndAssertApiResponse(
       jwt: String,
       applicationEntity: TemporaryAccommodationApplicationEntity,
-      applicationSchemaId: UUID,
     ) {
       val responseBody = callCasApi(jwt, applicationEntity.id)
         .expectStatus()
@@ -718,16 +650,13 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           applicationEntity.createdAt.toInstant() == it.createdAt &&
           applicationEntity.createdByUser.id == it.createdByUserId &&
           applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-          serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-          applicationSchemaId == it.schemaVersion &&
-          !it.outdatedSchema
+          serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
       }
     }
 
     private fun callCas3ApiAndAssertApiResponse(
       jwt: String,
       applicationEntity: TemporaryAccommodationApplicationEntity,
-      applicationSchemaId: UUID,
     ) {
       val responseBody = callCas3Api(jwt, applicationEntity.id)
         .expectStatus()
@@ -742,23 +671,9 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           applicationEntity.createdAt.toInstant() == it.createdAt &&
           applicationEntity.createdByUser.id == it.createdByUserId &&
           applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-          serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-          applicationSchemaId == it.schemaVersion &&
-          !it.outdatedSchema
+          serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
       }
     }
-
-    private fun schemaText(): String = """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {},
-                "required": []
-              }
-            """
   }
 
   @Nested
@@ -800,13 +715,9 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     fun `Create new application returns 201 with correct body and Location header`() {
       givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
 
-          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, applicationSchema.id)
-          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, applicationSchema.id)
+          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
+          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
         }
       }
     }
@@ -817,13 +728,9 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         givenAnOffender(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
         ) { offenderDetails, _ ->
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
 
-          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, applicationSchema.id)
-          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, applicationSchema.id)
+          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
+          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
         }
       }
     }
@@ -859,13 +766,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             )
           },
         ) { offenderDetails, _ ->
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
-
-          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, applicationSchema.id, agencyName)
-          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, applicationSchema.id, agencyName)
+          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, agencyName)
+          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, agencyName)
         }
       }
     }
@@ -873,7 +775,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     private fun callCasApiAndAssertResponse(
       jwt: String,
       crn: String,
-      applicationSchemaId: UUID,
       agencyName: String? = null,
     ) {
       val offenceId = "789"
@@ -890,7 +791,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       val blockFirst = result.responseBody.blockFirst()
       assertThat(blockFirst).matches {
         it.person.crn == crn &&
-          it.schemaVersion == applicationSchemaId &&
           it.offenceId == offenceId
       }
 
@@ -919,7 +819,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     private fun callCas3ApiAndAssertResponse(
       jwt: String,
       crn: String,
-      applicationSchemaId: UUID,
       agencyName: String? = null,
     ) {
       val offenceId = "789"
@@ -936,7 +835,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       val blockFirst = result.responseBody.blockFirst()
       assertThat(blockFirst).matches {
         it.person.crn == crn &&
-          it.schemaVersion == applicationSchemaId &&
           it.offenceId == offenceId
       }
 
@@ -973,13 +871,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           givenAnOffender { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
-              withSchema("{}")
-            }
-
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
               withProbationRegion(userEntity.probationRegion)
@@ -1008,13 +900,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           givenAnOffender { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
-              withSchema("{}")
-            }
-
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
               withProbationRegion(userEntity.probationRegion)
@@ -1116,12 +1002,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             val applicationId = UUID.randomUUID()
             val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
 
-            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(schemaText())
-            }
-
             val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
               withProbationRegion(submittingUser.probationRegion)
             }
@@ -1129,7 +1009,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
               withProbationRegion(submittingUser.probationRegion)
               withName(offenderName)
@@ -1189,12 +1068,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           givenAnOffender { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(schemaText())
-            }
-
             val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
               withProbationRegion(user.probationRegion)
             }
@@ -1202,7 +1075,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
               withProbationRegion(submittingUser.probationRegion)
               withProbationDeliveryUnit(probationDeliveryUnit)
@@ -1296,12 +1168,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
             val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
 
-            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(schemaText())
-            }
-
             val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
               withProbationRegion(submittingUser.probationRegion)
             }
@@ -1309,7 +1175,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
               withProbationRegion(submittingUser.probationRegion)
               withName(offenderName)
@@ -1373,18 +1238,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(submitApplication)
       .exchange()
-
-    private fun schemaText(): String = """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {},
-                "required": []
-              }
-            """
   }
 
   @Nested
@@ -1431,16 +1284,9 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
   private fun persistApplication(crn: String, user: UserEntity) = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
     withCreatedByUser(user)
-    withApplicationSchema(persistApplicationSchema())
     withProbationRegion(user.probationRegion)
     withArrivalDate(LocalDate.now().plusDays(30))
     withSubmittedAt(null)
-  }
-
-  private fun persistApplicationSchema() = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {

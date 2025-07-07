@@ -74,16 +74,11 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         withProbationRegion(givenAProbationRegion())
       }
 
-      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       listOf(
         approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedAt(
             LocalDate.of(year, month, 3).toLocalDateTime(),
           )
-          withApplicationSchema(applicationSchema)
           withCreatedByUser(user)
         },
       )
@@ -92,7 +87,6 @@ class DailyMetricsReportTest : IntegrationTestBase() {
         withCreatedAt(
           LocalDate.of(2023, 5, 1).toLocalDateTime(),
         )
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user)
       }
 

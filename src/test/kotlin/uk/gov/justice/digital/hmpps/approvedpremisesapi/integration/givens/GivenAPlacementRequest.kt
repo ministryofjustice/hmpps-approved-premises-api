@@ -58,10 +58,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   apType: ApprovedPremisesType? = null,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
-  val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
   var risksFactory = PersonRisksFactory()
 
   if (tier != null) {
@@ -88,7 +84,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
     crn?.let { withCrn(it) }
     name?.let { withName(it) }
     withCreatedByUser(createdByUser)
-    withApplicationSchema(applicationSchema)
     withSubmittedAt(applicationSubmittedAt)
     withReleaseType("licence")
     withRiskRatings(

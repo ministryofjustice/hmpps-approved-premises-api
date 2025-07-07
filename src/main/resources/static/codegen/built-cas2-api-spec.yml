@@ -2161,11 +2161,6 @@ components:
             createdByUserId:
               type: string
               format: uuid
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
             data:
               $ref: '#/components/schemas/Unit'
             document:
@@ -2201,8 +2196,6 @@ components:
               format: date
           required:
             - createdByUserId
-            - schemaVersion
-            - outdatedSchema
             - status
     TemporaryAccommodationApplication:
       allOf:
@@ -2212,11 +2205,6 @@ components:
             createdByUserId:
               type: string
               format: uuid
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
             data:
               $ref: '#/components/schemas/Unit'
             document:
@@ -2238,8 +2226,6 @@ components:
               format: uuid
           required:
             - createdByUserId
-            - schemaVersion
-            - outdatedSchema
             - status
             - offenceId
     ApplicationSummary:

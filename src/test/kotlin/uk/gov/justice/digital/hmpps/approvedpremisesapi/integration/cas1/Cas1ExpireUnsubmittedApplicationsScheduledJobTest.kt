@@ -149,7 +149,6 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
         withCreatedByUser(user)
           .withCreatedAt(createdAtGenerator())
           .withStatus(status)
-        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
       }
       applications.add(application)
     }

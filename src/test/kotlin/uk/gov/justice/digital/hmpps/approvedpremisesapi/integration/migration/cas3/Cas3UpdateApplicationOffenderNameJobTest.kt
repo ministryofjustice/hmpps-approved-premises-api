@@ -26,10 +26,6 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
       },
     ) { offenderDetails, _ ->
 
-      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val probationRegion = givenAProbationRegion()
 
       val user = userEntityFactory.produceAndPersist {
@@ -38,7 +34,6 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
       val temporaryAccommodationApplications = generateSequence {
         temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
           withProbationRegion(probationRegion)
           withCreatedByUser(user)
         }
@@ -76,10 +71,6 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
       },
     ) { offenderDetails, _ ->
 
-      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val probationRegion = givenAProbationRegion()
 
       val user = userEntityFactory.produceAndPersist {
@@ -88,7 +79,6 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
       val temporaryAccommodationApplications = generateSequence {
         temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
           withProbationRegion(probationRegion)
           withCreatedByUser(user)
         }
@@ -126,10 +116,6 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
       },
     ) { offenderDetails, _ ->
 
-      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val probationRegion = givenAProbationRegion()
 
       val user = userEntityFactory.produceAndPersist {
@@ -139,7 +125,6 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
       val crn = offenderDetails.otherIds.crn
 
       val temporaryAccommodationApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withProbationRegion(probationRegion)
         withCreatedByUser(user)
         withCrn(crn)

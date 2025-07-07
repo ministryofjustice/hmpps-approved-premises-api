@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -26,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ApplicationService
@@ -45,7 +43,6 @@ class Cas3ApplicationServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockUserService = mockk<UserService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
-  private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
 
   private val cas3ApplicationService = Cas3ApplicationService(
@@ -56,7 +53,6 @@ class Cas3ApplicationServiceTest {
     mockUserAccessService,
     mockAssessmentService,
     mockCas3DomainEventService,
-    mockJsonSchemaService,
     mockObjectMapper,
   )
 
@@ -175,7 +171,6 @@ class Cas3ApplicationServiceTest {
         }
         .produce()
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       assertThat(
         cas3ApplicationService.submitApplication(
@@ -186,50 +181,16 @@ class Cas3ApplicationServiceTest {
     }
 
     @Test
-    fun `submitApplication returns GeneralValidationError when application schema is outdated`() {
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .withProbationRegion(user.probationRegion)
-        .produce()
-        .apply {
-          schemaUpToDate = false
-        }
-
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = cas3ApplicationService.submitApplication(
-        applicationId,
-        submitApplication,
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-    }
-
-    @Test
     fun `submitApplication returns GeneralValidationError when application has already been submitted`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .withProbationRegion(user.probationRegion)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = cas3ApplicationService.submitApplication(
         applicationId,
@@ -244,22 +205,15 @@ class Cas3ApplicationServiceTest {
 
     @Test
     fun `submitApplication returns GeneralValidationError when application has already been deleted`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withDeletedAt(OffsetDateTime.now().minusDays(22))
         .withProbationRegion(user.probationRegion)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = cas3ApplicationService.submitApplication(
         applicationId,
@@ -274,23 +228,15 @@ class Cas3ApplicationServiceTest {
 
     @Test
     fun `submitApplication returns Success and creates assessment`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .withProbationRegion(user.probationRegion)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockProbationDeliveryUnitRepository.findByIdOrNull(any()) } returns null
       every {
@@ -337,24 +283,16 @@ class Cas3ApplicationServiceTest {
 
     @Test
     fun `submitApplication records MI reporting data when supplied`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .withProbationRegion(user.probationRegion)
         .withName(user.name)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockProbationDeliveryUnitRepository.findByIdOrNull(any()) } returns null
       every {

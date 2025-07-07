@@ -24,15 +24,10 @@ fun IntegrationTestBase.givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
     withStartDate(startDate)
   },
 ): Triple<Cas3PremisesEntity, Cas3BedspacesEntity, AssessmentEntity> {
-  val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
   val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
     withCreatedByUser(user)
     withCrn(offenderDetails.otherIds.crn)
     withProbationRegion(user.probationRegion)
-    withApplicationSchema(applicationSchema)
   }
 
   val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {

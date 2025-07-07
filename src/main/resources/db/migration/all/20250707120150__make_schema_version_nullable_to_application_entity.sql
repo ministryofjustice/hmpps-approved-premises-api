@@ -1,0 +1,1 @@
+ALTER TABLE applications ALTER COLUMN schema_version DROP NOT NULL;

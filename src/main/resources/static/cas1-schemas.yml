@@ -1694,11 +1694,6 @@ components:
         createdByUserId:
           type: string
           format: uuid
-        schemaVersion:
-          type: string
-          format: uuid
-        outdatedSchema:
-          type: boolean
         data:
           $ref: '_shared.yml#/components/schemas/Unit'
         document:
@@ -1737,8 +1732,6 @@ components:
         - person
         - createdAt
         - createdByUserId
-        - schemaVersion
-        - outdatedSchema
         - status
     Cas1UpdateAssessment:
       type: object

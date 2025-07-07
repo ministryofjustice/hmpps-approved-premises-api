@@ -47,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -76,7 +75,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
-  private lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   private lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
 
   private val appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn = AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn()
@@ -90,7 +88,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   fun setup() {
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-    applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
     appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.createApplication()
@@ -877,7 +874,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       withCreatedByUser(applicant)
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-      withApplicationSchema(applicationSchema)
       withData("{}")
       withOffenceId(offenceId)
       withRiskRatings(

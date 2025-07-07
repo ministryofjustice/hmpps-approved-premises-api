@@ -1663,10 +1663,6 @@ class WithdrawalTest : IntegrationTestBase() {
     assessmentAllocatedTo: UserEntity? = null,
     caseManager: Cas1ApplicationUserDetailsEntity? = null,
   ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
       withAddedAt(OffsetDateTime.now())
@@ -1677,7 +1673,6 @@ class WithdrawalTest : IntegrationTestBase() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(applicant)
-      withApplicationSchema(applicationSchema)
       withSubmittedAt(OffsetDateTime.now())
       withApArea(apArea)
       withCruManagementArea(givenACas1CruManagementArea())
@@ -1705,31 +1700,8 @@ class WithdrawalTest : IntegrationTestBase() {
     userEntity: UserEntity,
     managingTeamCode: String,
   ): ApplicationEntity {
-    val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-      )
-    }
-
     val application =
       approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(jsonSchema)
         withCrn(crn)
         withCreatedByUser(userEntity)
         withData(

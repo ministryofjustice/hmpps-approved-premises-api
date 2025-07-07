@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTeamCodeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -23,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -633,13 +631,8 @@ class UserAccessServiceTest {
 
   @Test
   fun `userCanViewApplication returns true if the user created the application for Approved Premises`() {
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
-      .withApplicationSchema(newestJsonSchema)
       .produce()
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
@@ -647,13 +640,8 @@ class UserAccessServiceTest {
 
   @Test
   fun `userCanViewApplication returns true if the application is an Approved Premises application and the user can access the Offender (LAO)`() {
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
       .withTeamCodes(mutableListOf())
       .produce()
 
@@ -671,13 +659,8 @@ class UserAccessServiceTest {
 
   @Test
   fun `userCanViewApplication returns false if the application is an Approved Premises application and the user cannot access the Offender (LAO)`() {
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
       .withTeamCodes(mutableListOf())
       .produce()
 
@@ -695,13 +678,8 @@ class UserAccessServiceTest {
 
   @Test
   fun `userCanViewApplication returns true if the user created the application for Temporary Accommodation`() {
-    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(user)
-      .withApplicationSchema(newestJsonSchema)
       .withProbationRegion(probationRegion)
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
@@ -715,13 +693,8 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(anotherUserNotInRegion)
-      .withApplicationSchema(newestJsonSchema)
       .withProbationRegion(anotherProbationRegion)
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
@@ -735,13 +708,8 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
       .withProbationRegion(probationRegion)
       .withSubmittedAt(null)
       .produce()
@@ -755,13 +723,8 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
       .withProbationRegion(probationRegion)
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
@@ -773,13 +736,8 @@ class UserAccessServiceTest {
   fun `userCanViewApplication returns false otherwise for Temporary Accommodation`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-    val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(anotherUserInRegion)
-      .withApplicationSchema(newestJsonSchema)
       .withProbationRegion(probationRegion)
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
@@ -1085,13 +1043,8 @@ class UserAccessServiceTest {
 
     @Test
     fun `userMayWithdrawApplication returns false if not CAS1`() {
-      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
         .withCreatedByUser(anotherUserInRegion)
-        .withApplicationSchema(newestJsonSchema)
         .withProbationRegion(probationRegion)
         .withSubmittedAt(null)
         .produce()
@@ -1284,13 +1237,8 @@ class UserAccessServiceTest {
 
       user.addRoleForUnitTest(CAS3_REFERRER)
 
-      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
         .withCreatedByUser(user)
-        .withApplicationSchema(newestJsonSchema)
         .withProbationRegion(probationRegion)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
@@ -1304,13 +1252,8 @@ class UserAccessServiceTest {
 
       user.addRoleForUnitTest(CAS3_REFERRER)
 
-      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
         .withCreatedByUser(anotherUserNotInRegion)
-        .withApplicationSchema(newestJsonSchema)
         .withProbationRegion(anotherProbationRegion)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
@@ -1324,13 +1267,8 @@ class UserAccessServiceTest {
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
       val application = TemporaryAccommodationApplicationEntityFactory()
         .withCreatedByUser(user)
-        .withApplicationSchema(newestJsonSchema)
         .withProbationRegion(probationRegion)
         .withSubmittedAt(null)
         .produce()

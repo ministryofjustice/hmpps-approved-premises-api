@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
@@ -36,7 +35,6 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         val sourceApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(applicant)
-          withApplicationSchema(jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java))
           withSubmittedAt(OffsetDateTime.now())
           withNomsNumber(offenderDetails.otherIds.nomsNumber)
           withApArea(givenAnApArea())
@@ -75,7 +73,6 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         assertThat(newApplication.createdByUser.id).isEqualTo(sourceApplication.createdByUser.id)
         assertThat(newApplication.data).isEqualTo(sourceApplication.data)
         assertThat(newApplication.document).isNull()
-        assertThat(newApplication.schemaVersion.id).isEqualTo(sourceApplication.schemaVersion.id)
         assertThat(newApplication.createdAt).isWithinTheLastMinute()
         assertThat(newApplication.submittedAt).isNull()
         assertThat(newApplication.isWomensApplication).isEqualTo(sourceApplication.isWomensApplication)

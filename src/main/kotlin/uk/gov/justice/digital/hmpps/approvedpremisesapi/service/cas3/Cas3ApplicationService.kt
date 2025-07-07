@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalTime
@@ -31,7 +30,6 @@ class Cas3ApplicationService(
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
   private val cas3DomainEventService: Cas3DomainEventService,
-  private val jsonSchemaService: JsonSchemaService,
   private val objectMapper: ObjectMapper,
 ) {
   @SuppressWarnings("ReturnCount")
@@ -44,8 +42,7 @@ class Cas3ApplicationService(
     var application =
       applicationRepository.findByIdOrNull(
         applicationId,
-      )?.let(jsonSchemaService::checkSchemaOutdated)
-        ?: return CasResult.NotFound("TemporaryAccommodationApplicationEntity", applicationId.toString())
+      ) ?: return CasResult.NotFound("TemporaryAccommodationApplicationEntity", applicationId.toString())
 
     if (application.deletedAt != null) {
       return CasResult.GeneralValidationError("This application has already been deleted")
@@ -63,17 +60,11 @@ class Cas3ApplicationService(
       return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     val validationErrors = ValidationErrors()
     val applicationData = application.data
 
     if (applicationData == null) {
       validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
-      validationErrors["$.data"] = "invalid"
     }
 
     if (validationErrors.any()) {

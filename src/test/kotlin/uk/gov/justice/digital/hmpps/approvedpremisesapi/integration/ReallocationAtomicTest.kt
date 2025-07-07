@@ -19,12 +19,10 @@ class ReallocationAtomicTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
       givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { otherUser, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { assigneeUser, _ ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(otherUser)
-            withApplicationSchema(applicationSchema)
           }
 
           val existingAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
