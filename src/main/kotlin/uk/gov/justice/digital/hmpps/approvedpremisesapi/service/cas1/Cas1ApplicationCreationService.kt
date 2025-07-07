@@ -314,6 +314,8 @@ class Cas1ApplicationCreationService(
     updateFields: Cas1ApplicationUpdateFields,
     userForRequest: UserEntity,
   ): CasResult<ApprovedPremisesApplicationEntity> {
+    lockableApplicationRepository.acquirePessimisticLock(applicationId)
+
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
