@@ -104,14 +104,6 @@ data class PlacementApplicationEntity(
   var placementType: PlacementType?,
 
   /**
-   * Supporting multiple dates in a single Placement Application was a legacy behaviour. All
-   * placement applications now have one and only one date in this collection
-   */
-  @Deprecated("Use [placementDates()] instead")
-  @OneToMany(mappedBy = "placementApplication", fetch = FetchType.LAZY)
-  var placementDates: MutableList<PlacementDateEntity>,
-
-  /**
    * It was previously possible to realloacte a PlacementRequest, which would create a copy
    * of the placement request with the new allocation. This would result in multiple
    * placement requests linked to a single placement application.
