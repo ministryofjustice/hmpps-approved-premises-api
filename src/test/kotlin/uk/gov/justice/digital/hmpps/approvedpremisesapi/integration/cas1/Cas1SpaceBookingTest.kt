@@ -2370,7 +2370,6 @@ class Cas1SpaceBookingTest {
       application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withCreatedByUser(applicant)
-        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
         withApArea(givenAnApArea())
         withSubmittedAt(OffsetDateTime.now())
       }
@@ -2725,7 +2724,6 @@ class Cas1SpaceBookingTest {
       application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withCreatedByUser(applicant)
-        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
         withApArea(givenAnApArea())
         withSubmittedAt(OffsetDateTime.now())
       }
@@ -2852,7 +2850,6 @@ class Cas1SpaceBookingTest {
       application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withCreatedByUser(applicant)
-        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
         withApArea(givenAnApArea())
         withSubmittedAt(OffsetDateTime.now())
       }

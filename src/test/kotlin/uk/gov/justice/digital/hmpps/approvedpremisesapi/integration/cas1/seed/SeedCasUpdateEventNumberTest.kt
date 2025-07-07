@@ -300,11 +300,6 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
       approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(offenderDetails.otherIds.crn)
         withCreatedByUser(applicant)
-        withApplicationSchema(
-          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
-        )
         withSubmittedAt(OffsetDateTime.now())
         withApArea(givenAnApArea())
         withReleaseType("licence")

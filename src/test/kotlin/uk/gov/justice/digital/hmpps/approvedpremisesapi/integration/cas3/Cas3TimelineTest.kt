@@ -159,7 +159,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
   private fun persistApplication(crn: String, user: UserEntity) = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
     withCreatedByUser(user)
-    withApplicationSchema(persistApplicationSchema())
     withProbationRegion(user.probationRegion)
     withArrivalDate(LocalDate.now().minusDays(100))
     withPersonReleaseDate(LocalDate.now().minusDays(100))
@@ -168,10 +167,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
   private fun persistAssessmentSchema() = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
     withAddedAt(OffsetDateTime.now())
-  }
-
-  private fun persistApplicationSchema() = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
   }
 
   private fun persistCas3UpdatedDomainEvent(id: UUID, assessment: TemporaryAccommodationAssessmentEntity, data: Any) = domainEventFactory.produceAndPersist {

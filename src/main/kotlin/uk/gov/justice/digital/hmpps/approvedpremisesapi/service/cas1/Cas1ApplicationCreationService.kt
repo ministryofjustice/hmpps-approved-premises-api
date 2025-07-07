@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
@@ -38,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
@@ -52,7 +50,6 @@ import java.util.UUID
 @Service
 class Cas1ApplicationCreationService(
   private val applicationRepository: ApplicationRepository,
-  private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
   private val assessmentService: AssessmentService,
@@ -132,7 +129,7 @@ class Cas1ApplicationCreationService(
       )
     }
 
-    return success(createdApplication.apply { schemaUpToDate = true })
+    return success(createdApplication)
   }
 
   fun createApprovedPremisesApplicationEntity(
@@ -150,7 +147,6 @@ class Cas1ApplicationCreationService(
     createdByUser = user,
     data = null,
     document = null,
-    schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java),
     createdAt = OffsetDateTime.now(),
     submittedAt = null,
     deletedAt = null,
@@ -160,7 +156,6 @@ class Cas1ApplicationCreationService(
     convictionId = convictionId!!,
     eventNumber = deliusEventNumber!!,
     offenceId = offenceId!!,
-    schemaUpToDate = true,
     riskRatings = riskRatings,
     assessments = mutableListOf(),
     teamCodes = mutableListOf(),
@@ -202,8 +197,7 @@ class Cas1ApplicationCreationService(
 
     var application = applicationRepository.findByIdOrNull(
       applicationId,
-    )?.let(jsonSchemaService::checkSchemaOutdated)
-      ?: return CasResult.NotFound("ApprovedPremisesApplicationEntity", applicationId.toString())
+    ) ?: return CasResult.NotFound("ApprovedPremisesApplicationEntity", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
@@ -227,17 +221,11 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
 
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     val validationErrors = ValidationErrors()
     val applicationData = application.data
 
     if (applicationData == null) {
       validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
-      validationErrors["$.data"] = "invalid"
     }
 
     if (validationErrors.any()) {
@@ -307,14 +295,14 @@ class Cas1ApplicationCreationService(
     return CasResult.Success(application)
   }
 
-  @SuppressWarnings("ReturnCount")
+  @SuppressWarnings("ReturnCount", "UnusedParameter")
   @Transactional
   fun updateApplication(
     applicationId: UUID,
     updateFields: Cas1ApplicationUpdateFields,
     userForRequest: UserEntity,
   ): CasResult<ApprovedPremisesApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+    val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (application !is ApprovedPremisesApplicationEntity) {
@@ -323,10 +311,6 @@ class Cas1ApplicationCreationService(
 
     if (application.createdByUser.id != userForRequest.id) {
       return CasResult.Unauthorised()
-    }
-
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (application.submittedAt != null) {

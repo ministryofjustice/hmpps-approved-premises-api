@@ -28,11 +28,6 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
-      withApplicationSchema(
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
-      )
       withSubmittedAt(OffsetDateTime.now())
       withReleaseType("licence")
     }

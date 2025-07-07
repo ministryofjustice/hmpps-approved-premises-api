@@ -21,10 +21,6 @@ class UpdateSentenceTypeAndSituationJobTest : IntegrationTestBase() {
 
   @Test
   fun `all applications have the sentence type and situation updated`() {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val probationRegion = givenAProbationRegion()
 
     val user = userEntityFactory.produceAndPersist {
@@ -33,7 +29,6 @@ class UpdateSentenceTypeAndSituationJobTest : IntegrationTestBase() {
 
     val applications = generateSequence {
       approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user)
         withData(
           objectMapper.writeValueAsString(

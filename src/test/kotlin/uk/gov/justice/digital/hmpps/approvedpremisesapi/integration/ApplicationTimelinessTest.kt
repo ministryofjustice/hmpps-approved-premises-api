@@ -19,11 +19,8 @@ class ApplicationTimelinessTest : IntegrationTestBase() {
   lateinit var applicationTimelinessEntityRepository: ApplicationTimelinessEntityRepository
 
   @Test
+  @SuppressWarnings("UnusedPrivateProperty")
   fun `it returns application timeliness data`() {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val user = userEntityFactory.produceAndPersist {
       withProbationRegion(givenAProbationRegion())
     }
@@ -45,28 +42,24 @@ class ApplicationTimelinessTest : IntegrationTestBase() {
 
     val submittedAndBookedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
-      withApplicationSchema(applicationSchema)
       withSubmittedAt(submittedDate)
       withRiskRatings(risks)
     }
 
     val submittedAndAssessedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
-      withApplicationSchema(applicationSchema)
       withSubmittedAt(submittedDate)
       withRiskRatings(risks)
     }
 
     val submittedAndUnassessedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
-      withApplicationSchema(applicationSchema)
       withSubmittedAt(submittedDate)
       withRiskRatings(risks)
     }
 
     val unSubmittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
-      withApplicationSchema(applicationSchema)
       withSubmittedAt(null)
       withRiskRatings(risks)
     }

@@ -25,10 +25,6 @@ class Cas1UpdateApplicationLicenceExpiryDateJobTest : IntegrationTestBase() {
 
   @Test
   fun `all applications have the licence expiry date updated`() {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val probationRegion = givenAProbationRegion()
 
     val user = userEntityFactory.produceAndPersist {
@@ -37,7 +33,6 @@ class Cas1UpdateApplicationLicenceExpiryDateJobTest : IntegrationTestBase() {
 
     val applications = generateSequence {
       approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user)
         withData(
           objectMapper.writeValueAsString(

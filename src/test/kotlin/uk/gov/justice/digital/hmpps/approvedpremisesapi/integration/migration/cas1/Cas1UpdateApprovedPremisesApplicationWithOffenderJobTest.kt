@@ -26,10 +26,6 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
 
   @Test
   fun `should link all applications without offender to new offender`() {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val probationRegion = givenAProbationRegion()
 
     val user = userEntityFactory.produceAndPersist {
@@ -58,7 +54,6 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
 
     val applications = generateSequence {
       approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user)
         withCrn("CRN1")
       }
@@ -81,10 +76,6 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
 
   @Test
   fun `should update an existing offender and associate all applications with the same CRN`() {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val probationRegion = givenAProbationRegion()
 
     val user = userEntityFactory.produceAndPersist {
@@ -116,7 +107,6 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
 
     val applications = generateSequence {
       approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user)
         withCrn("CRN3")
       }
@@ -141,10 +131,6 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
 
   @Test
   fun `should create offender from application and associate when not found in delius`() {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val probationRegion = givenAProbationRegion()
 
     val user = userEntityFactory.produceAndPersist {
@@ -166,7 +152,6 @@ class Cas1UpdateApprovedPremisesApplicationWithOffenderJobTest : IntegrationTest
 
     val applications = generateSequence {
       approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user)
         withCrn("CRN4")
         withName("OffenderName")

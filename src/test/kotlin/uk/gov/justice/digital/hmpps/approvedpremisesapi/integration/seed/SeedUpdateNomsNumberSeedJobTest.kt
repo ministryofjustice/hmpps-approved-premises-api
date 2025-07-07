@@ -35,11 +35,6 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withDefaults()
       withCreatedByUser(applicant)
-      withApplicationSchema(
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
-      )
       withApArea(givenAnApArea())
       withCrn(CRN)
       withNomsNumber(OLD_NOMS)
@@ -48,11 +43,6 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
     val alreadyCorrectApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withDefaults()
       withCreatedByUser(applicant)
-      withApplicationSchema(
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
-      )
       withApArea(givenAnApArea())
       withCrn(CRN)
       withNomsNumber(NEW_NOMS)
@@ -61,11 +51,6 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
     val otherCrnApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withDefaults()
       withCreatedByUser(applicant)
-      withApplicationSchema(
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        },
-      )
       withApArea(givenAnApArea())
       withCrn(OTHER_CRN)
       withNomsNumber(OTHER_NOMS)

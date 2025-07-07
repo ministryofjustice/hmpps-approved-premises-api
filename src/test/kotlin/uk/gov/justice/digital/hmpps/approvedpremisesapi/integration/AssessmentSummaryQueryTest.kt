@@ -37,7 +37,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
               val u2Assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
                 val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(apAssessment.application.schemaVersion)
                   withCreatedByUser(user2)
                   withArrivalDate(OffsetDateTime.now().minusDays(1))
                 }
@@ -99,7 +98,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
               val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
                 val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(taAssessment.application.schemaVersion)
                   withCreatedByUser(user2)
                   withProbationRegion(user2.probationRegion)
                 }
@@ -143,7 +141,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
               val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
                 val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(taAssessment.application.schemaVersion)
                   withCreatedByUser(user2)
                   withProbationRegion(user2.probationRegion)
                 }
@@ -186,7 +183,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
               val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
                 val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(taAssessment.application.schemaVersion)
                   withCreatedByUser(user2)
                   withProbationRegion(user2.probationRegion)
                 }

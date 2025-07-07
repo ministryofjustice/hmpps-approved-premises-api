@@ -28,10 +28,6 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
 
     val (offenderDetails) = givenAnOffender()
 
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
       withAddedAt(OffsetDateTime.now())
@@ -40,7 +36,6 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
-      withApplicationSchema(applicationSchema)
     }
     val assessment1 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(application)

@@ -14,7 +14,6 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
   @Test
   fun `should succeed for valid application id and timeline note id`() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() })
       withCreatedByUser(givenAUser().first)
     }
 
@@ -44,7 +43,6 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
   @Test
   fun `should log error if application timeline note id is not found`() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() })
       withCreatedByUser(givenAUser().first)
     }
 
@@ -77,7 +75,6 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
   @Test
   fun `should log error if application does not have note with note id`() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() })
       withCreatedByUser(givenAUser().first)
     }
 
@@ -86,7 +83,6 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
     }.id
 
     val anotherApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() })
       withCreatedByUser(givenAUser().first)
     }
 

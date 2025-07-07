@@ -330,10 +330,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
             withAddedAt(OffsetDateTime.now())
@@ -344,7 +340,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withProbationRegion(user.probationRegion)
             withProbationDeliveryUnit(user.probationDeliveryUnit)
-            withApplicationSchema(applicationSchema)
             withArrivalDate(LocalDate.now().randomDateAfter(14))
             withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
             withCreatedAt(OffsetDateTime.now())
@@ -730,10 +725,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
             withAddedAt(OffsetDateTime.now())
@@ -744,7 +735,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withProbationRegion(user.probationRegion)
             withProbationDeliveryUnit(user.probationDeliveryUnit)
-            withApplicationSchema(applicationSchema)
             withArrivalDate(LocalDate.now().randomDateAfter(14))
             withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
             withCreatedAt(OffsetDateTime.now())
@@ -837,10 +827,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
             withAddedAt(OffsetDateTime.now())
@@ -852,7 +838,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withProbationRegion(user.probationRegion)
             withProbationDeliveryUnit(user.probationDeliveryUnit)
-            withApplicationSchema(applicationSchema)
             withArrivalDate(LocalDate.now().randomDateAfter(14))
             withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
             withCreatedAt(OffsetDateTime.now())
@@ -937,11 +922,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val applicationSchema =
-            temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            }
-
           val assessmentSchema =
             temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
@@ -958,7 +938,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withProbationRegion(user.probationRegion)
-              withApplicationSchema(applicationSchema)
               withArrivalDate(LocalDate.now().plusDays(1))
               withSubmittedAt(LocalDate.parse("2024-01-01").atStartOfDay().atOffset(ZoneOffset.UTC))
               withCreatedAt(OffsetDateTime.now())
@@ -4260,10 +4239,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
     assessmentStatus: AssessmentStatus,
     submittedDate: LocalDate,
   ): TemporaryAccommodationAssessmentEntity {
-    val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
       withAddedAt(OffsetDateTime.now())
@@ -4273,7 +4248,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
       withProbationRegion(user.probationRegion)
-      withApplicationSchema(applicationSchema)
       withArrivalDate(LocalDate.now().randomDateAfter(14))
       withSubmittedAt(submittedDate.atStartOfDay().atOffset(ZoneOffset.UTC))
       withCreatedAt(OffsetDateTime.now())
@@ -4324,10 +4298,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
     accommodationRequiredDate: LocalDate,
     updatedAccommodationRequiredDate: LocalDate?,
   ): Pair<TemporaryAccommodationPremisesEntity, TemporaryAccommodationApplicationEntity> {
-    val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
       withAddedAt(OffsetDateTime.now())
@@ -4344,7 +4314,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       withCreatedByUser(user)
       withProbationRegion(user.probationRegion)
       withProbationDeliveryUnit(probationDeliveryUnit)
-      withApplicationSchema(applicationSchema)
       withArrivalDate(accommodationRequiredDate)
       withSubmittedAt(applicationSubmittedDate)
       withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(10))
@@ -4390,18 +4359,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
   private fun createTemporaryAccommodationApplication(
     offenderDetails: OffenderDetailSummary,
     userEntity: UserEntity,
-  ): TemporaryAccommodationApplicationEntity {
-    val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-    return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(userEntity)
-      withProbationRegion(userEntity.probationRegion)
-      withApplicationSchema(applicationSchema)
-      withDutyToReferLocalAuthorityAreaName("London")
-      withSubmittedAt(OffsetDateTime.now())
-    }
+  ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+    withCrn(offenderDetails.otherIds.crn)
+    withCreatedByUser(userEntity)
+    withProbationRegion(userEntity.probationRegion)
+    withDutyToReferLocalAuthorityAreaName("London")
+    withSubmittedAt(OffsetDateTime.now())
   }
 
   private fun createPremisesAndRoom(

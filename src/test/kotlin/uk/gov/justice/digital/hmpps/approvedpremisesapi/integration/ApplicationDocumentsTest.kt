@@ -36,7 +36,6 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withConvictionId(12345)
-          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
 
         val convictionLevelDocId = UUID.randomUUID()
@@ -64,7 +63,6 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withConvictionId(12345)
-          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
 
         val convictionLevelDocId = UUID.randomUUID()
@@ -91,7 +89,6 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withConvictionId(12345)
-          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
         val convictionLevelDocId = UUID.randomUUID()
         val documents = stubDocumentsFromDelius(convictionLevelDocId)

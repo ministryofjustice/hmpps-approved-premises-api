@@ -62,12 +62,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           val applicationId1 = UUID.randomUUID()
           val applicationId2 = UUID.randomUUID()
 
-          val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(newestJsonSchema)
             withId(applicationId1)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
@@ -83,7 +78,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(newestJsonSchema)
             withId(applicationId2)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
@@ -131,11 +125,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         )
 
         approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(
-            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
-          )
           withId(UUID.randomUUID())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -174,11 +163,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         )
 
         approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(
-            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
-          )
           withId(UUID.randomUUID())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -338,25 +322,20 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
           val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
+
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withCreatedAt(date1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withCreatedAt(date2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withCreatedAt(date3)
@@ -391,25 +370,19 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
           val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withCreatedAt(date1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withCreatedAt(date2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withCreatedAt(date3)
@@ -444,25 +417,20 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
           val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
+
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date3)
@@ -497,25 +465,20 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
           val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
+
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date1)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date2)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date3)
@@ -550,9 +513,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
           val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
 
           val risk1 = PersonRisksFactory()
             .withTier(
@@ -588,7 +548,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .produce()
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date1)
@@ -596,7 +555,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date2)
@@ -604,7 +562,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date3)
@@ -640,9 +597,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
           val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
           val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
 
           val risk1 = PersonRisksFactory()
             .withTier(
@@ -678,7 +632,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .produce()
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date1)
@@ -686,7 +639,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date2)
@@ -694,7 +646,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withArrivalDate(date3)
@@ -727,19 +678,14 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val crn = offenderDetails.otherIds.crn
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
 
           approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
-            withApplicationSchema(applicationSchema)
             withCrn(crn)
             withCreatedByUser(userEntity)
             withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
@@ -774,12 +720,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
             val crn2 = offenderDetails2.otherIds.crn
 
-            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            }
-
             approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
-              withApplicationSchema(applicationSchema)
               withName("Gareth")
               withCrn(crn1)
               withCreatedByUser(userEntity)
@@ -787,7 +728,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             }
 
             approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
-              withApplicationSchema(applicationSchema)
               withName("Stu")
               withCrn(crn2)
               withCreatedByUser(userEntity)
@@ -866,11 +806,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         )
 
         approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(
-            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
-          )
           withId(UUID.randomUUID())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -909,11 +844,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         )
 
         approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(
-            approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            },
-          )
           withId(UUID.randomUUID())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -965,46 +895,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             givenAnOffender { otherOffenderDetails, _ ->
               approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
-              val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                withSchema(
-                  """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-          """,
-                )
-              }
-
-              val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-                withSchema(
-                  """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": { }
-              }
-            """,
-                )
-              }
-
               val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(newestJsonSchema)
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(userEntity)
                 withData(
@@ -1025,7 +916,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               )
 
               val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(olderJsonSchema)
                 withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1041,7 +931,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
               val outdatedApplicationEntityNotManagedByTeam =
                 approvedPremisesApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(olderJsonSchema)
                   withCreatedByUser(otherUser)
                   withCrn(otherOffenderDetails.otherIds.crn)
                   withData("{}")
@@ -1229,31 +1118,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     managingTeamCode: String,
     submittedAt: OffsetDateTime? = null,
   ): ApplicationEntity {
-    val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-      )
-    }
-
     val application =
       approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(jsonSchema)
         withCrn(crn)
         withCreatedByUser(userEntity)
         withData(
@@ -1277,22 +1143,15 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     return application
   }
 
-  private fun createTwelveApplications(crn: String, user: UserEntity): List<ApprovedPremisesApplicationEntity> {
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
-    return approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
-      withApplicationSchema(applicationSchema)
-      withCrn(crn)
-      withCreatedByUser(user)
-      withData(
-        """
+  private fun createTwelveApplications(crn: String, user: UserEntity): List<ApprovedPremisesApplicationEntity> = approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+    withCrn(crn)
+    withCreatedByUser(user)
+    withData(
+      """
           {
              "thingId": 123
           }
           """,
-      )
-    }
+    )
   }
 }

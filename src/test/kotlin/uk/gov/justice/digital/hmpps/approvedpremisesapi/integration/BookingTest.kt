@@ -600,15 +600,10 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
         }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -689,15 +684,10 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
         }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -764,15 +754,10 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
         }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -839,15 +824,10 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
         }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -914,15 +894,10 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
         }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -1003,15 +978,10 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
         }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -1088,15 +1058,10 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
         }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -2489,7 +2454,6 @@ class BookingTest : IntegrationTestBase() {
             val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(applicant)
-              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
               withApArea(apArea)
               withSubmittedAt(OffsetDateTime.now())
             }
@@ -2535,7 +2499,6 @@ class BookingTest : IntegrationTestBase() {
               val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(applicant)
-                withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
                 withApArea(apArea)
                 withSubmittedAt(OffsetDateTime.now())
                 withCruManagementArea(givenACas1CruManagementArea())
@@ -2653,7 +2616,6 @@ class BookingTest : IntegrationTestBase() {
             val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(applicant)
-              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
               withApArea(apArea)
               withSubmittedAt(OffsetDateTime.now())
             }
@@ -2872,7 +2834,6 @@ class BookingTest : IntegrationTestBase() {
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
           withCrn(offenderDetails.otherIds.crn)
         }
 
@@ -2949,7 +2910,6 @@ class BookingTest : IntegrationTestBase() {
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
           withCrn(offenderDetails.otherIds.crn)
         }
 
@@ -3519,13 +3479,9 @@ class BookingTest : IntegrationTestBase() {
   fun `Create Confirmation on Temporary Accommodation Booking returns OK with correct body and close associated referral`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withProbationRegion(userEntity.probationRegion)
           withCreatedByUser(userEntity)
-          withApplicationSchema(applicationSchema)
           withCrn(offenderDetails.otherIds.crn)
         }
 

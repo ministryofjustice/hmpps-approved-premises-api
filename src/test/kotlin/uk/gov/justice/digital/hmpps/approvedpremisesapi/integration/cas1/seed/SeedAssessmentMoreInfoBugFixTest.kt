@@ -64,10 +64,6 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
     val (user) = givenAUser()
     val (offenderDetails) = givenAnOffender()
 
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
       withAddedAt(OffsetDateTime.now())
@@ -76,7 +72,6 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
-      withApplicationSchema(applicationSchema)
     }
 
     return approvedPremisesAssessmentEntityFactory.produceAndPersist {

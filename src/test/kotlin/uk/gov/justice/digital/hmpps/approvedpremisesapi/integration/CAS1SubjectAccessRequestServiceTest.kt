@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
@@ -1044,10 +1043,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withDecisionDetail("rejected as no good")
   }
 
-  private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
   private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
   }
@@ -1079,7 +1074,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val risk1 = personRisks()
     val applicantUserDetails = cas1ApplicationUserDetailsEntity()
     val caseManagerUserDetails = cas1CaseManagerUserDetailsEntity()
-    val applicationSchema = approvedPremisesApplicationJsonSchemaEntity()
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber)
@@ -1107,7 +1101,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withApplicantUserDetails(applicantUserDetails)
       withCaseManagerUserDetails(caseManagerUserDetails)
       withCaseManagerIsNotApplicant(true)
-      withApplicationSchema(applicationSchema)
       withData(DATA_JSON_SIMPLE)
       withDocument(DOCUMENT_JSON_SIMPLE)
     }

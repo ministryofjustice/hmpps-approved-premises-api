@@ -40,12 +40,6 @@ data class Cas3Application(
     @get:JsonProperty("createdByUserId", required = true) val createdByUserId: UUID,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("schemaVersion", required = true) val schemaVersion: UUID,
-
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("outdatedSchema", required = true) val outdatedSchema: Boolean,
-
-    @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("status", required = true) val status: ApplicationStatus,
 
     @Schema(example = "null", required = true, description = "")

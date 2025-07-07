@@ -157,7 +157,6 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
     repeat(number) {
       val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user)
-        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
       }
 
       domainEventFactory.produceAndPersist {

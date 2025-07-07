@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
@@ -36,9 +35,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var createdByUser: Yielded<UserEntity>? = null
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
-  private var applicationSchema: Yielded<JsonSchemaEntity> = {
-    ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-  }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var deletedAt: Yielded<OffsetDateTime?> = { null }
@@ -100,14 +96,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
 
   fun withDocument(document: String?) = apply {
     this.document = { document }
-  }
-
-  fun withApplicationSchema(applicationSchema: JsonSchemaEntity) = apply {
-    this.applicationSchema = { applicationSchema }
-  }
-
-  fun withYieldedApplicationSchema(applicationSchema: Yielded<JsonSchemaEntity>) = apply {
-    this.applicationSchema = applicationSchema
   }
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
@@ -248,7 +236,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
     data = this.data(),
     document = this.document(),
-    schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     deletedAt = this.deletedAt(),
@@ -258,7 +245,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     convictionId = this.convictionId(),
     eventNumber = this.eventNumber(),
     offenceId = this.offenceId(),
-    schemaUpToDate = false,
     riskRatings = this.riskRatings(),
     assessments = this.assessments(),
     teamCodes = this.teamCodes(),

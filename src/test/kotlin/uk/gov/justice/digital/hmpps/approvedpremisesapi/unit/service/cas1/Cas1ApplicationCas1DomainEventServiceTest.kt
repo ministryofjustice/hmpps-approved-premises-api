@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -82,8 +81,6 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     }
     .produce()
 
-  private val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
   @Nested
   inner class ApplicationSubmitted {
 
@@ -96,15 +93,11 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     @BeforeEach
     fun setup() {
       application = ApprovedPremisesApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCrn("THECRN")
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every {
         mockOffenderService.getOffenderByCrn(

@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -27,17 +26,10 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
   @Autowired
   lateinit var cas1TaskDeadlineService: Cas1TaskDeadlineService
 
-  lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
 
   @BeforeEach
   fun setup() {
-    applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-      withPermissiveSchema()
-    }
-
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
@@ -124,7 +116,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
     }
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(applicationSchema)
       withCreatedByUser(user)
     }
 

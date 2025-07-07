@@ -20,14 +20,10 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
     givenAUser { user, _ ->
       givenAUser { differentUser, _ ->
         givenAnOffender { offenderDetails, _ ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
 
           val applicationCreatedByDifferentUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(differentUser)
-            withApplicationSchema(applicationSchema)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
@@ -37,7 +33,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           val nonSubmittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
-            withApplicationSchema(applicationSchema)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
@@ -49,7 +44,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           val withdrawnApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
-            withApplicationSchema(applicationSchema)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
@@ -60,7 +54,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           val inapplicableApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
-            withApplicationSchema(applicationSchema)
             withIsInapplicable(true)
             withStatus(ApprovedPremisesApplicationStatus.INAPPLICABLE)
           }
@@ -68,7 +61,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           val submittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
-            withApplicationSchema(applicationSchema)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
@@ -114,9 +106,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
   fun `findAllTemporaryAccommodationSummariesCreatedByUser query works as described`() {
     givenAUser { user, _ ->
       givenAnOffender { offenderDetails, _ ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
 
         val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -140,7 +129,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         val nonSubmittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
           withSubmittedAt(null)
           withProbationRegion(probationRegion)
         }
@@ -148,7 +136,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         val submittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
           withSubmittedAt(OffsetDateTime.parse("2023-04-19T09:34:00+01:00"))
           withProbationRegion(probationRegion)
         }
@@ -156,7 +143,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         val deletedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
           withDeletedAt(OffsetDateTime.parse("2025-01-07T17:31:00+01:00"))
           withProbationRegion(probationRegion)
         }

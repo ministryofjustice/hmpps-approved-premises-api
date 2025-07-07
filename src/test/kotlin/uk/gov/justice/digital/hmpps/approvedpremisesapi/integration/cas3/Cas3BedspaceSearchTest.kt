@@ -2630,10 +2630,6 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     private fun createAssessment(user: UserEntity, crn: String, sexualRisk: Boolean? = null): Pair<TemporaryAccommodationApplicationEntity, AssessmentEntity> {
-      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
         withAddedAt(OffsetDateTime.now())
@@ -2643,7 +2639,6 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         withCrn(crn)
         withCreatedByUser(user)
         withProbationRegion(user.probationRegion)
-        withApplicationSchema(applicationSchema)
         if (sexualRisk != null) {
           withHasHistoryOfSexualOffence(sexualRisk)
           withIsConcerningSexualBehaviour(sexualRisk)

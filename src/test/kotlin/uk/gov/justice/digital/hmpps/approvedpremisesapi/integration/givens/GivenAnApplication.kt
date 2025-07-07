@@ -70,10 +70,6 @@ fun IntegrationTestBase.givenAnApplication(
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
-  val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
   val riskRatings = tier?.let {
     PersonRisksFactory().withTier(RiskWithStatus(RiskTier(level = it, lastUpdated = LocalDate.now()))).produce()
   } ?: PersonRisksFactory().produce()
@@ -81,7 +77,6 @@ fun IntegrationTestBase.givenAnApplication(
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
     withCreatedByUser(createdByUser)
-    withApplicationSchema(applicationSchema)
     withSubmittedAt(submittedAt)
     withEventNumber(eventNumber)
     withCruManagementArea(cruManagementArea)

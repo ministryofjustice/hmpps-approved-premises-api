@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -25,9 +24,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var createdByUser: Yielded<UserEntity>? = null
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
-  private var applicationSchema: Yielded<JsonSchemaEntity> = {
-    ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-  }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var deletedAt: Yielded<OffsetDateTime?> = { null }
@@ -78,14 +74,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
 
   fun withDocument(document: String?) = apply {
     this.document = { document }
-  }
-
-  fun withApplicationSchema(applicationSchema: JsonSchemaEntity) = apply {
-    this.applicationSchema = { applicationSchema }
-  }
-
-  fun withYieldedApplicationSchema(applicationSchema: Yielded<JsonSchemaEntity>) = apply {
-    this.applicationSchema = applicationSchema
   }
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
@@ -218,11 +206,9 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
     data = this.data(),
     document = this.document(),
-    schemaVersion = this.applicationSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     deletedAt = this.deletedAt(),
-    schemaUpToDate = false,
     assessments = this.assessments(),
     convictionId = this.convictionId(),
     eventNumber = this.eventNumber(),

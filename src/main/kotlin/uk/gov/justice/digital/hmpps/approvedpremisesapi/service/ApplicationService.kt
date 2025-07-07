@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -39,7 +38,6 @@ import java.util.UUID
 class ApplicationService(
   private val userRepository: UserRepository,
   private val applicationRepository: ApplicationRepository,
-  private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
   private val userService: UserService,
@@ -76,7 +74,7 @@ class ApplicationService(
     val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
 
     return if (canAccess) {
-      CasResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+      CasResult.Success(applicationEntity)
     } else {
       CasResult.Unauthorised()
     }
@@ -163,7 +161,7 @@ class ApplicationService(
         ),
       )
 
-      success(createdApplication.apply { schemaUpToDate = true })
+      success(createdApplication)
     }
   }
 
@@ -182,16 +180,12 @@ class ApplicationService(
     createdByUser = user,
     data = null,
     document = null,
-    schemaVersion = jsonSchemaService.getNewestSchema(
-      TemporaryAccommodationApplicationJsonSchemaEntity::class.java,
-    ),
     createdAt = OffsetDateTime.now(),
     submittedAt = null,
     deletedAt = null,
     convictionId = convictionId!!,
     eventNumber = deliusEventNumber!!,
     offenceId = offenceId!!,
-    schemaUpToDate = true,
     riskRatings = riskRatings,
     assessments = mutableListOf(),
     probationRegion = user.probationRegion,
@@ -224,7 +218,7 @@ class ApplicationService(
     applicationId: UUID,
     data: String,
   ): CasResult<ApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+    val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (application !is TemporaryAccommodationApplicationEntity) {
@@ -235,10 +229,6 @@ class ApplicationService(
 
     if (application.createdByUser != user) {
       return CasResult.Unauthorised()
-    }
-
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (application.deletedAt != null) {
