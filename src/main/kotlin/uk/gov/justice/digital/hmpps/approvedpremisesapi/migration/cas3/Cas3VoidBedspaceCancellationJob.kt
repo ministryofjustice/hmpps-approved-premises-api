@@ -29,13 +29,13 @@ class Cas3VoidBedspaceCancellationJob(
       if (cancellations.isEmpty()) break
 
       val voidBedspaces = cancellations.map { it.voidBedspace }
-      val bedIds = voidBedspaces.map { it.bed.id }
+      val bedIds = voidBedspaces.map { it.bed!!.id }
       val bedspacesMap = cas3BedspacesRepository.findAllById(bedIds).associateBy { it.id }
 
       migrationLogger.info("Processing page $pageNumber with ${cancellations.size} BedspaceVoidCancellation entities")
 
       voidBedspaces.forEach {
-        it.bedspace = bedspacesMap[it.bed.id]
+        it.bedspace = bedspacesMap[it.bed!!.id]
         it.cancellationDate = it.cancellation!!.createdAt
         it.cancellationNotes = it.cancellation?.notes
       }

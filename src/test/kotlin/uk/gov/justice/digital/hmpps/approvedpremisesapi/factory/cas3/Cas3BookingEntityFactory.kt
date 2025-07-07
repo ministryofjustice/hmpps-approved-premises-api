@@ -33,7 +33,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
   private var departureDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(14) }
   private var originalArrivalDate: Yielded<LocalDate>? = null
   private var originalDepartureDate: Yielded<LocalDate>? = null
-  private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var arrivals: Yielded<MutableList<Cas3ArrivalEntity>>? = null
   private var departures: Yielded<MutableList<Cas3DepartureEntity>>? = null
   private var nonArrival: Yielded<Cas3NonArrivalEntity>? = null
@@ -74,10 +73,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
 
   fun withOriginalDepartureDate(departureDate: LocalDate) = apply {
     this.originalDepartureDate = { departureDate }
-  }
-
-  fun withStaffKeyWorkerCode(staffKeyWorkerCode: String?) = apply {
-    this.keyWorkerStaffCode = { staffKeyWorkerCode }
   }
 
   fun withYieldedArrivals(arrivals: Yielded<MutableList<Cas3ArrivalEntity>>) = apply {

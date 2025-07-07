@@ -693,8 +693,8 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    throwIfBookingDatesConflict(body.startDate, body.endDate, null, voidBedspace.bed.id)
-    throwIfVoidBedspaceDatesConflict(body.startDate, body.endDate, lostBedId, voidBedspace.bed.id)
+    throwIfBookingDatesConflict(body.startDate, body.endDate, null, voidBedspace.bed!!.id)
+    throwIfVoidBedspaceDatesConflict(body.startDate, body.endDate, lostBedId, voidBedspace.bed!!.id)
 
     val updateVoidBedspaceResult = cas3PremisesService
       .updateVoidBedspaces(

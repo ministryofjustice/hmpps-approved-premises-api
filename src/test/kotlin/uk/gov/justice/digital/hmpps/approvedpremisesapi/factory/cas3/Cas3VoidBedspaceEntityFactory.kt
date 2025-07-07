@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonEntity
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
@@ -23,6 +25,9 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
   private var premises: Yielded<PremisesEntity>? = null
   private var voidBedspaceCancellation: Yielded<Cas3VoidBedspaceCancellationEntity>? = null
   private var bed: Yielded<BedEntity>? = null
+  private var bedspace: Yielded<Cas3BedspacesEntity>? = null
+  private var cancellationDate: Yielded<OffsetDateTime>? = null
+  private var cancellationNotes: Yielded<String>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -68,8 +73,20 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     this.bed = { bed }
   }
 
+  fun withBedspace(bedspace: Cas3BedspacesEntity) = apply {
+    this.bedspace = { bedspace }
+  }
+
   fun withYieldedBed(bed: Yielded<BedEntity>) = apply {
     this.bed = bed
+  }
+
+  fun withCancellationDate(cancellationDate: OffsetDateTime) = apply {
+    this.cancellationDate = { cancellationDate }
+  }
+
+  fun withCancellationNotes(cancellationNotes: String) = apply {
+    this.cancellationNotes = { cancellationNotes }
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -80,11 +97,11 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     reason = this.reason?.invoke() ?: throw RuntimeException("Reason must be provided"),
     referenceNumber = this.referenceNumber(),
     notes = this.notes(),
-    premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
-    bed = this.bed?.invoke() ?: throw RuntimeException("Must provide a Bed"),
+    premises = this.premises?.let { it() },
+    bed = this.bed?.let { it() },
     cancellation = this.voidBedspaceCancellation?.invoke(),
-    bedspace = null,
-    cancellationDate = null,
-    cancellationNotes = null,
+    bedspace = this.bedspace?.let { it() },
+    cancellationDate = this.cancellationDate?.let { it() },
+    cancellationNotes = this.cancellationNotes?.let { it() },
   )
 }
