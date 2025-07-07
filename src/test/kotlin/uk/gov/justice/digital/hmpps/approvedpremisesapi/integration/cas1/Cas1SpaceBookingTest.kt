@@ -2770,8 +2770,6 @@ class Cas1SpaceBookingTest {
     fun `Successfully creates an emergency booking and updates the existing booking`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
 
-      assertThat(existingSpaceBooking.transferredTo).isNull()
-
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/emergency-transfer")
         .header("Authorization", "Bearer $jwt")
@@ -2788,7 +2786,7 @@ class Cas1SpaceBookingTest {
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(existingSpaceBooking.id)!!
 
-      val emergencyTransferredBooking = updatedSpaceBooking.transferredTo!!
+      val emergencyTransferredBooking = cas1SpaceBookingRepository.findByTransferredFrom(updatedSpaceBooking)!!
 
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
@@ -2911,8 +2909,6 @@ class Cas1SpaceBookingTest {
     fun `Should create a planned booking, update the existing booking, and approve the change request`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
 
-      assertThat(existingSpaceBooking.transferredTo).isNull()
-
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/planned-transfer")
         .header("Authorization", "Bearer $jwt")
@@ -2933,7 +2929,7 @@ class Cas1SpaceBookingTest {
 
       val updatedChangedRequest = cas1ChangeRequestRepository.findByIdOrNull(existingChangeRequest.id)!!
 
-      val plannedTransferredBooking = updatedSpaceBooking.transferredTo!!
+      val plannedTransferredBooking = cas1SpaceBookingRepository.findByTransferredFrom(updatedSpaceBooking)!!
 
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(plannedTransferredBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(plannedTransferredBooking.expectedArrivalDate)

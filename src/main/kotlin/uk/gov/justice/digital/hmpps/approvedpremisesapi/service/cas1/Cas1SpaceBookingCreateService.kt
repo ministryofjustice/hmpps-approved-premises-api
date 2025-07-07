@@ -125,7 +125,6 @@ class Cas1SpaceBookingCreateService(
       deliusEventNumber = application.eventNumber,
       migratedManagementInfoFrom = null,
       transferredFrom = details.transferredFrom?.booking,
-      transferredTo = null,
       transferType = details.transferredFrom?.type,
       deliusId = null,
     )
