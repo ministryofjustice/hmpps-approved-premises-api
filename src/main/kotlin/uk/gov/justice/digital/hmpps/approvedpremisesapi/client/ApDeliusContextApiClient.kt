@@ -47,6 +47,19 @@ class ApDeliusContextApiClient(
     body = crnsOrNomsNumbers
   }
 
+  /**
+   * This endpoint will _always_ return a value for the CRN, even if the CRN isn't found.
+   *
+   * If the CRN isn't found it will return the following:
+   *
+   * <pre>
+   * {
+   *   "crn": "...",
+   *   "userExcluded": false,
+   *   "userRestricted": false
+   * }
+   * </pre>
+   */
   fun getUserAccessForCrns(deliusUsername: String, crns: List<String>) = getRequest<UserAccess> {
     path = "/users/access?username=$deliusUsername"
     body = crns

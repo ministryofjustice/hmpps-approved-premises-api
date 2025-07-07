@@ -111,9 +111,6 @@ class ApplicationServiceTest {
     every { mockUserRepository.findByDeliusUsername(deliusUsername) } returns userEntity
     every { mockApplicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(userId) } returns applicationSummaries
 
-    val crns = applicationSummaries.map { it.getCrn() }.distinct()
-    every { mockOffenderService.canAccessOffenders(deliusUsername, crns) } returns mapOf(crns.first() to true)
-
     assertThat(
       applicationService.getAllApplicationsForUsername(
         userEntity = userEntity,

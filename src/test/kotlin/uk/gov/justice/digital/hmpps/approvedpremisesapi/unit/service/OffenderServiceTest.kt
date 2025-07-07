@@ -300,21 +300,6 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `return null when no access result returned for crn, ReturnRestrictedIfLimitedAccess strategy`() {
-      val crn = randomNumberChars(8)
-
-      every {
-        mockApDeliusContextApiClient.getUserAccessForCrns(
-          "distinguished.name",
-          listOf(crn),
-        )
-      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
-
-      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
-      assertThat(result).isNull()
-    }
-
-    @Test
     fun `return true when crn is not user restricted or excluded from viewing, ReturnRestrictedIfLimitedAccess strategy`() {
       val crn = randomNumberChars(8)
       val caseAccess = CaseAccessFactory()
@@ -401,21 +386,6 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `return null when no access result returned for crn`() {
-      val crn = randomNumberChars(8)
-
-      every {
-        mockApDeliusContextApiClient.getUserAccessForCrns(
-          "distinguished.name",
-          listOf(crn),
-        )
-      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
-
-      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
-      assertThat(result[crn]).isNull()
-    }
-
-    @Test
     fun `return true when crn is not user restricted or excluded from viewing`() {
       val crn = randomNumberChars(8)
       val caseAccess = CaseAccessFactory()
@@ -437,29 +407,28 @@ class OffenderServiceTest {
 
     @Test
     fun `return expected results when multiple crns`() {
-      val crns = mutableListOf<String>()
-      repeat(5) { crns += randomStringMultiCaseWithNumbers(8) }
+      val crns = listOf("CRN1", "CRN2", "CRN3", "CRN4")
 
       val caseAccess1 = CaseAccessFactory()
-        .withCrn(crns[0])
+        .withCrn("CRN1")
         .withUserRestricted(false)
         .withUserExcluded(false)
         .produce()
 
       val caseAccess2 = CaseAccessFactory()
-        .withCrn(crns[1])
+        .withCrn("CRN2")
         .withUserRestricted(false)
         .withUserExcluded(true)
         .produce()
 
       val caseAccess3 = CaseAccessFactory()
-        .withCrn(crns[2])
+        .withCrn("CRN3")
         .withUserRestricted(true)
         .withUserExcluded(false)
         .produce()
 
       val caseAccess4 = CaseAccessFactory()
-        .withCrn(crns[3])
+        .withCrn("CRN4")
         .withUserRestricted(true)
         .withUserExcluded(false)
         .produce()
@@ -475,11 +444,10 @@ class OffenderServiceTest {
 
       val result = offenderService.canAccessOffenders("distinguished.name", crns)
 
-      assertThat(result[crns[0]]).isTrue()
-      assertThat(result[crns[1]]).isFalse()
-      assertThat(result[crns[2]]).isFalse()
-      assertThat(result[crns[3]]).isFalse()
-      assertThat(result[crns[4]]).isNull()
+      assertThat(result["CRN1"]).isTrue()
+      assertThat(result["CRN2"]).isFalse()
+      assertThat(result["CRN3"]).isFalse()
+      assertThat(result["CRN4"]).isFalse()
     }
 
     @ParameterizedTest
