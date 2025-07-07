@@ -85,7 +85,7 @@ class Cas3BookingSearchServiceTest {
   }
 
   @Test
-  fun `findBookings filters out bookings where the user is not authorised to get offender details for a particular CRN`() {
+  fun `findBookings finds out bookings where the user is not authorised to get offender details for a particular CRN and gives them the name Limited Access Offender`() {
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -122,9 +122,9 @@ class Cas3BookingSearchServiceTest {
       1,
       null,
     )
-    assertThat(results).hasSize(2)
+    assertThat(results).hasSize(3)
     assertThat(results).matches { result ->
-      result.map { it.personName }.toSet() == setOf("Gregor Samsa", "Franz Kafka")
+      result.map { it.personName }.toSet() == setOf("Gregor Samsa", "Franz Kafka", "Limited Access Offender")
     }
     assertThat(metadata).isNotNull()
     verify(exactly = 1) {
@@ -133,7 +133,7 @@ class Cas3BookingSearchServiceTest {
   }
 
   @Test
-  fun `findBookings does not provide a person's name when offender details for a particular CRN could not be found`() {
+  fun `findBookings provides Unknown for a person's name when offender details for a particular CRN could not be found`() {
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -178,10 +178,10 @@ class Cas3BookingSearchServiceTest {
     )
 
     assertThat(results).hasSize(3)
-    assertThat(results.dropLast(1)).allSatisfy {
+    assertThat(results).allSatisfy {
       assertThat(it.personName).isNotNull()
     }
-    assertThat(results.last().personName).isNull()
+    assertThat(results.last().personName).isEqualTo("Unknown")
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
       mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any())

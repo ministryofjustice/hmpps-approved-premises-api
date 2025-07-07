@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -70,10 +71,52 @@ class BookingSearchTest : IntegrationTestBase() {
         create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookingSearchResult =
           createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn, "${offenderDetails.firstName} ${offenderDetails.surname}")
-        val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
+        val expectedResponse = getExpectedResponse(expectedBookingSearchResult, crn, "Unknown")
 
         apDeliusContextAddListCaseSummaryToBulkResponse(emptyList(), listOf("S121978"))
         apDeliusContextAddResponseToUserAccessCall(emptyList(), username = userEntity.deliusUsername)
+
+        // when CRN is upper case
+        callApiAndAssertResponse("/bookings/search?crnOrName=$crn", jwt, expectedResponse, true)
+
+        // when CRN is lower case
+        callApiAndAssertResponse("/bookings/search?crnOrName=${crn.lowercase()}", jwt, expectedResponse, true)
+      }
+    }
+  }
+
+  @Test
+  fun `Searching for Temporary Accommodation single booking for a specific crn where the offender is LAO`() {
+    givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+      val crn = "S121978"
+      givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn(crn)
+          withCurrentRestriction(true)
+        },
+      ) { offenderDetails, _ ->
+        val expectedBookingSearchResult =
+          createTestTemporaryAccommodationBookings(userEntity.probationRegion, 1, 1, crn, "Limited Access Offender")
+        val expectedResponse = getExpectedResponse(expectedBookingSearchResult, crn, "Limited Access Offender")
+
+        val userExcludedCaseSummary = CaseSummaryFactory()
+          .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
+          .withCrn(offenderDetails.otherIds.crn)
+          .withCurrentExclusion(true)
+          .produce()
+
+        apDeliusContextAddListCaseSummaryToBulkResponse(listOf(userExcludedCaseSummary))
+
+        apDeliusContextAddResponseToUserAccessCall(
+          listOf(
+            CaseAccessFactory()
+              .withCrn(userExcludedCaseSummary.crn)
+              .withUserExcluded(true)
+              .produce(),
+          ),
+          username = userEntity.deliusUsername,
+        )
 
         // when CRN is upper case
         callApiAndAssertResponse("/bookings/search?crnOrName=$crn", jwt, expectedResponse, true)
@@ -1031,15 +1074,16 @@ class BookingSearchTest : IntegrationTestBase() {
     },
   )
 
-  private fun getExpectedResponseWithoutPersonName(
+  private fun getExpectedResponse(
     expectedBookings: List<BookingEntity>,
     crn: String,
+    personName: String,
   ): BookingSearchResults = BookingSearchResults(
     resultsCount = expectedBookings.size,
     results = expectedBookings.map { booking ->
       BookingSearchResult(
         person = BookingSearchResultPersonSummary(
-          name = null,
+          name = personName,
           crn = crn,
         ),
         booking = BookingSearchResultBookingSummary(
