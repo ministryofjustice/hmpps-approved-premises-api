@@ -248,8 +248,13 @@ class Cas1ApplicationCreationServiceTest {
       .withCreatedAt(OffsetDateTime.now())
       .produce()
 
+    @BeforeEach
+    fun setupLockMock() {
+      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
+    }
+
     @Test
-    fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
+    fun `returns NotFound when application doesn't exist`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(
@@ -271,7 +276,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
+    fun `returns Unauthorised when application doesn't belong to request user`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
 
       val otherUser = UserEntityFactory()
@@ -301,7 +306,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `updateApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
+    fun `returns GeneralValidationError when application has already been submitted`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
 
       application.submittedAt = OffsetDateTime.now()
@@ -333,7 +338,7 @@ class Cas1ApplicationCreationServiceTest {
       names = [ "STARTED", "INAPPLICABLE" ],
     )
     @ParameterizedTest
-    fun `updateApprovedPremisesApplication returns GeneralValidationError when application doesn't not have a suitable state`(status: ApprovedPremisesApplicationStatus) {
+    fun `returns GeneralValidationError when application doesn't not have a suitable state`(status: ApprovedPremisesApplicationStatus) {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
 
       application.status = status
@@ -358,7 +363,7 @@ class Cas1ApplicationCreationServiceTest {
 
     @ParameterizedTest
     @EnumSource(ApType::class)
-    fun `updateApprovedPremisesApplication returns Success with updated Application when using apType`(apType: ApType) {
+    fun `Success with updated Application when using apType`(apType: ApType) {
       setupMocksForSuccess()
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
@@ -412,7 +417,7 @@ class Cas1ApplicationCreationServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Cas1ApplicationTimelinessCategory::class)
-    fun `updateApprovedPremisesApplication sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
+    fun `sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
       setupMocksForSuccess()
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()

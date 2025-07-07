@@ -302,6 +302,8 @@ class Cas1ApplicationCreationService(
     updateFields: Cas1ApplicationUpdateFields,
     userForRequest: UserEntity,
   ): CasResult<ApprovedPremisesApplicationEntity> {
+    lockableApplicationRepository.acquirePessimisticLock(applicationId)
+
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
