@@ -71,6 +71,7 @@ paths:
           description: If set to true only the current logged in user's applications will be returned. Default HDC behaviour
           schema:
             type: boolean
+            default: true
       responses:
         200:
           description: successful operation

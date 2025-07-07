@@ -48,20 +48,17 @@ class Cas2v2ApplicationController(
     page: Int?,
     prisonCode: String?,
     applicationOrigin: ApplicationOrigin?,
-    limitByUser: Boolean?,
+    limitByUser: Boolean,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
-    val user = when (limitByUser) {
-      null, true -> userService.getUserForRequest()
-      false -> null
-    }
+    val user = userService.getUserForRequest()
 
-    if (user != null && userService.requiresCaseLoadIdCheck()) {
+    if (limitByUser && userService.requiresCaseLoadIdCheck()) {
       prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
     }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
-    val (applications, metadata) = cas2v2ApplicationService.getCas2v2Applications(prisonCode, isSubmitted, applicationOrigin, user, pageCriteria)
+    val (applications, metadata) = cas2v2ApplicationService.getCas2v2Applications(prisonCode, isSubmitted, applicationOrigin, limitByUser, user, pageCriteria)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),

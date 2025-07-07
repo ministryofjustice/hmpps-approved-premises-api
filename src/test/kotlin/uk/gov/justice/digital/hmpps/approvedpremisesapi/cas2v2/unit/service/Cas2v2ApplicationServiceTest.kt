@@ -176,6 +176,7 @@ class Cas2v2ApplicationServiceTest {
         prisonCode,
         isSubmitted,
         null,
+        false,
         user,
         pageCriteria,
       )

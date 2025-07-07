@@ -64,13 +64,14 @@ class Cas2v2ApplicationService(
     prisonCode: String?,
     isSubmitted: Boolean?,
     applicationOrigin: ApplicationOrigin?,
-    user: Cas2v2UserEntity?,
+    limitByUser: Boolean,
+    user: Cas2v2UserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
     var spec: Specification<Cas2v2ApplicationSummaryEntity> =
       Specification { _, _, cb -> cb.conjunction() } // Start with no-op
 
-    if (user != null) {
+    if (limitByUser) {
       spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasUserId(user.id.toString()))
     }
 
