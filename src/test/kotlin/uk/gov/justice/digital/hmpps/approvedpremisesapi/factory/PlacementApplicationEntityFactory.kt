@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
@@ -27,7 +26,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
   private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
-  private var placementDates: Yielded<MutableList<PlacementDateEntity>?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
@@ -85,10 +83,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.reallocatedAt = { reallocatedAt }
   }
 
-  fun withPlacementDates(placementDates: MutableList<PlacementDateEntity>) = apply {
-    this.placementDates = { placementDates }
-  }
-
   fun withPlacementType(placementType: PlacementType) = apply {
     this.placementType = { placementType }
   }
@@ -127,7 +121,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     decision = this.decision(),
     decisionMadeAt = this.decisionMadeAt(),
     placementType = this.placementType(),
-    placementDates = this.placementDates() ?: mutableListOf(),
     placementRequests = mutableListOf(),
     withdrawalReason = this.withdrawalReason(),
     dueAt = this.dueAt(),

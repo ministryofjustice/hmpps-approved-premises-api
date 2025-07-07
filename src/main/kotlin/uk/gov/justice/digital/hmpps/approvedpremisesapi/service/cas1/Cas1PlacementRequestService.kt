@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -45,7 +44,6 @@ class Cas1PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
-  private val placementDateRepository: PlacementDateRepository,
   private val cancellationRepository: CancellationRepository,
   private val userAccessService: UserAccessService,
   @Lazy private val applicationService: ApplicationService,
@@ -157,7 +155,7 @@ class Cas1PlacementRequestService(
   fun createPlacementRequestsFromPlacementApplication(
     placementApplicationEntity: PlacementApplicationEntity,
     notes: String?,
-  ): CasResult<List<PlacementRequestEntity>> {
+  ): CasResult<Unit> {
     val placementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(
       placementApplicationEntity.application,
     ) ?: return CasResult.NotFound(
@@ -165,41 +163,22 @@ class Cas1PlacementRequestService(
       placementApplicationEntity.application.id.toString(),
     )
 
-    val placementDateEntities = placementDateRepository.findAllByPlacementApplication(placementApplicationEntity)
+    val placementDates = PlacementDates(
+      expectedArrival = placementApplicationEntity.placementDates()!!.expectedArrival,
+      duration = placementApplicationEntity.placementDates()!!.duration,
+    )
+    val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
 
-    if (placementDateEntities.isEmpty()) {
-      return CasResult.NotFound(
-        "Placement Dates for Placement Application",
-        placementApplicationEntity.id.toString(),
-      )
-    }
+    this.createPlacementRequest(
+      source = PlacementRequestSource.ASSESSMENT_OF_PLACEMENT_APPLICATION,
+      placementRequirements = placementRequirements,
+      placementDates = placementDates,
+      notes = notes,
+      isParole = isParole,
+      placementApplicationEntity = placementApplicationEntity,
+    )
 
-    val placementRequests = placementDateEntities.map { placementDateEntity ->
-      val placementDates = PlacementDates(
-        expectedArrival = placementDateEntity.expectedArrival,
-        duration = placementDateEntity.duration,
-      )
-      val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
-      val placementRequest =
-        this.createPlacementRequest(
-          source = PlacementRequestSource.ASSESSMENT_OF_PLACEMENT_APPLICATION,
-          placementRequirements = placementRequirements,
-          placementDates = placementDates,
-          notes = notes,
-          isParole = isParole,
-          placementApplicationEntity = placementApplicationEntity,
-        )
-
-      placementDateRepository.save(
-        placementDateEntity.apply {
-          placementDateEntity.placementRequest = placementRequest
-        },
-      )
-
-      placementRequest
-    }
-
-    return CasResult.Success(placementRequests)
+    return CasResult.Success(Unit)
   }
 
   fun createPlacementRequest(

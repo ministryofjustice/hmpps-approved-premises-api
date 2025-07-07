@@ -13,8 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
@@ -39,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 class Cas1PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val userService: UserService,
-  private val placementDateRepository: PlacementDateRepository,
   private val placementRequestService: Cas1PlacementRequestService,
   private val userAllocator: UserAllocator,
   private val userAccessService: UserAccessService,
@@ -87,7 +84,6 @@ class Cas1PlacementApplicationService(
         decision = null,
         decisionMadeAt = null,
         placementType = null,
-        placementDates = mutableListOf(),
         placementRequests = mutableListOf(),
         withdrawalReason = null,
         dueAt = null,
@@ -160,24 +156,10 @@ class Cas1PlacementApplicationService(
       allocatedByUser = userService.getUserForRequest(),
     )
 
-    val newPlacementDates = placementDateRepository.saveAll(
-      currentPlacementApplication.placementDates.map {
-        PlacementDateEntity(
-          id = UUID.randomUUID(),
-          expectedArrival = it.expectedArrival,
-          duration = it.duration,
-          placementApplication = newPlacementApplication,
-          createdAt = dateTimeNow,
-        )
-      },
-    )
-
     val applicationWasntPreviouslyAllocated = currentPlacementApplication.allocatedToUser == null
     if (applicationWasntPreviouslyAllocated) {
       cas1PlacementApplicationEmailService.placementApplicationAllocated(newPlacementApplication)
     }
-
-    newPlacementApplication.placementDates = newPlacementDates
 
     return CasResult.Success(newPlacementApplication)
   }
@@ -336,20 +318,8 @@ class Cas1PlacementApplicationService(
     val allPlacementApps = listOf(baselinePlacementApplication) + additionalPlacementApps
 
     allPlacementApps.zip(apiPlacementDates) { placementApp, apiDate ->
-      val placementDate = placementDateRepository.save(
-        PlacementDateEntity(
-          id = UUID.randomUUID(),
-          expectedArrival = apiDate.expectedArrival,
-          duration = apiDate.duration,
-          placementApplication = placementApp,
-          createdAt = OffsetDateTime.now(),
-        ),
-      )
-
       placementApp.expectedArrival = apiDate.expectedArrival
       placementApp.duration = apiDate.duration
-
-      placementApp.placementDates = mutableListOf(placementDate)
     }
 
     return allPlacementApps

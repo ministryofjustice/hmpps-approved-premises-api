@@ -39,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -75,7 +74,6 @@ class Cas1PlacementRequestServiceTest {
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
-  private val placementDateRepository = mockk<PlacementDateRepository>()
   private val cancellationRepository = mockk<CancellationRepository>()
   private val userAccessService = mockk<UserAccessService>()
   private val applicationService = mockk<ApplicationService>()
@@ -89,7 +87,6 @@ class Cas1PlacementRequestServiceTest {
     placementRequestRepository,
     bookingNotMadeRepository,
     placementRequirementsRepository,
-    placementDateRepository,
     cancellationRepository,
     userAccessService,
     applicationService,
