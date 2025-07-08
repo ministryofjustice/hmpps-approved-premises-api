@@ -20,7 +20,7 @@ import java.util.UUID
 @Entity
 @Table(name = "cas3_bedspaces")
 @Inheritance(strategy = InheritanceType.JOINED)
-class Cas3BedspacesEntity(
+data class Cas3BedspacesEntity(
   @Id
   val id: UUID,
 

@@ -9,21 +9,27 @@ import io.mockk.slot
 import io.mockk.verify
 import io.sentry.Sentry
 import io.sentry.protocol.SentryId
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingAndPersons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BedspaceEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
@@ -32,10 +38,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.v2.Cas3v2TurnaroundRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -55,6 +65,8 @@ class Cas3v2BookingServiceTest {
   private val mockCas3v2TurnaroundRepository = mockk<Cas3v2TurnaroundRepository>()
   private val mockCas3VoidBedspacesRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
+  private val mockUserAccessService = mockk<UserAccessService>()
+  private val mockUserService = mockk<UserService>()
 
   private fun createCas3BookingService(): Cas3v2BookingService = Cas3v2BookingService(
     cas3BookingRepository = mockBookingRepository,
@@ -65,6 +77,8 @@ class Cas3v2BookingServiceTest {
     offenderService = mockOffenderService,
     workingDayService = mockWorkingDayService,
     cas3DomainEventService = mockCas3DomainEventService,
+    userAccessService = mockUserAccessService,
+    userService = mockUserService,
   )
 
   private val cas3BookingService = createCas3BookingService()
@@ -72,6 +86,107 @@ class Cas3v2BookingServiceTest {
   private val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()
     .produce()
+
+  @Nested
+  inner class GetBooking {
+    val premises = Cas3PremisesEntityFactory()
+      .withDefaults()
+      .produce()
+
+    private val bookingEntity = Cas3BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-25"))
+      .withPremises(premises)
+      .withBedspace(Cas3BedspaceEntityFactory().withPremises(premises).produce())
+      .produce()
+
+    private val personInfo = PersonInfoResult.Success.Full(
+      crn = bookingEntity.crn,
+      offenderDetailSummary = OffenderDetailsSummaryFactory().produce(),
+      inmateDetail = InmateDetailFactory().produce(),
+    )
+
+    @Test
+    fun `returns a booking`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns true
+      every {
+        mockOffenderService.getPersonInfoResult(
+          bookingEntity.crn,
+          user.deliusUsername,
+          user.hasQualification(
+            UserQualification.LAO,
+          ),
+        )
+      } returns personInfo
+
+      val result = cas3BookingService.getBooking(
+        bookingId = bookingEntity.id,
+        premisesId = premises.id,
+      )
+
+      assertThat(result is CasResult.Success).isTrue()
+      result as CasResult.Success
+
+      assertThat(result.value).isEqualTo(Cas3BookingAndPersons(bookingEntity, personInfo))
+    }
+
+    @Test
+    fun `returns a GeneralValidationError when booking's premises does not match the premisesId`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns true
+      every {
+        mockOffenderService.getPersonInfoResult(
+          bookingEntity.crn,
+          user.deliusUsername,
+          user.hasQualification(
+            UserQualification.LAO,
+          ),
+        )
+      } returns personInfo
+
+      val result = cas3BookingService.getBooking(
+        bookingId = bookingEntity.id,
+        premisesId = UUID.randomUUID(),
+      )
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue()
+      result as CasResult.GeneralValidationError
+
+      assertThat(result.message).isEqualTo("The supplied premisesId does not match the booking's premises")
+    }
+
+    @Test
+    fun `returns NotFound if the booking cannot be found`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns null
+
+      val result = cas3BookingService.getBooking(
+        bookingId = bookingEntity.id,
+        premisesId = premises.id,
+      )
+
+      assertThat(result is CasResult.NotFound).isTrue()
+      result as CasResult.NotFound
+
+      assertThat(result.id).isEqualTo(bookingEntity.id.toString())
+      assertThat(result.entityType).isEqualTo("Booking")
+    }
+
+    @Test
+    fun `returns Unauthorised if the user cannot view the booking`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns false
+
+      val result = cas3BookingService.getBooking(
+        bookingId = bookingEntity.id,
+        premisesId = premises.id,
+      )
+
+      assertThat(result is CasResult.Unauthorised).isTrue()
+    }
+  }
 
   @Nested
   inner class CreateBooking {

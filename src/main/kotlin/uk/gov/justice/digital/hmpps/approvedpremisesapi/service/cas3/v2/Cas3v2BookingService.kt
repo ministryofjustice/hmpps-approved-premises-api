@@ -6,8 +6,10 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingAndPersons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
@@ -20,6 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import java.time.LocalDate
@@ -36,8 +40,32 @@ class Cas3v2BookingService(
   private val cas3DomainEventService: Cas3DomainEventService,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val workingDayService: WorkingDayService,
+  private val userAccessService: UserAccessService,
+  private val userService: UserService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun getBooking(bookingId: UUID, premisesId: UUID): CasResult<Cas3BookingAndPersons> {
+    val booking = cas3BookingRepository.findByIdOrNull(bookingId)
+      ?: return CasResult.NotFound("Booking", bookingId.toString())
+
+    val user = userService.getUserForRequest()
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+      return CasResult.Unauthorised()
+    } else if (premisesId != booking.premises.id) {
+      return CasResult.GeneralValidationError("The supplied premisesId does not match the booking's premises")
+    }
+
+    val personInfo = offenderService.getPersonInfoResult(
+      booking.crn,
+      user.deliusUsername,
+      user.hasQualification(
+        UserQualification.LAO,
+      ),
+    )
+
+    return CasResult.Success(Cas3BookingAndPersons(booking, personInfo))
+  }
 
   @Transactional
   fun createBooking(

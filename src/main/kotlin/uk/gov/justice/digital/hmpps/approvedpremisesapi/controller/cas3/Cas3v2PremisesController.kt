@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
@@ -41,7 +40,6 @@ class Cas3v2PremisesController(
 ) {
 
   @GetMapping(value = ["/premises/{premisesId}/bookings"], produces = ["application/json"])
-  @ResponseBody
   fun getPremises(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3Booking>> = runBlocking {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
@@ -69,12 +67,22 @@ class Cas3v2PremisesController(
     )
   }
 
+  @GetMapping(value = ["/premises/{premisesId}/bookings/{bookingId}"], produces = ["application/json"])
+  fun premisesPremisesIdBookingsBookingIdGet(@PathVariable premisesId: UUID, @PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> = runBlocking {
+    val bookingAndPersonsResult = cas3BookingService.getBooking(bookingId, premisesId)
+    val bookingAndPersons = extractEntityFromCasResult(bookingAndPersonsResult)
+    val apiBooking = bookingTransformer.transformJpaToApi(
+      bookingAndPersons.booking,
+      bookingAndPersons.personInfo,
+    )
+    ResponseEntity.ok(apiBooking)
+  }
+
   @PostMapping(
     value = ["/premises/{premisesId}/bookings"],
     consumes = ["application/json"],
     produces = ["application/json"],
   )
-  @ResponseBody
   @Transactional
   @SuppressWarnings("ThrowsCount")
   fun premisesPremisesIdBookingsPost(
