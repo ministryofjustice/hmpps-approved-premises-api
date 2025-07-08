@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailRequest
 class MockEmailNotificationService : EmailNotifier {
   val requestedEmails = mutableListOf<EmailRequest>()
 
-  override fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>, replyToEmailId: String?) {
+  override fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>, replyToEmailId: String?, reference: String?) {
     requestedEmails.add(EmailRequest(recipientEmailAddress, templateId, personalisation))
   }
 
@@ -22,6 +22,7 @@ class MockEmailNotificationService : EmailNotifier {
     templateId: String,
     personalisation: Map<String, *>,
     replyToEmailId: String?,
+    reference: String?,
   ) {
     recipientEmailAddresses.forEach { sendEmail(it, templateId, personalisation, replyToEmailId) }
   }

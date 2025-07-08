@@ -143,7 +143,7 @@ class EmailNotificationServiceTest {
           "f3d78814-383f-4b5f-a681-9bd3ab912888",
           "test@here.com",
           personalisation,
-          null,
+          "946bad4b-11cf-46bd-8cc2-c8423e79b367",
           null,
         )
       } returns mockk()
@@ -152,6 +152,7 @@ class EmailNotificationServiceTest {
         recipientEmailAddress = "test@here.com",
         templateId = templateId,
         personalisation = personalisation,
+        reference = "946bad4b-11cf-46bd-8cc2-c8423e79b367",
       )
 
       verify(exactly = 1) {
@@ -159,7 +160,7 @@ class EmailNotificationServiceTest {
           "f3d78814-383f-4b5f-a681-9bd3ab912888",
           "test@here.com",
           personalisation,
-          null,
+          "946bad4b-11cf-46bd-8cc2-c8423e79b367",
           null,
         )
       }
