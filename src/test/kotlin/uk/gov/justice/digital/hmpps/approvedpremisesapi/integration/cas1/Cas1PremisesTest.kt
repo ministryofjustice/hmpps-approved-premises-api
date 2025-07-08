@@ -1352,12 +1352,18 @@ class Cas1PremisesTest : IntegrationTestBase() {
         region = givenAProbationRegion(
           apArea = givenAnApArea(name = "Region 1"),
         ),
+        cruManagementArea = givenACas1CruManagementArea(
+          name = "Management Area 1",
+        ),
       )
       val premises2 = givenAnApprovedPremises(
         name = "Premises 2",
         supportsSpaceBookings = true,
         region = givenAProbationRegion(
           apArea = givenAnApArea(name = "Region 2"),
+        ),
+        cruManagementArea = givenACas1CruManagementArea(
+          name = "Management Area 2",
         ),
       )
       givenAnApprovedPremises(name = "Premises 3 Ignored", supportsSpaceBookings = false)
@@ -1476,7 +1482,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
           assertThat(actual.size).isEqualTo(31)
 
-          assertThat(actual["row_name"]).isEqualTo(listOf("Region 1 - Premises 1", "Region 2 - Premises 2"))
+          assertThat(actual["row_name"]).isEqualTo(listOf("Management Area 1 - Premises 1", "Management Area 2 - Premises 2"))
 
           fun getDateToOccupancyMap(index: Int) = actual.keys
             .filter { it != "row_name" }.associateWith { date -> (actual[date]!![index] as Int) }
