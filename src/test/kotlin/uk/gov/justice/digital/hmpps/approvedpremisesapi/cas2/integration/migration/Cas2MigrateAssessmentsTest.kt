@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -36,18 +35,13 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
   @Test
   fun `Should create assessments for CAS2 Applications that are submitted and returns 202 response`() {
     givenACas2PomUser { userEntity, _ ->
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val submittedAt = OffsetDateTime.now().minusDays(1)
 
-      val unsubmittedApp = createApplicationEntity(applicationSchema, userEntity, null)
+      val unsubmittedApp = createApplicationEntity(userEntity, null)
 
-      val submittedWithoutAssessment = createApplicationEntity(applicationSchema, userEntity, submittedAt)
+      val submittedWithoutAssessment = createApplicationEntity(userEntity, submittedAt)
 
-      val submittedWithAssessment = createApplicationEntity(applicationSchema, userEntity, submittedAt)
+      val submittedWithAssessment = createApplicationEntity(userEntity, submittedAt)
 
       cas2AssessmentEntityFactory.produceAndPersist {
         withApplication(submittedWithAssessment)
@@ -78,9 +72,8 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
     Assertions.assertThat(unsubmittedApplication.get().assessment).isNull()
   }
 
-  private fun createApplicationEntity(applicationSchema: Cas2ApplicationJsonSchemaEntity, userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
+  private fun createApplicationEntity(userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withApplicationSchema(applicationSchema)
     withCreatedByUser(userEntity)
     withData("{}")
     withSubmittedAt(submittedAt)

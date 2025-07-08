@@ -15,10 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import java.io.IOException
@@ -46,7 +44,6 @@ class Cas2StartupScript(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val jsonSchemaService: Cas2JsonSchemaService,
   private val applicationService: Cas2ApplicationService,
   private val statusUpdateService: StatusUpdateService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
@@ -79,8 +76,6 @@ class Cas2StartupScript(
         data = dataFor(state = state, nomsNumber = "A1234AI"),
         document = documentFor(state = state, nomsNumber = "A1234AI"),
         submittedAt = submittedAt,
-        schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
-        schemaUpToDate = true,
         referringPrisonCode = if (submittedAt != null) applicant.activeCaseloadId else null,
       )
 

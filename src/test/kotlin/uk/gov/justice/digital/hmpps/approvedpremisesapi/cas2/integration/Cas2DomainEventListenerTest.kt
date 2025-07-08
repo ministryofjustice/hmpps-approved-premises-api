@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.nomisUserRolesMockSuccessfulGetStaffInformationByStaffIdCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.nomisUserRolesMockSuccessfulGetUserByUsernameCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -88,14 +87,6 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     domainEventsClient.publish(sendMessageRequest).get()
   }
 
-  private fun applicationJsonSchemaEntity(): Cas2ApplicationJsonSchemaEntity {
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
-    return applicationSchema
-  }
-
   private val oldOmu = OffenderManagementUnitEntityFactory().withPrisonCode("LIV").withPrisonName("HMP LIVERPOOL").produce()
   private val newOmu = OffenderManagementUnitEntityFactory().withPrisonCode("LON").withPrisonName("HMP LONDON").produce()
 
@@ -118,12 +109,10 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     val prisoner = Prisoner(prisonId = newOmu.prisonCode, prisonName = newOmu.prisonName)
     val eventType = "prisoner-offender-search.prisoner.updated"
 
-    val applicationSchema = applicationJsonSchemaEntity()
     givenACas2PomUser { userEntity, _ ->
       givenACas2Assessor { assessor, _ ->
         givenAnOffender { offenderDetails, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
             withCreatedByUser(userEntity)
             withReferringPrisonCode(oldOmu.prisonCode)
             withSubmittedAt(OffsetDateTime.now())
@@ -278,13 +267,11 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @Test
   fun `Save new allocation in assignment table but do not send emails if same prison`() {
     val eventType = "offender-management.allocation.changed"
-    val applicationSchema = applicationJsonSchemaEntity()
     givenACas2PomUser { oldUserEntity, _ ->
       givenACas2PomUser { newUserEntity, _ ->
         givenAnOffender { offenderDetails, _ ->
 
           val application = createApplicationAndApplicationAssignmentsWithoutLocationEvent(
-            applicationSchema,
             oldUserEntity,
             offenderDetails,
           )
@@ -525,7 +512,6 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     omu: OffenderManagementUnitEntity = oldOmu,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(applicationJsonSchemaEntity())
       withCreatedByUser(allocatedPom)
       withSubmittedAt(OffsetDateTime.now())
       withCrn(offenderDetails.otherIds.crn)
@@ -538,12 +524,10 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   }
 
   private fun createApplicationAndApplicationAssignmentsWithoutLocationEvent(
-    applicationSchema: Cas2ApplicationJsonSchemaEntity,
     user: NomisUserEntity,
     offenderDetails: OffenderDetailSummary,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(applicationSchema)
       withCreatedByUser(user)
       withSubmittedAt(OffsetDateTime.now())
       withCrn(offenderDetails.otherIds.crn)

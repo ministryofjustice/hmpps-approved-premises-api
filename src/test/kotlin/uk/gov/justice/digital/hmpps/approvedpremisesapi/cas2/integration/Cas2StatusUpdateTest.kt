@@ -84,10 +84,8 @@ class Cas2StatusUpdateTest(
 
       givenACas2Assessor { _, jwt ->
         givenACas2PomUser { applicant, _ ->
-          val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
-            withApplicationSchema(jsonSchema)
             withSubmittedAt(OffsetDateTime.now())
           }
 
@@ -153,10 +151,8 @@ class Cas2StatusUpdateTest(
     fun `Create status update returns 400 when new status NOT valid`() {
       givenACas2Assessor { _, jwt ->
         givenACas2PomUser { applicant, _ ->
-          val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
-            withApplicationSchema(jsonSchema)
             withSubmittedAt(OffsetDateTime.now())
           }
 
@@ -189,10 +185,8 @@ class Cas2StatusUpdateTest(
         try {
           givenACas2Assessor { _, jwt ->
             givenACas2PomUser { applicant, _ ->
-              val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedByUser(applicant)
-                withApplicationSchema(jsonSchema)
                 withSubmittedAt(submittedAt)
                 withNomsNumber("123NOMS")
               }

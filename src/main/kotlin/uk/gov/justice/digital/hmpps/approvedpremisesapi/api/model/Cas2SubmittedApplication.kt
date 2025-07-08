@@ -38,12 +38,6 @@ data class Cas2SubmittedApplication(
     @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("schemaVersion", required = true) val schemaVersion: UUID,
-
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("outdatedSchema", required = true) val outdatedSchema: Boolean,
-
-    @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("timelineEvents", required = true) val timelineEvents: List<Cas2TimelineEvent>,
 
     @Schema(example = "null", required = true, description = "")

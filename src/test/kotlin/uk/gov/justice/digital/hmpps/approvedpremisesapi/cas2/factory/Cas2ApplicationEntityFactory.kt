@@ -11,8 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -29,9 +27,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var createdByCas2User: Cas2UserEntity? = null // BAIL-WIP - This is not a yield as we need to test for null values here, we don't want a default value
-  private var applicationSchema: Yielded<JsonSchemaEntity> = {
-    ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-  }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var abandonedAt: Yielded<OffsetDateTime?> = { null }
@@ -80,14 +75,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
 
   fun withDocument(document: String?) = apply {
     this.document = { document }
-  }
-
-  fun withApplicationSchema(applicationSchema: JsonSchemaEntity) = apply {
-    this.applicationSchema = { applicationSchema }
-  }
-
-  fun withYieldedApplicationSchema(applicationSchema: Yielded<JsonSchemaEntity>) = apply {
-    this.applicationSchema = applicationSchema
   }
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
@@ -175,12 +162,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       createdByCas2User = this.createdByCas2User,
       data = this.data(),
       document = this.document(),
-      schemaVersion = this.applicationSchema(),
       createdAt = this.createdAt(),
       submittedAt = this.submittedAt(),
       abandonedAt = this.abandonedAt(),
       statusUpdates = this.statusUpdates(),
-      schemaUpToDate = false,
       nomsNumber = this.nomsNumber(),
       telephoneNumber = this.telephoneNumber(),
       notes = this.notes(),

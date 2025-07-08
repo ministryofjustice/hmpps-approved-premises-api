@@ -41,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
@@ -89,11 +88,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)
-  }
-
-  fun createApplicationSchema() = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-    withAddedAt(OffsetDateTime.now())
-    withId(UUID.randomUUID())
   }
 
   @Nested
@@ -198,15 +192,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class GetApplicationSummariesWithAssignmentType {
 
-    lateinit var applicationSchema: Cas2ApplicationJsonSchemaEntity
-
-    @BeforeEach
-    fun setup() {
-      applicationSchema = createApplicationSchema()
-    }
-
     fun abandonedApplication(userEntity: NomisUserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(applicationSchema)
       withCreatedByUser(userEntity)
       withCrn(crn)
       withData("{}")
@@ -216,7 +202,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     fun inProgressApplication(userEntity: NomisUserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
       withSubmittedAt(null)
-      withApplicationSchema(applicationSchema)
       withCreatedByUser(userEntity)
       withCrn(crn)
       withData("{}")
@@ -226,7 +211,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     fun submittedApplication(userEntity: NomisUserEntity, crn: String): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(userEntity)
         withCrn(crn)
         withData("{}")
@@ -243,7 +227,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     fun oldSubmittedApplication(userEntity: NomisUserEntity, crn: String): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(userEntity)
         withCrn(crn)
         withData("{}")
@@ -260,7 +243,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     fun transferredOutApplication(userEntity: NomisUserEntity, crn: String): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(userEntity)
         withCrn(crn)
         withData("{}")
@@ -284,7 +266,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       prisonCode: String? = null,
     ): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(transferredFromUser)
         withCrn(crn)
         withData("{}")
@@ -444,13 +425,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-            }
-
             val inProgressApplication = Cas2ApplicationEntityFactory()
-              .withApplicationSchema(applicationSchema)
               .withCreatedByUser(userAPrisonA)
               .withCrn(offenderDetails.otherIds.crn)
               .withData("{}")
@@ -573,18 +548,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         Pair("Awaiting arrival", UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")),
       )
 
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       fun createApplication(
         userEntity: NomisUserEntity,
         offenderDetails: OffenderDetailSummary,
       ): Cas2ApplicationEntity {
         val isSubmitted = assignmentType != AssignmentType.IN_PROGRESS
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
           withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -673,11 +642,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = createApplicationSchema()
-
             repeat(12) {
               val application = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -787,14 +753,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             givenAnOffender { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
               repeat(5) {
                 cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(userAPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -812,7 +772,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(userBPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -829,7 +788,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates today
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(userBPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -847,7 +805,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -864,7 +821,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(userCPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -907,17 +863,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             givenAnOffender { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
               val userAPrisonAApplicationIds = mutableListOf<UUID>()
 
               repeat(5) {
                 userAPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
                     withCreatedByUser(userAPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
@@ -936,7 +886,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(6) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
                     withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
@@ -952,7 +901,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(2) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
                     withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
@@ -966,7 +914,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1009,11 +956,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             givenAnOffender { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
               val pomUserPrisonA = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId(caseAdminPrisonA.activeCaseloadId!!)
               }
@@ -1023,7 +965,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(pomUserPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -1041,7 +982,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release date of today
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(pomUserPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -1058,7 +998,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(pomUserPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1075,7 +1014,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(pomUserPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1140,17 +1078,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             givenAnOffender { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
               // create 3 x submitted applications for this user
               // with most recent first and conditional release dates in the future
               repeat(3) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(userEntity)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -1167,7 +1099,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(userEntity)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -1182,7 +1113,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted application with a conditional release date before today
               val submittedApplicationWithCondionalReleaseDate = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1202,7 +1132,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(4) {
                 unSubmittedIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
                     withCreatedByUser(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
@@ -1212,7 +1141,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // create a submitted application by another user which should not be in results
               val otherUserApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1224,7 +1152,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // create an unsubmitted application by another user which should not be in results
               cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
                 withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1288,16 +1215,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, inmateDetails ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
-              .produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                withSchema(
-                  schema,
-                )
-              }
-
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
               withData(
@@ -1326,9 +1244,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
                 applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion &&
-                !it.outdatedSchema
+                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
             }
           }
         }
@@ -1519,16 +1435,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withActiveCaseloadId("other_caseload")
               }
 
-              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
-                .produceAndPersist {
-                  withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                  withSchema(
-                    schema,
-                  )
-                }
-
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(newestJsonSchema)
                 withCrn(offenderDetails.otherIds.crn)
                 withSubmittedAt(OffsetDateTime.now())
                 withCreatedByUser(otherUser)
@@ -1556,20 +1463,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             givenAnOffender { offenderDetails, inmateDetails ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
-              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
-                .produceAndPersist {
-                  withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                  withSchema(
-                    schema,
-                  )
-                }
-
               val otherUser = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId(userEntity.activeCaseloadId!!)
               }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(newestJsonSchema)
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(otherUser)
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
@@ -1609,20 +1507,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             givenAnOffender { offenderDetails, inmateDetails ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
-              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
-                .produceAndPersist {
-                  withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                  withSchema(
-                    schema,
-                  )
-                }
-
               val otherUser = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId(userEntity.activeCaseloadId!!)
               }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(newestJsonSchema)
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(otherUser)
                 withReferringPrisonCode(userEntity.activeCaseloadId!!)
@@ -1650,11 +1539,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       fun `Create new application for CAS-2 returns 201 with correct body - check that although we pass in prisonBail we will get out homeDetentionCurfew as this not written yet`() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
 
             // BAIL-WIP we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
             // in the cas2 application service this to be set so it will default to homeDetentionCurfew/
@@ -1679,7 +1563,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             assertThat(result.responseBody.blockFirst()).matches {
               it.person.crn == offenderDetails.otherIds.crn &&
-                it.schemaVersion == applicationSchema.id &&
                 it.applicationOrigin == ApplicationOrigin.homeDetentionCurfew &&
                 it.bailHearingDate == null
             }
@@ -1694,11 +1577,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
 
             val result = webTestClient.post()
               .uri("/cas2/applications")
@@ -1719,8 +1597,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn &&
-                it.schemaVersion == applicationSchema.id
+              it.person.crn == offenderDetails.otherIds.crn
             }
           }
         }
@@ -1730,11 +1607,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       fun `Create new application returns 404 when a person cannot be found`() {
         givenACas2PomUser { userEntity, jwt ->
           val crn = "X1234"
-
-          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
 
           webTestClient.post()
             .uri("/cas2/applications")
@@ -1769,11 +1641,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           apDeliusContextMockCaseSummary(caseDetail)
           mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.nomsId!!, InmateStatus.IN, null))
 
-          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
-
           webTestClient.post()
             .uri("/cas2/applications")
             .header("Authorization", "Bearer $jwt")
@@ -1797,11 +1664,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
         givenACas2LicenceCaseAdminUser { _, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
 
             val result = webTestClient.post()
               .uri("/cas2/applications")
@@ -1822,8 +1684,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn &&
-                it.schemaVersion == applicationSchema.id
+              it.person.crn == offenderDetails.otherIds.crn
             }
           }
         }
@@ -1833,11 +1694,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       fun `Create new application returns 404 when a person cannot be found`() {
         givenACas2LicenceCaseAdminUser { _, jwt ->
           val crn = "X1234"
-
-          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
 
           webTestClient.post()
             .uri("/cas2/applications")
@@ -1868,19 +1724,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-                withSchema(
-                  schema,
-                )
-              }
-
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
             }
 
@@ -1918,19 +1764,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-                withSchema(
-                  schema,
-                )
-              }
-
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
             }
 
@@ -1966,19 +1802,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-                withSchema(
-                  schema,
-                )
-              }
-
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
             }
 
@@ -2018,15 +1844,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     crn: String,
     userEntity: NomisUserEntity,
   ): Cas2ApplicationEntity {
-    val jsonSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        schema,
-      )
-    }
-
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(jsonSchema)
       withCrn(crn)
       withCreatedByUser(userEntity)
       withData(
@@ -2045,14 +1863,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   ): Cas2ApplicationEntity {
     cas2ApplicationJsonSchemaRepository.deleteAll()
 
-    val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
-      .produceAndPersist {
-        withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-        withSchema(
-          schema,
-        )
-      }
-
     val omu = offenderManagementUnitEntityFactory.produceAndPersist {
       withPrisonName(prisonName)
       withPrisonCode(userEntity.activeCaseloadId!!)
@@ -2060,7 +1870,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(newestJsonSchema)
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(userEntity)
       withReferringPrisonCode(omu.prisonCode)

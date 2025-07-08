@@ -87,19 +87,10 @@ class Cas2AssessmentNotesTest(
 
       givenACas2PomUser { referrer, _ ->
         givenACas2Assessor { _, jwt ->
-          val applicationSchema =
-            cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-              withSchema(
-                schema,
-              )
-            }
 
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withId(applicationId)
             withCreatedByUser(referrer)
-            withApplicationSchema(applicationSchema)
             withSubmittedAt(OffsetDateTime.now())
             withNomsNumber("123NOMS")
           }
@@ -165,19 +156,10 @@ class Cas2AssessmentNotesTest(
           fun `referrer create note returns 201`() {
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
             givenACas2PomUser { referrer, jwt ->
-              val applicationSchema =
-                cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withAddedAt(OffsetDateTime.now())
-                  withId(UUID.randomUUID())
-                  withSchema(
-                    schema,
-                  )
-                }
 
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withId(applicationId)
                 withCreatedByUser(referrer)
-                withApplicationSchema(applicationSchema)
                 withSubmittedAt(OffsetDateTime.now())
               }
 
@@ -239,14 +221,6 @@ class Cas2AssessmentNotesTest(
               val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
               givenACas2PomUser { _, jwt ->
-                val applicationSchema =
-                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withAddedAt(OffsetDateTime.now())
-                    withId(UUID.randomUUID())
-                    withSchema(
-                      schema,
-                    )
-                  }
 
                 val otherUser = nomisUserEntityFactory.produceAndPersist {
                   withActiveCaseloadId("another-prison")
@@ -255,7 +229,6 @@ class Cas2AssessmentNotesTest(
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
                   withCreatedByUser(otherUser)
-                  withApplicationSchema(applicationSchema)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
                 }
@@ -288,21 +261,12 @@ class Cas2AssessmentNotesTest(
             @Test
             fun `referrer can create a note for an application they did not create`() {
               givenACas2PomUser { referrer, jwt ->
-                val applicationSchema =
-                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withAddedAt(OffsetDateTime.now())
-                    withId(UUID.randomUUID())
-                    withSchema(
-                      schema,
-                    )
-                  }
 
                 val otherUser = nomisUserEntityFactory.produceAndPersist {
                   withActiveCaseloadId(referrer.activeCaseloadId!!)
                 }
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withReferringPrisonCode(referrer.activeCaseloadId!!)
@@ -366,19 +330,10 @@ class Cas2AssessmentNotesTest(
           fun `referrer create note returns 201`() {
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
             givenACas2LicenceCaseAdminUser { referrer, jwt ->
-              val applicationSchema =
-                cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withAddedAt(OffsetDateTime.now())
-                  withId(UUID.randomUUID())
-                  withSchema(
-                    schema,
-                  )
-                }
 
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withId(applicationId)
                 withCreatedByUser(referrer)
-                withApplicationSchema(applicationSchema)
                 withSubmittedAt(OffsetDateTime.now())
               }
 
@@ -440,14 +395,6 @@ class Cas2AssessmentNotesTest(
               val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
               givenACas2LicenceCaseAdminUser { _, jwt ->
-                val applicationSchema =
-                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withAddedAt(OffsetDateTime.now())
-                    withId(UUID.randomUUID())
-                    withSchema(
-                      schema,
-                    )
-                  }
 
                 val otherUser = nomisUserEntityFactory.produceAndPersist {
                   withActiveCaseloadId("another-prison")
@@ -456,7 +403,6 @@ class Cas2AssessmentNotesTest(
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
                   withCreatedByUser(otherUser)
-                  withApplicationSchema(applicationSchema)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
                 }
@@ -489,21 +435,12 @@ class Cas2AssessmentNotesTest(
             @Test
             fun `referrer can create a note for an application they did not create`() {
               givenACas2PomUser { referrer, jwt ->
-                val applicationSchema =
-                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withAddedAt(OffsetDateTime.now())
-                    withId(UUID.randomUUID())
-                    withSchema(
-                      schema,
-                    )
-                  }
 
                 val otherUser = nomisUserEntityFactory.produceAndPersist {
                   withActiveCaseloadId(referrer.activeCaseloadId!!)
                 }
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
                   withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withReferringPrisonCode(referrer.activeCaseloadId!!)

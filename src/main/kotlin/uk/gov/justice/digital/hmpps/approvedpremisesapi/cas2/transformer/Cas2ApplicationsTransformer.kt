@@ -33,8 +33,6 @@ class Cas2ApplicationsTransformer(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
       createdBy = nomisUserTransformer.transformJpaToApi(jpa),
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = !jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,

@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
@@ -42,13 +41,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -71,9 +68,6 @@ class Cas2ApplicationServiceTest {
 
   @MockK(relaxed = true)
   lateinit var mockApplicationSummaryRepository: ApplicationSummaryRepository
-
-  @MockK
-  lateinit var mockJsonSchemaService: Cas2JsonSchemaService
 
   @MockK
   lateinit var mockOffenderService: Cas2OffenderService
@@ -104,7 +98,6 @@ class Cas2ApplicationServiceTest {
       mockApplicationRepository,
       mockLockableApplicationRepository,
       mockApplicationSummaryRepository,
-      mockJsonSchemaService,
       mockOffenderService,
       mockUserAccessService,
       mockDomainEventService,
@@ -120,7 +113,6 @@ class Cas2ApplicationServiceTest {
   @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   @Nested
   inner class FindApplicationToAssign {
-    private val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
     private val user = NomisUserEntityFactory().produce()
     private val nomsNumber = "ABC123"
 
@@ -153,7 +145,6 @@ class Cas2ApplicationServiceTest {
     @ValueSource(booleans = [true, false])
     fun `finds assignable application as the latest application's status-update list is empty or null`(statusUpdatesListNull: Boolean) {
       val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withCreatedByUser(user)
         .withNomsNumber(nomsNumber)
         .withStatusUpdates(mutableListOf())
@@ -171,7 +162,6 @@ class Cas2ApplicationServiceTest {
 
     private fun createApplicationWithStatusUpdateEntity(statusUpdateEntityLabel: String): Cas2ApplicationEntity {
       val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withCreatedByUser(user)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -382,10 +372,6 @@ class Cas2ApplicationServiceTest {
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
       val userEntity = NomisUserEntityFactory()
         .withId(userId)
         .withNomisUsername(distinguishedName)
@@ -393,13 +379,8 @@ class Cas2ApplicationServiceTest {
 
       val applicationEntity = Cas2ApplicationEntityFactory()
         .withCreatedByUser(userEntity)
-        .withApplicationSchema(newestJsonSchema)
         .produce()
 
-      every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers {
-        it.invocation
-          .args[0] as Cas2ApplicationEntity
-      }
       every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
       every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
 
@@ -420,11 +401,8 @@ class Cas2ApplicationServiceTest {
       every { personInfoResult.crn } returns crn
       every { personInfoResult.offenderDetailSummary.otherIds.nomsNumber } returns "NOMS123"
 
-      val schema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
       val user = userWithUsername(username)
 
-      every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0] as
           Cas2ApplicationEntity
@@ -472,8 +450,6 @@ class Cas2ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-        application
 
       assertThatCasResult(
         applicationService.updateApplication(
@@ -488,21 +464,13 @@ class Cas2ApplicationServiceTest {
     fun `returns GeneralValidationError when application has already been submitted`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
       val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
         application
 
       val result = applicationService.updateApplication(
@@ -518,20 +486,13 @@ class Cas2ApplicationServiceTest {
     fun `returns GeneralValidationError when application has been abandoned`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
       val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.updateApplication(
         applicationId = applicationId,
@@ -542,37 +503,11 @@ class Cas2ApplicationServiceTest {
       assertThatCasResult(result).isGeneralValidationError("This application has been abandoned")
     }
 
-    @Test
-    fun `returns GeneralValidationError when application schema is outdated`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-
-      val application = Cas2ApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = false
-        }
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.updateApplication(
-        applicationId = applicationId,
-        data = "{}",
-        user = user,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("The schema version is outdated")
-    }
-
     @ParameterizedTest
     @ValueSource(strings = ["<", "＜", "〈", "〈", ">", "＞", "〉", "〉", "<＜〈〈>＞〉〉"])
     fun `returns Success when an application, that contains removed malicious characters, is updated`(str: String) {
       val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
 
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
       {
         "aProperty": "val${str}ue"
@@ -580,25 +515,12 @@ class Cas2ApplicationServiceTest {
     """
 
       val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-        application
-      every {
-        mockJsonSchemaService.getNewestSchema(
-          Cas2ApplicationJsonSchemaEntity::class
-            .java,
-        )
-      } returns newestSchema
-      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2ApplicationEntity
@@ -625,7 +547,6 @@ class Cas2ApplicationServiceTest {
     fun `returns Success with updated Application`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
       {
         "aProperty": "value"
@@ -633,18 +554,11 @@ class Cas2ApplicationServiceTest {
     """
 
       val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .produce()
-        .apply {
-          schemaUpToDate = true
-        }
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns newestSchema
-      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2ApplicationEntity
@@ -705,17 +619,11 @@ class Cas2ApplicationServiceTest {
       fun `returns Conflict Error when application has already been submitted`() {
         val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withSubmittedAt(OffsetDateTime.now())
           .produce()
-          .apply {
-            schemaUpToDate = true
-          }
 
         every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
           application
@@ -732,17 +640,11 @@ class Cas2ApplicationServiceTest {
       fun `returns Success when application has already been abandoned`() {
         val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
-          .apply {
-            schemaUpToDate = true
-          }
 
         every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
           application
@@ -758,7 +660,6 @@ class Cas2ApplicationServiceTest {
       fun `returns Success and deletes the application data`() {
         val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
 
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
         val data = """
             {
               "aProperty": "value"
@@ -766,14 +667,10 @@ class Cas2ApplicationServiceTest {
       """
 
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withData(data)
           .produce()
-          .apply {
-            schemaUpToDate = true
-          }
 
         every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
           application
@@ -846,8 +743,6 @@ class Cas2ApplicationServiceTest {
           .produce()
 
         every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-          application
 
         assertThatCasResult(applicationService.submitApplication(submitCas2Application, user)).isUnauthorised()
 
@@ -855,46 +750,16 @@ class Cas2ApplicationServiceTest {
       }
 
       @Test
-      fun `returns GeneralValidationError when application schema is outdated`() {
-        val application = Cas2ApplicationEntityFactory()
-          .withId(applicationId)
-          .withCreatedByUser(user)
-          .withSubmittedAt(null)
-          .produce()
-          .apply {
-            schemaUpToDate = false
-          }
-
-        every {
-          mockApplicationRepository.findByIdOrNull(applicationId)
-        } returns application
-        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-        val result = applicationService.submitApplication(submitCas2Application, user)
-
-        assertThatCasResult(result).isGeneralValidationError("The schema version is outdated")
-
-        assertEmailAndAssessmentsWereNotCreated()
-      }
-
-      @Test
       fun `returns GeneralValidationError when application has already been submitted`() {
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withSubmittedAt(OffsetDateTime.now())
           .produce()
-          .apply {
-            schemaUpToDate = true
-          }
 
         every {
           mockApplicationRepository.findByIdOrNull(applicationId)
         } returns application
-        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
         val result = applicationService.submitApplication(submitCas2Application, user)
 
@@ -905,10 +770,7 @@ class Cas2ApplicationServiceTest {
 
       @Test
       fun `returns GeneralValidationError when application has already been abandoned`() {
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withAbandonedAt(OffsetDateTime.now())
@@ -917,7 +779,6 @@ class Cas2ApplicationServiceTest {
         every {
           mockApplicationRepository.findByIdOrNull(applicationId)
         } returns application
-        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
         val result = applicationService.submitApplication(submitCas2Application, user)
 
@@ -928,24 +789,15 @@ class Cas2ApplicationServiceTest {
 
       @Test
       fun `throws a validation error if InmateDetails (for prison code) are not available`() {
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withSubmittedAt(null)
           .produce()
-          .apply {
-            schemaUpToDate = true
-          }
 
         every {
           mockApplicationRepository.findByIdOrNull(any())
         } returns application
-        every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
-          application
-        every { mockJsonSchemaService.validate(any(), any()) } returns true
 
         every { mockApplicationRepository.save(any()) } answers {
           it.invocation.args[0]
@@ -968,24 +820,15 @@ class Cas2ApplicationServiceTest {
 
       @Test
       fun `throws an UpstreamApiException if prison code is null`() {
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withSubmittedAt(null)
           .produce()
-          .apply {
-            schemaUpToDate = true
-          }
 
         every {
           mockApplicationRepository.findByIdOrNull(any())
         } returns application
-        every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
-          application
-        every { mockJsonSchemaService.validate(any(), any()) } returns true
 
         every { mockApplicationRepository.save(any()) } answers {
           it.invocation.args[0]
@@ -1019,26 +862,18 @@ class Cas2ApplicationServiceTest {
       @SuppressWarnings("CyclomaticComplexMethod")
       @Test
       fun `returns Success and stores event`() {
-        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestSchema)
           .withId(applicationId)
           .withCreatedByUser(user)
           .withSubmittedAt(null)
           .produce()
-          .apply {
-            schemaUpToDate = true
-          }
 
         val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
 
         every {
           mockApplicationRepository.findByIdOrNull(applicationId)
         } returns application
-        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-          application
-        every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+        application
 
         val inmateDetail = InmateDetailFactory()
           .withAssignedLivingUnit(
