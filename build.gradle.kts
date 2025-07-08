@@ -1,5 +1,4 @@
 import org.apache.commons.io.FileUtils
-import java.io.File
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.0"
@@ -395,8 +394,11 @@ tasks.get("openApiGenerate").doLast {
 ktlint {
   filter {
     exclude { it.file.path.contains("$buildDir${File.separator}generated${File.separator}") }
-    exclude("**/approvedpremisesapi/api/**")
-    exclude("**/approvedpremisesapi/cas3/model/generated/**")
+    exclude(
+      "**/approvedpremisesapi/api/**",
+      "**/approvedpremisesapi/cas3/model/generated/**",
+      "**/approvedpremisesapi/cas2/model/generated/**",
+    )
   }
 }
 
