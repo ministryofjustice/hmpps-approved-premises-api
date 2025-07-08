@@ -9,9 +9,6 @@ import java.time.LocalDate
 
 @Service
 class SpacePlanningModelsFactory {
-  fun allBeds(
-    beds: List<Cas1PlanningBedSummary>,
-  ) = beds.map { it.toBed() }
 
   fun allBedsDayState(
     day: LocalDate,

@@ -24,55 +24,6 @@ class SpacePlanningModelsFactoryTest {
   val factory = SpacePlanningModelsFactory()
 
   @Nested
-  inner class AllBeds {
-
-    @Test
-    fun `all room and bed properties including active characteristics are correctly mapped`() {
-      val bedSummary = Cas1PlanningBedSummaryFactory()
-        .withBedName("the bed name")
-        .withRoomName("the room name")
-        .withCharacteristicsPropertyNames(
-          listOf(
-            CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
-            CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-            CAS1_PROPERTY_NAME_SINGLE_ROOM,
-            "not in allow list",
-          ),
-        ).produce()
-
-      val result = factory.allBeds(listOf(bedSummary))
-
-      assertThat(result).hasSize(1)
-
-      val bed = result[0]
-      assertThat(bed.id).isEqualTo(bedSummary.bedId)
-      assertThat(bed.label).isEqualTo("the bed name")
-
-      val room = result[0].room
-      assertThat(room.id).isEqualTo(bedSummary.roomId)
-      assertThat(room.label).isEqualTo("the room name")
-
-      val characteristics = room.characteristics
-      assertThat(characteristics).hasSize(3)
-
-      assertThat(characteristics).containsOnly(
-        Characteristic(
-          label = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
-          propertyName = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
-        ),
-        Characteristic(
-          label = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          propertyName = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-        ),
-        Characteristic(
-          label = CAS1_PROPERTY_NAME_SINGLE_ROOM,
-          propertyName = CAS1_PROPERTY_NAME_SINGLE_ROOM,
-        ),
-      )
-    }
-  }
-
-  @Nested
   inner class AllBedsDayState {
 
     @Test
