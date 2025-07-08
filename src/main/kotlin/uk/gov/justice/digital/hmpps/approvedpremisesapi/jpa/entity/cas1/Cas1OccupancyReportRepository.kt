@@ -65,7 +65,7 @@ class Cas1OccupancyReportRepository(
     		select 
     			premises_and_days.day as day,
     			p.id as premises_id,
-    			concat(area.name,' - ',p.name) as premises_name,
+    			concat(cma.name,' - ',p.name) as premises_name,
     			(
     				select count(*) from beds 
     				inner join rooms on beds.room_id = rooms.id
@@ -87,7 +87,8 @@ class Cas1OccupancyReportRepository(
     		from premises_and_days
     		inner join premises p on p.id = premises_and_days.premises_id
         inner join probation_regions region ON region.id = p.probation_region_id
-        inner join ap_areas area ON area.id = region.ap_area_id 
+        inner join approved_premises ap ON ap.premises_id = p.id
+        inner join cas1_cru_management_areas cma on cma.id = ap.cas1_cru_management_area_id   
     	),
     	premises_day_state_summary as (
     		select 
