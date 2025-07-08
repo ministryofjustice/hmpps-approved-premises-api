@@ -58,6 +58,20 @@ paths:
           description: Prison code of applications to return.  If blank, returns all results.
           schema:
             type: string
+        - name: applicationOrigin
+          in: query
+          description: Filter by application origin
+          schema:
+              allOf:
+                  - $ref: '_shared.yml#/components/schemas/ApplicationOrigin'
+                  - type: string
+                    default: ~
+        - name: limitByUser
+          in: query
+          description: If set to true only the current logged in user's applications will be returned. Default HDC behaviour
+          schema:
+            type: boolean
+            default: true
       responses:
         200:
           description: successful operation

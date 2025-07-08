@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.ApplicationsCas2v2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
@@ -46,16 +47,18 @@ class Cas2v2ApplicationController(
     isSubmitted: Boolean?,
     page: Int?,
     prisonCode: String?,
+    applicationOrigin: ApplicationOrigin?,
+    limitByUser: Boolean,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    if (userService.requiresCaseLoadIdCheck()) {
+    if (limitByUser && userService.requiresCaseLoadIdCheck()) {
       prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
     }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
-    val (applications, metadata) = cas2v2ApplicationService.getCas2v2Applications(prisonCode, isSubmitted, user, pageCriteria)
+    val (applications, metadata) = cas2v2ApplicationService.getCas2v2Applications(prisonCode, isSubmitted, applicationOrigin, limitByUser, user, pageCriteria)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
