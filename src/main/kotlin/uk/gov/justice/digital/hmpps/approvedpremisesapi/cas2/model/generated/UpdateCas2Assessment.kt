@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
@@ -11,10 +11,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class UpdateCas2Assessment(
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("nacroReferralId") val nacroReferralId: kotlin.String? = null,
+    @get:JsonProperty("nacroReferralId") val nacroReferralId: String? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("assessorName") val assessorName: kotlin.String? = null
+    @get:JsonProperty("assessorName") val assessorName: String? = null
     ) {
 
 }

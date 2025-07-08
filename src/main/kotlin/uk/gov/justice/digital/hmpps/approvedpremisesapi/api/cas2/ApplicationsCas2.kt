@@ -5,12 +5,12 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.AssignmentType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import io.swagger.v3.oas.annotations.*
 import io.swagger.v3.oas.annotations.media.*

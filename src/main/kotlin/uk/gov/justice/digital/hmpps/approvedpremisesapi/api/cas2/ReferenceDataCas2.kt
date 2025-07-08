@@ -5,7 +5,7 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2ApplicationStatus
 import io.swagger.v3.oas.annotations.*
 import io.swagger.v3.oas.annotations.media.*
 import io.swagger.v3.oas.annotations.responses.*
