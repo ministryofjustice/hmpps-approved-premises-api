@@ -6,16 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 
 /**
- * 
+ *
  */
 class UpdateCas2Application(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>
-    ) : UpdateApplication {
-
-}
-
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>,
+) : UpdateApplication

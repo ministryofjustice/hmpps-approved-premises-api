@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2StatusUpdateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2StatusUpdateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.LatestCas2StatusUpdate
 import java.util.UUID
 
 @Component("Cas2StatusUpdateTransformer")
