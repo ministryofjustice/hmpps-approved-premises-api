@@ -42,6 +42,7 @@ class EmailNotificationService(
     templateId: String,
     personalisation: Map<String, *>,
     replyToEmailId: String?,
+    reference: String?,
   ) {
     val emailRequest = EmailRequest(recipientEmailAddress, templateId, personalisation, replyToEmailId)
     applicationEventPublisher.publishEvent(SendEmailRequestedEvent(emailRequest))
@@ -61,7 +62,7 @@ class EmailNotificationService(
           templateId,
           recipientEmailAddress,
           personalisation,
-          null,
+          reference,
           replyToEmailId,
         )
       } else {
@@ -69,7 +70,7 @@ class EmailNotificationService(
           templateId,
           recipientEmailAddress,
           personalisation,
-          null,
+          reference,
           replyToEmailId,
         )
       }
@@ -105,6 +106,7 @@ class EmailNotificationService(
     templateId: String,
     personalisation: Map<String, *>,
     replyToEmailId: String?,
+    reference: String?,
   ) = recipientEmailAddresses.forEach { sendEmail(it, templateId, personalisation, replyToEmailId) }
 
   private fun logEmail(emailRequest: EmailRequest) {
@@ -119,9 +121,9 @@ class EmailNotificationService(
 }
 
 interface EmailNotifier {
-  fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null)
+  fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null, reference: String? = null)
 
-  fun sendEmails(recipientEmailAddresses: Set<String>, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null)
+  fun sendEmails(recipientEmailAddresses: Set<String>, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null, reference: String? = null)
 
   fun sendCas2Email(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>)
 }

@@ -42,7 +42,7 @@ class Cas1EmailNotificationServiceTest {
 
   @Test
   fun `sendEmail delegates to EmailNotificationService and uses CRU email for reply-to`() {
-    every { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID) } returns Unit
+    every { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID, reference = application.id.toString()) } returns Unit
 
     service.sendEmail(
       RECIPIENT_1,
@@ -51,12 +51,12 @@ class Cas1EmailNotificationServiceTest {
       application,
     )
 
-    verify { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID) }
+    verify { emailNotificationService.sendEmail(RECIPIENT_1, TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID, reference = application.id.toString()) }
   }
 
   @Test
   fun `sendEmails delegates to EmailNotificationService and uses CRU email for reply-to`() {
-    every { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID) } returns Unit
+    every { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID, reference = application.id.toString()) } returns Unit
 
     service.sendEmails(
       setOf(RECIPIENT_1, RECIPIENT_2),
@@ -65,6 +65,6 @@ class Cas1EmailNotificationServiceTest {
       application,
     )
 
-    verify { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID) }
+    verify { emailNotificationService.sendEmails(setOf(RECIPIENT_1, RECIPIENT_2), TEMPLATE_ID, PERSONALISATION, replyToEmailId = NOTIFY_REPLY_TO_EMAIL_ID, reference = application.id.toString()) }
   }
 }
