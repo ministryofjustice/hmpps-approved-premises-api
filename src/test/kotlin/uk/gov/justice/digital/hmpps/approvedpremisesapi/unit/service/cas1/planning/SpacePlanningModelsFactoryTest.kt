@@ -59,20 +59,14 @@ class SpacePlanningModelsFactoryTest {
         Characteristic(
           label = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
           propertyName = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
-          weighting = 100,
-          singleRoom = false,
         ),
         Characteristic(
           label = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
           propertyName = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          weighting = 100,
-          singleRoom = false,
         ),
         Characteristic(
           label = CAS1_PROPERTY_NAME_SINGLE_ROOM,
           propertyName = CAS1_PROPERTY_NAME_SINGLE_ROOM,
-          weighting = 100,
-          singleRoom = true,
         ),
       )
     }
@@ -133,20 +127,14 @@ class SpacePlanningModelsFactoryTest {
         Characteristic(
           label = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
           propertyName = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
-          weighting = 100,
-          singleRoom = false,
         ),
         Characteristic(
           label = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
           propertyName = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          weighting = 100,
-          singleRoom = false,
         ),
         Characteristic(
           label = CAS1_PROPERTY_NAME_SINGLE_ROOM,
           propertyName = CAS1_PROPERTY_NAME_SINGLE_ROOM,
-          weighting = 100,
-          singleRoom = true,
         ),
       )
     }
@@ -306,14 +294,10 @@ class SpacePlanningModelsFactoryTest {
             Characteristic(
               label = characteristic1.propertyName!!,
               propertyName = characteristic1.propertyName!!,
-              weighting = 100,
-              singleRoom = false,
             ),
             Characteristic(
               label = characteristic2.propertyName!!,
               propertyName = characteristic2.propertyName!!,
-              weighting = 100,
-              singleRoom = false,
             ),
           ),
         ),
@@ -324,8 +308,6 @@ class SpacePlanningModelsFactoryTest {
             Characteristic(
               label = characteristicSingleRoom.propertyName!!,
               propertyName = characteristicSingleRoom.propertyName!!,
-              weighting = 100,
-              singleRoom = true,
             ),
           ),
         ),
