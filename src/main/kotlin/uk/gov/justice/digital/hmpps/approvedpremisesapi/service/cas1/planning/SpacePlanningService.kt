@@ -36,8 +36,13 @@ class SpacePlanningService(
     rangeInclusive: DateRange,
     excludeSpaceBookingId: UUID?,
   ): List<PremiseCapacitySummary> {
+    log.info("Determine capacity for ${forPremises.size} premises between $rangeInclusive")
+
     val allPremisesDayBedStates = bedStatesForEachDay(forPremises, rangeInclusive)
+    log.info("Have retrieved bed states")
+
     val allPremisesDayBookings = spaceBookingsForEachDay(forPremises, rangeInclusive, excludeSpaceBookingId)
+    log.info("Have retrieved bookings")
 
     return forPremises.map { premises ->
       calculatePremisesCapacity(
@@ -98,9 +103,12 @@ class SpacePlanningService(
   ): List<PremisesDayBedStates> {
     val allPremisesIds = forPremises.map { it.id }
     val allPremisesOosbRecords = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesIds(allPremisesIds)
+    log.info("Processing ${allPremisesOosbRecords.size} OOSB records")
     val allPremisesBeds = cas1BedsRepository.bedSummary(allPremisesIds)
+    log.info("Processing ${allPremisesBeds.size} Beds")
 
     return forPremises.map { premises ->
+      log.info("Loading bed state for premises ${premises.name}")
       PremisesDayBedStates(
         premises = premises,
         dayBedStates = range.orderedDatesInRange().map { day ->
