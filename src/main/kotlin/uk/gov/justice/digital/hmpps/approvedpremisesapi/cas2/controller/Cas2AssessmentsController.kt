@@ -45,6 +45,7 @@ class Cas2AssessmentsController(
   private val externalUserService: ExternalUserService,
 ) {
 
+  @SuppressWarnings("ThrowsCount")
   @RequestMapping(
     method = [RequestMethod.GET],
     value = ["/assessments/{assessmentId}"],
@@ -65,6 +66,7 @@ class Cas2AssessmentsController(
     throw NotFoundProblem(assessmentId, "Assessment")
   }
 
+  @SuppressWarnings("ThrowsCount")
   @RequestMapping(
     method = [RequestMethod.PUT],
     value = ["/assessments/{assessmentId}"],

@@ -41,7 +41,7 @@ class Cas2PeopleController(
   private val cas2UserService: Cas2UserService,
 ) {
 
-  @SuppressWarnings("TooGenericExceptionThrown")
+  @SuppressWarnings("TooGenericExceptionThrown", "ThrowsCount")
   @RequestMapping(
     method = [RequestMethod.GET],
     value = ["/people/search"],
