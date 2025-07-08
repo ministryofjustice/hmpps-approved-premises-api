@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
-import java.net.URI
-import java.util.UUID
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -27,6 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.net.URI
+import java.util.UUID
 
 @RestController
 @RequestMapping(

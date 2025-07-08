@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
@@ -9,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import java.util.UUID
-import org.springframework.web.bind.annotation.PathVariable
 
 @RestController
 @RequestMapping("\${openapi.cAS2DomainEvents.base-path:}/events/cas2/")
