@@ -8,19 +8,15 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
@@ -50,12 +46,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
@@ -67,14 +61,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.net.URI
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as JPAApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.Companion as DomainApprovedPremisesApplicationStatus
 
 @Service
 @Suppress("LongParameterList", "TooManyFunctions")
 class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val cas1ApplicationService: Cas1ApplicationService,
   private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
@@ -103,43 +95,6 @@ class ApplicationsController(
       getPersonDetailAndTransformToSummary(
         applications = applications,
         laoStrategy = CheckUserAccess(user.deliusUsername),
-      ),
-    )
-  }
-
-  override fun applicationsAllGet(
-    xServiceName: ServiceName,
-    page: Int?,
-    crnOrName: String?,
-    sortDirection: SortDirection?,
-    status: List<ApprovedPremisesApplicationStatus>?,
-    sortBy: ApplicationSortField?,
-    apAreaId: UUID?,
-    releaseType: ReleaseTypeOption?,
-  ): ResponseEntity<List<ApplicationSummary>> {
-    if (xServiceName != ServiceName.approvedPremises) {
-      throw ForbiddenProblem()
-    }
-    val user = userService.getUserForRequest()
-    val statusTransformed = status?.map { DomainApprovedPremisesApplicationStatus.valueOf(it) } ?: emptyList()
-
-    val (applications, metadata) =
-      cas1ApplicationService.getAllApprovedPremisesApplications(
-        page,
-        crnOrName,
-        sortDirection,
-        statusTransformed,
-        sortBy,
-        apAreaId,
-        releaseType?.name,
-      )
-
-    return ResponseEntity.ok().headers(
-      metadata?.toHeaders(),
-    ).body(
-      getPersonDetailAndTransformToSummary(
-        applications = applications,
-        laoStrategy = user.cas1LaoStrategy(),
       ),
     )
   }
