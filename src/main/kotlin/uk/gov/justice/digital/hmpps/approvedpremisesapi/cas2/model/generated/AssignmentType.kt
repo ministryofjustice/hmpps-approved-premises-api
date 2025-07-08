@@ -3,10 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: ALLOCATED,DEALLOCATED,IN_PROGRESS,PRISON,UNALLOCATED
-*/
+@SuppressWarnings("ExplicitItLambdaParameter")
 enum class AssignmentType(@get:JsonValue val value: String) {
 
   ALLOCATED("ALLOCATED"),

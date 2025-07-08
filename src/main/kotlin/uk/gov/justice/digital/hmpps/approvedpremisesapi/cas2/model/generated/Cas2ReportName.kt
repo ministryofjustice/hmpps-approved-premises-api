@@ -3,10 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: submittedMinusApplications,applicationMinusStatusMinusUpdates,unsubmittedMinusApplications
-*/
+@SuppressWarnings("EnumNaming", "ExplicitItLambdaParameter")
 enum class Cas2ReportName(@get:JsonValue val value: String) {
 
   submittedMinusApplications("submitted-applications"),
