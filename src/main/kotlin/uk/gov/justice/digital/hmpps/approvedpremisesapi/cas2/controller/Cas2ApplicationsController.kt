@@ -2,9 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
+import java.net.URI
+import java.util.UUID
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
@@ -20,21 +27,27 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import java.net.URI
-import java.util.UUID
 
-@Service
+@RestController
+@RequestMapping(
+  "\${openapi.communityAccommodationServicesTier2CAS2.base-path:/cas2}",
+  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
+)
 class Cas2ApplicationsController(
   private val applicationService: Cas2ApplicationService,
   private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: Cas2OffenderService,
   private val userService: Cas2UserService,
-) : ApplicationsCas2Delegate {
+) {
 
-  override fun getCas2ApplicationSummaries(
-    assignmentType: AssignmentType,
-    page: Int?,
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/applications"],
+  )
+  fun getCas2ApplicationSummaries(
+    @PathVariable assignmentType: AssignmentType,
+    @RequestParam page: Int?,
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
@@ -52,14 +65,23 @@ class Cas2ApplicationsController(
     ).body(getPersonNamesAndTransformToSummaries(results))
   }
 
-  override fun getCas2Application(applicationId: UUID): ResponseEntity<Cas2Application> {
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/applications/{applicationId}"],
+  )
+  fun getCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
     val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, user))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/applications"],
+    produces = ["application/json", "application/problem+json"],
+  )
   @Transactional
-  override fun createCas2Application(body: NewApplication): ResponseEntity<Cas2Application> {
+  fun createCas2Application(@RequestBody body: NewApplication): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
     val applicationResult = applicationService.createApplication(personInfo, user)
@@ -71,10 +93,15 @@ class Cas2ApplicationsController(
       .body(cas2ApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/applications/{applicationId}"],
+    produces = ["application/json", "application/problem+json"],
+  )
   @Transactional
-  override fun updateCas2Application(
-    applicationId: UUID,
-    body: UpdateCas2Application,
+  fun updateCas2Application(
+    @PathVariable applicationId: UUID,
+    @RequestBody body: UpdateCas2Application,
   ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
 
@@ -90,8 +117,12 @@ class Cas2ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(extractEntityFromCasResult(applicationResult)))
   }
 
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/applications/{applicationId}/abandon"],
+  )
   @Transactional
-  override fun abandonCas2Application(applicationId: UUID): ResponseEntity<Unit> {
+  fun abandonCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
     extractEntityFromCasResult(applicationService.abandonApplication(applicationId, user))
     return ResponseEntity.ok(Unit)
