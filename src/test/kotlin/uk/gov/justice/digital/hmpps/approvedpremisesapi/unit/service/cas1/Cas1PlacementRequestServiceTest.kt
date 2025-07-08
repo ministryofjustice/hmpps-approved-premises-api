@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -81,7 +80,6 @@ class Cas1PlacementRequestServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
-  private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val offenderService = mockk<OffenderService>()
 
@@ -95,7 +93,6 @@ class Cas1PlacementRequestServiceTest {
     applicationService,
     cas1PlacementRequestEmailService,
     cas1PlacementRequestDomainEventService,
-    cas1TaskDeadlineServiceMock,
     cas1BookingDomainEventService,
     offenderService,
     clock = Clock.systemDefaultZone(),
@@ -120,9 +117,6 @@ class Cas1PlacementRequestServiceTest {
     @ParameterizedTest
     @EnumSource(PlacementRequestSource::class)
     fun `createPlacementRequest creates a placement request with the correct deadline`(source: PlacementRequestSource) {
-      val dueAt = OffsetDateTime.now()
-
-      every { cas1TaskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
 
@@ -160,7 +154,6 @@ class Cas1PlacementRequestServiceTest {
       assertThat(placementRequest.assessment.id).isEqualTo(assessment.id)
       assertThat(placementRequest.application.id).isEqualTo(application.id)
       assertThat(placementRequest.isParole).isFalse()
-      assertThat(placementRequest.dueAt).isEqualTo(dueAt)
       assertThat(placementRequest.allocatedToUser).isNull()
 
       verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }

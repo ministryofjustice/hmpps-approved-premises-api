@@ -15,10 +15,8 @@ import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
-import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
@@ -124,13 +122,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     cruManagementAreaId: UUID? = null,
     pageable: Pageable? = null,
   ): Page<PlacementRequestEntity>
-
-  @Query("SELECT p from PlacementRequestEntity p WHERE p.dueAt IS NULL")
-  fun findAllWithNullDueAt(pageable: Pageable?): Slice<PlacementRequestEntity>
-
-  @Modifying
-  @Query("UPDATE PlacementRequestEntity p SET p.dueAt = :dueAt WHERE p.id = :id")
-  fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
 
   @Query(
     """
@@ -287,9 +278,6 @@ data class PlacementRequestEntity(
 
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
-
-  @Deprecated("Placement requests are no longer allocated to users and don't have a due at concept")
-  var dueAt: OffsetDateTime?,
 
   @Version
   var version: Long = 1,
