@@ -185,7 +185,7 @@ class Cas1SimpleApiClient {
     body: NewPlacementApplication,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/placement-applications")
+      .uri("/cas1/placement-applications")
       .header("Authorization", "Bearer $creatorJwt")
       .bodyValue(body)
       .exchange()
@@ -200,7 +200,7 @@ class Cas1SimpleApiClient {
     body: PlacementApplicationDecisionEnvelope,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/placement-applications/$placementApplicationId/decision")
+      .uri("/cas1/placement-applications/$placementApplicationId/decision")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -215,7 +215,7 @@ class Cas1SimpleApiClient {
     body: UpdatePlacementApplication,
   ) {
     integrationTestBase.webTestClient.put()
-      .uri("/placement-applications/$placementApplicationId")
+      .uri("/cas1/placement-applications/$placementApplicationId")
       .header("Authorization", "Bearer $creatorJwt")
       .bodyValue(body)
       .exchange()
@@ -230,7 +230,7 @@ class Cas1SimpleApiClient {
     body: SubmitPlacementApplication,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/placement-applications/$placementApplicationId/submission")
+      .uri("/cas1/placement-applications/$placementApplicationId/submission")
       .header("Authorization", "Bearer $creatorJwt")
       .bodyValue(body)
       .exchange()
