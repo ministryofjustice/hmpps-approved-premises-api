@@ -19,6 +19,7 @@ class Cas1EmailNotificationService(
       templateId,
       personalisation,
       replyToEmailId = getReplyToEmailId(application),
+      reference = application.id.toString(),
     )
   }
 
@@ -33,6 +34,7 @@ class Cas1EmailNotificationService(
       templateId,
       personalisation,
       replyToEmailId = getReplyToEmailId(application),
+      reference = application.id.toString(),
     )
   }
 
