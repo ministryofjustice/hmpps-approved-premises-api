@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ref
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationStatusTransformer
 
 @Service("Cas2ReferenceDataController")
-class ReferenceDataController(
+class Cas2ReferenceDataController(
   private val statusTransformer: ApplicationStatusTransformer,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : ReferenceDataCas2Delegate {

@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Reports
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 
 @Service("Cas2ReportsController")
-class ReportsController(private val reportService: Cas2ReportsService) : ReportsCas2Delegate {
+class Cas2ReportsController(private val reportService: Cas2ReportsService) : ReportsCas2Delegate {
 
   override fun reportsReportNameGet(reportName: Cas2ReportName): ResponseEntity<StreamingResponseBody> = when (reportName) {
     Cas2ReportName.submittedMinusApplications -> generateXlsxStreamingResponse { outputStream ->

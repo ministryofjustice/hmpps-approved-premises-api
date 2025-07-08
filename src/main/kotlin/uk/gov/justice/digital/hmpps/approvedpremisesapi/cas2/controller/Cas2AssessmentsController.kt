@@ -28,7 +28,7 @@ import java.net.URI
 import java.util.UUID
 
 @Service("Cas2AssessmentsController")
-class AssessmentsController(
+class Cas2AssessmentsController(
   private val assessmentService: Cas2AssessmentService,
   private val assessmentNoteService: Cas2AssessmentNoteService,
   private val assessmentsTransformer: AssessmentsTransformer,

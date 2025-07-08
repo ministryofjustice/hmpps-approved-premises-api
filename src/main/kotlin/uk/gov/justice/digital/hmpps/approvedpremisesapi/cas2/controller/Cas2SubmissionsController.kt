@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.util.UUID
 
 @Service("Cas2SubmissionsController")
-class SubmissionsController(
+class Cas2SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: Cas2ApplicationService,
   private val submissionsTransformer: SubmissionsTransformer,
