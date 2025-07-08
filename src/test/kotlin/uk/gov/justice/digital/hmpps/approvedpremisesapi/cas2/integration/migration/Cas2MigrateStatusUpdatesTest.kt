@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -32,13 +31,8 @@ class Cas2MigrateStatusUpdatesTest : MigrationJobTestBase() {
   fun `Should add assessments for CAS2 Status Updates that don't have one and returns 202 response`() {
     givenACas2PomUser { userEntity, _ ->
       givenACas2Assessor { assessor, _ ->
-        val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
-
         // set up the application and assessment that we check
-        val submittedApplication = createApplicationEntity(applicationSchema, userEntity, OffsetDateTime.now().minusDays(1))
+        val submittedApplication = createApplicationEntity(userEntity, OffsetDateTime.now().minusDays(1))
 
         val assessment = cas2AssessmentEntityFactory.produceAndPersist {
           withApplication(submittedApplication)
@@ -65,9 +59,8 @@ class Cas2MigrateStatusUpdatesTest : MigrationJobTestBase() {
     }
   }
 
-  private fun createApplicationEntity(applicationSchema: Cas2ApplicationJsonSchemaEntity, userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
+  private fun createApplicationEntity(userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withApplicationSchema(applicationSchema)
     withCreatedByUser(userEntity)
     withData("{}")
     withSubmittedAt(submittedAt)

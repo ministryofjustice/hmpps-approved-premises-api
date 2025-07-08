@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import java.time.OffsetDateTime
@@ -15,9 +14,6 @@ class Cas2UserAccessServiceTest {
   inner class UserCanViewApplication {
 
     private val userAccessService = Cas2UserAccessService()
-    val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
 
     @Nested
     inner class WhenTransferredApplication {
@@ -32,7 +28,6 @@ class Cas2UserAccessServiceTest {
       @Test
       fun `returns true if currently allocated POM or if in same prison`() {
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestJsonSchema)
           .withCreatedByUser(otherUser)
           .withSubmittedAt(OffsetDateTime.now())
           .withReferringPrisonCode(referringPrisonCode)
@@ -69,7 +64,6 @@ class Cas2UserAccessServiceTest {
       @Test
       fun `returns true`() {
         val application = Cas2ApplicationEntityFactory()
-          .withApplicationSchema(newestJsonSchema)
           .withCreatedByUser(user)
           .produce()
 
@@ -90,7 +84,6 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val application = Cas2ApplicationEntityFactory()
-            .withApplicationSchema(newestJsonSchema)
             .withCreatedByUser(anotherUser)
             .produce()
 
@@ -109,7 +102,6 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val application = Cas2ApplicationEntityFactory()
-            .withApplicationSchema(newestJsonSchema)
             .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("different-prison")
@@ -129,7 +121,6 @@ class Cas2UserAccessServiceTest {
           @Test
           fun `returns false`() {
             val application = Cas2ApplicationEntityFactory()
-              .withApplicationSchema(newestJsonSchema)
               .withCreatedByUser(anotherUserWithNoPrison)
               .withSubmittedAt(OffsetDateTime.now())
               .produce()
@@ -151,7 +142,6 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns true if the user created the application`() {
           val application = Cas2ApplicationEntityFactory()
-            .withApplicationSchema(newestJsonSchema)
             .withCreatedByUser(user)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
@@ -162,12 +152,7 @@ class Cas2UserAccessServiceTest {
 
         @Test
         fun `returns true when user NOT creator`() {
-          val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
-            .withSchema("{}")
-            .produce()
-
           val application = Cas2ApplicationEntityFactory()
-            .withApplicationSchema(newestJsonSchema)
             .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")

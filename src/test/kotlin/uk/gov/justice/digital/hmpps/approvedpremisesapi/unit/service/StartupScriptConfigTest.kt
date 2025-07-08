@@ -66,7 +66,6 @@ class StartupScriptConfigTest {
     mockExternalUserRepository,
     mockStatusUpdateRepository,
     mockAssessmentRepository,
-    mockJsonSchemaService,
     mockApplicationService,
     mockStatusUpdateService,
     statusFinder,

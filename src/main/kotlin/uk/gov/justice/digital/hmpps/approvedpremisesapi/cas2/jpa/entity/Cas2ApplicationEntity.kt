@@ -23,7 +23,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -109,9 +108,6 @@ data class Cas2ApplicationEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne
-  @JoinColumn(name = "schema_version")
-  var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
   var abandonedAt: OffsetDateTime? = null,
@@ -130,9 +126,6 @@ data class Cas2ApplicationEntity(
   @OneToMany(mappedBy = "application", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
   @SQLOrder("createdAt DESC")
   val applicationAssignments: MutableList<Cas2ApplicationAssignmentEntity> = mutableListOf(),
-
-  @Transient
-  var schemaUpToDate: Boolean,
 
   var nomsNumber: String?,
 

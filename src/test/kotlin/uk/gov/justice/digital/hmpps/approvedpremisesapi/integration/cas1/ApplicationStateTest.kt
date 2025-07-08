@@ -89,11 +89,6 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
         UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
       ),
     )
-    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-      withPermissiveSchema()
-    }
 
     approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())

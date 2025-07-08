@@ -114,11 +114,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val tooOldSubmitted = OffsetDateTime.now().minusDays(366)
       val tooOldCreated = tooOldSubmitted.minusSeconds(daysInSeconds(7))
 
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val user1 = nomisUserEntityFactory.produceAndPersist {
         withNomisUsername("NOMIS_USER_1")
       }
@@ -137,7 +132,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId1)
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
@@ -150,7 +144,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId2)
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
@@ -192,7 +185,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCreatedAt(tooOldCreated)
         withData("{}")
@@ -407,18 +399,12 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withData(objectMapper.writeValueAsString(event3ToSave))
       }
 
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val user1 = nomisUserEntityFactory.produceAndPersist {
         withNomisUsername("NOMIS_USER_1")
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(event1.applicationId!!)
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user1)
         withCrn(event1Details.personReference.crn.toString())
         withNomsNumber(event2Details.personReference.noms)
@@ -523,11 +509,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val newer = Instant.now().minusSeconds(daysInSeconds(100))
       val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val user1 = nomisUserEntityFactory.produceAndPersist {
         withNomisUsername("NOMIS_USER_1")
       }
@@ -537,7 +518,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
@@ -548,7 +528,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
@@ -560,7 +539,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
@@ -569,7 +547,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       // submitted application, which should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")

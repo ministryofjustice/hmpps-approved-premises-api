@@ -351,11 +351,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withDocument(DOCUMENT_JSON_SIMPLE)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-    withApplicationSchema(
-      cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      },
-    )
     withReferringPrisonCode(randomStringMultiCaseWithNumbers(3))
     withTelephoneNumber(randomStringMultiCaseWithNumbers(7))
 

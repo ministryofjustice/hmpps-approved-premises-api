@@ -33,8 +33,6 @@ class SubmissionsTransformer(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
       submittedBy = nomisUserTransformer.transformJpaToApi(jpa),
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = !jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,

@@ -17,15 +17,9 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
 
   @Test
   fun `applicationAssignments are returned sorted by createdAt descending`() {
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
-
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
           withCreatedByUser(userEntity)
           withSubmittedAt(OffsetDateTime.now())
           withCrn(offenderDetails.otherIds.crn)
@@ -58,15 +52,9 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
 
   @Test
   fun `test that most recent pom id is given`() {
-    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
-
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
           withCreatedByUser(userEntity)
           withSubmittedAt(OffsetDateTime.now())
           withCrn(offenderDetails.otherIds.crn)
@@ -110,26 +98,18 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
 
     @Test
     fun `test application origin persists`() {
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       givenACas2PomUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationHDC = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(userEntity)
-            withApplicationSchema(applicationSchema)
           }
           val applicationCourt = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(userEntity)
             withApplicationOrigin(ApplicationOrigin.courtBail)
-            withApplicationSchema(applicationSchema)
           }
           val applicationPrison = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(userEntity)
             withApplicationOrigin(ApplicationOrigin.prisonBail)
-            withApplicationSchema(applicationSchema)
           }
 
           cas2ApplicationRepository.save(applicationHDC)
@@ -149,23 +129,16 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
 
     @Test
     fun `test bail hearing is persisted if present`() {
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val now = OffsetDateTime.now().toLocalDate()
 
       givenACas2PomUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationNoBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(userEntity)
-            withApplicationSchema(applicationSchema)
           }
 
           val applicationBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(userEntity)
-            withApplicationSchema(applicationSchema)
             withBailHearingDate(now)
           }
 

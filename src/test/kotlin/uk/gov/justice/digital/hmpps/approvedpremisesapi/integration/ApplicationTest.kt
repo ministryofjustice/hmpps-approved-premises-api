@@ -753,11 +753,6 @@ class ApplicationTest : IntegrationTestBase() {
       givenAUser { _, jwt ->
         val crn = "X1234"
 
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
-
         webTestClient.post()
           .uri("/applications")
           .header("Authorization", "Bearer $jwt")
@@ -910,11 +905,6 @@ class ApplicationTest : IntegrationTestBase() {
               teamCodes = listOf(offenderDetails.otherIds.crn),
             ),
           )
-
-          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
 
           val result = webTestClient.post()
             .uri("/applications")

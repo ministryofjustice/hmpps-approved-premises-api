@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import java.time.OffsetDateTime
 
 class Cas2ApplicationAbandonTest : IntegrationTestBase() {
   @SpykBean
@@ -135,15 +134,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
     crn: String,
     userEntity: NomisUserEntity,
   ): Cas2ApplicationEntity {
-    val jsonSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        schema,
-      )
-    }
-
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(jsonSchema)
       withCrn(crn)
       withCreatedByUser(userEntity)
       withData(

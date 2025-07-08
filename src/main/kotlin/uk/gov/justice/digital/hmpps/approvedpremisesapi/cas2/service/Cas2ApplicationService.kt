@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Lock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -43,7 +42,6 @@ class Cas2ApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val lockableApplicationRepository: Cas2LockableApplicationRepository,
   private val applicationSummaryRepository: ApplicationSummaryRepository,
-  private val jsonSchemaService: Cas2JsonSchemaService,
   private val offenderService: Cas2OffenderService,
   private val userAccessService: Cas2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
@@ -117,9 +115,7 @@ class Cas2ApplicationService(
     val applicationEntity = applicationRepository.findSubmittedApplicationById(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
-    return CasResult.Success(
-      jsonSchemaService.checkSchemaOutdated(applicationEntity),
-    )
+    return CasResult.Success(applicationEntity)
   }
 
   fun getApplicationForUser(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
@@ -133,8 +129,7 @@ class Cas2ApplicationService(
 
     return if (canAccess) {
       CasResult.Success(
-        jsonSchemaService.checkSchemaOutdated
-          (applicationEntity),
+        applicationEntity,
       )
     } else {
       CasResult.Unauthorised()
@@ -152,21 +147,19 @@ class Cas2ApplicationService(
         createdByUser = user,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
-        schemaUpToDate = true,
         nomsNumber = personInfoResult.offenderDetailSummary.otherIds.nomsNumber!!,
         telephoneNumber = null,
       ),
     )
 
-    return CasResult.Success(createdApplication.apply { schemaUpToDate = true })
+    return CasResult.Success(createdApplication)
   }
 
   @SuppressWarnings("ReturnCount")
   fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+    val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (!application.isCreatedBy(user)) {
@@ -179,10 +172,6 @@ class Cas2ApplicationService(
 
     if (application.abandonedAt != null) {
       return CasResult.GeneralValidationError("This application has been abandoned")
-    }
-
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     application.apply {
@@ -232,7 +221,6 @@ class Cas2ApplicationService(
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = applicationRepository.findByIdOrNull(applicationId)
-      ?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
@@ -249,24 +237,16 @@ class Cas2ApplicationService(
       return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     val validationErrors = ValidationErrors()
     val applicationData = application.data
 
     if (applicationData == null) {
       validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
-      validationErrors["$.data"] = "invalid"
     }
 
     if (validationErrors.any()) {
       return CasResult.FieldValidationError(validationErrors)
     }
-
-    if (application.schemaVersion !is Cas2ApplicationJsonSchemaEntity) throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Application")
 
     try {
       application.apply {
