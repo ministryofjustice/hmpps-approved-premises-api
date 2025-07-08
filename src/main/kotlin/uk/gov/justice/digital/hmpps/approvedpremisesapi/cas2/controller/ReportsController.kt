@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ReportsCas2Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ReportsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 
