@@ -362,6 +362,18 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     nativeQuery = true,
   )
   fun countActiveSpaceBookings(premisesId: UUID): Long
+
+  fun findByTransferredFrom(spaceBooking: Cas1SpaceBookingEntity): Cas1SpaceBookingEntity?
+
+  @Query(
+    value = """
+      SELECT count(*) > 0
+      FROM cas1_space_bookings b 
+      WHERE b.transferred_from = :spaceBookingId AND b.cancellation_occurred_at IS NULL
+      """,
+    nativeQuery = true,
+  )
+  fun hasNonCancelledTransfer(spaceBookingId: UUID): Boolean
 }
 
 interface Cas1SpaceBookingDaySummarySearchResult {
@@ -532,9 +544,13 @@ data class Cas1SpaceBookingEntity(
    */
   val deliusId: String?,
 
-  @OneToOne(mappedBy = "transferredFrom", fetch = FetchType.LAZY)
-  val transferredTo: Cas1SpaceBookingEntity?,
-
+  /**
+   * We don't map transferredTo (i.e. we don't define the bi-directional
+   * relationship in the JPA model), because this will _always_ be eager
+   * loaded and we don't typically need this information.
+   *
+   * Instead, use the repository to find the value for 'transferredTo'.
+   */
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "transferred_from", referencedColumnName = "id")
   val transferredFrom: Cas1SpaceBookingEntity? = null,
@@ -576,7 +592,6 @@ data class Cas1SpaceBookingEntity(
   @Deprecated("The definition of active is ambiguous, use !isCancelled() instead")
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
-  fun isNotCancelled() = !isCancelled()
   fun hasDeparted() = actualDepartureDate != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDate != null
@@ -584,7 +599,6 @@ data class Cas1SpaceBookingEntity(
     !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
-  fun hasNonCancelledTransfer() = transferredTo?.isNotCancelled() ?: false
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

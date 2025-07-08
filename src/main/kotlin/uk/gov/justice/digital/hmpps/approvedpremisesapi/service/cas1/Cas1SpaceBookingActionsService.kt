@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookin
 @Service
 class Cas1SpaceBookingActionsService(
   val userAccessService: UserAccessService,
+  val spaceBookingRepository: Cas1SpaceBookingRepository,
   val changeRequestRepository: Cas1ChangeRequestRepository,
 ) {
   fun determineActions(spaceBooking: Cas1SpaceBookingEntity): ActionsResult {
@@ -69,7 +71,7 @@ class Cas1SpaceBookingActionsService(
       unavailable("Space booking has been marked as departed")
     } else if (spaceBooking.isCancelled()) {
       unavailable("Space booking has been cancelled")
-    } else if (spaceBooking.hasNonCancelledTransfer()) {
+    } else if (spaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id)) {
       unavailable("Space booking has already been transferred")
     } else {
       Available(SHORTEN)
@@ -100,7 +102,7 @@ class Cas1SpaceBookingActionsService(
       unavailable("Space booking has been marked as departed")
     } else if (spaceBooking.isCancelled()) {
       unavailable("Space booking has been cancelled")
-    } else if (spaceBooking.hasNonCancelledTransfer()) {
+    } else if (spaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id)) {
       unavailable("Space booking has already been transferred")
     } else {
       Available(action)

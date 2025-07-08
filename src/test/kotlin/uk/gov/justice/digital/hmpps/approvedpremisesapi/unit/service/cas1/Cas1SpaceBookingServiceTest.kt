@@ -1532,8 +1532,6 @@ class Cas1SpaceBookingServiceTest {
 
       every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any()) } returns Unit
 
-      assertThat(existingSpaceBooking.transferredTo).isNull()
-
       val transferInfo = TransferInfo(
         type = TransferType.PLANNED,
         booking = existingSpaceBooking,

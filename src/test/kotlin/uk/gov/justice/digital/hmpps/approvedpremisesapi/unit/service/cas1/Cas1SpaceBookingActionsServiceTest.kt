@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
@@ -26,6 +27,9 @@ class Cas1SpaceBookingActionsServiceTest {
 
   @MockK
   private lateinit var userAccessService: UserAccessService
+
+  @MockK
+  private lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   @MockK
   private lateinit var changeRequestRepository: Cas1ChangeRequestRepository
@@ -50,12 +54,16 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun success() {
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
+
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.APPEAL_CREATE)
     }
 
     @Test
     fun `unavailable if user does not have correct permission`() {
       userDoesntHavePermission(UserPermission.CAS1_PLACEMENT_APPEAL_CREATE)
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -67,6 +75,8 @@ class Cas1SpaceBookingActionsServiceTest {
     @Test
     fun `unavailable if has arrival`() {
       spaceBooking.actualArrivalDate = LocalDate.now()
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -99,6 +109,8 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `unavailable if already have open change request`() {
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
+
       every { changeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns listOf(
         Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce(),
       )
@@ -123,6 +135,8 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun success() {
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
+
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.EMERGENCY_TRANSFER_CREATE)
     }
 
@@ -139,12 +153,16 @@ class Cas1SpaceBookingActionsServiceTest {
         .withTransferredFrom(transferredBooking)
         .produce()
 
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
+
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.EMERGENCY_TRANSFER_CREATE)
     }
 
     @Test
     fun `unavailable if user does not have correct permission`() {
       userDoesntHavePermission(UserPermission.CAS1_TRANSFER_CREATE)
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -156,6 +174,8 @@ class Cas1SpaceBookingActionsServiceTest {
     @Test
     fun `unavailable if does not have arrival`() {
       spaceBooking.actualArrivalDate = null
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -199,17 +219,13 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `unavailable if has a non cancelled transfer already`() {
-      val transferredBooking = Cas1SpaceBookingEntityFactory()
-        .withCancellationOccurredAt(null)
-        .withTransferredFrom(spaceBooking)
-        .produce()
-
       spaceBooking = Cas1SpaceBookingEntityFactory()
         .withActualArrivalDate(LocalDate.now())
         .withActualDepartureDate(null)
         .withNonArrivalConfirmedAt(null)
-        .withTransferredTo(transferredBooking)
         .produce()
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns true
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -231,6 +247,8 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun success() {
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
+
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
     }
 
@@ -247,12 +265,16 @@ class Cas1SpaceBookingActionsServiceTest {
         .withTransferredFrom(transferredBooking)
         .produce()
 
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
+
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
     }
 
     @Test
     fun `unavailable if user does not have correct permission`() {
       userDoesntHavePermission(UserPermission.CAS1_TRANSFER_CREATE)
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -264,6 +286,8 @@ class Cas1SpaceBookingActionsServiceTest {
     @Test
     fun `unavailable if does not have arrival`() {
       spaceBooking.actualArrivalDate = null
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -307,16 +331,13 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `unavailable if has a non cancelled transfer already`() {
-      val transferredBooking = Cas1SpaceBookingEntityFactory()
-        .withCancellationOccurredAt(null)
-        .produce()
-
       spaceBooking = Cas1SpaceBookingEntityFactory()
         .withActualArrivalDate(LocalDate.now())
         .withActualDepartureDate(null)
         .withNonArrivalConfirmedAt(null)
-        .withTransferredTo(transferredBooking)
         .produce()
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns true
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -330,6 +351,8 @@ class Cas1SpaceBookingActionsServiceTest {
       every { changeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns listOf(
         Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLANNED_TRANSFER).produce(),
       )
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -351,12 +374,16 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun success() {
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
+
       service.determineActions(spaceBooking).assertAvailable(SpaceBookingAction.SHORTEN)
     }
 
     @Test
     fun `unavailable if user does not have correct permission`() {
       userDoesntHavePermission(UserPermission.CAS1_SPACE_BOOKING_SHORTEN)
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
@@ -368,6 +395,8 @@ class Cas1SpaceBookingActionsServiceTest {
     @Test
     fun `success if does not have arrival`() {
       spaceBooking.actualArrivalDate = null
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns false
 
       service.determineActions(spaceBooking)
         .assertAvailable(
@@ -410,16 +439,13 @@ class Cas1SpaceBookingActionsServiceTest {
 
     @Test
     fun `unavailable if has a non cancelled transfer already`() {
-      val transferredBooking = Cas1SpaceBookingEntityFactory()
-        .withCancellationOccurredAt(null)
-        .produce()
-
       spaceBooking = Cas1SpaceBookingEntityFactory()
         .withActualArrivalDate(LocalDate.now())
         .withActualDepartureDate(null)
         .withNonArrivalConfirmedAt(null)
-        .withTransferredTo(transferredBooking)
         .produce()
+
+      every { cas1SpaceBookingRepository.hasNonCancelledTransfer(spaceBooking.id) } returns true
 
       service.determineActions(spaceBooking)
         .assertUnavailable(
