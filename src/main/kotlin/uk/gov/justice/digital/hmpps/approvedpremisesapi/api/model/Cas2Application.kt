@@ -1,17 +1,12 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.generated.Cas2Assessment
 
 /**
  *
