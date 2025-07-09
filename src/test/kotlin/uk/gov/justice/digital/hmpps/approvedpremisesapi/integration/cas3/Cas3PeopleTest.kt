@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1OAsysTest.Companion.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockNeedsDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockOffenceDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
@@ -31,20 +30,6 @@ class Cas3PeopleTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isUnauthorized
-    }
-
-    @Test
-    fun `Return 404 if access record can't be found for the CRN  (legacy behaviour)`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextUserAccessEmptyResponse()
-
-      webTestClient.get()
-        .uri("/cas3/people/$CRN/oasys/riskManagement")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
     }
 
     @Test

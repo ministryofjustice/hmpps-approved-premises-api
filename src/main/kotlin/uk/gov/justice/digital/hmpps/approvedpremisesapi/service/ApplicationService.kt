@@ -91,7 +91,7 @@ class ApplicationService(
       ?: throw RuntimeException("Could not get user")
 
     if (userEntity.hasPermission(UserPermission.CAS1_OFFLINE_APPLICATION_VIEW) &&
-      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn) == true
+      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
     ) {
       return CasResult.Success(applicationEntity)
     }

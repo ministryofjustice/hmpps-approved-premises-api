@@ -132,7 +132,7 @@ class Cas1PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return CasResult.NotFound("PlacementRequest", id.toString())
 
-    if (offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy()) != true) {
+    if (!offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy())) {
       return CasResult.Unauthorised()
     }
 
@@ -147,7 +147,7 @@ class Cas1PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return CasResult.NotFound("PlacementRequest", id.toString())
 
-    if (offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy()) != true) {
+    if (!offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy())) {
       return CasResult.Unauthorised()
     }
 
