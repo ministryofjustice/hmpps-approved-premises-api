@@ -10,8 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.OutOfServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedEnded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedOutOfService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedDayState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import java.time.Instant
 import java.time.LocalDate
@@ -59,13 +58,13 @@ class SpacePlanningModelsFactoryTest {
 
       val bedDayState = result[0]
       assertThat(bedDayState.day).isEqualTo(LocalDate.of(2020, 1, 1))
-      assertThat(bedDayState.inactiveReason).isNull()
+      assertThat(bedDayState.outOfService).isFalse
 
       assertThat(bedDayState.bed).isEqualTo(bedSummary)
     }
 
     @Test
-    fun `mark beds with end date in the past as inactive`() {
+    fun `excludes beds with end date in the past`() {
       val bed1Active = Cas1PlanningBedSummaryFactory()
         .withBedName("the active bed name")
         .withRoomName("the room name")
@@ -84,19 +83,15 @@ class SpacePlanningModelsFactoryTest {
         outOfServiceBedRecordsToConsider = emptyList(),
       )
 
-      assertThat(result).hasSize(2)
+      assertThat(result).hasSize(1)
 
       val activeBedDayState = result[0]
-      assertThat(activeBedDayState.inactiveReason).isNull()
+      assertThat(activeBedDayState.outOfService).isFalse
       assertThat(activeBedDayState.bed).isEqualTo(bed1Active)
-
-      val inactiveBedDayState = result[1]
-      assertThat(inactiveBedDayState.inactiveReason).isInstanceOf(BedEnded::class.java)
-      assertThat(activeBedDayState.bed).isEqualTo(bed2EndedYesterday)
     }
 
     @Test
-    fun `exclude out of service beds`() {
+    fun `correctly populates out of service beds`() {
       val activeBed1Id = UUID.randomUUID()
       val oosbBed1Id = UUID.randomUUID()
       val oosbBed2Id = UUID.randomUUID()
@@ -110,13 +105,13 @@ class SpacePlanningModelsFactoryTest {
       val oosbBed1 = Cas1PlanningBedSummaryFactory()
         .withBedId(oosbBed1Id)
         .withBedName("oosb bed 1")
-        .withBedEndDate(LocalDate.of(2020, 4, 3))
+        .withBedEndDate(LocalDate.of(2020, 4, 5))
         .produce()
 
       val oosbBed2 = Cas1PlanningBedSummaryFactory()
         .withBedId(oosbBed2Id)
         .withBedName("oosb bed 2")
-        .withBedEndDate(LocalDate.of(2020, 4, 3))
+        .withBedEndDate(LocalDate.of(2020, 4, 5))
         .produce()
 
       val result = factory.allBedsDayState(
@@ -152,17 +147,23 @@ class SpacePlanningModelsFactoryTest {
 
       assertThat(result).hasSize(3)
 
-      val activeBedDayState = result[0]
-      assertThat(activeBedDayState.inactiveReason).isNull()
-      assertThat(activeBedDayState.bed).isEqualTo(activeBed1)
-
-      val oosbBed1State = result[1]
-      assertThat(oosbBed1State.inactiveReason).isInstanceOf(BedOutOfService::class.java)
-      assertThat(activeBedDayState.bed).isEqualTo(oosbBed1)
-
-      val oosbBed2State = result[2]
-      assertThat(oosbBed2State.inactiveReason).isInstanceOf(BedOutOfService::class.java)
-      assertThat(activeBedDayState.bed).isEqualTo(oosbBed2)
+      assertThat(result).containsExactlyInAnyOrder(
+        BedDayState(
+          bed = activeBed1,
+          day = LocalDate.of(2020, 4, 4),
+          outOfService = false,
+        ),
+        BedDayState(
+          bed = oosbBed1,
+          day = LocalDate.of(2020, 4, 4),
+          outOfService = true,
+        ),
+        BedDayState(
+          bed = oosbBed2,
+          day = LocalDate.of(2020, 4, 4),
+          outOfService = true,
+        ),
+      )
     }
   }
 

@@ -71,7 +71,7 @@ class SpacePlanningService(
       val availableBeds = bedStates.findActive()
       PremiseCapacityForDay(
         day = day,
-        totalBedCount = bedStates.totalBedCount(),
+        totalBedCount = bedStates.size,
         availableBedCount = availableBeds.size,
         bookingCount = bookings.size,
         characteristicAvailability = Cas1SpaceBookingEntity.ROOM_CHARACTERISTICS_OF_INTEREST.map {
@@ -206,7 +206,6 @@ class SpacePlanningService(
   )
 
   private fun List<BedDayState>.findActive() = this.filter { it.isActive() }
-  private fun List<BedDayState>.totalBedCount() = this.count { it.isActive() || it.isTemporarilyInactive() }
 
   private data class PremisesDayBookings(
     val premises: ApprovedPremisesEntity,

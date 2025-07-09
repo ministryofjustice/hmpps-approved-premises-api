@@ -18,21 +18,9 @@ data class Bed(
 data class BedDayState(
   val bed: Cas1PlanningBedSummary,
   val day: LocalDate,
-  val inactiveReason: BedInactiveReason?,
+  val outOfService: Boolean,
 ) {
-  fun isActive() = inactiveReason == null
-  fun isTemporarilyInactive() = inactiveReason?.isTemporary() ?: false
-}
-
-sealed interface BedInactiveReason {
-  fun isTemporary(): Boolean
-}
-data class BedEnded(val ended: LocalDate) : BedInactiveReason {
-  override fun isTemporary() = false
-}
-
-data class BedOutOfService(val reason: String) : BedInactiveReason {
-  override fun isTemporary() = true
+  fun isActive() = !outOfService
 }
 
 data class Room(

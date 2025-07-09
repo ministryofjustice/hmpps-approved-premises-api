@@ -15,11 +15,12 @@ class SpacePlanningModelsFactory {
     beds: List<Cas1PlanningBedSummary>,
     outOfServiceBedRecordsToConsider: List<OutOfServiceBedSummary>,
   ): List<BedDayState> = beds
+    .filter { BedEntity.isActive(day, it.bedEndDate) }
     .map { bedSummary ->
       BedDayState(
         bed = bedSummary,
         day = day,
-        inactiveReason = bedSummary.getInactiveReason(day, outOfServiceBedRecordsToConsider),
+        outOfService = bedSummary.findOutOfServiceRecord(day, outOfServiceBedRecordsToConsider) != null,
       )
     }
 
@@ -28,17 +29,6 @@ class SpacePlanningModelsFactory {
     spaceBookingsToConsider: List<Cas1SpaceBookingEntity>,
   ): List<Cas1SpaceBookingEntity> = spaceBookingsToConsider
     .filter { it.isExpectedOrResident(day) }
-
-  private fun Cas1PlanningBedSummary.getInactiveReason(day: LocalDate, outOfServiceBedRecords: List<OutOfServiceBedSummary>): BedInactiveReason? {
-    val outOfServiceRecord = this.findOutOfServiceRecord(day, outOfServiceBedRecords)
-    return if (outOfServiceRecord != null) {
-      BedOutOfService(outOfServiceRecord.getReasonName())
-    } else if (!BedEntity.isActive(day, this.bedEndDate)) {
-      BedEnded(this.bedEndDate!!)
-    } else {
-      null
-    }
-  }
 
   private fun Cas1PlanningBedSummary.findOutOfServiceRecord(
     day: LocalDate,
