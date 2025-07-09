@@ -33,6 +33,7 @@ complexity:
       # autowiring works. Spring beans will therefore require a larger-scale refactoring to reduce the number of
       # dependencies required by each one that would violate this rule.
       - org.springframework.stereotype.*
+      - uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Controller
       # Entities typically have large constructors, reflecting the columns in the database tables. Trying to reduce
       # the number of arguments is non-trivial and may result in worse performance and an unnecessarily fragmented
       # database design.
