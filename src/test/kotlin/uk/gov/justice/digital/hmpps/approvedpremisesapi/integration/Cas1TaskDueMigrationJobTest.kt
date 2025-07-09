@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -42,7 +41,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     val assessments = List(10) { createAssessment() }
-    val placementRequests = List(5) { createPlacementRequest() }
     val placementApplications = List(2) { createPlacementApplication() }
 
     migrationJobService.runMigrationJob(MigrationJobType.updateTaskDueDates)
@@ -52,13 +50,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
       assertThat(updatedAssessment.dueAt).isNotNull()
       assertThat(updatedAssessment.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
         .isEqualTo(cas1TaskDeadlineService.getDeadline(it)?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-    }
-
-    placementRequests.forEach {
-      val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(it.id)!!
-      assertThat(updatedPlacementRequest.dueAt).isNotNull()
-      assertThat(updatedPlacementRequest.dueAt?.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        .isEqualTo(cas1TaskDeadlineService.getDeadline(it).roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
     }
 
     placementApplications.forEach {
@@ -84,30 +75,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
         withSubmittedAt(OffsetDateTime.now())
         withDueAt(null)
       }
-  }
-
-  private fun createPlacementRequest(): PlacementRequestEntity {
-    val assessment = createAssessment()
-    val application = assessment.application as ApprovedPremisesApplicationEntity
-
-    return placementRequestFactory.produceAndPersist {
-      withAssessment(assessment)
-      withApplication(application)
-      withPlacementRequirements(
-        placementRequirementsFactory.produceAndPersist {
-          withApplication(application)
-          withAssessment(assessment)
-          withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-          withDesirableCriteria(
-            characteristicEntityFactory.produceAndPersistMultiple(5),
-          )
-          withEssentialCriteria(
-            characteristicEntityFactory.produceAndPersistMultiple(3),
-          )
-        },
-      )
-      withDueAt(null)
-    }
   }
 
   private fun createAssessment(): ApprovedPremisesAssessmentEntity {

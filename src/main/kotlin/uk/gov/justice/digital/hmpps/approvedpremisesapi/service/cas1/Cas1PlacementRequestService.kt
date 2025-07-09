@@ -51,7 +51,6 @@ class Cas1PlacementRequestService(
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
-  private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val offenderService: OffenderService,
   private val clock: Clock,
@@ -230,8 +229,6 @@ class Cas1PlacementRequestService(
       withdrawalReason = null,
       dueAt = null,
     )
-
-    placementRequest.dueAt = cas1TaskDeadlineService.getDeadline(placementRequest)
 
     val updatedPlacementRequest = placementRequestRepository.save(placementRequest)
 

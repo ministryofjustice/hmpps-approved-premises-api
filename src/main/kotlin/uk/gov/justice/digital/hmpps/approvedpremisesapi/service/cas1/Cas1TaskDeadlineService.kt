@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.isWorkingDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DatesConstant
@@ -34,25 +33,6 @@ class Cas1TaskDeadlineService(
 
       else ->
         addWorkingDays(effectiveAssessmentCreatedAt, ASSESSMENT_STANDARD_TIMEFRAME_WORKDAYS)
-    }
-  }
-
-  fun getDeadline(placementRequest: PlacementRequestEntity): OffsetDateTime {
-    val application = placementRequest.application
-    val effectivePlacementRequestCreatedAt = placementRequest.createdAt.slewedToWorkingPattern()
-
-    return when {
-      application.noticeType == Cas1ApplicationTimelinessCategory.emergency ->
-        effectivePlacementRequestCreatedAt
-
-      application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice ->
-        addWorkingDays(effectivePlacementRequestCreatedAt, PLACEMENT_REQUEST_SHORT_NOTICE_TIMEFRAME_WORKDAYS)
-
-      application.isEsapApplication ->
-        effectivePlacementRequestCreatedAt
-
-      else ->
-        addWorkingDays(effectivePlacementRequestCreatedAt, PLACEMENT_REQUEST_STANDARD_TIMEFRAME_WORKDAYS)
     }
   }
 
@@ -89,8 +69,6 @@ class Cas1TaskDeadlineService(
     private const val ASSESSMENT_STANDARD_TIMEFRAME_WORKDAYS = 10
     private const val ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS = 5
     private const val ASSESSMENT_EMERGENCY_TIMEFRAME_HOURS = 2L
-    private const val PLACEMENT_REQUEST_STANDARD_TIMEFRAME_WORKDAYS = 5
-    private const val PLACEMENT_REQUEST_SHORT_NOTICE_TIMEFRAME_WORKDAYS = 2
     private const val PLACEMENT_APPLICATION_TIMEFRAME_WORKDAYS = 5
 
     private val SAME_WORKING_DAY_DEADLINE_TIME: LocalTime = LocalTime.of(13, 0)
