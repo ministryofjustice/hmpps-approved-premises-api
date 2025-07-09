@@ -1,0 +1,1 @@
+ALTER TABLE cas_2_v2_applications ALTER COLUMN schema_version DROP NOT NULL;

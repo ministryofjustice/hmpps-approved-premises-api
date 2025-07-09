@@ -93,8 +93,6 @@ class Cas2v2ApplicationTransformerTest {
         "id",
         "person",
         "createdBy",
-        "schemaVersion",
-        "outdatedSchema",
         "createdAt",
         "submittedAt",
         "data",

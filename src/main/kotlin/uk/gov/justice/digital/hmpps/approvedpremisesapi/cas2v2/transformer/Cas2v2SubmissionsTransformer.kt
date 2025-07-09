@@ -27,8 +27,6 @@ class Cas2v2SubmissionsTransformer(
     id = jpa.id,
     person = personTransformer.transformModelToPersonApi(personInfo),
     submittedBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
-    schemaVersion = jpa.schemaVersion.id,
-    outdatedSchema = !jpa.schemaUpToDate,
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
     document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,

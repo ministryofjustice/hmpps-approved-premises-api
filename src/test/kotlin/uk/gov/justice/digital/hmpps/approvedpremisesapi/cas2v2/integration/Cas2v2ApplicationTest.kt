@@ -1093,9 +1093,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
                 applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion &&
-                !it.outdatedSchema
+                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
             }
           }
         }
@@ -1386,8 +1384,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         }
 
         Assertions.assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id
+          it.person.crn == offenderDetails.otherIds.crn
         }
       }
     }
