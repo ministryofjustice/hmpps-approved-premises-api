@@ -13,7 +13,7 @@ enum class EventType(@get:JsonValue val value: String) {
     bookingCancelledUpdated("accommodation.cas3.booking.cancelled.updated"),
     bookingConfirmed("accommodation.cas3.booking.confirmed"),
     bookingProvisionallyMade("accommodation.cas3.booking.provisionally-made"),
-    bedspaceArchived("accommodation.cas3.bedspace.archived"),
+    bedspaceUnarchived("accommodation.cas3.bedspace.unarchived"),
     personArrived("accommodation.cas3.person.arrived"),
     personArrivedUpdated("accommodation.cas3.person.arrived.updated"),
     personDeparted("accommodation.cas3.person.departed"),
