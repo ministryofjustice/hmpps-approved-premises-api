@@ -28,14 +28,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Candidat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService
 import java.time.LocalDate
 import java.util.UUID
 import java.util.stream.Stream
 import kotlin.enums.enumEntries
 
 @ExtendWith(MockKExtension::class)
-class Cas1SpaceSearchServiceTest {
+class Cas1PremisesSearchServiceTest {
   @MockK
   private lateinit var characteristicService: CharacteristicService
 
@@ -46,16 +46,16 @@ class Cas1SpaceSearchServiceTest {
   private lateinit var applicationRepository: ApprovedPremisesApplicationRepository
 
   @InjectMockKs
-  private lateinit var service: Cas1SpaceSearchService
+  private lateinit var service: Cas1PremisesSearchService
 
   @Test
-  fun `findSpaces throws error if the associated application cannot be found`() {
+  fun `throws error if the associated application cannot be found`() {
     val applicationId = UUID.randomUUID()
 
     every { applicationRepository.findByIdOrNull(any()) } returns null
 
     assertThatThrownBy {
-      service.findSpaces(
+      service.findPremises(
         Cas1SpaceSearchParameters(
           applicationId,
           startDate = LocalDate.parse("2024-08-01"),
@@ -70,7 +70,7 @@ class Cas1SpaceSearchServiceTest {
   }
 
   @Test
-  fun `findSpaces returns premises ordered by distance with the correct space availability`() {
+  fun `returns premises ordered by distance with the correct space availability`() {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withDefaults()
       .withIsWomensApplication(false)
@@ -140,7 +140,7 @@ class Cas1SpaceSearchServiceTest {
 
     every { applicationRepository.findByIdOrNull(application.id) } returns application
 
-    val result = service.findSpaces(
+    val result = service.findPremises(
       Cas1SpaceSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),
@@ -182,7 +182,7 @@ class Cas1SpaceSearchServiceTest {
 
   @ParameterizedTest
   @CsvSource("true", "false")
-  fun `findSpaces uses the associated gender from the application`(isWomensApplication: Boolean) {
+  fun `uses the associated gender from the application`(isWomensApplication: Boolean) {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withDefaults()
       .withIsWomensApplication(isWomensApplication)
@@ -252,7 +252,7 @@ class Cas1SpaceSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    service.findSpaces(
+    service.findPremises(
       Cas1SpaceSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),
@@ -281,7 +281,7 @@ class Cas1SpaceSearchServiceTest {
 
   @ParameterizedTest
   @MethodSource("spaceCharacteristicArgs")
-  fun `findSpaces uses the correct space characteristics`(spaceCharacteristics: List<Cas1SpaceCharacteristic>) {
+  fun `uses the correct space characteristics`(spaceCharacteristics: List<Cas1SpaceCharacteristic>) {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withDefaults()
       .withIsWomensApplication(false)
@@ -351,7 +351,7 @@ class Cas1SpaceSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    service.findSpaces(
+    service.findPremises(
       Cas1SpaceSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),

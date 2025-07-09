@@ -13,12 +13,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import java.util.UUID
 
 @Service
-class Cas1SpaceSearchService(
+class Cas1PremisesSearchService(
   private val characteristicService: CharacteristicService,
   private val spaceSearchRepository: Cas1SpaceSearchRepository,
   private val applicationRepository: ApprovedPremisesApplicationRepository,
 ) {
-  fun findSpaces(searchParameters: Cas1SpaceSearchParameters): List<CandidatePremises> {
+  fun findPremises(searchParameters: Cas1SpaceSearchParameters): List<CandidatePremises> {
     val applicationId = searchParameters.applicationId
     val application = applicationRepository.findByIdOrNull(searchParameters.applicationId)
       ?: throw NotFoundProblem(applicationId, "Application")
