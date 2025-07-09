@@ -26,15 +26,8 @@ class SpacePlanningModelsFactory {
   fun spaceBookingsForDay(
     day: LocalDate,
     spaceBookingsToConsider: List<Cas1SpaceBookingEntity>,
-  ): List<SpaceBooking> = spaceBookingsToConsider
+  ): List<Cas1SpaceBookingEntity> = spaceBookingsToConsider
     .filter { it.isExpectedOrResident(day) }
-    .map { booking ->
-      SpaceBooking(
-        id = booking.id,
-        label = booking.crn,
-        requiredRoomCharacteristics = toRoomCharacteristics(booking.criteria.mapNotNull { it.propertyName }),
-      )
-    }
 
   private fun Cas1PlanningBedSummary.getInactiveReason(day: LocalDate, outOfServiceBedRecords: List<OutOfServiceBedSummary>): BedInactiveReason? {
     val outOfServiceRecord = this.findOutOfServiceRecord(day, outOfServiceBedRecords)
@@ -55,15 +48,4 @@ class SpacePlanningModelsFactory {
       !day.isBefore(it.getStartDate()) &&
       !day.isAfter(it.getEndDate())
   }
-
-  private fun toRoomCharacteristics(characteristicPropertyNames: List<String>) = characteristicPropertyNames
-    .asSequence()
-    .filter { Cas1SpaceBookingEntity.ROOM_CHARACTERISTICS_OF_INTEREST.contains(it) }
-    .map { toCharacteristic(it) }
-    .toSet()
-
-  private fun toCharacteristic(propertyName: String) = Characteristic(
-    label = propertyName,
-    propertyName = propertyName,
-  )
 }

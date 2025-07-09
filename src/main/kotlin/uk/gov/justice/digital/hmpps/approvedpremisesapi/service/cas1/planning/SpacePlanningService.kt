@@ -94,11 +94,11 @@ class SpacePlanningService(
   private fun determineCharacteristicAvailability(
     characteristicPropertyName: String,
     availableBeds: List<BedDayState>,
-    bookings: List<SpaceBooking>,
+    bookings: List<Cas1SpaceBookingEntity>,
   ) = PremiseCharacteristicAvailability(
     characteristicPropertyName = characteristicPropertyName,
     availableBedCount = availableBeds.count { it.bed.characteristicsPropertyNames.contains(characteristicPropertyName) },
-    bookingCount = bookings.count { it.hasCharacteristic(characteristicPropertyName) },
+    bookingCount = bookings.count { booking -> booking.criteria.any { it.propertyName == characteristicPropertyName } },
   )
 
   private fun bedStatesForEachDay(
@@ -219,7 +219,7 @@ class SpacePlanningService(
 
   private data class DayBookings(
     val date: LocalDate,
-    val bookings: List<SpaceBooking>,
+    val bookings: List<Cas1SpaceBookingEntity>,
   )
 
   private fun List<Cas1SpaceBookingEntity>.bookingsForPremises(premises: ApprovedPremisesEntity) = filter { it.premises.id == premises.id }

@@ -12,8 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedEnded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedOutOfService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Characteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import java.time.Instant
 import java.time.LocalDate
@@ -208,32 +206,7 @@ class SpacePlanningModelsFactoryTest {
       )
 
       assertThat(result).hasSize(2)
-      assertThat(result).containsOnly(
-        SpaceBooking(
-          id = booking1.id,
-          label = "booking1",
-          requiredRoomCharacteristics = setOf(
-            Characteristic(
-              label = characteristic1.propertyName!!,
-              propertyName = characteristic1.propertyName!!,
-            ),
-            Characteristic(
-              label = characteristic2.propertyName!!,
-              propertyName = characteristic2.propertyName!!,
-            ),
-          ),
-        ),
-        SpaceBooking(
-          id = booking2.id,
-          label = "booking2",
-          requiredRoomCharacteristics = setOf(
-            Characteristic(
-              label = characteristicSingleRoom.propertyName!!,
-              propertyName = characteristicSingleRoom.propertyName!!,
-            ),
-          ),
-        ),
-      )
+      assertThat(result).containsOnly(booking1, booking2)
     }
 
     @Test
