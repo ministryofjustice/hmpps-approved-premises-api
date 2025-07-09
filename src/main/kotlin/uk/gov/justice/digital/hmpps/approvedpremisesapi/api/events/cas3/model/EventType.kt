@@ -8,8 +8,9 @@ import com.fasterxml.jackson.annotation.JsonValue
 * Values: bookingCancelled,bookingCancelledUpdated,bookingConfirmed,bookingProvisionallyMade,personArrived,personArrivedUpdated,personDeparted,referralSubmitted,personDepartureUpdated,assessmentUpdated,draftReferralDeleted
 */
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class EventType(@get:JsonValue val value: kotlin.String) {
+enum class EventType(@get:JsonValue val value: String) {
 
+  bedspaceArchived("accommodation.cas3.bedspace.archived"),
   bookingCancelled("accommodation.cas3.booking.cancelled"),
   bookingCancelledUpdated("accommodation.cas3.booking.cancelled.updated"),
   bookingConfirmed("accommodation.cas3.booking.confirmed"),
@@ -26,6 +27,6 @@ enum class EventType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): EventType = values().first { it -> it.value == value }
+    fun forValue(value: String): EventType = values().first { it -> it.value == value }
   }
 }

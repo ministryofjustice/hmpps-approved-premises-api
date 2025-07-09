@@ -366,6 +366,14 @@ class Cas1DomainEventService(
     val nomsNumber = domainEvent.nomsNumber ?: "Unknown NOMS Number"
     val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
 
+    val identifiers = mutableListOf<SnsEventPersonReference>()
+
+    if (crn != null) {
+      identifiers.add(SnsEventPersonReference("CRN", crn))
+    }
+
+    identifiers.add(SnsEventPersonReference("NOMS", nomsNumber))
+
     domainEventWorker.emitEvent(
       SnsEvent(
         eventType = typeName,
@@ -377,10 +385,7 @@ class Cas1DomainEventService(
           applicationId = domainEvent.applicationId,
         ),
         personReference = SnsEventPersonReferenceCollection(
-          identifiers = listOf(
-            SnsEventPersonReference("CRN", crn),
-            SnsEventPersonReference("NOMS", nomsNumber),
-          ),
+          identifiers = identifiers,
         ),
       ),
       domainEvent.id,

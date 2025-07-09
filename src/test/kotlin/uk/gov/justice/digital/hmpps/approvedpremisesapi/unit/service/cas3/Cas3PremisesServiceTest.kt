@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -66,6 +67,7 @@ class Cas3PremisesServiceTest {
   private val bedRepositoryMock = mockk<BedRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
   private val workingDayServiceMock = mockk<WorkingDayService>()
+  private val cas3DomainEventService = mockk<Cas3DomainEventService>()
 
   private val temporaryAccommodationPremisesFactory = TemporaryAccommodationPremisesEntityFactory()
     .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
@@ -88,6 +90,7 @@ class Cas3PremisesServiceTest {
     bedRepositoryMock,
     characteristicServiceMock,
     workingDayServiceMock,
+    cas3DomainEventService,
   )
 
   @Nested
@@ -992,7 +995,7 @@ class Cas3PremisesServiceTest {
   inner class ArchiveBedspace {
     @Test
     fun `When archive a bedspace returns Success with correct result when validation passed`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
 
       val archiveDate = LocalDate.now().plusDays(3)
 
@@ -1000,8 +1003,9 @@ class Cas3PremisesServiceTest {
       every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspace.id, archiveDate) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspace
+      every { cas3DomainEventService.saveBedspaceArchiveEvent(bedspace, premises.id) } returns Unit
 
-      val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, archiveDate)
 
       assertThatCasResult(result).isSuccess().with { bed ->
         assertThat(bed.name).isEqualTo(bedspace.name)
@@ -1014,41 +1018,41 @@ class Cas3PremisesServiceTest {
 
     @Test
     fun `When archive a non existing bedspace returns a NotFound with the correct message`() {
-      createPremisesAndBedspace()
+      val (premises, _) = createPremisesAndBedspace()
       val nonExistingBedspaceId = UUID.randomUUID()
 
       every { bedRepositoryMock.findByIdOrNull(nonExistingBedspaceId) } returns null
 
-      val result = premisesService.archiveBedspace(nonExistingBedspaceId, LocalDate.now())
+      val result = premisesService.archiveBedspace(nonExistingBedspaceId, premises.id, LocalDate.now())
 
       assertThatCasResult(result).isNotFound("Bedspace", nonExistingBedspaceId)
     }
 
     @Test
     fun `When archive a bedspace with an end date in the past returns FieldValidationError with the correct message`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
 
       every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
 
-      val result = premisesService.archiveBedspace(bedspace.id, LocalDate.now().minusDays(2))
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, LocalDate.now().minusDays(2))
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.endDate", "invalidEndDateInThePast")
     }
 
     @Test
     fun `When archive a bedspace with an end date in the future more than three months returns FieldValidationError with the correct message`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
 
       every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
 
-      val result = premisesService.archiveBedspace(bedspace.id, LocalDate.now().plusMonths(3).plusDays(1))
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, LocalDate.now().plusMonths(3).plusDays(1))
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.endDate", "invalidEndDateInTheFuture")
     }
 
     @Test
     fun `When archive a bedspace with a void that has an end date after bedspace archive date returns Cas3FieldValidationError with the correct message`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
       val archiveDate = LocalDate.now().plusDays(7)
       val voidBedspace = Cas3VoidBedspaceEntityFactory()
         .withPremises(bedspace.room.premises)
@@ -1062,14 +1066,14 @@ class Cas3PremisesServiceTest {
       every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspace.id, archiveDate) } returns listOf()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf(voidBedspace)
 
-      val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, archiveDate)
 
       assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingVoid", voidBedspace.endDate.plusDays(1).toString())
     }
 
     @Test
     fun `When archive a bedspace with a booking departure date after bedspace archive date returns Cas3FieldValidationError with the correct message`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
       val archiveDate = LocalDate.now().plusDays(7)
       val booking = BookingEntityFactory()
         .withPremises(bedspace.room.premises)
@@ -1083,14 +1087,14 @@ class Cas3PremisesServiceTest {
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf()
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate
 
-      val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, archiveDate)
 
       assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingBookings", booking.departureDate.plusDays(1).toString())
     }
 
     @Test
     fun `When archive a bedspace with a booking turnaround date after bedspace archive date returns Cas3FieldValidationError with the correct message`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
       val archiveDate = LocalDate.now().plusDays(7)
       val booking = BookingEntityFactory()
         .withPremises(bedspace.room.premises)
@@ -1109,14 +1113,14 @@ class Cas3PremisesServiceTest {
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf()
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate.plusDays(2)
 
-      val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, archiveDate)
 
       assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingTurnaround", booking.departureDate.plusDays(3).toString())
     }
 
     @Test
     fun `When archive a bedspace with a booking and void dates after bedspace archive date returns Cas3FieldValidationError with the correct message and last blocking date`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
       val archiveDate = LocalDate.now().plusDays(7)
       val booking = BookingEntityFactory()
         .withPremises(bedspace.room.premises)
@@ -1138,14 +1142,14 @@ class Cas3PremisesServiceTest {
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf(voidBedspace)
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate
 
-      val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, archiveDate)
 
       assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingVoid", voidBedspace.endDate.plusDays(1).toString())
     }
 
     @Test
     fun `When archive a bedspace with void and booking that has the same end date both after the bedspace archive date returns Cas3FieldValidationError with the correct message and last blocking date`() {
-      val (_, bedspace) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
       val archiveDate = LocalDate.now().plusDays(7)
       val booking = BookingEntityFactory()
         .withPremises(bedspace.room.premises)
@@ -1164,7 +1168,7 @@ class Cas3PremisesServiceTest {
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf()
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate.plusDays(2)
 
-      val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
+      val result = premisesService.archiveBedspace(bedspace.id, premises.id, archiveDate)
 
       assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingTurnaround", booking.departureDate.plusDays(3).toString())
     }
