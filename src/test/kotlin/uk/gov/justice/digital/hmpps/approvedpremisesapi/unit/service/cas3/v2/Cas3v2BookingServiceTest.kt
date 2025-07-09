@@ -106,7 +106,7 @@ class Cas3v2BookingServiceTest {
     )
 
     @Test
-    fun `returns a booking`() {
+    fun `returns a booking where booking's premises matches supplied premisesId`() {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns true
@@ -125,10 +125,36 @@ class Cas3v2BookingServiceTest {
         premisesId = premises.id,
       )
 
-      assertThat(result is CasResult.Success).isTrue()
-      result as CasResult.Success
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value).isEqualTo(Cas3BookingAndPersons(bookingEntity, personInfo))
+      }
+    }
 
-      assertThat(result.value).isEqualTo(Cas3BookingAndPersons(bookingEntity, personInfo))
+    @Test
+    fun `returns a booking where premisesId not supplied`() {
+      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns true
+      every {
+        mockOffenderService.getPersonInfoResult(
+          bookingEntity.crn,
+          user.deliusUsername,
+          user.hasQualification(
+            UserQualification.LAO,
+          ),
+        )
+      } returns personInfo
+
+      val result = cas3BookingService.getBooking(
+        bookingId = bookingEntity.id,
+        premisesId = null,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value).isEqualTo(Cas3BookingAndPersons(bookingEntity, personInfo))
+      }
     }
 
     @Test
