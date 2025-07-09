@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
@@ -215,6 +217,33 @@ class Cas3DomainEventService(
     )
   }
 
+  @Transactional
+  fun saveBedspaceArchiveEvent(bedspace: Cas3BedspacesEntity, user: UserEntity) {
+    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
+
+    domainEventRepository.save(
+      DomainEventEntity(
+        id = domainEvent.id,
+        applicationId = null,
+        assessmentId = null,
+        bookingId = null,
+        crn = domainEvent.crn,
+        nomsNumber = null,
+        type = enumTypeFromDataType(domainEvent.data::class),
+        occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
+        createdAt = OffsetDateTime.now(),
+        data = objectMapper.writeValueAsString(domainEvent.data),
+        service = "CAS3",
+        triggeredByUserId = user.id,
+        triggerSource = TriggerSourceType.USER,
+        schemaVersion = domainEvent.schemaVersion,
+        cas1SpaceBookingId = null,
+        cas3PremisesId = domainEvent.data.eventDetails.premisesId,
+        cas3BedspaceId = domainEvent.data.eventDetails.bedspaceId,
+      ),
+    )
+  }
+
   private fun <T : CAS3Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
     crn: String,
@@ -307,6 +336,7 @@ class Cas3DomainEventService(
     CAS3PersonDepartureUpdatedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED
     CAS3AssessmentUpdatedEvent::class -> DomainEventType.CAS3_ASSESSMENT_UPDATED
     CAS3DraftReferralDeletedEvent::class -> DomainEventType.CAS3_DRAFT_REFERRAL_DELETED
+    CAS3BedspaceArchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_ARCHIVED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 
