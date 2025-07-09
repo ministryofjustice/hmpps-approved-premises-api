@@ -485,6 +485,11 @@ enum class DomainEventType(
     Cas3EventType.bedspaceArchived.value,
     "A bedspace for a Transitional Accommodation premises has been archived",
   ),
+  CAS3_BEDSPACE_UNARCHIVED(
+    DomainEventCas.CAS3,
+    Cas3EventType.bedspaceUnarchived.value,
+    "A bedspace for a Transitional Accommodation premises has been unarchived",
+  ),
   CAS3_BOOKING_CONFIRMED(
     DomainEventCas.CAS3,
     Cas3EventType.bookingConfirmed.value,
