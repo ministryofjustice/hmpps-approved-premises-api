@@ -63,13 +63,15 @@ class SpacePlanningService(
     premisesDayBookings: PremisesDayBookings,
   ): PremiseCapacitySummary {
     val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
+      log.info("Calculating capacity for day $day")
+
       val bedStates = premisesDayBedStates.forDay(day)
       val bookings = premisesDayBookings.forDay(day)
 
       val availableBeds = bedStates.findActive()
       PremiseCapacityForDay(
         day = day,
-        totalBedCount = bedStates.totalBedCount(),
+        totalBedCount = bedStates.size,
         availableBedCount = availableBeds.size,
         bookingCount = bookings.size,
         characteristicAvailability = Cas1SpaceBookingEntity.ROOM_CHARACTERISTICS_OF_INTEREST.map {
@@ -92,11 +94,11 @@ class SpacePlanningService(
   private fun determineCharacteristicAvailability(
     characteristicPropertyName: String,
     availableBeds: List<BedDayState>,
-    bookings: List<SpaceBooking>,
+    bookings: List<Cas1SpaceBookingEntity>,
   ) = PremiseCharacteristicAvailability(
     characteristicPropertyName = characteristicPropertyName,
-    availableBedCount = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
-    bookingCount = bookings.count { it.hasCharacteristic(characteristicPropertyName) },
+    availableBedCount = availableBeds.count { it.bed.characteristicsPropertyNames.contains(characteristicPropertyName) },
+    bookingCount = bookings.count { booking -> booking.criteria.any { it.propertyName == characteristicPropertyName } },
   )
 
   private fun bedStatesForEachDay(
@@ -204,7 +206,6 @@ class SpacePlanningService(
   )
 
   private fun List<BedDayState>.findActive() = this.filter { it.isActive() }
-  private fun List<BedDayState>.totalBedCount() = this.count { it.isActive() || it.isTemporarilyInactive() }
 
   private data class PremisesDayBookings(
     val premises: ApprovedPremisesEntity,
@@ -217,7 +218,7 @@ class SpacePlanningService(
 
   private data class DayBookings(
     val date: LocalDate,
-    val bookings: List<SpaceBooking>,
+    val bookings: List<Cas1SpaceBookingEntity>,
   )
 
   private fun List<Cas1SpaceBookingEntity>.bookingsForPremises(premises: ApprovedPremisesEntity) = filter { it.premises.id == premises.id }

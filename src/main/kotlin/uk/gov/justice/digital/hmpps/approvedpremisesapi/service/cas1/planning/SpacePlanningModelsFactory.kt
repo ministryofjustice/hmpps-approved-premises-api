@@ -15,37 +15,20 @@ class SpacePlanningModelsFactory {
     beds: List<Cas1PlanningBedSummary>,
     outOfServiceBedRecordsToConsider: List<OutOfServiceBedSummary>,
   ): List<BedDayState> = beds
+    .filter { BedEntity.isActive(day, it.bedEndDate) }
     .map { bedSummary ->
       BedDayState(
-        bed = bedSummary.toBed(),
+        bed = bedSummary,
         day = day,
-        inactiveReason = bedSummary.getInactiveReason(day, outOfServiceBedRecordsToConsider),
+        outOfService = bedSummary.findOutOfServiceRecord(day, outOfServiceBedRecordsToConsider) != null,
       )
     }
 
   fun spaceBookingsForDay(
     day: LocalDate,
     spaceBookingsToConsider: List<Cas1SpaceBookingEntity>,
-  ): List<SpaceBooking> = spaceBookingsToConsider
+  ): List<Cas1SpaceBookingEntity> = spaceBookingsToConsider
     .filter { it.isExpectedOrResident(day) }
-    .map { booking ->
-      SpaceBooking(
-        id = booking.id,
-        label = booking.crn,
-        requiredRoomCharacteristics = toRoomCharacteristics(booking.criteria.mapNotNull { it.propertyName }),
-      )
-    }
-
-  private fun Cas1PlanningBedSummary.getInactiveReason(day: LocalDate, outOfServiceBedRecords: List<OutOfServiceBedSummary>): BedInactiveReason? {
-    val outOfServiceRecord = this.findOutOfServiceRecord(day, outOfServiceBedRecords)
-    return if (outOfServiceRecord != null) {
-      BedOutOfService(outOfServiceRecord.getReasonName())
-    } else if (!BedEntity.isActive(day, this.bedEndDate)) {
-      BedEnded(this.bedEndDate!!)
-    } else {
-      null
-    }
-  }
 
   private fun Cas1PlanningBedSummary.findOutOfServiceRecord(
     day: LocalDate,
@@ -55,25 +38,12 @@ class SpacePlanningModelsFactory {
       !day.isBefore(it.getStartDate()) &&
       !day.isAfter(it.getEndDate())
   }
+}
 
-  private fun Cas1PlanningBedSummary.toBed() = Bed(
-    id = this.bedId,
-    label = this.bedName,
-    room = Room(
-      id = this.roomId,
-      label = this.roomName,
-      characteristics = toRoomCharacteristics(this.characteristicsPropertyNames),
-    ),
-  )
-
-  private fun toRoomCharacteristics(characteristicPropertyNames: List<String>) = characteristicPropertyNames
-    .asSequence()
-    .filter { Cas1SpaceBookingEntity.ROOM_CHARACTERISTICS_OF_INTEREST.contains(it) }
-    .map { toCharacteristic(it) }
-    .toSet()
-
-  private fun toCharacteristic(propertyName: String) = Characteristic(
-    label = propertyName,
-    propertyName = propertyName,
-  )
+data class BedDayState(
+  val bed: Cas1PlanningBedSummary,
+  val day: LocalDate,
+  val outOfService: Boolean,
+) {
+  fun isActive() = !outOfService
 }
