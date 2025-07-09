@@ -16,10 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDate
@@ -33,7 +31,6 @@ class Cas2v2ApplicationsSeedJob(
   private val cas2v2UserRepository: Cas2v2UserRepository,
   private val statusUpdateRepository: Cas2v2StatusUpdateRepository,
   private val assessmentRepository: Cas2v2AssessmentRepository,
-  private val jsonSchemaService: JsonSchemaService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
 ) : SeedJob<Cas2v2ApplicationSeedCsvRow>(
@@ -85,8 +82,6 @@ class Cas2v2ApplicationsSeedJob(
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),
         document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,
-        schemaVersion = jsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
-        schemaUpToDate = true,
       ),
     )
     if (row.submittedAt != null) {

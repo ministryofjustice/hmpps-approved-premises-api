@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
 
@@ -13,12 +12,6 @@ class Cas2v2JsonSchemaService(
   @SuppressWarnings("FunctionOnlyReturningConstant", "UnusedParameter")
   @Deprecated("APS-1570 As a intermediary step to remove schema logic, this always returns true")
   fun validate(schema: JsonSchemaEntity, json: String) = true
-
-  fun checkCas2v2SchemaOutdated(application: Cas2v2ApplicationEntity): Cas2v2ApplicationEntity {
-    val newestSchema = getNewestSchema(application.schemaVersion.javaClass)
-
-    return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
-  }
 
   fun <T : JsonSchemaEntity> getNewestSchema(type: Class<T>): JsonSchemaEntity = jsonSchemaRepository.getSchemasForType(type).maxBy { it.addedAt }
 }

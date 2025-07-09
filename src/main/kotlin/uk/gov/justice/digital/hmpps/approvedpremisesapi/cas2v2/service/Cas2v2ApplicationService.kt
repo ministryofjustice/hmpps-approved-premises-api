@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -47,7 +46,6 @@ class Cas2v2ApplicationService(
   private val cas2v2ApplicationRepository: Cas2v2ApplicationRepository,
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
-  private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
   private val cas2v2OffenderService: Cas2v2OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
@@ -108,7 +106,7 @@ class Cas2v2ApplicationService(
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     return CasResult.Success(
-      cas2v2JsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity),
+      applicationEntity,
     )
   }
 
@@ -123,7 +121,7 @@ class Cas2v2ApplicationService(
     val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
 
     return if (canAccess) {
-      CasResult.Success(cas2v2JsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity))
+      CasResult.Success(applicationEntity)
     } else {
       CasResult.Unauthorised()
     }
@@ -157,10 +155,8 @@ class Cas2v2ApplicationService(
       createdByUser = user,
       data = null,
       document = null,
-      schemaVersion = cas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
       createdAt = OffsetDateTime.now(),
       submittedAt = null,
-      schemaUpToDate = true,
       nomsNumber = offenderDetails.nomsNumber,
       telephoneNumber = null,
       applicationOrigin = applicationOrigin,
@@ -171,7 +167,7 @@ class Cas2v2ApplicationService(
       entityToSave,
     )
 
-    return success(createdApplication.apply { schemaUpToDate = true })
+    return success(createdApplication)
   }
 
   @SuppressWarnings("ReturnCount")
@@ -181,7 +177,7 @@ class Cas2v2ApplicationService(
     user: Cas2v2UserEntity,
     bailHearingDate: LocalDate?,
   ): CasResult<Cas2v2ApplicationEntity> {
-    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
+    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
@@ -194,10 +190,6 @@ class Cas2v2ApplicationService(
 
     if (application.abandonedAt != null) {
       return CasResult.GeneralValidationError("This application has been abandoned")
-    }
-
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     application.bailHearingDate = bailHearingDate
@@ -249,7 +241,6 @@ class Cas2v2ApplicationService(
     cas2v2LockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
-      ?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
@@ -266,25 +257,16 @@ class Cas2v2ApplicationService(
       return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
-    if (!application.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     val validationErrors = ValidationErrors()
     val applicationData = application.data
 
     if (applicationData == null) {
       validationErrors["$.data"] = "empty"
-    } else if (!cas2v2JsonSchemaService.validate(application.schemaVersion, applicationData)) {
-      validationErrors["$.data"] = "invalid"
     }
 
     if (validationErrors.any()) {
       return CasResult.FieldValidationError(validationErrors)
     }
-
-    application.schemaVersion as? Cas2v2ApplicationJsonSchemaEntity
-      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 v2 Application")
 
     var prisonCode: String? = null
     if (application.nomsNumber != null) {

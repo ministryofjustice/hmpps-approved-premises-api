@@ -27,12 +27,6 @@ data class Cas2v2Application(
     @get:JsonProperty("createdBy", required = true) val createdBy: Cas2v2User,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("schemaVersion", required = true) val schemaVersion: UUID,
-
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("outdatedSchema", required = true) val outdatedSchema: Boolean,
-
-    @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("status", required = true) val status: ApplicationStatus,
 
     @Schema(example = "null", required = true, description = "")

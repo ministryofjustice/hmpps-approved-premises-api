@@ -20,7 +20,6 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -69,9 +68,6 @@ data class Cas2v2ApplicationEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne
-  @JoinColumn(name = "schema_version")
-  var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
   var abandonedAt: OffsetDateTime? = null,
@@ -86,9 +82,6 @@ data class Cas2v2ApplicationEntity(
 
   @OneToOne(mappedBy = "application")
   var assessment: Cas2v2AssessmentEntity? = null,
-
-  @Transient
-  var schemaUpToDate: Boolean,
 
   var nomsNumber: String?,
 
