@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import kotlin.collections.List
 import kotlin.collections.Map
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
 @RestController
 interface AssessmentsCas1 {
@@ -93,6 +94,7 @@ interface AssessmentsCas1 {
         return getDelegate().getAssessment(assessmentId)
     }
 
+    @PaginationHeaders
     @Operation(
         tags = ["Assessments",],
         summary = "Gets assessments the user is authorised to view",

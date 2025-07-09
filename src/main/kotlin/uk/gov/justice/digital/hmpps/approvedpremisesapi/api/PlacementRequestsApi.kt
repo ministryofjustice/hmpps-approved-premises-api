@@ -41,6 +41,7 @@ interface PlacementRequestsApi {
 
     fun getDelegate(): PlacementRequestsApiDelegate = object: PlacementRequestsApiDelegate {}
 
+    @PaginationHeaders
     @Operation(
         tags = ["Placement requests",],
         summary = "Gets all placement requests",

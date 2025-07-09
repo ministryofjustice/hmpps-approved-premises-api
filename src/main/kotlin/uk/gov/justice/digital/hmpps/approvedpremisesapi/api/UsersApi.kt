@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import kotlin.collections.List
 import kotlin.collections.Map
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
 @RestController
 interface UsersApi {
@@ -54,6 +55,7 @@ interface UsersApi {
         return getDelegate().usersDeliusGet(name, xServiceName)
     }
 
+    @PaginationHeaders
     @Operation(
         tags = ["Auth",],
         summary = "Returns a list of users. If only the user's ID and Name are required, use /users/summary",
