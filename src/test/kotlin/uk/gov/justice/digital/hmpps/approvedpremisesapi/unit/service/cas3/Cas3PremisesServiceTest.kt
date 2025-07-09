@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -66,6 +67,7 @@ class Cas3PremisesServiceTest {
   private val bedRepositoryMock = mockk<BedRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
   private val workingDayServiceMock = mockk<WorkingDayService>()
+  private val cas3DomainEventService = mockk<Cas3DomainEventService>()
 
   private val temporaryAccommodationPremisesFactory = TemporaryAccommodationPremisesEntityFactory()
     .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
@@ -88,6 +90,7 @@ class Cas3PremisesServiceTest {
     bedRepositoryMock,
     characteristicServiceMock,
     workingDayServiceMock,
+    cas3DomainEventService,
   )
 
   @Nested
@@ -1000,6 +1003,7 @@ class Cas3PremisesServiceTest {
       every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspace.id, archiveDate) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspace
+      every { cas3DomainEventService.saveBedspaceArchiveEvent(bedspace) } returns Unit
 
       val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
 
@@ -1014,7 +1018,7 @@ class Cas3PremisesServiceTest {
 
     @Test
     fun `When archive a non existing bedspace returns a NotFound with the correct message`() {
-      createPremisesAndBedspace()
+      val (_, _) = createPremisesAndBedspace()
       val nonExistingBedspaceId = UUID.randomUUID()
 
       every { bedRepositoryMock.findByIdOrNull(nonExistingBedspaceId) } returns null
