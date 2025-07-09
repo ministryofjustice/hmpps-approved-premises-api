@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -41,25 +40,6 @@ class Cas1PremisesDayTransformerTest {
           Cas1PremiseCharacteristicAvailability(Cas1SpaceBookingCharacteristic.IS_WHEELCHAIR_DESIGNATED, 20, 8),
         ),
       )
-
-    val spaceBookings = listOf(
-      Cas1SpaceBookingDaySummary(
-        id = UUID.randomUUID(),
-        person = RestrictedPersonSummary(
-          crn = "crn",
-          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
-        ),
-        canonicalArrivalDate = currentSearchDay.minusDays(1),
-        canonicalDepartureDate = currentSearchDay.plusDays(1),
-        tier = "Tier 1",
-        releaseType = "rotl",
-        essentialCharacteristics = listOf(
-          Cas1SpaceCharacteristic.isSingle,
-          Cas1SpaceCharacteristic.hasEnSuite,
-          Cas1SpaceCharacteristic.isIAP,
-        ),
-      ),
-    )
 
     val spaceBookingSummaries = listOf(
       Cas1SpaceBookingSummary(
@@ -106,7 +86,6 @@ class Cas1PremisesDayTransformerTest {
     val result = transformer.toCas1PremisesDaySummary(
       currentSearchDay,
       capacity,
-      spaceBookings,
       outOfServiceBeds,
       spaceBookingSummaries,
     )
@@ -115,7 +94,6 @@ class Cas1PremisesDayTransformerTest {
     assertThat(result.previousDate).isEqualTo(currentSearchDay.minusDays(1))
     assertThat(result.nextDate).isEqualTo(currentSearchDay.plusDays(1))
     assertThat(result.capacity).isEqualTo(capacity)
-    assertThat(result.spaceBookings).isEqualTo(spaceBookings)
     assertThat(result.outOfServiceBeds).isEqualTo(outOfServiceBeds)
     assertThat(result.spaceBookingSummaries).isEqualTo(spaceBookingSummaries)
   }
