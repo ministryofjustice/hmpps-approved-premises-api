@@ -39,3 +39,11 @@ class SpacePlanningModelsFactory {
       !day.isAfter(it.getEndDate())
   }
 }
+
+data class BedDayState(
+  val bed: Cas1PlanningBedSummary,
+  val day: LocalDate,
+  val outOfService: Boolean,
+) {
+  fun isActive() = !outOfService
+}
