@@ -1,11 +1,9 @@
-import org.apache.commons.io.FileUtils
 import java.io.File
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.0"
   kotlin("plugin.spring") version "2.1.21"
   kotlin("plugin.jpa") version "2.1.21"
-  id("org.openapi.generator") version "7.13.0"
   id("io.gitlab.arturbosch.detekt") version "1.23.8"
   id("org.owasp.dependencycheck") version "12.1.3"
 }
@@ -102,7 +100,6 @@ val buildDir = layout.buildDirectory.asFile.get()
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
-    dependsOn("openApiGenerate")
     getByName("check") {
       dependsOn(":ktlintCheck", "detekt")
     }
@@ -199,182 +196,8 @@ tasks.register<JavaExec>("generateCas1Roles") {
   outputs.file(file("built-cas1-roles.json"))
 }
 
-tasks.named("openApiGenerate") {
+tasks.named("assemble") {
   finalizedBy("generateCas1Roles")
-}
-
-// Skip OpenAPI generation if running tests from intellij
-val entryPointTask = project.gradle.startParameter.taskNames.firstOrNull()?.let {
-  // this hack fixes an issue downloading sources in intellij
-  if (it.contains("DownloadArtifact")) {
-    null
-  } else {
-    project.tasks.getByName(it.replace(":", ""))
-  }
-}
-val isTestInvokedFromIntellij = (entryPointTask is Test && System.getProperty("idea.active") !== null)
-if (isTestInvokedFromIntellij) {
-  tasks.withType<org.openapitools.generator.gradle.plugin.tasks.GenerateTask> {
-    enabled = false
-  }
-}
-
-fun addOpenApiConfigOptions(
-  configOptions: MapProperty<String, String>,
-  apiSuffix: String? = null,
-  useTags: Boolean = false,
-) {
-  configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
-    put("delegatePattern", "true")
-    put("gradleBuildFile", "false")
-    put("exceptionHandler", "false")
-    put("useBeanValidation", "false")
-    put(
-      "useTags",
-      if (useTags) {
-        "true"
-      } else {
-        "false"
-      },
-    )
-    apiSuffix?.let {
-      put("apiSuffix", it)
-    }
-    put("dateLibrary", "custom")
-    put("useSpringBoot3", "true")
-    put("enumPropertyNaming", "camelCase")
-  }
-}
-
-openApiGenerate {
-  generatorName.set("kotlin-spring")
-  inputSpec.set("$rootDir/src/main/resources/static/codegen/built-api-spec.yml")
-  outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
-  modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
-  addOpenApiConfigOptions(configOptions)
-  typeMappings.put("DateTime", "Instant")
-  importMappings.put("Instant", "java.time.Instant")
-  templateDir.set("$rootDir/openapi")
-  additionalProperties.put("removeEnumValuePrefix", "true")
-}
-
-registerAdditionalOpenApiGenerateTask(
-  name = "openApiGenerateCas1Namespace",
-  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas1-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas1",
-  useTags = true,
-)
-
-fun registerAdditionalOpenApiGenerateTask(
-  name: String,
-  ymlPath: String,
-  apiPackageName: String,
-  modelPackageName: String,
-  apiSuffix: String? = null,
-  useTags: Boolean = false,
-) {
-  tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(name) {
-    generatorName.set("kotlin-spring")
-    inputSpec.set(ymlPath)
-    outputDir.set("$buildDir/generated")
-    apiPackage.set(apiPackageName)
-    modelPackage.set(modelPackageName)
-    addOpenApiConfigOptions(configOptions, apiSuffix, useTags)
-    typeMappings.put("DateTime", "Instant")
-    importMappings.put("Instant", "java.time.Instant")
-    templateDir.set("$rootDir/openapi")
-  }
-}
-
-tasks.register("openApiPreCompilation") {
-
-  // Generate OpenAPI spec files suited to Kotlin code generator
-  // -----------------------------------------------------------
-  // The 'built' files produced each contain all the shared 'components'
-  // -- as the Kotlin generator doesn't support $ref links to 'remote' files.
-
-  logger.quiet("Running task: openApiPreCompilation")
-
-  val sharedComponents = FileUtils.readFileToString(
-    File("$rootDir/src/main/resources/static/_shared.yml"),
-    "UTF-8",
-  )
-
-  fun rewriteRefsForLocalComponents(file: File) {
-    val updatedContents = FileUtils
-      .readFileToString(file, "UTF-8")
-      .replace("_shared.yml#/components", "#/components")
-      .replace("cas1-schemas.yml#/components", "#/components")
-    FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
-  }
-
-  fun buildSpecWithSharedComponentsAppended(
-    outputFileName: String,
-    inputSpec: String,
-    inputSchemas: String? = null,
-  ) {
-    val apiFileName = "$rootDir/src/main/resources/static/$inputSpec"
-    val api = FileUtils.readFileToString(
-      File(apiFileName),
-      "UTF-8",
-    )
-
-    val schemas = if (inputSchemas != null) {
-      val schemasFileName = "$rootDir/src/main/resources/static/$inputSchemas"
-      FileUtils.readFileToString(
-        File(schemasFileName),
-        "UTF-8",
-      ).lines().filter {
-        !it.matches(""".*components\:.*""".toRegex()) &&
-          !it.matches(""".*schemas\:.*""".toRegex())
-      }.joinToString("\n")
-    } else {
-      ""
-    }
-
-    val compiledSpecFile = File("$rootDir/src/main/resources/static/codegen/$outputFileName")
-    val notice = "# DO NOT EDIT.\n# This is a build artefact for use in code generation.\n"
-
-    FileUtils.writeStringToFile(
-      compiledSpecFile,
-      (notice + api + sharedComponents + schemas),
-      "UTF-8",
-    )
-
-    rewriteRefsForLocalComponents(compiledSpecFile)
-  }
-
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-api-spec.yml",
-    inputSpec = "api.yml",
-  )
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-cas1-api-spec.yml",
-    inputSpec = "cas1-api.yml",
-    inputSchemas = "cas1-schemas.yml",
-  )
-}
-
-tasks.get("openApiGenerate").dependsOn(
-  "openApiPreCompilation",
-  "openApiGenerateCas1Namespace",
-)
-
-tasks.get("openApiGenerate").doLast {
-  // This is a workaround for an issue where we end up with duplicate keys in output JSON because we declare properties both in the discriminator
-  // and as a regular property in the OpenAPI spec.  The Typescript generator does not support just the discriminator so there is no alternative.
-  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model").walk()
-    .forEach {
-      if (it.isFile && it.extension == "kt") {
-        val replacedFileContents = FileUtils.readFileToString(it, "UTF-8")
-          .replace("include = JsonTypeInfo.As.PROPERTY", "include = JsonTypeInfo.As.EXISTING_PROPERTY")
-        FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
-      }
-    }
 }
 
 ktlint {
@@ -396,7 +219,7 @@ tasks {
   }
 }
 
-tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate")
+tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("assemble")
 
 detekt {
   config.setFrom("./detekt.yml")
