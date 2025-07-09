@@ -72,7 +72,7 @@ FROM
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
-    ap.gender = #SPECIFIED_GENDER#
+    ap.gender = :gender
   GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
 ) AS result
 WHERE
@@ -134,16 +134,8 @@ class Cas1SpaceSearchRepository(
     var query = CANDIDATE_PREMISES_QUERY_TEMPLATE
     val params = mutableMapOf<String, Any>(
       "outcode" to targetPostcodeDistrict,
+      "gender" to if (isWomensPremises) "WOMAN" else "MAN",
     )
-
-    when {
-      isWomensPremises -> {
-        query = query.replace("#SPECIFIED_GENDER#", "'WOMAN'")
-      }
-      else -> {
-        query = query.replace("#SPECIFIED_GENDER#", "'MAN'")
-      }
-    }
 
     when {
       premisesCharacteristics.isEmpty() -> {
