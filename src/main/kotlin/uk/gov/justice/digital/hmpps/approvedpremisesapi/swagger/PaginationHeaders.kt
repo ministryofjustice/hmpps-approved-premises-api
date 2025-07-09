@@ -1,45 +1,46 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger
 
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.Parameters
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.headers.Header
 import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 
-@Parameters(
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@ApiResponses(
   value = [
-    Parameter(
-      name = PaginationHeaders.CURRENT_PAGE,
-      `in` = ParameterIn.HEADER,
-      description = "The current page number",
-      required = false,
-      content = [Content(schema = Schema(implementation = Int::class))],
-    ),
-    Parameter(
-      name = PaginationHeaders.TOTAL_PAGES,
-      `in` = ParameterIn.HEADER,
-      description = "The total number of pages",
-      required = false,
-      content = [Content(schema = Schema(implementation = Int::class))],
-    ),
-    Parameter(
-      name = PaginationHeaders.TOTAL_RESULTS,
-      `in` = ParameterIn.HEADER,
-      description = "The total number of results",
-      required = false,
-      content = [Content(schema = Schema(implementation = Int::class))],
-    ),
-    Parameter(
-      name = PaginationHeaders.PAGE_SIZE,
-      `in` = ParameterIn.HEADER,
-      description = "The size of each page",
-      required = false,
-      content = [Content(schema = Schema(implementation = Int::class))],
+    ApiResponse(
+      responseCode = "200",
+      description = "Successful response",
+      headers = [
+        Header(
+          name = PaginationHeaders.CURRENT_PAGE,
+          description = "The current page number",
+          schema = Schema(implementation = Int::class),
+        ),
+
+        Header(
+          name = PaginationHeaders.TOTAL_PAGES,
+          description = "The total number of pages",
+          schema = Schema(implementation = Int::class),
+        ),
+
+        Header(
+          name = PaginationHeaders.TOTAL_RESULTS,
+          description = "The total number of results",
+          schema = Schema(implementation = Int::class),
+        ),
+
+        Header(
+          name = PaginationHeaders.PAGE_SIZE,
+          description = "The size of each page",
+          schema = Schema(implementation = Int::class),
+        ),
+
+      ],
     ),
   ],
 )
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
 internal annotation class PaginationHeaders {
   companion object {
     const val CURRENT_PAGE = "X-Pagination-CurrentPage"

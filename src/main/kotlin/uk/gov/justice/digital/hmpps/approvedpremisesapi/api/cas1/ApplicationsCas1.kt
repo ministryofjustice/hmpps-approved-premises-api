@@ -28,12 +28,14 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import kotlin.collections.List
 import kotlin.collections.Map
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
 @RestController
 interface ApplicationsCas1 {
 
     fun getDelegate(): ApplicationsCas1Delegate = object: ApplicationsCas1Delegate {}
 
+    @PaginationHeaders
     @Operation(
         tags = ["Applications",],
         summary = "Lists all applications that any user has created",
