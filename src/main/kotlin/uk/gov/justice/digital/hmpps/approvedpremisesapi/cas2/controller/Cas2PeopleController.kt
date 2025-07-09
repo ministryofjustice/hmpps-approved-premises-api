@@ -3,13 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -27,11 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
-@RestController
-@RequestMapping(
-  "\${openapi.communityAccommodationServicesTier2CAS2.base-path:/cas2}",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas2Controller
 class Cas2PeopleController(
   private val offenderService: Cas2OffenderService,
   private val oasysService: OASysService,
@@ -42,10 +35,7 @@ class Cas2PeopleController(
 ) {
 
   @SuppressWarnings("TooGenericExceptionThrown", "ThrowsCount")
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/people/search"],
-  )
+  @GetMapping("/people/search")
   fun peopleSearchGet(@RequestParam nomsNumber: String): ResponseEntity<Person> {
     val currentUser = cas2UserService.getUserForRequest()
 
@@ -66,10 +56,7 @@ class Cas2PeopleController(
     }
   }
 
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/people/{crn}/oasys/risk-to-self"],
-  )
+  @GetMapping("/people/{crn}/oasys/risk-to-self")
   fun peopleCrnOasysRiskToSelfGet(@PathVariable crn: String): ResponseEntity<OASysRiskToSelf> {
     getOffenderDetails(crn)
 
@@ -91,10 +78,7 @@ class Cas2PeopleController(
     }
   }
 
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/people/{crn}/oasys/rosh"],
-  )
+  @GetMapping("/people/{crn}/oasys/rosh")
   fun peopleCrnOasysRoshGet(@PathVariable crn: String): ResponseEntity<OASysRiskOfSeriousHarm> {
     getOffenderDetails(crn)
 
@@ -116,10 +100,7 @@ class Cas2PeopleController(
     }
   }
 
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/people/{crn}/risks"],
-  )
+  @GetMapping("/people/{crn}/risks")
   fun peopleCrnRisksGet(@PathVariable crn: String): ResponseEntity<PersonRisks> {
     val risks = when (val risksResult = offenderService.getRiskByCrn(crn)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()

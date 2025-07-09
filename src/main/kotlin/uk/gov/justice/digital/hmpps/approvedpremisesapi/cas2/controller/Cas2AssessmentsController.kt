@@ -1,13 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.RestController
 import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
@@ -31,11 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import java.net.URI
 import java.util.UUID
 
-@RestController
-@RequestMapping(
-  "\${openapi.communityAccommodationServicesTier2CAS2.base-path:/cas2}",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas2Controller
 class Cas2AssessmentsController(
   private val assessmentService: Cas2AssessmentService,
   private val assessmentNoteService: Cas2AssessmentNoteService,
@@ -46,10 +41,7 @@ class Cas2AssessmentsController(
 ) {
 
   @SuppressWarnings("ThrowsCount")
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/assessments/{assessmentId}"],
-  )
+  @GetMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Cas2Assessment> {
     val assessment = when (
       val assessmentResult = assessmentService.getAssessment(assessmentId)
@@ -67,10 +59,7 @@ class Cas2AssessmentsController(
   }
 
   @SuppressWarnings("ThrowsCount")
-  @RequestMapping(
-    method = [RequestMethod.PUT],
-    value = ["/assessments/{assessmentId}"],
-  )
+  @PutMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdPut(
     @PathVariable assessmentId: UUID,
     @RequestBody updateCas2Assessment: UpdateCas2Assessment,
@@ -94,10 +83,7 @@ class Cas2AssessmentsController(
     )
   }
 
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/assessments/{assessmentId}/status-updates"],
-  )
+  @PostMapping("/assessments/{assessmentId}/status-updates")
   fun assessmentsAssessmentIdStatusUpdatesPost(
     @PathVariable assessmentId: UUID,
     @RequestBody cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
@@ -114,10 +100,7 @@ class Cas2AssessmentsController(
     return ResponseEntity(HttpStatus.CREATED)
   }
 
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/assessments/{assessmentId}/notes"],
-  )
+  @PostMapping("/assessments/{assessmentId}/notes")
   fun assessmentsAssessmentIdNotesPost(
     @PathVariable assessmentId: UUID,
     @RequestBody body: NewCas2ApplicationNote,
