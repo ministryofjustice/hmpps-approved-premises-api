@@ -63,6 +63,8 @@ class SpacePlanningService(
     premisesDayBookings: PremisesDayBookings,
   ): PremiseCapacitySummary {
     val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
+      log.info("Calculating capacity for day $day")
+
       val bedStates = premisesDayBedStates.forDay(day)
       val bookings = premisesDayBookings.forDay(day)
 
@@ -95,7 +97,7 @@ class SpacePlanningService(
     bookings: List<SpaceBooking>,
   ) = PremiseCharacteristicAvailability(
     characteristicPropertyName = characteristicPropertyName,
-    availableBedCount = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
+    availableBedCount = availableBeds.count { it.bed.characteristicsPropertyNames.contains(characteristicPropertyName) },
     bookingCount = bookings.count { it.hasCharacteristic(characteristicPropertyName) },
   )
 

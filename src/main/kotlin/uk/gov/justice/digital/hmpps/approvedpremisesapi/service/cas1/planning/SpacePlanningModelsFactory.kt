@@ -17,7 +17,7 @@ class SpacePlanningModelsFactory {
   ): List<BedDayState> = beds
     .map { bedSummary ->
       BedDayState(
-        bed = bedSummary.toBed(),
+        bed = bedSummary,
         day = day,
         inactiveReason = bedSummary.getInactiveReason(day, outOfServiceBedRecordsToConsider),
       )
@@ -55,16 +55,6 @@ class SpacePlanningModelsFactory {
       !day.isBefore(it.getStartDate()) &&
       !day.isAfter(it.getEndDate())
   }
-
-  private fun Cas1PlanningBedSummary.toBed() = Bed(
-    id = this.bedId,
-    label = this.bedName,
-    room = Room(
-      id = this.roomId,
-      label = this.roomName,
-      characteristics = toRoomCharacteristics(this.characteristicsPropertyNames),
-    ),
-  )
 
   private fun toRoomCharacteristics(characteristicPropertyNames: List<String>) = characteristicPropertyNames
     .asSequence()

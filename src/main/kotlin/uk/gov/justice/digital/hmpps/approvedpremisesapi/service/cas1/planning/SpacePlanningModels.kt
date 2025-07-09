@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlanningBedSummary
 import java.time.LocalDate
 import java.util.UUID
 
@@ -12,14 +13,10 @@ data class Bed(
   val id: UUID,
   val label: String,
   val room: Room,
-) {
-  fun hasCharacteristic(propertyName: String) = room.characteristics.any {
-    it.propertyName == propertyName
-  }
-}
+)
 
 data class BedDayState(
-  val bed: Bed,
+  val bed: Cas1PlanningBedSummary,
   val day: LocalDate,
   val inactiveReason: BedInactiveReason?,
 ) {

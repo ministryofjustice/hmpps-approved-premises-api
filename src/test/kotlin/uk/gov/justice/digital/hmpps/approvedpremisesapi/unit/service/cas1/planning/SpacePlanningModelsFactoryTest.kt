@@ -63,31 +63,7 @@ class SpacePlanningModelsFactoryTest {
       assertThat(bedDayState.day).isEqualTo(LocalDate.of(2020, 1, 1))
       assertThat(bedDayState.inactiveReason).isNull()
 
-      val bed = bedDayState.bed
-      assertThat(bed.id).isEqualTo(bedSummary.bedId)
-      assertThat(bed.label).isEqualTo("the bed name")
-
-      val room = bed.room
-      assertThat(room.id).isEqualTo(bedSummary.roomId)
-      assertThat(room.label).isEqualTo("the room name")
-
-      val characteristics = room.characteristics
-      assertThat(characteristics).hasSize(3)
-
-      assertThat(characteristics).containsOnly(
-        Characteristic(
-          label = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
-          propertyName = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
-        ),
-        Characteristic(
-          label = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          propertyName = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-        ),
-        Characteristic(
-          label = CAS1_PROPERTY_NAME_SINGLE_ROOM,
-          propertyName = CAS1_PROPERTY_NAME_SINGLE_ROOM,
-        ),
-      )
+      assertThat(bedDayState.bed).isEqualTo(bedSummary)
     }
 
     @Test
@@ -114,13 +90,11 @@ class SpacePlanningModelsFactoryTest {
 
       val activeBedDayState = result[0]
       assertThat(activeBedDayState.inactiveReason).isNull()
-      assertThat(activeBedDayState.bed.id).isEqualTo(bed1Active.bedId)
-      assertThat(activeBedDayState.bed.label).isEqualTo("the active bed name")
+      assertThat(activeBedDayState.bed).isEqualTo(bed1Active)
 
       val inactiveBedDayState = result[1]
       assertThat(inactiveBedDayState.inactiveReason).isInstanceOf(BedEnded::class.java)
-      assertThat(inactiveBedDayState.bed.id).isEqualTo(bed2EndedYesterday.bedId)
-      assertThat(inactiveBedDayState.bed.label).isEqualTo("the ended bed name")
+      assertThat(activeBedDayState.bed).isEqualTo(bed2EndedYesterday)
     }
 
     @Test
@@ -182,18 +156,15 @@ class SpacePlanningModelsFactoryTest {
 
       val activeBedDayState = result[0]
       assertThat(activeBedDayState.inactiveReason).isNull()
-      assertThat(activeBedDayState.bed.id).isEqualTo(activeBed1Id)
-      assertThat(activeBedDayState.bed.label).isEqualTo("active bed 1")
+      assertThat(activeBedDayState.bed).isEqualTo(activeBed1)
 
       val oosbBed1State = result[1]
       assertThat(oosbBed1State.inactiveReason).isInstanceOf(BedOutOfService::class.java)
-      assertThat(oosbBed1State.bed.id).isEqualTo(oosbBed1Id)
-      assertThat(oosbBed1State.bed.label).isEqualTo("oosb bed 1")
+      assertThat(activeBedDayState.bed).isEqualTo(oosbBed1)
 
       val oosbBed2State = result[2]
       assertThat(oosbBed2State.inactiveReason).isInstanceOf(BedOutOfService::class.java)
-      assertThat(oosbBed2State.bed.id).isEqualTo(oosbBed2Id)
-      assertThat(oosbBed2State.bed.label).isEqualTo("oosb bed 2")
+      assertThat(activeBedDayState.bed).isEqualTo(oosbBed2)
     }
   }
 
