@@ -5,18 +5,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository.OutOfServiceBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlanningBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import java.time.LocalDate
 
 @Service
 class SpacePlanningModelsFactory {
-  companion object {
-    const val DEFAULT_CHARACTERISTIC_WEIGHT = 100
-  }
-
-  fun allBeds(
-    beds: List<Cas1PlanningBedSummary>,
-  ) = beds.map { it.toBed() }
 
   fun allBedsDayState(
     day: LocalDate,
@@ -83,7 +75,5 @@ class SpacePlanningModelsFactory {
   private fun toCharacteristic(propertyName: String) = Characteristic(
     label = propertyName,
     propertyName = propertyName,
-    weighting = DEFAULT_CHARACTERISTIC_WEIGHT,
-    singleRoom = propertyName == CAS1_PROPERTY_NAME_SINGLE_ROOM,
   )
 }

@@ -38,11 +38,13 @@ class SpacePlanningService(
   ): List<PremiseCapacitySummary> {
     log.info("Determine capacity for ${forPremises.size} premises between $rangeInclusive")
 
-    val allPremisesDayBedStates = bedStatesForEachDay(forPremises, rangeInclusive)
-    log.info("Have retrieved bed states")
+    val rangeList = rangeInclusive.orderedDatesInRange().toList()
 
-    val allPremisesDayBookings = spaceBookingsForEachDay(forPremises, rangeInclusive, excludeSpaceBookingId)
-    log.info("Have retrieved bookings")
+    val allPremisesDayBedStates = bedStatesForEachDay(forPremises, rangeList)
+    log.info("Have retrieved ${allPremisesDayBedStates.size} bed states")
+
+    val allPremisesDayBookings = spaceBookingsForEachDay(forPremises, rangeList, excludeSpaceBookingId)
+    log.info("Have retrieved ${allPremisesDayBookings.size} bookings")
 
     return forPremises.map { premises ->
       calculatePremisesCapacity(
@@ -99,7 +101,7 @@ class SpacePlanningService(
 
   private fun bedStatesForEachDay(
     forPremises: List<ApprovedPremisesEntity>,
-    range: DateRange,
+    orderedRange: List<LocalDate>,
   ): List<PremisesDayBedStates> {
     val allPremisesIds = forPremises.map { it.id }
     val allPremisesOosbRecords = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesIds(allPremisesIds)
@@ -109,15 +111,19 @@ class SpacePlanningService(
 
     return forPremises.map { premises ->
       log.info("Loading bed state for premises ${premises.name}")
+
+      val premisesBeds = allPremisesBeds.bedsForPremises(premises)
+      val premisesOosbRecords = allPremisesOosbRecords.oosbForPremises(premises)
+
       PremisesDayBedStates(
         premises = premises,
-        dayBedStates = range.orderedDatesInRange().map { day ->
+        dayBedStates = orderedRange.map { day ->
           DayBedStates(
             date = day,
             bedStates = spacePlanningModelsFactory.allBedsDayState(
               day = day,
-              beds = allPremisesBeds.bedsForPremises(premises),
-              outOfServiceBedRecordsToConsider = allPremisesOosbRecords.oosbForPremises(premises),
+              beds = premisesBeds,
+              outOfServiceBedRecordsToConsider = premisesOosbRecords,
             ),
           )
         }.toList(),
@@ -127,24 +133,28 @@ class SpacePlanningService(
 
   private fun spaceBookingsForEachDay(
     forPremises: List<ApprovedPremisesEntity>,
-    range: DateRange,
+    orderedRange: List<LocalDate>,
     excludeSpaceBookingId: UUID? = null,
   ): List<PremisesDayBookings> {
-    val nonCancelledBookingsInRange = spaceBookingRepository.findNonCancelledBookingsInRange(
+    val allPremisesBookingsInRange = spaceBookingRepository.findNonCancelledBookingsInRange(
       premisesIds = forPremises.map { it.id },
-      rangeStartInclusive = range.fromInclusive,
-      rangeEndInclusive = range.toInclusive,
+      rangeStartInclusive = orderedRange.first(),
+      rangeEndInclusive = orderedRange.last(),
     ).filter { it.id != excludeSpaceBookingId }
 
     return forPremises.map { premises ->
+      log.info("Loading bookings for premises ${premises.name}")
+
+      val premisesBookingsInRange = allPremisesBookingsInRange.bookingsForPremises(premises)
+
       PremisesDayBookings(
         premises = premises,
-        dayBookings = range.orderedDatesInRange().map { day ->
+        dayBookings = orderedRange.map { day ->
           DayBookings(
             date = day,
             bookings = spacePlanningModelsFactory.spaceBookingsForDay(
               day = day,
-              spaceBookingsToConsider = nonCancelledBookingsInRange.bookingsForPremises(premises),
+              spaceBookingsToConsider = premisesBookingsInRange,
             ),
           )
         }.toList(),
