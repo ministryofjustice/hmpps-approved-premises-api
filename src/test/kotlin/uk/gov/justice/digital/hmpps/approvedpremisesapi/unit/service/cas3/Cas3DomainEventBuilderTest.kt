@@ -544,8 +544,10 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `getBedspaceArchiveEvent transforms the bedspace information correctly to a domain event`() {
-    val endDate = LocalDate.parse("2023-07-15")
+  fun `getBedspaceUnarchiveEvent transforms the bedspace information correctly to a domain event`() {
+    val newStartDate = LocalDate.now()
+    val currentEndDate = LocalDate.now()
+    val currentStartDate = LocalDate.now()
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
     val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
@@ -559,25 +561,30 @@ class Cas3DomainEventBuilderTest {
 
     val bedspace = Cas3BedspaceEntityFactory()
       .withId(bedspaceId)
-      .withEndDate(endDate)
+      .withEndDate(currentEndDate)
+      .withStartDate(currentStartDate)
       .withPremises(premises)
       .produce()
 
-    val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
+    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, newStartDate, user)
 
     assertThat(event.applicationId).isNull()
     assertThat(event.bookingId).isNull()
     assertThat(event.crn).isEqualTo("TODO: what goes here")
     assertThat(event.nomsNumber).isNull()
-    assertThat(event.data.eventType).isEqualTo(EventType.bedspaceArchived)
+    assertThat(event.data.eventType).isEqualTo(EventType.bedspaceUnarchived)
     assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
-    assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
     assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
-    assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+    assertThat(event.data.eventDetails.currentEndDate).isEqualTo(currentEndDate)
+    assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
+    assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
   }
 
   @Test
-  fun `getBedspaceArchiveEvent errors when endDate is null`() {
+  fun `getBedspaceUnarchiveEvent errors when currentEndDate is null`() {
+    val newStartDate = LocalDate.now()
+    val currentEndDate = null
+    val currentStartDate = LocalDate.now()
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
     val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
@@ -591,15 +598,16 @@ class Cas3DomainEventBuilderTest {
 
     val bedspace = Cas3BedspaceEntityFactory()
       .withId(bedspaceId)
-      .withEndDate(null)
+      .withEndDate(currentEndDate)
+      .withStartDate(currentStartDate)
       .withPremises(premises)
       .produce()
 
     val error = assertThrows<IllegalStateException> {
-      cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
+      cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, newStartDate, user)
     }
 
-    assertThat(error.message).isEqualTo("Bedspace end date is null for bedspace id: ${bedspace.id}")
+    assertThat(error.message).isEqualTo("Bedspace endDate is null for bedspace id: ${bedspace.id}")
   }
 
   @Test
