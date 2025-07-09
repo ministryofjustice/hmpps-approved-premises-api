@@ -12,7 +12,6 @@ import org.springdoc.core.customizers.OpenApiCustomizer
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 
 @Configuration
@@ -25,7 +24,6 @@ class SwaggerConfiguration {
   }
 
   @Bean
-  @Primary
   fun customOpenAPI(): OpenAPI = OpenAPI()
     .info(
       Info()
