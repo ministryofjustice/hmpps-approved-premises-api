@@ -93,7 +93,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManageme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersistedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrictEntityFactory
@@ -186,8 +185,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
@@ -534,9 +531,6 @@ abstract class IntegrationTestBase {
   lateinit var placementApplicationRepository: PlacementApplicationRepository
 
   @Autowired
-  lateinit var placementDateRepository: PlacementDateRepository
-
-  @Autowired
   lateinit var bookingNotMadeRepository: BookingNotMadeTestRepository
 
   @Autowired
@@ -689,7 +683,6 @@ abstract class IntegrationTestBase {
   lateinit var cas3TurnaroundFactory: PersistedFactory<Cas3TurnaroundEntity, UUID, Cas3TurnaroundEntityFactory>
   lateinit var cas3v2TurnaroundFactory: PersistedFactory<Cas3v2TurnaroundEntity, UUID, Cas3v2TurnaroundEntityFactory>
   lateinit var placementApplicationFactory: PersistedFactory<PlacementApplicationEntity, UUID, PlacementApplicationEntityFactory>
-  lateinit var placementDateFactory: PersistedFactory<PlacementDateEntity, UUID, PlacementDateEntityFactory>
   lateinit var probationAreaProbationRegionMappingFactory: PersistedFactory<ProbationAreaProbationRegionMappingEntity, UUID, ProbationAreaProbationRegionMappingEntityFactory>
   lateinit var applicationTimelineNoteEntityFactory: PersistedFactory<ApplicationTimelineNoteEntity, UUID, ApplicationTimelineNoteEntityFactory>
   lateinit var appealEntityFactory: PersistedFactory<AppealEntity, UUID, AppealEntityFactory>
@@ -812,7 +805,6 @@ abstract class IntegrationTestBase {
     cas3TurnaroundFactory = PersistedFactory({ Cas3TurnaroundEntityFactory() }, turnaroundRepository)
     cas3v2TurnaroundFactory = PersistedFactory({ Cas3v2TurnaroundEntityFactory() }, cas3v2TurnaroundRepository)
     placementApplicationFactory = PersistedFactory({ PlacementApplicationEntityFactory() }, placementApplicationRepository)
-    placementDateFactory = PersistedFactory({ PlacementDateEntityFactory() }, placementDateRepository)
     probationAreaProbationRegionMappingFactory = PersistedFactory({ ProbationAreaProbationRegionMappingEntityFactory() }, probationAreaProbationRegionMappingRepository)
     applicationTimelineNoteEntityFactory = PersistedFactory({ ApplicationTimelineNoteEntityFactory() }, applicationTimelineNoteRepository)
     appealEntityFactory = PersistedFactory({ AppealEntityFactory() }, appealTestRepository)
