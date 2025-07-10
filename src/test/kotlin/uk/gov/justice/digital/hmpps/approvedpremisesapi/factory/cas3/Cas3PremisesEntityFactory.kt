@@ -84,16 +84,8 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
       .produce(),
   )
 
-  fun withYieldedProbationDeliveryUnit(probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>) = apply {
-    this.probationDeliveryUnit = probationDeliveryUnit
-  }
-
   fun withCharacteristics(characteristics: MutableList<Cas3PremisesCharacteristicEntity>) = apply {
     this.characteristics = { characteristics }
-  }
-
-  fun withBedspaces(bedspaces: MutableList<Cas3BedspacesEntity>) = apply {
-    this.bedspaces = { bedspaces }
   }
 
   fun withStatus(status: PropertyStatus) = apply {
@@ -115,7 +107,7 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     characteristics = this.characteristics(),
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke()
-      ?: throw RuntimeException("Must provide a local authority area"),
+      ?: throw RuntimeException("Must provide a probation delivery unit"),
     bedspaces = this.bedspaces(),
   )
 }

@@ -27,10 +27,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -64,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFa
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -1686,6 +1690,87 @@ class Cas3DomainEventServiceTest {
         data = data,
       ),
     )
+  }
+
+  @Test
+  fun `saveBedspaceUnarchiveEvent saves event but does not emit it`() {
+    val occuredAt = Instant.now()
+    val bedspaceId = UUID.randomUUID()
+    val newStartDate = LocalDate.parse("2021-01-01")
+    val currentStartDate = LocalDate.parse("2021-01-31")
+    val currentEndDate = LocalDate.parse("2021-01-31")
+    val id = UUID.randomUUID()
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      ).produce()
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    val premises = Cas3PremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .produce()
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withId(bedspaceId)
+      .withEndDate(currentEndDate)
+      .withEndDate(currentStartDate)
+      .withPremises(premises)
+      .produce()
+    val eventDetails = CAS3BedspaceUnarchiveEventDetails(
+      bedspaceId = bedspaceId,
+      userId = user.id,
+      newStartDate = newStartDate,
+      currentStartDate = bedspace.startDate!!,
+      currentEndDate = bedspace.endDate!!,
+    )
+    val data = CAS3BedspaceUnarchiveEvent(
+      eventDetails = eventDetails,
+      id = id,
+      timestamp = occuredAt,
+      eventType = EventType.bedspaceUnarchived,
+    )
+    val domainEventId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = "TODO: what goes here",
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(newStartDate), eq(user)) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(bedspace, newStartDate, user)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEvent.id &&
+            it.type == DomainEventType.CAS3_BEDSPACE_UNARCHIVED &&
+            it.crn == domainEvent.crn &&
+            it.cas3PremisesId == premises.id &&
+            it.cas3BedspaceId == bedspaceId &&
+            it.applicationId == null &&
+            it.cas1SpaceBookingId == null &&
+            it.assessmentId == null &&
+            it.service == "CAS3"
+          it.bookingId == null &&
+            it.nomsNumber == null &&
+            it.occurredAt.toInstant() == domainEvent.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
+        },
+      )
+    }
   }
 
   @Test

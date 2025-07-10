@@ -25,6 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -33,13 +35,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
 
+@Suppress("TooManyFunctions")
 @Component
 class Cas3DomainEventBuilder(
   @Value("\${url-templates.api.cas3.application}") private val applicationUrlTemplate: String,
@@ -228,6 +233,29 @@ class Cas3DomainEventBuilder(
     )
   }
 
+  fun getBedspaceUnarchiveEvent(
+    bedspace: Cas3BedspacesEntity,
+    newStartDate: LocalDate,
+    user: UserEntity,
+  ): DomainEvent<CAS3BedspaceUnarchiveEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = "TODO: what goes here",
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3BedspaceUnarchiveEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.bedspaceUnarchived,
+        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, newStartDate, user),
+      ),
+    )
+  }
+
   fun getReferralSubmittedDomainEvent(
     application: TemporaryAccommodationApplicationEntity,
   ): DomainEvent<CAS3ReferralSubmittedEvent> {
@@ -400,6 +428,18 @@ class Cas3DomainEventBuilder(
     applicationUrl = application.toUrl(),
     reasonDetail = null,
     recordedBy = user?.let { populateStaffMember(it) },
+  )
+
+  private fun buildCAS3BedspaceUnarchiveEventDetails(
+    bedspace: Cas3BedspacesEntity,
+    newStartDate: LocalDate,
+    user: UserEntity,
+  ) = CAS3BedspaceUnarchiveEventDetails(
+    bedspaceId = bedspace.id,
+    userId = user.id,
+    currentStartDate = bedspace.startDate ?: error("Bedspace startDate is null for bedspace id: ${bedspace.id}"),
+    currentEndDate = bedspace.endDate ?: error("Bedspace endDate is null for bedspace id: ${bedspace.id}"),
+    newStartDate = newStartDate,
   )
 
   private fun buildCAS3BookingCancelledEventDetails(
