@@ -127,6 +127,7 @@ class BookingTransformerTest {
     probationDeliveryUnit = null,
     startDate = LocalDate.of(2021, 10, 19),
     turnaroundWorkingDays = 2,
+    endDate = null,
   )
 
   private val baseBookingEntity = BookingEntity(

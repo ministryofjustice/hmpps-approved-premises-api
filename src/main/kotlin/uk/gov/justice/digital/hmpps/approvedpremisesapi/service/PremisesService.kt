@@ -158,6 +158,7 @@ class PremisesService(
       status = status,
       probationDeliveryUnit = probationDeliveryUnit,
       turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
+      endDate = null,
     )
 
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->

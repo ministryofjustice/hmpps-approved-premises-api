@@ -148,6 +148,7 @@ class Cas3PremisesService(
       status = status,
       probationDeliveryUnit = probationDeliveryUnit!!,
       turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
+      endDate = null,
     )
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
@@ -242,6 +243,7 @@ class Cas3PremisesService(
       status = PropertyStatus.active,
       probationDeliveryUnit = probationDeliveryUnit!!,
       turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
+      endDate = null,
     )
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)

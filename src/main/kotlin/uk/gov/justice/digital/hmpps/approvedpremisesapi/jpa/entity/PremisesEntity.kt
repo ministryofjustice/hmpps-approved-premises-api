@@ -305,6 +305,7 @@ class TemporaryAccommodationPremisesEntity(
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
   var startDate: LocalDate,
+  var endDate: LocalDate?,
   @ManyToOne
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,

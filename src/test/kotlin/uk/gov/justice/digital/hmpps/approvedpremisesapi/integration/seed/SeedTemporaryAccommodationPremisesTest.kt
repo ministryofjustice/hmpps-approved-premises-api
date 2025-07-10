@@ -212,6 +212,7 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var emailAddress: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
   private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(10) }
+  private var endDate: Yielded<LocalDate?> = { null }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -257,6 +258,10 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
     this.startDate = { startDate }
   }
 
+  fun withEndDate(endDate: LocalDate?) = apply {
+    this.endDate = { endDate }
+  }
+
   override fun produce() = TemporaryAccommodationPremisesSeedCsvRow(
     name = this.name(),
     addressLine1 = this.addressLine1(),
@@ -270,5 +275,6 @@ class TemporaryAccommodationPremisesSeedCsvRowFactory : Factory<TemporaryAccommo
     notes = this.notes(),
     emailAddress = this.emailAddress(),
     startDate = this.startDate(),
+    endDate = this.endDate(),
   )
 }
