@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_premises ADD COLUMN end_date DATE NULL;

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3
 
+import com.google.common.base.Strings.emptyToNull
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -31,6 +32,7 @@ class TemporaryAccommodationPremisesSeedJob(
   private val characteristicService: CharacteristicService,
 ) : SeedJob<TemporaryAccommodationPremisesSeedCsvRow>() {
   private val log = LoggerFactory.getLogger(this::class.java)
+  private fun parseDateIfNotNull(date: String?) = date?.let { LocalDate.parse(it) }
 
   override fun deserializeRow(columns: Map<String, String>) = TemporaryAccommodationPremisesSeedCsvRow(
     name = columns["Property reference"]!!.trim(),
@@ -45,6 +47,7 @@ class TemporaryAccommodationPremisesSeedJob(
     notes = columns["Optional notes"].trimToEmpty(),
     emailAddress = columns["Email Address"].trimToEmpty(),
     startDate = LocalDate.parse(columns["Start Date"].trimToEmpty()),
+    endDate = parseDateIfNotNull(emptyToNull(columns["End Date"])),
   )
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -116,6 +119,7 @@ class TemporaryAccommodationPremisesSeedJob(
         status = PropertyStatus.active,
         turnaroundWorkingDays = 2,
         startDate = row.startDate,
+        endDate = row.endDate,
       ),
     )
 
@@ -204,4 +208,5 @@ data class TemporaryAccommodationPremisesSeedCsvRow(
   val notes: String,
   val emailAddress: String?,
   val startDate: LocalDate,
+  val endDate: LocalDate?,
 )
