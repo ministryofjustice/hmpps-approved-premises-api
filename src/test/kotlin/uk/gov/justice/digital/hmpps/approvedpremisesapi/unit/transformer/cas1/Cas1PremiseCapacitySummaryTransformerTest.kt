@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacityForDay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
@@ -24,8 +24,8 @@ class Cas1PremiseCapacitySummaryTransformerTest {
   fun toCas1PremiseCapacitySummary() {
     val premise = ApprovedPremisesEntityFactory().withDefaults().produce()
 
-    val inputCapacitySummary = PremiseCapacitySummary(
-      premise = premise,
+    val inputCapacitySummary = PremiseCapacity(
+      premises = premise,
       range = DateRange(
         LocalDate.of(2020, 1, 2),
         LocalDate.of(2021, 3, 4),

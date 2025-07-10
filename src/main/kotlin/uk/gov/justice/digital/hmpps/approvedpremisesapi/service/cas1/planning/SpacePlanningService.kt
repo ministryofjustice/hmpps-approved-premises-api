@@ -35,7 +35,7 @@ class SpacePlanningService(
     forPremises: List<ApprovedPremisesEntity>,
     rangeInclusive: DateRange,
     excludeSpaceBookingId: UUID?,
-  ): List<PremiseCapacitySummary> {
+  ): List<PremiseCapacity> {
     log.info("Determine capacity for ${forPremises.size} premises between $rangeInclusive")
 
     val rangeList = rangeInclusive.orderedDatesInRange().toList()
@@ -61,7 +61,7 @@ class SpacePlanningService(
     rangeInclusive: DateRange,
     premisesDayBedStates: PremisesDayBedStates,
     premisesDayBookings: PremisesDayBookings,
-  ): PremiseCapacitySummary {
+  ): PremiseCapacity {
     val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
       log.info("Calculating capacity for day $day")
 
@@ -84,8 +84,8 @@ class SpacePlanningService(
       )
     }.toList()
 
-    return PremiseCapacitySummary(
-      premise = premises,
+    return PremiseCapacity(
+      premises = premises,
       range = rangeInclusive,
       byDay = capacityForEachDay,
     )
@@ -164,8 +164,8 @@ class SpacePlanningService(
     }
   }
 
-  data class PremiseCapacitySummary(
-    val premise: PremisesEntity,
+  data class PremiseCapacity(
+    val premises: PremisesEntity,
     val range: DateRange,
     val byDay: List<PremiseCapacityForDay>,
   )
