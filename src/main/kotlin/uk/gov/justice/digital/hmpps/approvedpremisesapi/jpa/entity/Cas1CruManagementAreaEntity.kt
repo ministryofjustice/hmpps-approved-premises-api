@@ -20,6 +20,7 @@ interface Cas1CruManagementAreaRepository : JpaRepository<Cas1CruManagementAreaE
   companion object {
     val WOMENS_ESTATE_ID: UUID = UUID.fromString("bfb04c2a-1954-4512-803d-164f7fcf252c")
   }
+
   fun findByName(cruManagementAreaOverride: String): Cas1CruManagementAreaEntity?
 }
 

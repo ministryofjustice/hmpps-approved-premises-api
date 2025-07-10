@@ -11,28 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.util.UUID
 
-private const val PREMISES_CHARACTERISTICS_FILTER = """
-  AND (
-    SELECT COUNT(distinct pc.characteristic_id)
-    FROM premises_characteristics pc
-    WHERE
-      pc.premises_id = result.premises_id
-      AND pc.characteristic_id IN (:premisesCharacteristics)
-  ) = :premisesCharacteristicCount
-"""
-
-private const val ROOM_CHARACTERISTICS_FILTER = """
-  AND (
-    SELECT COUNT(distinct rc.characteristic_id)
-    FROM room_characteristics rc
-    JOIN rooms r ON rc.room_id = r.id
-    WHERE
-      r.premises_id = result.premises_id
-      AND rc.characteristic_id IN (:roomCharacteristics)
-  ) = :roomCharacteristicCount
-"""
-
-private const val CANDIDATE_PREMISES_QUERY_TEMPLATE = """
+private const val CANDIDATE_PREMISES_QUERY = """
 SELECT
   result.*
 FROM
@@ -72,13 +51,28 @@ FROM
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
-    ap.gender = #SPECIFIED_GENDER#
+    ap.gender = :gender
   GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
 ) AS result
 WHERE
-  1 = 1
-#PREMISES_CHARACTERISTICS_FILTER#
-#ROOM_CHARACTERISTICS_FILTER#
+(
+  :premisesCharacteristicsCount = 0 OR 
+  :premisesCharacteristicsCount = (
+      SELECT COUNT(distinct pc.characteristic_id)
+      FROM premises_characteristics pc
+      WHERE pc.premises_id = result.premises_id AND pc.characteristic_id IN (:premisesCharacteristics)
+  )
+) 
+AND
+(
+  :roomCharacteristicsCount = 0 OR 
+  :roomCharacteristicsCount = (
+    SELECT COUNT(distinct rc.characteristic_id)
+    FROM room_characteristics rc
+    JOIN rooms r ON rc.room_id = r.id
+    WHERE r.premises_id = result.premises_id AND rc.characteristic_id IN (:roomCharacteristics)
+  )
+)
 ORDER BY result.distance_in_miles
 """
 
@@ -92,14 +86,16 @@ class Cas1SpaceSearchRepository(
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
   ): List<CandidatePremises> {
-    val (query, parameters) = resolveCandidatePremisesQueryTemplate(
-      targetPostcodeDistrict,
-      isWomensPremises,
-      premisesCharacteristics,
-      roomCharacteristics,
+    val parameters = mutableMapOf(
+      "outcode" to targetPostcodeDistrict,
+      "gender" to if (isWomensPremises) "WOMAN" else "MAN",
+      "premisesCharacteristicsCount" to premisesCharacteristics.size,
+      "premisesCharacteristics" to premisesCharacteristics.ifEmpty { null },
+      "roomCharacteristicsCount" to roomCharacteristics.size,
+      "roomCharacteristics" to roomCharacteristics.ifEmpty { null },
     )
 
-    return jdbcTemplate.query(query, parameters) { rs, _ ->
+    return jdbcTemplate.query(CANDIDATE_PREMISES_QUERY, parameters) { rs, _ ->
       val apType = when (val apType = rs.getString("ap_type")) {
         "MHAP" -> ApprovedPremisesType.MHAP_ST_JOSEPHS
         else -> ApprovedPremisesType.valueOf(apType)
@@ -123,51 +119,6 @@ class Cas1SpaceSearchRepository(
           ),
       )
     }
-  }
-
-  private fun resolveCandidatePremisesQueryTemplate(
-    targetPostcodeDistrict: String,
-    isWomensPremises: Boolean,
-    premisesCharacteristics: List<UUID>,
-    roomCharacteristics: List<UUID>,
-  ): Pair<String, Map<String, Any>> {
-    var query = CANDIDATE_PREMISES_QUERY_TEMPLATE
-    val params = mutableMapOf<String, Any>(
-      "outcode" to targetPostcodeDistrict,
-    )
-
-    when {
-      isWomensPremises -> {
-        query = query.replace("#SPECIFIED_GENDER#", "'WOMAN'")
-      }
-      else -> {
-        query = query.replace("#SPECIFIED_GENDER#", "'MAN'")
-      }
-    }
-
-    when {
-      premisesCharacteristics.isEmpty() -> {
-        query = query.replace("#PREMISES_CHARACTERISTICS_FILTER#", "")
-      }
-      else -> {
-        query = query.replace("#PREMISES_CHARACTERISTICS_FILTER#", PREMISES_CHARACTERISTICS_FILTER)
-        params["premisesCharacteristics"] = premisesCharacteristics
-        params["premisesCharacteristicCount"] = premisesCharacteristics.count()
-      }
-    }
-
-    when {
-      roomCharacteristics.isEmpty() -> {
-        query = query.replace("#ROOM_CHARACTERISTICS_FILTER#", "")
-      }
-      else -> {
-        query = query.replace("#ROOM_CHARACTERISTICS_FILTER#", ROOM_CHARACTERISTICS_FILTER)
-        params["roomCharacteristics"] = roomCharacteristics
-        params["roomCharacteristicCount"] = roomCharacteristics.count()
-      }
-    }
-
-    return query to params
   }
 }
 
