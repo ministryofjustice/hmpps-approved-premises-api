@@ -40,7 +40,7 @@ class Cas1SpaceSearchResultsTransformer {
             }
           },
         ),
-        distanceInMiles = candidatePremises.distanceInMiles.toBigDecimal(),
+        distanceInMiles = candidatePremises.distanceInMiles!!.toBigDecimal(),
       )
     },
   )

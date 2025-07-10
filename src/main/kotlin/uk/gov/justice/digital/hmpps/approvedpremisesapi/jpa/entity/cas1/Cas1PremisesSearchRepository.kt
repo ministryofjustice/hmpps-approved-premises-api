@@ -19,10 +19,13 @@ FROM
 (
   SELECT
     p.id AS premises_id,
-    ST_Distance(
-      (SELECT point FROM postcode_districts pd WHERE pd.outcode = :outcode)::geography,
-      ap.point::geography
-    ) * 0.000621371 AS distance_in_miles,
+    CASE 
+        WHEN :outcode IS NOT NULL THEN 
+            ST_Distance(
+              (SELECT point FROM postcode_districts pd WHERE pd.outcode = :outcode)::geography,
+              ap.point::geography
+            ) * 0.000621371
+    END AS distance_in_miles,
     CASE
       WHEN ('$CAS1_PROPERTY_NAME_PREMISES_PIPE'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'PIPE'
       WHEN ('$CAS1_PROPERTY_NAME_PREMISES_ESAP'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'ESAP'
@@ -82,7 +85,7 @@ class Cas1SpaceSearchRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
   fun findAllPremisesWithCharacteristicsByDistance(
-    targetPostcodeDistrict: String,
+    targetPostcodeDistrict: String?,
     gender: ApprovedPremisesGender?,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
@@ -125,7 +128,7 @@ class Cas1SpaceSearchRepository(
 
 data class CandidatePremises(
   val premisesId: UUID,
-  val distanceInMiles: Float,
+  val distanceInMiles: Float?,
   val apType: ApprovedPremisesType,
   val name: String,
   val fullAddress: String?,
