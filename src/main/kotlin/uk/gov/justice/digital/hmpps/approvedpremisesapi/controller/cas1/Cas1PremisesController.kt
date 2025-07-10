@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BedDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
@@ -44,7 +48,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 Premises")
 class Cas1PremisesController(
   private val userAccessService: UserAccessService,
   private val userService: UserService,
@@ -62,9 +67,14 @@ class Cas1PremisesController(
   private val staffMemberTransformer: StaffMemberTransformer,
   private val clock: Clock,
   private val spaceBookingService: Cas1SpaceBookingService,
-) : PremisesCas1Delegate {
+) {
 
-  override fun getOccupancyReport(): ResponseEntity<StreamingResponseBody> {
+  @Operation(summary = "Returns a CSV showing premises occupancy for the next 30 days. This does not consider characteristics.")
+  @GetMapping(
+    value = ["/premises/occupancy-report"],
+    produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+  )
+  fun getOccupancyReport(): ResponseEntity<StreamingResponseBody> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_CAPACITY_REPORT_VIEW)
 
     val timestamp = LocalDateTime.now(clock).format(TIMESTAMP_FORMAT)
@@ -77,7 +87,11 @@ class Cas1PremisesController(
     }
   }
 
-  override fun getBeds(premisesId: UUID): ResponseEntity<List<Cas1PremisesBedSummary>> {
+  @Operation(summary = "Lists all beds for the given premises")
+  @GetMapping("/premises/{premisesId}/beds")
+  fun getBeds(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<List<Cas1PremisesBedSummary>> {
     val premises = cas1PremisesService.findPremiseById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -88,7 +102,12 @@ class Cas1PremisesController(
     return ResponseEntity.ok(cas1PremisesService.getBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi))
   }
 
-  override fun getBed(premisesId: UUID, bedId: UUID): ResponseEntity<Cas1BedDetail> {
+  @Operation(summary = "Gets a given bed for a given premises")
+  @GetMapping("/premises/{premisesId}/beds/{bedId}")
+  fun getBed(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedId: UUID,
+  ): ResponseEntity<Cas1BedDetail> {
     val premises = cas1PremisesService.findPremiseById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -99,7 +118,11 @@ class Cas1PremisesController(
     return ResponseEntity.ok(cas1BedDetailTransformer.transformToApi(extractEntityFromCasResult(cas1BedService.getBedAndRoomCharacteristics(bedId))))
   }
 
-  override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1Premises> {
+  @Operation(summary = "Returns premises information")
+  @GetMapping("/premises/{premisesId}")
+  fun getPremisesById(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<Cas1Premises> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
     return ResponseEntity
@@ -111,10 +134,12 @@ class Cas1PremisesController(
       )
   }
 
-  override fun getPremisesSummaries(
-    gender: Cas1ApprovedPremisesGender?,
-    apAreaId: UUID?,
-    cruManagementAreaId: UUID?,
+  @Operation(summary = "Provide a summary of all premises, with optional filtering")
+  @GetMapping("/premises/summary")
+  fun getPremisesSummaries(
+    @RequestParam gender: Cas1ApprovedPremisesGender?,
+    @RequestParam apAreaId: UUID?,
+    @RequestParam cruManagementAreaId: UUID?,
   ): ResponseEntity<List<Cas1PremisesBasicSummary>> = ResponseEntity
     .ok()
     .body(
@@ -136,9 +161,11 @@ class Cas1PremisesController(
   against a prod-like dataset. It will need refining
   once requirements are fully understood
    */
-  override fun getCapacities(
-    startDate: LocalDate,
-    endDate: LocalDate,
+  @Operation(summary = "Provides capacity information for a given date range for all premises")
+  @GetMapping("/premises/capacity")
+  fun getCapacities(
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
   ): ResponseEntity<List<Cas1PremiseCapacity>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
@@ -156,11 +183,13 @@ class Cas1PremisesController(
     )
   }
 
-  override fun getCapacity(
-    premisesId: UUID,
-    startDate: LocalDate,
-    endDate: LocalDate,
-    excludeSpaceBookingId: UUID?,
+  @Operation(summary = "Provides capacity information for a given date range")
+  @GetMapping("/premises/{premisesId}/capacity")
+  fun getCapacity(
+    @PathVariable premisesId: UUID,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
+    @RequestParam excludeSpaceBookingId: UUID?,
   ): ResponseEntity<Cas1PremiseCapacity> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
@@ -181,13 +210,15 @@ class Cas1PremisesController(
     )
   }
 
-  override fun getDaySummary(
-    premisesId: UUID,
-    date: LocalDate,
-    bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
-    bookingsSortDirection: SortDirection?,
-    bookingsSortBy: Cas1SpaceBookingDaySummarySortField?,
-    excludeSpaceBookingId: UUID?,
+  @Operation(summary = "Provides a summary of capacity, space bookings and out of service beds for a premise on a given day")
+  @GetMapping("/premises/{premisesId}/day-summary/{date}")
+  fun getDaySummary(
+    @PathVariable premisesId: UUID,
+    @PathVariable date: LocalDate,
+    @RequestParam bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
+    @RequestParam bookingsSortDirection: SortDirection?,
+    @RequestParam bookingsSortBy: Cas1SpaceBookingDaySummarySortField?,
+    @RequestParam excludeSpaceBookingId: UUID?,
   ): ResponseEntity<Cas1PremisesDaySummary> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
     val premises = cas1PremisesService.findPremiseById(premisesId)
@@ -237,7 +268,11 @@ class Cas1PremisesController(
     )
   }
 
-  override fun getStaff(premisesId: UUID): ResponseEntity<List<StaffMember>> {
+  @Operation(summary = "Returns the staff that work at an approved premises")
+  @GetMapping("/premises/{premisesId}/staff")
+  fun getStaff(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<List<StaffMember>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
     val premises = cas1PremisesService.findPremiseById(premisesId)
