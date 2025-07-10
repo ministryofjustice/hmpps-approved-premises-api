@@ -1,5 +1,3 @@
-import java.io.File
-
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.0"
   kotlin("plugin.spring") version "2.1.21"
@@ -203,8 +201,11 @@ tasks.named("assemble") {
 ktlint {
   filter {
     exclude { it.file.path.contains("$buildDir${File.separator}generated${File.separator}") }
-    exclude("**/approvedpremisesapi/api/**")
-    exclude("**/approvedpremisesapi/cas3/model/generated/**")
+    exclude(
+      "**/approvedpremisesapi/api/**",
+      "**/approvedpremisesapi/cas3/model/generated/**",
+      "**/Cas2ReportName.kt",
+    )
   }
 }
 
