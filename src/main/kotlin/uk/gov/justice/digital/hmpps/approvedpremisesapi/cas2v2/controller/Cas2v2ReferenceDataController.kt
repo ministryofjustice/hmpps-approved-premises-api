@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ref
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.reference.Cas2v2PersistedApplicationStatusFinder
 
-@Cas2V2Controller
+@Cas2v2Controller
 class Cas2v2ReferenceDataController(
   private val statusTransformer: ApplicationStatusTransformer,
   private val statusFinder: Cas2v2PersistedApplicationStatusFinder,

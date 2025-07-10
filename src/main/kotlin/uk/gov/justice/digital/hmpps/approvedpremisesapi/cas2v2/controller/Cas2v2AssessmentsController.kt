@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.net.URI
 import java.util.UUID
 
-@Cas2V2Controller
+@Cas2v2Controller
 class Cas2v2AssessmentsController(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val cas2v2ApplicationNoteService: Cas2v2ApplicationNoteService,

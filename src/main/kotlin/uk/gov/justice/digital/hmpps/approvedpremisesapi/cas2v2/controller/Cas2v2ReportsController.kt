@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ReportNa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ReportsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 
-@Cas2V2Controller
+@Cas2v2Controller
 class Cas2v2ReportsController(private val cas2v2ReportService: Cas2v2ReportsService) {
 
   @GetMapping("/reports/{reportName}")
