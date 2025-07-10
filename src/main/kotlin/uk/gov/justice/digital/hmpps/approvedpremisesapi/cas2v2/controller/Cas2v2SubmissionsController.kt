@@ -1,16 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
 import jakarta.transaction.Transactional
+import java.util.UUID
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -27,17 +25,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import java.util.UUID
 
-@RestController
-@RequestMapping(
-  "\${openapi.communityAccommodationServicesTier2CAS2Version2.base-path:/cas2v2}",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas2V2Controller
 class Cas2v2SubmissionsController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2SubmissionsTransformer: Cas2v2SubmissionsTransformer,
@@ -48,7 +40,6 @@ class Cas2v2SubmissionsController(
 ) {
 
   @GetMapping("/submissions")
-  @PaginationHeaders
   fun submissionsGet(
     @RequestParam page: Int?,
   ): ResponseEntity<List<Cas2v2SubmittedApplicationSummary>> {
@@ -65,7 +56,6 @@ class Cas2v2SubmissionsController(
   }
 
   @GetMapping("/submissions/{applicationId}")
-  @PaginationHeaders
   fun submissionsApplicationIdGet(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Cas2v2SubmittedApplication> {
@@ -80,7 +70,6 @@ class Cas2v2SubmissionsController(
 
   @Transactional
   @PostMapping("/submissions")
-  @PaginationHeaders
   fun submissionsPost(
     @RequestBody submitCas2v2Application: SubmitCas2v2Application,
   ): ResponseEntity<Unit> {

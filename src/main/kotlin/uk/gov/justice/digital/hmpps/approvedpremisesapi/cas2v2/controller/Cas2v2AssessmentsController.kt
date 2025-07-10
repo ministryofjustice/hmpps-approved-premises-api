@@ -1,15 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
+import java.net.URI
+import java.util.UUID
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
@@ -22,16 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2Use
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import java.net.URI
-import java.util.UUID
 
-@RestController
-@RequestMapping(
-  "\${openapi.communityAccommodationServicesTier2CAS2Version2.base-path:/cas2v2}",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas2V2Controller
 class Cas2v2AssessmentsController(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val cas2v2ApplicationNoteService: Cas2v2ApplicationNoteService,
@@ -41,7 +33,6 @@ class Cas2v2AssessmentsController(
   private val cas2v2UserService: Cas2v2UserService,
 ) {
   @GetMapping("/assessments/{assessmentId}")
-  @PaginationHeaders
   fun assessmentsAssessmentIdGet(
     @PathVariable assessmentId: UUID,
   ): ResponseEntity<Cas2v2Assessment> {
@@ -51,7 +42,6 @@ class Cas2v2AssessmentsController(
   }
 
   @PutMapping("/assessments/{assessmentId}")
-  @PaginationHeaders
   fun assessmentsAssessmentIdPut(
     @PathVariable assessmentId: UUID,
     @RequestBody updateCas2Assessment: UpdateCas2v2Assessment,
@@ -65,7 +55,6 @@ class Cas2v2AssessmentsController(
   }
 
   @PostMapping("/assessments/{assessmentId}/status-updates")
-  @PaginationHeaders
   fun assessmentsAssessmentIdStatusUpdatesPost(
     @PathVariable assessmentId: UUID,
     @RequestBody cas2v2AssessmentStatusUpdate: Cas2v2AssessmentStatusUpdate,
@@ -82,7 +71,6 @@ class Cas2v2AssessmentsController(
   }
 
   @PostMapping("/assessments/{assessmentId}/notes")
-  @PaginationHeaders
   fun assessmentsAssessmentIdNotesPost(
     @PathVariable assessmentId: UUID,
     @RequestBody body: NewCas2v2ApplicationNote,

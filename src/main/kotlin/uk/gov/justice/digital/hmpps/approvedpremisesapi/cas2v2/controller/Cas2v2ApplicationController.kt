@@ -2,18 +2,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
-import org.springframework.http.MediaType
+import java.net.URI
+import java.util.UUID
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary as ModelCas2v2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
@@ -35,15 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeader
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import java.net.URI
-import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary as ModelCas2v2ApplicationSummary
 
-@RestController
-@RequestMapping(
-  "\${openapi.communityAccommodationServicesTier2CAS2Version2.base-path:/cas2v2}",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas2V2Controller
 class Cas2v2ApplicationController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
@@ -101,10 +94,7 @@ class Cas2v2ApplicationController(
 
   @Transactional
   @Suppress("ThrowsCount")
-  @PostMapping(
-    value = ["/applications"],
-    produces = ["application/json", "application/problem+json"],
-  )
+  @PostMapping("/applications")
   fun applicationsPost(
     @RequestBody body: NewCas2v2Application,
   ): ResponseEntity<Application> {

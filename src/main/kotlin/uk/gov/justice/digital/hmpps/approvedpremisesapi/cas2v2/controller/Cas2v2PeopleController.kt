@@ -1,31 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
-@RestController
-@RequestMapping(
-  "\${openapi.communityAccommodationServicesTier2CAS2Version2.base-path:/cas2v2}",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas2V2Controller
 class Cas2v2PeopleController(
   private val cas2v2OffenderService: Cas2v2OffenderService,
 ) {
 
   @Suppress("ThrowsCount")
   @GetMapping("/people/search-by-crn/{crn}")
-  @PaginationHeaders
   fun searchByCrnGet(
     @PathVariable crn: String,
   ): ResponseEntity<Person> {
@@ -39,7 +30,6 @@ class Cas2v2PeopleController(
 
   @Suppress("ThrowsCount")
   @GetMapping("/people/search-by-noms/{nomsNumber}")
-  @PaginationHeaders
   fun searchByNomisIdGet(
     @PathVariable nomsNumber: String,
   ): ResponseEntity<Person> {
