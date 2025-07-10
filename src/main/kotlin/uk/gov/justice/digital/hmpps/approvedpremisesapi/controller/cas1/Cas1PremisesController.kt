@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
@@ -15,8 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResultSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
@@ -87,6 +91,33 @@ class Cas1PremisesController(
     }
   }
 
+  @Operation(
+    summary = "Provides capacity information for multiple premises",
+    description = """
+      This endpoint will return premises that match the provided CRU Management Areas and/or Premises Characteristics, if any defined
+      
+      If a postcode area value is provided, results will be returned in distance from the postcode. Otherwise, they'll be returned
+      in order of CRU Management Area Codes (alpha ascending).
+      
+      7 days of capacity information will be provided, starting from today's date.
+      
+      The capacity information differs based upon whether room characteristics are specified.
+      
+      If no room characteristics are specified, all bookings for the given day are used to calculate the vacant bed count
+      
+      If room characteristics are specified, each characteristic is considered individually and the one with the lowest
+      vacant bed count will be returned. In this case the in-service bed count is the total number of beds with that
+      characteristic, regardless of whether the bed has any other specified characteristic
+    """,
+  )
+  @GetMapping("/premises/capacity")
+  @SuppressWarnings("UnusedParameter")
+  fun getNationalCapacity(
+    @RequestBody parameters: Cas1NationalOccupancyParameters,
+  ): ResponseEntity<Cas1NationalOccupancy> {
+    TODO("Endpoint to be implemented")
+  }
+
   @Operation(summary = "Lists all beds for the given premises")
   @GetMapping("/premises/{premisesId}/beds")
   fun getBeds(
@@ -155,33 +186,6 @@ class Cas1PremisesController(
         cas1PremisesTransformer.toPremiseBasicSummary(it)
       },
     )
-
-  /*
-  This is a spike endpoint to test performance
-  against a prod-like dataset. It will need refining
-  once requirements are fully understood
-   */
-  @Operation(summary = "Provides capacity information for a given date range for all premises")
-  @GetMapping("/premises/capacity")
-  fun getCapacities(
-    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
-    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
-  ): ResponseEntity<List<Cas1PremiseCapacity>> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
-
-    val capacities = extractEntityFromCasResult(
-      cas1PremisesService.getPremisesCapacities(
-        premisesIds = cas1PremisesService.getAllPremisesIds(),
-        startDate = startDate,
-        endDate = endDate,
-        excludeSpaceBookingId = null,
-      ),
-    )
-
-    return ResponseEntity.ok().body(
-      capacities.map { cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(it) },
-    )
-  }
 
   @Operation(summary = "Provides capacity information for a given date range")
   @GetMapping("/premises/{premisesId}/capacity")
@@ -291,3 +295,31 @@ class Cas1PremisesController(
     )
   }
 }
+
+data class Cas1NationalOccupancyParameters(
+  val fromDate: LocalDate,
+  @Schema(description = "Can be empty")
+  val cruManagementAreaIds: Set<UUID>,
+  @Schema(description = "Can be empty")
+  val premisesCharacteristics: Set<Cas1SpaceCharacteristic>,
+  @Schema(description = "Can be empty")
+  val roomCharacteristics: Set<Cas1SpaceCharacteristic>,
+  val postcodeArea: String?,
+)
+
+data class Cas1NationalOccupancy(
+  val startDate: LocalDate,
+  val endDate: LocalDate,
+  val premises: List<Cas1NationalOccupancyPremises>,
+)
+
+data class Cas1NationalOccupancyPremises(
+  val summary: Cas1PremisesSearchResultSummary,
+  val capacity: Set<Cas1PremiseCapacitySummary>,
+)
+
+data class Cas1PremiseCapacitySummary(
+  val date: LocalDate,
+  val inServiceBedCount: Int,
+  val vacantBedCount: Int,
+)
