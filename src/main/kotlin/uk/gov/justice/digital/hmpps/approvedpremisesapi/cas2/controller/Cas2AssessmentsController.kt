@@ -2,9 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.zalando.problem.AbstractThrowableProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.AssessmentsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
@@ -27,17 +30,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import java.net.URI
 import java.util.UUID
 
-@Service("Cas2AssessmentsController")
-class AssessmentsController(
+@Cas2Controller
+class Cas2AssessmentsController(
   private val assessmentService: Cas2AssessmentService,
   private val assessmentNoteService: Cas2AssessmentNoteService,
   private val assessmentsTransformer: AssessmentsTransformer,
   private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val statusUpdateService: StatusUpdateService,
   private val externalUserService: ExternalUserService,
-) : AssessmentsCas2Delegate {
+) {
 
-  override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Cas2Assessment> {
+  @SuppressWarnings("ThrowsCount")
+  @GetMapping("/assessments/{assessmentId}")
+  fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Cas2Assessment> {
     val assessment = when (
       val assessmentResult = assessmentService.getAssessment(assessmentId)
     ) {
@@ -53,9 +58,11 @@ class AssessmentsController(
     throw NotFoundProblem(assessmentId, "Assessment")
   }
 
-  override fun assessmentsAssessmentIdPut(
-    assessmentId: java.util.UUID,
-    updateCas2Assessment: UpdateCas2Assessment,
+  @SuppressWarnings("ThrowsCount")
+  @PutMapping("/assessments/{assessmentId}")
+  fun assessmentsAssessmentIdPut(
+    @PathVariable assessmentId: UUID,
+    @RequestBody updateCas2Assessment: UpdateCas2Assessment,
   ): ResponseEntity<Cas2Assessment> {
     val assessmentResult = assessmentService.updateAssessment(assessmentId, updateCas2Assessment)
     val validationResult = when (assessmentResult) {
@@ -76,9 +83,10 @@ class AssessmentsController(
     )
   }
 
-  override fun assessmentsAssessmentIdStatusUpdatesPost(
-    assessmentId: UUID,
-    cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
+  @PostMapping("/assessments/{assessmentId}/status-updates")
+  fun assessmentsAssessmentIdStatusUpdatesPost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
     val result = statusUpdateService.createForAssessment(
       assessmentId = assessmentId,
@@ -92,9 +100,10 @@ class AssessmentsController(
     return ResponseEntity(HttpStatus.CREATED)
   }
 
-  override fun assessmentsAssessmentIdNotesPost(
-    assessmentId: UUID,
-    body: NewCas2ApplicationNote,
+  @PostMapping("/assessments/{assessmentId}/notes")
+  fun assessmentsAssessmentIdNotesPost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody body: NewCas2ApplicationNote,
   ): ResponseEntity<Cas2ApplicationNote> {
     val noteResult = assessmentNoteService.createAssessmentNote(assessmentId, body)
 

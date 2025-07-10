@@ -3,8 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -21,17 +24,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
-@Service("Cas2SubmissionsController")
-class SubmissionsController(
+@Cas2Controller
+class Cas2SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: Cas2ApplicationService,
   private val submissionsTransformer: SubmissionsTransformer,
   private val offenderService: Cas2OffenderService,
   private val externalUserService: ExternalUserService,
   private val cas2UserService: Cas2UserService,
-) : SubmissionsCas2Delegate {
+) {
 
-  override fun submissionsGet(page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
+  @GetMapping("/submissions")
+  fun submissionsGet(@RequestParam page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
     val principal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
     if (principal.isExternalUser()) {
       ensureExternalUserPersisted()
@@ -49,7 +53,8 @@ class SubmissionsController(
     ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
-  override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
+  @GetMapping("/submissions/{applicationId}")
+  fun submissionsApplicationIdGet(@PathVariable applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
     val principal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
     if (principal.isExternalUser()) {
       ensureExternalUserPersisted()
@@ -61,10 +66,9 @@ class SubmissionsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
+  @PostMapping("/submissions")
   @Transactional
-  override fun submissionsPost(
-    submitCas2Application: SubmitCas2Application,
-  ): ResponseEntity<Unit> {
+  fun submissionsPost(@RequestBody submitCas2Application: SubmitCas2Application): ResponseEntity<Unit> {
     val user = cas2UserService.getUserForRequest()
     val submitResult = applicationService.submitApplication(submitCas2Application, user)
 
