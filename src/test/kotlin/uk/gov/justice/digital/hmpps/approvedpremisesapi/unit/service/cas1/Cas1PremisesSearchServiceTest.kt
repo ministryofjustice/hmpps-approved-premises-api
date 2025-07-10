@@ -8,7 +8,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -16,13 +15,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -40,38 +37,11 @@ class Cas1PremisesSearchServiceTest {
   @MockK
   private lateinit var spaceSearchRepository: Cas1SpaceSearchRepository
 
-  @MockK
-  private lateinit var applicationRepository: ApprovedPremisesApplicationRepository
-
   @InjectMockKs
   private lateinit var service: Cas1PremisesSearchService
 
   @Test
-  fun `throws error if the associated application cannot be found`() {
-    val applicationId = UUID.randomUUID()
-
-    every { applicationRepository.findByIdOrNull(any()) } returns null
-
-    assertThatThrownBy {
-      service.findPremises(
-        Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
-          applicationId = applicationId,
-          targetPostcodeDistrict = "TB1",
-          spaceCharacteristics = Cas1SpaceCharacteristic.entries,
-        ),
-      )
-    }.hasMessage(
-      "Not Found: No Application with an ID of $applicationId could be found",
-    )
-  }
-
-  @Test
   fun `returns premises ordered by distance with the correct space availability`() {
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withDefaults()
-      .withIsWomensApplication(false)
-      .produce()
-
     val candidatePremises1 = CandidatePremises(
       UUID.randomUUID(),
       1.0f,
@@ -134,11 +104,9 @@ class Cas1PremisesSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    every { applicationRepository.findByIdOrNull(application.id) } returns application
-
     val result = service.findPremises(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
-        applicationId = application.id,
+        gender = ApprovedPremisesGender.MAN,
         targetPostcodeDistrict = "TB1",
         spaceCharacteristics = Cas1SpaceCharacteristic.entries,
       ),
@@ -152,10 +120,6 @@ class Cas1PremisesSearchServiceTest {
     )
 
     verify(exactly = 1) {
-      applicationRepository.findByIdOrNull(application.id)
-    }
-
-    verify(exactly = 1) {
       characteristicService.getCharacteristicsByPropertyNames(
         Cas1SpaceCharacteristic.entries.map { it.value },
         ServiceName.approvedPremises,
@@ -165,7 +129,7 @@ class Cas1PremisesSearchServiceTest {
     verify(exactly = 1) {
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         "TB1",
-        isWomensPremises = false,
+        gender = ApprovedPremisesGender.MAN,
         spaceCharacteristics.filter { it.modelMatches("premises") }.map { it.id },
         spaceCharacteristics.filter { it.modelMatches("room") }.map { it.id },
       )
@@ -175,13 +139,8 @@ class Cas1PremisesSearchServiceTest {
   }
 
   @ParameterizedTest
-  @CsvSource("true", "false")
-  fun `uses the associated gender from the application`(isWomensApplication: Boolean) {
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withDefaults()
-      .withIsWomensApplication(isWomensApplication)
-      .produce()
-
+  @CsvSource("MAN", "WOMAN", "NULL", nullValues = ["NULL"])
+  fun `pass provided gender, if defined`(gender: ApprovedPremisesGender?) {
     val candidatePremises1 = CandidatePremises(
       UUID.randomUUID(),
       1.0f,
@@ -228,8 +187,6 @@ class Cas1PremisesSearchServiceTest {
     )
 
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
-
-    every { applicationRepository.findByIdOrNull(application.id) } returns application
 
     every {
       characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
@@ -248,18 +205,16 @@ class Cas1PremisesSearchServiceTest {
 
     service.findPremises(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
-        applicationId = application.id,
+        gender = gender,
         spaceCharacteristics = Cas1SpaceCharacteristic.entries,
         targetPostcodeDistrict = "TB1",
       ),
     )
 
     verify(exactly = 1) {
-      applicationRepository.findByIdOrNull(application.id)
-
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         any(),
-        isWomensPremises = isWomensApplication,
+        gender = gender,
         any(),
         any(),
       )
@@ -274,11 +229,6 @@ class Cas1PremisesSearchServiceTest {
   @ParameterizedTest
   @MethodSource("spaceCharacteristicArgs")
   fun `uses the correct space characteristics`(spaceCharacteristics: List<Cas1SpaceCharacteristic>) {
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withDefaults()
-      .withIsWomensApplication(false)
-      .produce()
-
     val candidatePremises1 = CandidatePremises(
       UUID.randomUUID(),
       1.0f,
@@ -326,8 +276,6 @@ class Cas1PremisesSearchServiceTest {
 
     val spaceCharacteristicEntities = spaceCharacteristics.map { characteristicWithRandomModelScopeCalled(it.value) }
 
-    every { applicationRepository.findByIdOrNull(application.id) } returns application
-
     every {
       characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
     } returnsMany listOf(
@@ -345,15 +293,13 @@ class Cas1PremisesSearchServiceTest {
 
     service.findPremises(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
-        applicationId = application.id,
+        gender = ApprovedPremisesGender.MAN,
         targetPostcodeDistrict = "TB1",
         spaceCharacteristics = spaceCharacteristics,
       ),
     )
 
     verify(exactly = 1) {
-      applicationRepository.findByIdOrNull(application.id)
-
       characteristicService.getCharacteristicsByPropertyNames(
         spaceCharacteristics.map { it.value },
         ServiceName.approvedPremises,
@@ -361,7 +307,7 @@ class Cas1PremisesSearchServiceTest {
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         any(),
-        any(),
+        ApprovedPremisesGender.MAN,
         spaceCharacteristicEntities.filter { it.modelMatches("premises") }.map { it.id },
         spaceCharacteristicEntities.filter { it.modelMatches("room") }.map { it.id },
       )

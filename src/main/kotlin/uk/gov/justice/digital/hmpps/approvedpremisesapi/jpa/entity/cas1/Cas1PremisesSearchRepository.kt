@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
@@ -51,7 +52,7 @@ FROM
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
-    ap.gender = :gender
+    (ap.gender IS NULL OR (ap.gender = :gender))
   GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
 ) AS result
 WHERE
@@ -82,13 +83,13 @@ class Cas1SpaceSearchRepository(
 ) {
   fun findAllPremisesWithCharacteristicsByDistance(
     targetPostcodeDistrict: String,
-    isWomensPremises: Boolean,
+    gender: ApprovedPremisesGender?,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
   ): List<CandidatePremises> {
     val parameters = mutableMapOf(
       "outcode" to targetPostcodeDistrict,
-      "gender" to if (isWomensPremises) "WOMAN" else "MAN",
+      "gender" to gender?.name,
       "premisesCharacteristicsCount" to premisesCharacteristics.size,
       "premisesCharacteristics" to premisesCharacteristics.ifEmpty { null },
       "roomCharacteristicsCount" to roomCharacteristics.size,
