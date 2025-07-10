@@ -6,13 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 
 @Component
 class Cas1PremiseCapacitySummaryTransformer {
 
   fun toCas1PremiseCapacitySummary(
-    premiseCapacity: PremiseCapacitySummary,
+    premiseCapacity: PremiseCapacity,
   ) = Cas1PremiseCapacity(
     startDate = premiseCapacity.range.fromInclusive,
     endDate = premiseCapacity.range.toInclusive,

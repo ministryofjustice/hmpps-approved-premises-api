@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.io.OutputStream
 import java.time.Clock
@@ -110,7 +110,7 @@ class Cas1PremisesService(
     startDate: LocalDate,
     endDate: LocalDate,
     excludeSpaceBookingId: UUID?,
-  ): CasResult<List<PremiseCapacitySummary>> {
+  ): CasResult<List<PremiseCapacity>> {
     val premises = premisesRepository.findAllById(premisesIds)
 
     if (premises.size != premisesIds.size) {
