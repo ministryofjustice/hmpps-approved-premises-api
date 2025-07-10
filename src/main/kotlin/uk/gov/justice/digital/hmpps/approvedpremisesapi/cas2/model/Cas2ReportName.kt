@@ -1,24 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-* 
-* Values: submittedMinusApplications,applicationMinusStatusMinusUpdates,unsubmittedMinusApplications
-*/
+@Suppress("EnumNaming", "ExplicitItLambdaParameter")
 enum class Cas2ReportName(@get:JsonValue val value: String) {
 
-    submittedMinusApplications("submitted-applications"),
-    applicationMinusStatusMinusUpdates("application-status-updates"),
-    unsubmittedMinusApplications("unsubmitted-applications");
+  submittedMinusApplications("submitted-applications"),
+  applicationMinusStatusMinusUpdates("application-status-updates"),
+  unsubmittedMinusApplications("unsubmitted-applications"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: String): Cas2ReportName {
-                return values().first{it -> it.value == value}
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: String): Cas2ReportName = values().first { it -> it.value == value }
+  }
 }
-

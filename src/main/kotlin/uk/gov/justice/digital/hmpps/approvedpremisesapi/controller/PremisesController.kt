@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancell
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
@@ -39,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity

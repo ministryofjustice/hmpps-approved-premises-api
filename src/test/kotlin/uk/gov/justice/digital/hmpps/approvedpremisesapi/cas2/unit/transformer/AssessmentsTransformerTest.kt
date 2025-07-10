@@ -4,10 +4,10 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.StatusUpdateTransformer
 

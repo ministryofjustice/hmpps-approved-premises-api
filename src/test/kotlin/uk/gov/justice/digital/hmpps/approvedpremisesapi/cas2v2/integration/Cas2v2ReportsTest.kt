@@ -17,10 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2StatusFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.UnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
