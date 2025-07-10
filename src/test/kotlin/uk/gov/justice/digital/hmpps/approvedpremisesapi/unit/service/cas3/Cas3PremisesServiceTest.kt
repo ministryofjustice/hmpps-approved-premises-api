@@ -772,6 +772,40 @@ class Cas3PremisesServiceTest {
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")
     }
+
+    @Test
+    fun `When create a new bedspace with reference less than 3 characters returns FieldValidationError with the correct message`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+
+      val result = premisesService.createBedspace(premises, "AB", LocalDate.now().minusDays(1), null, emptyList())
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceNotMeetMinimumLength")
+    }
+
+    @Test
+    fun `When create a new bedspace with reference containing only special characters returns FieldValidationError with the correct message`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+
+      val result = premisesService.createBedspace(premises, "!@#$%", LocalDate.now().minusDays(1), null, emptyList())
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceMustIncludeLetterOrNumber")
+    }
+
+    @Test
+    fun `When create a new bedspace with duplicate reference returns FieldValidationError with the correct message`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+
+      val existingRoom = RoomEntityFactory()
+        .withName("EXISTING_REF")
+        .withPremises(premises)
+        .produce()
+
+      premises.rooms.add(existingRoom)
+
+      val result = premisesService.createBedspace(premises, "existing_ref", LocalDate.now().minusDays(1), null, emptyList())
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceExists")
+    }
   }
 
   @Nested
@@ -907,6 +941,46 @@ class Cas3PremisesServiceTest {
       val result = premisesService.updateBedspace(premises, bedspace.id, randomStringMultiCaseWithNumbers(10), null, listOf(premisesCharacteristic.id))
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")
+    }
+
+    @Test
+    fun `When update a bedspace with reference less than 3 characters returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+
+      val result = premisesService.updateBedspace(premises, bedspace.id, "AB", null, emptyList())
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceNotMeetMinimumLength")
+    }
+
+    @Test
+    fun `When update a bedspace with reference containing only special characters returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+
+      val result = premisesService.updateBedspace(premises, bedspace.id, "!@#$%", null, emptyList())
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceMustIncludeLetterOrNumber")
+    }
+
+    @Test
+    fun `When update a bedspace with duplicate reference returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      val existingRoom = RoomEntityFactory()
+        .withName("EXISTING_REF")
+        .withPremises(premises)
+        .produce()
+
+      premises.rooms.add(existingRoom)
+
+      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+
+      val result = premisesService.updateBedspace(premises, bedspace.id, "existing_ref", null, emptyList())
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceExists")
     }
 
     private fun createPremisesAndBedspace(): Pair<TemporaryAccommodationPremisesEntity, BedEntity> {
