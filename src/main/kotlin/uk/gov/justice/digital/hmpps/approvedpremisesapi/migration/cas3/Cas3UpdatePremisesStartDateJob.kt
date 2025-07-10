@@ -56,7 +56,7 @@ class Cas3UpdatePremisesStartDateJob(
                     roomRepository.findAllByPremisesId(premises.id).flatMap { it.beds }.sortedBy { it.startDate }
                       .firstOrNull()
                   if (oldestBedspaceInPremises != null) {
-                    premises.startDate = oldestBedspaceInPremises.startDate
+                    premises.startDate = oldestBedspaceInPremises.startDate!!
                     premisesRepository.save(premises)
                     migrationLogger.info("Updated start_date using oldest bedspace start_date for premises id ${premises.id}")
                   } else {

@@ -74,7 +74,7 @@ data class Cas3Premises(
     @get:JsonProperty("characteristics") val characteristics: List<Characteristic>? = null,
 
     @Schema(example = "Sat Mar 30 00:00:00 GMT 2024", description = "Start date of the property.")
-    @get:JsonProperty("startDate") val startDate: LocalDate? = null,
+    @get:JsonProperty("startDate") val startDate: LocalDate,
 
     @Schema(example = "some notes about this property", description = "")
     @get:JsonProperty("notes") val notes: String? = null,

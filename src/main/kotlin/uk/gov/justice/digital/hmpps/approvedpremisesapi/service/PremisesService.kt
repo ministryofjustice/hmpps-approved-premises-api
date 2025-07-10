@@ -148,7 +148,7 @@ class PremisesService(
       longitude = null,
       probationRegion = probationRegion!!,
       localAuthorityArea = localAuthorityArea,
-      startDate = null,
+      startDate = LocalDate.now(),
       bookings = mutableListOf(),
       lostBeds = mutableListOf(),
       notes = if (notes.isNullOrEmpty()) "" else notes,

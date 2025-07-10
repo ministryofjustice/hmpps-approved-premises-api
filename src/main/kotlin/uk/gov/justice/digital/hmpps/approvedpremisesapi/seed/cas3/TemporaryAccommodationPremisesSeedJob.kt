@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.getCanonicalRegionN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.trimToEmpty
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.trimToNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import java.time.LocalDate
 import java.util.UUID
 
 @Component
@@ -43,6 +44,7 @@ class TemporaryAccommodationPremisesSeedJob(
     characteristics = getCharacteristics(columns),
     notes = columns["Optional notes"].trimToEmpty(),
     emailAddress = columns["Email Address"].trimToEmpty(),
+    startDate = LocalDate.parse(columns["Start Date"].trimToEmpty()),
   )
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -113,7 +115,7 @@ class TemporaryAccommodationPremisesSeedJob(
         probationDeliveryUnit = probationDeliveryUnit,
         status = PropertyStatus.active,
         turnaroundWorkingDays = 2,
-        startDate = null,
+        startDate = row.startDate,
       ),
     )
 
@@ -201,4 +203,5 @@ data class TemporaryAccommodationPremisesSeedCsvRow(
   val characteristics: List<String>,
   val notes: String,
   val emailAddress: String?,
+  val startDate: LocalDate,
 )

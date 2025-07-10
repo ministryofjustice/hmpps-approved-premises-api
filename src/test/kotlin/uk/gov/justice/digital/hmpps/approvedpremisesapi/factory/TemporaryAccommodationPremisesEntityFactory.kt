@@ -31,7 +31,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
-  private var startDate: Yielded<LocalDate?>? = null
+  private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(30) }
   private var turnaroundWorkingDays: Yielded<Int> = { 2 }
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
 
@@ -99,7 +99,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.probationDeliveryUnit = probationDeliveryUnit
   }
 
-  fun withStartDate(startDate: LocalDate?) = apply {
+  fun withStartDate(startDate: LocalDate) = apply {
     this.startDate = { startDate }
   }
 
@@ -149,7 +149,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     characteristics = this.characteristics(),
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
-    startDate = this.startDate?.invoke(),
+    startDate = this.startDate.invoke(),
     turnaroundWorkingDays = this.turnaroundWorkingDays.invoke(),
   )
 }
