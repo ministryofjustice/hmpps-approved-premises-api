@@ -1,11 +1,9 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.Instant
 
 /**
  * 
@@ -21,16 +19,16 @@ data class Cas2TimelineEvent(
     @get:JsonProperty("type", required = true) val type: TimelineEventType,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("occurredAt", required = true) val occurredAt: java.time.Instant,
+    @get:JsonProperty("occurredAt", required = true) val occurredAt: Instant,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("label", required = true) val label: kotlin.String,
+    @get:JsonProperty("label", required = true) val label: String,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("body") val body: kotlin.String? = null,
+    @get:JsonProperty("body") val body: String? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("createdByName") val createdByName: kotlin.String? = null
+    @get:JsonProperty("createdByName") val createdByName: String? = null
     ) {
 
 }
