@@ -209,7 +209,7 @@ class Cas1PremisesController(
 
     return ResponseEntity.ok().body(
       cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-        premiseCapacity = extractEntityFromCasResult(premiseCapacity)[0],
+        premiseCapacity = extractEntityFromCasResult(premiseCapacity).results[0],
       ),
     )
   }
@@ -239,7 +239,7 @@ class Cas1PremisesController(
               endDate = date,
               excludeSpaceBookingId = excludeSpaceBookingId,
             ),
-          )[0],
+          ).results[0],
         ).capacity.first(),
         spaceBookings = extractEntityFromCasResult(
           cas1SpaceBookingDaySummaryService.getBookingDaySummaries(
