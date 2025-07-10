@@ -105,12 +105,18 @@ class Cas1PremisesService(
 
   fun premiseExistsById(id: UUID) = premisesRepository.existsById(id)
 
+  data class PremisesCapacities(
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val results: List<PremiseCapacity>,
+  )
+
   fun getPremisesCapacities(
     premisesIds: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
     excludeSpaceBookingId: UUID?,
-  ): CasResult<List<PremiseCapacity>> {
+  ): CasResult<PremisesCapacities> {
     val premises = premisesRepository.findAllById(premisesIds)
 
     if (premises.size != premisesIds.size) {
@@ -134,10 +140,14 @@ class Cas1PremisesService(
     }
 
     return CasResult.Success(
-      spacePlanningService.capacity(
-        forPremisesIds = premises.map { it.id },
-        rangeInclusive = dateRange,
-        excludeSpaceBookingId = excludeSpaceBookingId,
+      PremisesCapacities(
+        startDate = startDate,
+        endDate = endDate,
+        spacePlanningService.capacity(
+          forPremisesIds = premises.map { it.id },
+          rangeInclusive = dateRange,
+          excludeSpaceBookingId = excludeSpaceBookingId,
+        ),
       ),
     )
   }

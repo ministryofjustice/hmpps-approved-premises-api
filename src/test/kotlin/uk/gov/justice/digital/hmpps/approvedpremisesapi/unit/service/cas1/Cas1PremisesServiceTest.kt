@@ -502,7 +502,9 @@ class Cas1PremisesServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(listOf(capacityResponse))
+        assertThat(it.startDate).isEqualTo(LocalDate.of(2020, 1, 2))
+        assertThat(it.endDate).isEqualTo(LocalDate.of(2020, 1, 3))
+        assertThat(it.results).isEqualTo(listOf(capacityResponse))
       }
     }
 
@@ -538,7 +540,7 @@ class Cas1PremisesServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(listOf(capacityResponse1, capacityResponse2))
+        assertThat(it.results).isEqualTo(listOf(capacityResponse1, capacityResponse2))
       }
     }
 
@@ -572,7 +574,7 @@ class Cas1PremisesServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(listOf(capacityResponse))
+        assertThat(it.results).isEqualTo(listOf(capacityResponse))
       }
     }
   }
