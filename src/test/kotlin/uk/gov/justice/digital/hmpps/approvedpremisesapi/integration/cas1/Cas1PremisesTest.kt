@@ -494,54 +494,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetAllPremisesCapacities : InitialiseDatabasePerClassTestBase() {
-    @BeforeAll
-    fun setupTestData() {
-      repeat(10) {
-        givenAnApprovedPremises()
-      }
-    }
-
-    @Test
-    fun `Returns 403 Forbidden if user does not have correct role`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
-
-      webTestClient.get()
-        .uri("/cas1/premises/capacity?startDate=2020-01-01&endDate=2020-01-02")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    fun success() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
-
-      val result = webTestClient.get()
-        .uri("/cas1/premises/capacity?startDate=2020-01-01&endDate=2020-01-07")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .bodyAsListOfObjects<Cas1PremiseCapacity>()
-
-      assertThat(result).hasSize(10)
-
-      result.forEach {
-        assertThat(it.capacity).hasSize(7)
-        assertThat(it.capacity[0].date).isEqualTo(LocalDate.of(2020, 1, 1))
-        assertThat(it.capacity[1].date).isEqualTo(LocalDate.of(2020, 1, 2))
-        assertThat(it.capacity[2].date).isEqualTo(LocalDate.of(2020, 1, 3))
-        assertThat(it.capacity[3].date).isEqualTo(LocalDate.of(2020, 1, 4))
-        assertThat(it.capacity[4].date).isEqualTo(LocalDate.of(2020, 1, 5))
-        assertThat(it.capacity[5].date).isEqualTo(LocalDate.of(2020, 1, 6))
-        assertThat(it.capacity[6].date).isEqualTo(LocalDate.of(2020, 1, 7))
-      }
-    }
-  }
-
-  @Nested
   inner class GetDaySummary : InitialiseDatabasePerClassTestBase() {
 
     lateinit var user: UserEntity
