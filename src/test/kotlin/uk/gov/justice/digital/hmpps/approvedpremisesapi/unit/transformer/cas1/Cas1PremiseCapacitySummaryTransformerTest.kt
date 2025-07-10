@@ -6,13 +6,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
+import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
 class Cas1PremiseCapacitySummaryTransformerTest {
@@ -22,10 +22,8 @@ class Cas1PremiseCapacitySummaryTransformerTest {
 
   @Test
   fun toCas1PremiseCapacitySummary() {
-    val premise = ApprovedPremisesEntityFactory().withDefaults().produce()
-
     val inputCapacitySummary = PremiseCapacity(
-      premises = premise,
+      premisesId = UUID.randomUUID(),
       range = DateRange(
         LocalDate.of(2020, 1, 2),
         LocalDate.of(2021, 3, 4),
