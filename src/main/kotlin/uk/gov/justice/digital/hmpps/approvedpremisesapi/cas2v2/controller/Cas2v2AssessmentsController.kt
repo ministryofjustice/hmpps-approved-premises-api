@@ -2,8 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.AssessmentsCas2v2Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
@@ -20,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.net.URI
 import java.util.UUID
 
-@Service("Cas2v2AssessmentsController")
+@Cas2v2Controller
 class Cas2v2AssessmentsController(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val cas2v2ApplicationNoteService: Cas2v2ApplicationNoteService,
@@ -28,17 +31,20 @@ class Cas2v2AssessmentsController(
   private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
   private val cas2v2UserService: Cas2v2UserService,
-) : AssessmentsCas2v2Delegate {
-
-  override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Cas2v2Assessment> {
+) {
+  @GetMapping("/assessments/{assessmentId}")
+  fun assessmentsAssessmentIdGet(
+    @PathVariable assessmentId: UUID,
+  ): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)
     val cas2v2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2v2AssessmentEntity))
   }
 
-  override fun assessmentsAssessmentIdPut(
-    assessmentId: UUID,
-    updateCas2Assessment: UpdateCas2v2Assessment,
+  @PutMapping("/assessments/{assessmentId}")
+  fun assessmentsAssessmentIdPut(
+    @PathVariable assessmentId: UUID,
+    @RequestBody updateCas2Assessment: UpdateCas2v2Assessment,
   ): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
 
@@ -48,9 +54,10 @@ class Cas2v2AssessmentsController(
     )
   }
 
-  override fun assessmentsAssessmentIdStatusUpdatesPost(
-    assessmentId: UUID,
-    cas2v2AssessmentStatusUpdate: Cas2v2AssessmentStatusUpdate,
+  @PostMapping("/assessments/{assessmentId}/status-updates")
+  fun assessmentsAssessmentIdStatusUpdatesPost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody cas2v2AssessmentStatusUpdate: Cas2v2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
     val result = cas2v2StatusUpdateService.createForAssessment(
       assessmentId = assessmentId,
@@ -63,9 +70,10 @@ class Cas2v2AssessmentsController(
     return ResponseEntity(HttpStatus.CREATED)
   }
 
-  override fun assessmentsAssessmentIdNotesPost(
-    assessmentId: UUID,
-    body: NewCas2v2ApplicationNote,
+  @PostMapping("/assessments/{assessmentId}/notes")
+  fun assessmentsAssessmentIdNotesPost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody body: NewCas2v2ApplicationNote,
   ): ResponseEntity<Cas2v2ApplicationNote> {
     val noteResult = cas2v2ApplicationNoteService.createAssessmentNote(assessmentId, body)
 
