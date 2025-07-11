@@ -12,13 +12,12 @@ import java.util.UUID
  */
 data class Cas3BedspacePremisesSearchResult(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) val id: UUID,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("id", required = true) val id: UUID,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("reference", required = true) val reference: String,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("reference", required = true) val reference: String,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("status", required = true) val status: Cas3BedspaceStatus
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("status", required = true) val status: Cas3BedspaceStatus,
 )
-

@@ -203,7 +203,6 @@ ktlint {
     exclude { it.file.path.contains("$buildDir${File.separator}generated${File.separator}") }
     exclude(
       "**/approvedpremisesapi/api/**",
-      "**/approvedpremisesapi/cas3/model/generated/**",
     )
   }
 }

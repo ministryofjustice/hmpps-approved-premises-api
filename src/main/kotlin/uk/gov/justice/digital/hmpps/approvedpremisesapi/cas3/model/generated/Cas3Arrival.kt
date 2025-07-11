@@ -17,22 +17,21 @@ import java.util.UUID
  */
 data class Cas3Arrival(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("expectedDepartureDate", required = true) val expectedDepartureDate: LocalDate,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("expectedDepartureDate", required = true) val expectedDepartureDate: LocalDate,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("arrivalTime", required = true) val arrivalTime: String,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("arrivalTime", required = true) val arrivalTime: String,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("notes") val notes: String? = null
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("notes") val notes: String? = null,
 )
-

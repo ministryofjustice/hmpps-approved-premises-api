@@ -15,16 +15,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResul
  */
 data class Cas3BedspaceSearchResult(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("premises", required = true) val premises: BedSearchResultPremisesSummary,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("premises", required = true) val premises: BedSearchResultPremisesSummary,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("room", required = true) val room: BedSearchResultRoomSummary,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("room", required = true) val room: BedSearchResultRoomSummary,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("bed", required = true) val bed: BedSearchResultBedSummary,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("bed", required = true) val bed: BedSearchResultBedSummary,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("overlaps", required = true) val overlaps: List<Cas3BedspaceSearchResultOverlap>
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("overlaps", required = true) val overlaps: List<Cas3BedspaceSearchResultOverlap>,
 )
-

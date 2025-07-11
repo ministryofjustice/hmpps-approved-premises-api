@@ -15,19 +15,18 @@ import java.util.UUID
  */
 data class Cas3Confirmation(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) val id: UUID,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("id", required = true) val id: UUID,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("dateTime", required = true) val dateTime: Instant,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("dateTime", required = true) val dateTime: Instant,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("notes") val notes: String? = null
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("notes") val notes: String? = null,
 )
-
