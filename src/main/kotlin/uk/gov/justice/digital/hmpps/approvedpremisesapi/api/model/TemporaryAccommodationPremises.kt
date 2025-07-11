@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 
 /**
  *

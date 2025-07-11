@@ -2,20 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 
 /**
  *

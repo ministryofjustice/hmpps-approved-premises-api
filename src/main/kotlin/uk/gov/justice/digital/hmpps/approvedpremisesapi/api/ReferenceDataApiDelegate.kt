@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
+import java.util.Optional
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -17,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralRejectionReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import java.util.Optional
 
 /**
  * A delegate to be called by the {@link ReferenceDataApiController}}.

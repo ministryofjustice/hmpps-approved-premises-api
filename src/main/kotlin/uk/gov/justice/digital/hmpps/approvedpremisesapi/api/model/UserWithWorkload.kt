@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 
 /**
  * This should be changed to embed the user as a property of this type, instead of 'extending' User. Currently this causes unmarshalling issues in integration tests, if using Jackson, due to discriminators not being logically correct

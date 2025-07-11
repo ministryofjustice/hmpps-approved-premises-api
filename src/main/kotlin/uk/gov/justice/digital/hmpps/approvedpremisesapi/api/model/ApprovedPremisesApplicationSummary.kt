@@ -2,11 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 
 /**
  * Use Cas1ApplicationSummary

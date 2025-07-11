@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import java.util.Optional
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
-import java.util.Optional
 
 @jakarta.annotation.Generated(
   value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"],

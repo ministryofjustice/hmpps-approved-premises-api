@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
+import java.util.Optional
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.context.request.NativeWebRequest
-import java.util.Optional
 
 /**
  * A delegate to be called by the {@link DocumentsApiController}}.

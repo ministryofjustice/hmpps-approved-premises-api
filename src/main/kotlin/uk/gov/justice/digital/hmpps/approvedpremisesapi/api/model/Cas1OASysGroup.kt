@@ -2,9 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysAssessmentMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 
 /**
  * Groups questions and answers from OAsys. Groups directly align with OAsys Sections other than 'needs', which collates questions from multiple sections

@@ -2,19 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Bed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingPremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Nonarrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 
 /**
  *

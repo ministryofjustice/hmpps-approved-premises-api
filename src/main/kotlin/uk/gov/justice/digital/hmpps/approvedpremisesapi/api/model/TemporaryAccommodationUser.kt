@@ -2,10 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 
 /**
  *

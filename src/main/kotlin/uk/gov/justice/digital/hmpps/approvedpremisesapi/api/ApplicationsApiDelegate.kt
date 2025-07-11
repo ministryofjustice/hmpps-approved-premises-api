@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
+import java.util.Optional
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -18,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
-import java.util.Optional
 
 /**
  * A delegate to be called by the {@link ApplicationsApiController}}.
