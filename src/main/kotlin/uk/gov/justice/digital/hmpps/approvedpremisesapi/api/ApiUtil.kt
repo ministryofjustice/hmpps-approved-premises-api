@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
 import jakarta.servlet.http.HttpServletResponse
-import java.io.IOException
 import org.springframework.web.context.request.NativeWebRequest
+import java.io.IOException
 
 object ApiUtil {
   fun setExampleResponse(req: NativeWebRequest, contentType: String, example: String) {
