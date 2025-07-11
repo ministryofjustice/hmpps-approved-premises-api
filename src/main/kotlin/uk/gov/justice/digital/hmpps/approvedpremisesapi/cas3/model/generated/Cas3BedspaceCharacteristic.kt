@@ -12,13 +12,12 @@ import java.util.UUID
  */
 data class Cas3BedspaceCharacteristic(
 
-    @Schema(example = "952790c0-21d7-4fd6-a7e1-9018f08d8bb0", required = true, description = "")
-    @get:JsonProperty("id", required = true) val id: UUID,
+  @Schema(example = "952790c0-21d7-4fd6-a7e1-9018f08d8bb0", required = true, description = "")
+  @get:JsonProperty("id", required = true) val id: UUID,
 
-    @Schema(example = "Is this premises catered (rather than self-catered)?", required = true, description = "")
-    @get:JsonProperty("description", required = true) val description: String,
+  @Schema(example = "Is this premises catered (rather than self-catered)?", required = true, description = "")
+  @get:JsonProperty("description", required = true) val description: String,
 
-    @Schema(example = "isCatered", description = "")
-    @get:JsonProperty("name") val name: String? = null
+  @Schema(example = "isCatered", description = "")
+  @get:JsonProperty("name") val name: String? = null,
 )
-

@@ -5,6 +5,13 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
+import io.swagger.v3.oas.annotations.*
+import io.swagger.v3.oas.annotations.enums.*
+import io.swagger.v3.oas.annotations.media.*
+import io.swagger.v3.oas.annotations.responses.*
+import io.swagger.v3.oas.annotations.security.*
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
@@ -18,121 +25,96 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
+import kotlin.collections.List
 
 @RestController
 interface PlacementRequestsApi {
 
-    fun getDelegate(): PlacementRequestsApiDelegate = object: PlacementRequestsApiDelegate {}
+  fun getDelegate(): PlacementRequestsApiDelegate = object : PlacementRequestsApiDelegate {}
 
-    @PaginationHeaders
-    @Operation(
-        tags = ["Placement requests",],
-        summary = "Gets all placement requests",
-        operationId = "placementRequestsDashboardGet",
-        description = """Deprecated, use cas1/placement-requests instead.""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(array = ArraySchema(schema = Schema(implementation = PlacementRequest::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/placement-requests/dashboard"],
-            produces = ["application/json"]
-    )
-    fun placementRequestsDashboardGet( @RequestParam(value = "status", required = false) status: PlacementRequestStatus?, @RequestParam(value = "crn", required = false) crn: kotlin.String?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "tier", required = false) tier: RiskTierLevel?, @RequestParam(value = "arrivalDateStart", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateStart: java.time.LocalDate?, @RequestParam(value = "arrivalDateEnd", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateEnd: java.time.LocalDate?, @RequestParam(value = "requestType", required = false) requestType: PlacementRequestRequestType?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: PlacementRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
-        return getDelegate().placementRequestsDashboardGet(status, crn, crnOrName, tier, arrivalDateStart, arrivalDateEnd, requestType, apAreaId, cruManagementAreaId, page, sortBy, sortDirection)
-    }
+  @PaginationHeaders
+  @Operation(
+    tags = ["Placement requests"],
+    summary = "Gets all placement requests",
+    operationId = "placementRequestsDashboardGet",
+    description = """Deprecated, use cas1/placement-requests instead.""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(array = ArraySchema(schema = Schema(implementation = PlacementRequest::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-requests/dashboard"],
+    produces = ["application/json"],
+  )
+  fun placementRequestsDashboardGet(@RequestParam(value = "status", required = false) status: PlacementRequestStatus?, @RequestParam(value = "crn", required = false) crn: kotlin.String?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "tier", required = false) tier: RiskTierLevel?, @RequestParam(value = "arrivalDateStart", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateStart: java.time.LocalDate?, @RequestParam(value = "arrivalDateEnd", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateEnd: java.time.LocalDate?, @RequestParam(value = "requestType", required = false) requestType: PlacementRequestRequestType?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: PlacementRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> = getDelegate().placementRequestsDashboardGet(status, crn, crnOrName, tier, arrivalDateStart, arrivalDateEnd, requestType, apAreaId, cruManagementAreaId, page, sortBy, sortDirection)
 
-    @Operation(
-        tags = ["Placement requests",],
-        summary = "Records that an attempt to match was made but no suitable Beds could be found",
-        operationId = "placementRequestsIdBookingNotMadePost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully recorded that a Booking could not be made", content = [Content(schema = Schema(implementation = BookingNotMade::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-requests/{id}/booking-not-made"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun placementRequestsIdBookingNotMadePost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "Details about the failure to match", required = true) @RequestBody newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> {
-        return getDelegate().placementRequestsIdBookingNotMadePost(id, newBookingNotMade)
-    }
+  @Operation(
+    tags = ["Placement requests"],
+    summary = "Records that an attempt to match was made but no suitable Beds could be found",
+    operationId = "placementRequestsIdBookingNotMadePost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully recorded that a Booking could not be made", content = [Content(schema = Schema(implementation = BookingNotMade::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{id}/booking-not-made"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun placementRequestsIdBookingNotMadePost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Details about the failure to match", required = true) @RequestBody newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> = getDelegate().placementRequestsIdBookingNotMadePost(id, newBookingNotMade)
 
-    @Operation(
-        tags = ["Placement requests",],
-        summary = "Creates a Booking for a placement request",
-        operationId = "placementRequestsIdBookingPost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully created a Booking", content = [Content(schema = Schema(implementation = NewPlacementRequestBookingConfirmation::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-requests/{id}/booking"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun placementRequestsIdBookingPost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "Booking details", required = true) @RequestBody newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> {
-        return getDelegate().placementRequestsIdBookingPost(id, newPlacementRequestBooking)
-    }
+  @Operation(
+    tags = ["Placement requests"],
+    summary = "Creates a Booking for a placement request",
+    operationId = "placementRequestsIdBookingPost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully created a Booking", content = [Content(schema = Schema(implementation = NewPlacementRequestBookingConfirmation::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{id}/booking"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun placementRequestsIdBookingPost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Booking details", required = true) @RequestBody newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> = getDelegate().placementRequestsIdBookingPost(id, newPlacementRequestBooking)
 
-    @Operation(
-        tags = ["Placement requests",],
-        summary = "Gets placement requests for a given user",
-        operationId = "placementRequestsIdGet",
-        description = """Use cas specific endpoint""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(schema = Schema(implementation = PlacementRequestDetail::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/placement-requests/{id}"],
-            produces = ["application/json"]
-    )
-    fun placementRequestsIdGet(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<PlacementRequestDetail> {
-        return getDelegate().placementRequestsIdGet(id)
-    }
+  @Operation(
+    tags = ["Placement requests"],
+    summary = "Gets placement requests for a given user",
+    operationId = "placementRequestsIdGet",
+    description = """Use cas specific endpoint""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(schema = Schema(implementation = PlacementRequestDetail::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-requests/{id}"],
+    produces = ["application/json"],
+  )
+  fun placementRequestsIdGet(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<PlacementRequestDetail> = getDelegate().placementRequestsIdGet(id)
 
-    @Operation(
-        tags = ["Placement requests",],
-        summary = "Withdraws a placement request",
-        operationId = "placementRequestsIdWithdrawalPost",
-        description = """Use cas specific endpoint""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = PlacementRequestDetail::class))]),
-            ApiResponse(responseCode = "404", description = "invalid applicationId", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-requests/{id}/withdrawal"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun placementRequestsIdWithdrawalPost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "Withdrawal details") @RequestBody(required = false) body: WithdrawPlacementRequest?): ResponseEntity<PlacementRequestDetail> {
-        return getDelegate().placementRequestsIdWithdrawalPost(id, body)
-    }
+  @Operation(
+    tags = ["Placement requests"],
+    summary = "Withdraws a placement request",
+    operationId = "placementRequestsIdWithdrawalPost",
+    description = """Use cas specific endpoint""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = PlacementRequestDetail::class))]),
+      ApiResponse(responseCode = "404", description = "invalid applicationId", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{id}/withdrawal"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun placementRequestsIdWithdrawalPost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Withdrawal details") @RequestBody(required = false) body: WithdrawPlacementRequest?): ResponseEntity<PlacementRequestDetail> = getDelegate().placementRequestsIdWithdrawalPost(id, body)
 }

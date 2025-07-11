@@ -6,15 +6,13 @@ import com.fasterxml.jackson.annotation.JsonValue
 @SuppressWarnings("EnumNaming", "ExplicitItLambdaParameter")
 enum class Cas3PremisesStatus(@get:JsonValue val value: String) {
 
-    online("online"),
-    archived("archived");
+  online("online"),
+  archived("archived"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: String): Cas3PremisesStatus {
-            return values().first { it -> it.value == value }
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: String): Cas3PremisesStatus = values().first { it -> it.value == value }
+  }
 }
-

@@ -5,6 +5,13 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.*
+import io.swagger.v3.oas.annotations.enums.*
+import io.swagger.v3.oas.annotations.media.*
+import io.swagger.v3.oas.annotations.responses.*
+import io.swagger.v3.oas.annotations.security.*
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -12,141 +19,114 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
 import kotlin.collections.List
-import kotlin.collections.Map
 
 @RestController
 interface PlacementApplicationsCas1 {
 
-    fun getDelegate(): PlacementApplicationsCas1Delegate = object: PlacementApplicationsCas1Delegate {}
+  fun getDelegate(): PlacementApplicationsCas1Delegate = object : PlacementApplicationsCas1Delegate {}
 
-    @Operation(
-        tags = ["Placement applications",],
-        summary = "Submits a decision for a placement application",
-        operationId = "placementApplicationsIdDecisionPost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully made a decision on the placement application", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
-            ApiResponse(responseCode = "400", description = "placement application already has a decision made", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-applications/{id}/decision"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun placementApplicationsIdDecisionPost(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "Information needed to submit a placement application", required = true) @RequestBody placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope): ResponseEntity<PlacementApplication> {
-        return getDelegate().placementApplicationsIdDecisionPost(id, placementApplicationDecisionEnvelope)
-    }
+  @Operation(
+    tags = ["Placement applications"],
+    summary = "Submits a decision for a placement application",
+    operationId = "placementApplicationsIdDecisionPost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully made a decision on the placement application", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+      ApiResponse(responseCode = "400", description = "placement application already has a decision made", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications/{id}/decision"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun placementApplicationsIdDecisionPost(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Information needed to submit a placement application", required = true) @RequestBody placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope): ResponseEntity<PlacementApplication> = getDelegate().placementApplicationsIdDecisionPost(id, placementApplicationDecisionEnvelope)
 
-    @Operation(
-        tags = ["Placement applications",],
-        summary = "Retrieves an application for a placement request",
-        operationId = "placementApplicationsIdGet",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved placement request application", content = [Content(schema = Schema(implementation = PlacementApplication::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/placement-applications/{id}"],
-            produces = ["application/json"]
-    )
-    fun placementApplicationsIdGet(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<PlacementApplication> {
-        return getDelegate().placementApplicationsIdGet(id)
-    }
+  @Operation(
+    tags = ["Placement applications"],
+    summary = "Retrieves an application for a placement request",
+    operationId = "placementApplicationsIdGet",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement request application", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-applications/{id}"],
+    produces = ["application/json"],
+  )
+  fun placementApplicationsIdGet(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<PlacementApplication> = getDelegate().placementApplicationsIdGet(id)
 
-    @Operation(
-        tags = ["Placement applications",],
-        summary = "Updates an application for a placement request",
-        operationId = "placementApplicationsIdPut",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved placement request application", content = [Content(schema = Schema(implementation = PlacementApplication::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PUT],
-            value = ["/placement-applications/{id}"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun placementApplicationsIdPut(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "Details about the application", required = true) @RequestBody updatePlacementApplication: UpdatePlacementApplication): ResponseEntity<PlacementApplication> {
-        return getDelegate().placementApplicationsIdPut(id, updatePlacementApplication)
-    }
+  @Operation(
+    tags = ["Placement applications"],
+    summary = "Updates an application for a placement request",
+    operationId = "placementApplicationsIdPut",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement request application", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/placement-applications/{id}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun placementApplicationsIdPut(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Details about the application", required = true) @RequestBody updatePlacementApplication: UpdatePlacementApplication): ResponseEntity<PlacementApplication> = getDelegate().placementApplicationsIdPut(id, updatePlacementApplication)
 
-    @Operation(
-        tags = ["Placement applications",],
-        summary = "Submits an application for a placement request",
-        operationId = "placementApplicationsIdSubmissionPost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully submitted the placement application", content = [Content(array = ArraySchema(schema = Schema(implementation = PlacementApplication::class)))]),
-            ApiResponse(responseCode = "400", description = "placement application has already been submitted", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-applications/{id}/submission"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun placementApplicationsIdSubmissionPost(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "Information needed to submit a placement application", required = true) @RequestBody submitPlacementApplication: SubmitPlacementApplication): ResponseEntity<List<PlacementApplication>> {
-        return getDelegate().placementApplicationsIdSubmissionPost(id, submitPlacementApplication)
-    }
+  @Operation(
+    tags = ["Placement applications"],
+    summary = "Submits an application for a placement request",
+    operationId = "placementApplicationsIdSubmissionPost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully submitted the placement application", content = [Content(array = ArraySchema(schema = Schema(implementation = PlacementApplication::class)))]),
+      ApiResponse(responseCode = "400", description = "placement application has already been submitted", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications/{id}/submission"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun placementApplicationsIdSubmissionPost(@Parameter(description = "Id of the application", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Information needed to submit a placement application", required = true) @RequestBody submitPlacementApplication: SubmitPlacementApplication): ResponseEntity<List<PlacementApplication>> = getDelegate().placementApplicationsIdSubmissionPost(id, submitPlacementApplication)
 
-    @Operation(
-        tags = ["Placement applications",],
-        summary = "Withdraw a placement application",
-        operationId = "placementApplicationsIdWithdrawPost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "Placement application withdrawn", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
-            ApiResponse(responseCode = "400", description = "placement application already has a decision made", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-applications/{id}/withdraw"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun placementApplicationsIdWithdrawPost(@Parameter(description = "Id of the placement application to withdraw", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "Withdrawal details") @RequestBody(required = false) withdrawPlacementApplication: WithdrawPlacementApplication?): ResponseEntity<PlacementApplication> {
-        return getDelegate().placementApplicationsIdWithdrawPost(id, withdrawPlacementApplication)
-    }
+  @Operation(
+    tags = ["Placement applications"],
+    summary = "Withdraw a placement application",
+    operationId = "placementApplicationsIdWithdrawPost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "Placement application withdrawn", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+      ApiResponse(responseCode = "400", description = "placement application already has a decision made", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications/{id}/withdraw"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun placementApplicationsIdWithdrawPost(@Parameter(description = "Id of the placement application to withdraw", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Withdrawal details") @RequestBody(required = false) withdrawPlacementApplication: WithdrawPlacementApplication?): ResponseEntity<PlacementApplication> = getDelegate().placementApplicationsIdWithdrawPost(id, withdrawPlacementApplication)
 
-    @Operation(
-        tags = ["Placement applications",],
-        summary = "Creates an application for a placement",
-        operationId = "placementApplicationsPost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully recorded that a placement application has been made", content = [Content(schema = Schema(implementation = PlacementApplication::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-applications"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun placementApplicationsPost(@Parameter(description = "Details about the application", required = true) @RequestBody newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> {
-        return getDelegate().placementApplicationsPost(newPlacementApplication)
-    }
+  @Operation(
+    tags = ["Placement applications"],
+    summary = "Creates an application for a placement",
+    operationId = "placementApplicationsPost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully recorded that a placement application has been made", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun placementApplicationsPost(@Parameter(description = "Details about the application", required = true) @RequestBody newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> = getDelegate().placementApplicationsPost(newPlacementApplication)
 }

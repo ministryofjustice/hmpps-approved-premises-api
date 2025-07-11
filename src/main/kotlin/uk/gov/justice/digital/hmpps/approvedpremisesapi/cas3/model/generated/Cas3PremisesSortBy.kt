@@ -6,15 +6,13 @@ import com.fasterxml.jackson.annotation.JsonValue
 @SuppressWarnings("EnumNaming", "ExplicitItLambdaParameter")
 enum class Cas3PremisesSortBy(@get:JsonValue val value: String) {
 
-    pdu("pdu"),
-    la("la");
+  pdu("pdu"),
+  la("la"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: String): Cas3PremisesSortBy {
-            return values().first { it -> it.value == value }
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: String): Cas3PremisesSortBy = values().first { it -> it.value == value }
+  }
 }
-

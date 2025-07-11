@@ -24,4 +24,4 @@ data class FurtherInformationRequestedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: FurtherInformationRequested,
-): Cas1DomainEventEnvelopeInterface<FurtherInformationRequested>
+) : Cas1DomainEventEnvelopeInterface<FurtherInformationRequested>

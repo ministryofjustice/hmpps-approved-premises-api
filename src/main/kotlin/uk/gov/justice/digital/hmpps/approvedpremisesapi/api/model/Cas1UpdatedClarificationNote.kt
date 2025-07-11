@@ -1,22 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 
- * @param response 
- * @param responseReceivedOn 
+ *
+ * @param response
+ * @param responseReceivedOn
  */
 data class Cas1UpdatedClarificationNote(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("response", required = true) val response: kotlin.String,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("response", required = true) val response: kotlin.String,
 
-    @Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")
-    @get:JsonProperty("responseReceivedOn", required = true) val responseReceivedOn: java.time.LocalDate
-    ) {
-
-}
-
+  @Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")
+  @get:JsonProperty("responseReceivedOn", required = true) val responseReceivedOn: java.time.LocalDate,
+)

@@ -5,16 +5,14 @@ import com.fasterxml.jackson.annotation.JsonValue
 @SuppressWarnings("EnumNaming", "ExplicitItLambdaParameter")
 enum class Cas3BedspaceStatus(@get:JsonValue val value: String) {
 
-    online("online"),
-    archived("archived"),
-    upcoming("upcoming");
+  online("online"),
+  archived("archived"),
+  upcoming("upcoming"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: String): Cas3BedspaceStatus {
-            return values().first { it -> it.value == value }
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: String): Cas3BedspaceStatus = values().first { it -> it.value == value }
+  }
 }
-

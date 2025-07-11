@@ -24,4 +24,4 @@ data class BookingKeyWorkerAssignedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: BookingKeyWorkerAssigned,
-): Cas1DomainEventEnvelopeInterface<BookingKeyWorkerAssigned>
+) : Cas1DomainEventEnvelopeInterface<BookingKeyWorkerAssigned>

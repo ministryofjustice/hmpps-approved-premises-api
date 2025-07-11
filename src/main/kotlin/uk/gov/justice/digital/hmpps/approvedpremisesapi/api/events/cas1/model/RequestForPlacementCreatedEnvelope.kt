@@ -24,4 +24,4 @@ data class RequestForPlacementCreatedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: RequestForPlacementCreated,
-): Cas1DomainEventEnvelopeInterface<RequestForPlacementCreated>
+) : Cas1DomainEventEnvelopeInterface<RequestForPlacementCreated>

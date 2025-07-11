@@ -5,43 +5,32 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CacheType
 import io.swagger.v3.oas.annotations.*
 import io.swagger.v3.oas.annotations.enums.*
 import io.swagger.v3.oas.annotations.media.*
 import io.swagger.v3.oas.annotations.responses.*
 import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CacheType
 
 @RestController
 interface CacheApi {
 
-    fun getDelegate(): CacheApiDelegate = object: CacheApiDelegate {}
+  fun getDelegate(): CacheApiDelegate = object : CacheApiDelegate {}
 
-    @Operation(
-        tags = ["default",],
-        summary = "Clears the given cache, can only be called from a local connection",
-        operationId = "cacheCacheNameDelete",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully cleared cache")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.DELETE],
-            value = ["/cache/{cacheName}"]
-    )
-    fun cacheCacheNameDelete(@Parameter(description = "", required = true, schema = Schema(allowableValues = ["qCodeStaffMembers", "userAccess", "staffDetails", "teamsManagingCase", "ukBankHolidays", "inmateDetails", "crnGetCaseDetailCache"])) @PathVariable("cacheName") cacheName: CacheType): ResponseEntity<Unit> {
-        return getDelegate().cacheCacheNameDelete(cacheName)
-    }
+  @Operation(
+    tags = ["default"],
+    summary = "Clears the given cache, can only be called from a local connection",
+    operationId = "cacheCacheNameDelete",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully cleared cache"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.DELETE],
+    value = ["/cache/{cacheName}"],
+  )
+  fun cacheCacheNameDelete(@Parameter(description = "", required = true, schema = Schema(allowableValues = ["qCodeStaffMembers", "userAccess", "staffDetails", "teamsManagingCase", "ukBankHolidays", "inmateDetails", "crnGetCaseDetailCache"])) @PathVariable("cacheName") cacheName: CacheType): ResponseEntity<Unit> = getDelegate().cacheCacheNameDelete(cacheName)
 }

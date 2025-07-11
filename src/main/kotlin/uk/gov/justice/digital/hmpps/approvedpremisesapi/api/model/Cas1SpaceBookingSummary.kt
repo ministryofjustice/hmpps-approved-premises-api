@@ -1,101 +1,95 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1KeyWorkerAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 
- * @param id 
- * @param person 
- * @param premises 
+ *
+ * @param id
+ * @param person
+ * @param premises
  * @param canonicalArrivalDate actual arrival date or, if not known, the expected arrival date
  * @param canonicalDepartureDate actual departure date or, if not known, the expected departure date
  * @param expectedArrivalDate expected arrival date
  * @param expectedDepartureDate expected departure date
  * @param characteristics Room and premise characteristics
- * @param isCancelled 
- * @param openChangeRequestTypes 
+ * @param isCancelled
+ * @param openChangeRequestTypes
  * @param actualArrivalDate actual arrival date if known
  * @param actualDepartureDate actual departure date if known
- * @param isNonArrival 
+ * @param isNonArrival
  * @param tier Risk rating tier level of corresponding application
- * @param keyWorkerAllocation 
- * @param status 
- * @param deliusEventNumber 
+ * @param keyWorkerAllocation
+ * @param status
+ * @param deliusEventNumber
  * @param plannedTransferRequested Use 'openChangeRequestTypes'
  * @param appealRequested Use 'openChangeRequestTypes'
  */
 data class Cas1SpaceBookingSummary(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("person", required = true) val person: PersonSummary,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("person", required = true) val person: PersonSummary,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("premises", required = true) val premises: NamedId,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("premises", required = true) val premises: NamedId,
 
-    @Schema(example = "null", required = true, description = "actual arrival date or, if not known, the expected arrival date")
-    @get:JsonProperty("canonicalArrivalDate", required = true) val canonicalArrivalDate: java.time.LocalDate,
+  @Schema(example = "null", required = true, description = "actual arrival date or, if not known, the expected arrival date")
+  @get:JsonProperty("canonicalArrivalDate", required = true) val canonicalArrivalDate: java.time.LocalDate,
 
-    @Schema(example = "null", required = true, description = "actual departure date or, if not known, the expected departure date")
-    @get:JsonProperty("canonicalDepartureDate", required = true) val canonicalDepartureDate: java.time.LocalDate,
+  @Schema(example = "null", required = true, description = "actual departure date or, if not known, the expected departure date")
+  @get:JsonProperty("canonicalDepartureDate", required = true) val canonicalDepartureDate: java.time.LocalDate,
 
-    @Schema(example = "null", required = true, description = "expected arrival date")
-    @get:JsonProperty("expectedArrivalDate", required = true) val expectedArrivalDate: java.time.LocalDate,
+  @Schema(example = "null", required = true, description = "expected arrival date")
+  @get:JsonProperty("expectedArrivalDate", required = true) val expectedArrivalDate: java.time.LocalDate,
 
-    @Schema(example = "null", required = true, description = "expected departure date")
-    @get:JsonProperty("expectedDepartureDate", required = true) val expectedDepartureDate: java.time.LocalDate,
+  @Schema(example = "null", required = true, description = "expected departure date")
+  @get:JsonProperty("expectedDepartureDate", required = true) val expectedDepartureDate: java.time.LocalDate,
 
-    @Schema(example = "null", required = true, description = "Room and premise characteristics")
-    @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic> = arrayListOf(),
+  @Schema(example = "null", required = true, description = "Room and premise characteristics")
+  @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic> = arrayListOf(),
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("isCancelled", required = true) val isCancelled: kotlin.Boolean,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("isCancelled", required = true) val isCancelled: kotlin.Boolean,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("openChangeRequestTypes", required = true) val openChangeRequestTypes: kotlin.collections.List<Cas1ChangeRequestType>,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("openChangeRequestTypes", required = true) val openChangeRequestTypes: kotlin.collections.List<Cas1ChangeRequestType>,
 
-    @Schema(example = "null", description = "actual arrival date if known")
-    @get:JsonProperty("actualArrivalDate") val actualArrivalDate: java.time.LocalDate? = null,
+  @Schema(example = "null", description = "actual arrival date if known")
+  @get:JsonProperty("actualArrivalDate") val actualArrivalDate: java.time.LocalDate? = null,
 
-    @Schema(example = "null", description = "actual departure date if known")
-    @get:JsonProperty("actualDepartureDate") val actualDepartureDate: java.time.LocalDate? = null,
+  @Schema(example = "null", description = "actual departure date if known")
+  @get:JsonProperty("actualDepartureDate") val actualDepartureDate: java.time.LocalDate? = null,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("isNonArrival") val isNonArrival: kotlin.Boolean? = null,
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("isNonArrival") val isNonArrival: kotlin.Boolean? = null,
 
-    @Schema(example = "null", description = "Risk rating tier level of corresponding application")
-    @get:JsonProperty("tier") val tier: kotlin.String? = null,
+  @Schema(example = "null", description = "Risk rating tier level of corresponding application")
+  @get:JsonProperty("tier") val tier: kotlin.String? = null,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("keyWorkerAllocation") val keyWorkerAllocation: Cas1KeyWorkerAllocation? = null,
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("keyWorkerAllocation") val keyWorkerAllocation: Cas1KeyWorkerAllocation? = null,
 
-    @Schema(example = "null", description = "")
-    @Deprecated(message = "")
-    @get:JsonProperty("status") val status: Cas1SpaceBookingSummaryStatus? = null,
+  @Schema(example = "null", description = "")
+  @Deprecated(message = "")
+  @get:JsonProperty("status") val status: Cas1SpaceBookingSummaryStatus? = null,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("deliusEventNumber") val deliusEventNumber: kotlin.String? = null,
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("deliusEventNumber") val deliusEventNumber: kotlin.String? = null,
 
-    @Schema(example = "null", description = "Use 'openChangeRequestTypes'")
-    @Deprecated(message = "")
-    @get:JsonProperty("plannedTransferRequested") val plannedTransferRequested: kotlin.Boolean? = null,
+  @Schema(example = "null", description = "Use 'openChangeRequestTypes'")
+  @Deprecated(message = "")
+  @get:JsonProperty("plannedTransferRequested") val plannedTransferRequested: kotlin.Boolean? = null,
 
-    @Schema(example = "null", description = "Use 'openChangeRequestTypes'")
-    @Deprecated(message = "")
-    @get:JsonProperty("appealRequested") val appealRequested: kotlin.Boolean? = null
-    ) {
-
-}
-
+  @Schema(example = "null", description = "Use 'openChangeRequestTypes'")
+  @Deprecated(message = "")
+  @get:JsonProperty("appealRequested") val appealRequested: kotlin.Boolean? = null,
+)

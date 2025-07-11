@@ -6,31 +6,31 @@ import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 
 /**
- * 
- * @param type 
- * @param id 
- * @param person 
- * @param createdAt 
+ *
+ * @param type
+ * @param id
+ * @param person
+ * @param createdAt
  */
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes(
-      JsonSubTypes.Type(value = ApprovedPremisesApplication::class, name = "CAS1"),
-      JsonSubTypes.Type(value = Cas2Application::class, name = "CAS2"),
-      JsonSubTypes.Type(value = Cas2v2Application::class, name = "CAS2V2"),
-      JsonSubTypes.Type(value = TemporaryAccommodationApplication::class, name = "CAS3"),
-      JsonSubTypes.Type(value = OfflineApplication::class, name = "Offline")
+  JsonSubTypes.Type(value = ApprovedPremisesApplication::class, name = "CAS1"),
+  JsonSubTypes.Type(value = Cas2Application::class, name = "CAS2"),
+  JsonSubTypes.Type(value = Cas2v2Application::class, name = "CAS2V2"),
+  JsonSubTypes.Type(value = TemporaryAccommodationApplication::class, name = "CAS3"),
+  JsonSubTypes.Type(value = OfflineApplication::class, name = "Offline"),
 )
+interface Application {
+  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  val type: kotlin.String
 
-interface Application{
-                @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-                val type: kotlin.String
-                @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-                val id: java.util.UUID
-                @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-                val person: Person
-                @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-                val createdAt: java.time.Instant
+  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  val id: java.util.UUID
 
+  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  val person: Person
+
+  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  val createdAt: java.time.Instant
 }
-

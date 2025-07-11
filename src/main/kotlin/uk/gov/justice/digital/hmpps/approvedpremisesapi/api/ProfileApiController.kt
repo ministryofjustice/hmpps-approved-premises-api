@@ -4,16 +4,19 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
 import java.util.Optional
 
-@jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")@Controller
+@jakarta.annotation.Generated(
+  value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"],
+  comments = "Generator version: 7.13.0",
+)@Controller
 @RequestMapping("\${openapi.approvedPremises.base-path:}")
 class ProfileApiController(
-        delegate: ProfileApiDelegate?
+  delegate: ProfileApiDelegate?,
 ) : ProfileApi {
-    private lateinit var delegate: ProfileApiDelegate
+  private lateinit var delegate: ProfileApiDelegate
 
-    init {
-        this.delegate = Optional.ofNullable(delegate).orElse(object : ProfileApiDelegate {})
-    }
+  init {
+    this.delegate = Optional.ofNullable(delegate).orElse(object : ProfileApiDelegate {})
+  }
 
-    override fun getDelegate(): ProfileApiDelegate = delegate
+  override fun getDelegate(): ProfileApiDelegate = delegate
 }

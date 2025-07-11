@@ -12,13 +12,12 @@ import java.time.Instant
  */
 data class Cas3OASysAssessmentMetadata(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("hasApplicableAssessment", required = true) val hasApplicableAssessment: Boolean,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("hasApplicableAssessment", required = true) val hasApplicableAssessment: Boolean,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("dateStarted") val dateStarted: Instant? = null,
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("dateStarted") val dateStarted: Instant? = null,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("dateCompleted") val dateCompleted: Instant? = null
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("dateCompleted") val dateCompleted: Instant? = null,
 )
-

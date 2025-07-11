@@ -24,4 +24,4 @@ data class PersonNotArrivedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: PersonNotArrived,
-): Cas1DomainEventEnvelopeInterface<PersonNotArrived>
+) : Cas1DomainEventEnvelopeInterface<PersonNotArrived>

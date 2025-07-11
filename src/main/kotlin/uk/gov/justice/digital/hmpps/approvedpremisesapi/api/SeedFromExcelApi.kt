@@ -5,63 +5,50 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelDirectoryRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileRequest
 import io.swagger.v3.oas.annotations.*
 import io.swagger.v3.oas.annotations.enums.*
 import io.swagger.v3.oas.annotations.media.*
 import io.swagger.v3.oas.annotations.responses.*
 import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelDirectoryRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileRequest
 
 @RestController
 interface SeedFromExcelApi {
 
-    fun getDelegate(): SeedFromExcelApiDelegate = object: SeedFromExcelApiDelegate {}
+  fun getDelegate(): SeedFromExcelApiDelegate = object : SeedFromExcelApiDelegate {}
 
-    @Operation(
-        tags = ["Seed excel",],
-        summary = "Starts the data seeding from Excel process for a directory, can only be called from a local connection",
-        operationId = "seedFromExcelDirectory",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "202", description = "successfully requested task")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/seedFromExcel/directory"],
-            consumes = ["application/json"]
-    )
-    fun seedFromExcelDirectory(@Parameter(description = "", required = true) @RequestBody seedFromExcelDirectoryRequest: SeedFromExcelDirectoryRequest): ResponseEntity<Unit> {
-        return getDelegate().seedFromExcelDirectory(seedFromExcelDirectoryRequest)
-    }
+  @Operation(
+    tags = ["Seed excel"],
+    summary = "Starts the data seeding from Excel process for a directory, can only be called from a local connection",
+    operationId = "seedFromExcelDirectory",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "202", description = "successfully requested task"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/seedFromExcel/directory"],
+    consumes = ["application/json"],
+  )
+  fun seedFromExcelDirectory(@Parameter(description = "", required = true) @RequestBody seedFromExcelDirectoryRequest: SeedFromExcelDirectoryRequest): ResponseEntity<Unit> = getDelegate().seedFromExcelDirectory(seedFromExcelDirectoryRequest)
 
-    @Operation(
-        tags = ["Seed excel",],
-        summary = "Starts the data seeding from Excel process, can only be called from a local connection",
-        operationId = "seedFromExcelFile",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "202", description = "successfully requested task")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/seedFromExcel/file"],
-            consumes = ["application/json"]
-    )
-    fun seedFromExcelFile(@Parameter(description = "", required = true) @RequestBody seedFromExcelFileRequest: SeedFromExcelFileRequest): ResponseEntity<Unit> {
-        return getDelegate().seedFromExcelFile(seedFromExcelFileRequest)
-    }
+  @Operation(
+    tags = ["Seed excel"],
+    summary = "Starts the data seeding from Excel process, can only be called from a local connection",
+    operationId = "seedFromExcelFile",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "202", description = "successfully requested task"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/seedFromExcel/file"],
+    consumes = ["application/json"],
+  )
+  fun seedFromExcelFile(@Parameter(description = "", required = true) @RequestBody seedFromExcelFileRequest: SeedFromExcelFileRequest): ResponseEntity<Unit> = getDelegate().seedFromExcelFile(seedFromExcelFileRequest)
 }
