@@ -45,14 +45,14 @@ class Cas3v2BookingService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getBooking(bookingId: UUID, premisesId: UUID): CasResult<Cas3BookingAndPersons> {
+  fun getBooking(bookingId: UUID, premisesId: UUID?): CasResult<Cas3BookingAndPersons> {
     val booking = cas3BookingRepository.findByIdOrNull(bookingId)
       ?: return CasResult.NotFound("Booking", bookingId.toString())
 
     val user = userService.getUserForRequest()
     if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       return CasResult.Unauthorised()
-    } else if (premisesId != booking.premises.id) {
+    } else if (premisesId != null && premisesId != booking.premises.id) {
       return CasResult.GeneralValidationError("The supplied premisesId does not match the booking's premises")
     }
 

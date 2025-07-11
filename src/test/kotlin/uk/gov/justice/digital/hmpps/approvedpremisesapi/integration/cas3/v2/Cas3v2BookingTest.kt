@@ -39,6 +39,73 @@ class Cas3v2BookingTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class GetBooking {
+
+    @Test
+    fun `Get a booking without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas3/v2/bookings/${UUID.randomUUID()}")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get a non-existent booking returns 404`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas3/v2/bookings/${UUID.randomUUID()}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Get a booking returns OK with the correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val premises = givenACas3Premises(
+            probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            },
+          )
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(
+              cas3BedspaceEntityFactory.produceAndPersist {
+                withPremises(premises)
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                bookingTransformer.transformJpaToApi(
+                  booking,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
+              ),
+            )
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class GetBookingForPremises {
 
     @Test
