@@ -126,7 +126,6 @@ class ApplicationsTransformer(
         createdAt = domain.getCreatedAt(),
         submittedAt = domain.getSubmittedAt(),
         isWomensApplication = domain.getIsWomensApplication(),
-        isPipeApplication = domain.getIsPipeApplication(),
         arrivalDate = domain.getArrivalDate(),
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
         status = getStatusFromSummary(domain),
