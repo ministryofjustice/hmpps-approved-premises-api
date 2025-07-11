@@ -421,7 +421,6 @@ class ApplicationsTransformersTest {
     assertThat(result.createdAt).isEqualTo(application.getCreatedAt())
     assertThat(result.submittedAt).isEqualTo(application.getSubmittedAt())
     assertThat(result.isWomensApplication).isEqualTo(application.getIsWomensApplication())
-    assertThat(result.isPipeApplication).isEqualTo(application.getIsPipeApplication())
     assertThat(result.arrivalDate).isEqualTo(application.getArrivalDate())
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.type).isEqualTo("CAS1")
