@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -68,16 +69,17 @@ class Cas1TaskServiceTest {
     placementApplicationRepositoryMock,
   )
 
-  private val requestUser = UserEntityFactory().withDefaults().produce()
+  private val requestUser = UserEntityFactory().withDefaults().withRoleEnums(listOf(UserRole.CAS1_CRU_MEMBER)).produce()
 
   @Test
-  fun `reallocateTask returns Unauthorised when requestUser does not have permissions to reallocate the task`() {
+  fun `reallocateTask returns Unauthorised when requestUser does not have role to reallocate the task`() {
     val requestUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
           .produce()
       }
+      .withRoleEnums(UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER))
       .produce()
 
     every { userAccessServiceMock.userCanReallocateTask(any()) } returns false
