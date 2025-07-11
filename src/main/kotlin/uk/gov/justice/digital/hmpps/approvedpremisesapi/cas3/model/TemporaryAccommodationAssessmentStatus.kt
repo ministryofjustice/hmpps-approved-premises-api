@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonValue
 
-enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: String) {
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
+enum class TemporaryAccommodationAssessmentStatus(val value: String) {
 
   unallocated("unallocated"),
   inReview("in_review"),
@@ -15,6 +15,6 @@ enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: Stri
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): TemporaryAccommodationAssessmentStatus = values().first { it -> it.value == value }
+    fun forValue(value: String): TemporaryAccommodationAssessmentStatus = entries.first { it.value == value }
   }
 }
