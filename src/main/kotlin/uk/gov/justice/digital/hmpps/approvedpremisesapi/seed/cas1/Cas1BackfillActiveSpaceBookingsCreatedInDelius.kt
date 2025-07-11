@@ -126,6 +126,11 @@ class Cas1BackfillActiveSpaceBookingsCreatedInDelius(
       return
     }
 
+    if (spaceBookingRepository.existsByDeliusId(deliusReferral.approvedPremisesReferralId)) {
+      log.warn("We already have a space booking for delius id $deliusReferral.approvedPremisesReferralId, will not backfill this booking.")
+      return
+    }
+
     val offlineApplication = offlineApplicationRepository.save(
       OfflineApplicationEntity(
         id = UUID.randomUUID(),

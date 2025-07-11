@@ -221,6 +221,80 @@ class SeedCas1BackfillActiveSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
     assertThat(offlineApplication1.name).isEqualTo("Max Power")
   }
 
+  /*
+  We run the job twice and ensure duplicates aren't created
+   */
+  @Test
+  fun `Ignore bookings that have already been backfilled`() {
+    apDeliusContextAddListCaseSummaryToBulkResponse(
+      listOf(
+        CaseSummaryFactory()
+          .withCrn("CRN1")
+          .withName(
+            NameFactory()
+              .withForename("Max")
+              .withSurname("Power")
+              .produce(),
+          )
+          .produce(),
+      ),
+    )
+
+    val deliusBooking = Cas1DeliusBookingImportEntity(
+      id = UUID.randomUUID(),
+      bookingId = null,
+      approvedPremisesReferralId = "Delius Referral Id",
+      crn = "CRN1",
+      eventNumber = "67",
+      keyWorkerStaffCode = "kw001",
+      keyWorkerForename = "kay",
+      keyWorkerMiddleName = "m",
+      keyWorkerSurname = "werker",
+      departureReasonCode = "dr1",
+      moveOnCategoryCode = "moc1",
+      moveOnCategoryDescription = null,
+      expectedArrivalDate = LocalDate.of(2024, 5, 9),
+      arrivalDate = LocalDate.of(2024, 5, 2),
+      expectedDepartureDate = LocalDate.of(2025, 6, 2),
+      departureDate = null,
+      nonArrivalDate = LocalDate.of(3000, 1, 1),
+      nonArrivalContactDatetime = OffsetDateTime.of(LocalDateTime.of(2024, 2, 1, 9, 58, 23), ZoneOffset.UTC),
+      nonArrivalReasonCode = null,
+      nonArrivalReasonDescription = null,
+      nonArrivalNotes = "the non arrival notes",
+      premisesQcode = premises.qCode,
+      createdAt = OffsetDateTime.now(),
+    )
+
+    deliusBookingImportRepository.save(
+      deliusBooking.copy(
+        id = UUID.randomUUID(),
+      ),
+    )
+
+    seed(
+      SeedFileType.approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius,
+      rowsToCsv(listOf(Cas1CreateMissingReferralsSeedCsvRow(premises.qCode))),
+    )
+
+    assertThat(offlineApplicationRepository.findAll()).hasSize(1)
+
+    val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
+    assertThat(premiseSpaceBookings).hasSize(1)
+
+    val migratedBooking1 = premiseSpaceBookings[0]
+    assertThat(migratedBooking1.crn).isEqualTo("CRN1")
+    assertThat(migratedBooking1.deliusId).isEqualTo("Delius Referral Id")
+
+    seed(
+      SeedFileType.approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius,
+      rowsToCsv(listOf(Cas1CreateMissingReferralsSeedCsvRow(premises.qCode))),
+    )
+
+    assertThat(offlineApplicationRepository.findAll()).hasSize(1)
+    assertThat(cas1SpaceBookingTestRepository.findByPremisesId(premises.id)).hasSize(1)
+  }
+
   private fun rowsToCsv(rows: List<Cas1CreateMissingReferralsSeedCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
