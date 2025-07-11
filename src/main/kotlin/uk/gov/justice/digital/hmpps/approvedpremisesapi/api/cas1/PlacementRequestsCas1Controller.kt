@@ -7,7 +7,8 @@ import java.util.Optional
 @jakarta.annotation.Generated(
   value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"],
   comments = "Generator version: 7.13.0",
-)@Controller
+)
+@Controller
 @RequestMapping("\${openapi.communityAccommodationServicesApprovedPremisesCAS1.base-path:/cas1}")
 class PlacementRequestsCas1Controller(
   delegate: PlacementRequestsCas1Delegate?,
