@@ -2,10 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.Point
-import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -15,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
@@ -41,7 +39,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.entries) }
-  private var point: Yielded<Point>? = null
+  private var point: Yielded<Point?> = { null }
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
   private var rooms: Yielded<MutableList<RoomEntity>> = { mutableListOf() }
   private var supportsSpaceBookings: Yielded<Boolean> = { false }
@@ -157,7 +155,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     )
   }
 
-  fun withPoint(point: Point) = apply {
+  fun withPoint(point: Point?) = apply {
     this.point = { point }
   }
 
@@ -209,8 +207,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     rooms = this.rooms(),
     characteristics = this.characteristics(),
     status = this.status(),
-    point = this.point?.invoke() ?: GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
-      .createPoint(Coordinate(this.latitude(), this.longitude())),
+    point = this.point?.invoke() ?: GisUtil.createPoint(this.latitude(), this.longitude()),
     gender = this.gender(),
     supportsSpaceBookings = this.supportsSpaceBookings(),
     managerDetails = this.managerDetails(),

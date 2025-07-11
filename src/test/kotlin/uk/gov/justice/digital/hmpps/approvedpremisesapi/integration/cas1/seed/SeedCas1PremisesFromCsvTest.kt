@@ -6,9 +6,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -16,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedCsvRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
@@ -307,10 +305,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.status).isEqualTo(csvRow.status)
     assertThat(persistedApprovedPremises.latitude).isEqualTo(csvRow.latitude!!)
     assertThat(persistedApprovedPremises.longitude).isEqualTo(csvRow.longitude!!)
-    assertThat(persistedApprovedPremises.point).isEqualTo(
-      GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
-        .createPoint(Coordinate(csvRow.latitude!!, csvRow.longitude!!)),
-    )
+    assertThat(persistedApprovedPremises.point).isEqualTo(GisUtil.createPoint(csvRow.latitude, csvRow.longitude))
     assertThat(persistedApprovedPremises.supportsSpaceBookings).isFalse()
   }
 
