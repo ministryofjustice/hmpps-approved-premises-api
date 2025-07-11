@@ -896,20 +896,20 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     private var jwtForUser: String? = null
 
-    private lateinit var primaryPrisonBailSubmitted: UUID
-    private lateinit var primaryPrisonBailUnsubmitted: UUID
-    private lateinit var primaryCourtBailSubmitted: UUID
-    private lateinit var primaryCourtBailUnsubmitted: UUID
+    private lateinit var primaryPrisonBailSubmitted: Cas2v2ApplicationEntity
+    private lateinit var primaryPrisonBailUnsubmitted: Cas2v2ApplicationEntity
+    private lateinit var primaryCourtBailSubmitted: Cas2v2ApplicationEntity
+    private lateinit var primaryCourtBailUnsubmitted: Cas2v2ApplicationEntity
 
-    private lateinit var secondaryPrisonBailSubmitted: UUID
-    private lateinit var secondaryPrisonBailUnsubmitted: UUID
-    private lateinit var secondaryCourtBailSubmitted: UUID
-    private lateinit var secondaryCourtBailUnsubmitted: UUID
+    private lateinit var secondaryPrisonBailSubmitted: Cas2v2ApplicationEntity
+    private lateinit var secondaryPrisonBailUnsubmitted: Cas2v2ApplicationEntity
+    private lateinit var secondaryCourtBailSubmitted: Cas2v2ApplicationEntity
+    private lateinit var secondaryCourtBailUnsubmitted: Cas2v2ApplicationEntity
 
-    private lateinit var deliusPrisonBailSubmitted: UUID
-    private lateinit var deliusPrisonBailUnsubmitted: UUID
-    private lateinit var deliusCourtBailSubmitted: UUID
-    private lateinit var deliusCourtBailUnsubmitted: UUID
+    private lateinit var deliusPrisonBailSubmitted: Cas2v2ApplicationEntity
+    private lateinit var deliusPrisonBailUnsubmitted: Cas2v2ApplicationEntity
+    private lateinit var deliusCourtBailSubmitted: Cas2v2ApplicationEntity
+    private lateinit var deliusCourtBailUnsubmitted: Cas2v2ApplicationEntity
 
     @BeforeEach
     fun setup() {
@@ -919,20 +919,20 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
             val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
 
-            primaryPrisonBailSubmitted = createdSubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.prisonBail).id
-            primaryPrisonBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.prisonBail).id
-            primaryCourtBailSubmitted = createdSubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.courtBail).id
-            primaryCourtBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.courtBail).id
+            primaryPrisonBailSubmitted = createSubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.prisonBail)
+            primaryPrisonBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.prisonBail)
+            primaryCourtBailSubmitted = createSubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.courtBail)
+            primaryCourtBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, primaryUser, ApplicationOrigin.courtBail)
 
-            secondaryPrisonBailSubmitted = createdSubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.prisonBail).id
-            secondaryPrisonBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.prisonBail).id
-            secondaryCourtBailSubmitted = createdSubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.courtBail).id
-            secondaryCourtBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.courtBail).id
+            secondaryPrisonBailSubmitted = createSubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.prisonBail)
+            secondaryPrisonBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.prisonBail)
+            secondaryCourtBailSubmitted = createSubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.courtBail)
+            secondaryCourtBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, secondaryUser, ApplicationOrigin.courtBail)
 
-            deliusPrisonBailSubmitted = createdSubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.prisonBail).id
-            deliusPrisonBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.prisonBail).id
-            deliusCourtBailSubmitted = createdSubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.courtBail).id
-            deliusCourtBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.courtBail).id
+            deliusPrisonBailSubmitted = createSubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.prisonBail)
+            deliusPrisonBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.prisonBail)
+            deliusCourtBailSubmitted = createSubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.courtBail)
+            deliusCourtBailUnsubmitted = createdUnsubmittedApplication(applicationSchema, deliusUser, ApplicationOrigin.courtBail)
 
             jwtForUser = jwt
           }
@@ -942,50 +942,128 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `get my submitted applications for prison referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted).toSet())
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail")
+      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
+
+      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser")
+      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get my unsubmitted applications for prison referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=true")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailUnsubmitted).toSet())
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=prisonBail")
+      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
+
+      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=true")
+      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get my submitted applications for court referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=courtBail")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailSubmitted).toSet())
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=courtBail")
+      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
+
+      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=true")
+      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get my unsubmitted applications for court referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=true")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailUnsubmitted).toSet())
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=courtBail")
+      Assertions.assertThat(uuids1).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
+
+      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=true")
+      Assertions.assertThat(uuids2).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get all submitted applications for prison referrals`() {
       val uuids = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted, secondaryPrisonBailSubmitted, deliusPrisonBailSubmitted).toSet())
+      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id, secondaryPrisonBailSubmitted.id, deliusPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get all unsubmitted applications for prison referrals`() {
       val uuids = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailUnsubmitted, secondaryPrisonBailUnsubmitted, deliusPrisonBailUnsubmitted).toSet())
+      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id, secondaryPrisonBailUnsubmitted.id, deliusPrisonBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get all submitted applications for court referrals`() {
       val uuids = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailSubmitted, secondaryCourtBailSubmitted, deliusCourtBailSubmitted).toSet())
+      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailSubmitted.id, secondaryCourtBailSubmitted.id, deliusCourtBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get all unsubmitted applications for court referrals`() {
       val uuids = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=false")
-      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailUnsubmitted, secondaryCourtBailUnsubmitted, deliusCourtBailUnsubmitted).toSet())
+      Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailUnsubmitted.id, secondaryCourtBailUnsubmitted.id, deliusCourtBailUnsubmitted.id).toSet())
+    }
+
+    @Test
+    fun `get application by crn`() {
+      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&crn=${primaryPrisonBailSubmitted.crn}")
+      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
+    }
+
+    @Test
+    fun `get application by offender nomis number`() {
+      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&offenderPrisonNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+      Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
+    }
+
+    @Test
+    fun `fail to get application by offender nomis number when created by other user and limit by user`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?offenderPrisonNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
+
+      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&offenderPrisonNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+      Assertions.assertThat(uuids2.size).isEqualTo(0)
+    }
+
+    @Test
+    fun `fail to get application by offender nomis number when app origin is other source`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&offenderPrisonNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
+    }
+
+    @Test
+    fun `fail to get application by offender nomis number when app is submitted and isSubmitted is false`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&offenderPrisonNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
+    }
+
+    @Test
+    fun `fail to get application by offender nomis number when app is unsubmitted and isSubmitted is true`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&offenderPrisonNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
+    }
+
+    @Test
+    fun `fail to get application by crn when created by other user and limit by user`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?crn=${secondaryPrisonBailSubmitted.crn}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
+
+      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&crn=${secondaryPrisonBailSubmitted.crn}")
+      Assertions.assertThat(uuids2.size).isEqualTo(0)
+    }
+
+    @Test
+    fun `fail to get application by crn when app origin is other source`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&crn=${primaryPrisonBailUnsubmitted.crn}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
+    }
+
+    @Test
+    fun `fail to get application by crn when app is submitted and isSubmitted is false`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&crn=${primaryPrisonBailSubmitted.crn}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
+    }
+
+    @Test
+    fun `fail to get application by crn when app is unsubmitted and isSubmitted is true`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&crn=${primaryPrisonBailUnsubmitted.crn}")
+      Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     private fun fetchApplications(url: String): Set<UUID> {
@@ -1006,7 +1084,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       return uuids
     }
 
-    private fun createdSubmittedApplication(
+    private fun createSubmittedApplication(
       applicationSchema: Cas2v2ApplicationJsonSchemaEntity,
       cas2v2UserEntity: Cas2v2UserEntity,
       applicationOrigin: ApplicationOrigin,
