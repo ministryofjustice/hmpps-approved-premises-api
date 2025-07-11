@@ -21,10 +21,6 @@ data class ApprovedPremisesApplication(
 
   @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: kotlin.Boolean? = null,
 
-  @Schema(description = "Use apType")
-  @Deprecated(message = "Use apType")
-  @get:JsonProperty("isEsapApplication") val isEsapApplication: kotlin.Boolean? = null,
-
   @get:JsonProperty("apType") val apType: ApType? = null,
 
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.Instant? = null,
