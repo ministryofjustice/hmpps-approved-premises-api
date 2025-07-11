@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
@@ -24,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -42,7 +40,6 @@ class Cas1AssessmentService(
   private val userAccessService: UserAccessService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
-  private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
@@ -77,10 +74,6 @@ class Cas1AssessmentService(
       return CasResult.GeneralValidationError("The application has been withdrawn.")
     }
 
-    if (!assessment.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     if (assessment.submittedAt != null) {
       return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
@@ -105,15 +98,9 @@ class Cas1AssessmentService(
     val assessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
-    val latestSchema = jsonSchemaService.getNewestSchema(
-      ApprovedPremisesAssessmentJsonSchemaEntity::class.java,
-    )
-
     if (!userAccessService.userCanViewAssessment(user, assessment)) {
       return CasResult.Unauthorised("Not authorised to view the assessment")
     }
-
-    assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
 
     val offenderDetails = getOffenderDetails(assessment.application.crn, user.cas1LaoStrategy())
 
@@ -384,10 +371,6 @@ class Cas1AssessmentService(
       return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
-    if (!assessment.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     if (assessment.reallocatedAt != null) {
       return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
     }
@@ -401,8 +384,6 @@ class Cas1AssessmentService(
     val validationErrors = ValidationErrors()
     if (assessment.data == null) {
       validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessment.data!!)) {
-      validationErrors["$.data"] = "invalid"
     }
     return if (validationErrors.any()) {
       CasResult.FieldValidationError(validationErrors)

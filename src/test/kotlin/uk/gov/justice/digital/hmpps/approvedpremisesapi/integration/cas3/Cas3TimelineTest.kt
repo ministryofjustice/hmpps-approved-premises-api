@@ -57,8 +57,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
         addReferralHistoryNotes(assessment)
         addDomainEventTimelineEvents(assessment)
 
-        assessment.schemaUpToDate = true
-
         val response = webTestClient.get()
           .uri("/cas3/timeline/${assessment.id}")
           .header("Authorization", "Bearer $jwt")
@@ -83,8 +81,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
 
         addReferralHistoryNotes(assessment)
         addDomainEventTimelineEvents(assessment)
-
-        assessment.schemaUpToDate = true
 
         val result = webTestClient.get()
           .uri("/cas3/timeline/${assessment.id}")
@@ -112,8 +108,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
         addReferralHistoryNotes(assessment)
         addDomainEventTimelineEvents(assessment)
 
-        assessment.schemaUpToDate = true
-
         val result = webTestClient.get()
           .uri("/cas3/timeline/${assessment.id}")
           .header("Authorization", "Bearer $jwt")
@@ -133,7 +127,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
   private fun persistAssessment(application: TemporaryAccommodationApplicationEntity) = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
     withAllocatedToUser(application.createdByUser)
     withApplication(application)
-    withAssessmentSchema(persistAssessmentSchema())
     withReleaseDate(null)
     withAccommodationRequiredFromDate(null)
   }
@@ -145,7 +138,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
     return temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withAllocatedToUser(application.createdByUser)
       withApplication(application)
-      withAssessmentSchema(persistAssessmentSchema())
       withSubmittedAt(OffsetDateTime.now().minusDays(21))
       withAllocatedAt(OffsetDateTime.now().minusDays(5))
       withReleaseDate(null)
@@ -162,11 +154,6 @@ class Cas3TimelineTest : IntegrationTestBase() {
     withProbationRegion(user.probationRegion)
     withArrivalDate(LocalDate.now().minusDays(100))
     withPersonReleaseDate(LocalDate.now().minusDays(100))
-  }
-
-  private fun persistAssessmentSchema() = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-    withAddedAt(OffsetDateTime.now())
   }
 
   private fun persistCas3UpdatedDomainEvent(id: UUID, assessment: TemporaryAccommodationAssessmentEntity, data: Any) = domainEventFactory.produceAndPersist {

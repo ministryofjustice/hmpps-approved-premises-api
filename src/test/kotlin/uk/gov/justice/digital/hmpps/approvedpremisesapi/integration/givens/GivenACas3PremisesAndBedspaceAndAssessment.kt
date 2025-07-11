@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3Beds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 fun IntegrationTestBase.givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
   user: UserEntity,
@@ -30,16 +29,9 @@ fun IntegrationTestBase.givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
     withProbationRegion(user.probationRegion)
   }
 
-  val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-    withAddedAt(OffsetDateTime.now())
-  }
-
   val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
     withApplication(application)
-    withAssessmentSchema(assessmentSchema)
   }
-  assessment.schemaUpToDate = true
 
   return Triple(premises, bedspace, assessment)
 }

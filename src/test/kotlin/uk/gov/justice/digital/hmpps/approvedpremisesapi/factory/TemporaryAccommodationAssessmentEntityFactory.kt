@@ -3,11 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -21,13 +19,6 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var application: Yielded<ApplicationEntity>? = null
-  private var assessmentSchema: Yielded<JsonSchemaEntity> = {
-    ApprovedPremisesAssessmentJsonSchemaEntity(
-      id = UUID.randomUUID(),
-      addedAt = OffsetDateTime.now(),
-      schema = "{}",
-    )
-  }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var allocatedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
@@ -60,10 +51,6 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
 
   fun withApplication(application: ApplicationEntity) = apply {
     this.application = { application }
-  }
-
-  fun withAssessmentSchema(assessmentSchema: JsonSchemaEntity) = apply {
-    this.assessmentSchema = { assessmentSchema }
   }
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
@@ -139,11 +126,9 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     id = this.id(),
     data = this.data(),
     document = this.document(),
-    schemaVersion = this.assessmentSchema(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     decision = this.decision(),
-    schemaUpToDate = false,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
     allocatedToUser = this.allocatedToUser(),
     allocatedAt = this.allocatedAt(),

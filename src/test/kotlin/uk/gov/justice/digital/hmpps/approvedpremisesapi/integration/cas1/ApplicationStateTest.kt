@@ -465,8 +465,6 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       desirableCriteria = listOf(),
     )
 
-    assessment.schemaUpToDate = true
-
     webTestClient.post()
       .uri("/assessments/${assessment.id}/acceptance")
       .header("Authorization", "Bearer $jwt")

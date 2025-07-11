@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -10,14 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
-import java.util.UUID
 
 class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
   @Autowired
@@ -25,17 +22,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var cas1TaskDeadlineService: Cas1TaskDeadlineService
-
-  lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
-
-  @BeforeEach
-  fun setup() {
-    assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-      withPermissiveSchema()
-    }
-  }
 
   @Test
   fun `it updates all tasks without a due date`() {
@@ -120,7 +106,6 @@ class Cas1TaskDueMigrationJobTest : IntegrationTestBase() {
     }
 
     return approvedPremisesAssessmentEntityFactory.produceAndPersist {
-      withAssessmentSchema(assessmentSchema)
       withApplication(application)
       withDueAt(null)
     }

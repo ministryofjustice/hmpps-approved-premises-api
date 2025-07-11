@@ -41,10 +41,6 @@ class Cas1ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
 
     user = userArgs.first
 
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
     }
@@ -56,13 +52,11 @@ class Cas1ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
     assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
       withAllocatedToUser(user)
-      withAssessmentSchema(assessmentSchema)
     }
 
     val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(otherApplication)
       withAllocatedToUser(user)
-      withAssessmentSchema(assessmentSchema)
     }
 
     domainEvents = DomainEventType.entries

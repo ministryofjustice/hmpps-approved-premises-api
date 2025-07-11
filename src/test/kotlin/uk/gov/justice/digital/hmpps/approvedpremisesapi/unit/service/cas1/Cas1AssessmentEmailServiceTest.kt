@@ -484,12 +484,6 @@ class Cas1AssessmentEmailServiceTest {
         .withEmail(allocatedUserEmail)
         .produce()
 
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withApplication(
           ApprovedPremisesApplicationEntityFactory()
@@ -497,7 +491,6 @@ class Cas1AssessmentEmailServiceTest {
             .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
             .produce(),
         )
-        .withAssessmentSchema(schema)
         .withData("{\"test\": \"data\"}")
         .withAllocatedToUser(allocatedUser)
         .withSubmittedAt(null)

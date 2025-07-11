@@ -50,10 +50,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
           crn2 = offenderDetails2.otherIds.crn
           apArea = givenAnApArea()
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           allApplications = mutableListOf(
             approvedPremisesApplicationEntityFactory.produceAndPersist {
               withCrn(crn1)
@@ -149,7 +145,6 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withApplication(applicationWithPlacementRequest!!)
-            withAssessmentSchema(assessmentSchema)
           }
 
           placementRequestFactory.produceAndPersist {

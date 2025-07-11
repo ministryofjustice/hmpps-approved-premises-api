@@ -107,10 +107,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
     givenAUser { user, _ ->
       givenAnOffender { offenderDetails, _ ->
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val probationRegion = givenAProbationRegion()
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -150,7 +146,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
         val assessmentForSubmittedApplication = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(submittedApplication)
           withAllocatedToUser(user)
-          withAssessmentSchema(assessmentSchema)
           withSubmittedAt(OffsetDateTime.parse("2023-04-19T10:15:00+01:00"))
         }
 

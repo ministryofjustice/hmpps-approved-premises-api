@@ -28,18 +28,12 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
 
     val (offenderDetails) = givenAnOffender()
 
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
     }
     val assessment1 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withAgreeWithShortNoticeReason(null)
       withAgreeWithShortNoticeReasonComments(null)
       withReasonForLateApplication(null)
@@ -61,7 +55,6 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
 
     val assessment2 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withAgreeWithShortNoticeReason(null)
       withAgreeWithShortNoticeReasonComments(null)
       withReasonForLateApplication(null)
@@ -83,7 +76,6 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
 
     val assessment3 = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withAgreeWithShortNoticeReason(null)
       withAgreeWithShortNoticeReasonComments("")
       withReasonForLateApplication("")
