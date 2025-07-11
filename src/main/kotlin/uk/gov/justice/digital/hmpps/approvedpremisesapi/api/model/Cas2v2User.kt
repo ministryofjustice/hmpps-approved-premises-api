@@ -41,7 +41,7 @@ data class Cas2v2User(
    * Values: nomis,delius,auth
    */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class AuthSource(@get:JsonValue val value: String) {
+  enum class AuthSource(@get:JsonValue val value: String) {
 
     nomis("nomis"),
     delius("delius"),

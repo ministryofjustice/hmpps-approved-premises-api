@@ -49,7 +49,7 @@ data class PlacementRequestBookingSummary(
    * Values: space,legacy
    */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class Type(@get:JsonValue val value: kotlin.String) {
+  enum class Type(@get:JsonValue val value: kotlin.String) {
 
     space("space"),
     legacy("legacy"),
