@@ -8,9 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param createdByUserId
  * @param status
  * @param isWomensApplication
- * @param isPipeApplication Use apType
  * @param isEmergencyApplication
- * @param isEsapApplication Use apType
  * @param apType
  * @param arrivalDate
  * @param risks
@@ -50,10 +48,6 @@ data class ApprovedPremisesApplication(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("isWomensApplication") val isWomensApplication: kotlin.Boolean? = null,
-
-  @Schema(example = "null", description = "Use apType")
-  @Deprecated(message = "")
-  @get:JsonProperty("isPipeApplication") val isPipeApplication: kotlin.Boolean? = null,
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: kotlin.Boolean? = null,

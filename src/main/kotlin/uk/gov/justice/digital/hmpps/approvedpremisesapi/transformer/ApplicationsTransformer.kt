@@ -56,7 +56,6 @@ class ApplicationsTransformer(
         createdAt = applicationEntity.createdAt.toInstant(),
         submittedAt = applicationEntity.submittedAt?.toInstant(),
         isWomensApplication = applicationEntity.isWomensApplication,
-        isPipeApplication = applicationEntity.isPipeApplication,
         arrivalDate = applicationEntity.arrivalDate?.toInstant(),
         data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
         document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
