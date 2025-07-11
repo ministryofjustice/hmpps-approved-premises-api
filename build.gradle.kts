@@ -204,7 +204,6 @@ ktlint {
     exclude(
       "**/approvedpremisesapi/api/**",
       "**/approvedpremisesapi/cas3/model/generated/**",
-      "**/Cas2ReportName.kt",
     )
   }
 }
