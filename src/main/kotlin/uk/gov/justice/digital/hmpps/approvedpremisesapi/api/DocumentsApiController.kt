@@ -4,10 +4,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
 import java.util.Optional
 
-@jakarta.annotation.Generated(
-  value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"],
-  comments = "Generator version: 7.13.0",
-)@Controller
+@Controller
 @RequestMapping("\${openapi.approvedPremises.base-path:}")
 class DocumentsApiController(
   delegate: DocumentsApiDelegate?,
