@@ -1008,34 +1008,34 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `get application by offender nomis number`() {
-      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&offenderPrisonNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&nomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `fail to get application by offender nomis number when created by other user and limit by user`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?offenderPrisonNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2v2/applications?nomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
 
-      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&offenderPrisonNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&nomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids2.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender nomis number when app origin is other source`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&offenderPrisonNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&nomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender nomis number when app is submitted and isSubmitted is false`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&offenderPrisonNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&nomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender nomis number when app is unsubmitted and isSubmitted is true`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&offenderPrisonNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&nomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 

@@ -64,7 +64,7 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin?,
     limitByUser: Boolean,
     crn: String?,
-    offenderPrisonNumber: String?,
+    nomsNumber: String?,
     user: Cas2v2UserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
@@ -79,8 +79,8 @@ class Cas2v2ApplicationService(
       spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasCrn(crn))
     }
 
-    if (offenderPrisonNumber != null) {
-      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasOffenderPrisonNumber(offenderPrisonNumber))
+    if (nomsNumber != null) {
+      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasOffenderPrisonNumber(nomsNumber))
     }
 
     if (prisonCode != null) {
