@@ -44,6 +44,7 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   spaceBookingShorten("cas1_space_booking_shorten"),
   premisesCapacityReportView("cas1_premises_capacity_report_view"),
   tasksList("cas1_tasks_list"),
+  taskAllocate("cas1_tasks_allocate"),
   premisesView("cas1_premises_view"),
   premisesManage("cas1_premises_manage"),
   reportsView("cas1_reports_view"),

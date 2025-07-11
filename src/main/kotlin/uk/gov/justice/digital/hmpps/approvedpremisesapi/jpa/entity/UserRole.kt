@@ -21,6 +21,7 @@ private object Constants {
     UserPermission.CAS1_USER_LIST,
     UserPermission.CAS1_VIEW_CRU_DASHBOARD,
     UserPermission.CAS1_VIEW_MANAGE_TASKS,
+    UserPermission.CAS1_TASK_ALLOCATE,
   )
 }
 
