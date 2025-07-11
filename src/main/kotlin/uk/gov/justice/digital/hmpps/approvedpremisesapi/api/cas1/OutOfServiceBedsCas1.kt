@@ -5,6 +5,13 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.*
+import io.swagger.v3.oas.annotations.enums.*
+import io.swagger.v3.oas.annotations.media.*
+import io.swagger.v3.oas.annotations.responses.*
+import io.swagger.v3.oas.annotations.security.*
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBed
@@ -15,143 +22,116 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
 import kotlin.collections.List
-import kotlin.collections.Map
 
 @RestController
 interface OutOfServiceBedsCas1 {
 
-    fun getDelegate(): OutOfServiceBedsCas1Delegate = object: OutOfServiceBedsCas1Delegate {}
+  fun getDelegate(): OutOfServiceBedsCas1Delegate = object : OutOfServiceBedsCas1Delegate {}
 
-    @Operation(
-        tags = ["out-of-service beds",],
-        summary = "Posts a cancellation to a specified out-of-service bed",
-        operationId = "cancelOutOfServiceBed",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBedCancellation::class))]),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or out-of-service bed ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}/cancellations"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun cancelOutOfServiceBed(@Parameter(description = "ID of the premises the cancellation is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the out-of-service bed", required = true) @PathVariable("outOfServiceBedId") outOfServiceBedId: java.util.UUID,@Parameter(description = "details of the cancellation", required = true) @RequestBody body: Cas1NewOutOfServiceBedCancellation): ResponseEntity<Cas1OutOfServiceBedCancellation> {
-        return getDelegate().cancelOutOfServiceBed(premisesId, outOfServiceBedId, body)
-    }
+  @Operation(
+    tags = ["out-of-service beds"],
+    summary = "Posts a cancellation to a specified out-of-service bed",
+    operationId = "cancelOutOfServiceBed",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBedCancellation::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or out-of-service bed ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}/cancellations"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun cancelOutOfServiceBed(@Parameter(description = "ID of the premises the cancellation is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the out-of-service bed", required = true) @PathVariable("outOfServiceBedId") outOfServiceBedId: java.util.UUID, @Parameter(description = "details of the cancellation", required = true) @RequestBody body: Cas1NewOutOfServiceBedCancellation): ResponseEntity<Cas1OutOfServiceBedCancellation> = getDelegate().cancelOutOfServiceBed(premisesId, outOfServiceBedId, body)
 
-    @Operation(
-        tags = ["out-of-service beds",],
-        summary = "Posts an out-of-service bed to a specified approved premises",
-        operationId = "createOutOfServiceBed",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/out-of-service-beds"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun createOutOfServiceBed(@Parameter(description = "ID of the premises the out-of-service bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "details of the out-of-service bed", required = true) @RequestBody body: Cas1NewOutOfServiceBed): ResponseEntity<Cas1OutOfServiceBed> {
-        return getDelegate().createOutOfServiceBed(premisesId, body)
-    }
+  @Operation(
+    tags = ["out-of-service beds"],
+    summary = "Posts an out-of-service bed to a specified approved premises",
+    operationId = "createOutOfServiceBed",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/out-of-service-beds"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun createOutOfServiceBed(@Parameter(description = "ID of the premises the out-of-service bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "details of the out-of-service bed", required = true) @RequestBody body: Cas1NewOutOfServiceBed): ResponseEntity<Cas1OutOfServiceBed> = getDelegate().createOutOfServiceBed(premisesId, body)
 
-    @Operation(
-        tags = ["out-of-service beds",],
-        summary = "Returns a specific out-of-service bed for a premises",
-        operationId = "getOutOfServiceBed",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises or out-of-service bed ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}"],
-            produces = ["application/json"]
-    )
-    fun getOutOfServiceBed(@Parameter(description = "ID of the premises the out-of-service bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the out-of-service bed", required = true) @PathVariable("outOfServiceBedId") outOfServiceBedId: java.util.UUID): ResponseEntity<Cas1OutOfServiceBed> {
-        return getDelegate().getOutOfServiceBed(premisesId, outOfServiceBedId)
-    }
+  @Operation(
+    tags = ["out-of-service beds"],
+    summary = "Returns a specific out-of-service bed for a premises",
+    operationId = "getOutOfServiceBed",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises or out-of-service bed ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBed(@Parameter(description = "ID of the premises the out-of-service bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the out-of-service bed", required = true) @PathVariable("outOfServiceBedId") outOfServiceBedId: java.util.UUID): ResponseEntity<Cas1OutOfServiceBed> = getDelegate().getOutOfServiceBed(premisesId, outOfServiceBedId)
 
-    @Operation(
-        tags = ["out-of-service beds",],
-        summary = "Lists all Out-Of-Service Beds entries",
-        operationId = "getOutOfServiceBeds",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBed::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/out-of-service-beds"],
-            produces = ["application/json"]
-    )
-    fun getOutOfServiceBeds( @RequestParam(value = "temporality", required = false) temporality: kotlin.collections.List<Temporality>?, @RequestParam(value = "premisesId", required = false) premisesId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1OutOfServiceBedSortField?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1OutOfServiceBed>> {
-        return getDelegate().getOutOfServiceBeds(temporality, premisesId, apAreaId, sortDirection, sortBy, page, perPage)
-    }
+  @Operation(
+    tags = ["out-of-service beds"],
+    summary = "Lists all Out-Of-Service Beds entries",
+    operationId = "getOutOfServiceBeds",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBed::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/out-of-service-beds"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBeds(@RequestParam(value = "temporality", required = false) temporality: kotlin.collections.List<Temporality>?, @RequestParam(value = "premisesId", required = false) premisesId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1OutOfServiceBedSortField?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1OutOfServiceBed>> = getDelegate().getOutOfServiceBeds(temporality, premisesId, apAreaId, sortDirection, sortBy, page, perPage)
 
-    @Operation(
-        tags = ["out-of-service beds",],
-        summary = "Lists all Out-Of-Service Beds entries for the Premises",
-        operationId = "getOutOfServiceBedsForPremises",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBed::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/premises/{premisesId}/out-of-service-beds"],
-            produces = ["application/json"]
-    )
-    fun getOutOfServiceBedsForPremises(@Parameter(description = "ID of the premises to show out-of-service beds for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<List<Cas1OutOfServiceBed>> {
-        return getDelegate().getOutOfServiceBedsForPremises(premisesId)
-    }
+  @Operation(
+    tags = ["out-of-service beds"],
+    summary = "Lists all Out-Of-Service Beds entries for the Premises",
+    operationId = "getOutOfServiceBedsForPremises",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBed::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/premises/{premisesId}/out-of-service-beds"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBedsForPremises(@Parameter(description = "ID of the premises to show out-of-service beds for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<List<Cas1OutOfServiceBed>> = getDelegate().getOutOfServiceBedsForPremises(premisesId)
 
-    @Operation(
-        tags = ["out-of-service beds",],
-        summary = "Updates an out-of-service bed for a premises",
-        operationId = "updateOutOfServiceBed",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PUT],
-            value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun updateOutOfServiceBed(@Parameter(description = "ID of the premises the out-of-service bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the out-of-service bed", required = true) @PathVariable("outOfServiceBedId") outOfServiceBedId: java.util.UUID,@Parameter(description = "details of the out-of-service bed", required = true) @RequestBody body: UpdateCas1OutOfServiceBed): ResponseEntity<Cas1OutOfServiceBed> {
-        return getDelegate().updateOutOfServiceBed(premisesId, outOfServiceBedId, body)
-    }
+  @Operation(
+    tags = ["out-of-service beds"],
+    summary = "Updates an out-of-service bed for a premises",
+    operationId = "updateOutOfServiceBed",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OutOfServiceBed::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun updateOutOfServiceBed(@Parameter(description = "ID of the premises the out-of-service bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the out-of-service bed", required = true) @PathVariable("outOfServiceBedId") outOfServiceBedId: java.util.UUID, @Parameter(description = "details of the out-of-service bed", required = true) @RequestBody body: UpdateCas1OutOfServiceBed): ResponseEntity<Cas1OutOfServiceBed> = getDelegate().updateOutOfServiceBed(premisesId, outOfServiceBedId, body)
 }

@@ -24,4 +24,4 @@ data class PlacementApplicationAllocatedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: PlacementApplicationAllocated,
-): Cas1DomainEventEnvelopeInterface<PlacementApplicationAllocated>
+) : Cas1DomainEventEnvelopeInterface<PlacementApplicationAllocated>

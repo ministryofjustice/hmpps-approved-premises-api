@@ -1,31 +1,27 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
 import com.fasterxml.jackson.annotation.JsonProperty
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 
 /**
- * 
- * @param id 
- * @param roomName 
- * @param bedName 
- * @param characteristics 
+ *
+ * @param id
+ * @param roomName
+ * @param bedName
+ * @param characteristics
  */
 data class Cas1PremisesBedSummary(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("roomName", required = true) val roomName: kotlin.String,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("roomName", required = true) val roomName: kotlin.String,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("bedName", required = true) val bedName: kotlin.String,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("bedName", required = true) val bedName: kotlin.String,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>
-    ) {
-
-}
-
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>,
+)

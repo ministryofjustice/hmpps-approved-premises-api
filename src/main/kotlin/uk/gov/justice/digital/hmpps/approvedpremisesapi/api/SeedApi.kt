@@ -5,44 +5,33 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedRequest
 import io.swagger.v3.oas.annotations.*
 import io.swagger.v3.oas.annotations.enums.*
 import io.swagger.v3.oas.annotations.media.*
 import io.swagger.v3.oas.annotations.responses.*
 import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedRequest
 
 @RestController
 interface SeedApi {
 
-    fun getDelegate(): SeedApiDelegate = object: SeedApiDelegate {}
+  fun getDelegate(): SeedApiDelegate = object : SeedApiDelegate {}
 
-    @Operation(
-        tags = ["default",],
-        summary = "Starts the data seeding process, can only be called from a local connection",
-        operationId = "seedPost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "202", description = "successfully requested task")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/seed"],
-            consumes = ["application/json"]
-    )
-    fun seedPost(@Parameter(description = "", required = true) @RequestBody seedRequest: SeedRequest): ResponseEntity<Unit> {
-        return getDelegate().seedPost(seedRequest)
-    }
+  @Operation(
+    tags = ["default"],
+    summary = "Starts the data seeding process, can only be called from a local connection",
+    operationId = "seedPost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "202", description = "successfully requested task"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/seed"],
+    consumes = ["application/json"],
+  )
+  fun seedPost(@Parameter(description = "", required = true) @RequestBody seedRequest: SeedRequest): ResponseEntity<Unit> = getDelegate().seedPost(seedRequest)
 }

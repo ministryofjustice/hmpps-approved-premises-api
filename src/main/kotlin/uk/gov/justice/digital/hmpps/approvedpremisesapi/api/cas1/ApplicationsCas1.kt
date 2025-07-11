@@ -5,6 +5,13 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.*
+import io.swagger.v3.oas.annotations.enums.*
+import io.swagger.v3.oas.annotations.media.*
+import io.swagger.v3.oas.annotations.responses.*
+import io.swagger.v3.oas.annotations.security.*
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
@@ -12,100 +19,77 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
+import kotlin.collections.List
 
 @RestController
 interface ApplicationsCas1 {
 
-    fun getDelegate(): ApplicationsCas1Delegate = object: ApplicationsCas1Delegate {}
+  fun getDelegate(): ApplicationsCas1Delegate = object : ApplicationsCas1Delegate {}
 
-    @PaginationHeaders
-    @Operation(
-        tags = ["Applications",],
-        summary = "Lists all applications that any user has created",
-        operationId = "getAllApplications",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ApplicationSummary::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/applications/all"],
-            produces = ["application/json"]
-    )
-    fun getAllApplications( @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "status", required = false) status: kotlin.collections.List<ApprovedPremisesApplicationStatus>?, @RequestParam(value = "sortBy", required = false) sortBy: ApplicationSortField?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "releaseType", required = false) releaseType: ReleaseTypeOption?): ResponseEntity<List<Cas1ApplicationSummary>> {
-        return getDelegate().getAllApplications(page, crnOrName, sortDirection, status, sortBy, apAreaId, releaseType)
-    }
+  @PaginationHeaders
+  @Operation(
+    tags = ["Applications"],
+    summary = "Lists all applications that any user has created",
+    operationId = "getAllApplications",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ApplicationSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/applications/all"],
+    produces = ["application/json"],
+  )
+  fun getAllApplications(@RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "status", required = false) status: kotlin.collections.List<ApprovedPremisesApplicationStatus>?, @RequestParam(value = "sortBy", required = false) sortBy: ApplicationSortField?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "releaseType", required = false) releaseType: ReleaseTypeOption?): ResponseEntity<List<Cas1ApplicationSummary>> = getDelegate().getAllApplications(page, crnOrName, sortDirection, status, sortBy, apAreaId, releaseType)
 
-    @Operation(
-        tags = ["Applications",],
-        summary = "Returns domain event summary",
-        operationId = "getApplicationTimeLine",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1TimelineEvent::class)))]),
-            ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/applications/{applicationId}/timeline"],
-            produces = ["application/json"]
-    )
-    fun getApplicationTimeLine(@Parameter(description = "ID of the application", required = true) @PathVariable("applicationId") applicationId: java.util.UUID): ResponseEntity<List<Cas1TimelineEvent>> {
-        return getDelegate().getApplicationTimeLine(applicationId)
-    }
+  @Operation(
+    tags = ["Applications"],
+    summary = "Returns domain event summary",
+    operationId = "getApplicationTimeLine",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1TimelineEvent::class)))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/applications/{applicationId}/timeline"],
+    produces = ["application/json"],
+  )
+  fun getApplicationTimeLine(@Parameter(description = "ID of the application", required = true) @PathVariable("applicationId") applicationId: java.util.UUID): ResponseEntity<List<Cas1TimelineEvent>> = getDelegate().getApplicationTimeLine(applicationId)
 
-    @Operation(
-        tags = ["Applications",],
-        summary = "Lists all applications that the user has created",
-        operationId = "getApplicationsForUser",
-        description = """Deprecated, use GET /cas1/applications/me instead.""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ApplicationSummary::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/applications"],
-            produces = ["application/json"]
-    )
-    fun getApplicationsForUser(): ResponseEntity<List<Cas1ApplicationSummary>> {
-        return getDelegate().getApplicationsForUser()
-    }
+  @Operation(
+    tags = ["Applications"],
+    summary = "Lists all applications that the user has created",
+    operationId = "getApplicationsForUser",
+    description = """Deprecated, use GET /cas1/applications/me instead.""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ApplicationSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/applications"],
+    produces = ["application/json"],
+  )
+  fun getApplicationsForUser(): ResponseEntity<List<Cas1ApplicationSummary>> = getDelegate().getApplicationsForUser()
 
-    @Operation(
-        tags = ["Applications",],
-        summary = "Lists all applications that the user has created",
-        operationId = "getApplicationsMe",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ApplicationSummary::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/applications/me"],
-            produces = ["application/json"]
-    )
-    fun getApplicationsMe(): ResponseEntity<List<Cas1ApplicationSummary>> {
-        return getDelegate().getApplicationsMe()
-    }
+  @Operation(
+    tags = ["Applications"],
+    summary = "Lists all applications that the user has created",
+    operationId = "getApplicationsMe",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ApplicationSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/applications/me"],
+    produces = ["application/json"],
+  )
+  fun getApplicationsMe(): ResponseEntity<List<Cas1ApplicationSummary>> = getDelegate().getApplicationsMe()
 }

@@ -5,20 +5,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
 /**
- * 
- * @param bailHearingDate 
+ *
+ * @param bailHearingDate
  */
 data class UpdateCas2v2Application(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null
-    ) : UpdateApplication{
-
-}
-
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+) : UpdateApplication

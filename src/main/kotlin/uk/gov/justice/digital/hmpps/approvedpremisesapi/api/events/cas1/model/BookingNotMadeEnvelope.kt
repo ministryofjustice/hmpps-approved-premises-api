@@ -11,7 +11,7 @@ import java.util.UUID
  * @param eventType
  * @param eventDetails
  */
-data class BookingNotMadeEnvelope (
+data class BookingNotMadeEnvelope(
   @Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")
   @get:JsonProperty("id", required = true) override val id: UUID,
 
@@ -23,4 +23,4 @@ data class BookingNotMadeEnvelope (
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: BookingNotMade,
-): Cas1DomainEventEnvelopeInterface<BookingNotMade>
+) : Cas1DomainEventEnvelopeInterface<BookingNotMade>

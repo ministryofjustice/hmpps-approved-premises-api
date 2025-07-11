@@ -5,6 +5,13 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.*
+import io.swagger.v3.oas.annotations.enums.*
+import io.swagger.v3.oas.annotations.media.*
+import io.swagger.v3.oas.annotations.responses.*
+import io.swagger.v3.oas.annotations.security.*
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPlacementAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
@@ -24,322 +31,277 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
 import kotlin.collections.List
-import kotlin.collections.Map
 
 @RestController
 interface SpaceBookingsCas1 {
 
-    fun getDelegate(): SpaceBookingsCas1Delegate = object: SpaceBookingsCas1Delegate {}
+  fun getDelegate(): SpaceBookingsCas1Delegate = object : SpaceBookingsCas1Delegate {}
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Cancels a space booking and approves the appeal change request",
-        operationId = "appeal",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/appeal"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun appeal(@Parameter(description = "ID of the premises the space booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "space booking id", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "details of the cancellation", required = true) @RequestBody body: Cas1ApprovedPlacementAppeal): ResponseEntity<Unit> {
-        return getDelegate().appeal(premisesId, bookingId, body)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Cancels a space booking and approves the appeal change request",
+    operationId = "appeal",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/appeal"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun appeal(@Parameter(description = "ID of the premises the space booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "space booking id", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the cancellation", required = true) @RequestBody body: Cas1ApprovedPlacementAppeal): ResponseEntity<Unit> = getDelegate().appeal(premisesId, bookingId, body)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Assign a keyworker to the space booking",
-        operationId = "assignKeyworker",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid key worker staff code", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/keyworker"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun assignKeyworker(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1AssignKeyWorker: Cas1AssignKeyWorker): ResponseEntity<Unit> {
-        return getDelegate().assignKeyworker(premisesId, bookingId, cas1AssignKeyWorker)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Assign a keyworker to the space booking",
+    operationId = "assignKeyworker",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid key worker staff code", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/keyworker"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun assignKeyworker(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1AssignKeyWorker: Cas1AssignKeyWorker): ResponseEntity<Unit> = getDelegate().assignKeyworker(premisesId, bookingId, cas1AssignKeyWorker)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Cancels a space booking",
-        operationId = "cancelSpaceBooking",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/cancellations"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun cancelSpaceBooking(@Parameter(description = "ID of the premises the space booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "space booking id", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "details of the cancellation", required = true) @RequestBody body: Cas1NewSpaceBookingCancellation): ResponseEntity<Unit> {
-        return getDelegate().cancelSpaceBooking(premisesId, bookingId, body)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Cancels a space booking",
+    operationId = "cancelSpaceBooking",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/cancellations"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun cancelSpaceBooking(@Parameter(description = "ID of the premises the space booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "space booking id", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the cancellation", required = true) @RequestBody body: Cas1NewSpaceBookingCancellation): ResponseEntity<Unit> = getDelegate().cancelSpaceBooking(premisesId, bookingId, body)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Create a booking for a space in premises, associated with a given placement request",
-        operationId = "createSpaceBooking",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceBooking::class))]),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-requests/{placementRequestId}/space-bookings"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun createSpaceBooking(@Parameter(description = "ID of the placement request from which the matching requirements originate", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID,@Parameter(description = "details of the space booking to be created", required = true) @RequestBody body: Cas1NewSpaceBooking): ResponseEntity<Cas1SpaceBooking> {
-        return getDelegate().createSpaceBooking(placementRequestId, body)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Create a booking for a space in premises, associated with a given placement request",
+    operationId = "createSpaceBooking",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceBooking::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{placementRequestId}/space-bookings"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun createSpaceBooking(@Parameter(description = "ID of the placement request from which the matching requirements originate", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID, @Parameter(description = "details of the space booking to be created", required = true) @RequestBody body: Cas1NewSpaceBooking): ResponseEntity<Cas1SpaceBooking> = getDelegate().createSpaceBooking(placementRequestId, body)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Creates a space booking without a change request and truncates the departure date of the existing space booking",
-        operationId = "emergencyTransfer",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun emergencyTransfer(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer): ResponseEntity<Unit> {
-        return getDelegate().emergencyTransfer(premisesId, bookingId, cas1NewEmergencyTransfer)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Creates a space booking without a change request and truncates the departure date of the existing space booking",
+    operationId = "emergencyTransfer",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun emergencyTransfer(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer): ResponseEntity<Unit> = getDelegate().emergencyTransfer(premisesId, bookingId, cas1NewEmergencyTransfer)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Returns space booking information for a given id",
-        operationId = "getSpaceBookingById",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceBooking::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/space-bookings/{bookingId}"],
-            produces = ["application/json"]
-    )
-    fun getSpaceBookingById(@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<Cas1SpaceBooking> {
-        return getDelegate().getSpaceBookingById(bookingId)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Returns space booking information for a given id",
+    operationId = "getSpaceBookingById",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceBooking::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/space-bookings/{bookingId}"],
+    produces = ["application/json"],
+  )
+  fun getSpaceBookingById(@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<Cas1SpaceBooking> = getDelegate().getSpaceBookingById(bookingId)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Returns space booking information for a given id",
-        operationId = "getSpaceBookingByPremiseAndId",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceBooking::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}"],
-            produces = ["application/json"]
-    )
-    fun getSpaceBookingByPremiseAndId(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<Cas1SpaceBooking> {
-        return getDelegate().getSpaceBookingByPremiseAndId(premisesId, bookingId)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Returns space booking information for a given id",
+    operationId = "getSpaceBookingByPremiseAndId",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceBooking::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}"],
+    produces = ["application/json"],
+  )
+  fun getSpaceBookingByPremiseAndId(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<Cas1SpaceBooking> = getDelegate().getSpaceBookingByPremiseAndId(premisesId, bookingId)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Returns timeline of a specific space booking with a given ID",
-        operationId = "getSpaceBookingTimeline",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1TimelineEvent::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/timeline"],
-            produces = ["application/json"]
-    )
-    fun getSpaceBookingTimeline(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<List<Cas1TimelineEvent>> {
-        return getDelegate().getSpaceBookingTimeline(premisesId, bookingId)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Returns timeline of a specific space booking with a given ID",
+    operationId = "getSpaceBookingTimeline",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1TimelineEvent::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/timeline"],
+    produces = ["application/json"],
+  )
+  fun getSpaceBookingTimeline(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<List<Cas1TimelineEvent>> = getDelegate().getSpaceBookingTimeline(premisesId, bookingId)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Lists space bookings for the premises, given optional filtering criteria",
-        operationId = "getSpaceBookings",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1SpaceBookingSummary::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/premises/{premisesId}/space-bookings"],
-            produces = ["application/json"]
-    )
-    fun getSpaceBookings(@Parameter(description = "ID of the premises to show space bookings for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @RequestParam(value = "residency", required = false) residency: Cas1SpaceBookingResidency?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "keyWorkerStaffCode", required = false) keyWorkerStaffCode: kotlin.String?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1SpaceBookingSummarySortField?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1SpaceBookingSummary>> {
-        return getDelegate().getSpaceBookings(premisesId, residency, crnOrName, keyWorkerStaffCode, sortDirection, sortBy, page, perPage)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Lists space bookings for the premises, given optional filtering criteria",
+    operationId = "getSpaceBookings",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1SpaceBookingSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/premises/{premisesId}/space-bookings"],
+    produces = ["application/json"],
+  )
+  fun getSpaceBookings(@Parameter(description = "ID of the premises to show space bookings for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @RequestParam(value = "residency", required = false) residency: Cas1SpaceBookingResidency?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "keyWorkerStaffCode", required = false) keyWorkerStaffCode: kotlin.String?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1SpaceBookingSummarySortField?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1SpaceBookingSummary>> = getDelegate().getSpaceBookings(premisesId, residency, crnOrName, keyWorkerStaffCode, sortDirection, sortBy, page, perPage)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Creates a space booking for a planned transfer change request and truncates the departure date of the existing space booking. Will close the planned transfer change request.",
-        operationId = "plannedTransfer",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/planned-transfer"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun plannedTransfer(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NewPlannedTransfer: Cas1NewPlannedTransfer): ResponseEntity<Unit> {
-        return getDelegate().plannedTransfer(premisesId, bookingId, cas1NewPlannedTransfer)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Creates a space booking for a planned transfer change request and truncates the departure date of the existing space booking. Will close the planned transfer change request.",
+    operationId = "plannedTransfer",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/planned-transfer"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun plannedTransfer(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NewPlannedTransfer: Cas1NewPlannedTransfer): ResponseEntity<Unit> = getDelegate().plannedTransfer(premisesId, bookingId, cas1NewPlannedTransfer)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Posts an arrival to a specified space booking",
-        operationId = "recordArrival",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/arrival"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun recordArrival(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NewArrival: Cas1NewArrival): ResponseEntity<Unit> {
-        return getDelegate().recordArrival(premisesId, bookingId, cas1NewArrival)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Posts an arrival to a specified space booking",
+    operationId = "recordArrival",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/arrival"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun recordArrival(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NewArrival: Cas1NewArrival): ResponseEntity<Unit> = getDelegate().recordArrival(premisesId, bookingId, cas1NewArrival)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Posts a departure to a specified space booking",
-        operationId = "recordDeparture",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/departure"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun recordDeparture(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NewDeparture: Cas1NewDeparture): ResponseEntity<Unit> {
-        return getDelegate().recordDeparture(premisesId, bookingId, cas1NewDeparture)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Posts a departure to a specified space booking",
+    operationId = "recordDeparture",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/departure"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun recordDeparture(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NewDeparture: Cas1NewDeparture): ResponseEntity<Unit> = getDelegate().recordDeparture(premisesId, bookingId, cas1NewDeparture)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "Posts a non arrival to a specified space booking",
-        operationId = "recordNonArrival",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-            ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/non-arrival"],
-            produces = ["application/problem+json", "application/json"],
-            consumes = ["application/json"]
-    )
-    fun recordNonArrival(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NonArrival: Cas1NonArrival): ResponseEntity<Unit> {
-        return getDelegate().recordNonArrival(premisesId, bookingId, cas1NonArrival)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "Posts a non arrival to a specified space booking",
+    operationId = "recordNonArrival",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/non-arrival"],
+    produces = ["application/problem+json", "application/json"],
+    consumes = ["application/json"],
+  )
+  fun recordNonArrival(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NonArrival: Cas1NonArrival): ResponseEntity<Unit> = getDelegate().recordNonArrival(premisesId, bookingId, cas1NonArrival)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "",
-        operationId = "shortenSpaceBooking",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PATCH],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}/shorten"],
-            consumes = ["application/json"]
-    )
-    fun shortenSpaceBooking(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1ShortenSpaceBooking: Cas1ShortenSpaceBooking): ResponseEntity<Unit> {
-        return getDelegate().shortenSpaceBooking(premisesId, bookingId, cas1ShortenSpaceBooking)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "",
+    operationId = "shortenSpaceBooking",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PATCH],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}/shorten"],
+    consumes = ["application/json"],
+  )
+  fun shortenSpaceBooking(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1ShortenSpaceBooking: Cas1ShortenSpaceBooking): ResponseEntity<Unit> = getDelegate().shortenSpaceBooking(premisesId, bookingId, cas1ShortenSpaceBooking)
 
-    @Operation(
-        tags = ["space bookings",],
-        summary = "",
-        operationId = "updateSpaceBooking",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PATCH],
-            value = ["/premises/{premisesId}/space-bookings/{bookingId}"],
-            consumes = ["application/json"]
-    )
-    fun updateSpaceBooking(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID,@Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1UpdateSpaceBooking: Cas1UpdateSpaceBooking): ResponseEntity<Unit> {
-        return getDelegate().updateSpaceBooking(premisesId, bookingId, cas1UpdateSpaceBooking)
-    }
+  @Operation(
+    tags = ["space bookings"],
+    summary = "",
+    operationId = "updateSpaceBooking",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PATCH],
+    value = ["/premises/{premisesId}/space-bookings/{bookingId}"],
+    consumes = ["application/json"],
+  )
+  fun updateSpaceBooking(@Parameter(description = "ID of the corresponding premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the space booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1UpdateSpaceBooking: Cas1UpdateSpaceBooking): ResponseEntity<Unit> = getDelegate().updateSpaceBooking(premisesId, bookingId, cas1UpdateSpaceBooking)
 }

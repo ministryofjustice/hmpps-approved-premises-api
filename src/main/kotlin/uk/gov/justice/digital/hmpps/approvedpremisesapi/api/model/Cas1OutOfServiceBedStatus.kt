@@ -1,26 +1,21 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
-* 
+*
 * Values: active,cancelled
 */
 enum class Cas1OutOfServiceBedStatus(@get:JsonValue val value: kotlin.String) {
 
-    active("active"),
-    cancelled("cancelled");
+  active("active"),
+  cancelled("cancelled"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: kotlin.String): Cas1OutOfServiceBedStatus {
-                return values().first{it -> it.value == value}
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: kotlin.String): Cas1OutOfServiceBedStatus = values().first { it -> it.value == value }
+  }
 }
-

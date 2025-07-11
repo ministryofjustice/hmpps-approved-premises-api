@@ -24,4 +24,4 @@ data class AssessmentAllocatedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: AssessmentAllocated,
-): Cas1DomainEventEnvelopeInterface<AssessmentAllocated>
+) : Cas1DomainEventEnvelopeInterface<AssessmentAllocated>

@@ -1,31 +1,27 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
 import com.fasterxml.jackson.annotation.JsonProperty
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 
 /**
- * 
- * @param occurredAt 
- * @param recordedAt 
- * @param reason 
- * @param reasonNotes 
+ *
+ * @param occurredAt
+ * @param recordedAt
+ * @param reason
+ * @param reasonNotes
  */
 data class Cas1SpaceBookingCancellation(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("occurredAt", required = true) val occurredAt: java.time.LocalDate,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("occurredAt", required = true) val occurredAt: java.time.LocalDate,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("recordedAt", required = true) val recordedAt: java.time.Instant,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("recordedAt", required = true) val recordedAt: java.time.Instant,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("reason", required = true) val reason: CancellationReason,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("reason", required = true) val reason: CancellationReason,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("reason_notes") val reasonNotes: kotlin.String? = null
-    ) {
-
-}
-
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("reason_notes") val reasonNotes: kotlin.String? = null,
+)

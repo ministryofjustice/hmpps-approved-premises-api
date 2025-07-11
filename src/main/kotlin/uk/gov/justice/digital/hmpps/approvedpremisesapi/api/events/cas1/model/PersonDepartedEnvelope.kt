@@ -24,4 +24,4 @@ data class PersonDepartedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: PersonDeparted,
-): Cas1DomainEventEnvelopeInterface<PersonDeparted>
+) : Cas1DomainEventEnvelopeInterface<PersonDeparted>

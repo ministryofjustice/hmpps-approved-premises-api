@@ -1,28 +1,23 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
-* 
+*
 * Values: notStarted,inProgress,complete,infoRequested
 */
 enum class TaskStatus(@get:JsonValue val value: kotlin.String) {
 
-    notStarted("not_started"),
-    inProgress("in_progress"),
-    complete("complete"),
-    infoRequested("info_requested");
+  notStarted("not_started"),
+  inProgress("in_progress"),
+  complete("complete"),
+  infoRequested("info_requested"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: kotlin.String): TaskStatus {
-                return values().first{it -> it.value == value}
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: kotlin.String): TaskStatus = values().first { it -> it.value == value }
+  }
 }
-

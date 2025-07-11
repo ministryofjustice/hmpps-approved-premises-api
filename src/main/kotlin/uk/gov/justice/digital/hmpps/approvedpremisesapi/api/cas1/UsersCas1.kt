@@ -5,85 +5,70 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import io.swagger.v3.oas.annotations.*
 import io.swagger.v3.oas.annotations.enums.*
 import io.swagger.v3.oas.annotations.media.*
 import io.swagger.v3.oas.annotations.responses.*
 import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 
 @RestController
 interface UsersCas1 {
 
-    fun getDelegate(): UsersCas1Delegate = object: UsersCas1Delegate {}
+  fun getDelegate(): UsersCas1Delegate = object : UsersCas1Delegate {}
 
-    @Operation(
-        tags = ["users",],
-        summary = "Deletes the user",
-        operationId = "deleteUser",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.DELETE],
-            value = ["/users/{id}"],
-            produces = ["application/problem+json"]
-    )
-    fun deleteUser(@Parameter(description = "ID of the user", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<Unit> {
-        return getDelegate().deleteUser(id)
-    }
+  @Operation(
+    tags = ["users"],
+    summary = "Deletes the user",
+    operationId = "deleteUser",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.DELETE],
+    value = ["/users/{id}"],
+    produces = ["application/problem+json"],
+  )
+  fun deleteUser(@Parameter(description = "ID of the user", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<Unit> = getDelegate().deleteUser(id)
 
-    @Operation(
-        tags = ["users",],
-        summary = "Get information about a specific user",
-        operationId = "getUser",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved information on user", content = [Content(schema = Schema(implementation = ApprovedPremisesUser::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/users/{id}"],
-            produces = ["application/json"]
-    )
-    fun getUser(@Parameter(description = "Id of the user", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<ApprovedPremisesUser> {
-        return getDelegate().getUser(id)
-    }
+  @Operation(
+    tags = ["users"],
+    summary = "Get information about a specific user",
+    operationId = "getUser",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved information on user", content = [Content(schema = Schema(implementation = ApprovedPremisesUser::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/users/{id}"],
+    produces = ["application/json"],
+  )
+  fun getUser(@Parameter(description = "Id of the user", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<ApprovedPremisesUser> = getDelegate().getUser(id)
 
-    @Operation(
-        tags = ["users",],
-        summary = "Update a user",
-        operationId = "updateUser",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "Successfully added information about user roles and qualifications", content = [Content(schema = Schema(implementation = User::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PUT],
-            value = ["/users/{id}"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun updateUser(@Parameter(description = "Id of the user", required = true) @PathVariable("id") id: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1UpdateUser: Cas1UpdateUser): ResponseEntity<User> {
-        return getDelegate().updateUser(id, cas1UpdateUser)
-    }
+  @Operation(
+    tags = ["users"],
+    summary = "Update a user",
+    operationId = "updateUser",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "Successfully added information about user roles and qualifications", content = [Content(schema = Schema(implementation = User::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/users/{id}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun updateUser(@Parameter(description = "Id of the user", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1UpdateUser: Cas1UpdateUser): ResponseEntity<User> = getDelegate().updateUser(id, cas1UpdateUser)
 }
