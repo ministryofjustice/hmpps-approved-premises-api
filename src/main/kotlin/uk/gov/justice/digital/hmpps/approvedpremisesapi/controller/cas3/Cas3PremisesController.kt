@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
@@ -49,12 +47,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.time.ZoneOffset
 import java.util.UUID
 
-@SuppressWarnings("LongParameterList", "ThrowsCount")
-@RestController
-@RequestMapping(
-  "\${api.base-path:}/cas3",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Suppress("LongParameterList")
+@Cas3Controller
 class Cas3PremisesController(
   private val userService: UserService,
   private val userAccessService: UserAccessService,
@@ -155,6 +149,7 @@ class Cas3PremisesController(
     return ResponseEntity.ok(result)
   }
 
+  @Suppress("ThrowsCount")
   @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
   fun getPremisesBedspace(
     @PathVariable premisesId: UUID,
@@ -171,7 +166,7 @@ class Cas3PremisesController(
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace))
   }
 
-  @PostMapping("/premises/{premisesId}/bedspaces", consumes = ["application/json"])
+  @PostMapping("/premises/{premisesId}/bedspaces")
   fun createBedspace(
     @PathVariable premisesId: UUID,
     @RequestBody newBedspace: Cas3NewBedspace,
@@ -190,7 +185,7 @@ class Cas3PremisesController(
   }
 
   @Transactional
-  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}", consumes = ["application/json"])
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
   fun updateBedspace(
     @PathVariable premisesId: UUID,
     @PathVariable bedspaceId: UUID,
@@ -269,10 +264,7 @@ class Cas3PremisesController(
     return ResponseEntity.ok(sortedResults)
   }
 
-  @PostMapping(
-    "/premises/{premisesId}/bookings/{bookingId}/departures",
-    consumes = [MediaType.APPLICATION_JSON_VALUE],
-  )
+  @PostMapping("/premises/{premisesId}/bookings/{bookingId}/departures")
   fun postPremisesBookingDeparture(
     @PathVariable premisesId: UUID,
     @PathVariable bookingId: UUID,

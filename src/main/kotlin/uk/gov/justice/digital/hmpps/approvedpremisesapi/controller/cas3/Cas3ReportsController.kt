@@ -3,9 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ReportType
@@ -37,8 +35,7 @@ import java.util.UUID
 private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 3
 private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 6
 
-@RestController
-@RequestMapping("\${api.base-path:}/cas3")
+@Cas3Controller
 class Cas3ReportsController(
   private val userAccessService: UserAccessService,
   private val cas3ReportService: Cas3ReportService,

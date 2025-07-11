@@ -1,11 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -16,11 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
-@RestController
-@RequestMapping(
-  "\${api.base-path:}/cas3",
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas3Controller
 class Cas3PeopleController(
   private val offenderService: OffenderService,
   private val userService: UserService,

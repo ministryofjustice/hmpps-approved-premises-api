@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -28,8 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
-@RestController
-@RequestMapping("\${api.base-path:}/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
+@Cas3Controller
+@RequestMapping("/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
 class Cas3v2PremisesController(
   private val usersService: UserService,
   private val userAccessService: UserAccessService,
@@ -39,7 +38,7 @@ class Cas3v2PremisesController(
   private val bookingTransformer: Cas3BookingTransformer,
 ) {
 
-  @GetMapping(value = ["/premises/{premisesId}/bookings"], produces = ["application/json"])
+  @GetMapping("/premises/{premisesId}/bookings")
   fun getPremises(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3Booking>> = runBlocking {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
@@ -67,7 +66,7 @@ class Cas3v2PremisesController(
     )
   }
 
-  @GetMapping(value = ["/premises/{premisesId}/bookings/{bookingId}"], produces = ["application/json"])
+  @GetMapping("/premises/{premisesId}/bookings/{bookingId}")
   fun premisesPremisesIdBookingsBookingIdGet(@PathVariable premisesId: UUID, @PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> = runBlocking {
     val bookingAndPersonsResult = cas3BookingService.getBooking(bookingId, premisesId)
     val bookingAndPersons = extractEntityFromCasResult(bookingAndPersonsResult)
@@ -78,11 +77,7 @@ class Cas3v2PremisesController(
     ResponseEntity.ok(apiBooking)
   }
 
-  @PostMapping(
-    value = ["/premises/{premisesId}/bookings"],
-    consumes = ["application/json"],
-    produces = ["application/json"],
-  )
+  @PostMapping("/premises/{premisesId}/bookings")
   @Transactional
   @SuppressWarnings("ThrowsCount")
   fun premisesPremisesIdBookingsPost(
