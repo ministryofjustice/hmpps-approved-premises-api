@@ -1,16 +1,13 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
-import java.util.Objects
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
 * 
 * Values: unallocated,inReview,readyToPlace,closed,rejected
 */
-enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: kotlin.String) {
+enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: String) {
 
     unallocated("unallocated"),
     inReview("in_review"),
@@ -21,7 +18,7 @@ enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: kotl
     companion object {
         @JvmStatic
         @JsonCreator
-        fun forValue(value: kotlin.String): TemporaryAccommodationAssessmentStatus {
+        fun forValue(value: String): TemporaryAccommodationAssessmentStatus {
                 return values().first{it -> it.value == value}
         }
     }

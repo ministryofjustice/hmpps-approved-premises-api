@@ -1,16 +1,13 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.Instant
+import java.time.LocalDate
+import java.util.UUID
 
 /**
  * 
@@ -27,25 +24,25 @@ data class TemporaryAccommodationAssessment(
     @get:JsonProperty("application", required = true) val application: TemporaryAccommodationApplication,
 
     @Schema(example = "null", required = true, description = "Any object")
-    @get:JsonProperty("summaryData", required = true) val summaryData: kotlin.Any,
+    @get:JsonProperty("summaryData", required = true) val summaryData: Any,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("service", required = true) override val service: kotlin.String,
+    @get:JsonProperty("service", required = true) override val service: String,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) override val id: java.util.UUID,
+    @get:JsonProperty("id", required = true) override val id: UUID,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("schemaVersion", required = true) override val schemaVersion: java.util.UUID,
+    @get:JsonProperty("schemaVersion", required = true) override val schemaVersion: UUID,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("outdatedSchema", required = true) override val outdatedSchema: kotlin.Boolean,
+    @get:JsonProperty("outdatedSchema", required = true) override val outdatedSchema: Boolean,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
+    @get:JsonProperty("createdAt", required = true) override val createdAt: Instant,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("clarificationNotes", required = true) override val clarificationNotes: kotlin.collections.List<ClarificationNote>,
+    @get:JsonProperty("clarificationNotes", required = true) override val clarificationNotes: List<ClarificationNote>,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("allocatedToStaffMember") val allocatedToStaffMember: TemporaryAccommodationUser? = null,
@@ -54,25 +51,25 @@ data class TemporaryAccommodationAssessment(
     @get:JsonProperty("status") val status: TemporaryAccommodationAssessmentStatus? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("releaseDate") val releaseDate: java.time.LocalDate? = null,
+    @get:JsonProperty("releaseDate") val releaseDate: LocalDate? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("accommodationRequiredFromDate") val accommodationRequiredFromDate: java.time.LocalDate? = null,
+    @get:JsonProperty("accommodationRequiredFromDate") val accommodationRequiredFromDate: LocalDate? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("allocatedAt") override val allocatedAt: java.time.Instant? = null,
+    @get:JsonProperty("allocatedAt") override val allocatedAt: Instant? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("submittedAt") override val submittedAt: java.time.Instant? = null,
+    @get:JsonProperty("submittedAt") override val submittedAt: Instant? = null,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("decision") override val decision: AssessmentDecision? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("rejectionRationale") override val rejectionRationale: kotlin.String? = null,
+    @get:JsonProperty("rejectionRationale") override val rejectionRationale: String? = null,
 
     @Schema(example = "null", description = "Any object")
-    @get:JsonProperty("data") override val `data`: kotlin.Any? = null
+    @get:JsonProperty("data") override val `data`: Any? = null
     ) : Assessment{
 
 }

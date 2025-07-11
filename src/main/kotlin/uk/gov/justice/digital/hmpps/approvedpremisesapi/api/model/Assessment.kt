@@ -1,14 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonValue
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationAssessment
 
 /**
  * 

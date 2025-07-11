@@ -1,14 +1,13 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.Instant
+import java.util.UUID
 
 /**
  * 
@@ -19,28 +18,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class TemporaryAccommodationApplicationSummary(
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("createdByUserId", required = true) val createdByUserId: java.util.UUID,
+    @get:JsonProperty("createdByUserId", required = true) val createdByUserId: UUID,
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("status", required = true) val status: ApplicationStatus,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("type", required = true) override val type: kotlin.String,
+    @get:JsonProperty("type", required = true) override val type: String,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) override val id: java.util.UUID,
+    @get:JsonProperty("id", required = true) override val id: UUID,
 
     @Schema(example = "null", required = true, description = "")
     @get:JsonProperty("person", required = true) override val person: Person,
 
     @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
+    @get:JsonProperty("createdAt", required = true) override val createdAt: Instant,
 
     @Schema(example = "null", description = "")
     @get:JsonProperty("risks") val risks: PersonRisks? = null,
 
     @Schema(example = "null", description = "")
-    @get:JsonProperty("submittedAt") override val submittedAt: java.time.Instant? = null
+    @get:JsonProperty("submittedAt") override val submittedAt: Instant? = null
     ) : ApplicationSummary{
 
 }
