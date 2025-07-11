@@ -13,6 +13,6 @@ enum class Cas3PremisesStatus(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas3PremisesStatus = values().first { it -> it.value == value }
+    fun forValue(value: String): Cas3PremisesStatus = entries.first { it.value == value }
   }
 }

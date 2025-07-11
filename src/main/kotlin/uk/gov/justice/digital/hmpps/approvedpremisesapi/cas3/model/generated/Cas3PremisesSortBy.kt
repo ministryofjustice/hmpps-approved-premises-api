@@ -13,6 +13,6 @@ enum class Cas3PremisesSortBy(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas3PremisesSortBy = values().first { it -> it.value == value }
+    fun forValue(value: String): Cas3PremisesSortBy = entries.first { it.value == value }
   }
 }

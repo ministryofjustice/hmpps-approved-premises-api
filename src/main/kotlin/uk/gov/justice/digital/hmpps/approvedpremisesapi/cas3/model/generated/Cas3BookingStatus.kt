@@ -18,6 +18,6 @@ enum class Cas3BookingStatus(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas3BookingStatus = values().first { it -> it.value == value }
+    fun forValue(value: String): Cas3BookingStatus = entries.first { it.value == value }
   }
 }
