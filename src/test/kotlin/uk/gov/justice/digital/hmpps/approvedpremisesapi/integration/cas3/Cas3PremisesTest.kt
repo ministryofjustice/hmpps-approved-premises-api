@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
@@ -1919,6 +1920,70 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Bad Request")
           .jsonPath("invalid-params[0].errorType").isEqualTo("incorrectCharacteristicModelScope")
+      }
+    }
+  }
+
+  @Nested
+  inner class ArchiveBedspace {
+    @Test
+    fun `When archive a bedspace returns OK with correct body when given valid data`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(bedspace.id)
+          .jsonPath("endDate").isEqualTo(archiveBedspace.endDate)
+      }
+    }
+
+    @Test
+    fun `When archive a bedspace for a Premises that not exist returns 404 Not Found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+
+        val nonExistPremisesId = UUID.randomUUID()
+
+        webTestClient.post()
+          .uri("/cas3/premises/$nonExistPremisesId/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $nonExistPremisesId could be found")
+      }
+    }
+
+    @Test
+    fun `When archive a bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isForbidden
       }
     }
   }

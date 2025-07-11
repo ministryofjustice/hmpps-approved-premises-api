@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
@@ -27,6 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Cas3ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -36,12 +39,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
+@Suppress("TooManyFunctions")
 class Cas3PremisesService(
   private val premisesRepository: PremisesRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
@@ -54,10 +59,12 @@ class Cas3PremisesService(
   private val roomRepository: RoomRepository,
   private val bedspaceRepository: BedRepository,
   private val characteristicService: CharacteristicService,
+  private val workingDayService: WorkingDayService,
 ) {
 
   companion object {
     const val MAX_LENGTH_BEDSPACE_REFERENCE = 3
+    const val MAX_MONTHS_ARCHIVE_BEDSPACE = 3
   }
 
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
@@ -523,7 +530,6 @@ class Cas3PremisesService(
     return success(bedspace)
   }
 
-  @SuppressWarnings("MagicNumber")
   fun updateBedspace(
     premises: PremisesEntity,
     bedspaceId: UUID,
@@ -577,6 +583,69 @@ class Cas3PremisesService(
       }
     }
     return !validationErrors.any()
+  }
+
+  @SuppressWarnings("CyclomaticComplexMethod")
+  fun archiveBedspace(
+    bedspaceId: UUID,
+    endDate: LocalDate,
+  ): CasResult<BedEntity> = validatedCasResult {
+    val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
+      ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
+
+    if (endDate.isBefore(LocalDate.now())) {
+      return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
+    }
+
+    if (endDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_BEDSPACE.toLong()))) {
+      return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
+    }
+
+    val overlapBookings = bookingRepository.findActiveOverlappingBookingByBed(bedspaceId, endDate).sortedByDescending { it.departureDate }
+    val lastOverlapVoid = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(bedspaceId, endDate).sortedByDescending { it.endDate }.firstOrNull()
+    val lastBookingsTurnaroundDate = overlapBookings.associate { it.id to workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0) }
+    val lastTurnaroundDate = lastBookingsTurnaroundDate.values.maxOrNull()
+
+    if (isVoidLastOverlapBedspaceArchiveDate(lastOverlapVoid, lastTurnaroundDate)) {
+      return CasResult.Cas3FieldValidationError(
+        Cas3ValidationErrors().apply {
+          this["$.endDate"] = Cas3ValidationMessage(
+            message = "existingVoid",
+            value = lastOverlapVoid?.endDate?.plusDays(1).toString(),
+          )
+        },
+      )
+    } else if (lastTurnaroundDate != null) {
+      val lastOverlapBooking = getLastBookingOverlapBedspaceArchiveDate(overlapBookings, lastBookingsTurnaroundDate, lastTurnaroundDate)
+      return if (lastOverlapBooking != null && lastOverlapBooking?.departureDate == lastTurnaroundDate) {
+        CasResult.Cas3FieldValidationError(
+          Cas3ValidationErrors().apply {
+            this["$.endDate"] = Cas3ValidationMessage(
+              message = "existingBookings",
+              value = lastOverlapBooking.departureDate.plusDays(1).toString(),
+            )
+          },
+        )
+      } else {
+        CasResult.Cas3FieldValidationError(
+          Cas3ValidationErrors().apply {
+            this["$.endDate"] = Cas3ValidationMessage(
+              message = "existingTurnaround",
+              value = lastTurnaroundDate.plusDays(1).toString(),
+            )
+          },
+        )
+      }
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    bedspace.endDate = endDate
+    val updatedBedspace = bedspaceRepository.save(bedspace)
+
+    return success(updatedBedspace)
   }
 
   @Suppress("ComplexCondition")
@@ -772,5 +841,16 @@ class Cas3PremisesService(
     }
 
     entity
+  }
+
+  private fun isVoidLastOverlapBedspaceArchiveDate(
+    lastOverlapVoid: Cas3VoidBedspaceEntity?,
+    lastTurnaroundDate: LocalDate?,
+  ) = lastOverlapVoid != null && (lastTurnaroundDate == null || (lastTurnaroundDate < lastOverlapVoid.endDate))
+
+  private fun getLastBookingOverlapBedspaceArchiveDate(overlapBookings: List<BookingEntity>, lastBookingsTurnaroundDate: Map<UUID, LocalDate>, lastTurnaroundDate: LocalDate?): BookingEntity? {
+    val lastOverlapBookingId = lastBookingsTurnaroundDate.filterValues { it == lastTurnaroundDate }.keys.firstOrNull()
+    val lastOverlapBooking = overlapBookings.firstOrNull { it.id == lastOverlapBookingId }
+    return lastOverlapBooking
   }
 }

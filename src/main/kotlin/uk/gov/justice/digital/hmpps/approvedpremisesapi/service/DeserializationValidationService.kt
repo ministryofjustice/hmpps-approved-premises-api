@@ -51,6 +51,7 @@ class DeserializationValidationService {
     return result
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod", "NestedBlockDepth")
   fun validateObject(path: String = "$", targetType: KClass<*>, jsonObject: ObjectNode): Map<String, ParamDetails> {
     val result = mutableMapOf<String, ParamDetails>()
 
