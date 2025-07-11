@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
@@ -18,10 +19,13 @@ FROM
 (
   SELECT
     p.id AS premises_id,
-    ST_Distance(
-      (SELECT point FROM postcode_districts pd WHERE pd.outcode = :outcode)::geography,
-      ap.point::geography
-    ) * 0.000621371 AS distance_in_miles,
+    CASE 
+        WHEN :outcode != 'ANY' THEN 
+            ST_Distance(
+              (SELECT point FROM postcode_districts pd WHERE pd.outcode = :outcode)::geography,
+              ap.point::geography
+            ) * 0.000621371
+    END AS distance_in_miles,
     CASE
       WHEN ('$CAS1_PROPERTY_NAME_PREMISES_PIPE'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'PIPE'
       WHEN ('$CAS1_PROPERTY_NAME_PREMISES_ESAP'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'ESAP'
@@ -37,8 +41,8 @@ FROM
     p.postcode AS postcode,
     aa.id AS ap_area_id,
     aa.name AS ap_area_name,
-    ARRAY_AGG (DISTINCT premises_chars_resolved.property_name) as premises_characteristics,
-    ARRAY_AGG (DISTINCT room_chars_resolved.property_name) as room_characteristics
+    ARRAY_REMOVE(ARRAY_AGG (DISTINCT premises_chars_resolved.property_name), null) as premises_characteristics,
+    ARRAY_REMOVE(ARRAY_AGG (DISTINCT room_chars_resolved.property_name), null) as room_characteristics
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
@@ -51,7 +55,7 @@ FROM
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
-    ap.gender = :gender
+    (:gender = 'ANY' OR (ap.gender = :gender))
   GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
 ) AS result
 WHERE
@@ -81,14 +85,14 @@ class Cas1SpaceSearchRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
   fun findAllPremisesWithCharacteristicsByDistance(
-    targetPostcodeDistrict: String,
-    isWomensPremises: Boolean,
+    targetPostcodeDistrict: String?,
+    gender: ApprovedPremisesGender?,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
   ): List<CandidatePremises> {
     val parameters = mutableMapOf(
-      "outcode" to targetPostcodeDistrict,
-      "gender" to if (isWomensPremises) "WOMAN" else "MAN",
+      "outcode" to (targetPostcodeDistrict ?: "ANY"),
+      "gender" to (gender?.name ?: "ANY"),
       "premisesCharacteristicsCount" to premisesCharacteristics.size,
       "premisesCharacteristics" to premisesCharacteristics.ifEmpty { null },
       "roomCharacteristicsCount" to roomCharacteristics.size,
@@ -103,7 +107,7 @@ class Cas1SpaceSearchRepository(
 
       CandidatePremises(
         rs.getUUID("premises_id"),
-        rs.getFloat("distance_in_miles"),
+        if (targetPostcodeDistrict == null) null else rs.getFloat("distance_in_miles"),
         apType,
         rs.getString("name"),
         rs.getString("full_address"),
@@ -124,7 +128,7 @@ class Cas1SpaceSearchRepository(
 
 data class CandidatePremises(
   val premisesId: UUID,
-  val distanceInMiles: Float,
+  val distanceInMiles: Float?,
   val apType: ApprovedPremisesType,
   val name: String,
   val fullAddress: String?,

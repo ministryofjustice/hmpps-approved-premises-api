@@ -35,6 +35,7 @@ enum class Cas1SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
     hasWideAccessToCommunalAreas("hasWideAccessToCommunalAreas"),
     hasWideDoor("hasWideDoor"),
     hasWideStepFreeAccess("hasWideStepFreeAccess"),
+    @Deprecated("No longer used")
     isArsonDesignated("isArsonDesignated"),
     isArsonSuitable("isArsonSuitable"),
     isCatered("isCatered"),
@@ -55,6 +56,7 @@ enum class Cas1SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
     isTopFloorVulnerable("isTopFloorVulnerable"),
     isWheelchairAccessible("isWheelchairAccessible"),
     isWheelchairDesignated("isWheelchairDesignated"),
+    @Deprecated("No longer used")
     arsonOffences("arsonOffences");
 
     companion object {

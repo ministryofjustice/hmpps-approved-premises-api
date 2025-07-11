@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
@@ -36,17 +37,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService.Cas1PremisesSearchCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1NationalOccupancyTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.math.BigDecimal
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -71,6 +76,8 @@ class Cas1PremisesController(
   private val staffMemberTransformer: StaffMemberTransformer,
   private val clock: Clock,
   private val spaceBookingService: Cas1SpaceBookingService,
+  private val cas1PremisesSearchService: Cas1PremisesSearchService,
+  private val cas1NationalOccupancyTransformer: Cas1NationalOccupancyTransformer,
 ) {
 
   @Operation(summary = "Returns a CSV showing premises occupancy for the next 30 days. This does not consider characteristics.")
@@ -110,12 +117,39 @@ class Cas1PremisesController(
       characteristic, regardless of whether the bed has any other specified characteristic
     """,
   )
-  @GetMapping("/premises/capacity")
-  @SuppressWarnings("UnusedParameter")
-  fun getNationalCapacity(
+  @PostMapping("/premises/capacity")
+  @SuppressWarnings("MagicNumber")
+  fun getNationalOccupancy(
     @RequestBody parameters: Cas1NationalOccupancyParameters,
   ): ResponseEntity<Cas1NationalOccupancy> {
-    TODO("Endpoint to be implemented")
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_NATIONAL_OCCUPANCY_VIEW)
+
+    val premisesSearchResult = cas1PremisesSearchService.findPremises(
+      Cas1PremisesSearchCriteria(
+        gender = null,
+        targetPostcodeDistrict = parameters.postcodeArea,
+        spaceCharacteristics = parameters.premisesCharacteristics,
+      ),
+    )
+
+    val startDate = parameters.fromDate
+    val endDate = startDate.plusDays(6)
+
+    val capacities = extractEntityFromCasResult(
+      cas1PremisesService.getPremisesCapacities(
+        premisesIds = premisesSearchResult.map { it.premisesId },
+        startDate = startDate,
+        endDate = endDate,
+      ),
+    )
+
+    return ResponseEntity.ok(
+      cas1NationalOccupancyTransformer.toCapacitySummary(
+        capacities = capacities,
+        requestedRoomCharacteristics = parameters.roomCharacteristics,
+        premisesSummaries = premisesSearchResult,
+      ),
+    )
   }
 
   @Operation(summary = "Lists all beds for the given premises")
@@ -209,7 +243,7 @@ class Cas1PremisesController(
 
     return ResponseEntity.ok().body(
       cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-        premiseCapacity = extractEntityFromCasResult(premiseCapacity)[0],
+        premiseCapacity = extractEntityFromCasResult(premiseCapacity).results[0],
       ),
     )
   }
@@ -239,7 +273,7 @@ class Cas1PremisesController(
               endDate = date,
               excludeSpaceBookingId = excludeSpaceBookingId,
             ),
-          )[0],
+          ).results[0],
         ).capacity.first(),
         spaceBookings = extractEntityFromCasResult(
           cas1SpaceBookingDaySummaryService.getBookingDaySummaries(
@@ -315,11 +349,14 @@ data class Cas1NationalOccupancy(
 
 data class Cas1NationalOccupancyPremises(
   val summary: Cas1PremisesSearchResultSummary,
-  val capacity: Set<Cas1PremiseCapacitySummary>,
+  val distanceInMiles: BigDecimal?,
+  val capacity: List<Cas1PremiseCapacitySummary>,
 )
 
 data class Cas1PremiseCapacitySummary(
   val date: LocalDate,
+  @Schema(description = "The room characteristic this value relates to. If null, this value is based upon bookings vs total beds")
+  val forRoomCharacteristic: Cas1SpaceCharacteristic?,
   val inServiceBedCount: Int,
   val vacantBedCount: Int,
 )

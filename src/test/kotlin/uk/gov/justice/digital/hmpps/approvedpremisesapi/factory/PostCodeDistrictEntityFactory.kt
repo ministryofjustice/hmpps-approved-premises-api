@@ -4,11 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.Point
-import org.locationtech.jts.geom.PrecisionModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import java.util.UUID
@@ -45,8 +43,7 @@ class PostCodeDistrictEntityFactory : Factory<PostCodeDistrictEntity> {
     outcode = this.outcode(),
     latitude = this.latitude(),
     longitude = this.longitude(),
-    point = this.point?.invoke() ?: GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
-      .createPoint(Coordinate(this.latitude(), this.longitude())),
+    point = this.point?.invoke() ?: GisUtil.createPoint(this.latitude(), this.longitude()),
   )
 
   private fun getRandomPostcode(): String {

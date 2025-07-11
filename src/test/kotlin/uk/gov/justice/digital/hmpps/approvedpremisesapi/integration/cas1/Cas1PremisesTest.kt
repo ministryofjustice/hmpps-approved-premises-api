@@ -20,11 +20,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancyParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -444,6 +447,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
   }
 
+  /**
+   * The [SpacePlanningServiceTest] provides a thorough integration test for
+   * calculating capacity. For that reason this integration test only provides
+   * a basic success path test
+   */
   @Nested
   inner class GetPremisesCapacity : InitialiseDatabasePerClassTestBase() {
     lateinit var premises: ApprovedPremisesEntity
@@ -490,6 +498,346 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       assertThat(result.capacity[0].date).isEqualTo(LocalDate.of(2020, 1, 1))
       assertThat(result.capacity[1].date).isEqualTo(LocalDate.of(2020, 1, 2))
+    }
+  }
+
+  @Nested
+  inner class GetNationalOccupancy : IntegrationTestBase() {
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct role`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = emptySet(),
+            premisesCharacteristics = emptySet(),
+            roomCharacteristics = emptySet(),
+            postcodeArea = "NN11",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Mandatory parameters provided, No matching premises returns empty result`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = emptySet(),
+            premisesCharacteristics = emptySet(),
+            roomCharacteristics = emptySet(),
+            postcodeArea = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1NationalOccupancy>()
+
+      assertThat(response.startDate).isEqualTo(LocalDate.of(2025, 1, 1))
+      assertThat(response.endDate).isEqualTo(LocalDate.of(2025, 1, 7))
+      assertThat(response.premises).isEmpty()
+    }
+
+    @Test
+    fun `Mandatory parameters provided, single premises available and all fields mapped`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+
+      val premises = givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        name = "premises1",
+      )
+
+      givenAnApprovedPremisesBed(premises = premises)
+      givenAnApprovedPremisesBed(premises = premises)
+      givenAnApprovedPremisesBed(premises = premises)
+
+      givenACas1SpaceBooking(
+        canonicalArrivalDate = LocalDate.of(2025, 1, 3),
+        canonicalDepartureDate = LocalDate.of(2025, 2, 1),
+        premises = premises,
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = emptySet(),
+            premisesCharacteristics = emptySet(),
+            roomCharacteristics = emptySet(),
+            postcodeArea = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1NationalOccupancy>()
+
+      assertThat(response.startDate).isEqualTo(LocalDate.of(2025, 1, 1))
+      assertThat(response.endDate).isEqualTo(LocalDate.of(2025, 1, 7))
+
+      assertThat(response.premises).hasSize(1)
+      val premisesResult = response.premises[0]
+      assertThat(premisesResult.summary.id).isEqualTo(premises.id)
+      assertThat(premisesResult.summary.name).isEqualTo("premises1")
+
+      assertThat(premisesResult.distanceInMiles).isNull()
+
+      val capacities = premisesResult.capacity
+      assertThat(capacities).hasSize(7)
+      assertThat(capacities[0].date).isEqualTo(LocalDate.of(2025, 1, 1))
+      assertThat(capacities[0].inServiceBedCount).isEqualTo(3)
+      assertThat(capacities[0].vacantBedCount).isEqualTo(3)
+      assertThat(capacities[1].date).isEqualTo(LocalDate.of(2025, 1, 2))
+      assertThat(capacities[1].inServiceBedCount).isEqualTo(3)
+      assertThat(capacities[1].vacantBedCount).isEqualTo(3)
+      assertThat(capacities[2].date).isEqualTo(LocalDate.of(2025, 1, 3))
+      assertThat(capacities[2].inServiceBedCount).isEqualTo(3)
+      assertThat(capacities[2].vacantBedCount).isEqualTo(2)
+      assertThat(capacities[3].date).isEqualTo(LocalDate.of(2025, 1, 4))
+      assertThat(capacities[3].inServiceBedCount).isEqualTo(3)
+      assertThat(capacities[3].vacantBedCount).isEqualTo(2)
+      assertThat(capacities[4].date).isEqualTo(LocalDate.of(2025, 1, 5))
+      assertThat(capacities[4].inServiceBedCount).isEqualTo(3)
+      assertThat(capacities[4].vacantBedCount).isEqualTo(2)
+      assertThat(capacities[5].date).isEqualTo(LocalDate.of(2025, 1, 6))
+      assertThat(capacities[5].inServiceBedCount).isEqualTo(3)
+      assertThat(capacities[5].vacantBedCount).isEqualTo(2)
+      assertThat(capacities[6].date).isEqualTo(LocalDate.of(2025, 1, 7))
+      assertThat(capacities[6].inServiceBedCount).isEqualTo(3)
+      assertThat(capacities[6].vacantBedCount).isEqualTo(2)
+    }
+
+    @Test
+    fun `Postcode provided, return in distance order, lowest first`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        postCode = "NN16",
+        name = "premises northamptonshire",
+        latitude = 52.407422,
+        longitude = -0.700557,
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        postCode = "SW11",
+        name = "premises london",
+        latitude = 51.477517,
+        longitude = -0.179730,
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        postCode = "LE11",
+        name = "premises leicestershire",
+        latitude = 52.770411,
+        longitude = -1.202296,
+      )
+
+      postCodeDistrictFactory.produceAndPersist {
+        withOutcode("NE1")
+        withLatitude(54.967460)
+        withLongitude(-1.615383)
+      }
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = emptySet(),
+            premisesCharacteristics = emptySet(),
+            roomCharacteristics = emptySet(),
+            postcodeArea = "NE1",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1NationalOccupancy>()
+
+      assertThat(response.premises).hasSize(3)
+      assertThat(response.premises[0].summary.name).isEqualTo("premises leicestershire")
+      assertThat(response.premises[1].summary.name).isEqualTo("premises northamptonshire")
+      assertThat(response.premises[2].summary.name).isEqualTo("premises london")
+    }
+
+    @Test
+    fun `Premises and room characteristics provided, ignore room characteristics for premises filtering`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+
+      // no matching chars, ignored
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        characteristics = emptyList(),
+      )
+
+      // only one matching char, ignored
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        characteristics = listOf(
+          characteristicRepository.findCas1ByPropertyName("isCatered")!!,
+          characteristicRepository.findCas1ByPropertyName("hasWideAccessToCommunalAreas")!!,
+        ),
+      )
+
+      val matchingPremises = givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        characteristics = listOf(
+          characteristicRepository.findCas1ByPropertyName("isCatered")!!,
+          characteristicRepository.findCas1ByPropertyName("acceptsNonSexualChildOffenders")!!,
+        ),
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = emptySet(),
+            premisesCharacteristics = setOf(Cas1SpaceCharacteristic.isCatered, Cas1SpaceCharacteristic.acceptsNonSexualChildOffenders),
+            roomCharacteristics = setOf(Cas1SpaceCharacteristic.hasEnSuite),
+            postcodeArea = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1NationalOccupancy>()
+
+      assertThat(response.premises).hasSize(1)
+      val premisesResult = response.premises[0]
+      assertThat(premisesResult.summary.id).isEqualTo(matchingPremises.id)
+    }
+
+    @Test
+    fun `Room characteristics provided, filter occupancy results on room characteristics`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+
+      val premises = givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        name = "premises1",
+      )
+
+      givenAnApprovedPremisesBed(
+        premises = premises,
+        characteristics = listOf(
+          characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
+          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
+        ),
+      )
+
+      givenAnApprovedPremisesBed(
+        premises = premises,
+        characteristics = listOf(
+          characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
+        ),
+      )
+
+      givenAnApprovedPremisesBed(
+        premises = premises,
+        characteristics = listOf(
+          characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
+        ),
+      )
+
+      givenAnApprovedPremisesBed(
+        premises = premises,
+        characteristics = emptyList(),
+      )
+
+      givenACas1SpaceBooking(
+        canonicalArrivalDate = LocalDate.of(2025, 1, 1),
+        canonicalDepartureDate = LocalDate.of(2025, 2, 1),
+        premises = premises,
+        criteria = listOf(
+          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
+        ),
+      )
+
+      givenACas1SpaceBooking(
+        canonicalArrivalDate = LocalDate.of(2025, 1, 2),
+        canonicalDepartureDate = LocalDate.of(2025, 1, 3),
+        premises = premises,
+        criteria = listOf(
+          characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!,
+        ),
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = emptySet(),
+            premisesCharacteristics = emptySet(),
+            roomCharacteristics = setOf(
+              Cas1SpaceCharacteristic.hasEnSuite,
+              Cas1SpaceCharacteristic.isArsonSuitable,
+            ),
+            postcodeArea = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1NationalOccupancy>()
+
+      assertThat(response.startDate).isEqualTo(LocalDate.of(2025, 1, 1))
+      assertThat(response.endDate).isEqualTo(LocalDate.of(2025, 1, 7))
+
+      assertThat(response.premises).hasSize(1)
+      val premisesResult = response.premises[0]
+
+      val capacities = premisesResult.capacity
+      assertThat(capacities).hasSize(7)
+      assertThat(capacities[0].date).isEqualTo(LocalDate.of(2025, 1, 1))
+      assertThat(capacities[0].forRoomCharacteristic).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+      assertThat(capacities[0].inServiceBedCount).isEqualTo(1)
+      assertThat(capacities[0].vacantBedCount).isEqualTo(0)
+      assertThat(capacities[1].date).isEqualTo(LocalDate.of(2025, 1, 2))
+      assertThat(capacities[1].forRoomCharacteristic).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+      assertThat(capacities[1].inServiceBedCount).isEqualTo(1)
+      assertThat(capacities[1].vacantBedCount).isEqualTo(-1)
+      assertThat(capacities[2].date).isEqualTo(LocalDate.of(2025, 1, 3))
+      assertThat(capacities[2].forRoomCharacteristic).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+      assertThat(capacities[2].inServiceBedCount).isEqualTo(1)
+      assertThat(capacities[2].vacantBedCount).isEqualTo(0)
+      assertThat(capacities[3].date).isEqualTo(LocalDate.of(2025, 1, 4))
+      assertThat(capacities[3].forRoomCharacteristic).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+      assertThat(capacities[3].inServiceBedCount).isEqualTo(1)
+      assertThat(capacities[3].vacantBedCount).isEqualTo(0)
+      assertThat(capacities[4].date).isEqualTo(LocalDate.of(2025, 1, 5))
+      assertThat(capacities[4].forRoomCharacteristic).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+      assertThat(capacities[4].inServiceBedCount).isEqualTo(1)
+      assertThat(capacities[4].vacantBedCount).isEqualTo(0)
+      assertThat(capacities[5].date).isEqualTo(LocalDate.of(2025, 1, 6))
+      assertThat(capacities[5].forRoomCharacteristic).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+      assertThat(capacities[5].inServiceBedCount).isEqualTo(1)
+      assertThat(capacities[5].vacantBedCount).isEqualTo(0)
+      assertThat(capacities[6].date).isEqualTo(LocalDate.of(2025, 1, 7))
+      assertThat(capacities[6].forRoomCharacteristic).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+      assertThat(capacities[6].inServiceBedCount).isEqualTo(1)
+      assertThat(capacities[6].vacantBedCount).isEqualTo(0)
     }
   }
 

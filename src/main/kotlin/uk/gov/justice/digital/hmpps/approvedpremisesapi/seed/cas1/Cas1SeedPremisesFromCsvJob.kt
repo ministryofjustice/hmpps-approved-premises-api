@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.geom.PrecisionModel
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -17,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import java.util.UUID
 
 /**
@@ -76,12 +74,6 @@ class Cas1SeedPremisesFromCsvJob(
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
-
-  companion object Constants {
-    private const val LAT_LON_SRID = 4326
-  }
-
-  private val geometryFactory = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), LAT_LON_SRID)
 
   override fun deserializeRow(columns: Map<String, String>) = ApprovedPremisesSeedCsvRow(
     name = columns["name"]!!,
@@ -203,7 +195,7 @@ class Cas1SeedPremisesFromCsvJob(
         status = row.status,
         longitude = row.longitude,
         latitude = row.latitude,
-        point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null,
+        point = if (row.longitude != null && row.latitude != null) GisUtil.createPoint(row.latitude, row.longitude) else null,
         gender = row.gender,
         supportsSpaceBookings = castBooleanString(row.supportsSpaceBookings),
         managerDetails = row.managerDetails,
@@ -252,7 +244,7 @@ class Cas1SeedPremisesFromCsvJob(
       this.probationRegion = probationRegion
       this.localAuthorityArea = localAuthorityArea
       this.status = row.status
-      this.point = if (row.longitude != null && row.latitude != null) geometryFactory.createPoint(Coordinate(row.latitude, row.longitude)) else null
+      this.point = if (row.longitude != null && row.latitude != null) GisUtil.createPoint(row.latitude, row.longitude) else null
       this.gender = row.gender
       this.supportsSpaceBookings = castBooleanString(row.supportsSpaceBookings)
       this.managerDetails = row.managerDetails
