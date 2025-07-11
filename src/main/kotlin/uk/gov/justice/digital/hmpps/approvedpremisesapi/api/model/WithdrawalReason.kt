@@ -20,6 +20,6 @@ enum class WithdrawalReason(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): WithdrawalReason = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): WithdrawalReason = entries.first { it.value == value }
   }
 }

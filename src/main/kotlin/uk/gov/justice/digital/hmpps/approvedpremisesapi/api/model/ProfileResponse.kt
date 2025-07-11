@@ -35,7 +35,7 @@ data class ProfileResponse(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): LoadError = values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): LoadError = entries.first { it.value == value }
     }
   }
 }

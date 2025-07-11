@@ -17,6 +17,6 @@ enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): PlacementRequestStatus = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): PlacementRequestStatus = entries.first { it.value == value }
   }
 }

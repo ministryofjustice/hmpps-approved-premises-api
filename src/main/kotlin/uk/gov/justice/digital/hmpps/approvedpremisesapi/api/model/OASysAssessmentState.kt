@@ -16,6 +16,6 @@ enum class OASysAssessmentState(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): OASysAssessmentState = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): OASysAssessmentState = entries.first { it.value == value }
   }
 }

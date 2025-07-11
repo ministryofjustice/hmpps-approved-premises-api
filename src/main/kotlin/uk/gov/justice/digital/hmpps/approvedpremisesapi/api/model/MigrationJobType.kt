@@ -38,6 +38,6 @@ enum class MigrationJobType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): MigrationJobType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): MigrationJobType = entries.first { it.value == value }
   }
 }

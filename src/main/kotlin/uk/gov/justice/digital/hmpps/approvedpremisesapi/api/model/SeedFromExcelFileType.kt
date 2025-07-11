@@ -16,6 +16,6 @@ enum class SeedFromExcelFileType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SeedFromExcelFileType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): SeedFromExcelFileType = entries.first { it.value == value }
   }
 }

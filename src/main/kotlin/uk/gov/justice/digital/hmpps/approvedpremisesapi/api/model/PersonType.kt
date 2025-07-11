@@ -17,6 +17,6 @@ enum class PersonType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): PersonType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): PersonType = entries.first { it.value == value }
   }
 }

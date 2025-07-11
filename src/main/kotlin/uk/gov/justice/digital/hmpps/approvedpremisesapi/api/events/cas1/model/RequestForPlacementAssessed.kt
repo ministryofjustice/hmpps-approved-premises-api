@@ -56,7 +56,7 @@ data class RequestForPlacementAssessed(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Decision = values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): Decision = entries.first { it.value == value }
     }
   }
 }

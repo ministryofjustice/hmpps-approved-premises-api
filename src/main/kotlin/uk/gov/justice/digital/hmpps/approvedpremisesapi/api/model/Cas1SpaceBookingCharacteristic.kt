@@ -20,6 +20,6 @@ enum class Cas1SpaceBookingCharacteristic(@get:JsonValue val value: kotlin.Strin
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1SpaceBookingCharacteristic = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1SpaceBookingCharacteristic = entries.first { it.value == value }
   }
 }

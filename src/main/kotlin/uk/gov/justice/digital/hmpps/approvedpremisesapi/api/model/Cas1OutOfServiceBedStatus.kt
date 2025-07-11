@@ -16,6 +16,6 @@ enum class Cas1OutOfServiceBedStatus(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1OutOfServiceBedStatus = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1OutOfServiceBedStatus = entries.first { it.value == value }
   }
 }

@@ -50,7 +50,7 @@ data class ReferralHistorySystemNote(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Category = values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): Category = entries.first { it.value == value }
     }
   }
 }

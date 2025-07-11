@@ -21,6 +21,6 @@ enum class SentenceTypeOption(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SentenceTypeOption = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): SentenceTypeOption = entries.first { it.value == value }
   }
 }

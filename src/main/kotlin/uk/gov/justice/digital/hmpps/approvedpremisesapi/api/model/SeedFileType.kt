@@ -51,6 +51,6 @@ enum class SeedFileType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SeedFileType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): SeedFileType = entries.first { it.value == value }
   }
 }

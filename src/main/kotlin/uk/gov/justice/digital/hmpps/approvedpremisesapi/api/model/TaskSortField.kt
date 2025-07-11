@@ -23,6 +23,6 @@ enum class TaskSortField(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): TaskSortField = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): TaskSortField = entries.first { it.value == value }
   }
 }

@@ -16,6 +16,6 @@ enum class Cas1ApprovedPremisesGender(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1ApprovedPremisesGender = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1ApprovedPremisesGender = entries.first { it.value == value }
   }
 }

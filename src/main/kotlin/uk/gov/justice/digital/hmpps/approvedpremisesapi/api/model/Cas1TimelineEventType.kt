@@ -37,6 +37,6 @@ enum class Cas1TimelineEventType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1TimelineEventType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1TimelineEventType = entries.first { it.value == value }
   }
 }

@@ -26,6 +26,6 @@ enum class Cas1ReportName(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1ReportName = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1ReportName = entries.first { it.value == value }
   }
 }

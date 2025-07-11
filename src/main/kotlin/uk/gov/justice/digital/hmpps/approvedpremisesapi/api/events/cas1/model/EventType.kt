@@ -35,6 +35,6 @@ enum class EventType(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): EventType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): EventType = entries.first { it.value == value }
   }
 }

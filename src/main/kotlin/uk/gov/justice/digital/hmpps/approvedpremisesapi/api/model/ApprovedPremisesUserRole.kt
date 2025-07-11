@@ -29,6 +29,6 @@ enum class ApprovedPremisesUserRole(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): ApprovedPremisesUserRole = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): ApprovedPremisesUserRole = entries.first { it.value == value }
   }
 }

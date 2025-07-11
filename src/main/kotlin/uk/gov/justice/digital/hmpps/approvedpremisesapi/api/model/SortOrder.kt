@@ -16,6 +16,6 @@ enum class SortOrder(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SortOrder = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): SortOrder = entries.first { it.value == value }
   }
 }

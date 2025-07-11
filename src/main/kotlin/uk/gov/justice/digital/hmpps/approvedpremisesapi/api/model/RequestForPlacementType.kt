@@ -16,6 +16,6 @@ enum class RequestForPlacementType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): RequestForPlacementType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): RequestForPlacementType = entries.first { it.value == value }
   }
 }

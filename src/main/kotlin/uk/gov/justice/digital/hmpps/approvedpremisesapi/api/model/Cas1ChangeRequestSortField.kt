@@ -17,6 +17,6 @@ enum class Cas1ChangeRequestSortField(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1ChangeRequestSortField = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1ChangeRequestSortField = entries.first { it.value == value }
   }
 }

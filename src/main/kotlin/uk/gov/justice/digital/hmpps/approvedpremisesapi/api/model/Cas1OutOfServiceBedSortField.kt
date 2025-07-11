@@ -21,6 +21,6 @@ enum class Cas1OutOfServiceBedSortField(@get:JsonValue val value: kotlin.String)
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1OutOfServiceBedSortField = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1OutOfServiceBedSortField = entries.first { it.value == value }
   }
 }

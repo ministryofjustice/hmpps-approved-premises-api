@@ -21,6 +21,6 @@ enum class CacheType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): CacheType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): CacheType = entries.first { it.value == value }
   }
 }

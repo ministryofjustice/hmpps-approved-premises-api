@@ -16,6 +16,6 @@ enum class DocumentLevel(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): DocumentLevel = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): DocumentLevel = entries.first { it.value == value }
   }
 }

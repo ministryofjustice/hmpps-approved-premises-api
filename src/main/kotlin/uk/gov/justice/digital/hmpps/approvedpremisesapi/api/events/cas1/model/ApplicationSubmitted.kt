@@ -76,7 +76,7 @@ data class ApplicationSubmitted(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Gender = values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): Gender = entries.first { it.value == value }
     }
   }
 }

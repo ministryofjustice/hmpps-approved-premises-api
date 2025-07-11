@@ -16,6 +16,6 @@ enum class Cas1TriggerSourceType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1TriggerSourceType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1TriggerSourceType = entries.first { it.value == value }
   }
 }

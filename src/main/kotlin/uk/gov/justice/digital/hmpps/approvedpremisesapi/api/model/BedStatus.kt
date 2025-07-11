@@ -17,6 +17,6 @@ enum class BedStatus(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): BedStatus = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): BedStatus = entries.first { it.value == value }
   }
 }

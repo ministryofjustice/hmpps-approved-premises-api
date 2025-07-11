@@ -19,6 +19,6 @@ enum class WithdrawableType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): WithdrawableType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): WithdrawableType = entries.first { it.value == value }
   }
 }

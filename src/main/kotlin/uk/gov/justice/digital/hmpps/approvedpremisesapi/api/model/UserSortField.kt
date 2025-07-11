@@ -15,6 +15,6 @@ enum class UserSortField(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): UserSortField = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): UserSortField = entries.first { it.value == value }
   }
 }

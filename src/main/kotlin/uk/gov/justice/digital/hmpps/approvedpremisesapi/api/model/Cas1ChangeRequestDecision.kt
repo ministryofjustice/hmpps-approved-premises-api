@@ -16,6 +16,6 @@ enum class Cas1ChangeRequestDecision(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1ChangeRequestDecision = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1ChangeRequestDecision = entries.first { it.value == value }
   }
 }

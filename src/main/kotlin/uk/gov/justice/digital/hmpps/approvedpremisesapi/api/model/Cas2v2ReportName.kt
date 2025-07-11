@@ -17,6 +17,6 @@ enum class Cas2v2ReportName(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas2v2ReportName = values().first { it -> it.value == value }
+    fun forValue(value: String): Cas2v2ReportName = entries.first { it.value == value }
   }
 }

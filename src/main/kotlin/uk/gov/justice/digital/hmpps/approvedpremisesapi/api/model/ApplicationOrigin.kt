@@ -17,6 +17,6 @@ enum class ApplicationOrigin(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): ApplicationOrigin = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): ApplicationOrigin = entries.first { it.value == value }
   }
 }

@@ -18,6 +18,6 @@ enum class UpdateApplicationType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): UpdateApplicationType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): UpdateApplicationType = entries.first { it.value == value }
   }
 }
