@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
@@ -1991,5 +1992,258 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   private fun createPremises(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
     withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
     withYieldedProbationRegion { probationRegion }
+  }
+
+  @Nested
+  inner class UnarchiveBedspace {
+    @Test
+    fun `Unarchive bedspace returns 200 OK when successful`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val archivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
+        }
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        // Verify the bedspace was updated
+        val updatedBedspace = bedRepository.findById(archivedBedspace.id).get()
+        assertThat(updatedBedspace.startDate).isEqualTo(restartDate)
+        assertThat(updatedBedspace.endDate).isNull()
+      }
+    }
+
+    @Test
+    fun `Unarchive bedspace returns 400 when restart date is too far in the past`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val archivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(10))
+        }
+
+        val restartDate = LocalDate.now().minusDays(8) // More than 7 days in the past
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidRestartDateInThePast")
+      }
+    }
+
+    @Test
+    fun `Unarchive bedspace returns 400 when restart date is too far in the future`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val archivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(1))
+        }
+
+        val restartDate = LocalDate.now().plusDays(8) // More than 7 days in the future
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidRestartDateInTheFuture")
+      }
+    }
+
+    @Test
+    fun `Unarchive bedspace returns 400 when restart date is before last archive end date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val lastArchiveEndDate = LocalDate.now().minusDays(5)
+        val archivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(lastArchiveEndDate)
+        }
+
+        val restartDate = lastArchiveEndDate.minusDays(1) // Before the last archive end date
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("beforeLastBedspaceArchivedDate")
+      }
+    }
+
+    @Test
+    fun `Unarchive bedspace returns 400 when bedspace does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val nonExistentBedspaceId = UUID.randomUUID()
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/$nonExistentBedspaceId/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("doesNotExist")
+      }
+    }
+
+    @Test
+    fun `Unarchive bedspace returns 400 when bedspace is not archived`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val onlineBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(10))
+          withEndDate(null) // Not archived
+        }
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${onlineBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceNotArchived")
+      }
+    }
+
+    @Test
+    fun `Unarchive bedspace returns 403 when user does not have permission to manage premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        // Create premises in a different region
+        val otherRegion = probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea {
+            apAreaEntityFactory.produceAndPersist {
+              withDefaultCruManagementArea(givenACas1CruManagementArea())
+            }
+          }
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { otherRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val archivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(1))
+        }
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
   }
 }
