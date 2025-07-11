@@ -473,6 +473,21 @@ class Cas1PremisesServiceTest {
     }
 
     @Test
+    fun `success, no premises requested`() {
+      val result = service.getPremisesCapacities(
+        premisesIds = emptyList(),
+        startDate = LocalDate.of(2020, 1, 2),
+        endDate = LocalDate.of(2020, 1, 3),
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.startDate).isEqualTo(LocalDate.of(2020, 1, 2))
+        assertThat(it.endDate).isEqualTo(LocalDate.of(2020, 1, 3))
+        assertThat(it.results).isEmpty()
+      }
+    }
+
+    @Test
     fun `success, single premises`() {
       val premise = ApprovedPremisesEntityFactory().withDefaults().withId(PREMISES_ID).produce()
       val excludeSpaceBookingId = UUID.randomUUID()

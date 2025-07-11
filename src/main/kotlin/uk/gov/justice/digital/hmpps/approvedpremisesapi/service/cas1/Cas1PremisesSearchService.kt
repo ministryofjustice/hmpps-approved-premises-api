@@ -17,7 +17,7 @@ class Cas1PremisesSearchService(
   data class Cas1PremisesSearchCriteria(
     val gender: ApprovedPremisesGender?,
     val targetPostcodeDistrict: String?,
-    val spaceCharacteristics: List<Cas1SpaceCharacteristic>,
+    val spaceCharacteristics: Set<Cas1SpaceCharacteristic>,
   )
 
   fun findPremises(searchCriteria: Cas1PremisesSearchCriteria): List<CandidatePremises> {
