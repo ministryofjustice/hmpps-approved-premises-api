@@ -374,6 +374,9 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     nativeQuery = true,
   )
   fun hasNonCancelledTransfer(spaceBookingId: UUID): Boolean
+
+  @Query
+  fun existsByDeliusId(deliusId: String): Boolean
 }
 
 interface Cas1SpaceBookingDaySummarySearchResult {
