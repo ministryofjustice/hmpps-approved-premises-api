@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util
 
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
 fun <T> assertThatCasResult(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
@@ -31,6 +32,13 @@ class CasResultAssertions<T>(actual: CasResult<T>) :
       failWithMessage("Expected CasResult.FieldValidationError but was <%s>", actual)
     }
     return CasResultFieldValidationErrorAssertions(actual as CasResult.FieldValidationError)
+  }
+
+  fun isCas3FieldValidationError(): CasResultCas3FieldValidationErrorAssertions<T> {
+    if (actual !is CasResult.Cas3FieldValidationError) {
+      failWithMessage("Expected CasResult.Cas3FieldValidationError but was <%s>", actual)
+    }
+    return CasResultCas3FieldValidationErrorAssertions(actual as CasResult.Cas3FieldValidationError)
   }
 
   @Deprecated("Use the chained version isFieldValidationError()")
@@ -143,6 +151,20 @@ class CasResultFieldValidationErrorAssertions<T>(actual: CasResult.FieldValidati
     val validationMessages = actual.validationMessages
 
     assertThat(validationMessages).containsEntry(field, expectedMessage)
+
+    return this
+  }
+}
+
+class CasResultCas3FieldValidationErrorAssertions<T>(actual: CasResult.Cas3FieldValidationError<T>) :
+  AbstractAssert<CasResultCas3FieldValidationErrorAssertions<T>, CasResult.Cas3FieldValidationError<T>>(
+    actual,
+    CasResultCas3FieldValidationErrorAssertions::class.java,
+  ) {
+  fun hasMessage(field: String, expectedMessage: String, expectedValue: String): CasResultCas3FieldValidationErrorAssertions<T> {
+    val validationMessages = actual.validationMessages
+
+    assertThat(validationMessages).containsEntry(field, Cas3ValidationMessage(expectedMessage, expectedValue))
 
     return this
   }

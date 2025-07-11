@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
@@ -179,7 +180,7 @@ class PremisesController(
 
     val updatedPremises = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages.mapValues { ParamDetails(it.value) })
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(
         id = validationResult.conflictingEntityId,
         conflictReason = validationResult.message,
@@ -714,7 +715,7 @@ class PremisesController(
 
     val updatedVoidBedspace = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages.mapValues { ParamDetails(it.value) })
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(
         id = validationResult.conflictingEntityId,
         conflictReason = validationResult.message,
@@ -747,7 +748,7 @@ class PremisesController(
 
     val cancellation = when (cancelVoidBedspaceResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = cancelVoidBedspaceResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelVoidBedspaceResult.validationMessages)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelVoidBedspaceResult.validationMessages.mapValues { ParamDetails(it.value) })
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(
         id = cancelVoidBedspaceResult.conflictingEntityId,
         conflictReason = cancelVoidBedspaceResult.message,
@@ -898,7 +899,7 @@ class PremisesController(
   private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
     is ValidatableActionResult.Success -> result.entity
     is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages.mapValues { ParamDetails(it.value) })
     is ValidatableActionResult.ConflictError -> throw ConflictProblem(
       id = result.conflictingEntityId,
       conflictReason = result.message,

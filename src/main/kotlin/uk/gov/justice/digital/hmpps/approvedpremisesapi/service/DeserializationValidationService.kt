@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -19,18 +20,18 @@ import kotlin.reflect.jvm.jvmErasure
 
 @Service
 class DeserializationValidationService {
-  fun validateArray(path: String = "$", targetType: KClass<*>, jsonArray: ArrayNode, elementsNullable: Boolean = true): Map<String, String> {
-    val result = mutableMapOf<String, String>()
+  fun validateArray(path: String = "$", targetType: KClass<*>, jsonArray: ArrayNode, elementsNullable: Boolean = true): Map<String, ParamDetails> {
+    val result = mutableMapOf<String, ParamDetails>()
 
     if (getExpectedJsonPrimitiveType(targetType.java) != null) {
       jsonArray.forEachIndexed { index, jsonNode ->
         val expectedJsonPrimitiveType = getExpectedJsonPrimitiveType(targetType.java)
         if (jsonNode.nodeType != expectedJsonPrimitiveType) {
-          result["$path[$index]"] = "expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}"
+          result["$path[$index]"] = ParamDetails("expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}")
         } else {
           val expectedSpecialHandlingJsonPrimitiveType = getExpectedSpecialHandlingJsonPrimitiveTypeChecker(targetType.java, jsonNode)
           if (expectedSpecialHandlingJsonPrimitiveType?.isValid() == false) {
-            result["$path[$index]"] = "invalid"
+            result["$path[$index]"] = ParamDetails("invalid")
           }
         }
       }
@@ -41,7 +42,7 @@ class DeserializationValidationService {
     jsonArray.forEachIndexed { index, jsonNode ->
       if (nullOrNullNode(jsonNode)) {
         if (!elementsNullable) {
-          result["$path[$index]"] = "expectedObject"
+          result["$path[$index]"] = ParamDetails("expectedObject")
         }
         return@forEachIndexed
       }
@@ -50,8 +51,8 @@ class DeserializationValidationService {
     return result
   }
 
-  fun validateObject(path: String = "$", targetType: KClass<*>, jsonObject: ObjectNode): Map<String, String> {
-    val result = mutableMapOf<String, String>()
+  fun validateObject(path: String = "$", targetType: KClass<*>, jsonObject: ObjectNode): Map<String, ParamDetails> {
+    val result = mutableMapOf<String, ParamDetails>()
 
     targetType.declaredMemberProperties.forEach {
       val jsonNode = jsonObject.get(it.name)
@@ -61,14 +62,14 @@ class DeserializationValidationService {
       }
 
       if (!it.returnType.isMarkedNullable && nullOrNullNode(jsonNode)) {
-        result["$path.${it.name}"] = "empty"
+        result["$path.${it.name}"] = ParamDetails("empty")
         return@forEach
       }
 
       if (!nullOrNullNode(jsonNode)) {
         if (isArrayType(it.returnType.jvmErasure.java)) {
           if (jsonObject.get(it.name) !is ArrayNode) {
-            result["$path.${it.name}"] = "expectedArray"
+            result["$path.${it.name}"] = ParamDetails("expectedArray")
             return@forEach
           }
 
@@ -79,14 +80,14 @@ class DeserializationValidationService {
 
         if ((it.returnType.jvmErasure.java as Class<*>).isEnum) {
           if (jsonObject.get(it.name) !is TextNode) {
-            result["$path.${it.name}"] = "expectedString"
+            result["$path.${it.name}"] = ParamDetails("expectedString")
           }
           return@forEach
         }
 
         if (getExpectedJsonPrimitiveType(it.returnType.jvmErasure.java) == null) {
           if (jsonObject.get(it.name) !is ObjectNode) {
-            result["$path.${it.name}"] = "expectedObject"
+            result["$path.${it.name}"] = ParamDetails("expectedObject")
             return@forEach
           }
 
@@ -98,11 +99,11 @@ class DeserializationValidationService {
 
         val expectedJsonPrimitiveType = getExpectedJsonPrimitiveType(it.returnType.jvmErasure.java)
         if (jsonNode.nodeType != expectedJsonPrimitiveType) {
-          result["$path.${it.name}"] = "expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}"
+          result["$path.${it.name}"] = ParamDetails("expected${expectedJsonPrimitiveType!!.name.lowercase().replaceFirstChar(Char::uppercase)}")
         } else {
           val expectedSpecialHandlingJsonPrimitiveType = getExpectedSpecialHandlingJsonPrimitiveTypeChecker(it.returnType.jvmErasure.java, jsonNode)
           if (expectedSpecialHandlingJsonPrimitiveType?.isValid() == false) {
-            result["$path.${it.name}"] = "invalid"
+            result["$path.${it.name}"] = ParamDetails("invalid")
           }
         }
       }

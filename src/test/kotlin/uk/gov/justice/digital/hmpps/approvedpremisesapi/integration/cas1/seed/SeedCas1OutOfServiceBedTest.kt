@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServiceBedSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServiceBedSeedCsvRowKey
@@ -95,7 +95,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
       it.level == "error" &&
         it.message == "Error on row 1:" &&
         it.throwable is BadRequestProblem &&
-        it.throwable.invalidParams == ValidationErrors(mutableMapOf("$.bedId" to "doesNotExist"))
+        it.throwable.invalidParams == mutableMapOf("$.bedId" to ParamDetails("doesNotExist"))
     }
   }
 
@@ -178,7 +178,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
         it.level == "error" &&
           it.message == "Error on row 1:" &&
           it.throwable is BadRequestProblem &&
-          it.throwable.invalidParams == ValidationErrors(mutableMapOf("$.reason" to "doesNotExist"))
+          it.throwable.invalidParams == mutableMapOf("$.reason" to ParamDetails("doesNotExist"))
       }
     }
   }

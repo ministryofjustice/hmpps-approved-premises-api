@@ -6,7 +6,7 @@ import org.zalando.problem.Exceptional
 import org.zalando.problem.Status
 
 class BadRequestProblem(
-  @JsonIgnore val invalidParams: Map<String, String>? = null,
+  @JsonIgnore val invalidParams: Map<String, ParamDetails>? = null,
   @JsonIgnore val errorDetail: String? = null,
 ) : AbstractThrowableProblem(null, "Bad Request", Status.BAD_REQUEST, errorDetail ?: "There is a problem with your request") {
   override fun getCause(): Exceptional? = null
@@ -19,14 +19,21 @@ class BadRequestProblem(
       invalidParams?.map {
         ParamError(
           propertyName = it.key,
-          errorType = it.value,
+          errorType = it.value.errorType,
+          errorDetail = it.value.errorDetail,
         )
       } ?: emptyList()
       ),
   )
 }
 
+data class ParamDetails(
+  val errorType: String,
+  val errorDetail: String? = null,
+)
+
 data class ParamError(
   val propertyName: String,
   val errorType: String,
+  val errorDetail: String? = null,
 )
