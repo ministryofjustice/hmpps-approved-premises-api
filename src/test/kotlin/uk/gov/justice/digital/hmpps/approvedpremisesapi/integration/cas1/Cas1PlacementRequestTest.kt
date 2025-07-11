@@ -1194,10 +1194,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       apArea: ApAreaEntity? = null,
       cruManagementArea: Cas1CruManagementAreaEntity? = null,
     ): PlacementRequestEntity {
-      val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
       val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(offenderDetails.otherIds.crn)
         withCreatedByUser(user)
@@ -1223,7 +1219,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       }
 
       val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-        withAssessmentSchema(assessmentSchema)
         withApplication(application)
         withSubmittedAt(OffsetDateTime.now())
         withAllocatedToUser(user)

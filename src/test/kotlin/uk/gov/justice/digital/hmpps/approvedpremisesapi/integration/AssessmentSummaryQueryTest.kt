@@ -41,7 +41,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
                   withArrivalDate(OffsetDateTime.now().minusDays(1))
                 }
                 withAllocatedToUser(user2)
-                withAssessmentSchema(apAssessment.schemaVersion)
                 withApplication(application)
                 withDecision(AssessmentDecision.ACCEPTED)
               }
@@ -102,7 +101,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
                   withProbationRegion(user2.probationRegion)
                 }
                 withAllocatedToUser(user2)
-                withAssessmentSchema(taAssessment.schemaVersion)
                 withApplication(application)
                 withDecision(AssessmentDecision.ACCEPTED)
               }
@@ -145,7 +143,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
                   withProbationRegion(user2.probationRegion)
                 }
                 withAllocatedToUser(user2)
-                withAssessmentSchema(taAssessment.schemaVersion)
                 withApplication(application)
                 withDecision(AssessmentDecision.ACCEPTED)
               }
@@ -187,7 +184,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
                   withProbationRegion(user2.probationRegion)
                 }
                 withAllocatedToUser(user2)
-                withAssessmentSchema(taAssessment.schemaVersion)
                 withApplication(application)
                 withDecision(AssessmentDecision.ACCEPTED)
               }

@@ -6,7 +6,6 @@ import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
@@ -217,10 +216,6 @@ abstract class AssessmentEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "schema_version")
-  var schemaVersion: JsonSchemaEntity,
-
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   var allocatedToUser: UserEntity?,
@@ -240,9 +235,6 @@ abstract class AssessmentEntity(
 
   @OneToMany(mappedBy = "assessment")
   var referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
-
-  @Transient
-  var schemaUpToDate: Boolean,
 
   var isWithdrawn: Boolean,
 
@@ -282,7 +274,6 @@ class ApprovedPremisesAssessmentEntity(
   application: ApplicationEntity,
   data: String?,
   document: String?,
-  schemaVersion: JsonSchemaEntity,
   allocatedToUser: UserEntity?,
   allocatedAt: OffsetDateTime?,
   reallocatedAt: OffsetDateTime?,
@@ -292,7 +283,6 @@ class ApprovedPremisesAssessmentEntity(
   rejectionRationale: String?,
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
-  schemaUpToDate: Boolean,
   isWithdrawn: Boolean,
   dueAt: OffsetDateTime?,
   var createdFromAppeal: Boolean,
@@ -304,7 +294,6 @@ class ApprovedPremisesAssessmentEntity(
   application,
   data,
   document,
-  schemaVersion,
   allocatedToUser,
   allocatedAt,
   reallocatedAt,
@@ -314,7 +303,6 @@ class ApprovedPremisesAssessmentEntity(
   rejectionRationale,
   clarificationNotes,
   referralHistoryNotes,
-  schemaUpToDate,
   isWithdrawn,
   dueAt,
 ) {
@@ -325,12 +313,12 @@ class ApprovedPremisesAssessmentEntity(
 @DiscriminatorValue("temporary-accommodation")
 @Table(name = "temporary_accommodation_assessments")
 @PrimaryKeyJoinColumn(name = "assessment_id")
+@SuppressWarnings("LongParameterList")
 class TemporaryAccommodationAssessmentEntity(
   id: UUID,
   application: ApplicationEntity,
   data: String?,
   document: String?,
-  schemaVersion: JsonSchemaEntity,
   allocatedToUser: UserEntity?,
   allocatedAt: OffsetDateTime?,
   reallocatedAt: OffsetDateTime?,
@@ -340,7 +328,6 @@ class TemporaryAccommodationAssessmentEntity(
   rejectionRationale: String?,
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
-  schemaUpToDate: Boolean,
   var completedAt: OffsetDateTime?,
   @Type(JsonType::class)
   var summaryData: String,
@@ -357,7 +344,6 @@ class TemporaryAccommodationAssessmentEntity(
   application,
   data,
   document,
-  schemaVersion,
   allocatedToUser,
   allocatedAt,
   reallocatedAt,
@@ -367,7 +353,6 @@ class TemporaryAccommodationAssessmentEntity(
   rejectionRationale,
   clarificationNotes,
   referralHistoryNotes,
-  schemaUpToDate,
   isWithdrawn,
   dueAt,
 ) {

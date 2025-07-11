@@ -145,8 +145,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             givenAnOffender { offenderDetails, _ ->
               temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-              val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
-
               val applicationInProgress =
                 createApplicationEntity(referrerUser, offenderDetails, probationRegion, null)
 
@@ -170,7 +168,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                 withApplication(applicationRejected)
                 withSubmittedAt(OffsetDateTime.now().minusDays(10))
                 withDecision(AssessmentDecision.REJECTED)
-                withAssessmentSchema(assessmentSchema)
               }
 
               val anotherUsersApplication =

@@ -55,12 +55,7 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ): PlacementRequestEntity {
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-      withAssessmentSchema(assessmentSchema)
       withApplication(application)
       withSubmittedAt(OffsetDateTime.now())
       withAllocatedToUser(user)

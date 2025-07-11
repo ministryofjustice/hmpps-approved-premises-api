@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
@@ -190,12 +189,6 @@ class Cas1AssessmentDomainEventServiceTest {
 
       val assessmentId = UUID.randomUUID()
 
-      val assessmentSchema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
         .withApplication(
@@ -212,7 +205,6 @@ class Cas1AssessmentDomainEventServiceTest {
             .produce(),
         )
         .withAllocatedToUser(user)
-        .withAssessmentSchema(assessmentSchema)
         .withData("{\"test\": \"data\"}")
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
@@ -309,13 +301,6 @@ class Cas1AssessmentDomainEventServiceTest {
         .withId(assessmentId)
         .withApplication(application)
         .withAllocatedToUser(user)
-        .withAssessmentSchema(
-          ApprovedPremisesAssessmentJsonSchemaEntity(
-            id = UUID.randomUUID(),
-            addedAt = OffsetDateTime.now(),
-            schema = "{}",
-          ),
-        )
         .withData("{\"test\": \"data\"}")
         .withDecision(AssessmentDecision.REJECTED)
         .withRejectionRationale("reasoning")
@@ -464,12 +449,6 @@ class Cas1AssessmentDomainEventServiceTest {
       .withDefaultProbationRegion()
       .produce()
 
-    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-      id = UUID.randomUUID(),
-      addedAt = OffsetDateTime.now(),
-      schema = "{}",
-    )
-
     val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(
         ApprovedPremisesApplicationEntityFactory()
@@ -477,7 +456,6 @@ class Cas1AssessmentDomainEventServiceTest {
           .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
           .produce(),
       )
-      .withAssessmentSchema(schema)
       .withData("{\"test\": \"data\"}")
       .withAllocatedToUser(allocatedUser)
       .withReallocatedAt(null)

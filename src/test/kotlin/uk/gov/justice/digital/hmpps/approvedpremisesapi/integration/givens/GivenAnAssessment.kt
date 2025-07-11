@@ -40,11 +40,6 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   arrivalDate: OffsetDateTime? = null,
   apType: ApprovedPremisesType? = null,
 ): Pair<ApprovedPremisesAssessmentEntity, ApprovedPremisesApplicationEntity> {
-  val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-    withAddedAt(OffsetDateTime.now())
-  }
-
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
     withCreatedByUser(createdByUser)
@@ -80,7 +75,6 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
       withAllocatedToUser(allocatedToUser)
     }
     withApplication(application)
-    withAssessmentSchema(assessmentSchema)
     withData(data)
     withDecision(decision)
     withSubmittedAt(submittedAt)
@@ -94,8 +88,6 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
     withIsWithdrawn(isWithdrawn)
     withDueAt(dueAt)
   }
-
-  assessment.schemaUpToDate = true
 
   return Pair(assessment, application)
 }
@@ -140,11 +132,6 @@ fun IntegrationTestBase.givenAnAssessmentForTemporaryAccommodation(
   createdAt: OffsetDateTime? = null,
   block: ((assessment: TemporaryAccommodationAssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null,
 ) {
-  val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-    withAddedAt(OffsetDateTime.now())
-  }
-
   val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
     withCreatedByUser(createdByUser)
@@ -156,7 +143,6 @@ fun IntegrationTestBase.givenAnAssessmentForTemporaryAccommodation(
       withAllocatedToUser(allocatedToUser)
     }
     withApplication(application)
-    withAssessmentSchema(assessmentSchema)
     withData(data)
     withReleaseDate(null)
     withAccommodationRequiredFromDate(null)
@@ -167,8 +153,6 @@ fun IntegrationTestBase.givenAnAssessmentForTemporaryAccommodation(
       withReallocatedAt(OffsetDateTime.now())
     }
   }
-
-  assessment.schemaUpToDate = true
 
   block?.invoke(assessment, application)
 }

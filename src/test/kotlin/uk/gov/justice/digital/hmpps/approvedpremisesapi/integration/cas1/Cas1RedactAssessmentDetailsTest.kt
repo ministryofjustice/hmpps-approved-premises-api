@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedCsvRow
-import java.time.OffsetDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
@@ -72,11 +71,6 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
     val (user) = givenAUser()
     val (offenderDetails) = givenAnOffender()
 
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
@@ -85,7 +79,6 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
     return approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withAllocatedToUser(user)
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withData(data)
       withDocument(data)
     }

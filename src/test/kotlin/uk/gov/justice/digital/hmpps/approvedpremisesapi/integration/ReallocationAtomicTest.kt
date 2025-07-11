@@ -19,7 +19,6 @@ class ReallocationAtomicTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
       givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { otherUser, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { assigneeUser, _ ->
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(otherUser)
@@ -28,7 +27,6 @@ class ReallocationAtomicTest : IntegrationTestBase() {
           val existingAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withAllocatedToUser(otherUser)
-            withAssessmentSchema(assessmentSchema)
           }
 
           every { realAssessmentRepository.save(match { it.id != existingAssessment.id }) } throws RuntimeException("I am a database error")

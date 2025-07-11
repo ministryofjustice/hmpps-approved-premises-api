@@ -17,10 +17,6 @@ class Cas3ReferralRejectionSeedJobTest : SeedTestBase() {
   fun `Reject an assessment update the assessment status to Rejected`() {
     val user = givenAUser().first
 
-    val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
       withProbationRegion(user.probationRegion)
       withCreatedByUser(user)
@@ -30,7 +26,6 @@ class Cas3ReferralRejectionSeedJobTest : SeedTestBase() {
     val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
       withAllocatedToUser(user)
-      withAssessmentSchema(assessmentSchema)
     }
 
     val rejectedReason = "Another reason (please add)"
