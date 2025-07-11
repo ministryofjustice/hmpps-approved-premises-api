@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -595,8 +596,8 @@ class Cas3PremisesService(
     val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
     if (bed == null) {
       "$.bedId" hasValidationError "doesNotExist"
-    } else if (bed.endDate != null && startDate >= bed.endDate) {
-      "$.startDate" hasValidationError "voidStartDateAfterBedspaceEndDate"
+    } else {
+      validateVoidAndBedDates(startDate, endDate, bed)
     }
 
     val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
@@ -643,6 +644,14 @@ class Cas3PremisesService(
       validated {
         if (endDate.isBefore(startDate)) {
           "$.endDate" hasValidationError "beforeStartDate"
+        }
+
+        val bed = voidBedspace.bed
+
+        if (bed == null) {
+          "$.bed" hasValidationError "doesNotExist"
+        } else {
+          validateVoidAndBedDates(startDate, endDate, bed)
         }
 
         val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
@@ -727,6 +736,22 @@ class Cas3PremisesService(
     }
 
     return probationDeliveryUnit
+  }
+
+  private fun ValidatedScope<Cas3VoidBedspaceEntity>.validateVoidAndBedDates(
+    voidStartDate: LocalDate,
+    voidEndDate: LocalDate,
+    bed: BedEntity,
+  ) {
+    if (bed.endDate != null && voidStartDate.isAfter(bed.endDate)) {
+      "$.startDate" hasValidationError "voidStartDateAfterBedspaceEndDate"
+    }
+    if (bed.startDate != null && voidStartDate.isBefore(bed.startDate)) {
+      "$.startDate" hasValidationError "voidStartDateBeforeBedspaceStartDate"
+    }
+    if (bed.endDate != null && voidEndDate.isAfter(bed.endDate)) {
+      "$.endDate" hasValidationError "voidEndDateAfterBedspaceEndDate"
+    }
   }
 
   private fun getAndValidateCharacteristics(
