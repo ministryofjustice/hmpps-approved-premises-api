@@ -115,8 +115,12 @@ class Cas1PremisesService(
     premisesIds: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
-    excludeSpaceBookingId: UUID?,
+    excludeSpaceBookingId: UUID? = null,
   ): CasResult<PremisesCapacities> {
+    if (premisesIds.isEmpty()) {
+      return CasResult.Success(PremisesCapacities(startDate, endDate, emptyList()))
+    }
+
     val premises = premisesRepository.findAllById(premisesIds)
 
     if (premises.size != premisesIds.size) {

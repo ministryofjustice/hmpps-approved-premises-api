@@ -35,7 +35,7 @@ class Cas1SpaceSearchController(
           ApprovedPremisesGender.MAN
         },
         cas1SpaceSearchParameters.targetPostcodeDistrict,
-        cas1SpaceSearchParameters.spaceCharacteristics ?: emptyList(),
+        cas1SpaceSearchParameters.spaceCharacteristics?.toSet() ?: emptySet(),
       ),
     )
 

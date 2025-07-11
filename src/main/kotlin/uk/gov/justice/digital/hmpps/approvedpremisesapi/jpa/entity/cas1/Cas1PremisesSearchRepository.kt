@@ -20,7 +20,7 @@ FROM
   SELECT
     p.id AS premises_id,
     CASE 
-        WHEN :outcode IS NOT NULL THEN 
+        WHEN :outcode != 'ANY' THEN 
             ST_Distance(
               (SELECT point FROM postcode_districts pd WHERE pd.outcode = :outcode)::geography,
               ap.point::geography
@@ -41,8 +41,8 @@ FROM
     p.postcode AS postcode,
     aa.id AS ap_area_id,
     aa.name AS ap_area_name,
-    ARRAY_AGG (DISTINCT premises_chars_resolved.property_name) as premises_characteristics,
-    ARRAY_AGG (DISTINCT room_chars_resolved.property_name) as room_characteristics
+    ARRAY_REMOVE(ARRAY_AGG (DISTINCT premises_chars_resolved.property_name), null) as premises_characteristics,
+    ARRAY_REMOVE(ARRAY_AGG (DISTINCT room_chars_resolved.property_name), null) as room_characteristics
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
@@ -55,7 +55,7 @@ FROM
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
-    (ap.gender IS NULL OR (ap.gender = :gender))
+    (:gender = 'ANY' OR (ap.gender = :gender))
   GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
 ) AS result
 WHERE
@@ -91,8 +91,8 @@ class Cas1SpaceSearchRepository(
     roomCharacteristics: List<UUID>,
   ): List<CandidatePremises> {
     val parameters = mutableMapOf(
-      "outcode" to targetPostcodeDistrict,
-      "gender" to gender?.name,
+      "outcode" to (targetPostcodeDistrict ?: "ANY"),
+      "gender" to (gender?.name ?: "ANY"),
       "premisesCharacteristicsCount" to premisesCharacteristics.size,
       "premisesCharacteristics" to premisesCharacteristics.ifEmpty { null },
       "roomCharacteristicsCount" to roomCharacteristics.size,
@@ -107,7 +107,7 @@ class Cas1SpaceSearchRepository(
 
       CandidatePremises(
         rs.getUUID("premises_id"),
-        rs.getFloat("distance_in_miles"),
+        if (targetPostcodeDistrict == null) null else rs.getFloat("distance_in_miles"),
         apType,
         rs.getString("name"),
         rs.getString("full_address"),

@@ -33,6 +33,8 @@ enum class Cas1SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
   hasWideAccessToCommunalAreas("hasWideAccessToCommunalAreas"),
   hasWideDoor("hasWideDoor"),
   hasWideStepFreeAccess("hasWideStepFreeAccess"),
+
+  @Deprecated("No longer used")
   isArsonDesignated("isArsonDesignated"),
   isArsonSuitable("isArsonSuitable"),
   isCatered("isCatered"),
@@ -53,12 +55,14 @@ enum class Cas1SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
   isTopFloorVulnerable("isTopFloorVulnerable"),
   isWheelchairAccessible("isWheelchairAccessible"),
   isWheelchairDesignated("isWheelchairDesignated"),
+
+  @Deprecated("No longer used")
   arsonOffences("arsonOffences"),
   ;
 
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1SpaceCharacteristic = values().first { it -> it.value == value }
+    fun forValue(value: String): Cas1SpaceCharacteristic = values().first { it -> it.value == value }
   }
 }

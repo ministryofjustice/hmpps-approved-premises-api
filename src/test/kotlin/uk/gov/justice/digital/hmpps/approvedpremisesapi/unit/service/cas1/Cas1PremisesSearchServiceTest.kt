@@ -108,7 +108,7 @@ class Cas1PremisesSearchServiceTest {
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
         gender = ApprovedPremisesGender.MAN,
         targetPostcodeDistrict = "TB1",
-        spaceCharacteristics = Cas1SpaceCharacteristic.entries,
+        spaceCharacteristics = Cas1SpaceCharacteristic.entries.toSet(),
       ),
     )
 
@@ -206,7 +206,7 @@ class Cas1PremisesSearchServiceTest {
     service.findPremises(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
         gender = gender,
-        spaceCharacteristics = Cas1SpaceCharacteristic.entries,
+        spaceCharacteristics = Cas1SpaceCharacteristic.entries.toSet(),
         targetPostcodeDistrict = "TB1",
       ),
     )
@@ -295,7 +295,7 @@ class Cas1PremisesSearchServiceTest {
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
         gender = ApprovedPremisesGender.MAN,
         targetPostcodeDistrict = "TB1",
-        spaceCharacteristics = spaceCharacteristics,
+        spaceCharacteristics = spaceCharacteristics.toSet(),
       ),
     )
 
