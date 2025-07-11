@@ -84,9 +84,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val (offenderDetails) = givenAnOffender()
     val (user, jwt) = givenAUser(
       roles = listOf(
-        UserRole.CAS1_ASSESSOR,
-        UserRole.CAS1_CRU_MEMBER,
-        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        UserRole.CAS1_JANITOR,
       ),
     )
 
@@ -138,7 +136,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     approveAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
-    createBooking()
+    createLegacyBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
   }
 
@@ -158,7 +156,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     approveAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
-    createBooking()
+    createLegacyBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
   }
 
@@ -178,7 +176,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     approveAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
 
-    createBooking()
+    createLegacyBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
   }
 
@@ -232,7 +230,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     submitApplication(false)
     allocateAndUpdateAssessment()
     approveAssessment()
-    createBooking()
+    createLegacyBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
     cancelBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
@@ -244,7 +242,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     submitApplication(false)
     allocateAndUpdateAssessment()
     approveAssessment()
-    createBooking()
+    createLegacyBooking()
     createAnotherBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
     cancelBooking()
@@ -368,7 +366,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .isOk
   }
 
-  private fun createBooking() {
+  private fun createLegacyBooking() {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val placementRequest = application.getLatestPlacementRequest()!!
 
