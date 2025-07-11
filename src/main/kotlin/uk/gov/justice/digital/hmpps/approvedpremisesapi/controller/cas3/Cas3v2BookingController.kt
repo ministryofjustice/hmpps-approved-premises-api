@@ -1,29 +1,23 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
-@RestController
-@RequestMapping(
-  "\${api.base-path:}/cas3/v2",
-  headers = ["X-Service-Name=temporary-accommodation"],
-  produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
-)
+@Cas3Controller
+@RequestMapping("/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
 class Cas3v2BookingController(
   private val bookingService: Cas3v2BookingService,
   private val bookingTransformer: Cas3BookingTransformer,
 ) {
 
-  @GetMapping(value = ["/bookings/{bookingId}"])
+  @GetMapping("/bookings/{bookingId}")
   fun bookingsBookingIdGet(@PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> {
     val bookingAndPersonsResult = bookingService.getBooking(bookingId, premisesId = null)
     val bookingAndPersons = extractEntityFromCasResult(bookingAndPersonsResult)
