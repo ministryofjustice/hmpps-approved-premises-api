@@ -2,9 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 
 /**
  *

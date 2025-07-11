@@ -2,11 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventAssociatedUrl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TriggerSourceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 
 /**
  *

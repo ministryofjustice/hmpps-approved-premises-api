@@ -2,10 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 
 /**
  *
