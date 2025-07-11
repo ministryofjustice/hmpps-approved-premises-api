@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
@@ -206,6 +207,25 @@ class Cas3PremisesController(
     )
 
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(updatedBedspace))
+  }
+
+  @PostMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/archive")
+  fun archiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @RequestBody body: Cas3ArchiveBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val archivedBedspace = extractEntityFromCasResult(
+      cas3PremisesService.archiveBedspace(bedspaceId, body.endDate),
+    )
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(archivedBedspace))
   }
 
   @GetMapping("/premises/summary")

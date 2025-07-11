@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -18,7 +19,7 @@ fun <EntityType> extractEntityFromAuthorisableActionResult(result: AuthorisableA
 @Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableActionResult<EntityType>) = when (result) {
   is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-  is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+  is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value, errorDetail = null) })
   is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   is ValidatableActionResult.Success -> result.entity
 }
@@ -48,8 +49,13 @@ fun <EntityType> extractEntityFromCasResult(result: CasResult<EntityType>) = whe
   is CasResult.NotFound -> throw NotFoundProblem(result.id, result.entityType)
   is CasResult.Unauthorised -> throw ForbiddenProblem(result.message)
   is CasResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-  is CasResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+  is CasResult.FieldValidationError -> throw BadRequestProblem(
+    invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value, errorDetail = null) },
+  )
   is CasResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
+  is CasResult.Cas3FieldValidationError -> throw BadRequestProblem(
+    invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.key, errorDetail = it.value.value) },
+  )
 }
 
 fun extractMessageFromCasResult(result: CasResult<*>): String? = when (result) {
@@ -59,4 +65,5 @@ fun extractMessageFromCasResult(result: CasResult<*>): String? = when (result) {
   is CasResult.ConflictError -> result.message
   is CasResult.NotFound -> "${result.entityType} ${result.id} not found"
   is CasResult.Unauthorised -> "Unauthorised"
+  is CasResult.Cas3FieldValidationError -> result.validationMessages.toString()
 }

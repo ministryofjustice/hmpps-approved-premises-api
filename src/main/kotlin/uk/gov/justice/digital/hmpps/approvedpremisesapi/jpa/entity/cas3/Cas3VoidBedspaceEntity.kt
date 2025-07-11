@@ -50,6 +50,17 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
   )
   fun findByBedspaceIdAndOverlappingDate(bedspaceId: UUID, startDate: LocalDate, endDate: LocalDate): List<Cas3VoidBedspaceEntity>
 
+  @Query(
+    """
+    SELECT vb 
+    FROM Cas3VoidBedspaceEntity vb
+    WHERE vb.bedspace.id = :bedspaceId
+    AND vb.endDate > :bedspaceEndDate 
+    AND vb.cancellationDate is NULL
+  """,
+  )
+  fun findOverlappingBedspaceEndDate(bedspaceId: UUID, bedspaceEndDate: LocalDate): List<Cas3VoidBedspaceEntity>
+
   @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb LEFT JOIN lb.cancellation c WHERE lb.startDate <= :endDate AND lb.endDate >= :startDate AND lb.bed = :bed AND c is NULL")
   fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<Cas3VoidBedspaceEntity>
 

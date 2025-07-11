@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -277,9 +278,9 @@ class Cas1SpaceBookingController(
       )
     } else {
       val departureDate = cas1NewDeparture.departureDate
-        ?: throw BadRequestProblem(invalidParams = mapOf("departureDate" to "is required"))
+        ?: throw BadRequestProblem(invalidParams = mapOf("departureDate" to ParamDetails("is required")))
       val departureTime = cas1NewDeparture.departureTime
-        ?: throw BadRequestProblem(invalidParams = mapOf("departureTime" to "is required"))
+        ?: throw BadRequestProblem(invalidParams = mapOf("departureTime" to ParamDetails("is required")))
       Pair(
         departureDate,
         LocalTime.parse(departureTime),
@@ -449,12 +450,12 @@ class Cas1SpaceBookingController(
 
   @SuppressWarnings("ThrowsCount")
   private fun getArrivalDateAndTime(arrivalDate: LocalDate?, arrivalTime: String?): Pair<LocalDate, LocalTime> {
-    if (arrivalDate == null) throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to "is required"))
-    if (arrivalTime == null) throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to "is required"))
+    if (arrivalDate == null) throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to ParamDetails("is required")))
+    if (arrivalTime == null) throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to ParamDetails("is required")))
 
-    if (arrivalDate > LocalDate.now()) throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to "must be in the past"))
+    if (arrivalDate > LocalDate.now()) throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to ParamDetails("must be in the past")))
     if (LocalDateTime.of(arrivalDate, LocalTime.parse(arrivalTime)) > LocalDateTime.now()) {
-      throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to "must be in the past"))
+      throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to ParamDetails("must be in the past")))
     }
     return Pair(arrivalDate, LocalTime.parse(arrivalTime))
   }
