@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: createdAt,dueAt,person,allocatedTo,completedAt,taskType,decision,expectedArrivalDate,apType
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TaskSortField(@get:JsonValue val value: kotlin.String) {
 
   createdAt("createdAt"),

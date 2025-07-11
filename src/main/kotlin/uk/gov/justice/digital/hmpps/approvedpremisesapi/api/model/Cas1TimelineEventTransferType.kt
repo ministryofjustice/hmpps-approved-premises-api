@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: EMERGENCY,PLANNED
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1TimelineEventTransferType(@get:JsonValue val value: kotlin.String) {
 
   EMERGENCY("emergency"),

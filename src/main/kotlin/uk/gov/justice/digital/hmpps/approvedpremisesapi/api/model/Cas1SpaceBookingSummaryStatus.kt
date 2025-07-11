@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: arrivingWithin6Weeks,arrivingWithin2Weeks,arrivingToday,overdueArrival,arrived,notArrived,departingWithin2Weeks,departingToday,overdueDeparture,departed
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1SpaceBookingSummaryStatus(@get:JsonValue val value: kotlin.String) {
 
   arrivingWithin6Weeks("arrivingWithin6Weeks"),

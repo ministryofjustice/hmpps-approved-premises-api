@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: occupied,available,outOfService
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class BedStatus(@get:JsonValue val value: kotlin.String) {
 
   occupied("occupied"),

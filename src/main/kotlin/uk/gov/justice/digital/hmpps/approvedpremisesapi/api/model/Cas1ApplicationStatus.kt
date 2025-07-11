@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: started,rejected,awaitingAssesment,unallocatedAssesment,assesmentInProgress,awaitingPlacement,placementAllocated,inapplicable,withdrawn,requestedFurtherInformation,pendingPlacementRequest,expired
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1ApplicationStatus(@get:JsonValue val value: kotlin.String) {
 
   started("started"),

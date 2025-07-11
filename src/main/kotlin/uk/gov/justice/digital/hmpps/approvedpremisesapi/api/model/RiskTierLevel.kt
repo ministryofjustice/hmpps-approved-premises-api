@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: d0,d1,d2,d3,c0,c1,c2,c3,b0,b1,b2,b3,a0,a1,a2,a3
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RiskTierLevel(@get:JsonValue val value: kotlin.String) {
 
   d0("D0"),

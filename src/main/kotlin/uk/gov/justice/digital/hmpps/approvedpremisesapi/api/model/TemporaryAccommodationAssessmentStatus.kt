@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: unallocated,inReview,readyToPlace,closed,rejected
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: kotlin.String) {
 
   unallocated("unallocated"),

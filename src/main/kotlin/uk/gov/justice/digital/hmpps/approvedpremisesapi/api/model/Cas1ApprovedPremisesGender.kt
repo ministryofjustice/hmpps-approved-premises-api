@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: man,woman
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1ApprovedPremisesGender(@get:JsonValue val value: kotlin.String) {
 
   man("man"),

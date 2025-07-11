@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: courtBail,prisonBail,homeDetentionCurfew
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApplicationOrigin(@get:JsonValue val value: kotlin.String) {
 
   courtBail("courtBail"),

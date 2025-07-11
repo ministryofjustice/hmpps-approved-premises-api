@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: submittedMinusApplications,applicationMinusStatusMinusUpdates,unsubmittedMinusApplications
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas2v2ReportName(@get:JsonValue val value: String) {
 
   submittedMinusApplications("submitted-applications"),

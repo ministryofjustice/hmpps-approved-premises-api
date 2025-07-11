@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: assessor,futureManager,changeRequestDev,cruMember,cruMemberFindAndBookBeta,cruMemberEnableOutOfServiceBeds,applicant,reportViewer,reportViewerWithPii,excludedFromAssessAllocation,excludedFromMatchAllocation,excludedFromPlacementApplicationAllocation,appealsManager,janitor,userManager
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApprovedPremisesUserRole(@get:JsonValue val value: kotlin.String) {
 
   assessor("assessor"),

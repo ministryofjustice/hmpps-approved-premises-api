@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: completed,incomplete
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class OASysAssessmentState(@get:JsonValue val value: kotlin.String) {
 
   completed("Completed"),

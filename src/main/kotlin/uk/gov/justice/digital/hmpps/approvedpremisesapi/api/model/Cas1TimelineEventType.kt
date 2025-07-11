@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: applicationSubmitted,applicationAssessed,bookingMade,personArrived,personNotArrived,personDeparted,bookingNotMade,bookingCancelled,bookingChanged,bookingKeyworkerAssigned,applicationWithdrawn,applicationExpired,informationRequest,assessmentAppealed,assessmentAllocated,placementChangeRequestCreated,placementChangeRequestRejected,placementApplicationWithdrawn,placementApplicationAllocated,matchRequestWithdrawn,requestForPlacementCreated,requestForPlacementAssessed,applicationTimelineNote
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1TimelineEventType(@get:JsonValue val value: kotlin.String) {
 
   applicationSubmitted("application_submitted"),

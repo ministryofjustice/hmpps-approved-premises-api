@@ -35,7 +35,8 @@ data class Characteristic(
    *
    * Values: approvedMinusPremises,temporaryMinusAccommodation,star
    */
-  enum class ServiceScope(@get:JsonValue val value: kotlin.String) {
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
+enum class ServiceScope(@get:JsonValue val value: kotlin.String) {
 
     approvedMinusPremises("approved-premises"),
     temporaryMinusAccommodation("temporary-accommodation"),
@@ -53,7 +54,8 @@ data class Characteristic(
    *
    * Values: premises,room,star
    */
-  enum class ModelScope(@get:JsonValue val value: kotlin.String) {
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
+enum class ModelScope(@get:JsonValue val value: kotlin.String) {
 
     premises("premises"),
     room("room"),

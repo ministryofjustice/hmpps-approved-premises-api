@@ -28,7 +28,8 @@ data class ProfileResponse(
    *
    * Values: staffRecordNotFound
    */
-  enum class LoadError(@get:JsonValue val value: kotlin.String) {
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
+enum class LoadError(@get:JsonValue val value: kotlin.String) {
 
     staffRecordNotFound("staff_record_not_found"),
     ;

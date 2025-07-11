@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: qCodeStaffMembers,userAccess,staffDetails,teamsManagingCase,ukBankHolidays,inmateDetails,crnGetCaseDetailCache
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class CacheType(@get:JsonValue val value: kotlin.String) {
 
   qCodeStaffMembers("qCodeStaffMembers"),

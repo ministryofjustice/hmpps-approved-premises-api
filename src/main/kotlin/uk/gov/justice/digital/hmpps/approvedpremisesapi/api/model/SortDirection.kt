@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: asc,desc
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class SortDirection(@get:JsonValue val value: kotlin.String) {
 
   asc("asc"),

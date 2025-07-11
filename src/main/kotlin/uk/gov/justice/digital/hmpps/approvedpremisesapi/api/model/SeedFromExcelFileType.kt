@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: CAS1_IMPORT_SITE_SURVEY_ROOMS,CAS1_IMPORT_SITE_SURVEY_PREMISES
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class SeedFromExcelFileType(@get:JsonValue val value: kotlin.String) {
 
   CAS1_IMPORT_SITE_SURVEY_ROOMS("cas1_import_site_survey_rooms"),

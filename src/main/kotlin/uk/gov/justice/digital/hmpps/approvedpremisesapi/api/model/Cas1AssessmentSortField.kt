@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: personName,personCrn,assessmentArrivalDate,assessmentStatus,assessmentCreatedAt,assessmentDueAt,applicationProbationDeliveryUnitName
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1AssessmentSortField(@get:JsonValue val value: kotlin.String) {
 
   personName("name"),

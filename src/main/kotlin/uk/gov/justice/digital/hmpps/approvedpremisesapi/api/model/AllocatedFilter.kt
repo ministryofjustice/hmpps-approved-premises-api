@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: allocated,unallocated
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class AllocatedFilter(@get:JsonValue val value: kotlin.String) {
 
   allocated("allocated"),

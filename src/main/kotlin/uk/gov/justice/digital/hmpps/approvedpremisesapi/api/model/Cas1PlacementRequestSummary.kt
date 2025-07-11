@@ -60,7 +60,8 @@ data class Cas1PlacementRequestSummary(
    *
    * Values: matched,unableToMatch,notMatched
    */
-  enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
+enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
 
     matched("matched"),
     unableToMatch("unableToMatch"),
