@@ -67,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -113,11 +112,6 @@ class AssessmentTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
@@ -126,30 +120,8 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withAllocatedToUser(user)
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
             withDecision(assessmentDecision)
           }
-
-          assessment.schemaUpToDate = true
-
-          val reallocatedAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-            withReallocatedAt(OffsetDateTime.now())
-          }
-
-          reallocatedAssessment.schemaUpToDate = true
-
-          val withdrawnAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-            withDecision(assessmentDecision)
-            withIsWithdrawn(true)
-          }
-
-          withdrawnAssessment.schemaUpToDate = true
 
           val responseStatus = when (assessmentDecision) {
             AssessmentDecision.ACCEPTED -> COMPLETED
@@ -1086,11 +1058,6 @@ class AssessmentTest : IntegrationTestBase() {
       applicationMutator: (ApprovedPremisesApplicationEntityFactory.() -> Unit) = {},
       assessmentMutator: (ApprovedPremisesAssessmentEntityFactory.() -> Unit) = {},
     ): ApprovedPremisesAssessmentEntity {
-      val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-        withAddedAt(OffsetDateTime.now())
-      }
-
       val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(offenderDetails.otherIds.crn)
         withCreatedByUser(user)
@@ -1102,7 +1069,6 @@ class AssessmentTest : IntegrationTestBase() {
       val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
         withAllocatedToUser(user)
         withApplication(application)
-        withAssessmentSchema(assessmentSchema)
         withDecision(null)
         withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
 
@@ -1145,8 +1111,6 @@ class AssessmentTest : IntegrationTestBase() {
         }
       }
 
-      assessment.schemaUpToDate = true
-
       return assessment
     }
 
@@ -1155,18 +1119,12 @@ class AssessmentTest : IntegrationTestBase() {
       offenderDetails: OffenderDetailSummary,
       assessmentStatus: AssessmentStatus,
     ): TemporaryAccommodationAssessmentEntity {
-      val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-        withAddedAt(OffsetDateTime.now())
-      }
-
       val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, user) {
         withArrivalDate(LocalDate.now().randomDateAfter(512))
       }
 
       val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
         withApplication(application)
-        withAssessmentSchema(assessmentSchema)
         withDecision(null)
         withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
         withReleaseDate(null)
@@ -1197,8 +1155,6 @@ class AssessmentTest : IntegrationTestBase() {
         }
       }
 
-      assessment.schemaUpToDate = true
-
       return assessment
     }
 
@@ -1216,11 +1172,6 @@ class AssessmentTest : IntegrationTestBase() {
             val inmateDetails: InmateDetail,
           )
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4) as MutableList<ProbationDeliveryUnitEntity?>
           probationDeliveryUnits.addLast(null)
 
@@ -1233,9 +1184,7 @@ class AssessmentTest : IntegrationTestBase() {
             }
 
             val assessment =
-              produceAndPersistTemporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
-
-            assessment.schemaUpToDate = true
+              produceAndPersistTemporaryAccommodationAssessmentEntity(user, application)
 
             AssessmentParams(assessment, offenderDetails, inmateDetails)
           }
@@ -1386,20 +1335,13 @@ class AssessmentTest : IntegrationTestBase() {
             val inmateDetails: InmateDetail,
           )
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val assessments = offenders.map { (offenderDetails, inmateDetails) ->
             val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, user) {
               withArrivalDate(LocalDate.now().nonRepeatingRandomDateAfter("assessmentArrivalDate", 512))
             }
 
             val assessment =
-              produceAndPersistTemporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
-
-            assessment.schemaUpToDate = true
+              produceAndPersistTemporaryAccommodationAssessmentEntity(user, application)
 
             AssessmentParams(assessment, offenderDetails, inmateDetails)
           }
@@ -1425,11 +1367,6 @@ class AssessmentTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenSomeOffenders { offenderSequence ->
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val (offender, otherOffender) = offenderSequence.take(2).toList()
 
           val application = produceAndPersistTemporaryAccommodationApplication(offender.first.otherIds.crn, user)
@@ -1437,14 +1374,10 @@ class AssessmentTest : IntegrationTestBase() {
           val otherApplication =
             produceAndPersistTemporaryAccommodationApplication(otherOffender.first.otherIds.crn, user)
 
-          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
-
-          assessment.schemaUpToDate = true
+          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application)
 
           val otherAssessment =
-            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
-
-          otherAssessment.schemaUpToDate = true
+            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication)
 
           // when CRN is upper case
           assertResponseForUrl(
@@ -1474,11 +1407,6 @@ class AssessmentTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenSomeOffenders { offenderSequence ->
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val (offender, otherOffender) = offenderSequence.take(2).toList()
 
           val application = produceAndPersistTemporaryAccommodationApplication(offender.first.otherIds.crn, user) {
@@ -1488,14 +1416,10 @@ class AssessmentTest : IntegrationTestBase() {
           val otherApplication =
             produceAndPersistTemporaryAccommodationApplication(otherOffender.first.otherIds.crn, user)
 
-          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
-
-          assessment.schemaUpToDate = true
+          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application)
 
           val otherAssessment =
-            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
-
-          otherAssessment.schemaUpToDate = true
+            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication)
 
           // first name match
           assertResponseForUrl(
@@ -1545,11 +1469,6 @@ class AssessmentTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenSomeOffenders { offenderSequence ->
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val (offender, otherOffender) = offenderSequence.take(2).toList()
 
           val application = produceAndPersistTemporaryAccommodationApplication(offender.first.otherIds.crn, user) {
@@ -1559,14 +1478,10 @@ class AssessmentTest : IntegrationTestBase() {
           val otherApplication =
             produceAndPersistTemporaryAccommodationApplication(otherOffender.first.otherIds.crn, user)
 
-          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
-
-          assessment.schemaUpToDate = true
+          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application)
 
           val otherAssessment =
-            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
-
-          otherAssessment.schemaUpToDate = true
+            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication)
 
           assertResponseForUrl(
             jwt,
@@ -1590,11 +1505,6 @@ class AssessmentTest : IntegrationTestBase() {
           },
         ) { offenderSequence ->
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val (offender, otherOffender) = offenderSequence.take(2).toList()
 
           val application = produceAndPersistTemporaryAccommodationApplication(
@@ -1612,14 +1522,10 @@ class AssessmentTest : IntegrationTestBase() {
               withArrivalDate(LocalDate.now().plusDays(4))
             }
 
-          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application, assessmentSchema)
-
-          assessment.schemaUpToDate = true
+          val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(user, application)
 
           val otherAssessment =
-            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication, assessmentSchema)
-
-          otherAssessment.schemaUpToDate = true
+            produceAndPersistTemporaryAccommodationAssessmentEntity(user, otherApplication)
 
           apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offender.first.asCaseSummary(), otherOffender.first.asCaseSummary()))
 
@@ -1648,11 +1554,6 @@ class AssessmentTest : IntegrationTestBase() {
           },
         ) { offenderDetails, inmateDetails ->
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
@@ -1661,10 +1562,7 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withAllocatedToUser(user)
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
           }
-
-          assessment.schemaUpToDate = true
 
           assertResponseForUrl(
             jwt,
@@ -1773,11 +1671,6 @@ class AssessmentTest : IntegrationTestBase() {
       givenAUser { userEntity, _ ->
         givenAnOffender { offenderDetails, inmateDetails ->
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
@@ -1786,10 +1679,7 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withAllocatedToUser(userEntity)
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
           }
-
-          assessment.schemaUpToDate = true
 
           webTestClient.get()
             .uri("/assessments/${assessment.id}")
@@ -1820,11 +1710,6 @@ class AssessmentTest : IntegrationTestBase() {
         },
       ) { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -1833,10 +1718,7 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-
-        assessment.schemaUpToDate = true
 
         webTestClient.get()
           .uri("/assessments/${assessment.id}")
@@ -1866,11 +1748,6 @@ class AssessmentTest : IntegrationTestBase() {
           userEntity.deliusUsername,
         )
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -1879,10 +1756,7 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-
-        assessment.schemaUpToDate = true
 
         webTestClient.get()
           .uri("/assessments/${assessment.id}")
@@ -1912,11 +1786,6 @@ class AssessmentTest : IntegrationTestBase() {
         },
       ) { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -1925,10 +1794,7 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-
-        assessment.schemaUpToDate = true
 
         webTestClient.get()
           .uri("/assessments/${assessment.id}")
@@ -1954,22 +1820,15 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity) {
           withArrivalDate(LocalDate.now().minusDays(100))
           withPersonReleaseDate(LocalDate.now().minusDays(100))
         }
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema) {
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application) {
             withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
           }
-
-        assessment.schemaUpToDate = true
 
         webTestClient.get()
           .uri("/assessments/${assessment.id}")
@@ -2030,11 +1889,6 @@ class AssessmentTest : IntegrationTestBase() {
         givenAnOffender { offenderDetails, _ ->
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
@@ -2043,12 +1897,9 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withAllocatedToUser(userEntity)
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
           }
 
           val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
-
-          assessment.schemaUpToDate = true
 
           val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
           val desirableCriteria =
@@ -2154,11 +2005,6 @@ class AssessmentTest : IntegrationTestBase() {
       ) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
@@ -2167,7 +2013,6 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withAllocatedToUser(userEntity)
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
           }
 
           val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
@@ -2183,8 +2028,6 @@ class AssessmentTest : IntegrationTestBase() {
             essentialCriteria = essentialCriteria,
             desirableCriteria = desirableCriteria,
           )
-
-          assessment.schemaUpToDate = true
 
           webTestClient.post()
             .uri("/assessments/${assessment.id}/acceptance")
@@ -2255,11 +2098,6 @@ class AssessmentTest : IntegrationTestBase() {
       ) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
@@ -2268,10 +2106,7 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withAllocatedToUser(userEntity)
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
           }
-
-          assessment.schemaUpToDate = true
 
           val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
           val desirableCriteria =
@@ -2324,11 +2159,6 @@ class AssessmentTest : IntegrationTestBase() {
         givenAnOffender { offenderDetails, _ ->
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
@@ -2338,10 +2168,7 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withAllocatedToUser(userEntity)
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
             withDecision(null)
-          }.apply {
-            schemaUpToDate = true
           }
 
           assessmentClarificationNoteEntityFactory.produceAndPersist {
@@ -2426,11 +2253,6 @@ class AssessmentTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -2439,10 +2261,7 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-
-        assessment.schemaUpToDate = true
 
         webTestClient.post()
           .uri("/assessments/${assessment.id}/rejection")
@@ -2498,11 +2317,6 @@ class AssessmentTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, _ ->
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -2511,10 +2325,7 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
           withDecision(null)
-        }.apply {
-          schemaUpToDate = true
         }
 
         assessmentClarificationNoteEntityFactory.produceAndPersist {
@@ -2557,15 +2368,13 @@ class AssessmentTest : IntegrationTestBase() {
         val releaseDateFromApplication = accommodationDateFromApplication.minusDays(1)
         var newReleaseDate = LocalDate.now()
 
-        val assessmentSchema = buildTemporaryAccommodationAssessmentJsonSchemaEntity()
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity) {
           withPersonReleaseDate(releaseDateFromApplication)
           withArrivalDate(accommodationDateFromApplication)
         }
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema)
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
 
         webTestClient.put()
           .uri("/assessments/${assessment.id}")
@@ -2604,15 +2413,13 @@ class AssessmentTest : IntegrationTestBase() {
         val releaseDateFromApplication = accommodationDateFromApplication.minusDays(1)
         var newAccommodationDate = accommodationDateFromApplication.plusDays(1)
 
-        val assessmentSchema = buildTemporaryAccommodationAssessmentJsonSchemaEntity()
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity) {
           withPersonReleaseDate(releaseDateFromApplication)
           withArrivalDate(accommodationDateFromApplication)
         }
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema)
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
 
         webTestClient.put()
           .uri("/assessments/${assessment.id}")
@@ -2651,10 +2458,8 @@ class AssessmentTest : IntegrationTestBase() {
 
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
 
-        val assessmentSchema = buildTemporaryAccommodationAssessmentJsonSchemaEntity()
-
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema) {
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application) {
             withAccommodationRequiredFromDate(originalDate)
             withReleaseDate(originalDate)
           }
@@ -2685,10 +2490,8 @@ class AssessmentTest : IntegrationTestBase() {
           withArrivalDate(accommodationDate)
         }
 
-        val assessmentSchema = buildTemporaryAccommodationAssessmentJsonSchemaEntity()
-
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema) {
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application) {
             withAccommodationRequiredFromDate(null)
             withReleaseDate(null)
           }
@@ -2712,17 +2515,10 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema)
-
-        assessment.schemaUpToDate = true
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
 
         val referralRejectionReasonId = UUID.randomUUID()
 
@@ -2765,11 +2561,6 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
 
         val referralRejectionReason1 = referralRejectionReasonEntityFactory.produceAndPersist {
@@ -2777,12 +2568,10 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema) {
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application) {
             withReferralRejectionReason(referralRejectionReason1)
             withReferralRejectionReasonDetail("Old referral rejection reason detail")
           }
-
-        assessment.schemaUpToDate = true
 
         val referralRejectionReasonId2 = UUID.randomUUID()
 
@@ -2825,17 +2614,10 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema)
-
-        assessment.schemaUpToDate = true
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
 
         val referralRejectionReasonId = UUID.randomUUID()
 
@@ -2875,17 +2657,10 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema)
-
-        assessment.schemaUpToDate = true
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
 
         webTestClient.post()
           .uri("/assessments/${assessment.id}/closure")
@@ -2907,10 +2682,6 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withNomsNumber(offenderDetails.otherIds.nomsNumber)
@@ -2920,7 +2691,6 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
 
         webTestClient.post()
@@ -2960,10 +2730,6 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -2972,7 +2738,6 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
 
         val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
@@ -3004,10 +2769,6 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -3017,7 +2778,6 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
           withIsWithdrawn(true)
         }
 
@@ -3042,11 +2802,6 @@ class AssessmentTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, _ ->
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withCreatedByUser(userEntity)
@@ -3056,10 +2811,7 @@ class AssessmentTest : IntegrationTestBase() {
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withAllocatedToUser(userEntity)
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
           withDecision(null)
-        }.apply {
-          schemaUpToDate = true
         }
 
         assessmentClarificationNoteEntityFactory.produceAndPersist {
@@ -3095,12 +2847,10 @@ class AssessmentTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
 
-        val assessmentSchema = buildTemporaryAccommodationAssessmentJsonSchemaEntity()
-
         val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
 
         val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema)
+          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
 
         webTestClient.post()
           .uri("/assessments/${assessment.id}/referral-history-notes")
@@ -3115,10 +2865,6 @@ class AssessmentTest : IntegrationTestBase() {
           .isOk
       }
     }
-  }
-
-  private fun buildTemporaryAccommodationAssessmentJsonSchemaEntity() = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
   }
 
   fun assessmentSummaryMapper(
@@ -3198,13 +2944,11 @@ class AssessmentTest : IntegrationTestBase() {
   private fun produceAndPersistTemporaryAccommodationAssessmentEntity(
     user: UserEntity,
     application: TemporaryAccommodationApplicationEntity,
-    assessmentSchema: TemporaryAccommodationAssessmentJsonSchemaEntity = buildTemporaryAccommodationAssessmentJsonSchemaEntity(),
     nonDefaultFields: TemporaryAccommodationAssessmentEntityFactory.() -> Unit = {},
   ): TemporaryAccommodationAssessmentEntity {
     val produceAndPersist = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withAllocatedToUser(user)
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withReleaseDate(null)
       withAccommodationRequiredFromDate(null)
       nonDefaultFields()

@@ -1659,14 +1659,9 @@ class ApplicationTest : IntegrationTestBase() {
           submittedAt = OffsetDateTime.now(),
         )
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
           withAllocatedToUser(user)
-          withAssessmentSchema(assessmentSchema)
           withSubmittedAt(OffsetDateTime.now())
         }
 
@@ -1707,14 +1702,9 @@ class ApplicationTest : IntegrationTestBase() {
             submittedAt = OffsetDateTime.now(),
           )
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
           approvedPremisesAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withAllocatedToUser(assessor)
-            withAssessmentSchema(assessmentSchema)
             withSubmittedAt(null)
           }
 

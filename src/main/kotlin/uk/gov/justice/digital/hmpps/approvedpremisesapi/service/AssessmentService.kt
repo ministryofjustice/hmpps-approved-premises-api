@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -28,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHisto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -66,7 +64,6 @@ class AssessmentService(
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
-  private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
@@ -148,25 +145,11 @@ class AssessmentService(
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
-    val latestSchema = when (assessment) {
-      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(
-        ApprovedPremisesAssessmentJsonSchemaEntity::class.java,
-      )
-
-      is TemporaryAccommodationAssessmentEntity -> jsonSchemaService.getNewestSchema(
-        TemporaryAccommodationAssessmentJsonSchemaEntity::class.java,
-      )
-
-      else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
-    }
-
     val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
 
     if (!isAuthorised) {
       return CasResult.Unauthorised("Not authorised to view the assessment")
     }
-
-    assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
 
     val offenderDetails = getOffenderDetails(assessment.application.crn, user.cas1LaoStrategy())
 
@@ -185,14 +168,12 @@ class AssessmentService(
       application = application,
       data = null,
       document = null,
-      schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
       allocatedToUser = null,
       allocatedAt = dateTimeNow,
       reallocatedAt = null,
       createdAt = dateTimeNow,
       submittedAt = null,
       decision = null,
-      schemaUpToDate = true,
       rejectionRationale = null,
       clarificationNotes = mutableListOf(),
       referralHistoryNotes = mutableListOf(),
@@ -233,14 +214,12 @@ class AssessmentService(
         application = application,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java),
         allocatedToUser = null,
         allocatedAt = dateTimeNow,
         reallocatedAt = null,
         createdAt = dateTimeNow,
         submittedAt = null,
         decision = null,
-        schemaUpToDate = true,
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
@@ -281,10 +260,6 @@ class AssessmentService(
 
     if (assessment.isWithdrawn) {
       return CasResult.GeneralValidationError("The application has been withdrawn.")
-    }
-
-    if (!assessment.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (assessment.submittedAt != null) {
@@ -494,10 +469,6 @@ class AssessmentService(
       throw RuntimeException("Only CAS3 is currently supported")
     }
 
-    if (!assessment.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     if (assessment.completedAt != null) {
       log.info("User: ${user.id} attempted to close assessment: $assessmentId. This assessment has already been closed.")
       return CasResult.Success(assessment)
@@ -583,14 +554,12 @@ class AssessmentService(
         application = application,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
         allocatedToUser = assigneeUser,
         allocatedAt = dateTimeNow,
         reallocatedAt = null,
         createdAt = dateTimeNow,
         submittedAt = null,
         decision = null,
-        schemaUpToDate = true,
         rejectionRationale = null,
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
@@ -830,10 +799,6 @@ class AssessmentService(
       }
     }
 
-    if (!assessment.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
     if (assessment.reallocatedAt != null) {
       return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
     }
@@ -847,8 +812,6 @@ class AssessmentService(
     val validationErrors = ValidationErrors()
     if (assessment.data == null) {
       validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessment.data!!)) {
-      validationErrors["$.data"] = "invalid"
     }
     return if (validationErrors.any()) {
       CasResult.FieldValidationError(validationErrors)

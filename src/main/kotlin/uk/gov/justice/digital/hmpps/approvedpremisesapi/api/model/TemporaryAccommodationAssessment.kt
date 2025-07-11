@@ -27,12 +27,6 @@ data class TemporaryAccommodationAssessment(
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("schemaVersion", required = true) override val schemaVersion: java.util.UUID,
-
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("outdatedSchema", required = true) override val outdatedSchema: kotlin.Boolean,
-
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
 
   @Schema(example = "null", required = true, description = "")

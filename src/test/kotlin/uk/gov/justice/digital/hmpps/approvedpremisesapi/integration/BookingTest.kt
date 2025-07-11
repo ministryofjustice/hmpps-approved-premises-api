@@ -611,16 +611,9 @@ class BookingTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-        assessment.schemaUpToDate = true
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -695,16 +688,9 @@ class BookingTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-        assessment.schemaUpToDate = true
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -765,16 +751,9 @@ class BookingTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-        assessment.schemaUpToDate = true
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -835,16 +814,9 @@ class BookingTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-        assessment.schemaUpToDate = true
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -905,16 +877,9 @@ class BookingTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-        assessment.schemaUpToDate = true
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -989,16 +954,9 @@ class BookingTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-        assessment.schemaUpToDate = true
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -1069,14 +1027,8 @@ class BookingTest : IntegrationTestBase() {
           withProbationRegion(userEntity.probationRegion)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -2515,11 +2467,6 @@ class BookingTest : IntegrationTestBase() {
               }
 
               val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-                withAssessmentSchema(
-                  approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
-                )
                 withApplication(application)
                 withSubmittedAt(OffsetDateTime.now())
                 withAllocatedToUser(applicant)
@@ -2842,14 +2789,8 @@ class BookingTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
           withCompletedAt(OffsetDateTime.now())
         }
 
@@ -2918,13 +2859,9 @@ class BookingTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
+          withReallocatedAt(OffsetDateTime.now())
           withCompletedAt(OffsetDateTime.now())
         }
 
@@ -3490,16 +3427,9 @@ class BookingTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(application)
-          withAssessmentSchema(assessmentSchema)
         }
-        assessment.schemaUpToDate = true
 
         val booking = bookingEntityFactory.produceAndPersist {
           withYieldedPremises {

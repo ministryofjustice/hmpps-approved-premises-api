@@ -27,12 +27,6 @@ data class Cas1Assessment(
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("schemaVersion", required = true) val schemaVersion: java.util.UUID,
-
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("outdatedSchema", required = true) val outdatedSchema: kotlin.Boolean,
-
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 
   @Schema(example = "null", required = true, description = "")

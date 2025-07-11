@@ -32,12 +32,6 @@ interface Assessment {
   val id: java.util.UUID
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val schemaVersion: java.util.UUID
-
-  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val outdatedSchema: kotlin.Boolean
-
-  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val createdAt: java.time.Instant
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")

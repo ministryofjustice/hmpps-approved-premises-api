@@ -159,11 +159,6 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
     assessmentAllocatedTo: UserEntity? = null,
     caseManager: Cas1ApplicationUserDetailsEntity? = null,
   ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
     val apArea = givenAnApArea()
 
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -180,12 +175,10 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withAllocatedToUser(assignee)
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withSubmittedAt(if (assessmentSubmitted) OffsetDateTime.now() else null)
       withAllocatedToUser(assessmentAllocatedTo)
     }
 
-    assessment.schemaUpToDate = true
     application.assessments.add(assessment)
 
     return Pair(application, assessment)

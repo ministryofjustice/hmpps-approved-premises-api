@@ -142,8 +142,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           ) { referrerUser, jwt ->
             givenAnOffender { offenderDetails, _ ->
 
-              val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
-
               val applicationInProgress =
                 createApplicationEntity(referrerUser, offenderDetails, probationRegion, null)
 
@@ -167,7 +165,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
                 withApplication(applicationRejected)
                 withSubmittedAt(OffsetDateTime.now().minusDays(10))
                 withDecision(AssessmentDecision.REJECTED)
-                withAssessmentSchema(assessmentSchema)
               }
 
               val anotherUsersApplication =

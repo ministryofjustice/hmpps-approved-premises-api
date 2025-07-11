@@ -39,8 +39,6 @@ class Cas1AssessmentTransformer(
       jpa.application as ApprovedPremisesApplicationEntity,
       personInfo,
     ),
-    schemaVersion = jpa.schemaVersion.id,
-    outdatedSchema = jpa.schemaUpToDate,
     createdAt = jpa.createdAt.toInstant(),
     allocatedAt = jpa.allocatedAt?.toInstant(),
     data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,

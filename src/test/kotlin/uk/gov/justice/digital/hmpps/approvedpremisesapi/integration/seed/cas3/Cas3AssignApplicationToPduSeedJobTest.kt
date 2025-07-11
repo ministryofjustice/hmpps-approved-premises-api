@@ -15,10 +15,6 @@ class Cas3AssignApplicationToPduSeedJobTest : SeedTestBase() {
   fun `When assign application to pdu then application is assigned to the pdu`() {
     val user = givenAUser().first
 
-    val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val pduOne = probationDeliveryUnitFactory.produceAndPersist {
       withName("PduOne")
       withProbationRegion(user.probationRegion)
@@ -38,7 +34,6 @@ class Cas3AssignApplicationToPduSeedJobTest : SeedTestBase() {
 
     val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
     }
 
     seed(
