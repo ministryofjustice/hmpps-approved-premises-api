@@ -29,6 +29,7 @@ data class ApplicationExpired(
   @get:JsonProperty("expiryReason") val expiryReason: ApplicationExpired.ExpiryReason = ExpiryReason.unsubmittedApplicationExpired,
 ) : Cas1DomainEventPayload {
 
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class ExpiryReason(@get:JsonValue val value: kotlin.String) {
 
     assessmentExpired("AssessmentExpired"),

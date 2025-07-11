@@ -54,6 +54,7 @@ data class Cas1CruManagementAreaEntity(
   var assessmentAutoAllocations: MutableMap<AutoAllocationDay, String>,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class AutoAllocationDay {
   MONDAY,
   TUESDAY,

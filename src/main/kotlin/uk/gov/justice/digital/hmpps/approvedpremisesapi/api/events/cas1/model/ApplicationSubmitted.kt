@@ -67,6 +67,7 @@ data class ApplicationSubmitted(
    *
    * Values: male,female
    */
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Gender(@get:JsonValue val value: kotlin.String) {
 
     male("Male"),

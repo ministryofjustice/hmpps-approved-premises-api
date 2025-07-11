@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 * 'Initial' means that the request for placement was created for the arrival date included on the original application.  'Additional' means the request for placement was created after the application had been assessed as suitable. A given application should only have, at most, one request for placement of type 'Initial'.
 * Values: initial,additional
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementApplicationType(@get:JsonValue val value: kotlin.String) {
 
   initial("Initial"),

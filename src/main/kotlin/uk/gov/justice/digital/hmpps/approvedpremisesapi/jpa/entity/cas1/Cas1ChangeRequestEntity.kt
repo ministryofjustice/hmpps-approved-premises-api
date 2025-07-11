@@ -139,11 +139,13 @@ class LockableCas1ChangeRequestEntity(
   val id: UUID,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ChangeRequestDecision {
   APPROVED,
   REJECTED,
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ChangeRequestType {
   PLACEMENT_APPEAL,
   PLACEMENT_EXTENSION,

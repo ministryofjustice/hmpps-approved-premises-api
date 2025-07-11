@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: normal,pipe,esap,rfap,mhapStJosephs,mhapElliottHouse
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApType(@get:JsonValue val value: kotlin.String) {
 
   normal("normal"),

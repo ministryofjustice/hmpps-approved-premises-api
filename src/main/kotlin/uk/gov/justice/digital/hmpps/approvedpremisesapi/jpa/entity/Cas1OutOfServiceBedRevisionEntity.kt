@@ -51,6 +51,7 @@ data class Cas1OutOfServiceBedRevisionEntity(
   override fun toString() = "Cas1OutOfServiceBedRevisionEntity: $id"
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1OutOfServiceBedRevisionType {
   INITIAL,
   UPDATE,

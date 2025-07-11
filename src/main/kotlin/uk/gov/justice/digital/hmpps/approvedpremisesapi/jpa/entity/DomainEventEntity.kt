@@ -187,8 +187,10 @@ data class DomainEventEntity(
   val schemaVersion: Int?,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TriggerSourceType { USER, SYSTEM }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class MetaDataName {
   CAS1_APP_REASON_FOR_SHORT_NOTICE,
   CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER,
@@ -199,6 +201,7 @@ enum class MetaDataName {
   CAS1_SPACE_BOOKING_ID,
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class DomainEventCas {
   CAS1,
   CAS2,

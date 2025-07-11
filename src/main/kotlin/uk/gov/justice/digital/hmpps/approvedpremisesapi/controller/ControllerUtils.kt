@@ -27,6 +27,7 @@ fun generateStreamingResponse(
   HttpStatus.OK,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ContentType(val mimeType: String, val extension: String) {
   CSV("text/csv", "csv"),
   XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),

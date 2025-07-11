@@ -132,6 +132,7 @@ sealed interface ActionOutcome {
   data class Unavailable(override val action: SpaceBookingAction, val reason: String) : ActionOutcome
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class SpaceBookingAction(
   val apiType: Cas1SpaceBookingAction,
 ) {

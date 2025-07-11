@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: upcoming,current,historic
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1SpaceBookingResidency(@get:JsonValue val value: kotlin.String) {
 
   upcoming("upcoming"),

@@ -276,6 +276,7 @@ class ApprovedPremisesEntity(
   }
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApprovedPremisesGender {
   MAN,
   WOMAN,

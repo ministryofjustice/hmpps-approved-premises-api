@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: notStarted,inProgress,complete,infoRequested
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TaskStatus(@get:JsonValue val value: kotlin.String) {
 
   notStarted("not_started"),

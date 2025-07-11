@@ -379,6 +379,7 @@ data class TestRule(
   }
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RuleType {
   ASSESSMENT,
   PLACEMENT_APPLICATION,

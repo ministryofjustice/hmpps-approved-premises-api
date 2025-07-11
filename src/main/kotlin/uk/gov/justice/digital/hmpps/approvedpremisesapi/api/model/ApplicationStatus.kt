@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: inProgress,submitted,requestedFurtherInformation,pending,rejected,awaitingPlacement,placed,inapplicable,withdrawn
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApplicationStatus(@get:JsonValue val value: kotlin.String) {
 
   inProgress("inProgress"),

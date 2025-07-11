@@ -47,6 +47,7 @@ data class RequestForPlacementAssessed(
    *
    * Values: accepted,rejected
    */
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Decision(@get:JsonValue val value: kotlin.String) {
 
     accepted("accepted"),

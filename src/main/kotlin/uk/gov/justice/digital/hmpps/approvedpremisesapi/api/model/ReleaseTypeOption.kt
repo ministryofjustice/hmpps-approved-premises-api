@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: licence,rotl,hdc,pss,inCommunity,notApplicable,extendedDeterminateLicence,paroleDirectedLicence,reReleasedPostRecall
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ReleaseTypeOption(@get:JsonValue val value: kotlin.String) {
 
   licence("licence"),

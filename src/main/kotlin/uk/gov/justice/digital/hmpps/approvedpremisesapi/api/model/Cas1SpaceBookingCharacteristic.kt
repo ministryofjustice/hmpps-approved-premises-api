@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 * All of the characteristics applicable to a space booking
 * Values: HAS_EN_SUITE,IS_ARSON_SUITABLE,IS_SINGLE,IS_STEP_FREE_DESIGNATED,IS_SUITED_FOR_SEX_OFFENDERS,IS_WHEELCHAIR_DESIGNATED
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1SpaceBookingCharacteristic(@get:JsonValue val value: kotlin.String) {
 
   HAS_EN_SUITE("hasEnSuite"),

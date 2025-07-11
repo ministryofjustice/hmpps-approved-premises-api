@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: requestUnsubmitted,requestRejected,requestSubmitted,awaitingMatch,requestWithdrawn,placementBooked,personArrived,personNotArrived,personDeparted
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RequestForPlacementStatus(@get:JsonValue val value: kotlin.String) {
 
   requestUnsubmitted("request_unsubmitted"),

@@ -60,4 +60,5 @@ data class EventTransferInfo(
   val booking: EventBookingSummary,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class EventTransferType { PLANNED, EMERGENCY }

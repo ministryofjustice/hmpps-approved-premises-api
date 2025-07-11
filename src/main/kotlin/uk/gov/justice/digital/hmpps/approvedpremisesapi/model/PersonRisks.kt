@@ -9,6 +9,7 @@ data class RiskWithStatus<T>(val status: RiskStatus, val value: T? = null) {
   constructor(value: T?) : this(RiskStatus.Retrieved, value)
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RiskStatus {
   Retrieved,
   NotFound,

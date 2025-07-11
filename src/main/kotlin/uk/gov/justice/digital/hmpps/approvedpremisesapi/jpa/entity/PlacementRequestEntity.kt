@@ -359,6 +359,7 @@ class LockablePlacementRequestEntity(
   val id: UUID,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementRequestWithdrawalReason(val apiValue: WithdrawPlacementRequestReason) {
   DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.duplicatePlacementRequest),
   ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.alternativeProvisionIdentified),

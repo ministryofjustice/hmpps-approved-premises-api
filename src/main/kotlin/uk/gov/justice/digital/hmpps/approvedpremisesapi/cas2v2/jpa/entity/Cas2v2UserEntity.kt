@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.Str
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas2v2UserType(val authSource: String) {
   DELIUS("delius"),
   NOMIS("nomis"),

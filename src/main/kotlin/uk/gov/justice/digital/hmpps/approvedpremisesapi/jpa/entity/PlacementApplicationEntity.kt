@@ -182,12 +182,14 @@ class LockablePlacementApplicationEntity(
 
 // Do not re-order these elements as we currently use ordinal enum mapping in hibernate
 // (i.e. they're persisted as index numbers, not enum name strings)
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementType {
   ROTL,
   RELEASE_FOLLOWING_DECISION,
   ADDITIONAL_PLACEMENT,
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {
   ACCEPTED(ApiPlacementApplicationDecision.accepted),
   REJECTED(ApiPlacementApplicationDecision.rejected),
@@ -226,6 +228,7 @@ enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDec
   }
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementApplicationWithdrawalReason(val apiValue: WithdrawPlacementRequestReason) {
   DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.duplicatePlacementRequest),
   ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.alternativeProvisionIdentified),

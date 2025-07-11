@@ -48,6 +48,7 @@ data class RoshRatingsInner(
   fun anyRisksAreNull() = riskChildrenCommunity == null || riskPublicCommunity == null || riskKnownAdultCommunity == null || riskStaffCommunity == null
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RiskLevel(val text: String) {
   VERY_HIGH("Very High"),
   HIGH("High"),

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: notMatched,unableToMatch,matched
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
 
   notMatched("notMatched"),

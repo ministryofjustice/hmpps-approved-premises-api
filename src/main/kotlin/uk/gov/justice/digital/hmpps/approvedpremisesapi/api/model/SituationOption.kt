@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: riskManagement,residencyManagement,bailAssessment,bailSentence,awaitingSentence
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class SituationOption(@get:JsonValue val value: kotlin.String) {
 
   riskManagement("riskManagement"),

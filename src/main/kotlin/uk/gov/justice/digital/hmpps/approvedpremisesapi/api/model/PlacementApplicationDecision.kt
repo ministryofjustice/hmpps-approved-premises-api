@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: accepted,rejected,withdraw,withdrawnByPp
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementApplicationDecision(@get:JsonValue val value: kotlin.String) {
 
   accepted("accepted"),

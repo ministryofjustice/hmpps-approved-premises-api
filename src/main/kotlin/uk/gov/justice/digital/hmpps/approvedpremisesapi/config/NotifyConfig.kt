@@ -80,6 +80,7 @@ object Cas2NotifyTemplates {
   val cas2ToNacroApplicationTransferredToAnotherPrison = "e292b246-0d4e-4636-81f0-933bcf4dadd0"
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class NotifyMode {
   DISABLED,
   TEST_AND_GUEST_LIST,

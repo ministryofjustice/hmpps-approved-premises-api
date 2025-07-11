@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: assessment,placementApplication
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TaskType(@get:JsonValue val value: kotlin.String) {
 
   assessment("Assessment"),

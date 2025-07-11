@@ -253,6 +253,7 @@ sealed interface ClientResult<ResponseType> {
   }
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PreemptiveCacheEntryStatus {
   /**
    * No corresponding entry in the cache

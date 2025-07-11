@@ -268,6 +268,7 @@ data class WithdrawableEntitiesWithNotes(
   val withdrawables: Set<WithdrawableEntity>,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class WithdrawableEntityType(val label: String) {
   Application("Application"),
 
@@ -306,6 +307,7 @@ data class WithdrawableDatePeriod(
   val endDate: LocalDate,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class BlockingReason {
   ArrivalRecordedInCas1,
   ArrivalRecordedInDelius,

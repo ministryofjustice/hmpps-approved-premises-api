@@ -505,6 +505,7 @@ class Cas1SpaceBookingService(
     val keyWorkerStaffCode: String?,
   )
 
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class UpdateType {
     AMENDMENT,
     SHORTENING,

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: user,system
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1TriggerSourceType(@get:JsonValue val value: kotlin.String) {
 
   user("user"),

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: inCustody,inCommunity,unknown
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PersonStatus(@get:JsonValue val value: kotlin.String) {
 
   inCustody("InCustody"),

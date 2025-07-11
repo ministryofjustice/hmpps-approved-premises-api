@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: approvedPremises,cas2,cas2v2,temporaryAccommodation
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ServiceName(@get:JsonValue val value: kotlin.String) {
 
   approvedPremises("approved-premises"),

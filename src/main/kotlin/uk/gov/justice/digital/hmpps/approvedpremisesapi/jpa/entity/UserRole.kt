@@ -24,6 +24,7 @@ private object Constants {
   )
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremisesUserRole?, val permissions: List<UserPermission> = emptyList()) {
 
   CAS1_ASSESSOR(

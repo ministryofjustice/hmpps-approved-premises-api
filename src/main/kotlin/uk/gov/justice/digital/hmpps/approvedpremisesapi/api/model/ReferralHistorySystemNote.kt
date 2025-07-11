@@ -37,6 +37,7 @@ data class ReferralHistorySystemNote(
    *
    * Values: submitted,unallocated,inReview,readyToPlace,rejected,completed
    */
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Category(@get:JsonValue val value: kotlin.String) {
 
     submitted("submitted"),

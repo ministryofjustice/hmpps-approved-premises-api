@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApprovedPremisesType {
   NORMAL,
   PIPE,

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: created,updatedStartDate,updatedEndDate,updatedReferenceNumber,updatedReason,updatedNotes
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1OutOfServiceBedRevisionType(@get:JsonValue val value: kotlin.String) {
 
   created("created"),

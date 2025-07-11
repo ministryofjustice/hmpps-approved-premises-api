@@ -24,6 +24,7 @@ data class BedUsageReportRow(
   val uniqueBedspaceRef: String,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class BedUsageType {
   Booking,
   Turnaround,

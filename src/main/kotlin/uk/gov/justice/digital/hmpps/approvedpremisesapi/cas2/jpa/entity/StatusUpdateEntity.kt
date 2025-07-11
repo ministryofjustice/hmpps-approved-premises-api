@@ -27,6 +27,7 @@ interface Cas2StatusUpdateRepository : JpaRepository<Cas2StatusUpdateEntity, UUI
   fun findAllStatusUpdatesWithoutAssessment(pageable: Pageable?): Slice<Cas2StatusUpdateEntity>
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas2StatusUpdateNonAssignable(val label: String) {
   AWAITING_ARRIVAL("Awaiting arrival"),
   REFERRAL_CANCELLED("Referral cancelled"),

@@ -98,6 +98,7 @@ class Cas1ApplicationSeedService(
     }
   }
 
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class ApplicationState {
     PENDING_SUBMISSION,
     AUTHORISED,

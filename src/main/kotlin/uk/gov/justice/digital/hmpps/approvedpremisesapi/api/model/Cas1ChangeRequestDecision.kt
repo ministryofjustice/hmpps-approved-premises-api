@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: APPROVED,REJECTED
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1ChangeRequestDecision(@get:JsonValue val value: kotlin.String) {
 
   APPROVED("approved"),

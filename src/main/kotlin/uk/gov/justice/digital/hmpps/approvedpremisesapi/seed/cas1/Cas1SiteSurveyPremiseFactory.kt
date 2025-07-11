@@ -132,11 +132,13 @@ data class WillAcceptPeopleWhoHave(
   val beenConvictedOfHateCrimes: Boolean,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class MaleFemale {
   MALE,
   FEMALE,
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class SiteSurveyProbationRegion {
   LONDON,
   KENT_SURREY_SUSSEX,

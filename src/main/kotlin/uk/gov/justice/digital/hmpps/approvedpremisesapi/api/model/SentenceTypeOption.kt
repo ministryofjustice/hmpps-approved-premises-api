@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: standardDeterminate,life,ipp,extendedDeterminate,communityOrder,bailPlacement,nonStatutory
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class SentenceTypeOption(@get:JsonValue val value: kotlin.String) {
 
   standardDeterminate("standardDeterminate"),

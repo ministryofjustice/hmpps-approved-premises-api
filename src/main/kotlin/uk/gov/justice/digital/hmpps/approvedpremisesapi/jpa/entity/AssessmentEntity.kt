@@ -394,6 +394,7 @@ interface DomainAssessmentSummary {
   val probationDeliveryUnitName: String?
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class DomainAssessmentSummaryStatus {
   COMPLETED,
   AWAITING_RESPONSE,
@@ -407,6 +408,7 @@ enum class DomainAssessmentSummaryStatus {
   UNALLOCATED,
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class AssessmentDecision {
   ACCEPTED,
   REJECTED,
@@ -496,6 +498,7 @@ class AssessmentReferralHistorySystemNoteEntity(
   createdByUser,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ReferralHistorySystemNoteType {
   SUBMITTED,
   UNALLOCATED,

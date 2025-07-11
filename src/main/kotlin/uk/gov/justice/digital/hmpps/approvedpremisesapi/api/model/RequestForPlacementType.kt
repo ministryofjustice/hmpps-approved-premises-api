@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: manual,automatic
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RequestForPlacementType(@get:JsonValue val value: kotlin.String) {
 
   manual("manual"),

@@ -195,6 +195,7 @@ data class SerializableClientResult(
   val path: String?,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ClientResultDiscriminator {
   SUCCESS,
   STATUS_CODE_FAILURE,

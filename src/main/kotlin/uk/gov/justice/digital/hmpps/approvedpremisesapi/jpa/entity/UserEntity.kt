@@ -186,6 +186,7 @@ data class UserQualificationAssignmentEntity(
   }
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class UserQualification {
   PIPE,
   LAO,

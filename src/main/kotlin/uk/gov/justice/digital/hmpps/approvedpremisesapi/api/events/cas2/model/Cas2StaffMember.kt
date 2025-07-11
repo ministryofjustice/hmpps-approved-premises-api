@@ -35,6 +35,7 @@ data class Cas2StaffMember(
    *
    * Values: nomis,delius
    */
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Usertype(@get:JsonValue val value: kotlin.String) {
 
     nomis("nomis"),

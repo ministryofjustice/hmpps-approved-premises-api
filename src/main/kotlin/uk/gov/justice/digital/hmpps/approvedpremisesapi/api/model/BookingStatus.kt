@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: arrived,awaitingMinusArrival,notMinusArrived,departed,cancelled,provisional,confirmed,closed
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class BookingStatus(@get:JsonValue val value: kotlin.String) {
 
   arrived("arrived"),

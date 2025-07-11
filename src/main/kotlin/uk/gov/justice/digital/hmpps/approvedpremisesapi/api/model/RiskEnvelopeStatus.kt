@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: retrieved,notFound,error
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RiskEnvelopeStatus(@get:JsonValue val value: kotlin.String) {
 
   retrieved("retrieved"),

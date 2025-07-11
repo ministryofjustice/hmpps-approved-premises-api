@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: duration,expectedArrival,createdAt,applicationSubmittedAt,requestType,personName,personRisksTier
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementRequestSortField(@get:JsonValue val value: kotlin.String) {
 
   duration("duration"),

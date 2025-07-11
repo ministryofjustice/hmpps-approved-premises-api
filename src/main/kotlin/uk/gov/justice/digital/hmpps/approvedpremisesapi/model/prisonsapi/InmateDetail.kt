@@ -17,6 +17,7 @@ data class AssignedLivingUnit(
   val agencyName: String,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class InmateStatus {
   @JsonProperty("ACTIVE IN")
   IN,

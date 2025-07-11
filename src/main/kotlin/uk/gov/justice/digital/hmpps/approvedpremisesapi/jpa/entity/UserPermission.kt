@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   @Deprecated("This should no longer be used on the UI or API")
   CAS1_ADHOC_BOOKING_CREATE(ApprovedPremisesUserPermission.adhocBookingCreate),

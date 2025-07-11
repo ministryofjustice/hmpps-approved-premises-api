@@ -342,6 +342,7 @@ data class Task(
   val decision: String?,
 )
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TaskEntityType {
   ASSESSMENT,
   PLACEMENT_APPLICATION,

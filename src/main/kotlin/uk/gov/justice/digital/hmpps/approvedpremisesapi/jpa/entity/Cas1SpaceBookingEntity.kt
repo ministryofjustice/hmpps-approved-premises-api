@@ -608,11 +608,13 @@ data class Cas1SpaceBookingEntity(
     get() = Cas1ApplicationFacade(application, offlineApplication)
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ManagementInfoSource {
   DELIUS,
   LEGACY_CAS_1,
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TransferType {
   PLANNED,
   EMERGENCY,

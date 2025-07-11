@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: parole,standardRelease
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementRequestRequestType(@get:JsonValue val value: kotlin.String) {
 
   parole("parole"),

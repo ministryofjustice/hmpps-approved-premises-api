@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: standard,emergency,shortNotice
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1ApplicationTimelinessCategory(@get:JsonValue val value: kotlin.String) {
 
   standard("standard"),

@@ -14,6 +14,7 @@ data class PhoneNumber(
   val type: PhoneTypes? = null,
 ) {
 
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class PhoneTypes {
     TELEPHONE,
     MOBILE,

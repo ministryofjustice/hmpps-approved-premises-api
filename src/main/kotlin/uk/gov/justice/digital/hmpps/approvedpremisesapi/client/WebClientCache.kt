@@ -285,6 +285,7 @@ As of Spring Boot 3 this class has been changed such that it can't be unmarshall
 entries in the cache during the Spring Boot 2 to 3, we have introduced our own version of Spring's HttpMethod that can
 be marshalled into JSON and back into Java.
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class MarshallableHttpMethod {
   GET,
   HEAD,

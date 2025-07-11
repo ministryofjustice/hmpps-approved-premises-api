@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: awaitingResponse,completed,reallocated,inProgress,notStarted
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1AssessmentStatus(@get:JsonValue val value: kotlin.String) {
 
   awaitingResponse("awaiting_response"),

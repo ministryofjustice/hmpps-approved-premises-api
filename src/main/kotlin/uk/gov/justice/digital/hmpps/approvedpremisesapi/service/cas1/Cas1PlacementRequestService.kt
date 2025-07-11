@@ -373,6 +373,7 @@ class Cas1PlacementRequestService(
   )
 }
 
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementRequestSource {
   ASSESSMENT_OF_APPLICATION,
   ASSESSMENT_OF_PLACEMENT_APPLICATION,

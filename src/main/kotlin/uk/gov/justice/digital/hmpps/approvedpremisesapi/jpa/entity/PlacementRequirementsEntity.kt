@@ -61,6 +61,7 @@ data class PlacementRequirementsEntity(
 
 // Do not re-order these elements as we currently use ordinal enum mapping in hibernate
 // (i.e. they're persisted as index numbers, not enum name strings)
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class JpaApType(val apiType: ApType) {
   NORMAL(ApType.normal),
   PIPE(ApType.pipe),

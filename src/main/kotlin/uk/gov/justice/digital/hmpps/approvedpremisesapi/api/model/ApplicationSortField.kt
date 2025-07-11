@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: tier,createdAt,arrivalDate,releaseType
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApplicationSortField(@get:JsonValue val value: kotlin.String) {
 
   tier("tier"),
