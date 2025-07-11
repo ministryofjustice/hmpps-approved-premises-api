@@ -10,9 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param isWithdrawn
  * @param hasRequestsForPlacement
  * @param isWomensApplication
- * @param isPipeApplication
  * @param isEmergencyApplication
- * @param isEsapApplication
  * @param arrivalDate
  * @param risks
  * @param tier
@@ -48,13 +46,7 @@ data class ApprovedPremisesApplicationSummary(
   @get:JsonProperty("isWomensApplication") val isWomensApplication: kotlin.Boolean? = null,
 
   @Schema(example = "null", description = "")
-  @get:JsonProperty("isPipeApplication") val isPipeApplication: kotlin.Boolean? = null,
-
-  @Schema(example = "null", description = "")
   @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: kotlin.Boolean? = null,
-
-  @Schema(example = "null", description = "")
-  @get:JsonProperty("isEsapApplication") val isEsapApplication: kotlin.Boolean? = null,
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.Instant? = null,
