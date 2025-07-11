@@ -47,16 +47,20 @@ class Cas2v2ApplicationController(
 ) {
   @GetMapping("/applications")
   @PaginationHeaders
+  @SuppressWarnings("LongParameterList")
   fun applicationsGet(
     @RequestParam isSubmitted: Boolean?,
     @RequestParam page: Int?,
     @RequestParam prisonCode: String?,
     @RequestParam applicationOrigin: ApplicationOrigin?,
-    @RequestParam limitByUser: Boolean = true,
+    @RequestParam limitByUser: Boolean?,
+    @RequestParam crn: String?,
+    @RequestParam offenderPrisonNumber: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    if (limitByUser && userService.requiresCaseLoadIdCheck()) {
+    val effectiveLimitByUser = limitByUser ?: true
+    if (effectiveLimitByUser && userService.requiresCaseLoadIdCheck()) {
       prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
     }
 
@@ -66,7 +70,9 @@ class Cas2v2ApplicationController(
       prisonCode,
       isSubmitted,
       applicationOrigin,
-      limitByUser,
+      effectiveLimitByUser,
+      crn,
+      offenderPrisonNumber,
       user,
       pageCriteria,
     )
