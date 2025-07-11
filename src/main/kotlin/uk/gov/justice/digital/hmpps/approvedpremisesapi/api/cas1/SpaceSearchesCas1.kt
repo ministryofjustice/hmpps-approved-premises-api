@@ -5,48 +5,40 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 
 @RestController
 interface SpaceSearchesCas1 {
 
-    fun getDelegate(): SpaceSearchesCas1Delegate = object: SpaceSearchesCas1Delegate {}
+  fun getDelegate(): SpaceSearchesCas1Delegate = object : SpaceSearchesCas1Delegate {}
 
-    @Operation(
-        tags = ["space searches",],
-        summary = "Search for accommodation \"spaces\" which are available and match the given requirements",
-        operationId = "spaceSearch",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceSearchResults::class))]),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/spaces/search"],
-            produces = ["application/json", "application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun spaceSearch(@Parameter(description = "", required = true) @RequestBody cas1SpaceSearchParameters: Cas1SpaceSearchParameters): ResponseEntity<Cas1SpaceSearchResults> {
-        return getDelegate().spaceSearch(cas1SpaceSearchParameters)
-    }
+  @Operation(
+    tags = ["space searches"],
+    summary = "Search for accommodation \"spaces\" which are available and match the given requirements",
+    operationId = "spaceSearch",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceSearchResults::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/spaces/search"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun spaceSearch(@Parameter(description = "", required = true) @RequestBody cas1SpaceSearchParameters: Cas1SpaceSearchParameters): ResponseEntity<Cas1SpaceSearchResults> = getDelegate().spaceSearch(cas1SpaceSearchParameters)
 }

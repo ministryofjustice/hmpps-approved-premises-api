@@ -198,17 +198,6 @@ tasks.named("assemble") {
   finalizedBy("generateCas1Roles")
 }
 
-ktlint {
-  filter {
-    exclude { it.file.path.contains("$buildDir${File.separator}generated${File.separator}") }
-    exclude(
-      "**/approvedpremisesapi/api/**",
-      "**/approvedpremisesapi/cas3/model/generated/**",
-      "**/Cas2ReportName.kt",
-    )
-  }
-}
-
 allOpen {
   annotations("jakarta.persistence.Entity")
 }

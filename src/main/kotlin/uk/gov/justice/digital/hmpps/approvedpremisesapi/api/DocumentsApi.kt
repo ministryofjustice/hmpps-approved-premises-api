@@ -5,45 +5,37 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 
 @RestController
 interface DocumentsApi {
 
-    fun getDelegate(): DocumentsApiDelegate = object: DocumentsApiDelegate {}
+  fun getDelegate(): DocumentsApiDelegate = object : DocumentsApiDelegate {}
 
-    @Operation(
-        tags = ["Application data",],
-        summary = "Downloads a document",
-        operationId = "documentsCrnDocumentIdGet",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = org.springframework.core.io.Resource::class))]),
-            ApiResponse(responseCode = "404", description = "invalid applicationId or documentId", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/documents/{crn}/{documentId}"],
-            produces = ["application/octet-stream", "application/json"]
-    )
-    fun documentsCrnDocumentIdGet(@Parameter(description = "CRN of the Person the document is associated with", required = true) @PathVariable("crn") crn: kotlin.String,@Parameter(description = "ID of the document", required = true) @PathVariable("documentId") documentId: java.util.UUID): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
-        return getDelegate().documentsCrnDocumentIdGet(crn, documentId)
-    }
+  @Operation(
+    tags = ["Application data"],
+    summary = "Downloads a document",
+    operationId = "documentsCrnDocumentIdGet",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = org.springframework.core.io.Resource::class))]),
+      ApiResponse(responseCode = "404", description = "invalid applicationId or documentId", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/documents/{crn}/{documentId}"],
+    produces = ["application/octet-stream", "application/json"],
+  )
+  fun documentsCrnDocumentIdGet(@Parameter(description = "CRN of the Person the document is associated with", required = true) @PathVariable("crn") crn: kotlin.String, @Parameter(description = "ID of the document", required = true) @PathVariable("documentId") documentId: java.util.UUID): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> = getDelegate().documentsCrnDocumentIdGet(crn, documentId)
 }

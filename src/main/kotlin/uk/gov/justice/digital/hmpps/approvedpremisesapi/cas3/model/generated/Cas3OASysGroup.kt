@@ -11,10 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
  */
 data class Cas3OASysGroup(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("assessmentMetadata", required = true) val assessmentMetadata: Cas3OASysAssessmentMetadata,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("assessmentMetadata", required = true) val assessmentMetadata: Cas3OASysAssessmentMetadata,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("answers", required = true) val answers: List<OASysQuestion>
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("answers", required = true) val answers: List<OASysQuestion>,
 )
-

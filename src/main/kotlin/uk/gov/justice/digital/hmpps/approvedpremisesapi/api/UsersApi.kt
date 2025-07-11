@@ -5,6 +5,19 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -13,100 +26,76 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
 @RestController
 interface UsersApi {
 
-    fun getDelegate(): UsersApiDelegate = object: UsersApiDelegate {}
+  fun getDelegate(): UsersApiDelegate = object : UsersApiDelegate {}
 
-    @Operation(
-        tags = ["Auth",],
-        summary = "Returns a user with match on name",
-        operationId = "usersDeliusGet",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved user", content = [Content(schema = Schema(implementation = User::class))]),
-            ApiResponse(responseCode = "404", description = "User not found", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/users/delius"],
-            produces = ["application/json"]
-    )
-    fun usersDeliusGet( @RequestParam(value = "name", required = true) name: kotlin.String,@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<User> {
-        return getDelegate().usersDeliusGet(name, xServiceName)
-    }
+  @Operation(
+    tags = ["Auth"],
+    summary = "Returns a user with match on name",
+    operationId = "usersDeliusGet",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved user", content = [Content(schema = Schema(implementation = User::class))]),
+      ApiResponse(responseCode = "404", description = "User not found", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/users/delius"],
+    produces = ["application/json"],
+  )
+  fun usersDeliusGet(@RequestParam(value = "name", required = true) name: kotlin.String, @Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<User> = getDelegate().usersDeliusGet(name, xServiceName)
 
-    @PaginationHeaders
-    @Operation(
-        tags = ["Auth",],
-        summary = "Returns a list of users. If only the user's ID and Name are required, use /users/summary",
-        operationId = "usersGet",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved users", content = [Content(array = ArraySchema(schema = Schema(implementation = User::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/users"],
-            produces = ["application/json"]
-    )
-    fun usersGet(@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @RequestParam(value = "roles", required = false) roles: kotlin.collections.List<ApprovedPremisesUserRole>?, @RequestParam(value = "qualifications", required = false) qualifications: kotlin.collections.List<UserQualification>?, @RequestParam(value = "probationRegionId", required = false) probationRegionId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: UserSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<User>> {
-        return getDelegate().usersGet(xServiceName, roles, qualifications, probationRegionId, apAreaId, cruManagementAreaId, page, sortBy, sortDirection)
-    }
+  @PaginationHeaders
+  @Operation(
+    tags = ["Auth"],
+    summary = "Returns a list of users. If only the user's ID and Name are required, use /users/summary",
+    operationId = "usersGet",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved users", content = [Content(array = ArraySchema(schema = Schema(implementation = User::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/users"],
+    produces = ["application/json"],
+  )
+  fun usersGet(@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @RequestParam(value = "roles", required = false) roles: kotlin.collections.List<ApprovedPremisesUserRole>?, @RequestParam(value = "qualifications", required = false) qualifications: kotlin.collections.List<UserQualification>?, @RequestParam(value = "probationRegionId", required = false) probationRegionId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: UserSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<User>> = getDelegate().usersGet(xServiceName, roles, qualifications, probationRegionId, apAreaId, cruManagementAreaId, page, sortBy, sortDirection)
 
-    @Operation(
-        tags = ["Auth",],
-        summary = "Returns a list of users with partial match on name",
-        operationId = "usersSearchGet",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved users", content = [Content(array = ArraySchema(schema = Schema(implementation = User::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/users/search"],
-            produces = ["application/json"]
-    )
-    fun usersSearchGet( @RequestParam(value = "name", required = true) name: kotlin.String,@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<List<User>> {
-        return getDelegate().usersSearchGet(name, xServiceName)
-    }
+  @Operation(
+    tags = ["Auth"],
+    summary = "Returns a list of users with partial match on name",
+    operationId = "usersSearchGet",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved users", content = [Content(array = ArraySchema(schema = Schema(implementation = User::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/users/search"],
+    produces = ["application/json"],
+  )
+  fun usersSearchGet(@RequestParam(value = "name", required = true) name: kotlin.String, @Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<List<User>> = getDelegate().usersSearchGet(name, xServiceName)
 
-    @Operation(
-        tags = ["Auth",],
-        summary = "Returns a list of user summaries (i.e. id and name only)",
-        operationId = "usersSummaryGet",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved users", content = [Content(array = ArraySchema(schema = Schema(implementation = UserSummary::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/users/summary"],
-            produces = ["application/json"]
-    )
-    fun usersSummaryGet(@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @RequestParam(value = "roles", required = false) roles: kotlin.collections.List<ApprovedPremisesUserRole>?, @RequestParam(value = "qualifications", required = false) qualifications: kotlin.collections.List<UserQualification>?, @RequestParam(value = "probationRegionId", required = false) probationRegionId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: UserSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<UserSummary>> {
-        return getDelegate().usersSummaryGet(xServiceName, roles, qualifications, probationRegionId, apAreaId, page, sortBy, sortDirection)
-    }
+  @Operation(
+    tags = ["Auth"],
+    summary = "Returns a list of user summaries (i.e. id and name only)",
+    operationId = "usersSummaryGet",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved users", content = [Content(array = ArraySchema(schema = Schema(implementation = UserSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/users/summary"],
+    produces = ["application/json"],
+  )
+  fun usersSummaryGet(@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @RequestParam(value = "roles", required = false) roles: kotlin.collections.List<ApprovedPremisesUserRole>?, @RequestParam(value = "qualifications", required = false) qualifications: kotlin.collections.List<UserQualification>?, @RequestParam(value = "probationRegionId", required = false) probationRegionId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: UserSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<UserSummary>> = getDelegate().usersSummaryGet(xServiceName, roles, qualifications, probationRegionId, apAreaId, page, sortBy, sortDirection)
 }

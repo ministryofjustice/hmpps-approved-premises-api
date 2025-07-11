@@ -5,44 +5,34 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobRequest
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobRequest
 
 @RestController
 interface MigrationJobApi {
 
-    fun getDelegate(): MigrationJobApiDelegate = object: MigrationJobApiDelegate {}
+  fun getDelegate(): MigrationJobApiDelegate = object : MigrationJobApiDelegate {}
 
-    @Operation(
-        tags = ["default",],
-        summary = "Starts a migration job (process for data migrations that can't be achieved solely via SQL migrations), can only be called from a local connection",
-        operationId = "migrationJobPost",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "202", description = "successfully requested task")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/migration-job"],
-            consumes = ["application/json"]
-    )
-    fun migrationJobPost(@Parameter(description = "", required = true) @RequestBody migrationJobRequest: MigrationJobRequest): ResponseEntity<Unit> {
-        return getDelegate().migrationJobPost(migrationJobRequest)
-    }
+  @Operation(
+    tags = ["default"],
+    summary = "Starts a migration job (process for data migrations that can't be achieved solely via SQL migrations), can only be called from a local connection",
+    operationId = "migrationJobPost",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "202", description = "successfully requested task"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/migration-job"],
+    consumes = ["application/json"],
+  )
+  fun migrationJobPost(@Parameter(description = "", required = true) @RequestBody migrationJobRequest: MigrationJobRequest): ResponseEntity<Unit> = getDelegate().migrationJobPost(migrationJobRequest)
 }

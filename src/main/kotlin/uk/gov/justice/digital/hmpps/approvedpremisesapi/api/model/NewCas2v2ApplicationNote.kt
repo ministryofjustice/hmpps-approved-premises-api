@@ -5,13 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * A note to add to an application
- * @param note 
+ * @param note
  */
 data class NewCas2v2ApplicationNote(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("note", required = true) val note: String
-    ) {
-
-}
-
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("note", required = true) val note: String,
+)

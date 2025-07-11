@@ -1,27 +1,23 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
-* 
+*
 * Values: courtBail,prisonBail,homeDetentionCurfew
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApplicationOrigin(@get:JsonValue val value: kotlin.String) {
 
-    courtBail("courtBail"),
-    prisonBail("prisonBail"),
-    homeDetentionCurfew("homeDetentionCurfew");
+  courtBail("courtBail"),
+  prisonBail("prisonBail"),
+  homeDetentionCurfew("homeDetentionCurfew"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: kotlin.String): ApplicationOrigin {
-                return values().first{it -> it.value == value}
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: kotlin.String): ApplicationOrigin = values().first { it -> it.value == value }
+  }
 }
-

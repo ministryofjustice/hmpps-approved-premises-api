@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas3UpdateApplication(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("data", required = true) val `data`: Map<String, Any>
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("data", required = true) val `data`: Map<String, Any>,
 )
-

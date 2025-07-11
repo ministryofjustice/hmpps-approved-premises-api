@@ -6,28 +6,28 @@ import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Arrival
 
 /**
- * 
- * @param type 
- * @param expectedDepartureDate 
- * @param notes 
- * @param keyWorkerStaffCode 
+ *
+ * @param type
+ * @param expectedDepartureDate
+ * @param notes
+ * @param keyWorkerStaffCode
  */
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes(
-      JsonSubTypes.Type(value = NewCas2Arrival::class, name = "CAS2"),
-      JsonSubTypes.Type(value = NewCas3Arrival::class, name = "CAS3")
+  JsonSubTypes.Type(value = NewCas2Arrival::class, name = "CAS2"),
+  JsonSubTypes.Type(value = NewCas3Arrival::class, name = "CAS3"),
 )
+interface NewArrival {
+  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  val type: kotlin.String
 
-interface NewArrival{
-                @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-                val type: kotlin.String
-                @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-                val expectedDepartureDate: java.time.LocalDate
-                @get:Schema(example = "null", description = "")
-                val notes: kotlin.String? 
-                @get:Schema(example = "null", description = "")
-                val keyWorkerStaffCode: kotlin.String? 
+  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  val expectedDepartureDate: java.time.LocalDate
 
+  @get:Schema(example = "null", description = "")
+  val notes: kotlin.String?
+
+  @get:Schema(example = "null", description = "")
+  val keyWorkerStaffCode: kotlin.String?
 }
-

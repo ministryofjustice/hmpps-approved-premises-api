@@ -1,47 +1,38 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 
- * @param id 
- * @param apType 
- * @param name 
+ *
+ * @param id
+ * @param apType
+ * @param name
  * @param fullAddress Full address, excluding postcode
- * @param apArea 
+ * @param apArea
  * @param characteristics Room and premise characteristics
- * @param postcode 
+ * @param postcode
  */
 data class Cas1PremisesSearchResultSummary(
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("apType", required = true) val apType: ApType,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("apType", required = true) val apType: ApType,
 
-    @Schema(example = "Hope House", required = true, description = "")
-    @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @Schema(example = "Hope House", required = true, description = "")
+  @get:JsonProperty("name", required = true) val name: kotlin.String,
 
-    @Schema(example = "null", required = true, description = "Full address, excluding postcode")
-    @get:JsonProperty("fullAddress", required = true) val fullAddress: kotlin.String,
+  @Schema(example = "null", required = true, description = "Full address, excluding postcode")
+  @get:JsonProperty("fullAddress", required = true) val fullAddress: kotlin.String,
 
-    @Schema(example = "null", required = true, description = "")
-    @get:JsonProperty("apArea", required = true) val apArea: NamedId,
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("apArea", required = true) val apArea: NamedId,
 
-    @Schema(example = "null", required = true, description = "Room and premise characteristics")
-    @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>,
+  @Schema(example = "null", required = true, description = "Room and premise characteristics")
+  @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>,
 
-    @Schema(example = "LS1 3AD", description = "")
-    @get:JsonProperty("postcode") val postcode: kotlin.String? = null
-    ) {
-
-}
-
+  @Schema(example = "LS1 3AD", description = "")
+  @get:JsonProperty("postcode") val postcode: kotlin.String? = null,
+)

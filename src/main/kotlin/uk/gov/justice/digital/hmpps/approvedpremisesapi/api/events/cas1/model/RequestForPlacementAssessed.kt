@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 
 /**
  *
@@ -48,6 +47,7 @@ data class RequestForPlacementAssessed(
    *
    * Values: accepted,rejected
    */
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Decision(@get:JsonValue val value: kotlin.String) {
 
     accepted("accepted"),

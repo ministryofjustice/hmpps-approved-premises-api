@@ -5,6 +5,17 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
@@ -12,151 +23,121 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReaso
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 
 @RestController
 interface ReferenceDataCas1 {
 
-    fun getDelegate(): ReferenceDataCas1Delegate = object: ReferenceDataCas1Delegate {}
+  fun getDelegate(): ReferenceDataCas1Delegate = object : ReferenceDataCas1Delegate {}
 
-    @Operation(
-        tags = ["Reference Data",],
-        summary = "",
-        operationId = "getChangeRequestReasons",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/reference-data/change-request-reasons/{changeRequestType}"],
-            produces = ["application/json"]
-    )
-    fun getChangeRequestReasons(@Parameter(description = "", required = true, schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"])) @PathVariable("changeRequestType") changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> {
-        return getDelegate().getChangeRequestReasons(changeRequestType)
-    }
+  @Operation(
+    tags = ["Reference Data"],
+    summary = "",
+    operationId = "getChangeRequestReasons",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/change-request-reasons/{changeRequestType}"],
+    produces = ["application/json"],
+  )
+  fun getChangeRequestReasons(@Parameter(description = "", required = true, schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"])) @PathVariable("changeRequestType") changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = getDelegate().getChangeRequestReasons(changeRequestType)
 
-    @Operation(
-        tags = ["Reference Data",],
-        summary = "",
-        operationId = "getChangeRequestRejectionReasons",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/reference-data/change-request-rejection-reasons/{changeRequestType}"],
-            produces = ["application/json"]
-    )
-    fun getChangeRequestRejectionReasons(@Parameter(description = "", required = true, schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"])) @PathVariable("changeRequestType") changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> {
-        return getDelegate().getChangeRequestRejectionReasons(changeRequestType)
-    }
+  @Operation(
+    tags = ["Reference Data"],
+    summary = "",
+    operationId = "getChangeRequestRejectionReasons",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NamedId::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/change-request-rejection-reasons/{changeRequestType}"],
+    produces = ["application/json"],
+  )
+  fun getChangeRequestRejectionReasons(@Parameter(description = "", required = true, schema = Schema(allowableValues = ["placementAppeal", "placementExtension", "plannedTransfer"])) @PathVariable("changeRequestType") changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = getDelegate().getChangeRequestRejectionReasons(changeRequestType)
 
-    @Operation(
-        tags = ["Reference Data",],
-        summary = "Lists all CRU Management Areas",
-        operationId = "getCruManagementAreas",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1CruManagementArea::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/reference-data/cru-management-areas"],
-            produces = ["application/json"]
-    )
-    fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> {
-        return getDelegate().getCruManagementAreas()
-    }
+  @Operation(
+    tags = ["Reference Data"],
+    summary = "Lists all CRU Management Areas",
+    operationId = "getCruManagementAreas",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1CruManagementArea::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/cru-management-areas"],
+    produces = ["application/json"],
+  )
+  fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> = getDelegate().getCruManagementAreas()
 
-    @Operation(
-        tags = ["Reference Data",],
-        summary = "Lists all active departure reasons",
-        operationId = "getDepartureReasons",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = DepartureReason::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/reference-data/departure-reasons"],
-            produces = ["application/json"]
-    )
-    fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> {
-        return getDelegate().getDepartureReasons()
-    }
+  @Operation(
+    tags = ["Reference Data"],
+    summary = "Lists all active departure reasons",
+    operationId = "getDepartureReasons",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = DepartureReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/departure-reasons"],
+    produces = ["application/json"],
+  )
+  fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> = getDelegate().getDepartureReasons()
 
-    @Operation(
-        tags = ["Reference Data",],
-        summary = "Lists all active move-on categories",
-        operationId = "getMoveOnCategories",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = MoveOnCategory::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/reference-data/move-on-categories"],
-            produces = ["application/json"]
-    )
-    fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> {
-        return getDelegate().getMoveOnCategories()
-    }
+  @Operation(
+    tags = ["Reference Data"],
+    summary = "Lists all active move-on categories",
+    operationId = "getMoveOnCategories",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = MoveOnCategory::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/move-on-categories"],
+    produces = ["application/json"],
+  )
+  fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> = getDelegate().getMoveOnCategories()
 
-    @Operation(
-        tags = ["Reference Data",],
-        summary = "Lists all active non-arrivals reasons",
-        operationId = "getNonArrivalReasons",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NonArrivalReason::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/reference-data/non-arrival-reasons"],
-            produces = ["application/json"]
-    )
-    fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> {
-        return getDelegate().getNonArrivalReasons()
-    }
+  @Operation(
+    tags = ["Reference Data"],
+    summary = "Lists all active non-arrivals reasons",
+    operationId = "getNonArrivalReasons",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NonArrivalReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/non-arrival-reasons"],
+    produces = ["application/json"],
+  )
+  fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> = getDelegate().getNonArrivalReasons()
 
-    @Operation(
-        tags = ["Reference Data",],
-        summary = "Lists all reasons for beds going out of service",
-        operationId = "getOutOfServiceBedReasons",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBedReason::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/reference-data/out-of-service-bed-reasons"],
-            produces = ["application/json"]
-    )
-    fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
-        return getDelegate().getOutOfServiceBedReasons()
-    }
+  @Operation(
+    tags = ["Reference Data"],
+    summary = "Lists all reasons for beds going out of service",
+    operationId = "getOutOfServiceBedReasons",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1OutOfServiceBedReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/out-of-service-bed-reasons"],
+    produces = ["application/json"],
+  )
+  fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> = getDelegate().getOutOfServiceBedReasons()
 }

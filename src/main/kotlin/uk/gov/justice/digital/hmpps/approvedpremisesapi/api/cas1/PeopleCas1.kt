@@ -5,46 +5,38 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 
 @RestController
 interface PeopleCas1 {
 
-    fun getDelegate(): PeopleCas1Delegate = object: PeopleCas1Delegate {}
+  fun getDelegate(): PeopleCas1Delegate = object : PeopleCas1Delegate {}
 
-    @Operation(
-        tags = ["People",],
-        summary = "Returns a timeline of all applications for a Person.",
-        operationId = "getPeopleApplicationsTimeline",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1PersonalTimeline::class))]),
-            ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/people/{crn}/timeline"],
-            produces = ["application/json"]
-    )
-    fun getPeopleApplicationsTimeline(@Parameter(description = "CRN of the Person to fetch the timeline for", required = true) @PathVariable("crn") crn: kotlin.String): ResponseEntity<Cas1PersonalTimeline> {
-        return getDelegate().getPeopleApplicationsTimeline(crn)
-    }
+  @Operation(
+    tags = ["People"],
+    summary = "Returns a timeline of all applications for a Person.",
+    operationId = "getPeopleApplicationsTimeline",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1PersonalTimeline::class))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/timeline"],
+    produces = ["application/json"],
+  )
+  fun getPeopleApplicationsTimeline(@Parameter(description = "CRN of the Person to fetch the timeline for", required = true) @PathVariable("crn") crn: kotlin.String): ResponseEntity<Cas1PersonalTimeline> = getDelegate().getPeopleApplicationsTimeline(crn)
 }

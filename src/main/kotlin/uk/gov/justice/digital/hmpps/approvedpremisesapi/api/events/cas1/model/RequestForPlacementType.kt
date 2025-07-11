@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 *
 * Values: initial,rotl,releaseFollowingDecisions,additionalPlacement
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class RequestForPlacementType(@get:JsonValue val value: kotlin.String) {
 
   initial("initial"),

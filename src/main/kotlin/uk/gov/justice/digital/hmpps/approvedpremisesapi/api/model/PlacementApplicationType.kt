@@ -1,26 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
-* 'Initial' means that the request for placement was created for the arrival date included on the original application.  'Additional' means the request for placement was created after the application had been assessed as suitable. A given application should only have, at most, one request for placement of type 'Initial'. 
+* 'Initial' means that the request for placement was created for the arrival date included on the original application.  'Additional' means the request for placement was created after the application had been assessed as suitable. A given application should only have, at most, one request for placement of type 'Initial'.
 * Values: initial,additional
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementApplicationType(@get:JsonValue val value: kotlin.String) {
 
-    initial("Initial"),
-    additional("Additional");
+  initial("Initial"),
+  additional("Additional"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: kotlin.String): PlacementApplicationType {
-                return values().first{it -> it.value == value}
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: kotlin.String): PlacementApplicationType = values().first { it -> it.value == value }
+  }
 }
-

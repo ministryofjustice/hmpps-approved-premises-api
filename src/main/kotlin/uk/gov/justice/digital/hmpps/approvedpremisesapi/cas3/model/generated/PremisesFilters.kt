@@ -11,10 +11,9 @@ import java.util.UUID
  */
 data class PremisesFilters(
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("includedCharacteristicIds") val includedCharacteristicIds: List<UUID>? = null,
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("includedCharacteristicIds") val includedCharacteristicIds: List<UUID>? = null,
 
-    @Schema(example = "null", description = "")
-    @get:JsonProperty("excludedCharacteristicIds") val excludedCharacteristicIds: List<UUID>? = null
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("excludedCharacteristicIds") val excludedCharacteristicIds: List<UUID>? = null,
 )
-

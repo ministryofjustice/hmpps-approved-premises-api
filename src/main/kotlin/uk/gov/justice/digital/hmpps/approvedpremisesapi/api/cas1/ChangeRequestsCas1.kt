@@ -5,6 +5,19 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
@@ -12,139 +25,111 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 
 @RestController
 interface ChangeRequestsCas1 {
 
-    fun getDelegate(): ChangeRequestsCas1Delegate = object: ChangeRequestsCas1Delegate {}
+  fun getDelegate(): ChangeRequestsCas1Delegate = object : ChangeRequestsCas1Delegate {}
 
-    @Operation(
-        tags = ["change requests",],
-        summary = "",
-        operationId = "createPlacementAppeal",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-requests/{placementRequestId}/appeal"],
-            produces = ["application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun createPlacementAppeal(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
-        return getDelegate().createPlacementAppeal(placementRequestId, cas1NewChangeRequest)
-    }
+  @Operation(
+    tags = ["change requests"],
+    summary = "",
+    operationId = "createPlacementAppeal",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{placementRequestId}/appeal"],
+    produces = ["application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun createPlacementAppeal(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> = getDelegate().createPlacementAppeal(placementRequestId, cas1NewChangeRequest)
 
-    @Operation(
-        tags = ["change requests",],
-        summary = "",
-        operationId = "createPlacementExtension",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-requests/{placementRequestId}/extension"],
-            produces = ["application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun createPlacementExtension(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
-        return getDelegate().createPlacementExtension(placementRequestId, cas1NewChangeRequest)
-    }
+  @Operation(
+    tags = ["change requests"],
+    summary = "",
+    operationId = "createPlacementExtension",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{placementRequestId}/extension"],
+    produces = ["application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun createPlacementExtension(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> = getDelegate().createPlacementExtension(placementRequestId, cas1NewChangeRequest)
 
-    @Operation(
-        tags = ["change requests",],
-        summary = "",
-        operationId = "createPlannedTransfer",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successful operation"),
-            ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/placement-requests/{placementRequestId}/planned-transfer"],
-            produces = ["application/problem+json"],
-            consumes = ["application/json"]
-    )
-    fun createPlannedTransfer(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
-        return getDelegate().createPlannedTransfer(placementRequestId, cas1NewChangeRequest)
-    }
+  @Operation(
+    tags = ["change requests"],
+    summary = "",
+    operationId = "createPlannedTransfer",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation"),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{placementRequestId}/planned-transfer"],
+    produces = ["application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun createPlannedTransfer(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> = getDelegate().createPlannedTransfer(placementRequestId, cas1NewChangeRequest)
 
-    @Operation(
-        tags = ["change requests",],
-        summary = "",
-        operationId = "findOpen",
-        description = """Return open change requests""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved change requests", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ChangeRequestSummary::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/placement-requests/change-requests"],
-            produces = ["application/json"]
-    )
-    fun findOpen( @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1ChangeRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<Cas1ChangeRequestSummary>> {
-        return getDelegate().findOpen(page, cruManagementAreaId, sortBy, sortDirection)
-    }
+  @Operation(
+    tags = ["change requests"],
+    summary = "",
+    operationId = "findOpen",
+    description = """Return open change requests""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved change requests", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ChangeRequestSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-requests/change-requests"],
+    produces = ["application/json"],
+  )
+  fun findOpen(@RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1ChangeRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<Cas1ChangeRequestSummary>> = getDelegate().findOpen(page, cruManagementAreaId, sortBy, sortDirection)
 
-    @Operation(
-        tags = ["change requests",],
-        summary = "",
-        operationId = "get",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved change request", content = [Content(schema = Schema(implementation = Cas1ChangeRequest::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/placement-requests/{placementRequestId}/change-requests/{changeRequestId}"],
-            produces = ["application/json"]
-    )
-    fun get(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID,@Parameter(description = "", required = true) @PathVariable("changeRequestId") changeRequestId: java.util.UUID): ResponseEntity<Cas1ChangeRequest> {
-        return getDelegate().get(placementRequestId, changeRequestId)
-    }
+  @Operation(
+    tags = ["change requests"],
+    summary = "",
+    operationId = "get",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved change request", content = [Content(schema = Schema(implementation = Cas1ChangeRequest::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-requests/{placementRequestId}/change-requests/{changeRequestId}"],
+    produces = ["application/json"],
+  )
+  fun get(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID, @Parameter(description = "", required = true) @PathVariable("changeRequestId") changeRequestId: java.util.UUID): ResponseEntity<Cas1ChangeRequest> = getDelegate().get(placementRequestId, changeRequestId)
 
-    @Operation(
-        tags = ["change requests",],
-        summary = "",
-        operationId = "reject",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully rejected a change request")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PATCH],
-            value = ["/placement-requests/{placementRequestId}/change-requests/{changeRequestId}"],
-            consumes = ["application/json"]
-    )
-    fun reject(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID,@Parameter(description = "", required = true) @PathVariable("changeRequestId") changeRequestId: java.util.UUID,@Parameter(description = "", required = true) @RequestBody cas1RejectChangeRequest: Cas1RejectChangeRequest): ResponseEntity<Unit> {
-        return getDelegate().reject(placementRequestId, changeRequestId, cas1RejectChangeRequest)
-    }
+  @Operation(
+    tags = ["change requests"],
+    summary = "",
+    operationId = "reject",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully rejected a change request"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PATCH],
+    value = ["/placement-requests/{placementRequestId}/change-requests/{changeRequestId}"],
+    consumes = ["application/json"],
+  )
+  fun reject(@Parameter(description = "", required = true) @PathVariable("placementRequestId") placementRequestId: java.util.UUID, @Parameter(description = "", required = true) @PathVariable("changeRequestId") changeRequestId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody cas1RejectChangeRequest: Cas1RejectChangeRequest): ResponseEntity<Unit> = getDelegate().reject(placementRequestId, changeRequestId, cas1RejectChangeRequest)
 }

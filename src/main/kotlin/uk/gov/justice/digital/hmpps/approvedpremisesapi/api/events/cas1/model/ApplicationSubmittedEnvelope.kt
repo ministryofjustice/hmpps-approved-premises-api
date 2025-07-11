@@ -24,4 +24,4 @@ data class ApplicationSubmittedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: ApplicationSubmitted,
-): Cas1DomainEventEnvelopeInterface<ApplicationSubmitted>
+) : Cas1DomainEventEnvelopeInterface<ApplicationSubmitted>

@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedSubmittedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 
 /**
  *
@@ -69,6 +67,7 @@ data class ApplicationSubmitted(
    *
    * Values: male,female
    */
+  @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Gender(@get:JsonValue val value: kotlin.String) {
 
     male("Male"),

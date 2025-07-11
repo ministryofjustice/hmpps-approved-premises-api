@@ -1,29 +1,25 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import java.util.Objects
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonValue
 
 /**
-* 
+*
 * Values: awaitingResponse,completed,reallocated,inProgress,notStarted
 */
+@Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApprovedPremisesAssessmentStatus(@get:JsonValue val value: kotlin.String) {
 
-    awaitingResponse("awaiting_response"),
-    completed("completed"),
-    reallocated("reallocated"),
-    inProgress("in_progress"),
-    notStarted("not_started");
+  awaitingResponse("awaiting_response"),
+  completed("completed"),
+  reallocated("reallocated"),
+  inProgress("in_progress"),
+  notStarted("not_started"),
+  ;
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun forValue(value: kotlin.String): ApprovedPremisesAssessmentStatus {
-                return values().first{it -> it.value == value}
-        }
-    }
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: kotlin.String): ApprovedPremisesAssessmentStatus = values().first { it -> it.value == value }
+  }
 }
-

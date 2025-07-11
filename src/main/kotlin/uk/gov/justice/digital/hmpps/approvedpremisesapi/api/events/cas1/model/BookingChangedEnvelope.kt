@@ -24,4 +24,4 @@ data class BookingChangedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: BookingChanged,
-): Cas1DomainEventEnvelopeInterface<BookingChanged>
+) : Cas1DomainEventEnvelopeInterface<BookingChanged>

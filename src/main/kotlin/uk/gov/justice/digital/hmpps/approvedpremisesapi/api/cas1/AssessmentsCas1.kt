@@ -5,6 +5,19 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentRejection
@@ -16,156 +29,126 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
 @RestController
 interface AssessmentsCas1 {
 
-    fun getDelegate(): AssessmentsCas1Delegate = object: AssessmentsCas1Delegate {}
+  fun getDelegate(): AssessmentsCas1Delegate = object : AssessmentsCas1Delegate {}
 
-    @Operation(
-        tags = ["Assessments",],
-        summary = "Accepts an Assessment",
-        operationId = "acceptAssessment",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully accepted the assessment")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/assessments/{assessmentId}/acceptance"],
-            consumes = ["application/json"]
-    )
-    fun acceptAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID,@Parameter(description = "Information needed to accept an assessment", required = true) @RequestBody cas1AssessmentAcceptance: Cas1AssessmentAcceptance): ResponseEntity<Unit> {
-        return getDelegate().acceptAssessment(assessmentId, cas1AssessmentAcceptance)
-    }
+  @Operation(
+    tags = ["Assessments"],
+    summary = "Accepts an Assessment",
+    operationId = "acceptAssessment",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully accepted the assessment"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/acceptance"],
+    consumes = ["application/json"],
+  )
+  fun acceptAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID, @Parameter(description = "Information needed to accept an assessment", required = true) @RequestBody cas1AssessmentAcceptance: Cas1AssessmentAcceptance): ResponseEntity<Unit> = getDelegate().acceptAssessment(assessmentId, cas1AssessmentAcceptance)
 
-    @Operation(
-        tags = ["Assessments",],
-        summary = "Adds a clarification note to an assessment",
-        operationId = "addClarificationNoteToAssessment",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "201", description = "successfully created a clarification note", content = [Content(schema = Schema(implementation = Cas1ClarificationNote::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/assessments/{assessmentId}/notes"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun addClarificationNoteToAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID,@Parameter(description = "Clarification note", required = true) @RequestBody cas1NewClarificationNote: Cas1NewClarificationNote): ResponseEntity<Cas1ClarificationNote> {
-        return getDelegate().addClarificationNoteToAssessment(assessmentId, cas1NewClarificationNote)
-    }
+  @Operation(
+    tags = ["Assessments"],
+    summary = "Adds a clarification note to an assessment",
+    operationId = "addClarificationNoteToAssessment",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "201", description = "successfully created a clarification note", content = [Content(schema = Schema(implementation = Cas1ClarificationNote::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/notes"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun addClarificationNoteToAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID, @Parameter(description = "Clarification note", required = true) @RequestBody cas1NewClarificationNote: Cas1NewClarificationNote): ResponseEntity<Cas1ClarificationNote> = getDelegate().addClarificationNoteToAssessment(assessmentId, cas1NewClarificationNote)
 
-    @Operation(
-        tags = ["Assessments",],
-        summary = "Gets a single assessment by its id",
-        operationId = "getAssessment",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved assessment", content = [Content(schema = Schema(implementation = Cas1Assessment::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/assessments/{assessmentId}"],
-            produces = ["application/json"]
-    )
-    fun getAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID): ResponseEntity<Cas1Assessment> {
-        return getDelegate().getAssessment(assessmentId)
-    }
+  @Operation(
+    tags = ["Assessments"],
+    summary = "Gets a single assessment by its id",
+    operationId = "getAssessment",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved assessment", content = [Content(schema = Schema(implementation = Cas1Assessment::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/assessments/{assessmentId}"],
+    produces = ["application/json"],
+  )
+  fun getAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID): ResponseEntity<Cas1Assessment> = getDelegate().getAssessment(assessmentId)
 
-    @PaginationHeaders
-    @Operation(
-        tags = ["Assessments",],
-        summary = "Gets assessments the user is authorised to view",
-        operationId = "getAssessmentsForUser",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully retrieved assessments", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1AssessmentSummary::class)))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.GET],
-            value = ["/assessments"],
-            produces = ["application/json"]
-    )
-    fun getAssessmentsForUser( @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1AssessmentSortField?, @RequestParam(value = "statuses", required = false) statuses: kotlin.collections.List<Cas1AssessmentStatus>?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1AssessmentSummary>> {
-        return getDelegate().getAssessmentsForUser(sortDirection, sortBy, statuses, crnOrName, page, perPage)
-    }
+  @PaginationHeaders
+  @Operation(
+    tags = ["Assessments"],
+    summary = "Gets assessments the user is authorised to view",
+    operationId = "getAssessmentsForUser",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved assessments", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1AssessmentSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/assessments"],
+    produces = ["application/json"],
+  )
+  fun getAssessmentsForUser(@RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1AssessmentSortField?, @RequestParam(value = "statuses", required = false) statuses: kotlin.collections.List<Cas1AssessmentStatus>?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1AssessmentSummary>> = getDelegate().getAssessmentsForUser(sortDirection, sortBy, statuses, crnOrName, page, perPage)
 
-    @Operation(
-        tags = ["Assessments",],
-        summary = "Rejects an Assessment",
-        operationId = "rejectAssessment",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully rejected the assessment")
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.POST],
-            value = ["/assessments/{assessmentId}/rejection"],
-            consumes = ["application/json"]
-    )
-    fun rejectAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID,@Parameter(description = "Rejection info", required = true) @RequestBody cas1AssessmentRejection: Cas1AssessmentRejection): ResponseEntity<Unit> {
-        return getDelegate().rejectAssessment(assessmentId, cas1AssessmentRejection)
-    }
+  @Operation(
+    tags = ["Assessments"],
+    summary = "Rejects an Assessment",
+    operationId = "rejectAssessment",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully rejected the assessment"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/rejection"],
+    consumes = ["application/json"],
+  )
+  fun rejectAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID, @Parameter(description = "Rejection info", required = true) @RequestBody cas1AssessmentRejection: Cas1AssessmentRejection): ResponseEntity<Unit> = getDelegate().rejectAssessment(assessmentId, cas1AssessmentRejection)
 
-    @Operation(
-        tags = ["Assessments",],
-        summary = "Updates an assessment",
-        operationId = "updateAssessment",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "200", description = "successfully updated assessment", content = [Content(schema = Schema(implementation = Cas1Assessment::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PUT],
-            value = ["/assessments/{assessmentId}"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun updateAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID,@Parameter(description = "Updated assessment", required = true) @RequestBody cas1UpdateAssessment: Cas1UpdateAssessment): ResponseEntity<Cas1Assessment> {
-        return getDelegate().updateAssessment(assessmentId, cas1UpdateAssessment)
-    }
+  @Operation(
+    tags = ["Assessments"],
+    summary = "Updates an assessment",
+    operationId = "updateAssessment",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully updated assessment", content = [Content(schema = Schema(implementation = Cas1Assessment::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/assessments/{assessmentId}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun updateAssessment(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID, @Parameter(description = "Updated assessment", required = true) @RequestBody cas1UpdateAssessment: Cas1UpdateAssessment): ResponseEntity<Cas1Assessment> = getDelegate().updateAssessment(assessmentId, cas1UpdateAssessment)
 
-    @Operation(
-        tags = ["Assessments",],
-        summary = "Updates an assessment's clarification note",
-        operationId = "updateAssessmentClarificationNote",
-        description = """""",
-        responses = [
-            ApiResponse(responseCode = "201", description = "successfully updated a clarification note", content = [Content(schema = Schema(implementation = Cas1ClarificationNote::class))])
-        ]
-    )
-    @RequestMapping(
-            method = [RequestMethod.PUT],
-            value = ["/assessments/{assessmentId}/notes/{noteId}"],
-            produces = ["application/json"],
-            consumes = ["application/json"]
-    )
-    fun updateAssessmentClarificationNote(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID,@Parameter(description = "Id of the clarification note", required = true) @PathVariable("noteId") noteId: java.util.UUID,@Parameter(description = "Clarification note", required = true) @RequestBody cas1UpdatedClarificationNote: Cas1UpdatedClarificationNote): ResponseEntity<Cas1ClarificationNote> {
-        return getDelegate().updateAssessmentClarificationNote(assessmentId, noteId, cas1UpdatedClarificationNote)
-    }
+  @Operation(
+    tags = ["Assessments"],
+    summary = "Updates an assessment's clarification note",
+    operationId = "updateAssessmentClarificationNote",
+    description = """""",
+    responses = [
+      ApiResponse(responseCode = "201", description = "successfully updated a clarification note", content = [Content(schema = Schema(implementation = Cas1ClarificationNote::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/assessments/{assessmentId}/notes/{noteId}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun updateAssessmentClarificationNote(@Parameter(description = "Id of the assessment", required = true) @PathVariable("assessmentId") assessmentId: java.util.UUID, @Parameter(description = "Id of the clarification note", required = true) @PathVariable("noteId") noteId: java.util.UUID, @Parameter(description = "Clarification note", required = true) @RequestBody cas1UpdatedClarificationNote: Cas1UpdatedClarificationNote): ResponseEntity<Cas1ClarificationNote> = getDelegate().updateAssessmentClarificationNote(assessmentId, noteId, cas1UpdatedClarificationNote)
 }

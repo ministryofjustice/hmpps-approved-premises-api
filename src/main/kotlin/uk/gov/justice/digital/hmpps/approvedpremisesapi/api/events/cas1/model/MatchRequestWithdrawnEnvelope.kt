@@ -24,4 +24,4 @@ data class MatchRequestWithdrawnEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: MatchRequestWithdrawn,
-): Cas1DomainEventEnvelopeInterface<MatchRequestWithdrawn>
+) : Cas1DomainEventEnvelopeInterface<MatchRequestWithdrawn>

@@ -4,16 +4,16 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
 import java.util.Optional
 
-@jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")@Controller
+@Controller
 @RequestMapping("\${openapi.communityAccommodationServicesApprovedPremisesCAS1.base-path:/cas1}")
 class ApplicationsCas1Controller(
-        delegate: ApplicationsCas1Delegate?
+  delegate: ApplicationsCas1Delegate?,
 ) : ApplicationsCas1 {
-    private lateinit var delegate: ApplicationsCas1Delegate
+  private lateinit var delegate: ApplicationsCas1Delegate
 
-    init {
-        this.delegate = Optional.ofNullable(delegate).orElse(object : ApplicationsCas1Delegate {})
-    }
+  init {
+    this.delegate = Optional.ofNullable(delegate).orElse(object : ApplicationsCas1Delegate {})
+  }
 
-    override fun getDelegate(): ApplicationsCas1Delegate = delegate
+  override fun getDelegate(): ApplicationsCas1Delegate = delegate
 }

@@ -4,16 +4,16 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
 import java.util.Optional
 
-@jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")@Controller
+@Controller
 @RequestMapping("\${openapi.approvedPremises.base-path:}")
 class CacheApiController(
-        delegate: CacheApiDelegate?
+  delegate: CacheApiDelegate?,
 ) : CacheApi {
-    private lateinit var delegate: CacheApiDelegate
+  private lateinit var delegate: CacheApiDelegate
 
-    init {
-        this.delegate = Optional.ofNullable(delegate).orElse(object : CacheApiDelegate {})
-    }
+  init {
+    this.delegate = Optional.ofNullable(delegate).orElse(object : CacheApiDelegate {})
+  }
 
-    override fun getDelegate(): CacheApiDelegate = delegate
+  override fun getDelegate(): CacheApiDelegate = delegate
 }
