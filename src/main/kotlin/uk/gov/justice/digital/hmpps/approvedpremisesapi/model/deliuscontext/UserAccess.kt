@@ -8,6 +8,6 @@ data class CaseAccess(
   val crn: String,
   val userExcluded: Boolean,
   val userRestricted: Boolean,
-  val exclusionMessage: String?,
-  val restrictionMessage: String?,
+  val exclusionMessage: String? = null,
+  val restrictionMessage: String? = null,
 )
