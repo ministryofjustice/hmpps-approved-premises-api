@@ -60,6 +60,7 @@ class Cas3PremisesService(
   private val bedspaceRepository: BedRepository,
   private val characteristicService: CharacteristicService,
   private val workingDayService: WorkingDayService,
+  private val cas3DomainEventService: Cas3DomainEventService,
 ) {
 
   companion object {
@@ -802,13 +803,18 @@ class Cas3PremisesService(
       return@validatedCasResult errors()
     }
 
+    val currentStartDate = bedspace.startDate ?: error("Start date for bedspace ${bedspace.id} is null")
+    val currentEndDate = bedspace.endDate ?: error("End date for bedspace ${bedspace.id} is null")
+
     // Update the bedspace to unarchive it
     val updatedBedspace = bedspaceRepository.save(
-      bedspace.copy(
+        bedspace.copy(
         startDate = restartDate,
         endDate = null,
       ),
     )
+
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, currentStartDate, currentEndDate)
 
     success(updatedBedspace)
   }

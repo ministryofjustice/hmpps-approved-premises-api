@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -66,6 +67,7 @@ class Cas3PremisesServiceTest {
   private val bedRepositoryMock = mockk<BedRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
   private val workingDayServiceMock = mockk<WorkingDayService>()
+  private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
 
   private val temporaryAccommodationPremisesFactory = TemporaryAccommodationPremisesEntityFactory()
     .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
@@ -88,6 +90,7 @@ class Cas3PremisesServiceTest {
     bedRepositoryMock,
     characteristicServiceMock,
     workingDayServiceMock,
+    mockCas3DomainEventService,
   )
 
   @Nested
@@ -1993,10 +1996,12 @@ class Cas3PremisesServiceTest {
     @Test
     fun `unarchiveBedspace returns Success when bedspace is successfully unarchived`() {
       val premises = temporaryAccommodationPremisesFactory.produce()
+      val currentStartDate = LocalDate.now().minusDays(30)
+      val currentEndDate = LocalDate.now().minusDays(1)
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
       val archivedBedspace = BedEntityFactory()
         .withYieldedRoom { room }
-        .withStartDate(LocalDate.now().minusDays(30))
+        .withStartDate(currentStartDate)
         .withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
         .produce()
 
@@ -2007,6 +2012,7 @@ class Cas3PremisesServiceTest {
       val updatedBedspace = archivedBedspace.copy(startDate = restartDate, endDate = null)
 
       every { bedRepositoryMock.save(any()) } returns updatedBedspace
+      every { mockCas3DomainEventService.saveBedspaceUnarchiveEvent(eq(updatedBedspace), eq(currentStartDate), eq(currentEndDate)) } returns Unit
 
       val result = premisesService.unarchiveBedspace(premises, archivedBedspace.id, restartDate)
 
@@ -2137,11 +2143,14 @@ class Cas3PremisesServiceTest {
     @Test
     fun `unarchiveBedspace allows restart date exactly 7 days in the past`() {
       val premises = temporaryAccommodationPremisesFactory.produce()
+      val currentStartDate = LocalDate.now().minusDays(30)
+      val currentEndDate = LocalDate.now().minusDays(10)
+
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
       val archivedBedspace = BedEntityFactory()
         .withYieldedRoom { room }
-        .withStartDate(LocalDate.now().minusDays(30))
-        .withEndDate(LocalDate.now().minusDays(10))
+        .withStartDate(currentStartDate)
+        .withEndDate(currentEndDate)
         .produce()
 
       premises.rooms.add(room)
@@ -2151,6 +2160,7 @@ class Cas3PremisesServiceTest {
       val updatedBedspace = archivedBedspace.copy(startDate = restartDate, endDate = null)
 
       every { bedRepositoryMock.save(any()) } returns updatedBedspace
+      every { mockCas3DomainEventService.saveBedspaceUnarchiveEvent(eq(updatedBedspace), eq(currentStartDate),  eq(currentEndDate)) } returns Unit
 
       val result = premisesService.unarchiveBedspace(premises, archivedBedspace.id, restartDate)
 
@@ -2160,11 +2170,14 @@ class Cas3PremisesServiceTest {
     @Test
     fun `unarchiveBedspace allows restart date exactly 7 days in the future`() {
       val premises = temporaryAccommodationPremisesFactory.produce()
+      val currentStartDate = LocalDate.now().minusDays(30)
+      val currentEndDate = LocalDate.now().minusDays(10)
+
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
       val archivedBedspace = BedEntityFactory()
         .withYieldedRoom { room }
-        .withStartDate(LocalDate.now().minusDays(30))
-        .withEndDate(LocalDate.now().minusDays(10))
+        .withStartDate(currentStartDate)
+        .withEndDate(currentEndDate)
         .produce()
 
       premises.rooms.add(room)
@@ -2173,6 +2186,7 @@ class Cas3PremisesServiceTest {
       val restartDate = LocalDate.now().plusDays(7) // Exactly 7 days in the future
       val updatedBedspace = archivedBedspace.copy(startDate = restartDate, endDate = null)
 
+      every { mockCas3DomainEventService.saveBedspaceUnarchiveEvent(eq(updatedBedspace), eq(currentStartDate),  eq(currentEndDate)) } returns Unit
       every { bedRepositoryMock.save(any()) } returns updatedBedspace
 
       val result = premisesService.unarchiveBedspace(premises, archivedBedspace.id, restartDate)
