@@ -138,7 +138,7 @@ class UserAccessService(
 
   fun userCanReallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {
     ServiceName.temporaryAccommodation -> user.hasRole(UserRole.CAS3_ASSESSOR)
-    ServiceName.approvedPremises -> user.hasPermission(UserPermission.CAS1_VIEW_MANAGE_TASKS)
+    ServiceName.approvedPremises -> user.hasPermission(UserPermission.CAS1_TASK_ALLOCATE)
     else -> false
   }
 
