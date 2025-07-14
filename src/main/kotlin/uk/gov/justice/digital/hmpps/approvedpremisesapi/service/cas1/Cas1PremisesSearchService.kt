@@ -1,13 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import java.util.UUID
 
@@ -15,24 +13,19 @@ import java.util.UUID
 class Cas1PremisesSearchService(
   private val characteristicService: CharacteristicService,
   private val spaceSearchRepository: Cas1SpaceSearchRepository,
-  private val applicationRepository: ApprovedPremisesApplicationRepository,
 ) {
   data class Cas1PremisesSearchCriteria(
-    val applicationId: UUID,
-    val targetPostcodeDistrict: String,
-    val spaceCharacteristics: List<Cas1SpaceCharacteristic>,
+    val gender: ApprovedPremisesGender?,
+    val targetPostcodeDistrict: String?,
+    val spaceCharacteristics: Set<Cas1SpaceCharacteristic>,
   )
 
   fun findPremises(searchCriteria: Cas1PremisesSearchCriteria): List<CandidatePremises> {
-    val applicationId = searchCriteria.applicationId
-    val application = applicationRepository.findByIdOrNull(searchCriteria.applicationId)
-      ?: throw NotFoundProblem(applicationId, "Application")
-
     val groupedCharacteristics = getGroupedCharacteristics(searchCriteria)
 
     return spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
       targetPostcodeDistrict = searchCriteria.targetPostcodeDistrict,
-      isWomensPremises = application.isWomensApplication!!,
+      gender = searchCriteria.gender,
       premisesCharacteristics = groupedCharacteristics.premisesCharacteristics,
       roomCharacteristics = groupedCharacteristics.roomCharacteristics,
     )

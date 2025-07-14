@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
@@ -239,7 +239,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
     @Test
     fun `single premises success`() {
       val capacity = spacePlanner.capacity(
-        premises = premises1,
+        premisesId = premises1.id,
         rangeInclusive = DateRange(
           fromInclusive = date(2020, 5, 6),
           toInclusive = date(2020, 5, 10),
@@ -247,14 +247,14 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         excludeSpaceBookingId = null,
       )
 
-      assertThat(capacity.premise.id).isEqualTo(premises1.id)
+      assertThat(capacity.premisesId).isEqualTo(premises1.id)
       assertPremises1CapacityNoExclusions(capacity)
     }
 
     @Test
     fun `single premises success, excluding a space booking`() {
       val capacity = spacePlanner.capacity(
-        premises = premises1,
+        premisesId = premises1.id,
         rangeInclusive = DateRange(
           fromInclusive = date(2020, 5, 6),
           toInclusive = date(2020, 5, 10),
@@ -262,7 +262,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         excludeSpaceBookingId = premises1BookingCrn1.id,
       )
 
-      assertThat(capacity.premise.id).isEqualTo(premises1.id)
+      assertThat(capacity.premisesId).isEqualTo(premises1.id)
       assertThat(capacity.byDay).hasSize(5)
 
       val day1Capacity = capacity.byDay[0]
@@ -335,7 +335,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
     @Test
     fun `multiple premises success`() {
       val capacity = spacePlanner.capacity(
-        forPremises = listOf(premises1, premises2),
+        forPremisesIds = listOf(premises1.id, premises2.id),
         rangeInclusive = DateRange(
           fromInclusive = date(2020, 5, 6),
           toInclusive = date(2020, 5, 10),
@@ -343,11 +343,11 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
         excludeSpaceBookingId = null,
       )
 
-      assertPremises1CapacityNoExclusions(capacity.first { it.premise.id == premises1.id })
-      assertPremises2CapacityNoExclusions(capacity.first { it.premise.id == premises2.id })
+      assertPremises1CapacityNoExclusions(capacity.first { it.premisesId == premises1.id })
+      assertPremises2CapacityNoExclusions(capacity.first { it.premisesId == premises2.id })
     }
 
-    private fun assertPremises2CapacityNoExclusions(capacity: PremiseCapacitySummary) {
+    private fun assertPremises2CapacityNoExclusions(capacity: PremiseCapacity) {
       assertThat(capacity.byDay).hasSize(5)
 
       val day1Capacity = capacity.byDay[0]
@@ -421,7 +421,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
       )
     }
 
-    private fun assertPremises1CapacityNoExclusions(capacity: PremiseCapacitySummary) {
+    private fun assertPremises1CapacityNoExclusions(capacity: PremiseCapacity) {
       assertThat(capacity.byDay).hasSize(5)
 
       val day1Capacity = capacity.byDay[0]

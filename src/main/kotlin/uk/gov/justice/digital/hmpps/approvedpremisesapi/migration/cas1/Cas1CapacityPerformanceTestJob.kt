@@ -36,7 +36,7 @@ class Cas1CapacityPerformanceTestJob(
       ),
     )
 
-    val description = objectMapper.writeValueAsString(capacities.map { cas1PremiseCapacitySummaryTransformer.toCas1PremiseCapacitySummary(it) })
+    val description = objectMapper.writeValueAsString(capacities.results.map { cas1PremiseCapacitySummaryTransformer.toCas1PremiseCapacitySummary(it) })
 
     log.info("Capacities are $description")
 

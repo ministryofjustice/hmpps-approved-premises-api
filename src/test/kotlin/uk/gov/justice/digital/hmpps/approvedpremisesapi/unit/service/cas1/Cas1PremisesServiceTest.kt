@@ -26,8 +26,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacityForDay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
@@ -99,8 +99,8 @@ class Cas1PremisesServiceTest {
         .withSupportsSpaceBookings(true)
         .produce()
 
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(LocalDate.now(), LocalDate.now().plusWeeks(12)),
         byDay = emptyList(),
       )
@@ -110,7 +110,7 @@ class Cas1PremisesServiceTest {
 
       every { premisesService.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 4
 
       val result = service.getPremisesInfo(PREMISES_ID)
@@ -137,10 +137,10 @@ class Cas1PremisesServiceTest {
         .withSupportsSpaceBookings(true)
         .produce()
 
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(LocalDate.now(), LocalDate.now().plusWeeks(12)),
-        byDay = listOf(SpacePlanningService.PremiseCapacityForDay(LocalDate.of(2024, 11, 12), 5, 2, 7, emptyList())),
+        byDay = listOf(PremiseCapacityForDay(LocalDate.of(2024, 11, 12), 5, 2, 7, emptyList())),
       )
 
       every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns false
@@ -148,7 +148,7 @@ class Cas1PremisesServiceTest {
 
       every { premisesService.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 5
 
       val result = service.getPremisesInfo(PREMISES_ID)
@@ -200,13 +200,13 @@ class Cas1PremisesServiceTest {
         createPremiseCapacityForDay(LocalDate.of(2024, 7, 2), 4, 3, 3, emptyList()),
       )
 
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(rangeStart, rangeEnd),
         byDay = overbookedDays,
       )
 
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
 
       val result = service.getPremisesInfo(PREMISES_ID) as CasResult.Success
 
@@ -236,13 +236,13 @@ class Cas1PremisesServiceTest {
         createPremiseCapacityForDay(LocalDate.of(2024, 7, 12), 3, 1, 4, emptyList()),
       )
 
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(rangeStart, rangeEnd),
         byDay = overbookedDays,
       )
 
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
 
       val result = service.getPremisesInfo(PREMISES_ID) as CasResult.Success
 
@@ -278,14 +278,14 @@ class Cas1PremisesServiceTest {
         createPremiseCapacityForDay(LocalDate.of(2024, 7, 12), 3, 1, 4, emptyList()),
       )
 
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(rangeStart, rangeEnd),
         byDay = overbookedDays,
       )
 
       every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns true
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
 
       val result = service.getPremisesInfo(PREMISES_ID) as CasResult.Success
 
@@ -317,13 +317,13 @@ class Cas1PremisesServiceTest {
         ),
       )
 
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(rangeStart, rangeEnd),
         byDay = overbookedDays,
       )
 
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
 
       val result = service.getPremisesInfo(PREMISES_ID) as CasResult.Success
 
@@ -364,13 +364,13 @@ class Cas1PremisesServiceTest {
         createPremiseCapacityForDay(LocalDate.of(2024, 8, 25), 5, 1, 3),
       )
 
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(rangeStart, rangeEnd),
         byDay = overbookedDays,
       )
 
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
 
       val result = service.getPremisesInfo(PREMISES_ID) as CasResult.Success
 
@@ -402,13 +402,13 @@ class Cas1PremisesServiceTest {
         createPremiseCapacityForDay(LocalDate.of(2024, 7, 4), 5, 0, 8),
         createPremiseCapacityForDay(LocalDate.of(2024, 7, 5), 6, 0, 6),
       )
-      val premisesCapacitySummary = PremiseCapacitySummary(
-        premise = premises,
+      val premisesCapacitySummary = PremiseCapacity(
+        premisesId = PREMISES_ID,
         range = DateRange(rangeStart, rangeEnd),
         byDay = overbookedDays,
       )
 
-      every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
 
       val result = service.getPremisesInfo(PREMISES_ID) as CasResult.Success
 
@@ -473,6 +473,21 @@ class Cas1PremisesServiceTest {
     }
 
     @Test
+    fun `success, no premises requested`() {
+      val result = service.getPremisesCapacities(
+        premisesIds = emptyList(),
+        startDate = LocalDate.of(2020, 1, 2),
+        endDate = LocalDate.of(2020, 1, 3),
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.startDate).isEqualTo(LocalDate.of(2020, 1, 2))
+        assertThat(it.endDate).isEqualTo(LocalDate.of(2020, 1, 3))
+        assertThat(it.results).isEmpty()
+      }
+    }
+
+    @Test
     fun `success, single premises`() {
       val premise = ApprovedPremisesEntityFactory().withDefaults().withId(PREMISES_ID).produce()
       val excludeSpaceBookingId = UUID.randomUUID()
@@ -481,11 +496,11 @@ class Cas1PremisesServiceTest {
         approvedPremisesRepository.findAllById(listOf(PREMISES_ID))
       } returns listOf(premise)
 
-      val capacityResponse = mockk<PremiseCapacitySummary>()
+      val capacityResponse = mockk<PremiseCapacity>()
 
       every {
         spacePlanningService.capacity(
-          forPremises = listOf(premise),
+          forPremisesIds = listOf(PREMISES_ID),
           rangeInclusive = DateRange(
             LocalDate.of(2020, 1, 2),
             LocalDate.of(2020, 1, 3),
@@ -502,7 +517,9 @@ class Cas1PremisesServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(listOf(capacityResponse))
+        assertThat(it.startDate).isEqualTo(LocalDate.of(2020, 1, 2))
+        assertThat(it.endDate).isEqualTo(LocalDate.of(2020, 1, 3))
+        assertThat(it.results).isEqualTo(listOf(capacityResponse))
       }
     }
 
@@ -516,12 +533,12 @@ class Cas1PremisesServiceTest {
         approvedPremisesRepository.findAllById(listOf(premises1.id, premises2.id))
       } returns listOf(premises1, premises2)
 
-      val capacityResponse1 = mockk<PremiseCapacitySummary>()
-      val capacityResponse2 = mockk<PremiseCapacitySummary>()
+      val capacityResponse1 = mockk<PremiseCapacity>()
+      val capacityResponse2 = mockk<PremiseCapacity>()
 
       every {
         spacePlanningService.capacity(
-          forPremises = listOf(premises1, premises2),
+          forPremisesIds = listOf(premises1.id, premises2.id),
           rangeInclusive = DateRange(
             LocalDate.of(2020, 2, 2),
             LocalDate.of(2020, 2, 3),
@@ -538,7 +555,7 @@ class Cas1PremisesServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(listOf(capacityResponse1, capacityResponse2))
+        assertThat(it.results).isEqualTo(listOf(capacityResponse1, capacityResponse2))
       }
     }
 
@@ -551,11 +568,11 @@ class Cas1PremisesServiceTest {
         approvedPremisesRepository.findAllById(listOf(PREMISES_ID))
       } returns listOf(premise)
 
-      val capacityResponse = mockk<PremiseCapacitySummary>()
+      val capacityResponse = mockk<PremiseCapacity>()
 
       every {
         spacePlanningService.capacity(
-          forPremises = listOf(premise),
+          forPremisesIds = listOf(PREMISES_ID),
           rangeInclusive = DateRange(
             LocalDate.of(2020, 1, 2),
             LocalDate.of(2022, 1, 1),
@@ -572,7 +589,7 @@ class Cas1PremisesServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(listOf(capacityResponse))
+        assertThat(it.results).isEqualTo(listOf(capacityResponse))
       }
     }
   }

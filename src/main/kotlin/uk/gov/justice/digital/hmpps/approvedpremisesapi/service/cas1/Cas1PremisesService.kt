@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.io.OutputStream
 import java.time.Clock
@@ -85,7 +85,7 @@ class Cas1PremisesService(
 
   private fun buildOverBookingSummary(premises: ApprovedPremisesEntity): List<Cas1OverbookingRange> {
     val premisesCapacitySummary = spacePlanningService.capacity(
-      premises,
+      premises.id,
       rangeInclusive = DateRange(LocalDate.now(), LocalDate.now().plusWeeks(OVERBOOKING_RANGE_DURATION_WEEKS).minusDays(1)),
       excludeSpaceBookingId = null,
     )
@@ -105,12 +105,22 @@ class Cas1PremisesService(
 
   fun premiseExistsById(id: UUID) = premisesRepository.existsById(id)
 
+  data class PremisesCapacities(
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val results: List<PremiseCapacity>,
+  )
+
   fun getPremisesCapacities(
     premisesIds: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
-    excludeSpaceBookingId: UUID?,
-  ): CasResult<List<PremiseCapacitySummary>> {
+    excludeSpaceBookingId: UUID? = null,
+  ): CasResult<PremisesCapacities> {
+    if (premisesIds.isEmpty()) {
+      return CasResult.Success(PremisesCapacities(startDate, endDate, emptyList()))
+    }
+
     val premises = premisesRepository.findAllById(premisesIds)
 
     if (premises.size != premisesIds.size) {
@@ -134,10 +144,14 @@ class Cas1PremisesService(
     }
 
     return CasResult.Success(
-      spacePlanningService.capacity(
-        forPremises = premises,
-        rangeInclusive = dateRange,
-        excludeSpaceBookingId = excludeSpaceBookingId,
+      PremisesCapacities(
+        startDate = startDate,
+        endDate = endDate,
+        spacePlanningService.capacity(
+          forPremisesIds = premises.map { it.id },
+          rangeInclusive = dateRange,
+          excludeSpaceBookingId = excludeSpaceBookingId,
+        ),
       ),
     )
   }
