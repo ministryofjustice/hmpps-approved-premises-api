@@ -66,6 +66,15 @@ class SwaggerConfiguration {
     .build()
 
   @Bean
+  fun cas2(): GroupedOpenApi = GroupedOpenApi.builder()
+    .group("CAS2")
+    .displayName("CAS2")
+    .pathsToMatch("/**/cas2/**")
+    .pathsToExclude("/**/events/**")
+    .addOpenApiCustomizer(errorResponsesCustomizer())
+    .build()
+
+  @Bean
   fun cas2DomainEvents(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2DomainEvents")
     .displayName("CAS2 Domain Events")
