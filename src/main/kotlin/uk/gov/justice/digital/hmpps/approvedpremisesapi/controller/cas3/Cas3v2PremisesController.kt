@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
 import jakarta.transaction.Transactional
+import java.util.UUID
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
@@ -10,7 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -24,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
 @Cas3Controller
@@ -36,6 +38,7 @@ class Cas3v2PremisesController(
   private val cas3BookingService: Cas3v2BookingService,
   private val bookingTransformer: Cas3BookingTransformer,
   private val offenderDetailService: OffenderDetailService,
+  private val voidBedspaceService: Cas3v2VoidBedspaceService
 ) {
 
   @GetMapping("/premises/{premisesId}/bookings")
@@ -114,5 +117,11 @@ class Cas3v2PremisesController(
     )
 
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(extractEntityFromCasResult(createdBookingResult), personInfo))
+  }
+
+  @GetMapping("/cas3/premises/{premisesId}/void-bedspaces")
+  fun getVoidBedspaces(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3VoidBedspace>> {
+
+    return ResponseEntity.ok(listOf())
   }
 }
