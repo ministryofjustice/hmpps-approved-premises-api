@@ -61,14 +61,6 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     this.premises = { premises }
   }
 
-  fun withYieldedVoidBedspaceCancellation(voidBedspaceCancellation: Yielded<Cas3VoidBedspaceCancellationEntity>) = apply {
-    this.voidBedspaceCancellation = voidBedspaceCancellation
-  }
-
-  fun withVoidBedspaceCancellation(voidBedspaceCancellation: Cas3VoidBedspaceCancellationEntity) = apply {
-    this.voidBedspaceCancellation = { voidBedspaceCancellation }
-  }
-
   fun withBed(bed: BedEntity) = apply {
     this.bed = { bed }
   }

@@ -35,6 +35,10 @@ fun IntegrationTestBase.givenAUser(
   }
   val apArea = resolvedProbationRegion.apArea!!
 
+  val pdu = probationDeliveryUnitFactory.produceAndPersist {
+    withProbationRegion(resolvedProbationRegion)
+  }
+
   val user = userEntityFactory.produceAndPersist {
     withId(id)
     withDeliusUsername(staffDetail.username)
@@ -47,6 +51,7 @@ fun IntegrationTestBase.givenAUser(
     withYieldedApArea { apArea }
     withCruManagementArea(cruManagementArea ?: apArea.defaultCruManagementArea)
     withCruManagementAreaOverride(cruManagementAreaOverride)
+    withProbationDeliveryUnit { pdu }
   }
 
   roles.forEach { role ->

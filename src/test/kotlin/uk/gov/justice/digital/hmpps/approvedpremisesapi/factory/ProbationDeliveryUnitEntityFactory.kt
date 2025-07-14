@@ -11,7 +11,7 @@ class ProbationDeliveryUnitEntityFactory : Factory<ProbationDeliveryUnitEntity> 
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var deliusCode: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var probationRegion: Yielded<ProbationRegionEntity>? = null
+  private var probationRegion: Yielded<ProbationRegionEntity> = { ProbationRegionEntityFactory().produce() }
 
   fun withDefaults() = apply {
     this.probationRegion = { ProbationRegionEntityFactory().withDefaults().produce() }
@@ -41,6 +41,6 @@ class ProbationDeliveryUnitEntityFactory : Factory<ProbationDeliveryUnitEntity> 
     id = this.id(),
     name = this.name(),
     deliusCode = this.deliusCode(),
-    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a Probation Region"),
+    probationRegion = this.probationRegion.invoke(),
   )
 }

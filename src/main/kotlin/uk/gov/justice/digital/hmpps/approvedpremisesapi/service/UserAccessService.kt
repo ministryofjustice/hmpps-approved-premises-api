@@ -102,8 +102,10 @@ class UserAccessService(
     else -> false
   }
 
+  @Deprecated("Use CAS3UserAccessService.canViewVoidBedspaces")
   fun currentUserCanManagePremisesVoidBedspaces(premises: PremisesEntity) = userCanManagePremisesVoidBedspaces(userService.getUserForRequest(), premises)
 
+  @Deprecated("Use CAS3UserAccessService.canViewVoidBedspaces")
   fun userCanManagePremisesVoidBedspaces(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false

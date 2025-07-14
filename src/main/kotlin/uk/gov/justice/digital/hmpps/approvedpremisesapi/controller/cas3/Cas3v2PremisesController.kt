@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -19,10 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -35,7 +39,10 @@ class Cas3v2PremisesController(
   private val cas3PremisesService: Cas3v2PremisesService,
   private val cas3BookingService: Cas3v2BookingService,
   private val bookingTransformer: Cas3BookingTransformer,
+  private val voidBedspaceService: Cas3v2VoidBedspaceService,
   private val offenderDetailService: OffenderDetailService,
+  private val cas3UserAccessService: Cas3UserAccessService,
+  private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
 ) {
 
   @GetMapping("/premises/{premisesId}/bookings")
@@ -114,5 +121,18 @@ class Cas3v2PremisesController(
     )
 
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(extractEntityFromCasResult(createdBookingResult), personInfo))
+  }
+
+  @GetMapping("/premises/{premisesId}/void-bedspaces")
+  fun getVoidBedspaces(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3VoidBedspace>> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    val probationRegionId = premises.probationDeliveryUnit.probationRegion.id
+
+    if (!cas3UserAccessService.canViewVoidBedspaces(probationRegionId)) throw ForbiddenProblem()
+
+    val voidBedspaces = voidBedspaceService.findVoidBedspaces(premises.id)
+      .map(cas3VoidBedspacesTransformer::toCas3VoidBedspace)
+
+    return ResponseEntity.ok(voidBedspaces)
   }
 }

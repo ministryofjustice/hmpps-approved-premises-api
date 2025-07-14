@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonEntity
 
 @Component
@@ -12,5 +13,11 @@ class Cas3VoidBedspaceReasonTransformer {
     name = jpa.name,
     isActive = jpa.isActive,
     serviceScope = ServiceName.temporaryAccommodation.value,
+  )
+
+  fun toCas3VoidBedspaceReason(entity: Cas3VoidBedspaceReasonEntity) = Cas3VoidBedspaceReason(
+    id = entity.id,
+    name = entity.name,
+    isActive = entity.isActive,
   )
 }

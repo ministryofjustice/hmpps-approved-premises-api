@@ -1,18 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import java.time.LocalDate
@@ -21,6 +25,10 @@ import java.util.UUID
 
 @SuppressWarnings("LargeClass")
 class VoidBedspacesTest : IntegrationTestBase() {
+
+  @Autowired
+  private lateinit var migrationJobService: MigrationJobService
+
   @Autowired
   lateinit var cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer
 
@@ -60,9 +68,11 @@ class VoidBedspacesTest : IntegrationTestBase() {
   @Test
   fun `List Void Bedspaces on Temporary Accommodation premises returns OK with correct body`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { userEntity.probationRegion }
+        withProbationDeliveryUnit(userEntity.probationDeliveryUnit!!)
       }
 
       val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
@@ -81,7 +91,12 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(listOf(cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspaces)))
+      // migrate the existing premises to return from the new endpoint
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3VoidBedspaceData)
+
+      val bedspaces = listOf(cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspaces))
+      val expectedJson = objectMapper.writeValueAsString(bedspaces)
 
       webTestClient.get()
         .uri("/premises/${premises.id}/lost-beds")
@@ -91,6 +106,22 @@ class VoidBedspacesTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .json(expectedJson)
+
+      val returnedFromV2 = webTestClient.get()
+        .uri("/cas3/v2/premises/${premises.id}/void-bedspaces")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "temporary-accommodation")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList(Cas3VoidBedspace::class.java)
+        .returnResult()
+        .responseBody!!
+
+      val bedspaceIds = bedspaces.map { it.id }
+
+      // the new endpoint should return the same values as the old endpoint.
+      assertThat(returnedFromV2.map { it.id }).containsAll(bedspaceIds)
     }
   }
 
