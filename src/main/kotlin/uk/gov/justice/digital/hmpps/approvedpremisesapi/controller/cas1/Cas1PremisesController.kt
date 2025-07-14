@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService.Cas1PremisesSearchCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
@@ -69,7 +68,6 @@ class Cas1PremisesController(
   private val cas1BedSummaryTransformer: Cas1BedSummaryTransformer,
   private val cas1BedDetailTransformer: Cas1BedDetailTransformer,
   private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
-  private val cas1SpaceBookingDaySummaryService: Cas1SpaceBookingDaySummaryService,
   private val cas1OutOfServiceBedSummaryService: Cas1OutOfServiceBedSummaryService,
   private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
   private val staffMemberService: StaffMemberService,
@@ -275,16 +273,6 @@ class Cas1PremisesController(
             ),
           ).results[0],
         ).capacity.first(),
-        spaceBookings = extractEntityFromCasResult(
-          cas1SpaceBookingDaySummaryService.getBookingDaySummaries(
-            premisesId = premisesId,
-            date = date,
-            bookingsCriteriaFilter = bookingsCriteriaFilter,
-            bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
-            bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
-            excludeSpaceBookingId = excludeSpaceBookingId,
-          ),
-        ),
         outOfServiceBeds = extractEntityFromCasResult(
           cas1OutOfServiceBedSummaryService.getOutOfServiceBedSummaries(
             premisesId = premisesId,

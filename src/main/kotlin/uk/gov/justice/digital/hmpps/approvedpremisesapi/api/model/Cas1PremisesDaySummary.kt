@@ -28,9 +28,6 @@ data class Cas1PremisesDaySummary(
   @get:JsonProperty("capacity", required = true) val capacity: Cas1PremiseCapacityForDay,
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("spaceBookings", required = true) val spaceBookings: kotlin.collections.List<Cas1SpaceBookingDaySummary>,
-
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("spaceBookingSummaries", required = true) val spaceBookingSummaries: kotlin.collections.List<Cas1SpaceBookingSummary>,
 
   @Schema(example = "null", required = true, description = "")
