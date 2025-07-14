@@ -12,6 +12,14 @@ object Cas2v2ApplicationSummarySpecifications {
     criteriaBuilder.equal(root.get<String>("userId"), userId)
   }
 
+  fun hasCrn(crn: String): Specification<Cas2v2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
+    criteriaBuilder.equal(root.get<String>("crn"), crn)
+  }
+
+  fun hasOffenderPrisonNumber(nomsNumber: String): Specification<Cas2v2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
+    criteriaBuilder.equal(root.get<String>("nomsNumber"), nomsNumber)
+  }
+
   fun hasApplicationOrigin(applicationOrigin: ApplicationOrigin?): Specification<Cas2v2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
     applicationOrigin?.let {
       criteriaBuilder.equal(root.get<String>("applicationOrigin"), it.toString())
