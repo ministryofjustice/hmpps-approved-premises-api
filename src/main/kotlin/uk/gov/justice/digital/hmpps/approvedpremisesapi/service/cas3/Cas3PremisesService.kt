@@ -65,6 +65,7 @@ class Cas3PremisesService(
   companion object {
     const val MAX_LENGTH_BEDSPACE_REFERENCE = 3
     const val MAX_MONTHS_ARCHIVE_BEDSPACE = 3
+    const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 7
   }
 
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
@@ -765,6 +766,51 @@ class Cas3PremisesService(
     )
 
     return success(cancellationEntity)
+  }
+
+  fun unarchiveBedspace(
+    premises: PremisesEntity,
+    bedspaceId: UUID,
+    restartDate: LocalDate,
+  ): CasResult<BedEntity> = validatedCasResult {
+    val bedspace = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedspaceId }
+      ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+
+    // Check if bedspace is actually archived
+    if (!bedspace.isCas3BedspaceArchived()) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotArchived"
+    }
+
+    val today = LocalDate.now()
+
+    // Validate restart date is not more than 7 days in the past
+    if (restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInThePast"
+    }
+
+    // Validate restart date is not more than 7 days in the future
+    if (restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
+    }
+
+    // Validate restart date is after the last archive end date
+    if (restartDate.isBefore(bedspace.endDate) || restartDate.isEqual(bedspace.endDate)) {
+      "$.restartDate" hasValidationError "beforeLastBedspaceArchivedDate"
+    }
+
+    if (hasErrors()) {
+      return@validatedCasResult errors()
+    }
+
+    // Update the bedspace to unarchive it
+    val updatedBedspace = bedspaceRepository.save(
+      bedspace.copy(
+        startDate = restartDate,
+        endDate = null,
+      ),
+    )
+
+    success(updatedBedspace)
   }
 
   private fun tryGetProbationDeliveryUnit(
