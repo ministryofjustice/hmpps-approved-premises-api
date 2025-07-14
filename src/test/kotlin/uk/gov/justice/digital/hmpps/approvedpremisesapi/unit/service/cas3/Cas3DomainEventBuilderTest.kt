@@ -562,12 +562,12 @@ class Cas3DomainEventBuilderTest {
     val room = RoomEntityFactory().withPremises(premises).produce()
     val bedspace = BedEntityFactory()
       .withId(bedspaceId)
-      .withEndDate(currentEndDate)
-      .withStartDate(currentStartDate)
+      .withEndDate(null)
+      .withStartDate(newStartDate)
       .withRoom(room)
       .produce()
 
-    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, newStartDate, user)
+    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
 
     assertThat(event.applicationId).isNull()
     assertThat(event.bookingId).isNull()
@@ -582,9 +582,9 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `getBedspaceUnarchiveEvent errors when currentEndDate is null`() {
-    val newStartDate = LocalDate.now()
-    val currentEndDate = null
+  fun `getBedspaceUnarchiveEvent errors when newStartDate is null`() {
+    val newStartDate = null
+    val currentEndDate = LocalDate.now()
     val currentStartDate = LocalDate.now()
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
@@ -600,16 +600,16 @@ class Cas3DomainEventBuilderTest {
     val room = RoomEntityFactory().withPremises(premises).produce()
     val bedspace = BedEntityFactory()
       .withId(bedspaceId)
-      .withEndDate(currentEndDate)
-      .withStartDate(currentStartDate)
+      .withEndDate(null)
+      .withStartDate(newStartDate)
       .withRoom(room)
       .produce()
 
     val error = assertThrows<IllegalStateException> {
-      cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, newStartDate, user)
+      cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
     }
 
-    assertThat(error.message).isEqualTo("Bedspace endDate is null for bedspace id: ${bedspace.id}")
+    assertThat(error.message).isEqualTo("Bedspace startDate is null for bedspace id: ${bedspace.id}")
   }
 
   @Test

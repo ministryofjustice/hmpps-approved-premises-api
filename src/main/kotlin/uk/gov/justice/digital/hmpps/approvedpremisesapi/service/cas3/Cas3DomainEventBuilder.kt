@@ -235,7 +235,8 @@ class Cas3DomainEventBuilder(
 
   fun getBedspaceUnarchiveEvent(
     bedspace: BedEntity,
-    newStartDate: LocalDate,
+    currentStartDate: LocalDate,
+    currentEndDate: LocalDate,
     user: UserEntity,
   ): DomainEvent<CAS3BedspaceUnarchiveEvent> {
     val domainEventId = UUID.randomUUID()
@@ -251,7 +252,7 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceUnarchived,
-        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, newStartDate, user),
+        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, currentStartDate, currentEndDate, user),
       ),
     )
   }
@@ -432,14 +433,15 @@ class Cas3DomainEventBuilder(
 
   private fun buildCAS3BedspaceUnarchiveEventDetails(
     bedspace: BedEntity,
-    newStartDate: LocalDate,
+    currentStartDate: LocalDate,
+    currentEndDate: LocalDate,
     user: UserEntity,
   ) = CAS3BedspaceUnarchiveEventDetails(
     bedspaceId = bedspace.id,
     userId = user.id,
-    currentStartDate = bedspace.startDate ?: error("Bedspace startDate is null for bedspace id: ${bedspace.id}"),
-    currentEndDate = bedspace.endDate ?: error("Bedspace endDate is null for bedspace id: ${bedspace.id}"),
-    newStartDate = newStartDate,
+    currentStartDate = currentStartDate,
+    currentEndDate = currentEndDate,
+    newStartDate = bedspace.startDate ?: error("Bedspace startDate is null for bedspace id: ${bedspace.id}"),
   )
 
   private fun buildCAS3BookingCancelledEventDetails(

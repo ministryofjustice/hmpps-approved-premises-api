@@ -1720,16 +1720,16 @@ class Cas3DomainEventServiceTest {
     val room = RoomEntityFactory().withPremises(premises).produce()
     val bedspace = BedEntityFactory()
       .withId(bedspaceId)
-      .withEndDate(currentEndDate)
-      .withStartDate(currentStartDate)
+      .withEndDate(null)
+      .withStartDate(newStartDate)
       .withRoom(room)
       .produce()
     val eventDetails = CAS3BedspaceUnarchiveEventDetails(
       bedspaceId = bedspaceId,
       userId = user.id,
       newStartDate = newStartDate,
-      currentStartDate = bedspace.startDate!!,
-      currentEndDate = bedspace.endDate!!,
+      currentStartDate = currentStartDate,
+      currentEndDate = currentEndDate,
     )
     val data = CAS3BedspaceUnarchiveEvent(
       eventDetails = eventDetails,
@@ -1749,11 +1749,11 @@ class Cas3DomainEventServiceTest {
       data = data,
     )
 
-    every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(newStartDate), eq(user)) } returns domainEvent
+    every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(currentStartDate), eq(currentEndDate), eq(user)) } returns domainEvent
     every { domainEventRepositoryMock.save(any()) } returns null
     every { userService.getUserForRequest() } returns user
 
-    cas3DomainEventService.saveBedspaceUnarchiveEvent(bedspace, newStartDate)
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
