@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
@@ -21,12 +22,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BedspaceEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
@@ -553,17 +553,18 @@ class Cas3DomainEventBuilderTest {
     val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
       .withProbationRegion(probationRegion).produce()
     val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = Cas3PremisesEntityFactory()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
       .withLocalAuthorityArea(localAuthorityArea)
       .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
       .produce()
     val user = userEntity(probationRegion)
-
-    val bedspace = Cas3BedspaceEntityFactory()
+    val room = RoomEntityFactory().withPremises(premises).produce()
+    val bedspace = BedEntityFactory()
       .withId(bedspaceId)
       .withEndDate(currentEndDate)
       .withStartDate(currentStartDate)
-      .withPremises(premises)
+      .withRoom(room)
       .produce()
 
     val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, newStartDate, user)
@@ -590,17 +591,18 @@ class Cas3DomainEventBuilderTest {
     val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
       .withProbationRegion(probationRegion).produce()
     val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = Cas3PremisesEntityFactory()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
       .withLocalAuthorityArea(localAuthorityArea)
       .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
       .produce()
     val user = userEntity(probationRegion)
-
-    val bedspace = Cas3BedspaceEntityFactory()
+    val room = RoomEntityFactory().withPremises(premises).produce()
+    val bedspace = BedEntityFactory()
       .withId(bedspaceId)
       .withEndDate(currentEndDate)
       .withStartDate(currentStartDate)
-      .withPremises(premises)
+      .withRoom(room)
       .produce()
 
     val error = assertThrows<IllegalStateException> {

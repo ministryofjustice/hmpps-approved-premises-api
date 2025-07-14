@@ -60,6 +60,7 @@ class Cas3PremisesService(
   private val bedspaceRepository: BedRepository,
   private val characteristicService: CharacteristicService,
   private val workingDayService: WorkingDayService,
+  private val cas3DomainEventService: Cas3DomainEventService,
 ) {
 
   companion object {
@@ -809,6 +810,8 @@ class Cas3PremisesService(
         endDate = null,
       ),
     )
+
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(bedspace, restartDate)
 
     success(updatedBedspace)
   }

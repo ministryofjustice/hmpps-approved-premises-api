@@ -29,13 +29,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
@@ -234,7 +234,7 @@ class Cas3DomainEventBuilder(
   }
 
   fun getBedspaceUnarchiveEvent(
-    bedspace: Cas3BedspacesEntity,
+    bedspace: BedEntity,
     newStartDate: LocalDate,
     user: UserEntity,
   ): DomainEvent<CAS3BedspaceUnarchiveEvent> {
@@ -431,7 +431,7 @@ class Cas3DomainEventBuilder(
   )
 
   private fun buildCAS3BedspaceUnarchiveEventDetails(
-    bedspace: Cas3BedspacesEntity,
+    bedspace: BedEntity,
     newStartDate: LocalDate,
     user: UserEntity,
   ) = CAS3BedspaceUnarchiveEventDetails(
