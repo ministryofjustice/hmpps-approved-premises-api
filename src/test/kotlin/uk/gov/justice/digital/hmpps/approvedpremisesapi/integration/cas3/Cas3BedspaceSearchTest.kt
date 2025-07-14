@@ -404,9 +404,6 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           apDeliusContextAddResponseToUserAccessCall(
             listOf(
               CaseAccessFactory()
-                .withCrn(fullPersonCaseSummary.crn)
-                .produce(),
-              CaseAccessFactory()
                 .withCrn(userExcludedCaseSummary.crn)
                 .withUserExcluded(true)
                 .produce(),

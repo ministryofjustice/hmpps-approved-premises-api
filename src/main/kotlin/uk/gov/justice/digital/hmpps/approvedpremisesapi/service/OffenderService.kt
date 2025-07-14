@@ -130,25 +130,14 @@ class OffenderService(
       valueTransform = { it },
     )
 
-   /*
-    * this could be more efficient by only retrieving access information for CRNs where
-    * the corresponding [CaseSummary.hasLimitedAccess()] is true. A similar short-circuit
-    * was implemented in the new deprecated [getOffender()] function.
-    *
-    * It could also be more efficient if ignoring offenders that can't be found on calls to
-    * [apDeliusContextApiClient.getSummariesForCrns(crnsList)] (although that shouldn't
-    * happen often)
-    */
     val caseAccessByCrn = when (laoStrategy) {
       is LaoStrategy.NeverRestricted -> emptyMap()
-      is LaoStrategy.CheckUserAccess ->
-        when (val result = apDeliusContextApiClient.getUserAccessForCrns(laoStrategy.deliusUsername, crnsList)) {
-          is ClientResult.Success -> result.body
-          is ClientResult.Failure -> result.throwException()
-        }.access.associateBy(
-          keySelector = { it.crn },
-          valueTransform = { it },
+      is LaoStrategy.CheckUserAccess -> {
+        getUserAccessForCrns(
+          deliusUsername = laoStrategy.deliusUsername,
+          crns = crnsList.filter { caseSummariesByCrn[it]?.hasLimitedAccess() == true },
         )
+      }
     }
 
     return crns.map { crn ->
@@ -159,6 +148,21 @@ class OffenderService(
         laoStrategy,
       )
     }
+  }
+
+  private fun getUserAccessForCrns(
+    deliusUsername: String,
+    crns: List<String>,
+  ): Map<String, CaseAccess> = if (crns.isNotEmpty()) {
+    when (val result = apDeliusContextApiClient.getUserAccessForCrns(deliusUsername, crns)) {
+      is ClientResult.Success -> result.body
+      is ClientResult.Failure -> result.throwException()
+    }.access.associateBy(
+      keySelector = { it.crn },
+      valueTransform = { it },
+    )
+  } else {
+    emptyMap()
   }
 
   private fun toPersonSummaryInfo(
@@ -192,7 +196,7 @@ class OffenderService(
     }
   }
 
-  private fun CaseSummary.hasLimitedAccess() = this.currentExclusion == true || this.currentRestriction == true
+  private fun CaseSummary.hasLimitedAccess() = this.currentExclusion || this.currentRestriction
   private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
   private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
 

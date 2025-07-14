@@ -1673,6 +1673,11 @@ class OffenderServiceTest {
     const val OFFENDER_2_CRN = "CRN2"
     const val OFFENDER_2_NOMS = "NOMS2"
     const val OFFENDER_3_CRN = "CRN3"
+    const val OFFENDER_3_NOMS = "NOMS3"
+    const val OFFENDER_4_CRN = "CRN4"
+    const val OFFENDER_4_NOMS = "NOMS4"
+    const val OFFENDER_5_CRN = "CRN5"
+    const val OFFENDER_5_NOMS = "NOMS5"
     const val USERNAME = "deliusUsername"
   }
 
@@ -1709,7 +1714,12 @@ class OffenderServiceTest {
     fun `any error retrieving case access is rethrown`(response: ClientResult.Failure<UserAccess>) {
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
-      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          cases = listOf(CaseSummaryFactory().withCrn(OFFENDER_1_CRN).withCurrentRestriction(true).produce()),
+        ),
+      )
 
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
@@ -1940,77 +1950,107 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `multiple crns with all possible return types`() {
-      val offender1Success = CaseSummaryFactory()
+    fun `multiple crns with all possible return types, don't check permission if no restrictions or exclusions`() {
+      val offender1NotLao = CaseSummaryFactory()
         .withCrn(OFFENDER_1_CRN)
         .withNomsId(OFFENDER_1_NOMS)
         .withCurrentExclusion(false)
         .withCurrentRestriction(false)
         .produce()
 
-      val offender2Restricted = CaseSummaryFactory()
+      val offender2RestrictedToUser = CaseSummaryFactory()
         .withCrn(OFFENDER_2_CRN)
         .withNomsId(OFFENDER_2_NOMS)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(true)
+        .produce()
+
+      val offender3ExcludedButNotToUser = CaseSummaryFactory()
+        .withCrn(OFFENDER_3_CRN)
+        .withNomsId(OFFENDER_3_NOMS)
         .withCurrentExclusion(true)
         .withCurrentRestriction(false)
         .produce()
 
-      CaseSummaryFactory()
-        .withCrn(OFFENDER_3_CRN)
+      val offender4NotLao = CaseSummaryFactory()
+        .withCrn(OFFENDER_4_CRN)
+        .withNomsId(OFFENDER_4_NOMS)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(false)
         .produce()
 
       every {
-        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(
+          listOf(
+            OFFENDER_1_CRN,
+            OFFENDER_2_CRN,
+            OFFENDER_3_CRN,
+            OFFENDER_4_CRN,
+            OFFENDER_5_CRN,
+          ),
+        )
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(
           listOf(
-            offender1Success,
-            offender2Restricted,
+            offender1NotLao,
+            offender2RestrictedToUser,
+            offender3ExcludedButNotToUser,
+            offender4NotLao,
           ),
         ),
       )
 
       every {
-        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN))
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_2_CRN, OFFENDER_3_CRN))
       } returns ClientResult.Success(
         HttpStatus.OK,
         UserAccess(
           listOf(
             CaseAccessFactory()
-              .withCrn(OFFENDER_1_CRN)
-              .withUserRestricted(false)
-              .withUserExcluded(false)
-              .produce(),
-            CaseAccessFactory()
               .withCrn(OFFENDER_2_CRN)
               .withUserRestricted(false)
               .withUserExcluded(true)
+              .produce(),
+            CaseAccessFactory()
+              .withCrn(OFFENDER_3_CRN)
+              .withUserRestricted(false)
+              .withUserExcluded(false)
               .produce(),
           ),
         ),
       )
 
       val results = offenderService.getPersonSummaryInfoResults(
-        crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN),
+        crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN, OFFENDER_4_CRN, OFFENDER_5_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
       )
 
-      assertThat(results).hasSize(3)
+      assertThat(results).hasSize(5)
 
       assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
       val result0 = results[0] as PersonSummaryInfoResult.Success.Full
       assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
-      assertThat(result0.summary).isSameAs(offender1Success)
+      assertThat(result0.summary).isSameAs(offender1NotLao)
 
       assertThat(results[1]).isInstanceOf(PersonSummaryInfoResult.Success.Restricted::class.java)
       val result1 = results[1] as PersonSummaryInfoResult.Success.Restricted
       assertThat(result1.crn).isEqualTo(OFFENDER_2_CRN)
       assertThat(result1.nomsNumber).isEqualTo(OFFENDER_2_NOMS)
 
-      assertThat(results[2]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
-      val result2 = results[2] as PersonSummaryInfoResult.NotFound
+      assertThat(results[2]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result2 = results[2] as PersonSummaryInfoResult.Success.Full
       assertThat(result2.crn).isEqualTo(OFFENDER_3_CRN)
+      assertThat(result2.summary).isSameAs(offender3ExcludedButNotToUser)
+
+      assertThat(results[3]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result3 = results[3] as PersonSummaryInfoResult.Success.Full
+      assertThat(result3.crn).isEqualTo(OFFENDER_4_CRN)
+      assertThat(result3.summary).isSameAs(offender4NotLao)
+
+      assertThat(results[4]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
+      val result4 = results[4] as PersonSummaryInfoResult.NotFound
+      assertThat(result4.crn).isEqualTo(OFFENDER_5_CRN)
     }
   }
 
