@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -48,7 +48,7 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
   private var turnarounds: Yielded<MutableList<Cas3v2TurnaroundEntity>>? = null
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
-  private var status: Yielded<BookingStatus?> = { null }
+  private var status: Yielded<Cas3BookingStatus?> = { null }
   private var offenderName: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
@@ -159,7 +159,7 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     this.placementRequest = { placementRequest }
   }
 
-  fun withStatus(status: BookingStatus) = apply {
+  fun withStatus(status: Cas3BookingStatus) = apply {
     this.status = { status }
   }
 
