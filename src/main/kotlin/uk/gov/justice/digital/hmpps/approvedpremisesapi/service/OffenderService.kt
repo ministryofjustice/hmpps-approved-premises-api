@@ -506,21 +506,6 @@ class OffenderService(
     laoStrategy: LaoStrategy,
   ) = getPersonInfoResults(setOf(crn), laoStrategy).first()
 
-  fun getPersonInfoResults(
-    crns: Set<String>,
-    laoStrategy: LaoStrategy,
-  ) = getPersonInfoResults(
-    crns = crns,
-    deliusUsername = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> null
-      is LaoStrategy.CheckUserAccess -> laoStrategy.deliusUsername
-    },
-    ignoreLaoRestrictions = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> true
-      is LaoStrategy.CheckUserAccess -> false
-    },
-  )
-
   @Deprecated(
     """Use version that takes limitedAccessStrategy, derive from [UserEntity.cas1LimitedAccessStrategy()] 
     |or [UserEntity.cas3LimitedAccessStrategy()]""",
@@ -531,15 +516,29 @@ class OffenderService(
     ignoreLaoRestrictions: Boolean,
   ): PersonInfoResult {
     check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
-    return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
+
+    return getPersonInfoResults(
+      crns = setOf(crn),
+      laoStrategy = if (ignoreLaoRestrictions) {
+        LaoStrategy.NeverRestricted
+      } else {
+        LaoStrategy.CheckUserAccess(deliusUsername!!)
+      },
+    ).first()
   }
 
-  private fun getPersonInfoResults(
+  fun getPersonInfoResults(
     crns: Set<String>,
-    deliusUsername: String?,
-    ignoreLaoRestrictions: Boolean,
+    laoStrategy: LaoStrategy,
   ): List<PersonInfoResult> {
-    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided" }
+    val deliusUsername = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> null
+      is LaoStrategy.CheckUserAccess -> laoStrategy.deliusUsername
+    }
+    val ignoreLaoRestrictions = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> true
+      is LaoStrategy.CheckUserAccess -> false
+    }
 
     if (crns.isEmpty()) return emptyList()
 
