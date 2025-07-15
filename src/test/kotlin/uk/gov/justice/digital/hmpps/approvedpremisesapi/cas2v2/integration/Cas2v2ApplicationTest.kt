@@ -327,7 +327,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     private fun getAllCas2v2applications(userEntity: Cas2v2UserEntity, otherUser: Cas2v2UserEntity, jwt: String) {
       givenAnOffender { offenderDetails, _ ->
-        cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
         // abandoned application
         val abandonedApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
@@ -434,7 +433,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       givenACas2v2DeliusUser { userEntity, jwt ->
         givenACas2v2PomUser { _, _ ->
           givenAnOffender { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             val courtBailApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
               withCreatedByUser(userEntity)
@@ -508,7 +506,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     private fun getAllApplications(userEntity: Cas2v2UserEntity, jwt: String) {
       givenAnOffender { offenderDetails, _ ->
-        cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
         repeat(12) {
           cas2v2ApplicationEntityFactory.produceAndPersist {
@@ -677,7 +674,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         givenACas2v2DeliusUser { userEntity, jwt ->
           givenACas2v2DeliusUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
-              cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
               // create 3 x submitted applications for this user
               // with most recent first and conditional release dates in the future
@@ -874,7 +870,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       givenACas2v2NomisUser { primaryUser, jwt ->
         givenACas2v2NomisUser { secondaryUser, _ ->
           givenACas2v2DeliusUser { deliusUser, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             primaryPrisonBailSubmitted = createSubmittedApplication(primaryUser, ApplicationOrigin.prisonBail)
             primaryPrisonBailUnsubmitted = createdUnsubmittedApplication(primaryUser, ApplicationOrigin.prisonBail)
@@ -1078,7 +1073,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withNomsNumber(nomsNumber)
             },
           ) { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             apDeliusContextAddSingleCaseSummaryToBulkResponse(
               caseSummary = CaseSummaryFactory()
@@ -1131,7 +1125,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withNomsNumber(nomsNumber)
             },
           ) { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             apDeliusContextAddSingleCaseSummaryToBulkResponse(
               caseSummary = CaseSummaryFactory()
@@ -1183,7 +1176,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         fun `Get single submitted cas2v2 application is forbidden`() {
           givenACas2v2DeliusUser { _, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
               val otherUser = cas2v2UserEntityFactory.produceAndPersist {
                 withActiveNomisCaseloadId("other_caseload")
@@ -1223,7 +1215,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withNomsNumber(nomsNumber)
               },
             ) { offenderDetails, _ ->
-              cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
               apDeliusContextAddSingleCaseSummaryToBulkResponse(
                 caseSummary = CaseSummaryFactory()
@@ -1274,7 +1265,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         fun `Get single unsubmitted cas2v2 application returns 403`() {
           givenACas2v2NomisUser { userEntity, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
               val otherUser = cas2v2UserEntityFactory.produceAndPersist {
                 withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
@@ -1373,11 +1363,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     private fun createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt: String) {
       val crn = "X1234"
-
-      cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
 
       webTestClient.post()
         .uri("/cas2v2/applications")

@@ -19,11 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
@@ -48,9 +45,6 @@ class StartupScriptConfigTest {
 
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockAssessmentEntity = mockk<Cas2AssessmentEntity>()
-
-  private val mockJsonSchemaService = mockk<Cas2JsonSchemaService>()
-  private val mockJsonSchemaEntity = mockk<JsonSchemaEntity>()
 
   private val mockApplicationService = mockk<Cas2ApplicationService>()
   private val mockStatusUpdateService = mockk<StatusUpdateService>()
@@ -84,11 +78,6 @@ class StartupScriptConfigTest {
     every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
 
     every { mockExternalUserRepository.findAll() } answers { listOf(mockExternalUserEntity) }
-    every {
-      mockJsonSchemaService.getNewestSchema(
-        Cas2ApplicationJsonSchemaEntity::class.java,
-      )
-    } answers { mockJsonSchemaEntity }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }
     every { mockApplicationRepository.saveAndFlush(any()) } answers { mockApplicationEntity }

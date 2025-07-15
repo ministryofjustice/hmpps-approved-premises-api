@@ -199,8 +199,6 @@ class Cas2v2SubmissionTest(
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
-
             val submittedCas2v2ApplicationEntitySecond = cas2v2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
@@ -372,7 +370,6 @@ class Cas2v2SubmissionTest(
               withNomsNumber(nomsNumber)
             },
           ) { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -504,7 +501,6 @@ class Cas2v2SubmissionTest(
               withCurrentRestriction(true)
             },
           ) { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -550,7 +546,6 @@ class Cas2v2SubmissionTest(
               withCurrentExclusion(true)
             },
           ) { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -667,7 +662,6 @@ class Cas2v2SubmissionTest(
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
-            cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = createInProgressApplication(
               offenderDetails.otherIds.crn,
@@ -706,7 +700,6 @@ class Cas2v2SubmissionTest(
                   withNomsNumber(nomsNumber)
                 },
               ) { offenderDetails, _ ->
-                cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
                 val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
                   withCrn(offenderDetails.otherIds.crn)
@@ -803,8 +796,6 @@ class Cas2v2SubmissionTest(
         givenACas2Admin { _, jwt ->
           givenACas2v2PomUser { user, _ ->
             givenAnOffender { offenderDetails, _ ->
-              cas2v2ApplicationJsonSchemaRepository.deleteAll()
-
               val applicationEntity = createInProgressApplication(
                 offenderDetails.otherIds.crn,
                 user,
