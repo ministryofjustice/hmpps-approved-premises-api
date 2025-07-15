@@ -151,7 +151,7 @@ class Cas1PremisesController(
     )
   }
 
-  @Operation(summary = "Lists all beds for the given premises")
+  @Operation(summary = "Lists all beds for the given premises, excluding ended beds")
   @GetMapping("/premises/{premisesId}/beds")
   fun getBeds(
     @PathVariable premisesId: UUID,
@@ -163,7 +163,7 @@ class Cas1PremisesController(
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(cas1PremisesService.getBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi))
+    return ResponseEntity.ok(cas1PremisesService.getActiveBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi))
   }
 
   @Operation(summary = "Gets a given bed for a given premises")

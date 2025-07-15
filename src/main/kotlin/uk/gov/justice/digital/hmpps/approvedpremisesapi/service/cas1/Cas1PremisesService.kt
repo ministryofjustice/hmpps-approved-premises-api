@@ -156,7 +156,10 @@ class Cas1PremisesService(
     )
   }
 
-  fun getBeds(premisesId: UUID) = cas1BedsRepository.bedSummary(listOf(premisesId))
+  fun getActiveBeds(premisesId: UUID) = cas1BedsRepository.bedSummary(
+    premisesIds = listOf(premisesId),
+    excludeEndedBeds = true,
+  )
 
   data class Cas1PremisesInfo(
     val entity: ApprovedPremisesEntity,
