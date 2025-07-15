@@ -623,13 +623,75 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Postcode provided, return in distance order, lowest first`() {
+    fun `Postcode not provided, return in order of ap area identifier followed by premises name`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+
+      val regionCC = givenAProbationRegion(apArea = givenAnApArea(identifier = "CC"))
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        name = "premises 2 in CC",
+        region = regionCC,
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        name = "premises 1 in CC",
+        region = regionCC,
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        name = "premises in ZZ",
+        region = givenAProbationRegion(apArea = givenAnApArea(identifier = "ZZ")),
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        name = "premises in AA",
+        region = givenAProbationRegion(apArea = givenAnApArea(identifier = "AA")),
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = emptySet(),
+            premisesCharacteristics = emptySet(),
+            roomCharacteristics = emptySet(),
+            postcodeArea = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1NationalOccupancy>()
+
+      assertThat(response.premises).hasSize(4)
+      assertThat(response.premises[0].summary.name).isEqualTo("premises in AA")
+      assertThat(response.premises[1].summary.name).isEqualTo("premises 1 in CC")
+      assertThat(response.premises[2].summary.name).isEqualTo("premises 2 in CC")
+      assertThat(response.premises[3].summary.name).isEqualTo("premises in ZZ")
+    }
+
+    @Test
+    fun `Postcode provided, return in distance order followed by premises name, lowest first`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
 
       givenAnApprovedPremises(
         supportsSpaceBookings = true,
         postCode = "NN16",
-        name = "premises northamptonshire",
+        name = "premises northamptonshire B",
+        latitude = 52.407422,
+        longitude = -0.700557,
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        postCode = "NN16",
+        name = "premises northamptonshire A",
         latitude = 52.407422,
         longitude = -0.700557,
       )
@@ -673,10 +735,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .isOk
         .bodyAsObject<Cas1NationalOccupancy>()
 
-      assertThat(response.premises).hasSize(3)
+      assertThat(response.premises).hasSize(4)
       assertThat(response.premises[0].summary.name).isEqualTo("premises leicestershire")
-      assertThat(response.premises[1].summary.name).isEqualTo("premises northamptonshire")
-      assertThat(response.premises[2].summary.name).isEqualTo("premises london")
+      assertThat(response.premises[1].summary.name).isEqualTo("premises northamptonshire A")
+      assertThat(response.premises[2].summary.name).isEqualTo("premises northamptonshire B")
+      assertThat(response.premises[3].summary.name).isEqualTo("premises london")
     }
 
     @Test
