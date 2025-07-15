@@ -79,12 +79,12 @@ class Cas2v2StartupScript(
     val application = cas2v2applicationRepository.save(
       Cas2v2ApplicationEntity(
         id = UUID.randomUUID(),
-        crn = "X320742",
-        nomsNumber = seedConfig.onStartup.script.noms,
+        crn = "X698232",
+        nomsNumber = "A5275DZ",
         createdAt = createdAt,
         createdByUser = cas2v2UserEntity,
-        data = dataFor(state = state, nomsNumber = "DO16821"),
-        document = documentFor(state = state, nomsNumber = "DO16821"),
+        data = dataFor(state = state, nomsNumber = "A5275DZ"),
+        document = documentFor(state = state, nomsNumber = "A5275DZ"),
         submittedAt = submittedAt,
         applicationOrigin = applicationOrigin,
       ),
