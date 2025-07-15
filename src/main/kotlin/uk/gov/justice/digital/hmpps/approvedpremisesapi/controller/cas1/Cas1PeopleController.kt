@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1Per
 @Service
 class Cas1PeopleController(
   private val userService: UserService,
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
   private val cas1ApplicationService: Cas1ApplicationService,
   private val cas1PersonalTimelineTransformer: Cas1PersonalTimelineTransformer,
   private val cas1TimelineService: Cas1TimelineService,
@@ -34,7 +34,7 @@ class Cas1PeopleController(
   override fun getPeopleApplicationsTimeline(crn: String): ResponseEntity<Cas1PersonalTimeline> {
     val user = userService.getUserForRequest()
 
-    val timeline = when (val personInfoResult = offenderService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
+    val timeline = when (val personInfoResult = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Unknown -> throw personInfoResult.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
       is PersonInfoResult.Success.Full -> buildPersonInfoWithTimeline(personInfoResult, crn)

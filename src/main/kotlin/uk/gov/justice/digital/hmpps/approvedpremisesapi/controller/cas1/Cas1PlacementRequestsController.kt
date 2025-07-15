@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
@@ -37,7 +37,7 @@ class Cas1PlacementRequestsController(
   private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer,
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
 ) : PlacementRequestsCas1Delegate {
@@ -90,7 +90,7 @@ class Cas1PlacementRequestsController(
   ): List<Cas1PlacementRequestSummary> = placementRequests.map {
     cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
       it,
-      offenderService.getPersonInfoResult(it.getPersonCrn(), user.cas1LaoStrategy()),
+      offenderDetailService.getPersonInfoResult(it.getPersonCrn(), user.cas1LaoStrategy()),
     )
   }
 
@@ -141,7 +141,7 @@ class Cas1PlacementRequestsController(
     forUser: UserEntity,
     placementRequestEntity: PlacementRequestEntity,
   ): Cas1PlacementRequestDetail {
-    val personInfo = offenderService.getPersonInfoResult(
+    val personInfo = offenderDetailService.getPersonInfoResult(
       placementRequestEntity.application.crn,
       forUser.cas1LaoStrategy(),
     )

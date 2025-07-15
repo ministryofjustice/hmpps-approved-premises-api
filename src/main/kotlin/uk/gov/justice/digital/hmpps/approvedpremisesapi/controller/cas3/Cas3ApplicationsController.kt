@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ApplicationTransformer
@@ -42,7 +42,7 @@ class Cas3ApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationService: ApplicationService,
   private val userService: UserService,
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
   private val cas3ApplicationTransformer: Cas3ApplicationTransformer,
   private val objectMapper: ObjectMapper,
 ) {
@@ -89,7 +89,7 @@ class Cas3ApplicationsController(
     val user = userService.getUserForRequest()
 
     val personInfo =
-      when (val personInfoResult = offenderService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
+      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
         is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
@@ -174,7 +174,7 @@ class Cas3ApplicationsController(
     user: UserEntity,
     ignoreLaoRestrictions: Boolean,
   ): Cas3Application {
-    val personInfo = offenderService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderDetailService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return cas3ApplicationTransformer.transformJpaToApi(application, personInfo)
   }
@@ -184,7 +184,7 @@ class Cas3ApplicationsController(
     laoStrategy: LaoStrategy,
   ): List<Cas3ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
 
     return applications.map {
       val crn = it.getCrn()

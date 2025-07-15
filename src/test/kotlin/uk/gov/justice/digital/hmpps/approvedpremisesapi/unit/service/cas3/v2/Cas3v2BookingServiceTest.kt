@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -67,6 +68,7 @@ class Cas3v2BookingServiceTest {
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockUserService = mockk<UserService>()
+  private val mockOffenderDetailService = mockk<OffenderDetailService>()
 
   private fun createCas3BookingService(): Cas3v2BookingService = Cas3v2BookingService(
     cas3BookingRepository = mockBookingRepository,
@@ -79,6 +81,7 @@ class Cas3v2BookingServiceTest {
     cas3DomainEventService = mockCas3DomainEventService,
     userAccessService = mockUserAccessService,
     userService = mockUserService,
+    offenderDetailService = mockOffenderDetailService,
   )
 
   private val cas3BookingService = createCas3BookingService()
@@ -111,7 +114,7 @@ class Cas3v2BookingServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns true
       every {
-        mockOffenderService.getPersonInfoResult(
+        mockOffenderDetailService.getPersonInfoResult(
           bookingEntity.crn,
           user.deliusUsername,
           user.hasQualification(
@@ -137,7 +140,7 @@ class Cas3v2BookingServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns true
       every {
-        mockOffenderService.getPersonInfoResult(
+        mockOffenderDetailService.getPersonInfoResult(
           bookingEntity.crn,
           user.deliusUsername,
           user.hasQualification(
@@ -163,7 +166,7 @@ class Cas3v2BookingServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanManagePremisesBookings(user, bookingEntity.premises) } returns true
       every {
-        mockOffenderService.getPersonInfoResult(
+        mockOffenderDetailService.getPersonInfoResult(
           bookingEntity.crn,
           user.deliusUsername,
           user.hasQualification(

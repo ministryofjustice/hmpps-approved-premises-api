@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
@@ -34,10 +34,10 @@ import java.util.UUID
 class Cas1AssessmentsController(
   private val cas1AssessmentService: Cas1AssessmentService,
   private val userService: UserService,
-  private val offenderService: OffenderService,
   private val cas1AssessmentTransformer: Cas1AssessmentTransformer,
   private val objectMapper: ObjectMapper,
   private val cas1AssessmentClarificationNoteTransformer: Cas1AssessmentClarificationNoteTransformer,
+  private val offenderDetailService: OffenderDetailService,
 ) : AssessmentsCas1Delegate {
 
   override fun getAssessmentsForUser(
@@ -77,7 +77,7 @@ class Cas1AssessmentsController(
       ),
     )
 
-    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
 
     val transformedResponse = cas1AssessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo)
 
@@ -100,7 +100,7 @@ class Cas1AssessmentsController(
         ),
     )
 
-    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
 
     return ResponseEntity.ok(
       cas1AssessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo),
@@ -203,7 +203,7 @@ class Cas1AssessmentsController(
     laoStrategy: LaoStrategy,
   ): List<Cas1AssessmentSummary> {
     val crns = summaries.map { it.crn }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
 
     return summaries.map {
       val crn = it.crn

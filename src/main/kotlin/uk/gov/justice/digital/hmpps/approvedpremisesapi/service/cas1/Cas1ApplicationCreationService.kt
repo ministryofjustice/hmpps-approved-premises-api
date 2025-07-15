@@ -37,8 +37,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.time.Clock
 import java.time.LocalDate
@@ -50,7 +50,6 @@ import java.util.UUID
 @Service
 class Cas1ApplicationCreationService(
   private val applicationRepository: ApplicationRepository,
-  private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
   private val assessmentService: AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
@@ -67,6 +66,7 @@ class Cas1ApplicationCreationService(
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val cas1OffenderService: Cas1OffenderService,
+  private val offenderDetailService: OffenderDetailService,
 ) {
 
   fun createApprovedPremisesApplication(
@@ -233,7 +233,7 @@ class Cas1ApplicationCreationService(
     }
 
     val inmateDetails = application.nomsNumber?.let { nomsNumber ->
-      when (val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(application.crn, nomsNumber)) {
+      when (val inmateDetailsResult = offenderDetailService.getInmateDetailByNomsNumber(application.crn, nomsNumber)) {
         is AuthorisableActionResult.Success -> inmateDetailsResult.entity
         else -> null
       }

@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -42,6 +43,7 @@ class Cas3v2BookingService(
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val userService: UserService,
+  private val offenderDetailService: OffenderDetailService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -56,7 +58,7 @@ class Cas3v2BookingService(
       return CasResult.GeneralValidationError("The supplied premisesId does not match the booking's premises")
     }
 
-    val personInfo = offenderService.getPersonInfoResult(
+    val personInfo = offenderDetailService.getPersonInfoResult(
       booking.crn,
       user.deliusUsername,
       user.hasQualification(
