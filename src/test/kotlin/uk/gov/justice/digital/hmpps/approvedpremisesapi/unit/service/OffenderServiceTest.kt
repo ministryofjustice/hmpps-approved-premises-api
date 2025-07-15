@@ -910,7 +910,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `throws Exception when LAO respond is Forbidden`() {
+    fun `throws Exception when LAO response is Forbidden`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1028,7 +1028,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user has access and ignoreLaoRestrictions is false`() {
+    fun `returns Full for LAO Offender where user does not have access and ignoreLaoRestrictions is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1074,7 +1074,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user does not have acess and ignoreLaoRestrictions is true`() {
+    fun `returns Full for LAO Offender where user does not have access and ignoreLaoRestrictions is true`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1253,7 +1253,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `throws Exception when LAO respond is Forbidden`() {
+    fun `throws Exception when LAO response is Forbidden`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1358,7 +1358,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user has access and ignoreLaoRestrictions is false`() {
+    fun `returns Full for LAO Offender where where user does have access and ignoreLaoRestrictions is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1401,7 +1401,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user does not have acess and ignoreLaoRestrictions is true`() {
+    fun `returns Full for LAO Offender where user does not have access and ignoreLaoRestrictions is true`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
