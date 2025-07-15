@@ -7,9 +7,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -28,18 +25,6 @@ class Cas1PremisesDayTransformerTest {
   @Test
   fun toCas1PremisesDaySummary() {
     val currentSearchDay = LocalDate.now()
-
-    val capacity =
-      Cas1PremiseCapacityForDay(
-        date = currentSearchDay,
-        totalBedCount = 5,
-        availableBedCount = 3,
-        bookingCount = 4,
-        characteristicAvailability = listOf(
-          Cas1PremiseCharacteristicAvailability(Cas1SpaceBookingCharacteristic.IS_SINGLE, 10, 4),
-          Cas1PremiseCharacteristicAvailability(Cas1SpaceBookingCharacteristic.IS_WHEELCHAIR_DESIGNATED, 20, 8),
-        ),
-      )
 
     val spaceBookingSummaries = listOf(
       Cas1SpaceBookingSummary(
@@ -85,7 +70,6 @@ class Cas1PremisesDayTransformerTest {
 
     val result = transformer.toCas1PremisesDaySummary(
       currentSearchDay,
-      capacity,
       outOfServiceBeds,
       spaceBookingSummaries,
     )
@@ -93,7 +77,6 @@ class Cas1PremisesDayTransformerTest {
     assertThat(result.forDate).isEqualTo(currentSearchDay)
     assertThat(result.previousDate).isEqualTo(currentSearchDay.minusDays(1))
     assertThat(result.nextDate).isEqualTo(currentSearchDay.plusDays(1))
-    assertThat(result.capacity).isEqualTo(capacity)
     assertThat(result.outOfServiceBeds).isEqualTo(outOfServiceBeds)
     assertThat(result.spaceBookingSummaries).isEqualTo(spaceBookingSummaries)
   }
