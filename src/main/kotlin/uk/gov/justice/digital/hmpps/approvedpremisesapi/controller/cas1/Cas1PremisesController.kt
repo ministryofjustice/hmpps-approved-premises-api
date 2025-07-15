@@ -265,16 +265,6 @@ class Cas1PremisesController(
     return ResponseEntity.ok().body(
       cas1PremisesDayTransformer.toCas1PremisesDaySummary(
         date = date,
-        premisesCapacity = cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-          premiseCapacity = extractEntityFromCasResult(
-            cas1PremisesService.getPremisesCapacities(
-              premisesIds = listOf(premisesId),
-              startDate = date,
-              endDate = date,
-              excludeSpaceBookingId = excludeSpaceBookingId,
-            ),
-          ).results[0],
-        ).capacity.first(),
         outOfServiceBeds = extractEntityFromCasResult(
           cas1OutOfServiceBedSummaryService.getOutOfServiceBedSummaries(
             premisesId = premisesId,

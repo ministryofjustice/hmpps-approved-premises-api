@@ -1306,26 +1306,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `return capacity information`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
-
-      val summaries = webTestClient.get()
-        .uri("/cas1/premises/${premises.id}/day-summary/$summaryDate")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .returnResult(Cas1PremisesDaySummary::class.java).responseBody.blockFirst()!!
-
-      val capacity = summaries.capacity
-      assertThat(capacity.date).isEqualTo(summaryDate)
-      assertThat(capacity.totalBedCount).isEqualTo(8)
-      assertThat(capacity.availableBedCount).isEqualTo(5)
-      assertThat(capacity.bookingCount).isEqualTo(3)
-      assertThat(capacity.characteristicAvailability.count()).isEqualTo(6)
-    }
-
-    @Test
     fun `return out of service beds applicable to given date`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
@@ -1434,12 +1414,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
       val spaceBookingsAvailableInPremisesSummary = summaries.spaceBookingSummaries
       assertThat(spaceBookingsAvailableInPremisesSummary.size).isEqualTo(2)
       assertThat(spaceBookingsAvailableInPremisesSummary).extracting("id").doesNotContain(excludeSpaceBookingId)
-
-      val capacity = summaries.capacity
-      assertThat(capacity.date).isEqualTo(summaryDate)
-      assertThat(capacity.totalBedCount).isEqualTo(8)
-      assertThat(capacity.availableBedCount).isEqualTo(5)
-      assertThat(capacity.bookingCount).isEqualTo(2)
 
       assertThat(summaries.spaceBookingSummaries.map { it.id }).containsExactly(
         spaceBookingOfflineApplication.id,
