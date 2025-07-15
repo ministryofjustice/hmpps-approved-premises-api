@@ -18,6 +18,7 @@ class Cas1PremisesSearchService(
     val gender: ApprovedPremisesGender?,
     val targetPostcodeDistrict: String?,
     val spaceCharacteristics: Set<Cas1SpaceCharacteristic>,
+    val cruManagementAreaIds: Set<UUID> = emptySet(),
   )
 
   fun findPremises(searchCriteria: Cas1PremisesSearchCriteria): List<CandidatePremises> {
@@ -28,6 +29,7 @@ class Cas1PremisesSearchService(
       gender = searchCriteria.gender,
       premisesCharacteristics = groupedCharacteristics.premisesCharacteristics,
       roomCharacteristics = groupedCharacteristics.roomCharacteristics,
+      cruManagementAreaIds = searchCriteria.cruManagementAreaIds.toList(),
     )
   }
 

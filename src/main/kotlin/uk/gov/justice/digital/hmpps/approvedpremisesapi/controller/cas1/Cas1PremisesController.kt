@@ -127,6 +127,7 @@ class Cas1PremisesController(
         gender = null,
         targetPostcodeDistrict = parameters.postcodeArea,
         spaceCharacteristics = parameters.premisesCharacteristics,
+        cruManagementAreaIds = parameters.cruManagementAreaIds,
       ),
     )
 
