@@ -1715,7 +1715,7 @@ class BookingServiceTest {
           this.roles.add(
             UserRoleAssignmentEntityFactory()
               .withUser(this)
-              .withRole(UserRole.CAS1_CRU_MEMBER)
+              .withRole(UserRole.CAS1_JANITOR)
               .produce(),
           )
         }

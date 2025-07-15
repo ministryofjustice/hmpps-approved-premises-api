@@ -60,7 +60,14 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_CRU_MEMBER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.cruMember,
-    permissions = commonCruMemberPermissions + listOf(UserPermission.CAS1_BOOKING_CREATE),
+    permissions = commonCruMemberPermissions + listOf(
+      UserPermission.CAS1_PREMISES_CAPACITY_REPORT_VIEW,
+      UserPermission.CAS1_SPACE_BOOKING_CREATE,
+      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
+      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD,
+      UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL,
+      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
+    ),
   ),
 
   /**
