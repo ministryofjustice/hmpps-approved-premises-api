@@ -58,7 +58,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     fun `Get applications all returns 200 and correct body`() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          approvedPremisesApplicationJsonSchemaRepository.deleteAll()
           val applicationId1 = UUID.randomUUID()
           val applicationId2 = UUID.randomUUID()
 
@@ -893,7 +892,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnOffender { otherOffenderDetails, _ ->
-              approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
               val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)

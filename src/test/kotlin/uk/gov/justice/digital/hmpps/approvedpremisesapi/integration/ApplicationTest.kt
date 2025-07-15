@@ -114,8 +114,6 @@ class ApplicationTest : IntegrationTestBase() {
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnOffender { otherOffenderDetails, _ ->
-              approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
               val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(userEntity)
@@ -652,8 +650,6 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get single online application returns 200 non-upgradable outdated application marked as such`() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
           val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
