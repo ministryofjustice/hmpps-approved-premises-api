@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
@@ -272,10 +271,6 @@ class Cas2v2ApplicationServiceTest {
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      val newestJsonSchema = Cas2v2ApplicationJsonSchemaEntityFactory()
-        .withSchema("{}")
-        .produce()
-
       val userEntity = Cas2v2UserEntityFactory()
         .withId(userId)
         .withUsername(distinguishedName)
@@ -283,7 +278,6 @@ class Cas2v2ApplicationServiceTest {
 
       val cas2v2ApplicationEntity = Cas2v2ApplicationEntityFactory()
         .withCreatedByUser(userEntity)
-        .withApplicationSchema(newestJsonSchema)
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns cas2v2ApplicationEntity
@@ -424,10 +418,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns GeneralValidationError when cas2v2 application has already been submitted`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
@@ -452,10 +443,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns GeneralValidationError when application has been abandoned`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
@@ -480,7 +468,6 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success when an application, that contains removed malicious characters, is updated`(str: String) {
       val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
 
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
       {
         "aProperty": "val${str}ue"
@@ -488,7 +475,6 @@ class Cas2v2ApplicationServiceTest {
     """
 
       val application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .produce()
@@ -528,7 +514,6 @@ class Cas2v2ApplicationServiceTest {
       val bailHearingDate = LocalDate.of(2030, 12, 18)
       val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
 
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
       {
         "aProperty": "value"
@@ -537,7 +522,6 @@ class Cas2v2ApplicationServiceTest {
     """
 
       val application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .produce()
@@ -613,10 +597,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Conflict Error when application has already been submitted`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
       val application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
@@ -639,10 +620,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success when application has already been abandoned`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
       val application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
@@ -664,7 +642,6 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success and deletes the application data`() {
       val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
 
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
       val data = """
             {
               "aProperty": "value"
@@ -672,7 +649,6 @@ class Cas2v2ApplicationServiceTest {
       """
 
       val application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withData(data)
@@ -754,10 +730,7 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `returns GeneralValidationError when application has already been submitted`() {
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
@@ -779,10 +752,7 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `returns GeneralValidationError when application has already been abandoned`() {
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
@@ -809,10 +779,7 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `returns Success and stores event`() {
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)

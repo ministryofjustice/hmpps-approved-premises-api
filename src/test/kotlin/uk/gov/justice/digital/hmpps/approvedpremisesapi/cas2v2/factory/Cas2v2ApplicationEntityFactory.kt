@@ -8,8 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -25,9 +23,6 @@ class Cas2v2ApplicationEntityFactory : Factory<Cas2v2ApplicationEntity> {
   private var createdByUser: Yielded<Cas2v2UserEntity>? = null
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
-  private var applicationSchema: Yielded<JsonSchemaEntity> = {
-    ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-  }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var abandonedAt: Yielded<OffsetDateTime?> = { null }
@@ -70,14 +65,6 @@ class Cas2v2ApplicationEntityFactory : Factory<Cas2v2ApplicationEntity> {
 
   fun withDocument(document: String?) = apply {
     this.document = { document }
-  }
-
-  fun withApplicationSchema(applicationSchema: JsonSchemaEntity) = apply {
-    this.applicationSchema = { applicationSchema }
-  }
-
-  fun withYieldedApplicationSchema(applicationSchema: Yielded<JsonSchemaEntity>) = apply {
-    this.applicationSchema = applicationSchema
   }
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {

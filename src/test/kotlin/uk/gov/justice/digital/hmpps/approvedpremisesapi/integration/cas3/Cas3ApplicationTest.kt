@@ -75,8 +75,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             probationRegion = probationRegion,
           ) { referrerUser, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
-
               val applicationInProgress =
                 createApplicationEntity(referrerUser, offenderDetails, probationRegion, null)
 
@@ -143,7 +141,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             probationRegion = probationRegion,
           ) { referrerUser, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
               val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
 
@@ -266,7 +263,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     fun `Get single application returns 200 with correct body when requesting user created application`() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
@@ -301,7 +297,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
           givenAnOffender { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -341,8 +336,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             withCurrentRestriction(true)
           },
         ) { offenderDetails, _ ->
-          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
-
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(createdByUser)
@@ -399,7 +392,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               withCurrentRestriction(true)
             },
           ) { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -442,7 +434,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAUser { createdByUser, _ ->
           givenAnOffender { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -484,7 +475,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       givenAUser { userEntity, jwt ->
         givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
           givenAnOffender { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -525,7 +515,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     fun `Get single application returns 404 Not Found when the application was deleted`() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
@@ -869,7 +858,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           roles = listOf(UserRole.CAS3_REFERRER),
         ) { _, _ ->
           givenAnOffender { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -898,7 +886,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           roles = listOf(UserRole.CAS3_REFERRER),
         ) { _, _ ->
           givenAnOffender { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)

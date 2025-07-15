@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.SubmittedApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.io.ByteArrayInputStream
@@ -114,11 +113,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val tooOldSubmitted = OffsetDateTime.now().minusDays(366)
       val tooOldCreated = tooOldSubmitted.minusSeconds(daysInSeconds(7))
 
-      val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val user1 = cas2v2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
       }
@@ -133,7 +127,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId1)
-        withApplicationSchema(applicationSchema)
         withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user1)
         withCrn("CRN_1")
@@ -146,7 +139,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId2)
-        withApplicationSchema(applicationSchema)
         withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user2)
         withCrn("CRN_2")
@@ -160,7 +152,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       // outside time limit -- should not feature in report
       cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCreatedAt(tooOldCreated)
         withData("{}")
@@ -343,20 +334,13 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
     fun `streams spreadsheet of cas2v2 Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
       // create applications and then
 
-      val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val user = cas2v2UserEntityFactory.produceAndPersist()
       val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user)
       }
       val application1ID = application1.id
 
       val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user)
       }
@@ -502,11 +486,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val newer = Instant.now().minusSeconds(daysInSeconds(100))
       val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
-      val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
       val user1 = cas2v2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
       }
@@ -516,7 +495,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       }
 
       val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
@@ -526,7 +504,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       }
 
       val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCrn("CRN_2")
         withApplicationOrigin(ApplicationOrigin.prisonBail)
@@ -538,7 +515,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       // outside time limit -- should not feature in report
       cas2v2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
@@ -547,7 +523,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       // submitted application, which should not feature in report
       cas2v2ApplicationEntityFactory.produceAndPersist {
-        withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")
@@ -601,23 +576,17 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
     val submitted = OffsetDateTime.now()
     val created = submitted.minusDays(7)
 
-    val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
-
     val user = cas2v2UserEntityFactory.produceAndPersist {
       withUsername("NOMIS_USER_1")
     }
 
     val allApplications: ArrayList<Cas2v2ApplicationEntity> = ArrayList()
 
-    repeat(5) { allApplications.add(createApplication(user, applicationSchema, created)) }
+    repeat(5) { allApplications.add(createApplication(user, created)) }
     repeat(5) {
       allApplications.add(
         createApplication(
           user,
-          applicationSchema,
           created,
           ApplicationOrigin.homeDetentionCurfew,
         ),
@@ -627,7 +596,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       allApplications.add(
         createApplication(
           user,
-          applicationSchema,
           created,
           ApplicationOrigin.prisonBail,
         ),
@@ -637,7 +605,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       allApplications.add(
         createApplication(
           user,
-          applicationSchema,
           created,
           ApplicationOrigin.courtBail,
         ),
@@ -669,14 +636,12 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
   private fun createApplication(
     user: Cas2v2UserEntity,
-    schema: Cas2v2ApplicationJsonSchemaEntity,
     created: OffsetDateTime,
     applicationOrigin: ApplicationOrigin? = null,
   ): Cas2v2ApplicationEntity {
     if (applicationOrigin == null) {
       return cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user)
-        withApplicationSchema(schema)
         withCreatedAt(created)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
@@ -686,7 +651,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
     } else {
       return cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user)
-        withApplicationSchema(schema)
         withCreatedAt(created)
         withApplicationOrigin(applicationOrigin)
         withCrn("CRN_2")

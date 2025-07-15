@@ -587,12 +587,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
             null,
           )
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
           temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withAssessmentSchema(applicationSchema)
+            withAssessmentSchema(assessmentSchema)
             withDecision(REJECTED)
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withSubmittedAt(OffsetDateTime.now())
@@ -1044,12 +1044,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
             null,
           )
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
           temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withAssessmentSchema(applicationSchema)
+            withAssessmentSchema(assessmentSchema)
             withDecision(REJECTED)
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withSubmittedAt(OffsetDateTime.now())

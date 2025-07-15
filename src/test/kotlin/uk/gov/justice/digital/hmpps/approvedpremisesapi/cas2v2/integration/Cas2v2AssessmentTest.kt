@@ -129,16 +129,10 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity {
-      val applicationSchema =
-        cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
-
-      return cas2v2ApplicationEntityFactory.produceAndPersist {
-        withId(applicationId)
-        withCreatedByUser(referrer)
-        withApplicationSchema(applicationSchema)
-        withSubmittedAt(OffsetDateTime.now())
-      }
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+      withId(applicationId)
+      withCreatedByUser(referrer)
+      withSubmittedAt(OffsetDateTime.now())
     }
   }
 
@@ -264,16 +258,10 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity {
-      val applicationSchema =
-        cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
-
-      return cas2v2ApplicationEntityFactory.produceAndPersist {
-        withId(applicationId)
-        withCreatedByUser(referrer)
-        withApplicationSchema(applicationSchema)
-        withSubmittedAt(OffsetDateTime.now())
-      }
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+      withId(applicationId)
+      withCreatedByUser(referrer)
+      withSubmittedAt(OffsetDateTime.now())
     }
   }
 }

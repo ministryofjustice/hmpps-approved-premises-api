@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -42,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -57,7 +54,6 @@ import java.util.UUID
 class ApplicationServiceTest {
   private val mockUserRepository = mockk<UserRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
-  private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockUserService = mockk<UserService>()
@@ -385,7 +381,6 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -463,7 +458,6 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -478,7 +472,6 @@ class ApplicationServiceTest {
       OffenderDetailsSummaryFactory().produce(),
     )
     every { mockUserService.getUserForRequest() } returns user
-    every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     val riskRatings = PersonRisksFactory()
@@ -541,7 +534,6 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -556,7 +548,6 @@ class ApplicationServiceTest {
       OffenderDetailsSummaryFactory().produce(),
     )
     every { mockUserService.getUserForRequest() } returns user
-    every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     val riskRatings = PersonRisksFactory()
@@ -619,7 +610,6 @@ class ApplicationServiceTest {
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = inmateDetail,
     )
-    val schema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
       this.roles.add(
@@ -634,7 +624,6 @@ class ApplicationServiceTest {
       OffenderDetailsSummaryFactory().produce(),
     )
     every { mockUserService.getUserForRequest() } returns user
-    every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     val riskRatings = PersonRisksFactory()
@@ -820,7 +809,6 @@ class ApplicationServiceTest {
       }
       .produce()
 
-    val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
     val updatedData = """
       {
         "aProperty": "value"
@@ -835,7 +823,6 @@ class ApplicationServiceTest {
 
     every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     val result = applicationService.updateTemporaryAccommodationApplication(
