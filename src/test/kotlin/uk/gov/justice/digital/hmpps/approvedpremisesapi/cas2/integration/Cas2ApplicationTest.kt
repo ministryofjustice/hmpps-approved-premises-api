@@ -423,7 +423,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       givenACas2Assessor { assessor, _ ->
         givenACas2PomUser { userAPrisonA, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val inProgressApplication = Cas2ApplicationEntityFactory()
               .withCreatedByUser(userAPrisonA)
@@ -640,7 +639,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       givenACas2PomUser { otherUser, _ ->
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
 
             repeat(12) {
               val application = cas2ApplicationEntityFactory.produceAndPersist {
@@ -751,7 +749,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         givenACas2Assessor { assessor, _ ->
           givenACas2PomUser { userAPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               repeat(5) {
                 cas2ApplicationEntityFactory.produceAndPersist {
@@ -861,7 +858,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         givenACas2Assessor { assessor, _ ->
           givenACas2PomUser { userAPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               val userAPrisonAApplicationIds = mutableListOf<UUID>()
 
@@ -954,7 +950,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         givenACas2Assessor { assessor, _ ->
           givenACas2LicenceCaseAdminUser { caseAdminPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               val pomUserPrisonA = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId(caseAdminPrisonA.activeCaseloadId!!)
@@ -1076,7 +1071,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         givenACas2PomUser { userEntity, jwt ->
           givenACas2PomUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               // create 3 x submitted applications for this user
               // with most recent first and conditional release dates in the future
@@ -1213,7 +1207,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       fun `Get single in progress application returns 200 with correct body`() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, inmateDetails ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -1429,7 +1422,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         fun `Get single submitted application is forbidden`() {
           givenACas2PomUser { userEntity, jwt ->
             givenAnOffender { offenderDetails, inmateDetails ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               val otherUser = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId("other_caseload")
@@ -1461,7 +1453,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         fun `Get single submitted application returns 200 with timeline events`() {
           givenACas2PomUser { userEntity, jwt ->
             givenAnOffender { offenderDetails, inmateDetails ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               val otherUser = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId(userEntity.activeCaseloadId!!)
@@ -1505,7 +1496,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         fun `Get single unsubmitted application returns 403`() {
           givenACas2PomUser { userEntity, jwt ->
             givenAnOffender { offenderDetails, inmateDetails ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               val otherUser = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId(userEntity.activeCaseloadId!!)
@@ -1861,8 +1851,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     prisonName: String,
     omuEmail: String,
   ): Cas2ApplicationEntity {
-    cas2ApplicationJsonSchemaRepository.deleteAll()
-
     val omu = offenderManagementUnitEntityFactory.produceAndPersist {
       withPrisonName(prisonName)
       withPrisonCode(userEntity.activeCaseloadId!!)

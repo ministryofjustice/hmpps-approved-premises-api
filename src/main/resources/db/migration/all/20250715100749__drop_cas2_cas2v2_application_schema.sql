@@ -1,0 +1,7 @@
+ALTER TABLE cas_2_applications DROP CONSTRAINT cas2_apps_schema_version_fk;
+ALTER TABLE cas_2_v2_applications DROP CONSTRAINT fk_cas_2_v2_applications_on_schema_version;
+ALTER TABLE cas_2_application_json_schemas DROP CONSTRAINT cas_2_application_json_schemas_json_schema_id_fkey;
+ALTER TABLE cas_2_v2_application_json_schemas DROP CONSTRAINT fk_cas_2_v2_application_json_schemas_on_json_schema;
+
+DROP TABLE cas_2_application_json_schemas;
+DROP TABLE cas_2_v2_application_json_schemas;

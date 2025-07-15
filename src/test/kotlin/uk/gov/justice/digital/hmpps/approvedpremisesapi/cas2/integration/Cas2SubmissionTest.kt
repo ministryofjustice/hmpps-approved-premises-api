@@ -203,8 +203,6 @@ class Cas2SubmissionTest(
       givenACas2Assessor { _, jwt ->
         givenACas2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
-
             val submittedcas2applicationentitySecond = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
@@ -364,7 +362,6 @@ class Cas2SubmissionTest(
         givenACas2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             val omuEmail = "test@test.com"
-            cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
@@ -540,7 +537,6 @@ class Cas2SubmissionTest(
       givenACas2Assessor { _, jwt ->
         givenACas2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
 
             val applicationEntity = createInProgressApplication(
               offenderDetails.otherIds.crn,
@@ -566,7 +562,6 @@ class Cas2SubmissionTest(
           givenACas2Admin { admin, jwt ->
             givenACas2PomUser { user, _ ->
               givenAnOffender { offenderDetails, _ ->
-                cas2ApplicationJsonSchemaRepository.deleteAll()
 
                 val omu = offenderManagementUnitEntityFactory.produceAndPersist {
                   withPrisonName("PRISON")
@@ -688,7 +683,6 @@ class Cas2SubmissionTest(
         givenACas2Admin { _, jwt ->
           givenACas2PomUser { user, _ ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
 
               val applicationEntity = createInProgressApplication(
                 offenderDetails.otherIds.crn,

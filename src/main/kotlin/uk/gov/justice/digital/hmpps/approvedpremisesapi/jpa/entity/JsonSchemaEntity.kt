@@ -36,26 +36,6 @@ abstract class JsonSchemaEntity(
 )
 
 @Entity
-@DiscriminatorValue("CAS_2_APPLICATION")
-@Table(name = "cas_2_application_json_schemas")
-@PrimaryKeyJoinColumn(name = "json_schema_id")
-class Cas2ApplicationJsonSchemaEntity(
-  id: UUID,
-  addedAt: OffsetDateTime,
-  schema: String,
-) : JsonSchemaEntity(id, addedAt, schema)
-
-@Entity
-@DiscriminatorValue("CAS_2_V2_APPLICATION")
-@Table(name = "cas_2_v2_application_json_schemas")
-@PrimaryKeyJoinColumn(name = "json_schema_id")
-class Cas2v2ApplicationJsonSchemaEntity(
-  id: UUID,
-  addedAt: OffsetDateTime,
-  schema: String,
-) : JsonSchemaEntity(id, addedAt, schema)
-
-@Entity
 @DiscriminatorValue("APPROVED_PREMISES_ASSESSMENT")
 @Table(name = "approved_premises_assessment_json_schemas")
 @PrimaryKeyJoinColumn(name = "json_schema_id")
