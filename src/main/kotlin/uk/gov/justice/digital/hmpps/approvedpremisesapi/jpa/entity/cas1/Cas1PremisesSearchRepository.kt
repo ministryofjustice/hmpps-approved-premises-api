@@ -56,7 +56,8 @@ FROM
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
-    (:gender = 'ANY' OR (ap.gender = :gender))
+    (:gender = 'ANY' OR (ap.gender = :gender)) AND
+    (:cruManagementAreaIdsCount = 0 OR (ap.cas1_cru_management_area_id IN (:cruManagementAreaIds)))
   GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
 ) AS result
 WHERE
@@ -99,6 +100,7 @@ class Cas1SpaceSearchRepository(
     gender: ApprovedPremisesGender?,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
+    cruManagementAreaIds: List<UUID>,
   ): List<CandidatePremises> {
     val parameters = mutableMapOf(
       "outcode" to (targetPostcodeDistrict ?: "ANY"),
@@ -107,6 +109,8 @@ class Cas1SpaceSearchRepository(
       "premisesCharacteristics" to premisesCharacteristics.ifEmpty { null },
       "roomCharacteristicsCount" to roomCharacteristics.size,
       "roomCharacteristics" to roomCharacteristics.ifEmpty { null },
+      "cruManagementAreaIdsCount" to cruManagementAreaIds.size,
+      "cruManagementAreaIds" to cruManagementAreaIds.ifEmpty { null },
     )
 
     return jdbcTemplate.query(CANDIDATE_PREMISES_QUERY, parameters) { rs, _ ->

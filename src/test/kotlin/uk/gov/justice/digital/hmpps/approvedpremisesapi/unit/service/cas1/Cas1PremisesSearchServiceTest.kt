@@ -104,6 +104,7 @@ class Cas1PremisesSearchServiceTest {
         any(),
         any(),
         any(),
+        any(),
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
@@ -112,6 +113,7 @@ class Cas1PremisesSearchServiceTest {
         gender = ApprovedPremisesGender.MAN,
         targetPostcodeDistrict = "TB1",
         spaceCharacteristics = Cas1SpaceCharacteristic.entries.toSet(),
+        cruManagementAreaIds = setOf(UUID.fromString("dfe1587e-4781-4ef4-8bbe-a9fbf419607e")),
       ),
     )
 
@@ -135,6 +137,7 @@ class Cas1PremisesSearchServiceTest {
         gender = ApprovedPremisesGender.MAN,
         spaceCharacteristics.filter { it.modelMatches("premises") }.map { it.id },
         spaceCharacteristics.filter { it.modelMatches("room") }.map { it.id },
+        cruManagementAreaIds = listOf(UUID.fromString("dfe1587e-4781-4ef4-8bbe-a9fbf419607e")),
       )
     }
 
@@ -206,6 +209,7 @@ class Cas1PremisesSearchServiceTest {
         any(),
         any(),
         any(),
+        any(),
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
@@ -221,6 +225,7 @@ class Cas1PremisesSearchServiceTest {
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         any(),
         gender = gender,
+        any(),
         any(),
         any(),
       )
@@ -297,6 +302,7 @@ class Cas1PremisesSearchServiceTest {
         any(),
         any(),
         any(),
+        any(),
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
@@ -319,6 +325,7 @@ class Cas1PremisesSearchServiceTest {
         ApprovedPremisesGender.MAN,
         spaceCharacteristicEntities.filter { it.modelMatches("premises") }.map { it.id },
         spaceCharacteristicEntities.filter { it.modelMatches("room") }.map { it.id },
+        cruManagementAreaIds = emptyList(),
       )
     }
 

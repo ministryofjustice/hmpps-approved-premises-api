@@ -902,6 +902,65 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(capacities[6].inServiceBedCount).isEqualTo(1)
       assertThat(capacities[6].vacantBedCount).isEqualTo(0)
     }
+
+    @Test
+    fun `CRU Management Area IDs provided, only return premises in those areas`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+
+      val area1 = givenACas1CruManagementArea()
+      val area2 = givenACas1CruManagementArea()
+      val area3 = givenACas1CruManagementArea()
+      val area4 = givenACas1CruManagementArea()
+
+      val area1Premises1 = givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        cruManagementArea = area1,
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        cruManagementArea = area2,
+      )
+
+      val area3Premises1 = givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        cruManagementArea = area3,
+      )
+
+      val area3Premises2 = givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        cruManagementArea = area3,
+      )
+
+      givenAnApprovedPremises(
+        supportsSpaceBookings = true,
+        cruManagementArea = area4,
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/capacity")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NationalOccupancyParameters(
+            fromDate = LocalDate.of(2025, 1, 1),
+            cruManagementAreaIds = setOf(area1.id, area3.id),
+            premisesCharacteristics = emptySet(),
+            roomCharacteristics = emptySet(),
+            postcodeArea = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1NationalOccupancy>()
+
+      assertThat(response.premises).hasSize(3)
+      assertThat(response.premises.map { it.summary.id }).containsExactlyInAnyOrder(
+        area1Premises1.id,
+        area3Premises1.id,
+        area3Premises2.id,
+      )
+    }
   }
 
   @Nested
