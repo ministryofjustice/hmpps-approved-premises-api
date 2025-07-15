@@ -78,7 +78,16 @@ AND
     WHERE r.premises_id = result.premises_id AND rc.characteristic_id IN (:roomCharacteristics)
   )
 )
-ORDER BY result.distance_in_miles
+ORDER BY 
+    CASE 
+        WHEN :outcode = 'ANY' THEN ap_area_identifier
+        ELSE ''
+    END,
+    CASE 
+        WHEN :outcode != 'ANY' THEN distance_in_miles
+        ELSE 0
+    END,
+    name
 """
 
 @Repository

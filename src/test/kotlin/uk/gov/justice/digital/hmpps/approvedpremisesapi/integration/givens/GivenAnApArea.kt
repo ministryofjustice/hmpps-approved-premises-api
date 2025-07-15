@@ -9,10 +9,14 @@ fun IntegrationTestBase.givenAnApArea(
   id: UUID = UUID.randomUUID(),
   name: String? = null,
   defaultCruManagementArea: Cas1CruManagementAreaEntity? = null,
+  identifier: String? = null,
 ): ApAreaEntity = apAreaEntityFactory.produceAndPersist {
   withId(id)
   if (name != null) {
     withName(name)
+  }
+  if (identifier != null) {
+    withIdentifier(identifier)
   }
   withDefaultCruManagementArea(defaultCruManagementArea ?: givenACas1CruManagementArea())
 }
