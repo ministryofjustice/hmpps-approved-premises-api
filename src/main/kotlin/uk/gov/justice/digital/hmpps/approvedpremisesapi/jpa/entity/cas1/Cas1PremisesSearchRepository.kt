@@ -41,6 +41,7 @@ FROM
     p.postcode AS postcode,
     aa.id AS ap_area_id,
     aa.name AS ap_area_name,
+    aa.identifier AS ap_area_identifier,
     ARRAY_REMOVE(ARRAY_AGG (DISTINCT premises_chars_resolved.property_name), null) as premises_characteristics,
     ARRAY_REMOVE(ARRAY_AGG (DISTINCT room_chars_resolved.property_name), null) as room_characteristics
   FROM approved_premises ap
@@ -109,14 +110,15 @@ class Cas1SpaceSearchRepository(
         rs.getUUID("premises_id"),
         if (targetPostcodeDistrict == null) null else rs.getFloat("distance_in_miles"),
         apType,
-        rs.getString("name"),
-        rs.getString("full_address"),
-        rs.getString("address_line1"),
-        rs.getString("address_line2"),
-        rs.getString("town"),
-        rs.getString("postcode"),
-        rs.getUUID("ap_area_id"),
-        rs.getString("ap_area_name"),
+        name = rs.getString("name"),
+        fullAddress = rs.getString("full_address"),
+        addressLine1 = rs.getString("address_line1"),
+        addressLine2 = rs.getString("address_line2"),
+        town = rs.getString("town"),
+        postcode = rs.getString("postcode"),
+        apAreaId = rs.getUUID("ap_area_id"),
+        apAreaName = rs.getString("ap_area_name"),
+        apAreaIdentifier = rs.getString("ap_area_identifier"),
         characteristics = (
           SqlUtil.toStringList(rs.getArray("premises_characteristics")) +
             SqlUtil.toStringList(rs.getArray("room_characteristics"))
@@ -138,5 +140,6 @@ data class CandidatePremises(
   val postcode: String,
   val apAreaId: UUID,
   val apAreaName: String,
+  val apAreaIdentifier: String,
   val characteristics: List<String>,
 )

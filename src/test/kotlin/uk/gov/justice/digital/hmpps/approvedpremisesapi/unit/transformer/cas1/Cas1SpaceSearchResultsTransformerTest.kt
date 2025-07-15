@@ -33,6 +33,7 @@ class Cas1SpaceSearchResultsTransformerTest {
         postcode = "TB1 2AB",
         apAreaId = apAreaId1,
         apAreaName = "Some AP Area 1",
+        apAreaIdentifier = "Area1",
         characteristics = emptyList(),
       ),
       CandidatePremises(
@@ -47,6 +48,7 @@ class Cas1SpaceSearchResultsTransformerTest {
         postcode = "TB1 2AC",
         apAreaId = apAreaId2,
         apAreaName = "Some AP Area 2",
+        apAreaIdentifier = "Area2",
         characteristics = emptyList(),
       ),
     )
@@ -62,6 +64,7 @@ class Cas1SpaceSearchResultsTransformerTest {
     assertThat(premises1.postcode).isEqualTo("TB1 2AB")
     assertThat(premises1.apArea.id).isEqualTo(apAreaId1)
     assertThat(premises1.apArea.name).isEqualTo("Some AP Area 1")
+    assertThat(premises1.apArea.code).isEqualTo("Area1")
     assertThat(premises1.characteristics).isEmpty()
     assertThat(actual.results[0].distanceInMiles).isEqualTo(BigDecimal.valueOf(1.0))
 
@@ -73,6 +76,7 @@ class Cas1SpaceSearchResultsTransformerTest {
     assertThat(premises2.postcode).isEqualTo("TB1 2AC")
     assertThat(premises2.apArea.id).isEqualTo(apAreaId2)
     assertThat(premises2.apArea.name).isEqualTo("Some AP Area 2")
+    assertThat(premises2.apArea.code).isEqualTo("Area2")
     assertThat(premises2.characteristics).isEmpty()
     assertThat(actual.results[1].distanceInMiles).isEqualTo(BigDecimal.valueOf(2.0))
   }
