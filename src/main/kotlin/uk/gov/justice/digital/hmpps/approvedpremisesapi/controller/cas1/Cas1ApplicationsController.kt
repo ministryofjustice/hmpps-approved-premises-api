@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
@@ -28,7 +28,7 @@ class Cas1ApplicationsController(
   private val applicationService: ApplicationService,
   private val cas1ApplicationService: Cas1ApplicationService,
   private val userService: UserService,
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
   private val applicationsTransformer: ApplicationsTransformer,
 ) : ApplicationsCas1Delegate {
 
@@ -115,7 +115,7 @@ class Cas1ApplicationsController(
     laoStrategy: LaoStrategy,
   ): List<Cas1ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
 
     return applications.map {
       val crn = it.getCrn()

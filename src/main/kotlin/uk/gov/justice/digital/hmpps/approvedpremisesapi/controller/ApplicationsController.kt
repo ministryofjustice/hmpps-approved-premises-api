@@ -42,7 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
@@ -70,7 +70,6 @@ class ApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
-  private val offenderService: OffenderService,
   private val documentTransformer: DocumentTransformer,
   private val userService: UserService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
@@ -82,6 +81,7 @@ class ApplicationsController(
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val documentService: DocumentService,
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
+  private val offenderDetailService: OffenderDetailService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -136,7 +136,7 @@ class ApplicationsController(
     val user = userService.getUserForRequest()
 
     val personInfo =
-      when (val personInfoResult = offenderService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
+      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
         is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
           personInfoResult.crn,
           "Offender",
@@ -400,7 +400,7 @@ class ApplicationsController(
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
   ): Application {
-    val personInfo = offenderService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderDetailService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)
   }
@@ -410,7 +410,7 @@ class ApplicationsController(
     laoStrategy: LaoStrategy,
   ): List<ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
 
     return applications.map {
       val crn = it.getCrn()
@@ -426,7 +426,7 @@ class ApplicationsController(
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
   ): Application {
-    val personInfo = offenderService.getPersonInfoResult(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderDetailService.getPersonInfoResult(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
@@ -41,12 +42,13 @@ class PeopleController(
   private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
   private val oasysService: OASysService,
+  private val offenderDetailService: OffenderDetailService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personInfo = offenderDetailService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     when (personInfo) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")

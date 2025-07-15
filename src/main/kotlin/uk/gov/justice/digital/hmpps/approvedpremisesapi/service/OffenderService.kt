@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
@@ -27,11 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.time.LocalDate
 import java.util.stream.Collectors
@@ -44,7 +41,6 @@ class OffenderService(
   private val caseNotesClient: CaseNotesClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
-  private val personTransformer: PersonTransformer,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
@@ -358,38 +354,6 @@ class OffenderService(
     }
   }
 
-  fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail?> {
-    var inmateDetailResponse = prisonsApiClient.getInmateDetailsWithWait(nomsNumber)
-
-    val hasCacheTimedOut = inmateDetailResponse is ClientResult.Failure.PreemptiveCacheTimeout
-    if (hasCacheTimedOut) {
-      inmateDetailResponse = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
-    }
-
-    fun logFailedResponse(inmateDetailResponse: ClientResult.Failure<InmateDetail>) = when (hasCacheTimedOut) {
-      true -> log.warn("Could not get inmate details for $crn after cache timed out", inmateDetailResponse.toException())
-      false -> log.warn("Could not get inmate details for $crn as an unsuccessful response was cached", inmateDetailResponse.toException())
-    }
-
-    val inmateDetail = when (inmateDetailResponse) {
-      is ClientResult.Success -> inmateDetailResponse.body
-      is ClientResult.Failure.StatusCode -> when (inmateDetailResponse.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> {
-          logFailedResponse(inmateDetailResponse)
-          null
-        }
-      }
-      is ClientResult.Failure -> {
-        logFailedResponse(inmateDetailResponse)
-        null
-      }
-    }
-
-    return AuthorisableActionResult.Success(inmateDetail)
-  }
-
   fun getFilteredPrisonCaseNotesByNomsNumber(nomsNumber: String, getCas1SpecificNoteTypes: Boolean): CasResult<List<CaseNote>> {
     val cas1PrisonNoteTypesToInclude = listOf(
       "Alert", "Conduct & Behaviour", "Custodial Violence Management", "Negative Behaviours", "Enforcement", "Interventions / Keywork",
@@ -499,70 +463,5 @@ class OffenderService(
       is ClientResult.Failure -> caseDetailResult.throwException()
     }
     return CasResult.Success(caseDetail)
-  }
-
-  fun getPersonInfoResult(
-    crn: String,
-    laoStrategy: LaoStrategy,
-  ) = getPersonInfoResults(setOf(crn), laoStrategy).first()
-
-  fun getPersonInfoResults(
-    crns: Set<String>,
-    laoStrategy: LaoStrategy,
-  ) = getPersonInfoResults(
-    crns = crns,
-    deliusUsername = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> null
-      is LaoStrategy.CheckUserAccess -> laoStrategy.deliusUsername
-    },
-    ignoreLaoRestrictions = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> true
-      is LaoStrategy.CheckUserAccess -> false
-    },
-  )
-
-  @Deprecated(
-    """Use version that takes limitedAccessStrategy, derive from [UserEntity.cas1LimitedAccessStrategy()] 
-    |or [UserEntity.cas3LimitedAccessStrategy()]""",
-  )
-  fun getPersonInfoResult(
-    crn: String,
-    deliusUsername: String?,
-    ignoreLaoRestrictions: Boolean,
-  ): PersonInfoResult {
-    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
-    return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
-  }
-
-  private fun getPersonInfoResults(
-    crns: Set<String>,
-    deliusUsername: String?,
-    ignoreLaoRestrictions: Boolean,
-  ): List<PersonInfoResult> {
-    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided" }
-
-    if (crns.isEmpty()) return emptyList()
-
-    val offendersDetails = getOffenderSummariesByCrns(crns, deliusUsername, ignoreLaoRestrictions)
-
-    return offendersDetails.map {
-      when (it) {
-        is PersonSummaryInfoResult.Success.Full -> {
-          val inmateDetails = it.summary.nomsId?.let { nomsNumber ->
-            when (val inmateDetailsResult = getInmateDetailByNomsNumber(it.crn, nomsNumber)) {
-              is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-              else -> null
-            }
-          }
-          personTransformer.transformPersonSummaryInfoToPersonInfo(it, inmateDetails)
-        }
-
-        is PersonSummaryInfoResult.Success.Restricted,
-        is PersonSummaryInfoResult.NotFound,
-        is PersonSummaryInfoResult.Unknown,
-        ->
-          personTransformer.transformPersonSummaryInfoToPersonInfo(it, null)
-      }
-    }
   }
 }

@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -72,6 +73,7 @@ class Cas1SpaceBookingController(
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val cas1BookingManagementService: Cas1BookingManagementService,
+  private val offenderDetailService: OffenderDetailService,
 ) : SpaceBookingsCas1Delegate {
 
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
@@ -432,7 +434,7 @@ class Cas1SpaceBookingController(
   private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {
     val user = userService.getUserForRequest()
 
-    val person = offenderService.getPersonInfoResult(
+    val person = offenderDetailService.getPersonInfoResult(
       booking.crn,
       user.cas1LaoStrategy(),
     )
