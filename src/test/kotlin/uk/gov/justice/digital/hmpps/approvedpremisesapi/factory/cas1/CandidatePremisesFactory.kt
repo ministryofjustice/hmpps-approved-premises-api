@@ -24,6 +24,7 @@ class CandidatePremisesFactory : Factory<CandidatePremises> {
     "TB1 2AB",
     UUID.randomUUID(),
     "Some AP Area",
+    "Area Code",
     characteristics = emptyList(),
   )
 }

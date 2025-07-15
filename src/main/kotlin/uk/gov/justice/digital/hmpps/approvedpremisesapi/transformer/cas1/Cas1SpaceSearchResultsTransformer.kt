@@ -33,6 +33,7 @@ class Cas1SpaceSearchResultsTransformer {
     apArea = NamedId(
       id = premises.apAreaId,
       name = premises.apAreaName,
+      code = premises.apAreaIdentifier,
     ),
     characteristics = premises.characteristics.map {
       Cas1SpaceCharacteristic.valueOf(it)
