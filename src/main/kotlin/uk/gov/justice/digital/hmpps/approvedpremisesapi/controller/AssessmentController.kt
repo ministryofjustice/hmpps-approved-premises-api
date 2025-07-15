@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3AssessmentService
@@ -45,7 +45,7 @@ class AssessmentController(
   private val objectMapper: ObjectMapper,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
@@ -101,7 +101,7 @@ class AssessmentController(
     laoStrategy: LaoStrategy,
   ): List<AssessmentSummary> {
     val crns = summaries.map { it.crn }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), laoStrategy)
+    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
 
     return summaries.map {
       val crn = it.crn
@@ -119,7 +119,7 @@ class AssessmentController(
 
     val ignoreLaoRestrictions = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
-    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     val transformedResponse = assessmentTransformer.transformJpaToApi(assessment, personInfo)
 
@@ -154,7 +154,7 @@ class AssessmentController(
     val ignoreLao =
       (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
-    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLao)
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLao)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),

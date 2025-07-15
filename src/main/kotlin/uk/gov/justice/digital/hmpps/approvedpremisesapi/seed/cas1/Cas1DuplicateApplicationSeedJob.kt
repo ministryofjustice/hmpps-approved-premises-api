@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -35,7 +35,7 @@ import java.util.UUID
 @Component
 class Cas1DuplicateApplicationSeedJob(
   private val applicationService: ApplicationService,
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
 ) : SeedJob<Cas1DuplicateApplicationSeedCsvRow>(
@@ -63,7 +63,7 @@ class Cas1DuplicateApplicationSeedJob(
 
     val personInfo =
       when (
-        val personInfoResult = offenderService.getPersonInfoResult(
+        val personInfoResult = offenderDetailService.getPersonInfoResult(
           crn = sourceApplication.crn,
           deliusUsername = null,
           ignoreLaoRestrictions = true,

@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
@@ -438,7 +438,7 @@ class Cas1ApplicationSeedService(
 @SuppressWarnings("MagicNumber")
 @Service
 class Cas1ApplicationSeedServiceCaches(
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
 ) {
 
   var personInfoCache: LoadingCache<String, PersonInfoResult.Success.Full> = CacheBuilder.newBuilder()
@@ -446,7 +446,7 @@ class Cas1ApplicationSeedServiceCaches(
     .expireAfterWrite(1, TimeUnit.MINUTES)
     .build(object : CacheLoader<String, PersonInfoResult.Success.Full>() {
       override fun load(crn: String): PersonInfoResult.Success.Full = when (
-        val personInfoResult = offenderService.getPersonInfoResult(
+        val personInfoResult = offenderDetailService.getPersonInfoResult(
           crn = crn,
           deliusUsername = null,
           ignoreLaoRestrictions = true,

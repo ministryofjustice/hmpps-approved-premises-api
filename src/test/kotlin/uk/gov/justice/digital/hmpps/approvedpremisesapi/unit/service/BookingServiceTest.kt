@@ -76,7 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -95,7 +95,7 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService as Cas3DomainEventService
 
 class BookingServiceTest {
-  private val mockOffenderService = mockk<OffenderService>()
+  private val mockOffenderDetailService = mockk<OffenderDetailService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
@@ -119,7 +119,7 @@ class BookingServiceTest {
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
 
   fun createBookingService(): BookingService = BookingService(
-    offenderService = mockOffenderService,
+    offenderDetailService = mockOffenderDetailService,
     workingDayService = mockWorkingDayService,
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
@@ -245,7 +245,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockOffenderDetailService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
 
       val result = bookingService.getBooking(bookingEntity.id)
 

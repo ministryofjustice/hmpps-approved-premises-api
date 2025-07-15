@@ -57,7 +57,7 @@ import java.util.UUID
 
 @Service
 class BookingService(
-  private val offenderService: OffenderService,
+  private val offenderDetailService: OffenderDetailService,
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
@@ -90,7 +90,7 @@ class BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val personInfo = offenderService.getPersonInfoResult(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val personInfo = offenderDetailService.getPersonInfoResult(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     return AuthorisableActionResult.Success(BookingAndPersons(booking, personInfo))
   }

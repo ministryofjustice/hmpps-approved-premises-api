@@ -56,7 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
@@ -94,7 +94,6 @@ class PremisesController(
   private val userAccessService: UserAccessService,
   private val premisesService: PremisesService,
   private val cas3PremisesService: Cas3PremisesService,
-  private val offenderService: OffenderService,
   private val bookingService: BookingService,
   private val cas3BookingService: Cas3BookingService,
   private val cas3VoidBedspaceService: Cas3VoidBedspaceService,
@@ -114,6 +113,7 @@ class PremisesController(
   private val dateChangeTransformer: DateChangeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val requestContextService: RequestContextService,
+  private val offenderDetailService: OffenderDetailService,
 ) : PremisesApiDelegate {
   @Transactional
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
@@ -315,7 +315,7 @@ class PremisesController(
 
     val crns = premises.bookings.map { it.crn }
     val personInfoResults = async {
-      offenderService.getPersonInfoResults(
+      offenderDetailService.getPersonInfoResults(
         crns.toSet(),
         user.cas3LaoStrategy(),
       )
@@ -366,7 +366,7 @@ class PremisesController(
     }
 
     val personInfo =
-      offenderService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      offenderDetailService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: $crn")
 

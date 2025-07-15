@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
@@ -92,6 +93,7 @@ class Cas1ApplicationCreationServiceTest {
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
   private val mockCas1OffenderService = mockk<Cas1OffenderService>()
+  private val mockOffenderDetailService = mockk<OffenderDetailService>()
 
   private val applicationService = Cas1ApplicationCreationService(
     mockApplicationRepository,
@@ -112,6 +114,7 @@ class Cas1ApplicationCreationServiceTest {
     mockLockableApplicationRepository,
     mockCas1CruManagementAreaRepository,
     mockCas1OffenderService,
+    mockOffenderDetailService,
   )
 
   @Nested
@@ -997,7 +1000,7 @@ class Cas1ApplicationCreationServiceTest {
       every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
+      every { mockOffenderDetailService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
         InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),
       )
 
