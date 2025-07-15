@@ -34,15 +34,10 @@ class SpacePlanningService(
     rangeInclusive: DateRange,
     excludeSpaceBookingId: UUID?,
   ): List<PremiseCapacity> {
-    log.info("Determine capacity for ${forPremisesIds.size} premises between $rangeInclusive")
-
     val rangeList = rangeInclusive.orderedDatesInRange().toList()
 
     val allPremisesDayBedStates = bedStatesForEachDay(forPremisesIds, rangeList)
-    log.info("Have retrieved ${allPremisesDayBedStates.size} bed states")
-
     val allPremisesDayBookings = spaceBookingsForEachDay(forPremisesIds, rangeList, excludeSpaceBookingId)
-    log.info("Have retrieved ${allPremisesDayBookings.size} bookings")
 
     return forPremisesIds.map { premisesId ->
       calculatePremisesCapacity(
@@ -61,8 +56,6 @@ class SpacePlanningService(
     premisesDayBookings: PremisesDayBookings,
   ): PremiseCapacity {
     val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
-      log.info("Calculating capacity for day $day")
-
       val bedStates = premisesDayBedStates.forDay(day)
       val bookings = premisesDayBookings.forDay(day)
 
@@ -104,12 +97,9 @@ class SpacePlanningService(
     orderedRange: List<LocalDate>,
   ): List<PremisesDayBedStates> {
     val allPremisesOosbRecords = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesIds(forPremisesIds)
-    log.info("Processing ${allPremisesOosbRecords.size} OOSB records")
     val allPremisesBeds = cas1BedsRepository.bedSummary(forPremisesIds)
-    log.info("Processing ${allPremisesBeds.size} Beds")
 
     return forPremisesIds.map { premisesId ->
-      log.info("Loading bed state for premises $premisesId")
 
       val premisesBeds = allPremisesBeds.bedsForPremises(premisesId)
       val premisesOosbRecords = allPremisesOosbRecords.oosbForPremises(premisesId)
@@ -142,8 +132,6 @@ class SpacePlanningService(
     ).filter { it.id != excludeSpaceBookingId }
 
     return forPremisesIds.map { premisesId ->
-      log.info("Loading bookings for premises $premisesId")
-
       val premisesBookingsInRange = allPremisesBookingsInRange.bookingsForPremises(premisesId)
 
       PremisesDayBookings(
