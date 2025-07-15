@@ -54,6 +54,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area1",
       characteristics = emptyList(),
     )
 
@@ -69,6 +70,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area2",
       characteristics = emptyList(),
     )
 
@@ -84,6 +86,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area3",
       characteristics = emptyList(),
     )
 
@@ -153,6 +156,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area1",
       characteristics = emptyList(),
     )
 
@@ -168,6 +172,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area2",
       characteristics = emptyList(),
     )
 
@@ -183,6 +188,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area3",
       characteristics = emptyList(),
     )
 
@@ -241,6 +247,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area1",
       characteristics = emptyList(),
     )
 
@@ -256,6 +263,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area2",
       characteristics = emptyList(),
     )
 
@@ -271,6 +279,7 @@ class Cas1PremisesSearchServiceTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      "Area3",
       characteristics = emptyList(),
     )
 
