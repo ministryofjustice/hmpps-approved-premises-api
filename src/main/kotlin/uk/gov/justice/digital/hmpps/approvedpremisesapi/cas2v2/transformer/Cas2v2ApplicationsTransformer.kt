@@ -71,6 +71,7 @@ class Cas2v2ApplicationsTransformer(
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
     personName = personName,
+    prisonCode = jpaSummary.prisonCode,
     applicationOrigin = when (jpaSummary.applicationOrigin) {
       "courtBail" -> ApplicationOrigin.courtBail
       "prisonBail" -> ApplicationOrigin.prisonBail

@@ -23,6 +23,7 @@ import java.util.UUID
  * @param hdcEligibilityDate
  * @param nomsNumber
  * @param bailHearingDate
+ * @param prisonCode
  */
 data class Cas2v2ApplicationSummary(
 
@@ -48,7 +49,10 @@ data class Cas2v2ApplicationSummary(
   @get:JsonProperty("crn", required = true) val crn: String,
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
+  @get:JsonProperty(
+    "applicationOrigin",
+    required = true,
+  ) val applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
@@ -70,4 +74,7 @@ data class Cas2v2ApplicationSummary(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+
+  @Schema(example = "null", description = "")
+  @get:JsonProperty("prisonCode") val prisonCode: String? = null,
 )
