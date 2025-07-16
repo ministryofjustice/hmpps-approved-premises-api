@@ -191,5 +191,11 @@
       "cas1_user_list",
       "cas1_user_management"
     ]
+  },
+  {
+    "name" : "ap_area_manager",
+    "permissions" : [
+      "cas1_view_manage_tasks"
+    ]
   }
 ]
