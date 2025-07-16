@@ -1,0 +1,8 @@
+ALTER TABLE assessments DROP CONSTRAINT assessments_schema_version_fkey;
+ALTER TABLE approved_premises_assessment_json_schemas DROP CONSTRAINT approved_premises_assessment_json_schemas_json_schema_id_fkey;
+ALTER TABLE temporary_accommodation_assessment_json_schemas DROP CONSTRAINT temporary_accommodation_assessment_json_sch_json_schema_id_fkey;
+
+ALTER TABLE assessments DROP COLUMN schema_version;
+
+DROP TABLE approved_premises_assessment_json_schemas;
+DROP TABLE temporary_accommodation_assessment_json_schemas;

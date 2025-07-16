@@ -53,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
@@ -87,11 +86,6 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
         UserRole.CAS1_JANITOR,
       ),
     )
-
-    approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withPermissiveSchema()
-    }
 
     cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
       withId(UUID.randomUUID())
