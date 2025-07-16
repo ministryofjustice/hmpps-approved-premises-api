@@ -362,7 +362,9 @@ class TemporaryAccommodationPremisesEntity(
   rooms,
   characteristics,
   status,
-)
+) {
+  fun isCas3PremisesArchived(): Boolean = endDate != null && endDate!! <= LocalDate.now()
+}
 
 interface TemporaryAccommodationPremisesSummary {
   val id: UUID

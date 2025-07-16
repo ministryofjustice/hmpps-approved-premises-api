@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchiveBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -242,6 +243,25 @@ class Cas3PremisesController(
     )
 
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(unarchivedBedspace))
+  }
+
+  @Transactional
+  @PostMapping("/premises/{premisesId}/unarchive")
+  fun unarchivePremises(
+    @PathVariable premisesId: UUID,
+    @RequestBody body: Cas3UnarchivePremises,
+  ): ResponseEntity<Cas3Premises> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val unarchivedPremises = extractEntityFromCasResult(
+      cas3PremisesService.unarchivePremises(premises, body.restartDate),
+    )
+
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(unarchivedPremises))
   }
 
   @GetMapping("/premises/summary")

@@ -67,6 +67,8 @@ class Cas3PremisesService(
     const val MAX_LENGTH_BEDSPACE_REFERENCE = 3
     const val MAX_MONTHS_ARCHIVE_BEDSPACE = 3
     const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 7
+    const val MAX_MONTHS_ARCHIVE_PREMISES = 3
+    const val MAX_DAYS_UNARCHIVE_PREMISES: Long = 7
   }
 
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
@@ -779,24 +781,20 @@ class Cas3PremisesService(
     val bedspace = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedspaceId }
       ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
 
-    // Check if bedspace is actually archived
     if (!bedspace.isCas3BedspaceArchived()) {
       return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotArchived"
     }
 
     val today = LocalDate.now()
 
-    // Validate restart date is not more than 7 days in the past
     if (restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
       "$.restartDate" hasValidationError "invalidRestartDateInThePast"
     }
 
-    // Validate restart date is not more than 7 days in the future
     if (restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
       "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
     }
 
-    // Validate restart date is after the last archive end date
     if (restartDate.isBefore(bedspace.endDate) || restartDate.isEqual(bedspace.endDate)) {
       "$.restartDate" hasValidationError "beforeLastBedspaceArchivedDate"
     }
@@ -846,6 +844,47 @@ class Cas3PremisesService(
     )
 
     success(updatedBedspace)
+  }
+
+  fun unarchivePremises(
+    premises: TemporaryAccommodationPremisesEntity,
+    restartDate: LocalDate,
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
+    if (!premises.isCas3PremisesArchived()) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotArchived"
+    }
+
+    val today = LocalDate.now()
+
+    if (restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInThePast"
+    }
+
+    if (restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
+    }
+
+    if (restartDate.isBefore(premises.endDate) || restartDate.isEqual(premises.endDate)) {
+      "$.restartDate" hasValidationError "beforeLastPremisesArchivedDate"
+    }
+
+    if (hasErrors()) {
+      return@validatedCasResult errors()
+    }
+
+    premises.startDate = restartDate
+    premises.endDate = null
+    premises.status = PropertyStatus.active
+    val updatedPremises = premisesRepository.save(premises)
+
+    premises.rooms.flatMap { it.beds }.forEach { bedspace ->
+      val result = unarchiveBedspace(premises, bedspace.id, restartDate)
+      if (result is CasResult.Error) {
+        return result.reviseType()
+      }
+    }
+
+    success(updatedPremises)
   }
 
   private fun tryGetProbationDeliveryUnit(
