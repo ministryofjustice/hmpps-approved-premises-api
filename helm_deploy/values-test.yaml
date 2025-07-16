@@ -37,8 +37,8 @@ generic-service:
     ASSIGN-DEFAULT-REGION-TO-USERS-WITH-UNKNOWN-REGION: true
     SENTRY_ENVIRONMENT: test
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
-    DOMAIN-EVENTS_CAS1_EMIT-ENABLED: false
-    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: false
+    DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
+    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
 
     SEED_ON-STARTUP_ENABLED: true
