@@ -1972,6 +1972,240 @@ class Cas3PremisesServiceTest {
     }
   }
 
+  @Nested
+  inner class UnarchivePremises {
+    @Test
+    fun `unarchivePremises returns Success when premises is successfully unarchived`() {
+      val probationRegion = ProbationRegionEntityFactory()
+        .withApArea(ApAreaEntityFactory().produce())
+        .produce()
+
+      val localAuthority = LocalAuthorityEntityFactory()
+        .produce()
+
+      val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      val archivedPremises = temporaryAccommodationPremisesFactory
+        .withService(ServiceName.temporaryAccommodation.value)
+        .withProbationRegion(probationRegion)
+        .withProbationDeliveryUnit(probationDeliveryUnit)
+        .withLocalAuthorityArea(localAuthority)
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
+        .withStatus(PropertyStatus.archived)
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(archivedPremises)
+        .produce()
+
+      val archivedBedspace = BedEntityFactory()
+        .withRoom(room)
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
+        .produce()
+
+      archivedPremises.rooms.add(room)
+      room.beds.add(archivedBedspace)
+
+      val restartDate = LocalDate.now().plusDays(1)
+
+      // Create updated entities for mocking
+      val updatedPremises = temporaryAccommodationPremisesFactory
+        .withService(ServiceName.temporaryAccommodation.value)
+        .withProbationRegion(probationRegion)
+        .withProbationDeliveryUnit(probationDeliveryUnit)
+        .withLocalAuthorityArea(localAuthority)
+        .withStartDate(restartDate)
+        .withEndDate(null)
+        .withStatus(PropertyStatus.active)
+        .produce()
+
+      val updatedBedspace = BedEntityFactory()
+        .withRoom(room)
+        .withStartDate(restartDate)
+        .withEndDate(null)
+        .produce()
+
+      every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
+      every { premisesRepositoryMock.save(any()) } returns updatedPremises
+      every { bedRepositoryMock.save(any()) } returns updatedBedspace
+
+      val result = premisesService.unarchivePremises(archivedPremises.id, restartDate)
+
+      assertThatCasResult(result).isSuccess().with { resultEntity ->
+        assertThat(resultEntity.startDate).isEqualTo(restartDate)
+        assertThat(resultEntity.endDate).isNull()
+        assertThat(resultEntity.status).isEqualTo(PropertyStatus.active)
+      }
+
+      verify(exactly = 1) {
+        premisesRepositoryMock.save(
+          match<TemporaryAccommodationPremisesEntity> {
+            it.id == archivedPremises.id
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        bedRepositoryMock.save(
+          match<BedEntity> {
+            it.id == archivedBedspace.id
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `unarchivePremises returns FieldValidationError when premises does not exist`() {
+      val premisesId = UUID.randomUUID()
+      val restartDate = LocalDate.now().plusDays(1)
+
+      every { premisesRepositoryMock.findByIdOrNull(premisesId) } returns null
+
+      val result = premisesService.unarchivePremises(premisesId, restartDate)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotExist")
+    }
+
+    @Test
+    fun `unarchivePremises returns FieldValidationError when premises is not archived`() {
+      val activePremises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(null) // Not archived
+        .withStatus(PropertyStatus.active)
+        .produce()
+
+      val restartDate = LocalDate.now().plusDays(1)
+
+      every { premisesRepositoryMock.findByIdOrNull(activePremises.id) } returns activePremises
+
+      val result = premisesService.unarchivePremises(activePremises.id, restartDate)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesNotArchived")
+    }
+
+    @Test
+    fun `unarchivePremises returns FieldValidationError when restart date is more than 7 days in the past`() {
+      val archivedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(LocalDate.now().minusDays(10)) // Archived 10 days ago
+        .withStatus(PropertyStatus.archived)
+        .produce()
+
+      val restartDate = LocalDate.now().minusDays(8) // More than 7 days in the past
+
+      every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
+
+      val result = premisesService.unarchivePremises(archivedPremises.id, restartDate)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "invalidRestartDateInThePast")
+    }
+
+    @Test
+    fun `unarchivePremises returns FieldValidationError when restart date is more than 7 days in the future`() {
+      val archivedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
+        .withStatus(PropertyStatus.archived)
+        .produce()
+
+      val restartDate = LocalDate.now().plusDays(8) // More than 7 days in the future
+
+      every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
+
+      val result = premisesService.unarchivePremises(archivedPremises.id, restartDate)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "invalidRestartDateInTheFuture")
+    }
+
+    @Test
+    fun `unarchivePremises returns FieldValidationError when restart date is before last archive end date`() {
+      val lastArchiveEndDate = LocalDate.now().minusDays(1)
+      val archivedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(lastArchiveEndDate) // Archived yesterday
+        .withStatus(PropertyStatus.archived)
+        .produce()
+
+      val restartDate = lastArchiveEndDate.minusDays(1) // Before last archive end date
+
+      every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
+
+      val result = premisesService.unarchivePremises(archivedPremises.id, restartDate)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "beforeLastPremisesArchivedDate")
+    }
+
+    @Test
+    fun `unarchivePremises returns FieldValidationError when restart date equals last archive end date`() {
+      val lastArchiveEndDate = LocalDate.now().minusDays(1)
+      val archivedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(lastArchiveEndDate) // Archived yesterday
+        .withStatus(PropertyStatus.archived)
+        .produce()
+
+      val restartDate = lastArchiveEndDate // Equal to last archive end date
+
+      every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
+
+      val result = premisesService.unarchivePremises(archivedPremises.id, restartDate)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "beforeLastPremisesArchivedDate")
+    }
+
+    @Test
+    fun `unarchivePremises allows restart date exactly 7 days in the past`() {
+      val archivedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(LocalDate.now().minusDays(8)) // Archived 8 days ago
+        .withStatus(PropertyStatus.archived)
+        .produce()
+
+      val restartDate = LocalDate.now().minusDays(7) // Exactly 7 days in the past
+
+      val updatedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(restartDate)
+        .withEndDate(null)
+        .withStatus(PropertyStatus.active)
+        .produce()
+
+      every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
+      every { premisesRepositoryMock.save(any()) } returns updatedPremises
+
+      val result = premisesService.unarchivePremises(archivedPremises.id, restartDate)
+
+      assertThatCasResult(result).isSuccess()
+    }
+
+    @Test
+    fun `unarchivePremises allows restart date exactly 7 days in the future`() {
+      val archivedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
+        .withStatus(PropertyStatus.archived)
+        .produce()
+
+      val restartDate = LocalDate.now().plusDays(7) // Exactly 7 days in the future
+
+      val updatedPremises = temporaryAccommodationPremisesFactory
+        .withStartDate(restartDate)
+        .withEndDate(null)
+        .withStatus(PropertyStatus.active)
+        .produce()
+
+      every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
+      every { premisesRepositoryMock.save(any()) } returns updatedPremises
+
+      val result = premisesService.unarchivePremises(archivedPremises.id, restartDate)
+
+      assertThatCasResult(result).isSuccess()
+    }
+  }
+
   private fun createPremisesAndBedspace(): Pair<TemporaryAccommodationPremisesEntity, BedEntity> {
     val premises = temporaryAccommodationPremisesFactory.produce()
 
