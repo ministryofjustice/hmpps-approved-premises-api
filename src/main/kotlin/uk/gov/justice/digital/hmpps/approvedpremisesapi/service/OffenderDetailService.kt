@@ -50,18 +50,9 @@ class OffenderDetailService(
     crns: Set<String>,
     laoStrategy: LaoStrategy,
   ): List<PersonInfoResult> {
-    val deliusUsername = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> null
-      is LaoStrategy.CheckUserAccess -> laoStrategy.deliusUsername
-    }
-    val ignoreLaoRestrictions = when (laoStrategy) {
-      is LaoStrategy.NeverRestricted -> true
-      is LaoStrategy.CheckUserAccess -> false
-    }
-
     if (crns.isEmpty()) return emptyList()
 
-    val offendersDetails = offenderService.getOffenderSummariesByCrns(crns, deliusUsername, ignoreLaoRestrictions)
+    val offendersDetails = offenderService.getPersonSummaryInfoResults(crns, laoStrategy)
 
     return offendersDetails.map {
       when (it) {

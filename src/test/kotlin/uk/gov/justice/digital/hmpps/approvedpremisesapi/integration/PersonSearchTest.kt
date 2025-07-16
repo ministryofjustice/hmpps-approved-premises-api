@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -9,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import java.time.LocalDate
@@ -88,17 +87,10 @@ class PersonSearchTest : IntegrationTestBase() {
   @Test
   fun `Searching for a CRN that does not exist returns 404`() {
     givenAUser { userEntity, jwt ->
-      wiremockServer.stubFor(
-        get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(404),
-          ),
-      )
+      apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
 
       webTestClient.get()
-        .uri("/people/search?crn=CRN")
+        .uri("/people/search?crn=CRN1")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

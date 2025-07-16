@@ -138,10 +138,9 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = null,
-          ignoreLaoRestrictions = true,
+          laoStrategy = LaoStrategy.NeverRestricted,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -176,10 +175,9 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -224,10 +222,9 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult1Success, personSummaryInfoResult2Restricted, personSummaryInfoResult3Success)
 
@@ -281,10 +278,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(CRN1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -311,10 +307,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.NotFound(CRN1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -341,10 +336,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -378,10 +372,9 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = null,
-          ignoreLaoRestrictions = true,
+          laoStrategy = LaoStrategy.NeverRestricted,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -415,10 +408,9 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -449,10 +441,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(CRN1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -478,10 +469,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.NotFound(CRN1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -507,10 +497,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -543,10 +532,9 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = null,
-          ignoreLaoRestrictions = true,
+          laoStrategy = LaoStrategy.NeverRestricted,
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -581,10 +569,9 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -616,10 +603,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(CRN1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -646,10 +632,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.NotFound(CRN1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 
@@ -676,10 +661,9 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1)
 
       every {
-        mockOffenderService.getOffenderSummariesByCrns(
+        mockOffenderService.getPersonSummaryInfoResults(
           crns = setOf(CRN1),
-          deliusUsername = DELIUS_USERNAME,
-          ignoreLaoRestrictions = false,
+          laoStrategy = CheckUserAccess(DELIUS_USERNAME),
         )
       } returns listOf(personSummaryInfoResult)
 

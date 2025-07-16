@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -21,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -106,17 +105,10 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Getting a personal timeline for a CRN that does not exist returns 404`() {
     givenAUser { _, jwt ->
-      wiremockServer.stubFor(
-        get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(404),
-          ),
-      )
+      apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
 
       webTestClient.get()
-        .uri("/cas1/people/CRN/timeline")
+        .uri("/cas1/people/CRN1/timeline")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
