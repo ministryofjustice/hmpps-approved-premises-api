@@ -1,12 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.DiscriminatorColumn
-import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
-import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.hibernate.annotations.Immutable
@@ -34,23 +32,3 @@ abstract class JsonSchemaEntity(
   val addedAt: OffsetDateTime,
   val schema: String,
 )
-
-@Entity
-@DiscriminatorValue("APPROVED_PREMISES_ASSESSMENT")
-@Table(name = "approved_premises_assessment_json_schemas")
-@PrimaryKeyJoinColumn(name = "json_schema_id")
-class ApprovedPremisesAssessmentJsonSchemaEntity(
-  id: UUID,
-  addedAt: OffsetDateTime,
-  schema: String,
-) : JsonSchemaEntity(id, addedAt, schema)
-
-@Entity
-@DiscriminatorValue("TEMPORARY_ACCOMMODATION_ASSESSMENT")
-@Table(name = "temporary_accommodation_assessment_json_schemas")
-@PrimaryKeyJoinColumn(name = "json_schema_id")
-class TemporaryAccommodationAssessmentJsonSchemaEntity(
-  id: UUID,
-  addedAt: OffsetDateTime,
-  schema: String,
-) : JsonSchemaEntity(id, addedAt, schema)

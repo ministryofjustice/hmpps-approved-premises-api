@@ -49,7 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -81,8 +80,6 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   lateinit var user: UserEntity
   lateinit var criteria: MutableList<CharacteristicEntity>
   lateinit var premises: ApprovedPremisesEntity
-
-  lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
 
   val bookingWithCanonicalArrivalDateWithinRange = BookingWithCanonicalArrivalDateWithinRange()
   val bookingWithCanonicalDepartureDateWithinRange = BookingWithCanonicalDepartureDateWithinRange()
@@ -132,8 +129,6 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       name = "premisesName",
       supportsSpaceBookings = true,
     )
-
-    assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
     bookingWithCanonicalArrivalDateWithinRange.createBooking()
     bookingWithCanonicalDepartureDateWithinRange.createBooking()

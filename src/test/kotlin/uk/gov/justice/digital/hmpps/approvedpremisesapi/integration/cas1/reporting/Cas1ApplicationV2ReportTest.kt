@@ -47,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -75,8 +74,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
-  private lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
-
   private val appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn = AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn()
   private val appSubmittedWithAssessmentAccepted = AppSubmittedWithAssessmentAccepted()
   private val appSubmittedWithAssessmentAllocated = AppSubmittedWithAssessmentAllocated()
@@ -87,8 +84,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @BeforeAll
   fun setup() {
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-    assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
     appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.createApplication()
     appSubmittedWithAssessmentAccepted.createApplication()
