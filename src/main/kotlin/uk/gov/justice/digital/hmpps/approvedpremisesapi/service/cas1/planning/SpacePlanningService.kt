@@ -97,7 +97,10 @@ class SpacePlanningService(
     orderedRange: List<LocalDate>,
   ): List<PremisesDayBedStates> {
     val allPremisesOosbRecords = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesIds(forPremisesIds)
-    val allPremisesBeds = cas1BedsRepository.bedSummary(forPremisesIds)
+    val allPremisesBeds = cas1BedsRepository.bedSummary(
+      premisesIds = forPremisesIds,
+      excludeEndedBeds = false,
+    )
 
     return forPremisesIds.map { premisesId ->
 

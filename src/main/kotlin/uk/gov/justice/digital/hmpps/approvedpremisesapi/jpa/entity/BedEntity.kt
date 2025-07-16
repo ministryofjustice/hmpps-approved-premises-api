@@ -69,9 +69,13 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 class Cas1BedsRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
-  fun bedSummary(premisesIds: List<UUID>): List<Cas1PlanningBedSummary> {
-    val params = mutableMapOf<String, Any>(
+  fun bedSummary(
+    premisesIds: List<UUID>,
+    excludeEndedBeds: Boolean,
+  ): List<Cas1PlanningBedSummary> {
+    val params = mutableMapOf(
       "premisesIds" to premisesIds,
+      "excludeEndedBeds" to excludeEndedBeds,
     )
 
     return jdbcTemplate.query(
@@ -88,7 +92,9 @@ class Cas1BedsRepository(
       INNER JOIN beds b ON b.room_id = r.id
       LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = r.id 
       LEFT OUTER JOIN "characteristics" c ON c.id = room_chars.characteristic_id 
-      WHERE r.premises_id IN (:premisesIds)
+      WHERE 
+      r.premises_id IN (:premisesIds) AND 
+      (:excludeEndedBeds = false OR b.end_date is null OR b.end_date >= NOW())
       GROUP BY b.id, b."name", r.id, r."name"
       """.trimIndent(),
       params,
