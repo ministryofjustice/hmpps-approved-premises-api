@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1FurtherInfoBugFixSeedCsvRow
-import java.time.OffsetDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
@@ -64,11 +63,6 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
     val (user) = givenAUser()
     val (offenderDetails) = givenAnOffender()
 
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
@@ -77,7 +71,6 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
     return approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withAllocatedToUser(user)
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withData(data)
     }
   }

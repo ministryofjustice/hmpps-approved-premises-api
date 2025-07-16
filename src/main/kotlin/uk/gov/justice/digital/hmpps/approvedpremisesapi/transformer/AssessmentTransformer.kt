@@ -58,8 +58,6 @@ class AssessmentTransformer(
         jpa.application,
         personInfo,
       ) as ApprovedPremisesApplication,
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
       allocatedAt = jpa.allocatedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
@@ -85,8 +83,6 @@ class AssessmentTransformer(
       TemporaryAccommodationAssessment(
         id = jpa.id,
         application = application,
-        schemaVersion = jpa.schemaVersion.id,
-        outdatedSchema = jpa.schemaUpToDate,
         createdAt = jpa.createdAt.toInstant(),
         allocatedAt = jpa.allocatedAt?.toInstant(),
         data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,

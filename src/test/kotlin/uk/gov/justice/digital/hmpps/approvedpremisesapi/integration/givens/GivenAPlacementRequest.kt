@@ -98,12 +98,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
     apType?.let { withApType(it) }
   }
 
-  val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-    withAssessmentSchema(assessmentSchema)
     withApplication(app)
     withSubmittedAt(assessmentSubmittedAt)
     withAllocatedToUser(assessmentAllocatedTo)

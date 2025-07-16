@@ -42,10 +42,6 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
 
     user = userArgs.first
 
-    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
-
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
     }
@@ -57,13 +53,11 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
       withAllocatedToUser(user)
-      withAssessmentSchema(assessmentSchema)
     }
 
     val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withApplication(otherApplication)
       withAllocatedToUser(user)
-      withAssessmentSchema(assessmentSchema)
     }
 
     premises = givenAnApprovedPremises()

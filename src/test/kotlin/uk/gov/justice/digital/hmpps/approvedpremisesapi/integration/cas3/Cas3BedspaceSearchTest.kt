@@ -52,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @SuppressWarnings("LargeClass")
@@ -2627,11 +2626,6 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     private fun createAssessment(user: UserEntity, crn: String, sexualRisk: Boolean? = null): Pair<TemporaryAccommodationApplicationEntity, AssessmentEntity> {
-      val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-        withAddedAt(OffsetDateTime.now())
-      }
-
       val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
         withCreatedByUser(user)
@@ -2645,9 +2639,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
 
       val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
         withApplication(application)
-        withAssessmentSchema(assessmentSchema)
       }
-      assessment.schemaUpToDate = true
 
       return Pair(application, assessment)
     }

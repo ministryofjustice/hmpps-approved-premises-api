@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -93,13 +92,6 @@ class Cas1AssessmentTransformerTest {
   private val approvedPremisesAssessmentFactory = ApprovedPremisesAssessmentEntityFactory()
     .withApplication(mockk<ApprovedPremisesApplicationEntity>())
     .withId(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-    .withAssessmentSchema(
-      ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      ),
-    )
     .withDecision(JpaAssessmentDecision.REJECTED)
     .withRejectionRationale("reasoning")
     .withData("{\"data\": \"something\"}")
@@ -135,7 +127,6 @@ class Cas1AssessmentTransformerTest {
       val result = cas1AssessmentTransformer.transformJpaToCas1Assessment(assessment, mockk())
 
       assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-      assertThat(result.schemaVersion).isEqualTo(UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"))
       assertThat(result.decision).isEqualTo(ApiAssessmentDecision.rejected)
       assertThat(result.rejectionRationale).isEqualTo("reasoning")
       assertThat(result.createdAt).isEqualTo(Instant.parse("2022-12-14T12:05:00Z"))

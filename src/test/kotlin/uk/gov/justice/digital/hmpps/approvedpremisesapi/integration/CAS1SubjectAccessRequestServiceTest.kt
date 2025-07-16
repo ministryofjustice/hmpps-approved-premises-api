@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -1043,10 +1042,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withDecisionDetail("rejected as no good")
   }
 
-  private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
-  }
-
   private fun cas1ApplicationUserDetailsEntity(): Cas1ApplicationUserDetailsEntity = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
     withEmailAddress("noname_applicant_user@noname.net")
   }
@@ -1116,7 +1111,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withIsWithdrawn(false)
     withAllocatedToUser(userEntity())
     withApplication(application)
-    withAssessmentSchema(approvedPremisesAssessmentJsonSchemaEntity())
     withCreatedFromAppeal(false)
     withDecision(AssessmentDecision.REJECTED)
     withReallocatedAt(null)

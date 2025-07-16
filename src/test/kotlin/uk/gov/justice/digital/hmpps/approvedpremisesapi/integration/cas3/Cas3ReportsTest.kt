@@ -330,11 +330,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
@@ -372,13 +367,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
           val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
             withDecision(assessmentDecision)
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             assessmentDecision?.let { withSubmittedAt(OffsetDateTime.now()) }
             withRejectionRationale(if (REJECTED.name == assessmentDecision?.name) "some reason" else null)
           }
-          assessment.schemaUpToDate = true
 
           val caseSummary = CaseSummaryFactory()
             .fromOffenderDetails(offenderDetails)
@@ -587,12 +580,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
             null,
           )
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
           temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
             withDecision(REJECTED)
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withSubmittedAt(OffsetDateTime.now())
@@ -725,11 +714,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
@@ -769,7 +753,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
           val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
             withDecision(REJECTED)
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
@@ -781,8 +764,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             assessment.referralRejectionReasonDetail = randomStringLowerCase(100)
             temporaryAccommodationAssessmentRepository.save(assessment)
           }
-
-          assessment.schemaUpToDate = true
 
           val caseSummary = CaseSummaryFactory()
             .fromOffenderDetails(offenderDetails)
@@ -827,11 +808,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
           val prisonReleaseTypes = "Standard recall,CRD licence,ECSL"
           val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
@@ -871,14 +847,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
           val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
             withDecision(REJECTED)
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
             withRejectionRationale("some reason")
           }
-
-          assessment.schemaUpToDate = true
 
           val caseSummary = CaseSummaryFactory()
             .fromOffenderDetails(offenderDetails)
@@ -921,12 +894,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
     fun `CAS3 referral report shows updatedReleaseDate and updatedAccommodationRequiredFrom dates in report when they have been updated`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
-
-          val assessmentSchema =
-            temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-              withAddedAt(OffsetDateTime.now())
-            }
 
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -974,7 +941,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val assessment =
             temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
               withApplication(application)
-              withAssessmentSchema(assessmentSchema)
               withDecision(REJECTED)
               withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
               REJECTED.let { withSubmittedAt(OffsetDateTime.now()) }
@@ -982,8 +948,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
               withReleaseDate(LocalDate.now().plusDays(9))
               withAccommodationRequiredFromDate(LocalDate.now().plusDays(10))
             }
-
-          assessment.schemaUpToDate = true
 
           apDeliusContextAddResponseToUserAccessCall(
             listOf(
@@ -1044,12 +1008,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
             null,
           )
 
-          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
           temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withAssessmentSchema(assessmentSchema)
             withDecision(REJECTED)
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withSubmittedAt(OffsetDateTime.now())
@@ -4239,11 +4199,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
     assessmentStatus: AssessmentStatus,
     submittedDate: LocalDate,
   ): TemporaryAccommodationAssessmentEntity {
-    val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
     val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(user)
@@ -4256,7 +4211,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withDecision(null)
       withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
 
@@ -4284,7 +4238,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
         else -> throw IllegalArgumentException("status $assessmentStatus is not supported")
       }
     }
-    assessment.schemaUpToDate = true
 
     return assessment
   }
@@ -4298,11 +4251,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
     accommodationRequiredDate: LocalDate,
     updatedAccommodationRequiredDate: LocalDate?,
   ): Pair<TemporaryAccommodationPremisesEntity, TemporaryAccommodationApplicationEntity> {
-    val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-      withAddedAt(OffsetDateTime.now())
-    }
-
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withProbationRegion(user.probationRegion)
@@ -4346,13 +4294,11 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
-      withAssessmentSchema(assessmentSchema)
       withDecision(ACCEPTED)
       withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
       withSubmittedAt(OffsetDateTime.now())
       withAccommodationRequiredFromDate(updatedAccommodationRequiredDate)
     }
-    assessment.schemaUpToDate = true
     return Pair(premises, application)
   }
 

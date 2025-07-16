@@ -45,11 +45,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -109,13 +107,6 @@ class AssessmentTransformerTest {
   private val approvedPremisesAssessmentFactory = ApprovedPremisesAssessmentEntityFactory()
     .withApplication(mockk<ApprovedPremisesApplicationEntity>())
     .withId(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-    .withAssessmentSchema(
-      ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      ),
-    )
     .withDecision(JpaAssessmentDecision.REJECTED)
     .withRejectionRationale("reasoning")
     .withData("{\"data\": \"something\"}")
@@ -126,13 +117,6 @@ class AssessmentTransformerTest {
   private val temporaryAccommodationAssessmentFactory = TemporaryAccommodationAssessmentEntityFactory()
     .withApplication(mockk<TemporaryAccommodationApplicationEntity>())
     .withId(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-    .withAssessmentSchema(
-      TemporaryAccommodationAssessmentJsonSchemaEntity(
-        id = UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      ),
-    )
     .withDecision(JpaAssessmentDecision.REJECTED)
     .withRejectionRationale("reasoning")
     .withData("{\"data\": \"something\"}")
@@ -172,7 +156,6 @@ class AssessmentTransformerTest {
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk()) as ApprovedPremisesAssessment
 
       assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-      assertThat(result.schemaVersion).isEqualTo(UUID.fromString("aeeb6992-6485-4600-9c35-19479819c544"))
       assertThat(result.decision).isEqualTo(ApiAssessmentDecision.rejected)
       assertThat(result.rejectionRationale).isEqualTo("reasoning")
       assertThat(result.createdAt).isEqualTo(Instant.parse("2022-12-14T12:05:00Z"))

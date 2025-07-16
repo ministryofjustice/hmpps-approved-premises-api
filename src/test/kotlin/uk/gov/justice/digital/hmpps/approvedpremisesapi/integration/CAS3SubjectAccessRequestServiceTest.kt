@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -373,7 +372,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withIsWithdrawn(false)
       withAllocatedToUser(userEntity())
       withApplication(application)
-      withAssessmentSchema(temporaryAccommodationAssessmentJsonSchemaEntity())
       withDecision(AssessmentDecision.REJECTED)
       withReallocatedAt(null)
       withRejectionRationale("rejected as no good")
@@ -393,10 +391,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withReleaseDate(LocalDate.parse(arrivedAtDateOnly))
       withAccommodationRequiredFromDate(LocalDate.parse(arrivedAtDateOnly))
     }
-  }
-
-  private fun temporaryAccommodationAssessmentJsonSchemaEntity(): JsonSchemaEntity = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-    withPermissiveSchema()
   }
 
   private fun temporaryAccommodationApplicationEntity(
