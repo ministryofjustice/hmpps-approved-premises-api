@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.time.LocalDate
 import java.util.stream.Collectors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.Alert as PrisionerAlert
@@ -195,45 +194,6 @@ class OffenderService(
   private fun CaseSummary.hasLimitedAccess() = this.currentExclusion || this.currentRestriction
   private fun CaseAccess.hasLimitedAccess() = this.userExcluded || this.userRestricted
   private fun CaseAccess.hasNotLimitedAccess() = !this.userExcluded && !this.userRestricted
-
-  @Deprecated(
-    "This function uses the now deprecated [OffenderDetailsDataSource]",
-    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
-  )
-  fun getOffenderSummariesByCrns(
-    crns: Set<String>,
-    deliusUsername: String?,
-    ignoreLaoRestrictions: Boolean = false,
-  ): List<PersonSummaryInfoResult> {
-    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
-
-    if (crns.isEmpty()) return emptyList()
-
-    val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
-    val userAccessList = deliusUsername?.let { offenderDetailsDataSource.getUserAccessForOffenderCrns(it, crns.toList()) }
-
-    return crns.map { crn ->
-      val offenderResponse = offenderDetailsList[crn]
-      val accessResponse = userAccessList?.get(crn)
-
-      val offender = getOffender(
-        ignoreLaoRestrictions,
-        { offenderResponse },
-        { accessResponse },
-      )
-
-      when (offender) {
-        is AuthorisableActionResult.Success -> {
-          PersonSummaryInfoResult.Success.Full(crn, offender.entity.asCaseSummary())
-        }
-        is AuthorisableActionResult.NotFound -> PersonSummaryInfoResult.NotFound(crn)
-        is AuthorisableActionResult.Unauthorised -> {
-          val nomsNumber = (offenderResponse as ClientResult.Success).body.otherIds.nomsNumber
-          PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
-        }
-      }
-    }
-  }
 
   @Deprecated(
     """ This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model

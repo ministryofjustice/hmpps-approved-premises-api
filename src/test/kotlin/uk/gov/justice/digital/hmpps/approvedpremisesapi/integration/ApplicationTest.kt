@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
@@ -205,6 +206,8 @@ class ApplicationTest : IntegrationTestBase() {
         val crn = "X1234"
 
         val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+
+        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
         apDeliusContextMockUserAccess(
           CaseAccessFactory()
@@ -748,6 +751,8 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Create new application returns 404 when a person cannot be found`() {
       givenAUser { _, jwt ->
         val crn = "X1234"
+
+        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
         webTestClient.post()
           .uri("/applications")

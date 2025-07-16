@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
@@ -204,6 +205,8 @@ class BookingTest : IntegrationTestBase() {
           withCrn("SOME-CRN")
           withServiceName(ServiceName.approvedPremises)
         }
+
+        apDeliusContextEmptyCaseSummaryToBulkResponse("SOME-CRN")
 
         webTestClient.get()
           .uri("/premises/${premises.id}/bookings/${booking.id}")
@@ -450,6 +453,8 @@ class BookingTest : IntegrationTestBase() {
         withCrn("SOME-CRN")
         withServiceName(ServiceName.temporaryAccommodation)
       }
+
+      apDeliusContextEmptyCaseSummaryToBulkResponse("SOME-CRN")
 
       val expectedJson = objectMapper.writeValueAsString(
         listOf(

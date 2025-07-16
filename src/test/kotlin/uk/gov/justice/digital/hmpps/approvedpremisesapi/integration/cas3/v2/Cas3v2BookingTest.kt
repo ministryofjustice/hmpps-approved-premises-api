@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspaceAndApplicationAndAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -275,6 +276,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           withServiceName(ServiceName.temporaryAccommodation)
         }
 
+        apDeliusContextEmptyCaseSummaryToBulkResponse("SOME-CRN")
+
         webTestClient.get()
           .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
           .header("Authorization", "Bearer $jwt")
@@ -517,6 +520,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           ),
         ),
       )
+
+      apDeliusContextEmptyCaseSummaryToBulkResponse("SOME-CRN")
 
       webTestClient.get()
         .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")

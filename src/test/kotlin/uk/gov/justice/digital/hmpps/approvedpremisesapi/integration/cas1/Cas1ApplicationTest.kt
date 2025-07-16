@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -985,12 +985,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
         val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-        apDeliusContextMockUserAccess(
-          CaseAccessFactory()
-            .withCrn(crn)
-            .produce(),
-          userEntity.deliusUsername,
-        )
+        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
         webTestClient.get()
           .uri("/cas1/applications")
