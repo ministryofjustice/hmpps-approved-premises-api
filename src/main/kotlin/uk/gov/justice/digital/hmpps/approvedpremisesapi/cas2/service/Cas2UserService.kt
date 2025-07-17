@@ -84,6 +84,10 @@ class Cas2UserService(
       is ClientResult.Failure -> nomisUserDetailResponse.throwException()
     }
 
+    if (nomisUserDetails.primaryEmail == null) {
+      error("User $username does not have a primary email set in NOMIS")
+    }
+
     val normalisedUsername = username.uppercase()
     val existingUser = nomisUserRepository.findByNomisUsername(normalisedUsername)
 

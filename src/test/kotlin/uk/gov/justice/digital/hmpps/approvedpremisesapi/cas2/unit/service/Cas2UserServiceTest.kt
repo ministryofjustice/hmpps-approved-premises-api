@@ -152,6 +152,30 @@ class Cas2UserServiceTest {
             it.activeCaseloadId == "ABC"
         }
       }
+
+      @Test
+      fun `throws error if user has no email address`() {
+        // setup auth service
+        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
+        every { mockPrincipal.token.tokenValue } returns "abc123"
+        every { mockPrincipal.name } returns username
+
+        val newUserData = NomisUserDetailFactory()
+          .withUsername(username)
+          .withEmail(null)
+          .withActiveCaseloadId("ABC")
+          .produce()
+
+        val jwt = "abc123"
+        every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe(jwt) } returns ClientResult.Success(
+          HttpStatus.OK,
+          newUserData,
+        )
+
+        val error = assertThrows<IllegalStateException> { cas2UserService.getNomisUserForUsername(username, jwt) }
+        assertThat(error).hasMessage("User $username does not have a primary email set in NOMIS")
+      }
     }
 
     @Nested
