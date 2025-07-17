@@ -33,8 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -56,12 +54,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinu
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
 
 class Cas1PlacementApplicationServiceTest {
   private val placementApplicationRepository = mockk<PlacementApplicationRepository>()
   private val userService = mockk<UserService>()
-  private val placementDateRepository = mockk<PlacementDateRepository>()
   private val placementRequestService = mockk<Cas1PlacementRequestService>()
   private val userAllocator = mockk<UserAllocator>()
   private val userAccessService = mockk<UserAccessService>()
@@ -73,7 +69,6 @@ class Cas1PlacementApplicationServiceTest {
   private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
     placementApplicationRepository,
     userService,
-    placementDateRepository,
     placementRequestService,
     userAllocator,
     userAccessService,
@@ -171,8 +166,6 @@ class Cas1PlacementApplicationServiceTest {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
-      every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
 
       every { userService.getDeliusUserNameForRequest() } returns "theUsername"
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
@@ -201,7 +194,6 @@ class Cas1PlacementApplicationServiceTest {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
 
       every { userService.getDeliusUserNameForRequest() } returns "theUsername"
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
@@ -226,8 +218,6 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp = updatedPlacementApplications[0]
       assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
 
-      assertThat(updatedPlacementApp.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApp.placementDates[0].duration).isEqualTo(5)
       assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp.duration).isEqualTo(5)
 
@@ -242,8 +232,6 @@ class Cas1PlacementApplicationServiceTest {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
-
       every { userService.getDeliusUserNameForRequest() } returns "theUsername"
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(any()) } just Runs
@@ -269,8 +257,6 @@ class Cas1PlacementApplicationServiceTest {
       val firstSubmissionGroupId = updatedPlacementApplications[0].submissionGroupId
 
       val updatedPlacementApp1 = updatedPlacementApplications[0]
-      assertThat(updatedPlacementApp1.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApp1.placementDates[0].duration).isEqualTo(5)
       assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp1.duration).isEqualTo(5)
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -280,8 +266,6 @@ class Cas1PlacementApplicationServiceTest {
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp1) }
 
       val updatedPlacementApp2 = updatedPlacementApplications[1]
-      assertThat(updatedPlacementApp2.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
-      assertThat(updatedPlacementApp2.placementDates[0].duration).isEqualTo(10)
       assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
       assertThat(updatedPlacementApp2.duration).isEqualTo(10)
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -291,8 +275,6 @@ class Cas1PlacementApplicationServiceTest {
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp2) }
 
       val updatedPlacementApp3 = updatedPlacementApplications[2]
-      assertThat(updatedPlacementApp3.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
-      assertThat(updatedPlacementApp3.placementDates[0].duration).isEqualTo(15)
       assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
       assertThat(updatedPlacementApp3.duration).isEqualTo(15)
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -343,7 +325,7 @@ class Cas1PlacementApplicationServiceTest {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every {
         placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
-      } returns CasResult.Success(emptyList())
+      } returns CasResult.Success(Unit)
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
       every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit
@@ -452,17 +434,10 @@ class Cas1PlacementApplicationServiceTest {
           }
           .produce(),
       )
+      .withSubmittedAt(OffsetDateTime.now())
+      .withExpectedArrival(LocalDate.now())
+      .withDuration(12)
       .produce()
-
-    private val placementDates = mutableListOf(
-      PlacementDateEntity(
-        id = UUID.randomUUID(),
-        createdAt = OffsetDateTime.now(),
-        duration = 12,
-        expectedArrival = LocalDate.now(),
-        placementApplication = previousPlacementApplication,
-      ),
-    )
 
     @Test
     fun `Reallocating an allocated application returns successfully`() {
@@ -473,25 +448,6 @@ class Cas1PlacementApplicationServiceTest {
           .produce()
       }
 
-      previousPlacementApplication.placementDates = placementDates
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(assigneeUser)
-        .withDecision(null)
-        .withCreatedByUser(assigneeUser)
-        .produce()
-
-      val newPlacementDates = mutableListOf(
-        PlacementDateEntity(
-          id = UUID.randomUUID(),
-          createdAt = OffsetDateTime.now(),
-          duration = 12,
-          expectedArrival = LocalDate.now(),
-          placementApplication = placementApplication,
-        ),
-      )
-
       val dueAt = OffsetDateTime.now()
 
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
@@ -500,12 +456,6 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.save(previousPlacementApplication) } answers { previousPlacementApplication }
       every { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every {
-        placementDateRepository.saveAll<PlacementDateEntity>(
-          match { it.first().expectedArrival == placementDates[0].expectedArrival && it.first().duration == placementDates[0].duration },
-        )
-      } answers { newPlacementDates }
-
       every { userService.getUserForRequest() } returns currentRequestUser
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), currentRequestUser) } just Runs
 
@@ -529,8 +479,9 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
         assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
         assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
-        assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
         assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
+        assertThat(newPlacementApplication.expectedArrival).isEqualTo(LocalDate.now())
+        assertThat(newPlacementApplication.duration).isEqualTo(12)
       }
     }
 
@@ -543,25 +494,7 @@ class Cas1PlacementApplicationServiceTest {
           .produce()
       }
 
-      previousPlacementApplication.placementDates = placementDates
       previousPlacementApplication.allocatedToUser = null
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(assigneeUser)
-        .withDecision(null)
-        .withCreatedByUser(assigneeUser)
-        .produce()
-
-      val newPlacementDates = mutableListOf(
-        PlacementDateEntity(
-          id = UUID.randomUUID(),
-          createdAt = OffsetDateTime.now(),
-          duration = 12,
-          expectedArrival = LocalDate.now(),
-          placementApplication = placementApplication,
-        ),
-      )
 
       val dueAt = OffsetDateTime.now()
 
@@ -571,11 +504,6 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.save(previousPlacementApplication) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every {
-        placementDateRepository.saveAll<PlacementDateEntity>(
-          match { it.first().expectedArrival == placementDates[0].expectedArrival && it.first().duration == placementDates[0].duration },
-        )
-      } answers { newPlacementDates }
 
       every { userService.getUserForRequest() } returns currentRequestUser
 
@@ -602,8 +530,9 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
         assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
         assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
-        assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
         assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
+        assertThat(newPlacementApplication.duration).isEqualTo(12)
+        assertThat(newPlacementApplication.expectedArrival).isEqualTo(LocalDate.now())
 
         verify(exactly = 1) {
           cas1PlacementApplicationEmailService.placementApplicationAllocated(newPlacementApplication)
