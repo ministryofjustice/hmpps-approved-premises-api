@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OccupancyReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.io.OutputStream
 import java.time.Clock
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -34,6 +37,7 @@ class Cas1PremisesService(
   val spaceBookingRepository: Cas1SpaceBookingRepository,
   val featureFlagService: FeatureFlagService,
   val cas1OccupancyReportRepository: Cas1OccupancyReportRepository,
+  val cas1PremisesLocalRestrictionRepository: Cas1PremisesLocalRestrictionRepository,
   private val clock: Clock,
   private val cas1BedsRepository: Cas1BedsRepository,
 ) {
@@ -160,6 +164,20 @@ class Cas1PremisesService(
     premisesIds = listOf(premisesId),
     excludeEndedBeds = true,
   )
+
+  fun addLocalRestriction(premisesId: UUID, createdByUserId: UUID, description: String): CasResult<Unit> {
+    val restriction = Cas1PremisesLocalRestrictionEntity(
+      id = UUID.randomUUID(),
+      approvedPremisesId = premisesId,
+      description = description,
+      createdAt = OffsetDateTime.now(),
+      createdByUserId = createdByUserId,
+    )
+
+    cas1PremisesLocalRestrictionRepository.saveAndFlush(restriction)
+
+    return CasResult.Success(Unit)
+  }
 
   data class Cas1PremisesInfo(
     val entity: ApprovedPremisesEntity,

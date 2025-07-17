@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
@@ -317,6 +318,46 @@ class Cas1PremisesController(
         .map(staffMemberTransformer::transformDomainToApi),
     )
   }
+
+  @Operation(
+    summary = "Add a local restriction to a premises",
+    description = "Creates a new local restriction for the specified premises. " +
+      "The requesting user must have the appropriate permission (CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE). " +
+      "The endpoint accepts a description of the restriction as input and returns no content on success.",
+    responses = [
+      ApiResponse(
+        responseCode = "204",
+        description = "Local restriction added successfully",
+      ),
+      ApiResponse(
+        responseCode = "400",
+        description = "Invalid request, such as missing description",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "User does not have the required permission (CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Premises not found",
+      ),
+    ],
+  )
+  @PostMapping("/premises/{premisesId}/local-restrictions")
+  fun addLocalRestriction(
+    @PathVariable premisesId: UUID,
+    @RequestBody payload: PremisesLocalRestriction,
+  ): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
+
+    cas1PremisesService.findPremiseById(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val user = userService.getUserForRequest()
+
+    cas1PremisesService.addLocalRestriction(premisesId, user.id, payload.description)
+    return ResponseEntity.noContent().build()
+  }
 }
 
 data class Cas1NationalOccupancyParameters(
@@ -348,4 +389,9 @@ data class Cas1PremiseCapacitySummary(
   val forRoomCharacteristic: Cas1SpaceCharacteristic?,
   val inServiceBedCount: Int,
   val vacantBedCount: Int,
+)
+
+data class PremisesLocalRestriction(
+  @Schema(description = "restriction to a premises")
+  val description: String,
 )

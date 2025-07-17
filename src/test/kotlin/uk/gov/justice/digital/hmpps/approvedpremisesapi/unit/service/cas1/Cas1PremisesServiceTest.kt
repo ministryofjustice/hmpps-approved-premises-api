@@ -5,6 +5,8 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -20,6 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OccupancyReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -64,6 +68,9 @@ class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var cas1OccupancyReportRepository: Cas1OccupancyReportRepository
+
+  @MockK
+  lateinit var cas1PremisesLocalRestrictionRepository: Cas1PremisesLocalRestrictionRepository
 
   @MockK
   lateinit var clock: Clock
@@ -175,7 +182,7 @@ class Cas1PremisesServiceTest {
     fun setup() {
       premises = ApprovedPremisesEntityFactory()
         .withDefaults()
-        .withId(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID)
+        .withId(PREMISES_ID)
         .withName("the name")
         .withApCode("the ap code")
         .withPostcode("LE11 1PO")
@@ -187,10 +194,10 @@ class Cas1PremisesServiceTest {
       rangeEnd = rangeStart.plusWeeks(12)
 
       every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns false
-      every { approvedPremisesRepository.findByIdOrNull(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) } returns premises
+      every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
       every { spaceBookingRepository.countActiveSpaceBookings(eq(premises.id)) } returns 100
       every { premisesService.getBedCount(premises) } returns 56
-      every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) } returns 4
+      every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
     }
 
     @Test
@@ -591,6 +598,32 @@ class Cas1PremisesServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.results).isEqualTo(listOf(capacityResponse))
       }
+    }
+  }
+
+  @Nested
+  inner class PremisesLocalRestrictions {
+
+    @Test
+    fun `successfully add restriction`() {
+      val userID = UUID.randomUUID()
+      val description = "description"
+      val restrictionCaptor = slot<Cas1PremisesLocalRestrictionEntity>()
+
+      every { cas1PremisesLocalRestrictionRepository.saveAndFlush(capture(restrictionCaptor)) } answers { restrictionCaptor.captured }
+
+      service.addLocalRestriction(
+        premisesId = PREMISES_ID,
+        createdByUserId = userID,
+        description = description,
+      )
+
+      verify(exactly = 1) { cas1PremisesLocalRestrictionRepository.saveAndFlush(any()) }
+      val savedEntity = restrictionCaptor.captured
+
+      assertEquals(description, savedEntity.description)
+      assertEquals(userID, savedEntity.createdByUserId)
+      assertEquals(PREMISES_ID, savedEntity.approvedPremisesId)
     }
   }
 }

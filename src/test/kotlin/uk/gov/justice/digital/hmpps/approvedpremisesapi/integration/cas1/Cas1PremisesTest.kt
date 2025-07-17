@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancyParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.PremisesLocalRestriction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -62,6 +63,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
@@ -1943,6 +1945,77 @@ class Cas1PremisesTest : IntegrationTestBase() {
             ),
           )
         }
+    }
+  }
+
+  @Nested
+  inner class Cas1PremisesLocalRestrictions : InitialiseDatabasePerClassTestBase() {
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct role`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${UUID.randomUUID()}/local-restrictions")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          PremisesLocalRestriction(
+            description = "description",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Returns 404 not found if premises does not exist`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${UUID.randomUUID()}/local-restrictions")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          PremisesLocalRestriction(
+            description = "description",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Successfully added restriction for a given premises`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
+
+      val premises = givenAnApprovedPremises(
+        name = "Premises 1",
+        supportsSpaceBookings = true,
+        region = givenAProbationRegion(
+          apArea = givenAnApArea(name = "Region 1"),
+        ),
+        cruManagementArea = givenACas1CruManagementArea(
+          name = "Management Area 1",
+        ),
+      )
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/local-restrictions")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          PremisesLocalRestriction(
+            description = "No hate based offences",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isNoContent
+
+      val premiseRestrictions = cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesId(premises.id)
+
+      assertThat(premiseRestrictions.size).isEqualTo(1)
+      assertThat(premiseRestrictions.first().description).isEqualTo("No hate based offences")
     }
   }
 }
