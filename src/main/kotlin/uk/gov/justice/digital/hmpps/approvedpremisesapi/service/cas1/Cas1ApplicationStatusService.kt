@@ -30,13 +30,6 @@ class Cas1ApplicationStatusService(
     applicationRepository.save(application)
   }
 
-  fun bookingMade(booking: BookingEntity) {
-    val application = booking.application
-    if (application != null) {
-      bookingMade(application as ApprovedPremisesApplicationEntity)
-    }
-  }
-
   fun spaceBookingMade(spaceBooking: Cas1SpaceBookingEntity) {
     bookingMade(spaceBooking.application!!)
   }

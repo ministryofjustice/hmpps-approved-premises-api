@@ -22,8 +22,6 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
    */
   CAS1_ASSESS_PLACEMENT_APPLICATION(ApprovedPremisesUserPermission.assessPlacementApplication),
 
-  @Deprecated("Legacy bookings have been replaced by space bookings")
-  CAS1_BOOKING_CREATE(ApprovedPremisesUserPermission.bookingCreate),
   CAS1_BOOKING_WITHDRAW(ApprovedPremisesUserPermission.bookingWithdraw),
   CAS1_BOOKING_CHANGE_DATES(ApprovedPremisesUserPermission.bookingChangeDates),
 

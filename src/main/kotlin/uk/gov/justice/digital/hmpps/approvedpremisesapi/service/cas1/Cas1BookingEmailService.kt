@@ -28,6 +28,7 @@ class Cas1BookingEmailService(
     spaceBooking.toEmailBookingInfo(application),
   )
 
+  // before removing this, create unit tests for space booking by recycling this functions unit tests
   fun bookingMade(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
