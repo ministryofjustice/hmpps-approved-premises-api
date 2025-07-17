@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository.Companion.UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableCas1SpaceBookingEntityRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
@@ -74,6 +75,13 @@ class Cas1BookingManagementService(
       } else {
         existingCas1SpaceBooking.id hasConflictError "An arrival is already recorded for this Space Booking"
       }
+    }
+
+    val crn = existingCas1SpaceBooking.crn
+    cas1SpaceBookingRepository.findResidentSpaceBookingsForCrn(crn, UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE).firstOrNull()?.premises?.let { alreadyResidentAt ->
+      return CasResult.GeneralValidationError(
+        "Arrival cannot be recorded as $crn is recorded as resident at ${alreadyResidentAt.name} (${alreadyResidentAt.cruManagementArea.name})",
+      )
     }
 
     existingCas1SpaceBooking.canonicalArrivalDate = arrivalDate

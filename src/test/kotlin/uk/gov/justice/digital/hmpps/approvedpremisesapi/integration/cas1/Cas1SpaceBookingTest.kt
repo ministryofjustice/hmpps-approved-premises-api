@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository.Companion.UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
@@ -74,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
@@ -1298,6 +1301,31 @@ class Cas1SpaceBookingTest {
         createdByUser = user,
       )
 
+      // departed, ignored when checking existing residence
+      givenACas1SpaceBooking(
+        crn = offender.otherIds.crn,
+        actualArrivalDate = LocalDate.parse("2020-01-01"),
+        expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(1),
+        actualDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(2),
+      )
+
+      // not departed but departure is before UPCOMING_EXPECTED_DEPARTURE_THRESHOLD, ignored when checking existing residence
+      givenACas1SpaceBooking(
+        crn = offender.otherIds.crn,
+        actualArrivalDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.minusDays(10),
+        expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.minusDays(1),
+        actualDepartureDate = null,
+      )
+
+      // not departed but cancelled (legacy booking state), ignored when checking existing residence
+      givenACas1SpaceBooking(
+        crn = offender.otherIds.crn,
+        actualArrivalDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.minusDays(1),
+        expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(10),
+        actualDepartureDate = null,
+        cancellationOccurredAt = LocalDate.now(),
+      )
+
       spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withPremises(premises)
@@ -1333,6 +1361,41 @@ class Cas1SpaceBookingTest {
       )
 
       emailAsserter.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `Recording arrival blocked if CRN is already resident elsewhere`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      givenACas1SpaceBooking(
+        crn = "CRN123",
+        actualArrivalDate = LocalDate.parse("2020-01-01"),
+        expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(1),
+        actualDepartureDate = null,
+        premises = givenAnApprovedPremises(name = "Other Premises Name", cruManagementArea = givenACas1CruManagementArea(name = "NE")),
+      )
+
+      val spaceBooking = givenACas1SpaceBooking(
+        crn = "CRN123",
+        premises = premises,
+        deliusEventNumber = "1",
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            arrivalDate = LocalDate.now().minusDays(1),
+            arrivalTime = "12:00:00",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .bodyAsObject<ValidationError>()
+
+      assertThat(response.detail).isEqualTo("Arrival cannot be recorded as CRN123 is recorded as resident at Other Premises Name (NE)")
     }
 
     @Test

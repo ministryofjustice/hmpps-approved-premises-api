@@ -29,6 +29,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   nonArrivalConfirmedAt: Instant? = null,
   cancellationOccurredAt: LocalDate? = null,
   actualArrivalDate: LocalDate? = null,
+  actualDepartureDate: LocalDate? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   transferredFrom: Cas1SpaceBookingEntity? = null,
@@ -51,6 +52,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withCrn(crn)
     withExpectedArrivalDate(expectedArrivalDate)
     withActualArrivalDate(actualArrivalDate)
+    withActualDepartureDate(actualDepartureDate)
     withCanonicalArrivalDate(canonicalArrivalDate)
     withExpectedDepartureDate(expectedDepartureDate)
     withCanonicalDepartureDate(canonicalDepartureDate)
