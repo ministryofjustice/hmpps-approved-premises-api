@@ -1286,7 +1286,88 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           }
         }
       }
+
+      @Nested
+      inner class WhenIsPrisonBail {
+        @Test
+        fun `prison referrer can see another users prison bail application`() {
+          givenACas2v2NomisUser { userEntity, jwt ->
+            givenAnOffender { offenderDetails, _ ->
+
+              val otherUser = cas2v2UserEntityFactory.produceAndPersist {
+                withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
+              }
+
+              val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(otherUser)
+                withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
+                withApplicationOrigin(ApplicationOrigin.prisonBail)
+              }
+
+              webTestClient.get()
+                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+            }
+          }
+        }
+
+        @Test
+        fun `court referrer cannot see another users prison bail application`() {
+          givenACas2v2DeliusUser { userEntity, jwt ->
+            givenAnOffender { offenderDetails, _ ->
+
+              val otherUser = cas2v2UserEntityFactory.produceAndPersist()
+
+              val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(otherUser)
+                withApplicationOrigin(ApplicationOrigin.prisonBail)
+              }
+
+              webTestClient.get()
+                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+
+        }
+
+        @Test
+        fun `prison referrer cannot see another users court bail application`() {
+          givenACas2v2NomisUser { userEntity, jwt ->
+            givenAnOffender { offenderDetails, _ ->
+
+              val otherUser = cas2v2UserEntityFactory.produceAndPersist {
+                withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
+              }
+
+              val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(otherUser)
+                withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
+                withApplicationOrigin(ApplicationOrigin.courtBail)
+              }
+
+              webTestClient.get()
+                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+
+        }
+      }
     }
+
   }
 
   @Nested
