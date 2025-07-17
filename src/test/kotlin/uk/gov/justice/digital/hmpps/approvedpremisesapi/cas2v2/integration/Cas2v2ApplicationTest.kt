@@ -1336,7 +1336,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .isForbidden
             }
           }
-
         }
 
         @Test
@@ -1363,11 +1362,9 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .isForbidden
             }
           }
-
         }
       }
     }
-
   }
 
   @Nested

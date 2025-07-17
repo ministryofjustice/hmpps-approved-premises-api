@@ -5,13 +5,13 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
-import java.time.OffsetDateTime
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
+import java.time.OffsetDateTime
 
 class Cas2v2UserAccessServiceTest {
 
@@ -154,10 +154,10 @@ class Cas2v2UserAccessServiceTest {
         inner class WhenApplicationIsPrisonBail {
 
           @Test
-          fun `returns true when secondary user is a prison referrer` () {
+          fun `returns true when secondary user is a prison referrer`() {
             every {
               mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
               )
             } returns true
 
@@ -165,10 +165,10 @@ class Cas2v2UserAccessServiceTest {
           }
 
           @Test
-          fun `returns false when secondary user is a court referrer` () {
+          fun `returns false when secondary user is a court referrer`() {
             every {
               mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
               )
             } returns false
 
@@ -179,10 +179,10 @@ class Cas2v2UserAccessServiceTest {
         @Nested
         inner class WhenApplicationIsCourtBail {
           @Test
-          fun `returns false when secondary user is a prison referrer` () {
+          fun `returns false when secondary user is a prison referrer`() {
             every {
               mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
               )
             } returns true
 
@@ -190,10 +190,10 @@ class Cas2v2UserAccessServiceTest {
           }
 
           @Test
-          fun `returns false when secondary user is a court referrer` () {
+          fun `returns false when secondary user is a court referrer`() {
             every {
               mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
               )
             } returns false
 
@@ -204,10 +204,10 @@ class Cas2v2UserAccessServiceTest {
         @Nested
         inner class WhenApplicationIsHDC {
           @Test
-          fun `returns false when secondary user is a prison referrer` () {
+          fun `returns false when secondary user is a prison referrer`() {
             every {
               mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
               )
             } returns true
 
@@ -215,10 +215,10 @@ class Cas2v2UserAccessServiceTest {
           }
 
           @Test
-          fun `returns false when secondary user is a court referrer` () {
+          fun `returns false when secondary user is a court referrer`() {
             every {
               mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
               )
             } returns false
 
