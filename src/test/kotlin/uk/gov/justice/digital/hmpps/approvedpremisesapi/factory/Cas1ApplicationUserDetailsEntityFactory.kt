@@ -12,8 +12,16 @@ class Cas1ApplicationUserDetailsEntityFactory : Factory<Cas1ApplicationUserDetai
   private var emailAddress: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var telephoneNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
 
+  fun withName(name: String) = apply {
+    this.name = { name }
+  }
+
   fun withEmailAddress(emailAddress: String) = apply {
     this.emailAddress = { emailAddress }
+  }
+
+  fun withTelephoneNumber(telephoneNumber: String) = apply {
+    this.telephoneNumber = { telephoneNumber }
   }
 
   override fun produce(): Cas1ApplicationUserDetailsEntity = Cas1ApplicationUserDetailsEntity(

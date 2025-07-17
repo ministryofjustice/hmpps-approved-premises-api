@@ -43,6 +43,7 @@ fun IntegrationTestBase.givenACas1Application(
   name: String = "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}",
   tier: String? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
+  applicant: Cas1ApplicationUserDetailsEntity? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ) = givenAnApplication(
   createdByUser,
@@ -54,6 +55,7 @@ fun IntegrationTestBase.givenACas1Application(
   name,
   tier,
   caseManager,
+  applicant,
   block,
 )
 
@@ -68,6 +70,7 @@ fun IntegrationTestBase.givenAnApplication(
   name: String = "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}",
   tier: String? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
+  applicant: Cas1ApplicationUserDetailsEntity? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val riskRatings = tier?.let {
@@ -85,6 +88,7 @@ fun IntegrationTestBase.givenAnApplication(
     withRiskRatings(riskRatings)
     withCaseManagerUserDetails(caseManager)
     withCaseManagerIsNotApplicant(caseManager != null)
+    withApplicantUserDetails(applicant)
   }
 
   block(application)

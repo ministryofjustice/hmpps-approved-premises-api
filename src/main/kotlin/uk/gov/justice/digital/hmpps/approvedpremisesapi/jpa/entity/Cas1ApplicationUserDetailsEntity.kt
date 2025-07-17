@@ -15,7 +15,7 @@ interface Cas1ApplicationUserDetailsRepository : JpaRepository<Cas1ApplicationUs
 class Cas1ApplicationUserDetailsEntity(
   @Id
   val id: UUID,
-  val name: String,
-  val email: String?,
-  val telephoneNumber: String?,
+  var name: String,
+  var email: String?,
+  var telephoneNumber: String?,
 )
