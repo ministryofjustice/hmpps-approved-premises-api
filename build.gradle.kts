@@ -24,7 +24,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.1")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.3")
   // this should match the version of hibernate provided by spring
   implementation("org.hibernate:hibernate-spatial:6.6.4.Final")
   implementation("org.hibernate.orm:hibernate-jcache")
