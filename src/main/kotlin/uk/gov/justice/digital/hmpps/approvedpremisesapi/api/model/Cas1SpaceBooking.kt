@@ -3,40 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param applicationId
- * @param person
- * @param premises
- * @param apArea
- * @param expectedArrivalDate
- * @param expectedDepartureDate
- * @param canonicalArrivalDate actual arrival date or, if not known, the expected arrival date.
- * @param canonicalDepartureDate actual departure date or, if not known, the expected departure date
- * @param createdAt
- * @param otherBookingsInPremisesForCrn
- * @param characteristics
- * @param allowedActions
- * @param openChangeRequests
- * @param assessmentId
- * @param tier
- * @param bookedBy
- * @param requestForPlacementId use the better named 'placementRequestId'
- * @param placementRequestId
- * @param actualArrivalDate
- * @param actualArrivalDateOnly Use actualArrivalDate
- * @param actualArrivalTime This value may not be defined even if an arrival date is
- * @param actualDepartureDate
- * @param actualDepartureDateOnly Use actualDepartureDate
- * @param actualDepartureTime This value may not be defined even if a departure date is
- * @param departure
- * @param keyWorkerAllocation
- * @param cancellation
- * @param nonArrival
- * @param deliusEventNumber
- * @param status
- */
 data class Cas1SpaceBooking(
 
   @Schema(example = "null", required = true, description = "")
@@ -131,8 +97,4 @@ data class Cas1SpaceBooking(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("deliusEventNumber") val deliusEventNumber: kotlin.String? = null,
-
-  @Schema(example = "null", description = "")
-  @Deprecated(message = "")
-  @get:JsonProperty("status") val status: Cas1SpaceBookingSummaryStatus? = null,
 )

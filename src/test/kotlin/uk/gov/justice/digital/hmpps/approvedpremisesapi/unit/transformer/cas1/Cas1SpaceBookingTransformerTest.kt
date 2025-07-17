@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingAction
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
@@ -51,7 +50,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -73,9 +71,6 @@ class Cas1SpaceBookingTransformerTest {
 
   @MockK
   private lateinit var userTransformer: UserTransformer
-
-  @MockK
-  private lateinit var spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer
 
   @MockK
   private lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
@@ -272,7 +267,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalArrivalDate).isEqualTo(LocalDate.parse("2025-04-06"))
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalDepartureDate).isEqualTo(LocalDate.parse("2025-05-07"))
       assertThat(result.requestForPlacementId).isEqualTo(placementRequest.id)
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.notArrived)
 
       assertThat(result.characteristics).containsExactlyInAnyOrder(
         Cas1SpaceCharacteristic.isCatered,
@@ -363,7 +357,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(departure.parentReason!!.name).isEqualTo(parentDepartureReason.name)
       assertThat(departure.notes).isNull()
       assertThat(departure.moveOnCategory).isNull()
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
     }
   }
 
@@ -384,7 +377,6 @@ class Cas1SpaceBookingTransformerTest {
 
       val cas1ChangeRequests = listOf(Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce())
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
-      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
       every { cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns cas1ChangeRequests
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("The booking's premise").produce()
@@ -454,7 +446,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isEqualTo(cancelled)
       assertThat(result.plannedTransferRequested).isFalse()
@@ -479,7 +470,6 @@ class Cas1SpaceBookingTransformerTest {
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("the premise").produce()
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
-      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
 
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(
@@ -526,7 +516,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isTrue()
       assertThat(result.plannedTransferRequested).isFalse()
@@ -548,7 +537,6 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
-      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
 
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(

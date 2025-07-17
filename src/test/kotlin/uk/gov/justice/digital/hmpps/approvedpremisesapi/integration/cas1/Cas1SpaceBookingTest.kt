@@ -7,9 +7,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.EnumSource
-import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPlacementAppeal
@@ -25,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -75,8 +72,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1SpaceBookingSummaryStatusTestHelper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.TestCaseForSpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -87,7 +82,6 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import java.util.stream.Stream
 
 class Cas1SpaceBookingTest {
 
@@ -294,7 +288,6 @@ class Cas1SpaceBookingTest {
           assertThat(result.createdAt).satisfies(
             { it.isAfter(Instant.now().minusSeconds(10)) },
           )
-          assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingWithin2Weeks)
 
           domainEventAsserter.assertDomainEventOfTypeStored(
             placementRequest.application.id,
@@ -893,61 +886,6 @@ class Cas1SpaceBookingTest {
   }
 
   @Nested
-  inner class StatusesForSpaceBooking : SpaceBookingIntegrationTestBase() {
-
-    @BeforeAll
-    fun setupTestData() {
-      super.setupRegionAndKeyWorkerAndPremises()
-    }
-
-    @ParameterizedTest
-    @MethodSource("spaceBookingSummaryStatusCases")
-    fun `Search generates the correct statuses`(
-      testCaseForSpaceBookingSummaryStatus: TestCaseForSpaceBookingSummaryStatus,
-      expectedResultStatus: Cas1SpaceBookingSummaryStatus,
-    ) {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
-
-      val crnForStatusTest = UUID.randomUUID().toString()
-
-      currentSpaceBooking1 =
-        createSpaceBooking(crn = crnForStatusTest, firstName = "curt", lastName = "rent 1", tier = "A") {
-          withPremises(premisesWithBookings)
-          withExpectedArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
-          withExpectedDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
-          withActualArrivalDate(testCaseForSpaceBookingSummaryStatus.actualArrivalDate)
-          withActualDepartureDate(testCaseForSpaceBookingSummaryStatus.actualDepartureDate)
-          withCanonicalArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
-          withCanonicalDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
-          withNonArrivalConfirmedAt(
-            testCaseForSpaceBookingSummaryStatus.nonArrivalConfirmedAtDateTime?.toInstant(
-              ZoneOffset.UTC,
-            ),
-          )
-          withKeyworkerName(null)
-          withKeyworkerStaffCode(null)
-          withKeyworkerAssignedAt(Instant.now())
-        }
-
-      val response = webTestClient.get()
-        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=asc")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
-
-      val result = response
-        .first { it.person.crn == crnForStatusTest }
-
-      assertThat(result.person.crn).isEqualTo(crnForStatusTest)
-      assertThat(result.status).isEqualTo(expectedResultStatus)
-    }
-
-    fun spaceBookingSummaryStatusCases(): Stream<Arguments> = Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
-  }
-
-  @Nested
   inner class GetASpaceBooking : InitialiseDatabasePerClassTestBase() {
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
@@ -1105,7 +1043,6 @@ class Cas1SpaceBookingTest {
           otherSpaceBookingAtPremises2021.id,
         )
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
-      assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingToday)
       assertThat(response.actualArrivalTime).isEqualTo("11:24")
       assertThat(response.actualDepartureTime).isEqualTo("10:24")
       assertThat(response.openChangeRequests.size).isEqualTo(1)
@@ -1247,7 +1184,6 @@ class Cas1SpaceBookingTest {
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
-      assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingToday)
     }
   }
 
