@@ -2395,59 +2395,22 @@ class Cas1ApAreaManagerTasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one, sends emails`(baseUrl: String) {
+    fun `Reallocate assessment is Forbidden to users with role CAS1_AP_AREA_MANAGER`(baseUrl: String) {
       givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { _, jwt ->
-        givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { currentlyAllocatedUser, _ ->
-          givenAUser(
-            roles = listOf(UserRole.CAS1_ASSESSOR),
-          ) { assigneeUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              givenAnAssessmentForApprovedPremises(
-                allocatedToUser = currentlyAllocatedUser,
-                createdByUser = currentlyAllocatedUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { existingAssessment, application ->
-
-                webTestClient.post()
-                  .uri("$baseUrl/assessment/${existingAssessment.id}/allocations")
-                  .header("Authorization", "Bearer $jwt")
-                  .header("X-Service-Name", ServiceName.approvedPremises.value)
-                  .bodyValue(
-                    NewReallocation(
-                      userId = assigneeUser.id,
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isCreated
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      Reallocation(
-                        user = userTransformer.transformJpaToApi(
-                          assigneeUser,
-                          ServiceName.approvedPremises,
-                        ) as ApprovedPremisesUser,
-                        taskType = TaskType.assessment,
-                      ),
-                    ),
-                  )
-
-                val assessments = approvedPremisesAssessmentRepository.findAll()
-
-                assertThat(assessments.first { it.id == existingAssessment.id }.reallocatedAt).isNotNull
-                assertThat(assessments)
-                  .anyMatch { it.application.id == application.id && it.allocatedToUser!!.id == assigneeUser.id }
-
-                emailAsserter.assertEmailsRequestedCount(2)
-                emailAsserter.assertEmailRequested(currentlyAllocatedUser.email!!, Cas1NotifyTemplates.ASSESSMENT_DEALLOCATED)
-                emailAsserter.assertEmailRequested(assigneeUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ALLOCATED)
-              }
-            }
-          }
+        webTestClient.post()
+          .uri("$baseUrl/assessment/${UUID.randomUUID()}/allocations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .bodyValue(
+            NewReallocation(
+              userId = UUID.randomUUID(),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
         }
       }
-    }
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
