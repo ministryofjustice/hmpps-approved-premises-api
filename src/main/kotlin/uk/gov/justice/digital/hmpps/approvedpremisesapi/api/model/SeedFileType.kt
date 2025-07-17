@@ -1,14 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: approvedPremises,approvedPremisesRooms,temporaryAccommodationPremises,temporaryAccommodationBedspace,user,nomisUsers,externalUsers,cas2Applications,cas2v2Applications,cas2v2Users,temporaryAccommodationUsers,approvedPremisesUsers,characteristics,updateNomsNumber,updateUsersFromApi,usersBasic,approvedPremisesAssessmentMoreInfoBugFix,approvedPremisesRedactAssessmentDetails,approvedPremisesBookingToSpaceBooking,approvedPremisesWithdrawPlacementRequest,approvedPremisesReplayDomainEvents,approvedPremisesDuplicateApplication,approvedPremisesUpdateEventNumber,approvedPremisesLinkBookingToPlacementRequest,approvedPremisesOutOfServiceBeds,approvedPremisesCruManagementAreas,approvedPremisesImportDeliusReferrals,approvedPremisesUpdateSpaceBooking,approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius,approvedPremisesCreateTestApplications,approvedPremisesDeleteApplicationTimelineNotes,approvedPremisesUpdateActualArrivalDate,approvedPremisesUpdatePremisesStatus,temporaryAccommodationReferralRejection,approvedPremisesRemapBedCodes,shortTermAccommodationCreateOmus,temporaryAccommodationAssignApplicationToPdu
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class SeedFileType(@get:JsonValue val value: kotlin.String) {
+enum class SeedFileType(@get:JsonValue val value: String) {
 
   approvedPremises("approved_premises"),
   approvedPremisesRooms("approved_premises_rooms"),
@@ -42,16 +37,10 @@ enum class SeedFileType(@get:JsonValue val value: kotlin.String) {
   approvedPremisesCreateTestApplications("approved_premises_create_test_applications"),
   approvedPremisesDeleteApplicationTimelineNotes("approved_premises_delete_application_timeline_notes"),
   approvedPremisesUpdateActualArrivalDate("approved_premises_update_actual_arrival_date"),
+  approvedPremisesUpdateApplicationContactDetails("approved_premises_update_application_contact_details"),
   approvedPremisesUpdatePremisesStatus("approved_premises_update_premises_status"),
   temporaryAccommodationReferralRejection("temporary_accommodation_referral_rejection"),
   approvedPremisesRemapBedCodes("approved_premises_remap_bed_codes"),
   shortTermAccommodationCreateOmus("short_term_accommodation_create_omus"),
   temporaryAccommodationAssignApplicationToPdu("temporary_accommodation_assign_application_to_pdu"),
-  ;
-
-  companion object {
-    @JvmStatic
-    @JsonCreator
-    fun forValue(value: kotlin.String): SeedFileType = values().first { it -> it.value == value }
-  }
 }
