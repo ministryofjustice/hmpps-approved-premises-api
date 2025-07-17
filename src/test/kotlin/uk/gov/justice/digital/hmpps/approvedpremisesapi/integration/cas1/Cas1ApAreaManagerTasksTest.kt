@@ -113,8 +113,8 @@ class Cas1ApAreaManagerTasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"])
-      fun `Get all tasks returns 200 when have CAS1_CRU_MEMBER roles`(role: UserRole) {
+      @EnumSource(value = UserRole::class, names = ["CAS1_AP_AREA_MANAGER"])
+      fun `Get all tasks returns 200 when have CAS1_AP_AREA_MANAGER roles`(role: UserRole) {
         givenAUser(roles = listOf(role)) { _, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
@@ -158,7 +158,7 @@ class Cas1ApAreaManagerTasksTest {
       @ParameterizedTest
       @ValueSource(strings = ["/tasks", "/cas1/tasks"])
       fun `Get all tasks returns 200 when no type retains original sort order`(baseUrl: String) {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
 
@@ -246,7 +246,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -409,7 +409,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -530,7 +530,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -654,7 +654,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -771,7 +771,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -960,7 +960,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -1131,7 +1131,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails1, _ ->
               givenAnOffender { offenderDetails2, _ ->
@@ -1303,7 +1303,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -1440,7 +1440,7 @@ class Cas1ApAreaManagerTasksTest {
 
       @BeforeAll
       fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               this.jwt = jwt
@@ -2009,7 +2009,7 @@ class Cas1ApAreaManagerTasksTest {
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `Unknown task type for an application returns 404`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAnAssessmentForApprovedPremises(
             allocatedToUser = user,
@@ -2031,7 +2031,7 @@ class Cas1ApAreaManagerTasksTest {
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `If request is for an application only returns active users with ASSESSOR role`(baseUrl: String) {
       val (creator, _) = givenAUser()
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER))
       val (assessor, _) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
       )
@@ -2042,7 +2042,7 @@ class Cas1ApAreaManagerTasksTest {
       )
       // user with incorrect role
       givenAUser(
-        roles = listOf(UserRole.CAS1_CRU_MEMBER),
+        roles = listOf(UserRole.CAS1_AP_AREA_MANAGER),
       )
 
       givenAnOffender { offenderDetails, _ ->
@@ -2087,7 +2087,7 @@ class Cas1ApAreaManagerTasksTest {
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `If request is for an appealed application only returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { user, _ ->
@@ -2152,12 +2152,12 @@ class Cas1ApAreaManagerTasksTest {
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `If request is for an appealed application returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { janitor, _ ->
           givenAUser(
-            roles = listOf(UserRole.CAS1_CRU_MEMBER),
+            roles = listOf(UserRole.CAS1_AP_AREA_MANAGER),
           ) { _, _ ->
             givenAnOffender { offenderDetails, _ ->
               givenAnAssessmentForApprovedPremises(
@@ -2217,7 +2217,7 @@ class Cas1ApAreaManagerTasksTest {
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `If request is for a placement application only returns active users with ASSESSOR role, with correct workload`(baseUrl: String) {
       // ignored, wrong role
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER))
 
       // ignored, inactive
       givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR), isActive = false)
@@ -2376,7 +2376,7 @@ class Cas1ApAreaManagerTasksTest {
 
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocate application to different assessor without CAS1_CRU_MEMBER role returns 403`(baseUrl: String) {
+    fun `Reallocate application to different assessor without CAS1_AP_AREA_MANAGER role returns 403`(baseUrl: String) {
       givenAUser { _, jwt ->
         webTestClient.post()
           .uri("$baseUrl/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
@@ -2396,7 +2396,7 @@ class Cas1ApAreaManagerTasksTest {
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one, sends emails`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { _, jwt ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { currentlyAllocatedUser, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2452,7 +2452,7 @@ class Cas1ApAreaManagerTasksTest {
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `Reallocate assessment to different assessor returns an error if the assessment has already been allocated`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { _, jwt ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2492,7 +2492,7 @@ class Cas1ApAreaManagerTasksTest {
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `Reallocating a placement application to different assessor returns 201, creates new placement application, deallocates old one`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -2607,7 +2607,7 @@ class Cas1ApAreaManagerTasksTest {
     @ParameterizedTest
     @ValueSource(strings = ["/tasks", "/cas1/tasks"])
     fun `Deallocate Approved Premises assessment returns 403 Forbidden`(baseUrl: String) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAUser { _, _ ->
             givenAnAssessmentForApprovedPremises(
