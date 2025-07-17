@@ -92,7 +92,7 @@ class Cas2v2ApplicationController(
     val applicationResult = cas2v2ApplicationService
       .getCas2v2ApplicationForUser(
         applicationId,
-        user,
+        user
       )
 
     val application = extractEntityFromCasResult(applicationResult)

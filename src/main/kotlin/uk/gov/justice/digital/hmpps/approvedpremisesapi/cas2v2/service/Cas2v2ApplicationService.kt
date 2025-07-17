@@ -40,6 +40,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import org.springframework.security.core.GrantedAuthority
 
 @Service("Cas2v2ApplicationService")
 class Cas2v2ApplicationService(
