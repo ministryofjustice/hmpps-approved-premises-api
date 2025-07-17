@@ -171,6 +171,14 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_USER_MANAGEMENT,
     ),
   ),
+  CAS1_AP_AREA_MANAGER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.apAreaManager,
+    listOf(
+      UserPermission.CAS1_VIEW_MANAGE_TASKS,
+    ),
+  ),
+
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
   CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
   CAS3_REPORTER(ServiceName.temporaryAccommodation, null),
