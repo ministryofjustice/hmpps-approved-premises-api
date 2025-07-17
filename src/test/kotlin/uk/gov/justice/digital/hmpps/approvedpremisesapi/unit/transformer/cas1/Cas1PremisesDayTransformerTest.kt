@@ -65,7 +65,6 @@ class Cas1PremisesDayTransformerTest {
         actualDepartureDate = null,
         isNonArrival = false,
         keyWorkerAllocation = null,
-        status = null,
         deliusEventNumber = UUID.randomUUID().toString(),
         plannedTransferRequested = false,
         appealRequested = false,
