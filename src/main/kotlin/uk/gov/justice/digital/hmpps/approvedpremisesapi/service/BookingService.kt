@@ -10,8 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -22,12 +20,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationRepository
@@ -39,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
@@ -50,7 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -65,17 +58,13 @@ class BookingService(
   private val cas3ConfirmationRepository: Cas3ConfirmationRepository,
   private val dateChangeRepository: DateChangeRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
-  private val bedRepository: BedRepository,
-  private val placementRequestRepository: PlacementRequestRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
-  private val premisesRepository: PremisesRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val deliusService: DeliusService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
-  private val clock: Clock,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
@@ -99,137 +88,6 @@ class BookingService(
     val booking: BookingEntity,
     val personInfo: PersonInfoResult,
   )
-
-  @Transactional
-  fun createApprovedPremisesBookingFromPlacementRequest(
-    user: UserEntity,
-    placementRequestId: UUID,
-    bedId: UUID?,
-    premisesId: UUID?,
-    arrivalDate: LocalDate,
-    departureDate: LocalDate,
-  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
-      ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
-
-    if (!user.hasPermission(UserPermission.CAS1_BOOKING_CREATE) && placementRequest.allocatedToUser?.id != user.id) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    var bed: BedEntity?
-    var premises: PremisesEntity?
-
-    val validationResult = validated {
-      if (placementRequest.isWithdrawn) {
-        return@validated generalError("placementRequestIsWithdrawn")
-      }
-
-      val existingBooking = placementRequest.booking
-
-      if (existingBooking != null && !existingBooking.isCancelled) {
-        return@validated placementRequest.booking!!.id hasConflictError "A Booking has already been made for this Placement Request"
-      }
-
-      if (placementRequest.spaceBookings.any { it.isActive() }) {
-        return@validated placementRequest.id hasConflictError "A Space Booking has already been made for this Placement Request"
-      }
-
-      if (departureDate.isBefore(arrivalDate)) {
-        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
-      }
-
-      if (bedId != null) {
-        getBookingWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-          return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
-        }
-
-        getVoidBedspaceWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-          return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-        }
-
-        bed = bedRepository.findByIdOrNull(bedId)
-
-        if (bed == null) {
-          "$.bedId" hasValidationError "doesNotExist"
-        } else if (bed!!.room.premises !is ApprovedPremisesEntity) {
-          "$.bedId" hasValidationError "mustBelongToApprovedPremises"
-        }
-
-        premises = bed!!.room.premises
-      } else if (premisesId != null) {
-        premises = premisesRepository.findByIdOrNull(premisesId)
-        bed = null
-
-        if (premises == null) {
-          "$.premisesId" hasValidationError "doesNotExist"
-        } else if (premises !is ApprovedPremisesEntity) {
-          "$.premisesId" hasValidationError "mustBeAnApprovedPremises"
-        }
-      } else {
-        return@validated generalError("You must identify the AP Area and Premises name")
-      }
-
-      if (validationErrors.any()) {
-        return@validated fieldValidationError
-      }
-
-      val bookingCreatedAt = OffsetDateTime.now(clock)
-
-      val booking = bookingRepository.save(
-        BookingEntity(
-          id = UUID.randomUUID(),
-          crn = placementRequest.application.crn,
-          arrivalDate = arrivalDate,
-          departureDate = departureDate,
-          keyWorkerStaffCode = null,
-          arrivals = mutableListOf(),
-          departures = mutableListOf(),
-          nonArrival = null,
-          cancellations = mutableListOf(),
-          confirmation = null,
-          extensions = mutableListOf(),
-          dateChanges = mutableListOf(),
-          premises = premises!!,
-          bed = bed,
-          service = ServiceName.approvedPremises.value,
-          originalArrivalDate = arrivalDate,
-          originalDepartureDate = departureDate,
-          createdAt = bookingCreatedAt,
-          application = placementRequest.application,
-          offlineApplication = null,
-          turnarounds = mutableListOf(),
-          nomsNumber = placementRequest.application.nomsNumber,
-          placementRequest = null,
-          status = BookingStatus.confirmed,
-          adhoc = false,
-          offenderName = null,
-        ),
-      )
-
-      placementRequest.booking = booking
-
-      cas1ApplicationStatusService.bookingMade(booking)
-      placementRequestRepository.save(placementRequest)
-
-      val application = placementRequest.application
-
-      cas1BookingDomainEventService.bookingMade(
-        application = application,
-        booking = booking,
-        user = user,
-        placementRequest = placementRequest,
-      )
-      cas1BookingEmailService.bookingMade(
-        application = placementRequest.application,
-        booking = booking,
-        placementApplication = placementRequest.placementApplication,
-      )
-
-      return@validated success(booking)
-    }
-
-    return AuthorisableActionResult.Success(validationResult)
-  }
 
   @SuppressWarnings("UnusedParameter")
   @Transactional

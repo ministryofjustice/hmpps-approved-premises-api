@@ -10,7 +10,6 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   assessAppealedApplication("cas1_assess_appealed_application"),
   assessApplication("cas1_assess_application"),
   assessPlacementApplication("cas1_assess_placement_application"),
-  bookingCreate("cas1_booking_create"),
   bookingChangeDates("cas1_booking_change_dates"),
   bookingWithdraw("cas1_booking_withdraw"),
   changeRequestList("cas1_change_request_list"),

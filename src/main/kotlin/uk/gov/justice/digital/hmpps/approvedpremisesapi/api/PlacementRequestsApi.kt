@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
@@ -71,23 +69,6 @@ interface PlacementRequestsApi {
     consumes = ["application/json"],
   )
   fun placementRequestsIdBookingNotMadePost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Details about the failure to match", required = true) @RequestBody newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> = getDelegate().placementRequestsIdBookingNotMadePost(id, newBookingNotMade)
-
-  @Operation(
-    tags = ["Placement requests"],
-    summary = "Creates a Booking for a placement request",
-    operationId = "placementRequestsIdBookingPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successfully created a Booking", content = [Content(schema = Schema(implementation = NewPlacementRequestBookingConfirmation::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/placement-requests/{id}/booking"],
-    produces = ["application/json"],
-    consumes = ["application/json"],
-  )
-  fun placementRequestsIdBookingPost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Booking details", required = true) @RequestBody newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> = getDelegate().placementRequestsIdBookingPost(id, newPlacementRequestBooking)
 
   @Operation(
     tags = ["Placement requests"],
