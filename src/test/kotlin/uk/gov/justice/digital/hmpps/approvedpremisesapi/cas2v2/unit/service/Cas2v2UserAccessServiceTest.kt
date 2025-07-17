@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.unit.service
 
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -7,13 +9,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
 import java.time.OffsetDateTime
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 
 class Cas2v2UserAccessServiceTest {
+
+  val mockkCas2v2UserService = mockk<Cas2v2UserService>()
 
   @Nested
   inner class UserCanViewApplication {
 
-    private val cas2v2UserAccessService = Cas2v2UserAccessService()
+    private val cas2v2UserAccessService = Cas2v2UserAccessService(mockkCas2v2UserService)
 
     @Nested
     inner class WhenApplicationCreatedByUser {
@@ -118,6 +125,105 @@ class Cas2v2UserAccessServiceTest {
             .produce()
 
           assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isTrue
+        }
+      }
+
+      @Nested
+      inner class PrisonBailApplications {
+        private val referrerOne = Cas2v2UserEntityFactory()
+          .produce()
+        private val referrerTwo = Cas2v2UserEntityFactory()
+          .produce()
+
+        private val prisonApplication = Cas2v2ApplicationEntityFactory()
+          .withApplicationOrigin(ApplicationOrigin.prisonBail)
+          .withCreatedByUser(referrerOne)
+          .produce()
+
+        private val courtApplication = Cas2v2ApplicationEntityFactory()
+          .withApplicationOrigin(ApplicationOrigin.courtBail)
+          .withCreatedByUser(referrerOne)
+          .produce()
+
+        private val hdcApplication = Cas2v2ApplicationEntityFactory()
+          .withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
+          .withCreatedByUser(referrerOne)
+          .produce()
+
+        @Nested
+        inner class WhenApplicationIsPrisonBail {
+
+          @Test
+          fun `returns true when secondary user is a prison referrer` () {
+            every {
+              mockkCas2v2UserService.userForRequestHasRole(
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+              )
+            } returns true
+
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, prisonApplication)).isTrue
+          }
+
+          @Test
+          fun `returns false when secondary user is a court referrer` () {
+            every {
+              mockkCas2v2UserService.userForRequestHasRole(
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+              )
+            } returns false
+
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, prisonApplication)).isFalse
+          }
+        }
+
+        @Nested
+        inner class WhenApplicationIsCourtBail {
+          @Test
+          fun `returns false when secondary user is a prison referrer` () {
+            every {
+              mockkCas2v2UserService.userForRequestHasRole(
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+              )
+            } returns true
+
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, courtApplication)).isFalse
+          }
+
+          @Test
+          fun `returns false when secondary user is a court referrer` () {
+            every {
+              mockkCas2v2UserService.userForRequestHasRole(
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+              )
+            } returns false
+
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, courtApplication)).isFalse
+          }
+        }
+
+        @Nested
+        inner class WhenApplicationIsHDC {
+          @Test
+          fun `returns false when secondary user is a prison referrer` () {
+            every {
+              mockkCas2v2UserService.userForRequestHasRole(
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+              )
+            } returns true
+
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, hdcApplication)).isFalse
+          }
+
+          @Test
+          fun `returns false when secondary user is a court referrer` () {
+            every {
+              mockkCas2v2UserService.userForRequestHasRole(
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"))
+              )
+            } returns false
+
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, hdcApplication)).isFalse
+          }
         }
       }
     }
