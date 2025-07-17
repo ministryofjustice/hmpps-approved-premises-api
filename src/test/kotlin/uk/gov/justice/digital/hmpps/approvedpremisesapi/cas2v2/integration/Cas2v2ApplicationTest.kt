@@ -1301,6 +1301,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(otherUser)
+                withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
                 withApplicationOrigin(ApplicationOrigin.prisonBail)
               }
