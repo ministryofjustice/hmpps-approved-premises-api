@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementRequestsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
@@ -46,6 +48,9 @@ class PlacementRequestsController(
   private val userAccessService: UserAccessService,
   private val offenderDetailService: OffenderDetailService,
 ) : PlacementRequestsApiDelegate {
+
+  @Deprecated("This will be removed once UI has removed usage in code")
+  override fun placementRequestsIdBookingPost(id: UUID, newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> = ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 
   @Deprecated("Use Cas1PlacementRequestsController.search instead")
   override fun placementRequestsDashboardGet(
