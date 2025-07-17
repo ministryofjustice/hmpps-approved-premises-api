@@ -14,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -1776,7 +1775,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Application::class.java)
+            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -1814,7 +1813,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Application::class.java)
+            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
