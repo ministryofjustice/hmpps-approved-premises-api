@@ -14,6 +14,7 @@ class Cas2v2UserAccessService(
   fun userCanViewCas2v2Application(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity): Boolean = if (user.id == application.createdByUser.id) {
     true
   } else if (application.applicationOrigin == ApplicationOrigin.prisonBail &&
+    application.submittedAt != null &&
     cas2v2UserService.userForRequestHasRole(
       listOf(
         SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),

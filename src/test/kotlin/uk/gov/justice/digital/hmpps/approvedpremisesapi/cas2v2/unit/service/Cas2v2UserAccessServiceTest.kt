@@ -135,7 +135,13 @@ class Cas2v2UserAccessServiceTest {
         private val referrerTwo = Cas2v2UserEntityFactory()
           .produce()
 
-        private val prisonApplication = Cas2v2ApplicationEntityFactory()
+        private val submittedPrisonApplication = Cas2v2ApplicationEntityFactory()
+          .withApplicationOrigin(ApplicationOrigin.prisonBail)
+          .withCreatedByUser(referrerOne)
+          .withSubmittedAt(OffsetDateTime.now())
+          .produce()
+
+        private val unsubmittedPrisonApplication = Cas2v2ApplicationEntityFactory()
           .withApplicationOrigin(ApplicationOrigin.prisonBail)
           .withCreatedByUser(referrerOne)
           .produce()
@@ -154,14 +160,25 @@ class Cas2v2UserAccessServiceTest {
         inner class WhenApplicationIsPrisonBail {
 
           @Test
-          fun `returns true when secondary user is a prison referrer`() {
+          fun `returns true when secondary user is a prison referrer and application is submitted`() {
             every {
               mockkCas2v2UserService.userForRequestHasRole(
                 listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
               )
             } returns true
 
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, prisonApplication)).isTrue
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, submittedPrisonApplication)).isTrue
+          }
+
+          @Test
+          fun `returns false when secondary user is a prison referrer and application is unsubmitted`() {
+            every {
+              mockkCas2v2UserService.userForRequestHasRole(
+                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
+              )
+            } returns false
+
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, unsubmittedPrisonApplication)).isFalse
           }
 
           @Test
@@ -172,7 +189,7 @@ class Cas2v2UserAccessServiceTest {
               )
             } returns false
 
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, prisonApplication)).isFalse
+            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, submittedPrisonApplication)).isFalse
           }
         }
 
