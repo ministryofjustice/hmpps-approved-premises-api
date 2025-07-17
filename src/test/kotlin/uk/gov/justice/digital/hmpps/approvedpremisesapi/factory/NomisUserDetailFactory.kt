@@ -44,7 +44,7 @@ class NomisUserDetailFactory : Factory<NomisUserDetail> {
     this.accountType = { accountType }
   }
 
-  fun withEmail(email: String) = apply {
+  fun withEmail(email: String?) = apply {
     this.primaryEmail = { email }
   }
 
