@@ -193,6 +193,7 @@ class WebClientConfiguration(
         )
         .filter(oauth2Client)
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 
