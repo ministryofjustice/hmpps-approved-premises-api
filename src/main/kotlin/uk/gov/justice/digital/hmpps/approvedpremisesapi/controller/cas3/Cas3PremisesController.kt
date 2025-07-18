@@ -218,7 +218,7 @@ class Cas3PremisesController(
     }
 
     val archivedBedspace = extractEntityFromCasResult(
-      cas3PremisesService.archiveBedspace(bedspaceId, body.endDate),
+      cas3PremisesService.archiveBedspace(bedspaceId, premises.id, body.endDate),
     )
 
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(archivedBedspace))

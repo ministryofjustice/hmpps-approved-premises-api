@@ -60,6 +60,7 @@ class Cas3PremisesService(
   private val bedspaceRepository: BedRepository,
   private val characteristicService: CharacteristicService,
   private val workingDayService: WorkingDayService,
+  private val cas3DomainEventService: Cas3DomainEventService,
 ) {
 
   companion object {
@@ -589,6 +590,7 @@ class Cas3PremisesService(
   @SuppressWarnings("CyclomaticComplexMethod")
   fun archiveBedspace(
     bedspaceId: UUID,
+    premisesId: UUID,
     endDate: LocalDate,
   ): CasResult<BedEntity> = validatedCasResult {
     val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
@@ -645,6 +647,8 @@ class Cas3PremisesService(
 
     bedspace.endDate = endDate
     val updatedBedspace = bedspaceRepository.save(bedspace)
+
+    cas3DomainEventService.saveBedspaceArchiveEvent(updatedBedspace, premisesId)
 
     return success(updatedBedspace)
   }

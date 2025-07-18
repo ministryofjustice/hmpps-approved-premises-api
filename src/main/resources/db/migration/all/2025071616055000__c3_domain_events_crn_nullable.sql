@@ -1,0 +1,1 @@
+ALTER TABLE domain_events ALTER COLUMN crn DROP NOT NULL;
