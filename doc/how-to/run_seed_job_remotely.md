@@ -32,7 +32,7 @@ For CSV files:
   /app/run_seed_job {seed type} {file name}
   ```
 
-- `seed type` is a value from the [`SeedFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/d8dc87aefa0294289a7bcb08048fbd8679b9954c/src/main/resources/static/_shared.yml#L3240) enum in the OpenAPI spec.  e.g.
+- `seed type` is a value from the [`SeedFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/42ef30f8a977c0f51bb7b55e1e92238e264c4d08/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model/SeedFileType.kt#L8) enum.  e.g.
 
   ```shell 
   /app/run_seed_job approved_premises ap_seed_file
@@ -44,7 +44,7 @@ For XLSX files:
   /app/run_seed_from_excel_job {seed type} {file name}
   ```
 
-- `seed type` is a value from the [`SeedFromExcelFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/9a9ad8df7b8015f63799f191fc986e47900325be/src/main/resources/static/_shared.yml#L3730) enum in the OpenAPI spec.  e.g.
+- `seed type` is a value from the [`SeedFromExcelFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/42ef30f8a977c0f51bb7b55e1e92238e264c4d08/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model/SeedFromExcelFileType.kt#L10) enum.  e.g.
 
   ```shell 
   /app/run_seed_from_excel_job cas1_import_site_survey_rooms ap_seed_file
