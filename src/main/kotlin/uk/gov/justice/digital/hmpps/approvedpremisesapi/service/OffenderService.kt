@@ -5,15 +5,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -24,12 +20,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import java.time.LocalDate
 import java.util.stream.Collectors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.Alert as PrisionerAlert
 
@@ -37,10 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.
 class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val prisionerAlertsApiClient: PrisonerAlertsApiClient,
-  private val caseNotesClient: CaseNotesClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
-  prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
   companion object {
@@ -49,24 +40,9 @@ class OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  private val prisonCaseNotesConfig: PrisonCaseNotesConfig
   private val adjudicationsConfig: PrisonAdjudicationsConfig
 
   init {
-    val excludedCategories = prisonCaseNotesConfigBindingModel.excludedCategories
-      ?: throw RuntimeException("No prison-case-notes.excluded-categories provided")
-
-    prisonCaseNotesConfig = PrisonCaseNotesConfig(
-      lookbackDays = prisonCaseNotesConfigBindingModel.lookbackDays ?: throw RuntimeException("No prison-case-notes.lookback-days configuration provided"),
-      prisonApiPageSize = prisonCaseNotesConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-api-page-size configuration provided"),
-      excludedCategories = excludedCategories.mapIndexed { index, categoryConfig ->
-        ExcludedCategory(
-          category = categoryConfig.category ?: throw RuntimeException("No category provided for prison-case-notes.excluded-categories at index $index"),
-          subcategory = categoryConfig.subcategory,
-        )
-      },
-    )
-
     adjudicationsConfig = PrisonAdjudicationsConfig(
       prisonApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided"),
     )
@@ -312,51 +288,6 @@ class OffenderService(
       }
       is ClientResult.Failure -> clientResult.throwException()
     }
-  }
-
-  fun getFilteredPrisonCaseNotesByNomsNumber(nomsNumber: String, getCas1SpecificNoteTypes: Boolean): CasResult<List<CaseNote>> {
-    val cas1PrisonNoteTypesToInclude = listOf(
-      "Alert", "Conduct & Behaviour", "Custodial Violence Management", "Negative Behaviours", "Enforcement", "Interventions / Keywork",
-      "Mental Health", "Drug Rehabilitation", "Social Care", "Positive Behaviour / Achievements", "Alcohol Treatment",
-    )
-    val allCaseNotes = mutableListOf<CaseNote>()
-
-    val fromDate = LocalDate.now().minusDays(prisonCaseNotesConfig.lookbackDays.toLong())
-
-    var currentPage: CaseNotesPage?
-    var currentPageIndex: Int? = null
-    do {
-      if (currentPageIndex == null) {
-        currentPageIndex = 0
-      } else {
-        currentPageIndex += 1
-      }
-
-      val caseNotesPageResponse = caseNotesClient.getCaseNotesPage(nomsNumber, fromDate, currentPageIndex, prisonCaseNotesConfig.prisonApiPageSize)
-      currentPage = when (caseNotesPageResponse) {
-        is ClientResult.Success -> caseNotesPageResponse.body
-        is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
-          HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "CaseNotes", id = "nomsNumber")
-          HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
-          else -> caseNotesPageResponse.throwException()
-        }
-        is ClientResult.Failure -> caseNotesPageResponse.throwException()
-      }
-
-      allCaseNotes.addAll(
-        if (getCas1SpecificNoteTypes) {
-          currentPage.content.filter { caseNote ->
-            cas1PrisonNoteTypesToInclude.any { it == (caseNote.typeDescription ?: caseNote.type) }
-          }
-        } else {
-          currentPage.content.filter { caseNote ->
-            prisonCaseNotesConfig.excludedCategories.none { it.excluded(caseNote.type, caseNote.subType) }
-          }
-        },
-      )
-    } while (currentPage != null && currentPage.totalPages > currentPageIndex!! + 1)
-
-    return CasResult.Success(allCaseNotes)
   }
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
