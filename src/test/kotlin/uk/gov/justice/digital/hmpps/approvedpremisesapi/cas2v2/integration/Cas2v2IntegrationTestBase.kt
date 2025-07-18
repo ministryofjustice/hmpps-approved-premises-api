@@ -56,6 +56,9 @@ abstract class Cas2v2IntegrationTestBase : IntegrationTestBase() {
   @Autowired
   lateinit var cas2v2StatusUpdateDetailEntityRepository: Cas2v2StatusUpdateDetailRepository
 
+  @Autowired
+  lateinit var cas2v2ApplicationNoteRepository: Cas2v2ApplicationNoteRepository
+
   lateinit var cas2v2ApplicationEntityFactory: PersistedFactory<Cas2v2ApplicationEntity, UUID, Cas2v2ApplicationEntityFactory>
   lateinit var cas2v2AssessmentEntityFactory: PersistedFactory<Cas2v2AssessmentEntity, UUID, Cas2v2AssessmentEntityFactory>
   lateinit var cas2v2StatusUpdateEntityFactory: PersistedFactory<Cas2v2StatusUpdateEntity, UUID, Cas2v2StatusUpdateEntityFactory>

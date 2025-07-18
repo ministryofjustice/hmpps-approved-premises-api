@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -12,8 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2Use
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import java.time.OffsetDateTime
-import org.junit.jupiter.api.BeforeEach
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 
 class Cas2v2UserAccessServiceTest {
 
@@ -96,8 +95,8 @@ class Cas2v2UserAccessServiceTest {
             assertThat(
               cas2v2UserAccessService.userCanViewCas2v2Application(
                 userWithNoPrison,
-                cas2v2Application
-              )
+                cas2v2Application,
+              ),
             ).isFalse
           }
         }
@@ -153,16 +152,6 @@ class Cas2v2UserAccessServiceTest {
           .withCreatedByUser(referrerOne)
           .produce()
 
-        private val courtApplication = Cas2v2ApplicationEntityFactory()
-          .withApplicationOrigin(ApplicationOrigin.courtBail)
-          .withCreatedByUser(referrerOne)
-          .produce()
-
-        private val hdcApplication = Cas2v2ApplicationEntityFactory()
-          .withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
-          .withCreatedByUser(referrerOne)
-          .produce()
-
         @Nested
         inner class WhenApplicationIsPrisonBail {
 
@@ -182,8 +171,8 @@ class Cas2v2UserAccessServiceTest {
               assertThat(
                 cas2v2UserAccessService.userCanViewCas2v2Application(
                   referrerTwo,
-                  submittedPrisonApplication
-                )
+                  submittedPrisonApplication,
+                ),
               ).isTrue
             }
 
@@ -192,8 +181,8 @@ class Cas2v2UserAccessServiceTest {
               assertThat(
                 cas2v2UserAccessService.userCanViewCas2v2Application(
                   referrerTwo,
-                  unsubmittedPrisonApplication
-                )
+                  unsubmittedPrisonApplication,
+                ),
               ).isFalse
             }
 
