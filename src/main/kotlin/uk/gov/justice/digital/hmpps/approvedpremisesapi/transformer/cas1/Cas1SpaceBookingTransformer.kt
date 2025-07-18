@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
@@ -37,7 +36,6 @@ class Cas1SpaceBookingTransformer(
   private val personTransformer: PersonTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val userTransformer: UserTransformer,
-  private val spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
   private val cas1ChangeRequestTransformer: Cas1ChangeRequestTransformer,
@@ -51,15 +49,6 @@ class Cas1SpaceBookingTransformer(
     val placementRequest = jpa.placementRequest
     val application = jpa.application
     val applicationId = jpa.applicationFacade.id
-    val status = Cas1SpaceBookingStatusTransformer().transformToSpaceBookingSummaryStatus(
-      SpaceBookingDates(
-        jpa.expectedArrivalDate,
-        jpa.expectedDepartureDate,
-        jpa.actualArrivalDate,
-        jpa.actualDepartureDate,
-        jpa.nonArrivalConfirmedAt?.toLocalDateTime(),
-      ),
-    )
     val openChangeRequests = cas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, person)
     return Cas1SpaceBooking(
       id = jpa.id,
@@ -97,7 +86,6 @@ class Cas1SpaceBookingTransformer(
       nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
       departure = jpa.extractDeparture(),
-      status = status,
       characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
       allowedActions = cas1SpaceBookingActionsService.determineActions(jpa).available().map { it.apiType },
       openChangeRequests = openChangeRequests,
@@ -191,15 +179,6 @@ class Cas1SpaceBookingTransformer(
       isNonArrival = spaceBooking.hasNonArrival(),
       tier = spaceBooking.application?.riskRatings?.tier?.value?.level,
       keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
-      status = spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(
-        SpaceBookingDates(
-          spaceBooking.expectedArrivalDate,
-          spaceBooking.expectedDepartureDate,
-          spaceBooking.actualArrivalDate,
-          spaceBooking.actualDepartureDate,
-          spaceBooking.nonArrivalConfirmedAt?.toLocalDateTime(),
-        ),
-      ),
       characteristics = spaceBooking.criteria.mapNotNull { criteria ->
         Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
       },
@@ -244,15 +223,6 @@ class Cas1SpaceBookingTransformer(
         ),
       )
     },
-    status = spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(
-      SpaceBookingDates(
-        searchResult.expectedArrivalDate,
-        searchResult.expectedDepartureDate,
-        searchResult.actualArrivalDate,
-        searchResult.actualDepartureDate,
-        searchResult.nonArrivalConfirmedAtDateTime,
-      ),
-    ),
     characteristics = searchResult.getCharacteristicPropertyNames().mapNotNull { propertyName ->
       Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
     },
