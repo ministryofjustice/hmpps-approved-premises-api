@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryB
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CaseNotesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 
 class CaseNotesServiceTest {
@@ -54,8 +54,8 @@ class CaseNotesServiceTest {
         )
       } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.NOT_FOUND, null)
 
-      var result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
-      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
+      val result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
+      assertThatCasResult(result).isNotFound("CaseNotes", nomsNumber)
     }
 
     @Test
@@ -71,8 +71,8 @@ class CaseNotesServiceTest {
         )
       } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.FORBIDDEN, null)
 
-      var result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
-      assertThat(result).isInstanceOf(CasResult.Unauthorised::class.java)
+      val result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
+      assertThatCasResult(result).isUnauthorised()
     }
 
     @Test
@@ -127,9 +127,9 @@ class CaseNotesServiceTest {
 
       val result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value).containsAll(caseNotesPageOne.subList(0, 1) + caseNotesPageTwo.subList(0, 1))
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).containsAll(caseNotesPageOne.subList(0, 1) + caseNotesPageTwo.subList(0, 1))
+      }
     }
 
     @Test
@@ -184,9 +184,9 @@ class CaseNotesServiceTest {
 
       val result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, true)
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value).containsAll(caseNotesPageTwo.subList(2, 3) + caseNotesPageTwo.subList(2, 3))
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).containsAll(caseNotesPageTwo.subList(2, 3) + caseNotesPageTwo.subList(2, 3))
+      }
     }
   }
 }
