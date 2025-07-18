@@ -813,6 +813,62 @@ class Cas3PremisesService(
     success(updatedBedspace)
   }
 
+  fun unarchivePremises(
+    premisesId: UUID,
+    restartDate: LocalDate,
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
+    val premises = premisesRepository.findByIdOrNull(premisesId) as? TemporaryAccommodationPremisesEntity
+      ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "doesNotExist"
+
+    // Check if premises is actually archived
+    if (!isCas3PremisesArchived(premises)) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotArchived"
+    }
+
+    val today = LocalDate.now()
+
+    // Validate restart date is not more than 7 days in the past
+    if (restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInThePast"
+    }
+
+    // Validate restart date is not more than 7 days in the future
+    if (restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
+    }
+
+    // Validate restart date is after the last archive end date
+    if (restartDate.isBefore(premises.endDate) || restartDate.isEqual(premises.endDate)) {
+      "$.restartDate" hasValidationError "beforeLastPremisesArchivedDate"
+    }
+
+    if (hasErrors()) {
+      return@validatedCasResult errors()
+    }
+
+    // Update the premises to unarchive it
+    premises.startDate = restartDate
+    premises.endDate = null
+    premises.status = PropertyStatus.active
+    val updatedPremises = premisesRepository.save(premises)
+
+    // Unarchive all bedspaces associated with this premises
+    premises.rooms.flatMap { it.beds }.forEach { bedspace ->
+      if (bedspace.isCas3BedspaceArchived()) {
+        val updatedBedspace = bedspaceRepository.save(
+          bedspace.copy(
+            startDate = restartDate,
+            endDate = null,
+          ),
+        )
+      }
+    }
+
+    success(updatedPremises)
+  }
+
+  private fun isCas3PremisesArchived(premises: TemporaryAccommodationPremisesEntity): Boolean = premises.endDate != null && premises.endDate!! <= LocalDate.now()
+
   private fun tryGetProbationDeliveryUnit(
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
     probationRegionId: UUID,
