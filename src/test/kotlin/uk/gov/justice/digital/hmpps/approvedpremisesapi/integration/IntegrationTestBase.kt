@@ -64,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarif
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistorySystemNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistoryUserNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedMoveEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
@@ -142,8 +141,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
@@ -365,9 +362,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var cas3NonArrivalTestRepository: Cas3NonArrivalTestRepository
-
-  @Autowired
-  lateinit var bedMoveRepository: BedMoveRepository
 
   @Autowired
   lateinit var arrivalRepository: ArrivalTestRepository
@@ -667,7 +661,6 @@ abstract class IntegrationTestBase {
   lateinit var cas1ChangeRequestRejectionReasonEntityFactory: PersistedFactory<Cas1ChangeRequestRejectionReasonEntity, UUID, Cas1ChangeRequestRejectionReasonEntityFactory>
   lateinit var cas1ChangeRequestEntityFactory: PersistedFactory<Cas1ChangeRequestEntity, UUID, Cas1ChangeRequestEntityFactory>
 
-  lateinit var bedMoveEntityFactory: PersistedFactory<BedMoveEntity, UUID, BedMoveEntityFactory>
   private var clientCredentialsCallMocked = false
 
   @BeforeEach
@@ -778,7 +771,6 @@ abstract class IntegrationTestBase {
     cas1OutOfServiceBedReasonEntityFactory = PersistedFactory({ Cas1OutOfServiceBedReasonEntityFactory() }, cas1OutOfServiceBedReasonTestRepository)
     cas1OutOfServiceBedCancellationEntityFactory = PersistedFactory({ Cas1OutOfServiceBedCancellationEntityFactory() }, cas1OutOfServiceBedCancellationTestRepository)
     cas1OutOfServiceBedRevisionEntityFactory = PersistedFactory({ Cas1OutOfServiceBedRevisionEntityFactory() }, cas1OutOfServiceBedDetailsTestRepository)
-    bedMoveEntityFactory = PersistedFactory({ BedMoveEntityFactory() }, bedMoveRepository)
     cas1SpaceBookingEntityFactory = PersistedFactory({ Cas1SpaceBookingEntityFactory() }, cas1SpaceBookingRepository)
     cas1CruManagementAreaEntityFactory = PersistedFactory({ Cas1CruManagementAreaEntityFactory() }, cas1CruManagementAreaRepository)
     cas1ChangeRequestReasonEntityFactory = PersistedFactory({ Cas1ChangeRequestReasonEntityFactory() }, cas1ChangeRequestReasonRepository)
