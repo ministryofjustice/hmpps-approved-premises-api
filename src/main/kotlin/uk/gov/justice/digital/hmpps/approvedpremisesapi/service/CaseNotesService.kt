@@ -19,23 +19,23 @@ class CaseNotesService(
 ) {
 
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
+
   init {
     val excludedCategories = prisonCaseNotesConfigBindingModel.excludedCategories
-      ?: throw RuntimeException("No prison-case-notes.excluded-categories provided")
+      ?: error("No prison-case-notes.excluded-categories provided")
 
     prisonCaseNotesConfig = PrisonCaseNotesConfig(
-      lookbackDays = prisonCaseNotesConfigBindingModel.lookbackDays ?: throw RuntimeException("No prison-case-notes.lookback-days configuration provided"),
-      prisonApiPageSize = prisonCaseNotesConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-api-page-size configuration provided"),
+      lookbackDays = prisonCaseNotesConfigBindingModel.lookbackDays ?: error("No prison-case-notes.lookback-days configuration provided"),
+      prisonApiPageSize = prisonCaseNotesConfigBindingModel.prisonApiPageSize ?: error("No prison-api-page-size configuration provided"),
       excludedCategories = excludedCategories.mapIndexed { index, categoryConfig ->
         ExcludedCategory(
-          category = categoryConfig.category ?: throw RuntimeException("No category provided for prison-case-notes.excluded-categories at index $index"),
+          category = categoryConfig.category ?: error("No category provided for prison-case-notes.excluded-categories at index $index"),
           subcategory = categoryConfig.subcategory,
         )
       },
     )
   }
 
-  @SuppressWarnings("TooGenericExceptionThrown")
   fun getFilteredPrisonCaseNotesByNomsNumber(nomsNumber: String, getCas1SpecificNoteTypes: Boolean): CasResult<List<CaseNote>> {
     val cas1PrisonNoteTypesToInclude = listOf(
       "Alert", "Conduct & Behaviour", "Custodial Violence Management", "Negative Behaviours", "Enforcement", "Interventions / Keywork",
@@ -58,7 +58,7 @@ class CaseNotesService(
       currentPage = when (caseNotesPageResponse) {
         is ClientResult.Success -> caseNotesPageResponse.body
         is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
-          HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "CaseNotes", id = "nomsNumber")
+          HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "CaseNotes", id = nomsNumber)
           HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
           else -> caseNotesPageResponse.throwException()
         }
