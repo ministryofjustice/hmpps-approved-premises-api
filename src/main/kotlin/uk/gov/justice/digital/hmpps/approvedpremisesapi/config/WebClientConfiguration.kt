@@ -47,8 +47,6 @@ class WebClientConfiguration(
 
   @Bean(name = ["apDeliusContextApiWebClient"])
   fun apDeliusContextApiWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.ap-delius-context-api.base-url}") apDeliusContextApiBaseUrl: String,
   ): WebClientConfig {
@@ -80,7 +78,6 @@ class WebClientConfiguration(
 
   @Bean(name = ["hmppsTierApiWebClient"])
   fun hmppsTierApiWebClient(
-    clientRegistrations: ClientRegistrationRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String,
     @Value("\${services.hmpps-tier.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
@@ -108,8 +105,6 @@ class WebClientConfiguration(
 
   @Bean(name = ["prisonsApiWebClient"])
   fun prisonsApiWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String,
     @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") prisonApiMaxResponseInMemorySizeBytes: Int,
@@ -138,13 +133,12 @@ class WebClientConfiguration(
         )
         .filter(oauth2Client)
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 
   @Bean(name = ["prisonerAlertsApiWebClient"])
   fun prisonerAlertsApiWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
     @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
@@ -200,13 +194,12 @@ class WebClientConfiguration(
         )
         .filter(oauth2Client)
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 
   @Bean(name = ["apOASysContextApiWebClient"])
   fun apOASysContextApiWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.ap-oasys-context-api.base-url}") apOASysContextApiBaseUrl: String,
     @Value("\${services.ap-oasys-context-api.timeout-ms}") apAndOasysUpstreamTimeoutMs: Long,
@@ -270,8 +263,6 @@ class WebClientConfiguration(
 
   @Bean(name = ["nomisUserRolesApiWebClient"])
   fun nomisUserRolesApiClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
   ): WebClientConfig {
@@ -322,8 +313,6 @@ class WebClientConfiguration(
 
   @Bean(name = ["managePomCasesWebClient"])
   fun managePomCasesWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
@@ -355,8 +344,6 @@ class WebClientConfiguration(
 
   @Bean(name = ["prisonerSearchWebClient"])
   fun prisonerSearchWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisoner-search.base-url}") prisonSearchBaseUrl: String,
   ): WebClientConfig {
