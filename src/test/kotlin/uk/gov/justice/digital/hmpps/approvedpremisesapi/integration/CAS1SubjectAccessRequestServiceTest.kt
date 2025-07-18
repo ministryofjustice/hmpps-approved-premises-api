@@ -12,8 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
@@ -494,43 +492,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   @Test
-  fun `get CAS1 information - has a bed move`() {
-    val (offender, _) = givenAnOffender()
-    val application = approvedPremisesApplicationEntity(offender)
-    val booking = bookingEntity(offender, application)
-
-    val newBed = bedEntity()
-    val bedMove = bedMoveEntity(booking, booking.bed!!, newBed)
-
-    val result =
-      sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
-    val expectedJson = """
-    {
-        "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
-        "ApplicationTimeline" :[ ],
-        "Assessments": [ ],
-        "AssessmentClarificationNotes": [ ],
-        "Bookings": [${bookingsJson(booking)}],
-        "SpaceBookings":  [ ],
-        "OfflineApplications":  [ ],
-        "BookingExtensions": [ ],
-        "Cancellations": [ ],
-        "BedMoves": [${bedMovesJson(bedMove)}],
-        "Appeals": [ ],
-        "PlacementApplications": [ ],
-        "PlacementRequests": [ ],
-        "PlacementRequirements": [ ],
-        "PlacementRequirementCriteria" : [ ],
-        "BookingNotMades" : [ ],
-        "DomainEvents": [ ],
-        "DomainEventsMetadata": [ ]
-    }
-    """.trimIndent()
-
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
   fun `get CAS1 information - has an appeal`() {
     val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
@@ -947,20 +908,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       }
     """.trimIndent()
 
-  private fun bedMovesJson(bedMove: BedMoveEntity): String =
-    """
-      {
-        "crn": "${bedMove.booking.crn}" ,
-        "noms_number": "${bedMove.booking.nomsNumber}",
-        "notes": "${bedMove.notes}",
-        "previous_bed_name": "${bedMove.previousBed!!.name}",
-        "previous_bed_code":"${bedMove.previousBed!!.code}",
-        "new_bed_name":"${bedMove.newBed.name}",
-        "new_bed_code":"${bedMove.newBed.code}",
-        "created_at": "$CREATED_AT_NO_TZ"
-      }
-    """.trimIndent()
-
   private fun offlineApplicationEntity(offenderDetails: OffenderDetailSummary) = offlineApplicationEntityFactory.produceAndPersist {
     withService(ServiceName.approvedPremises.value)
     withCrn(offenderDetails.otherIds.crn)
@@ -1057,13 +1004,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withCreatedBy(application.createdByUser)
   }
 
-  private fun bedMoveEntity(booking: BookingEntity, previousBed: BedEntity, newBed: BedEntity): BedMoveEntity = this.bedMoveEntityFactory.produceAndPersist {
-    withBooking(booking)
-    withPreviousBed(previousBed)
-    withNewBed(newBed)
-    withNotes("Some Notes about a bed move")
-    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-  }
   private fun approvedPremisesApplicationEntity(offenderDetails: OffenderDetailSummary): ApprovedPremisesApplicationEntity {
     val user = userEntity()
     val risk1 = personRisks()
