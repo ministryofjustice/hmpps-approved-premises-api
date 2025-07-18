@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -91,7 +92,12 @@ class Cas2v2UserAccessServiceTest {
               .withSubmittedAt(OffsetDateTime.now())
               .produce()
 
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(userWithNoPrison, cas2v2Application)).isFalse
+            assertThat(
+              cas2v2UserAccessService.userCanViewCas2v2Application(
+                userWithNoPrison,
+                cas2v2Application,
+              ),
+            ).isFalse
           }
         }
       }
@@ -146,100 +152,45 @@ class Cas2v2UserAccessServiceTest {
           .withCreatedByUser(referrerOne)
           .produce()
 
-        private val courtApplication = Cas2v2ApplicationEntityFactory()
-          .withApplicationOrigin(ApplicationOrigin.courtBail)
-          .withCreatedByUser(referrerOne)
-          .produce()
-
-        private val hdcApplication = Cas2v2ApplicationEntityFactory()
-          .withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
-          .withCreatedByUser(referrerOne)
-          .produce()
-
         @Nested
         inner class WhenApplicationIsPrisonBail {
 
-          @Test
-          fun `returns true when secondary user is a prison referrer and application is submitted`() {
-            every {
-              mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
-              )
-            } returns true
+          @Nested
+          inner class WhenLoggedInAsPrisonReferrer {
+            @BeforeEach
+            fun setup() {
+              every {
+                mockkCas2v2UserService.userForRequestHasRole(
+                  listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
+                )
+              } returns true
+            }
 
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, submittedPrisonApplication)).isTrue
-          }
+            @Test
+            fun `access submitted prison bail applications`() {
+              assertThat(
+                cas2v2UserAccessService.userCanViewCas2v2Application(
+                  referrerTwo,
+                  submittedPrisonApplication,
+                ),
+              ).isTrue
+            }
 
-          @Test
-          fun `returns false when secondary user is a prison referrer and application is unsubmitted`() {
-            every {
-              mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
-              )
-            } returns false
+            @Test
+            fun `cannot access unsubmitted prison bail applications`() {
+              assertThat(
+                cas2v2UserAccessService.userCanViewCas2v2Application(
+                  referrerTwo,
+                  unsubmittedPrisonApplication,
+                ),
+              ).isFalse
+            }
 
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, unsubmittedPrisonApplication)).isFalse
-          }
-
-          @Test
-          fun `returns false when secondary user is a court referrer`() {
-            every {
-              mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
-              )
-            } returns false
-
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, submittedPrisonApplication)).isFalse
-          }
-        }
-
-        @Nested
-        inner class WhenApplicationIsCourtBail {
-          @Test
-          fun `returns false when secondary user is a prison referrer`() {
-            every {
-              mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
-              )
-            } returns true
-
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, courtApplication)).isFalse
-          }
-
-          @Test
-          fun `returns false when secondary user is a court referrer`() {
-            every {
-              mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
-              )
-            } returns false
-
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, courtApplication)).isFalse
-          }
-        }
-
-        @Nested
-        inner class WhenApplicationIsHDC {
-          @Test
-          fun `returns false when secondary user is a prison referrer`() {
-            every {
-              mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
-              )
-            } returns true
-
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, hdcApplication)).isFalse
-          }
-
-          @Test
-          fun `returns false when secondary user is a court referrer`() {
-            every {
-              mockkCas2v2UserService.userForRequestHasRole(
-                listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
-              )
-            } returns false
-
-            assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(referrerTwo, hdcApplication)).isFalse
+            @Test
+            fun `access a note to any application that is of origin prisonBail`() {
+              assertThat(cas2v2UserAccessService.userCanAddNote(referrerTwo, submittedPrisonApplication)).isTrue
+              assertThat(cas2v2UserAccessService.userCanAddNote(referrerTwo, unsubmittedPrisonApplication)).isTrue
+            }
           }
         }
       }

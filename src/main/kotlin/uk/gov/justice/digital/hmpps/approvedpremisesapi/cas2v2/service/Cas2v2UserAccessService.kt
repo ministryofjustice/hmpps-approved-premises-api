@@ -11,35 +11,51 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 class Cas2v2UserAccessService(
   private val cas2v2UserService: Cas2v2UserService,
 ) {
-  fun userCanViewCas2v2Application(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity): Boolean = if (user.id == application.createdByUser.id) {
-    true
-  } else if (application.applicationOrigin == ApplicationOrigin.prisonBail &&
-    application.submittedAt != null &&
-    cas2v2UserService.userForRequestHasRole(
-      listOf(
-        SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),
-      ),
-    )
-  ) {
-    true
-  } else if (application.submittedAt == null) {
-    false
-  } else if (user.userType == Cas2v2UserType.NOMIS) {
-    offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeNomisCaseloadId)
-  } else {
-    false
+  fun userCanViewCas2v2Application(
+    user: Cas2v2UserEntity,
+    application: Cas2v2ApplicationEntity,
+  ): Boolean {
+    val isPrisonBailReferral = application.applicationOrigin == ApplicationOrigin.prisonBail &&
+      application.submittedAt != null &&
+      cas2v2UserService.userForRequestHasRole(
+        listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
+      )
+
+    if (isPrisonBailReferral) return true
+
+    if (user.id == application.createdByUser.id) return true
+
+    if (application.submittedAt == null) return false
+
+    return if (user.userType == Cas2v2UserType.NOMIS) {
+      offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeNomisCaseloadId)
+    } else {
+      false
+    }
   }
 
-  fun userCanAddNote(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity): Boolean = when (user.userType) {
-    Cas2v2UserType.NOMIS ->
-      user.id == application.createdByUser.id ||
-        offenderIsFromSamePrisonAsUser(
-          application.referringPrisonCode,
-          user.activeNomisCaseloadId,
-        )
+  fun userCanAddNote(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity): Boolean {
+    if (
+      application.applicationOrigin == ApplicationOrigin.prisonBail &&
+      cas2v2UserService.userForRequestHasRole(
+        listOf(
+          SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),
+        ),
+      )
+    ) {
+      return true
+    }
 
-    Cas2v2UserType.DELIUS -> user.id == application.createdByUser.id
-    Cas2v2UserType.EXTERNAL -> true
+    return when (user.userType) {
+      Cas2v2UserType.NOMIS ->
+        user.id == application.createdByUser.id ||
+          offenderIsFromSamePrisonAsUser(
+            application.referringPrisonCode,
+            user.activeNomisCaseloadId,
+          )
+      Cas2v2UserType.DELIUS -> user.id == application.createdByUser.id
+      Cas2v2UserType.EXTERNAL -> true
+    }
   }
 
   fun offenderIsFromSamePrisonAsUser(referringPrisonCode: String?, activeCaseloadId: String?): Boolean = if (referringPrisonCode !== null && activeCaseloadId !== null) {
