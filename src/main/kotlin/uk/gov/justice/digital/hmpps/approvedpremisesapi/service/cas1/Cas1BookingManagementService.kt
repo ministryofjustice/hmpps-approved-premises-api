@@ -76,6 +76,13 @@ class Cas1BookingManagementService(
       }
     }
 
+    val crn = existingCas1SpaceBooking.crn
+    cas1SpaceBookingRepository.findResidentSpaceBookingsForCrn(crn).firstOrNull()?.premises?.let { alreadyResidentAt ->
+      return CasResult.GeneralValidationError(
+        "Arrival cannot be recorded as $crn is recorded as resident at ${alreadyResidentAt.name} (${alreadyResidentAt.cruManagementArea.name})",
+      )
+    }
+
     existingCas1SpaceBooking.canonicalArrivalDate = arrivalDate
     existingCas1SpaceBooking.actualArrivalDate = arrivalDate
     existingCas1SpaceBooking.actualArrivalTime = arrivalTime

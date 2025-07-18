@@ -328,16 +328,18 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
 
   @Query
   fun existsByDeliusId(deliusId: String): Boolean
-}
 
-interface Cas1SpaceBookingDaySummarySearchResult {
-  val id: UUID
-  val crn: String
-  val canonicalArrivalDate: LocalDate
-  val canonicalDepartureDate: LocalDate
-  val tier: String?
-  val releaseType: String
-  val characteristicsPropertyNames: String?
+  @Query(
+    """
+    SELECT b FROM Cas1SpaceBookingEntity b 
+    INNER JOIN FETCH b.premises
+    WHERE 
+    b.crn = :crn AND 
+    b.actualArrivalDate IS NOT NULL AND 
+    b.actualDepartureDate IS NULL 
+    """,
+  )
+  fun findResidentSpaceBookingsForCrn(crn: String): List<Cas1SpaceBookingEntity>
 }
 
 interface Cas1SpaceBookingSearchResult {
