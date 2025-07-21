@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancyParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.PremisesLocalRestriction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -1991,5 +1993,105 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(premiseRestrictions.size).isEqualTo(1)
       assertThat(premiseRestrictions.first().description).isEqualTo("No hate based offences")
     }
+  }
+
+  @Test
+  fun `Should retrieve only non-archived restrictions in created at descending order for a given premises`() {
+    val (user, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
+
+    val premises = givenAnApprovedPremises(
+      name = "Premises 1",
+      supportsSpaceBookings = true,
+      region = givenAProbationRegion(
+        apArea = givenAnApArea(name = "Region 1"),
+      ),
+      cruManagementArea = givenACas1CruManagementArea(
+        name = "Management Area 1",
+      ),
+    )
+
+    cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+      withApprovedPremisesId(premises.id)
+      withDescription("No child RSo")
+      withCreatedAt(OffsetDateTime.now().minusDays(2))
+      withCreatedByUserId(user.id)
+    }
+
+    cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+      withApprovedPremisesId(premises.id)
+      withDescription("No offence against sex workers")
+      withCreatedAt(OffsetDateTime.now().minusDays(1))
+      withCreatedByUserId(user.id)
+    }
+
+    cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+      withApprovedPremisesId(premises.id)
+      withDescription("No hate based offences")
+      withCreatedAt(OffsetDateTime.now())
+      withCreatedByUserId(user.id)
+    }
+
+    cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+      withApprovedPremisesId(premises.id)
+      withDescription("No orson offenses")
+      withCreatedAt(OffsetDateTime.now().minusDays(2))
+      withCreatedByUserId(user.id)
+      withArchived(true)
+    }
+
+    val response = webTestClient.get()
+      .uri("/cas1/premises/${premises.id}/local-restrictions")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsListOfObjects<PremisesLocalRestrictionSummary>()
+
+    assertThat(response.size).isEqualTo(3)
+    assertThat(response.map { it.description }).containsExactly(
+      "No hate based offences",
+      "No offence against sex workers",
+      "No child RSo",
+    )
+  }
+
+  @Test
+  fun `Should archive restriction when delete is called`() {
+    val (user, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
+
+    val premises = givenAnApprovedPremises(
+      name = "Premises 1",
+      supportsSpaceBookings = true,
+      region = givenAProbationRegion(
+        apArea = givenAnApArea(name = "Region 1"),
+      ),
+      cruManagementArea = givenACas1CruManagementArea(
+        name = "Management Area 1",
+      ),
+    )
+
+    val restriction = cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+      withApprovedPremisesId(premises.id)
+      withDescription("No hate based offences")
+      withCreatedAt(OffsetDateTime.now().minusDays(1))
+      withCreatedByUserId(user.id)
+    }
+
+    val isRestrictionActiveBeforeDelete =
+      cas1PremisesLocalRestrictionRepository.findByIdOrNull(restriction.id)
+    assertThat(isRestrictionActiveBeforeDelete).isNotNull()
+    assertThat(isRestrictionActiveBeforeDelete?.archived).isFalse()
+
+    webTestClient.delete()
+      .uri("/cas1/premises/${premises.id}/local-restrictions/${restriction.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isNoContent
+
+    val isRestrictionArchivedAfterDelete =
+      cas1PremisesLocalRestrictionRepository.findByIdOrNull(restriction.id)
+    assertThat(isRestrictionArchivedAfterDelete).isNotNull()
+    assertThat(isRestrictionArchivedAfterDelete?.archived).isTrue()
   }
 }
