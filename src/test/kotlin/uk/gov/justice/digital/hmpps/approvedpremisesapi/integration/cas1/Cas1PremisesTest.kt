@@ -193,6 +193,20 @@ class Cas1PremisesTest : IntegrationTestBase() {
         endDate = LocalDate.now().plusDays(2),
       )
 
+      cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+        withApprovedPremisesId(premises.id)
+        withDescription("No offence against sex workers")
+        withCreatedAt(OffsetDateTime.now().minusDays(1))
+        withCreatedByUserId(user.id)
+      }
+
+      cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+        withApprovedPremisesId(premises.id)
+        withDescription("No hate based offences")
+        withCreatedAt(OffsetDateTime.now())
+        withCreatedByUserId(user.id)
+      }
+
       val summary = webTestClient.get()
         .uri("/cas1/premises/${premises.id}")
         .header("Authorization", "Bearer $jwt")
@@ -212,6 +226,10 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.managerDetails).isEqualTo("manager details")
       assertThat(summary.overbookingSummary).containsExactly(
         Cas1OverbookingRange(LocalDate.now(), LocalDate.now().plusWeeks(12).minusDays(1)),
+      )
+      assertThat(summary.localRestrictions).containsExactly(
+        "No hate based offences",
+        "No offence against sex workers",
       )
     }
   }

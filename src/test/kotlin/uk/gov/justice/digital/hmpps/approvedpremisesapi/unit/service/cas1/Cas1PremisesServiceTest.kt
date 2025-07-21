@@ -120,6 +120,7 @@ class Cas1PremisesServiceTest {
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 4
+      every { cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(PREMISES_ID) } returns listOf("restriction1", "restriction2")
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -130,6 +131,7 @@ class Cas1PremisesServiceTest {
         assertThat(premisesSummaryInfo.outOfServiceBeds).isEqualTo(4)
         assertThat(premisesSummaryInfo.availableBeds).isEqualTo(48)
         assertThat(premisesSummaryInfo.overbookingSummary).isEmpty()
+        assertThat(premisesSummaryInfo.localRestrictions).isEqualTo(listOf("restriction1", "restriction2"))
       }
     }
 
@@ -158,6 +160,7 @@ class Cas1PremisesServiceTest {
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 5
+      every { cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(PREMISES_ID) } returns emptyList()
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -168,6 +171,7 @@ class Cas1PremisesServiceTest {
         assertThat(premisesSummaryInfo.outOfServiceBeds).isEqualTo(4)
         assertThat(premisesSummaryInfo.availableBeds).isEqualTo(47)
         assertThat(premisesSummaryInfo.overbookingSummary).isEqualTo(listOf(Cas1OverbookingRange(LocalDate.of(2024, 11, 12), LocalDate.of(2024, 11, 12))))
+        assertThat(premisesSummaryInfo.localRestrictions).isEmpty()
       }
     }
   }
@@ -199,6 +203,7 @@ class Cas1PremisesServiceTest {
       every { spaceBookingRepository.countActiveSpaceBookings(eq(premises.id)) } returns 100
       every { premisesService.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
+      every { cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(PREMISES_ID) } returns emptyList()
     }
 
     @Test

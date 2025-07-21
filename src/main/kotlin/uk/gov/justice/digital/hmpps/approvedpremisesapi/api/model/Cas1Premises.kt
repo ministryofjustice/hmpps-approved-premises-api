@@ -55,4 +55,10 @@ data class Cas1Premises(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("managerDetails") val managerDetails: kotlin.String? = null,
+
+  @Schema(
+    example = "No hate based offences",
+    description = "A list of restrictions that apply specifically to this approved premises.",
+  )
+  val localRestrictions: List<String>? = emptyList(),
 )

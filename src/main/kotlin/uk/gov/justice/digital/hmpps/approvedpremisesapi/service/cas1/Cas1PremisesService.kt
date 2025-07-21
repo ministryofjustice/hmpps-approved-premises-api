@@ -69,6 +69,7 @@ class Cas1PremisesService(
     val bedCount = premisesService.getBedCount(premise)
     val outOfServiceBedsCount = outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
     val spaceBookingCount = spaceBookingRepository.countActiveSpaceBookings(premisesId).toInt()
+    val localRestrictions = cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(premisesId)
 
     val overbookingSummary = if (!featureFlagService.getBooleanFlag("cas1-disable-overbooking-summary")) {
       premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
@@ -83,6 +84,7 @@ class Cas1PremisesService(
         availableBeds = bedCount - outOfServiceBedsCount - spaceBookingCount,
         outOfServiceBeds = outOfServiceBedsCount,
         overbookingSummary = overbookingSummary,
+        localRestrictions = localRestrictions,
       ),
     )
   }
@@ -202,5 +204,6 @@ class Cas1PremisesService(
     val availableBeds: Int,
     val outOfServiceBeds: Int,
     val overbookingSummary: List<Cas1OverbookingRange>,
+    val localRestrictions: List<String> = emptyList(),
   )
 }
