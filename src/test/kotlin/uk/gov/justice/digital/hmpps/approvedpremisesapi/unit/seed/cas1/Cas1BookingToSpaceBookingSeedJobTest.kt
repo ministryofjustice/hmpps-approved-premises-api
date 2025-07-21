@@ -7,7 +7,6 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -27,7 +26,6 @@ class Cas1BookingToSpaceBookingSeedJobTest {
     approvedPremisesRepository = approvedPremisesRepository,
     spaceBookingRepository = mockk<Cas1SpaceBookingRepository>(),
     bookingRepository = mockk<BookingRepository>(),
-    bedMoveRepository = mockk<BedMoveRepository>(),
     domainEventRepository = mockk<DomainEventRepository>(),
     domainEventService = mockk<Cas1DomainEventService>(),
     userRepository = mockk<UserRepository>(),
