@@ -18,7 +18,7 @@ class Cas1BookingEmailService(
   private val emailNotifier: Cas1EmailNotifier,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.cas1.space-booking}") private val spaceBookingUrlTemplate: UrlTemplate,
 ) {
 
   fun spaceBookingMade(
@@ -163,7 +163,7 @@ class Cas1BookingEmailService(
       "apName" to values.premisesName,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
       "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
-      "bookingUrl" to bookingUrlTemplate.resolve(
+      "bookingUrl" to spaceBookingUrlTemplate.resolve(
         mapOf(
           "premisesId" to emailBookingInfo.premises.id.toString(),
           "bookingId" to emailBookingInfo.bookingId.toString(),

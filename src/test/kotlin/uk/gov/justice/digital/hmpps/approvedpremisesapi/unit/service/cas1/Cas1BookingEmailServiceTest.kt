@@ -58,7 +58,7 @@ class Cas1BookingEmailServiceTest {
     mockEmailNotificationService,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
-    bookingUrlTemplate = UrlTemplate("http://frontend/premises/#premisesId/bookings/#bookingId"),
+    spaceBookingUrlTemplate = UrlTemplate("http://frontend/manage/premises/#premisesId/placements/#bookingId"),
   )
 
   private val withdrawingUser = UserEntityFactory()
@@ -108,7 +108,7 @@ class Cas1BookingEmailServiceTest {
         mapOf(
           "apName" to PREMISES_NAME,
           "applicationUrl" to "http://frontend/applications/${application.id}",
-          "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
+          "bookingUrl" to "http://frontend/manage/premises/${premises.id}/placements/${booking.id}",
           "crn" to CRN,
           "startDate" to "2023-02-01",
           "endDate" to "2023-02-14",
@@ -146,7 +146,7 @@ class Cas1BookingEmailServiceTest {
       val personalisation = mapOf(
         "apName" to PREMISES_NAME,
         "applicationUrl" to "http://frontend/applications/${application.id}",
-        "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
+        "bookingUrl" to "http://frontend/manage/premises/${premises.id}/placements/${booking.id}",
         "crn" to CRN,
         "startDate" to "2023-02-01",
         "endDate" to "2023-02-14",
@@ -258,7 +258,7 @@ class Cas1BookingEmailServiceTest {
       val personalisation = mapOf(
         "apName" to PREMISES_NAME,
         "applicationUrl" to "http://frontend/applications/${application.id}",
-        "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
+        "bookingUrl" to "http://frontend/manage/premises/${premises.id}/placements/${booking.id}",
         "crn" to CRN,
         "startDate" to "2023-02-01",
         "endDate" to "2023-02-14",
