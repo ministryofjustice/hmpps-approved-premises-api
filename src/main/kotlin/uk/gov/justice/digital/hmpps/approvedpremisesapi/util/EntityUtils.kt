@@ -54,7 +54,7 @@ fun <EntityType> extractEntityFromCasResult(result: CasResult<EntityType>) = whe
   )
   is CasResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   is CasResult.Cas3FieldValidationError -> throw BadRequestProblem(
-    invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.key, errorDetail = it.value.value) },
+    invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value.message, errorDetail = it.value.value) },
   )
 }
 

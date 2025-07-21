@@ -1972,6 +1972,43 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `When archive a bedspace which have an active booking after the bedspace archive date returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+
+        val bookingDepartureDate = LocalDate.now().plusDays(10)
+        bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBed(bedspace)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(randomStringMultiCaseWithNumbers(8))
+          withStatus(BookingStatus.provisional)
+          withArrivalDate(LocalDate.now().minusDays(20))
+          withDepartureDate(bookingDepartureDate)
+        }
+
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingBookings")
+          .jsonPath("$.invalid-params[0].errorDetail").isEqualTo(bookingDepartureDate.plusDays(1).toString())
+      }
+    }
+
+    @Test
     fun `When archive a bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
