@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CaseNotesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -43,6 +44,7 @@ class PeopleController(
   private val userService: UserService,
   private val oasysService: OASysService,
   private val offenderDetailService: OffenderDetailService,
+  private val caseNotesService: CaseNotesService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -71,7 +73,7 @@ class PeopleController(
 
     val nomsNumber = offenderDetails.otherIds.nomsNumber
 
-    val prisonCaseNotesResult = offenderService.getFilteredPrisonCaseNotesByNomsNumber(
+    val prisonCaseNotesResult = caseNotesService.getFilteredPrisonCaseNotesByNomsNumber(
       nomsNumber,
       getCas1SpecificNoteTypes = xServiceName == ServiceName.approvedPremises,
     )
