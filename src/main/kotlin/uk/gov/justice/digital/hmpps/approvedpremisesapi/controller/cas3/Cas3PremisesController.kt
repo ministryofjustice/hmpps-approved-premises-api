@@ -329,6 +329,26 @@ class Cas3PremisesController(
     )
   }
 
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-archive")
+  fun cancelArchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = extractEntityFromCasResult(
+      cas3PremisesService.cancelArchiveBedspace(premises, bedspaceId),
+    )
+
+    return ResponseEntity.ok(
+      cas3BedspaceTransformer.transformJpaToApi(result),
+    )
+  }
+
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): BookingEntity {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
