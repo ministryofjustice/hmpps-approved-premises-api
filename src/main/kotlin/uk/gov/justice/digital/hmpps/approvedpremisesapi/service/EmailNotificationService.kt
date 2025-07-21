@@ -107,7 +107,15 @@ class EmailNotificationService(
     personalisation: Map<String, *>,
     replyToEmailId: String?,
     reference: String?,
-  ) = recipientEmailAddresses.forEach { sendEmail(it, templateId, personalisation, replyToEmailId) }
+  ) = recipientEmailAddresses.forEach {
+    sendEmail(
+      recipientEmailAddress = it,
+      templateId = templateId,
+      personalisation = personalisation,
+      replyToEmailId = replyToEmailId,
+      reference = reference,
+    )
+  }
 
   private fun logEmail(emailRequest: EmailRequest) {
     val templateId = emailRequest.templateId

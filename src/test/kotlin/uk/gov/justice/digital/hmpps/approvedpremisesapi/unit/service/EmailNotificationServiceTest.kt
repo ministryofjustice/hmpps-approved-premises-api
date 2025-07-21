@@ -349,6 +349,7 @@ class EmailNotificationServiceTest {
         recipientEmailAddresses = setOf("test1@here.com", "test2@here.com"),
         templateId = templateId,
         personalisation = personalisation,
+        reference = "the-reference-value",
       )
 
       verify(exactly = 1) {
@@ -356,7 +357,7 @@ class EmailNotificationServiceTest {
           "f3d78814-383f-4b5f-a681-9bd3ab912888",
           "test1@here.com",
           personalisation,
-          null,
+          "the-reference-value",
           null,
         )
       }
@@ -366,7 +367,7 @@ class EmailNotificationServiceTest {
           "f3d78814-383f-4b5f-a681-9bd3ab912888",
           "test2@here.com",
           personalisation,
-          null,
+          "the-reference-value",
           null,
         )
       }
