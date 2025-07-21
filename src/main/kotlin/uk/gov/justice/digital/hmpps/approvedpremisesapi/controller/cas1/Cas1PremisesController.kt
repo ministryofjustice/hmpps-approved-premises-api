@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -164,7 +165,9 @@ class Cas1PremisesController(
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(cas1PremisesService.getActiveBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi))
+    return ResponseEntity.ok(
+      cas1PremisesService.getActiveBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi),
+    )
   }
 
   @Operation(summary = "Gets a given bed for a given premises")
@@ -180,7 +183,15 @@ class Cas1PremisesController(
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(cas1BedDetailTransformer.transformToApi(extractEntityFromCasResult(cas1BedService.getBedAndRoomCharacteristics(bedId))))
+    return ResponseEntity.ok(
+      cas1BedDetailTransformer.transformToApi(
+        extractEntityFromCasResult(
+          cas1BedService.getBedAndRoomCharacteristics(
+            bedId,
+          ),
+        ),
+      ),
+    )
   }
 
   @Operation(summary = "Returns premises information")
@@ -348,6 +359,78 @@ class Cas1PremisesController(
     cas1PremisesService.addLocalRestriction(premisesId, user.id, payload.description)
     return ResponseEntity.noContent().build()
   }
+
+  @Operation(
+    summary = "Retrieve local restrictions for a premises",
+    description = "Retrieves all local restrictions associated with the specified premises. " +
+      "The requesting user must have the appropriate permission (CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE).",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "List of local restrictions retrieved successfully",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "User does not have the required permission (CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Premises not found",
+      ),
+    ],
+  )
+  @GetMapping("/premises/{premisesId}/local-restrictions")
+  fun getLocalRestrictions(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<List<PremisesLocalRestrictionSummary>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)
+
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val restrictionsSummary = cas1PremisesService.getLocalRestrictions(premises.id)
+      .map { restriction ->
+        PremisesLocalRestrictionSummary(
+          description = restriction.description,
+          createdAt = restriction.createdAt.toLocalDate(),
+        )
+      }
+
+    return ResponseEntity.ok(restrictionsSummary)
+  }
+
+  @Operation(
+    summary = "Delete a local restriction from a premises",
+    description = "Deletes the specified local restriction for the given premises. " +
+      "The requesting user must have the appropriate permission (CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE).",
+    responses = [
+      ApiResponse(
+        responseCode = "204",
+        description = "Local restriction deleted successfully",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "User does not have the required permission (CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Restriction or Premises not found",
+      ),
+    ],
+  )
+  @DeleteMapping("/premises/{premisesId}/local-restrictions/{restrictionId}")
+  fun deleteLocalRestriction(
+    @PathVariable premisesId: UUID,
+    @PathVariable restrictionId: UUID,
+  ): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)
+
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    cas1PremisesService.deleteLocalRestriction(premises.id, restrictionId)
+    return ResponseEntity.noContent().build()
+  }
 }
 
 data class Cas1NationalOccupancyParameters(
@@ -384,4 +467,11 @@ data class Cas1PremiseCapacitySummary(
 data class PremisesLocalRestriction(
   @Schema(description = "restriction to a premises")
   val description: String,
+)
+
+data class PremisesLocalRestrictionSummary(
+  @Schema(description = "restriction description")
+  val description: String,
+  @Schema(description = "restriction added date")
+  val createdAt: LocalDate,
 )

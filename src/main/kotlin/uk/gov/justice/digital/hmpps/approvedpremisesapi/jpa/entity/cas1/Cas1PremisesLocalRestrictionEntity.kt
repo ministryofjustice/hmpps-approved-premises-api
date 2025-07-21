@@ -11,6 +11,8 @@ import java.util.UUID
 @Repository
 interface Cas1PremisesLocalRestrictionRepository : JpaRepository<Cas1PremisesLocalRestrictionEntity, UUID> {
   fun findAllByApprovedPremisesId(approvedPremisesId: UUID): List<Cas1PremisesLocalRestrictionEntity>
+
+  fun findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(approvedPremisesId: UUID): List<Cas1PremisesLocalRestrictionEntity>
 }
 
 @Entity
@@ -22,5 +24,5 @@ data class Cas1PremisesLocalRestrictionEntity(
   val createdAt: OffsetDateTime,
   val createdByUserId: UUID,
   val approvedPremisesId: UUID,
-  val archived: Boolean = false,
+  var archived: Boolean = false,
 )

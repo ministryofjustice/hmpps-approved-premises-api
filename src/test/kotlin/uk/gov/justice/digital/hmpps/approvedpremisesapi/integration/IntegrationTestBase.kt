@@ -107,6 +107,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1PremisesLocalRestrictionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BookingEntityFactory
@@ -199,6 +200,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesEntity
@@ -661,6 +663,7 @@ abstract class IntegrationTestBase {
   lateinit var cas1ChangeRequestRejectionReasonEntityFactory: PersistedFactory<Cas1ChangeRequestRejectionReasonEntity, UUID, Cas1ChangeRequestRejectionReasonEntityFactory>
   lateinit var cas1ChangeRequestEntityFactory: PersistedFactory<Cas1ChangeRequestEntity, UUID, Cas1ChangeRequestEntityFactory>
 
+  lateinit var cas1PremisesLocalRestrictionEntityFactory: PersistedFactory<Cas1PremisesLocalRestrictionEntity, UUID, Cas1PremisesLocalRestrictionEntityFactory>
   private var clientCredentialsCallMocked = false
 
   @BeforeEach
@@ -776,6 +779,7 @@ abstract class IntegrationTestBase {
     cas1ChangeRequestReasonEntityFactory = PersistedFactory({ Cas1ChangeRequestReasonEntityFactory() }, cas1ChangeRequestReasonRepository)
     cas1ChangeRequestRejectionReasonEntityFactory = PersistedFactory({ Cas1ChangeRequestRejectionReasonEntityFactory() }, cas1ChangeRequestRejectionReasonRepository)
     cas1ChangeRequestEntityFactory = PersistedFactory({ Cas1ChangeRequestEntityFactory() }, cas1ChangeRequestRepository)
+    cas1PremisesLocalRestrictionEntityFactory = PersistedFactory({ Cas1PremisesLocalRestrictionEntityFactory() }, cas1PremisesLocalRestrictionRepository)
   }
 
   fun mockClientCredentialsJwtRequest(

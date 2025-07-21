@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.Clock
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -624,6 +625,78 @@ class Cas1PremisesServiceTest {
       assertEquals(description, savedEntity.description)
       assertEquals(userID, savedEntity.createdByUserId)
       assertEquals(PREMISES_ID, savedEntity.approvedPremisesId)
+    }
+
+    @Test
+    fun `getLocalRestrictions should return the correct list of restrictions in descending order by createdAt and and exclude archived ones`() {
+      val premisesId = UUID.randomUUID()
+      val restrictions = listOf(
+        Cas1PremisesLocalRestrictionEntity(
+          id = UUID.randomUUID(),
+          approvedPremisesId = premisesId,
+          description = "Restriction 1",
+          createdAt = OffsetDateTime.parse("2025-07-17T11:13:55.990520+01:00"), // Older
+          archived = false,
+          createdByUserId = UUID.randomUUID(),
+        ),
+        Cas1PremisesLocalRestrictionEntity(
+          id = UUID.randomUUID(),
+          approvedPremisesId = premisesId,
+          description = "Restriction 2",
+          createdAt = OffsetDateTime.parse("2025-07-18T11:13:55.990520+01:00"), // Newer
+          archived = false,
+          createdByUserId = UUID.randomUUID(),
+        ),
+        Cas1PremisesLocalRestrictionEntity(
+          id = UUID.randomUUID(),
+          approvedPremisesId = premisesId,
+          description = "Restriction 3",
+          createdAt = OffsetDateTime.now(),
+          archived = true,
+          createdByUserId = UUID.randomUUID(),
+        ),
+      )
+
+      every {
+        cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(premisesId)
+      } returns restrictions.filter { !it.archived }.sortedByDescending { it.createdAt }
+
+      val result = service.getLocalRestrictions(premisesId)
+
+      assertThat(result.size).isEqualTo(2)
+      assertThat(result.map { it.description }).containsExactly("Restriction 2", "Restriction 1")
+    }
+
+    @Test
+    fun `deleteLocalRestriction should set the archived property to true for the given restriction`() {
+      val premisesId = UUID.randomUUID()
+      val restrictionId = UUID.randomUUID()
+      val restriction = Cas1PremisesLocalRestrictionEntity(
+        id = restrictionId,
+        approvedPremisesId = premisesId,
+        description = "Active Restriction",
+        createdAt = OffsetDateTime.now(),
+        archived = false,
+        createdByUserId = UUID.randomUUID(),
+      )
+
+      every {
+        cas1PremisesLocalRestrictionRepository.findByIdOrNull(restrictionId)
+      } returns restriction
+
+      every {
+        cas1PremisesLocalRestrictionRepository.save(any())
+      } returnsArgument 0
+
+      service.deleteLocalRestriction(premisesId, restrictionId)
+
+      val updatedRestriction = slot<Cas1PremisesLocalRestrictionEntity>()
+      verify {
+        cas1PremisesLocalRestrictionRepository.save(capture(updatedRestriction))
+      }
+      with(updatedRestriction.captured) {
+        assertThat(archived).isTrue()
+      }
     }
   }
 }

@@ -179,6 +179,23 @@ class Cas1PremisesService(
     return CasResult.Success(Unit)
   }
 
+  fun getLocalRestrictions(premisesId: UUID) = cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(premisesId)
+
+  fun deleteLocalRestriction(premisesId: UUID, localRestrictionId: UUID): CasResult<Unit> {
+    val localRestriction = cas1PremisesLocalRestrictionRepository.findByIdOrNull(localRestrictionId)
+      ?: return CasResult.NotFound("localRestriction", localRestrictionId.toString())
+
+    if (localRestriction.approvedPremisesId != premisesId) {
+      return CasResult.GeneralValidationError("localRestriction does not belong to premises")
+    }
+
+    localRestriction.archived = true
+
+    cas1PremisesLocalRestrictionRepository.save(localRestriction)
+
+    return CasResult.Success(Unit)
+  }
+
   data class Cas1PremisesInfo(
     val entity: ApprovedPremisesEntity,
     val bedCount: Int,
