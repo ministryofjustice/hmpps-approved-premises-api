@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
@@ -1519,6 +1520,159 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         val result = objectMapper.readValue(resultBody, Cas2v2Application::class.java)
 
         Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+      }
+    }
+  }
+
+  @Nested
+  inner class PrisonBailVisibility {
+
+    val submittedPrisonBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
+    val unsubmittedPrisonBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
+
+    val submittedCourtBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
+    val unsubmittedCourtBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
+
+    var jwtForNorwichUser = ""
+
+    @BeforeEach
+    fun setUp() {
+      givenACas2v2Assessor { assessor, _ ->
+        givenACas2v2NomisUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { userBrixton, _ ->
+          givenACas2v2NomisUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("NWI") }) { userNorwich, jwt ->
+            givenAnOffender { offenderDetails, _ ->
+              jwtForNorwichUser = jwt
+              val users = listOf(userBrixton, userNorwich)
+              // submitted
+              // 3 at brixton, 3 at norwich
+              users.forEach { user ->
+                repeat(3) {
+                  submittedPrisonBailApplications.add(
+                    cas2v2ApplicationEntityFactory.produceAndPersist {
+                      withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                      withCreatedByUser(user)
+                      withCrn(offenderDetails.otherIds.crn)
+                      withApplicationOrigin(ApplicationOrigin.prisonBail)
+                      withData("{}")
+                      withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                      withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                    },
+                  )
+                }
+              }
+              // create an unsubmitted, and a submitted court bail for each user
+              users.forEach { user ->
+                unsubmittedPrisonBailApplications.add(
+                  cas2v2ApplicationEntityFactory.produceAndPersist {
+                    withCreatedAt(OffsetDateTime.now().minusDays(1))
+                    withCreatedByUser(user)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withApplicationOrigin(ApplicationOrigin.prisonBail)
+                    withData("{}")
+                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                  },
+                )
+                cas2v2ApplicationEntityFactory.produceAndPersist {
+                  withCreatedAt(OffsetDateTime.now().minusDays(1))
+                  withCreatedByUser(user)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withApplicationOrigin(ApplicationOrigin.courtBail)
+                  withData("{}")
+                  withSubmittedAt(OffsetDateTime.now().minusDays(1))
+                  withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                }
+              }
+
+              addStatusUpdates(submittedPrisonBailApplications.first().id, assessor)
+            }
+          }
+        }
+      }
+    }
+
+    @Nested
+    inner class AsPrisonBailReferrer {
+
+      @Test
+      fun `View a list of all submitted prisonBail applications`() {
+        val rawResponseBody = webTestClient.get()
+          .uri("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser=false")
+          .header("Authorization", "Bearer $jwtForNorwichUser")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody =
+          objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+
+        Assertions.assertThat(responseBody.size).isEqualTo(6)
+        Assertions.assertThat(
+          submittedPrisonBailApplications.map { it.id.toString() }.sorted(),
+        ).isEqualTo(
+          responseBody.map { it.id.toString() }.sorted(),
+        )
+      }
+
+      fun `View detail all submitted prisonBail applications`() {
+        submittedPrisonBailApplications.forEach { application ->
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2v2/application/${application.id}")
+            .header("Authorization", "Bearer $jwtForNorwichUser")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(
+            rawResponseBody,
+            Cas2v2Application::class.java,
+          )
+
+          Assertions.assertThat(responseBody).matches {
+            application.id == it.id &&
+              application.crn == it.person.crn &&
+              application.createdAt.toInstant() == it.createdAt &&
+              application.createdByUser.id == it.createdBy.id &&
+              application.submittedAt?.toInstant() == it.submittedAt &&
+              serializableToJsonNode(application.data) == serializableToJsonNode(it.data)
+          }
+        }
+      }
+
+      fun `Add a note to any application that is of origin prisonBail`() {
+        submittedPrisonBailApplications.forEach { application ->
+          val rawResponseBody = webTestClient.put()
+            .uri("/cas2v2/application/${application.id}")
+            .header("Authorization", "Bearer $jwtForNorwichUser")
+            .bodyValue(
+              UpdateCas2v2Application(
+                data = mapOf("thingId" to 123),
+                type = UpdateApplicationType.CAS2V2,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(
+            rawResponseBody,
+            Application::class.java,
+          )
+
+          Assertions.assertThat(responseBody).matches {
+            application.id == it.id &&
+              application.crn == it.person.crn &&
+              application.createdAt.toInstant() == it.createdAt
+          }
+        }
       }
     }
   }
