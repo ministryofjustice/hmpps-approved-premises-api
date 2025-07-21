@@ -104,7 +104,14 @@ data class PlacementApplicationEntity(
   var placementType: PlacementType?,
 
   /**
-   * It was previously possible to realloacte a PlacementRequest, which would create a copy
+   * If true, this Placement Application was created on assessment of
+   * a application and represents the request for placement
+   * implicit in that original application
+   */
+  val automatic: Boolean,
+
+  /**
+   * It was previously possible to re-allocate a PlacementRequest, which would create a copy
    * of the placement request with the new allocation. This would result in multiple
    * placement requests linked to a single placement application.
    *
