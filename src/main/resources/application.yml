@@ -183,6 +183,7 @@ services:
     base-url: http://localhost:9580
     # 2.5 MB
     max-response-in-memory-size-bytes: 2621440
+    timeout-ms: 4000
   nomis-user-roles-api:
     base-url: http://localhost:9575
     timeout-ms: 2000
