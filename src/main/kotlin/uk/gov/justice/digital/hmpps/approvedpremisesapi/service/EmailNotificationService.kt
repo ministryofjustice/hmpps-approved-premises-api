@@ -113,6 +113,7 @@ class EmailNotificationService(
       templateId = templateId,
       personalisation = personalisation,
       replyToEmailId = replyToEmailId,
+      reference = reference,
     )
   }
 
