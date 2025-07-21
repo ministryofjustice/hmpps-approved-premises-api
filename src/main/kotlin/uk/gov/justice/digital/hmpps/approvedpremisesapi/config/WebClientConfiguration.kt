@@ -142,6 +142,7 @@ class WebClientConfiguration(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
     @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
+    @Value("\${services.prisoner-alerts-api.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -156,8 +157,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(tierApiUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(tierApiUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .exchangeStrategies(
@@ -167,6 +168,7 @@ class WebClientConfiguration(
         )
         .filter(oauth2Client)
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 
