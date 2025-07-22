@@ -22,8 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -60,7 +60,7 @@ class Cas1ApplicationCreationService(
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
-  private val placementApplicationAutomaticRepository: PlacementApplicationAutomaticRepository,
+  private val placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
   private val lockableApplicationRepository: LockableApplicationRepository,
@@ -282,8 +282,8 @@ class Cas1ApplicationCreationService(
     cas1ApplicationEmailService.applicationSubmitted(application)
 
     if (application.arrivalDate != null) {
-      placementApplicationAutomaticRepository.save(
-        PlacementApplicationAutomaticEntity(
+      placementApplicationPlaceholderRepository.save(
+        PlacementApplicationPlaceholderEntity(
           id = UUID.randomUUID(),
           application = application,
           submittedAt = application.submittedAt!!,

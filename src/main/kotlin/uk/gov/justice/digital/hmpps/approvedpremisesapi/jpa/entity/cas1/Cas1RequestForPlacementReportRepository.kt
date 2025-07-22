@@ -13,7 +13,7 @@ class Cas1RequestForPlacementReportRepository(
   /**
    Because of the bifurcated placement request model, this query is a union from two sources:
 
-   1. placement_applications_automatic
+   1. placement_applications_placeholder
 
    Represents requests for placements implicit in the original application (where dates are defined)
 
@@ -53,7 +53,7 @@ class Cas1RequestForPlacementReportRepository(
     END AS request_for_placement_withdrawal_reason,
     raw_applications_report.*
     
-  FROM placement_applications_automatic paa
+  FROM placement_applications_placeholder paa
   
     INNER JOIN approved_premises_applications apa ON apa.id = paa.application_id 
     INNER JOIN raw_applications_report ON raw_applications_report.application_id = paa.application_id

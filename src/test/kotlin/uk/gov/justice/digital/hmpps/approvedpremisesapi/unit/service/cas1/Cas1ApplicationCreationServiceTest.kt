@@ -45,8 +45,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -86,7 +86,7 @@ class Cas1ApplicationCreationServiceTest {
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
-  private val mockPlacementApplicationAutomaticRepository = mockk<PlacementApplicationAutomaticRepository>()
+  private val mockPlacementApplicationPlaceholderRepository = mockk<PlacementApplicationPlaceholderRepository>()
   private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
@@ -105,7 +105,7 @@ class Cas1ApplicationCreationServiceTest {
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
-    mockPlacementApplicationAutomaticRepository,
+    mockPlacementApplicationPlaceholderRepository,
     mockCas1ApplicationStatusService,
     Clock.systemDefaultZone(),
     mockLockableApplicationRepository,
@@ -705,7 +705,7 @@ class Cas1ApplicationCreationServiceTest {
       }
 
       verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
-      verify(exactly = 0) { mockPlacementApplicationAutomaticRepository.save(any()) }
+      verify(exactly = 0) { mockPlacementApplicationPlaceholderRepository.save(any()) }
     }
 
     @ParameterizedTest
@@ -787,7 +787,7 @@ class Cas1ApplicationCreationServiceTest {
       }
 
       verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
-      verify(exactly = 1) { mockPlacementApplicationAutomaticRepository.save(any()) }
+      verify(exactly = 1) { mockPlacementApplicationPlaceholderRepository.save(any()) }
     }
 
     @ParameterizedTest
@@ -1023,8 +1023,8 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockCas1ApplicationEmailService.applicationSubmitted(any()) } just Runs
       every {
-        mockPlacementApplicationAutomaticRepository.save(any())
-      } answers { it.invocation.args[0] as PlacementApplicationAutomaticEntity }
+        mockPlacementApplicationPlaceholderRepository.save(any())
+      } answers { it.invocation.args[0] as PlacementApplicationPlaceholderEntity }
     }
   }
 

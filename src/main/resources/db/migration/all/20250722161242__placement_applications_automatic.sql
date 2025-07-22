@@ -1,0 +1,1 @@
+ALTER TABLE placement_applications_automatic RENAME TO placement_applications_placeholder;
