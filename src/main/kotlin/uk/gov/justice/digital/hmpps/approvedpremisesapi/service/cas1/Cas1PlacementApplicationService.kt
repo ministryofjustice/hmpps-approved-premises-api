@@ -84,6 +84,7 @@ class Cas1PlacementApplicationService(
         decision = null,
         decisionMadeAt = null,
         placementType = null,
+        automatic = false,
         placementRequests = mutableListOf(),
         withdrawalReason = null,
         dueAt = null,

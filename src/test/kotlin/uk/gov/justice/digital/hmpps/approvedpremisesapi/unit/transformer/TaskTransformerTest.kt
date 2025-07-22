@@ -318,7 +318,11 @@ class TaskTransformerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = JpaPlacementType::class)
+    @EnumSource(
+      value = JpaPlacementType::class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = [ "AUTOMATIC" ],
+    )
     fun `Placement types are transformed correctly`(placementType: JpaPlacementType) {
       val placementApplication = placementApplicationFactory
         .withPlacementType(placementType)

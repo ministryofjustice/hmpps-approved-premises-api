@@ -50,6 +50,7 @@ class Cas1PlacementApplicationDomainEventService(
       PlacementType.ROTL -> RequestForPlacementType.rotl
       PlacementType.RELEASE_FOLLOWING_DECISION -> RequestForPlacementType.releaseFollowingDecisions
       PlacementType.ADDITIONAL_PLACEMENT -> RequestForPlacementType.additionalPlacement
+      PlacementType.AUTOMATIC -> error("Automatic applications are not submitted")
     }
 
     val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(username)) {

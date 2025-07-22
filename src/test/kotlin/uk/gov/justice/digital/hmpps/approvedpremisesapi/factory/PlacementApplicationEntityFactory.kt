@@ -27,6 +27,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
+  private var automatic = { false }
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
   private var submissionGroupId: Yielded<UUID> = { UUID.randomUUID() }
@@ -87,6 +88,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.placementType = { placementType }
   }
 
+  fun withAutomatic(automatic: Boolean) = apply {
+    this.automatic = { automatic }
+  }
+
   fun withWithdrawalReason(withdrawalReason: PlacementApplicationWithdrawalReason) = apply {
     this.withdrawalReason = { withdrawalReason }
   }
@@ -121,6 +126,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     decision = this.decision(),
     decisionMadeAt = this.decisionMadeAt(),
     placementType = this.placementType(),
+    automatic = this.automatic(),
     placementRequests = mutableListOf(),
     withdrawalReason = this.withdrawalReason(),
     dueAt = this.dueAt(),

@@ -104,7 +104,18 @@ data class PlacementApplicationEntity(
   var placementType: PlacementType?,
 
   /**
-   * It was previously possible to realloacte a PlacementRequest, which would create a copy
+   * If true, this Placement Application was created on assessment of
+   * an application that included a placement date, and represents the
+   * request for placement implicit in that original application
+   *
+   * Automatic applications do not go through the regular placement
+   * applications review process (they're approved on creation),
+   * or appear as completed tasks
+   */
+  val automatic: Boolean,
+
+  /**
+   * It was previously possible to re-allocate a PlacementRequest, which would create a copy
    * of the placement request with the new allocation. This would result in multiple
    * placement requests linked to a single placement application.
    *
@@ -178,6 +189,7 @@ enum class PlacementType {
   ROTL,
   RELEASE_FOLLOWING_DECISION,
   ADDITIONAL_PLACEMENT,
+  AUTOMATIC,
 }
 
 enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {
