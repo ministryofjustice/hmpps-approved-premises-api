@@ -219,7 +219,7 @@ class Cas1AssessmentService(
     reasonForLateApplication: String? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
     val acceptedAt = OffsetDateTime.now(clock)
-    val createPlacementRequest = placementDates != null
+    val includesRequestForPlacement = placementDates != null
 
     val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
       is CasResult.Success -> validation.value
@@ -255,7 +255,7 @@ class Cas1AssessmentService(
      */
     val placementRequirementsResult = cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
 
-    if (createPlacementRequest) {
+    if (includesRequestForPlacement) {
       placementRequestService.createPlacementRequest(
         PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
         placementRequirementsResult,
@@ -281,7 +281,7 @@ class Cas1AssessmentService(
     )
     cas1AssessmentEmailService.assessmentAccepted(application)
 
-    if (createPlacementRequest) {
+    if (includesRequestForPlacement) {
       cas1PlacementRequestEmailService.placementRequestSubmitted(application)
     }
 
