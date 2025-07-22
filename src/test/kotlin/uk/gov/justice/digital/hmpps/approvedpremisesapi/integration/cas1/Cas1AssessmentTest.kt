@@ -686,860 +686,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
       }
     }
 
-    @Nested
-    inner class GetAssessment {
-
-      @Test
-      fun `Get assessment by ID without JWT returns 401`() {
-        webTestClient.get()
-          .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9")
-          .exchange()
-          .expectStatus()
-          .isUnauthorized
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = UserRole::class)
-      fun `Get assessment by ID returns 200 with correct body for all roles`(role: UserRole) {
-        givenAUser(roles = listOf(role)) { _, jwt ->
-          givenAUser { userEntity, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
-
-              val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(userEntity)
-              }
-
-              val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-                withAllocatedToUser(userEntity)
-                withApplication(application)
-              }
-
-              webTestClient.get()
-                .uri("/cas1/assessments/${assessment.id}")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    cas1AssessmentTransformer.transformJpaToCas1Assessment(
-                      assessment,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                    ),
-                  ),
-                )
-            }
-          }
-        }
-      }
-
-      @Test
-      fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
-        givenAUser { userEntity, jwt ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentExclusion(true)
-            },
-          ) { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            webTestClient.get()
-              .uri("/cas1/assessments/${assessment.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-      }
-
-      @Test
-      fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
-        givenAUser { userEntity, jwt ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentExclusion(true)
-            },
-          ) { offenderDetails, inmateDetails ->
-
-            apDeliusContextMockUserAccess(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .withUserExcluded(false)
-                .withUserRestricted(false)
-                .produce(),
-              userEntity.deliusUsername,
-            )
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            webTestClient.get()
-              .uri("/cas1/assessments/${assessment.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  cas1AssessmentTransformer.transformJpaToCas1Assessment(
-                    assessment,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-
-      @Test
-      fun `Get assessment by ID returns 200 when Offender is LAO and user does have LAO qualification but does not pass the LAO check`() {
-        givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentRestriction(true)
-            },
-          ) { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            webTestClient.get()
-              .uri("/cas1/assessments/${assessment.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  cas1AssessmentTransformer.transformJpaToCas1Assessment(
-                    assessment,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Nested
-    inner class UpdateAssessment {
-      @Test
-      fun `Update does not let withdrawn assessments be updated`() {
-        givenAUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-              withIsWithdrawn(true)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-              withIsWithdrawn(true)
-            }
-
-            webTestClient.put()
-              .uri("/cas1/assessments/${assessment.id}")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                UpdateAssessment(
-                  data = mapOf("some text" to 5),
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isBadRequest
-          }
-        }
-      }
-
-      @Test
-      fun `Update assessment with an outstanding clarification note does not change the application status`() {
-        givenAUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-              withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-              withDecision(null)
-            }
-
-            assessmentClarificationNoteEntityFactory.produceAndPersist {
-              withAssessment(assessment)
-              withResponse(null)
-              withResponseReceivedOn(null)
-              withCreatedBy(userEntity)
-            }.apply {
-              assessment.clarificationNotes = mutableListOf(this)
-            }
-
-            webTestClient.put()
-              .uri("/cas1/assessments/${assessment.id}")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                UpdateAssessment(
-                  data = mapOf("some text" to 5),
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-            assertThat((persistedAssessment.data).toString()).isEqualTo("{\"some text\":5}")
-          }
-        }
-      }
-    }
-
-    @Nested
-    inner class ClarificationNoteToAssessment {
-
-      @Test
-      fun `Create clarification note returns 200 with correct body and creates and emits a domain event`() {
-        givenAUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withNomsNumber(offenderDetails.otherIds.nomsNumber)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            webTestClient.post()
-              .uri("/cas1/assessments/${assessment.id}/notes")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                NewClarificationNote(
-                  query = "some text",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonPath("$.query").isEqualTo("some text")
-
-            val emittedMessage =
-              domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
-
-            assertThat(emittedMessage.description).isEqualTo(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeDescription)
-            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
-            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
-            )
-
-            domainEventAsserter.assertDomainEventOfTypeStored(
-              application.id,
-              DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-            )
-          }
-        }
-      }
-
-      @Test
-      fun `Update clarification note returns 201 with correct body`() {
-        givenAUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
-              withAssessment(assessment)
-              withCreatedBy(userEntity)
-            }
-
-            webTestClient.put()
-              .uri("/cas1/assessments/${assessment.id}/notes/${clarificationNote.id}")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                UpdatedClarificationNote(
-                  response = "some text",
-                  responseReceivedOn = LocalDate.parse("2022-03-04"),
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonPath("$.response").isEqualTo("some text")
-              .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
-          }
-        }
-      }
-    }
-
-    @Nested
-    inner class AcceptAssessment {
-
-      @Test
-      fun `Accept assessment without JWT returns 401`() {
-        val placementDates = PlacementDates(
-          expectedArrival = LocalDate.now(),
-          duration = 12,
-        )
-
-        val placementRequirements = PlacementRequirements(
-          type = ApType.normal,
-          location = "B74",
-          radius = 50,
-          essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
-          desirableCriteria = listOf(PlacementCriteria.isCatered, PlacementCriteria.acceptsSexOffenders),
-        )
-
-        webTestClient.post()
-          .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/acceptance")
-          .bodyValue(
-            Cas1AssessmentAcceptance(
-              document = "{}",
-              requirements = placementRequirements,
-              placementDates = placementDates,
-              notes = "Some Notes",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isUnauthorized
-      }
-
-      @Test
-      fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, emits domain event and emails`() {
-        givenAUser(
-          staffDetail = StaffDetailFactory.staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          ),
-        ) { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
-
-            val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
-            val desirableCriteria =
-              listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
-
-            val placementDates = PlacementDates(
-              expectedArrival = LocalDate.now(),
-              duration = 12,
-            )
-
-            val placementRequirements = PlacementRequirements(
-              type = ApType.normal,
-              location = postcodeDistrict.outcode,
-              radius = 50,
-              essentialCriteria = essentialCriteria,
-              desirableCriteria = desirableCriteria,
-            )
-
-            webTestClient.post()
-              .uri("/cas1/assessments/${assessment.id}/acceptance")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                Cas1AssessmentAcceptance(
-                  document = mapOf("document" to "value"),
-                  requirements = placementRequirements,
-                  placementDates = placementDates,
-                  notes = "Some Notes",
-                  agreeWithShortNoticeReason = true,
-                  agreeWithShortNoticeReasonComments = "comments",
-                  reasonForLateApplication = "medical condition",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-            assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-            assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
-            assertThat(persistedAssessment.submittedAt).isNotNull
-            assertThat(persistedAssessment.agreeWithShortNoticeReason).isTrue
-            assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("comments")
-            assertThat(persistedAssessment.reasonForLateApplication).isEqualTo("medical condition")
-
-            val emittedMessage =
-              domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
-
-            assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
-            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
-            )
-
-            domainEventAsserter.assertDomainEventOfTypeStored(
-              application.id,
-              DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-            )
-
-            domainEventAsserter.assertDomainEventOfTypeStored(
-              application.id,
-              DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-            )
-
-            val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
-
-            assertThat(persistedPlacementRequest.allocatedToUser).isNull()
-            assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
-            assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
-            assertThat(persistedPlacementRequest.duration).isEqualTo(placementDates.duration)
-            assertThat(persistedPlacementRequest.notes).isEqualTo("Some Notes")
-
-            val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
-
-            assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-            assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
-            assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
-
-            assertThat(persistedPlacementRequirements.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
-              placementRequirements.desirableCriteria.map { it.toString() },
-            )
-            assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
-              placementRequirements.essentialCriteria.map { it.toString() },
-            )
-
-            emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ACCEPTED)
-            emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_SUBMITTED)
-          }
-        }
-      }
-
-      @Test
-      fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements, emits domain event and emails`() {
-        givenAUser(
-          staffDetail = StaffDetailFactory.staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          ),
-        ) { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
-
-            val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
-            val desirableCriteria =
-              listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
-
-            val placementRequirements = PlacementRequirements(
-              type = ApType.normal,
-              location = postcodeDistrict.outcode,
-              radius = 50,
-              essentialCriteria = essentialCriteria,
-              desirableCriteria = desirableCriteria,
-            )
-
-            webTestClient.post()
-              .uri("/cas1/assessments/${assessment.id}/acceptance")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                Cas1AssessmentAcceptance(
-                  document = mapOf("document" to "value"),
-                  requirements = placementRequirements,
-                  notes = "Some Notes",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-            assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-            assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
-            assertThat(persistedAssessment.submittedAt).isNotNull
-
-            val emittedMessage =
-              domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
-
-            assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
-            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
-            )
-
-            domainEventAsserter.assertDomainEventOfTypeStored(
-              application.id,
-              DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-            )
-
-            assertThat(placementRequestTestRepository.findByApplication(application)).isNull()
-
-            val persistedPlacementRequirements =
-              placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)!!
-
-            assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-            assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
-            assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
-
-            assertThat(persistedPlacementRequirements.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
-              placementRequirements.desirableCriteria.map { it.toString() },
-            )
-            assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
-              placementRequirements.essentialCriteria.map { it.toString() },
-            )
-
-            emailAsserter.assertEmailsRequestedCount(1)
-            emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ACCEPTED)
-          }
-        }
-      }
-
-      @Test
-      fun `Accept assessment returns an error if the postcode cannot be found`() {
-        givenAUser(
-          staffDetail = StaffDetailFactory.staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          ),
-        ) { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-            val desirableCriteria =
-              listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
-
-            val placementDates = PlacementDates(
-              expectedArrival = LocalDate.now(),
-              duration = 12,
-            )
-
-            val placementRequirements = PlacementRequirements(
-              type = ApType.normal,
-              location = "SW1",
-              radius = 50,
-              essentialCriteria = essentialCriteria,
-              desirableCriteria = desirableCriteria,
-            )
-
-            webTestClient.post()
-              .uri("/cas1/assessments/${assessment.id}/acceptance")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                Cas1AssessmentAcceptance(
-                  document = mapOf("document" to "value"),
-                  requirements = placementRequirements,
-                  placementDates = placementDates,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .is4xxClientError
-              .expectBody()
-              .jsonPath("title").isEqualTo("Bad Request")
-              .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
-              .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.postcodeDistrict")
-          }
-        }
-      }
-
-      @Test
-      fun `Accept assessment with an outstanding clarification note sets the application status correctly`() {
-        givenAUser(
-          staffDetail = StaffDetailFactory.staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          ),
-        ) { userEntity, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-              withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-              withDecision(null)
-            }
-
-            assessmentClarificationNoteEntityFactory.produceAndPersist {
-              withAssessment(assessment)
-              withResponse(null)
-              withResponseReceivedOn(null)
-              withCreatedBy(userEntity)
-            }.apply {
-              assessment.clarificationNotes = mutableListOf(this)
-            }
-
-            var persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-            assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
-              .isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
-
-            val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
-
-            val essentialCriteria = listOf(
-              PlacementCriteria.hasEnSuite,
-              PlacementCriteria.isRecoveryFocussed,
-            )
-            val desirableCriteria = listOf(
-              PlacementCriteria.acceptsNonSexualChildOffenders,
-              PlacementCriteria.acceptsSexOffenders,
-            )
-
-            val placementDates = PlacementDates(
-              expectedArrival = LocalDate.now(),
-              duration = 12,
-            )
-
-            val placementRequirements = PlacementRequirements(
-              type = ApType.normal,
-              location = postcodeDistrict.outcode,
-              radius = 50,
-              essentialCriteria = essentialCriteria,
-              desirableCriteria = desirableCriteria,
-            )
-
-            webTestClient.post()
-              .uri("/cas1/assessments/${assessment.id}/acceptance")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                Cas1AssessmentAcceptance(
-                  document = mapOf("document" to "value"),
-                  requirements = placementRequirements,
-                  placementDates = placementDates,
-                  notes = "Some Notes",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-            assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
-              .isEqualTo(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
-          }
-        }
-      }
-    }
-
-    @Nested
-    inner class RejectAssessment {
-      @Test
-      fun `Reject assessment without JWT returns 401`() {
-        webTestClient.post()
-          .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/rejection")
-          .bodyValue(AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
-          .exchange()
-          .expectStatus()
-          .isUnauthorized
-      }
-
-      @Test
-      fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
-        givenAUser(
-          staffDetail = StaffDetailFactory.staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          ),
-        ) { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-            }
-
-            webTestClient.post()
-              .uri("/cas1/assessments/${assessment.id}/rejection")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                Cas1AssessmentRejection(
-                  agreeWithShortNoticeReason = false,
-                  agreeWithShortNoticeReasonComments = "rejection comments",
-                  reasonForLateApplication = "medical condition",
-                  document = mapOf("document" to "value"),
-                  rejectionRationale = "reasoning",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-            assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-            assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
-            assertThat(persistedAssessment.submittedAt).isNotNull
-            assertThat(persistedAssessment.agreeWithShortNoticeReason).isFalse
-            assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("rejection comments")
-            assertThat(persistedAssessment.reasonForLateApplication).isEqualTo("medical condition")
-
-            val emittedMessage =
-              snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
-
-            assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
-            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
-            )
-
-            emailAsserter.assertEmailsRequestedCount(1)
-            emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_REJECTED)
-          }
-        }
-      }
-
-      @Test
-      fun `Reject assessment with an outstanding clarification note sets the application status correctly`() {
-        givenAUser(
-          staffDetail = StaffDetailFactory.staffDetail(
-            probationArea = ProbationArea(
-              code = "N21",
-              description = randomStringMultiCaseWithNumbers(10),
-            ),
-          ),
-        ) { userEntity, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(userEntity)
-              withApplication(application)
-              withDecision(null)
-            }
-
-            assessmentClarificationNoteEntityFactory.produceAndPersist {
-              withAssessment(assessment)
-              withResponse(null)
-              withResponseReceivedOn(null)
-              withCreatedBy(userEntity)
-            }.apply {
-              assessment.clarificationNotes = mutableListOf(this)
-            }
-
-            val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
-
-            webTestClient.post()
-              .uri("/cas1/assessments/${assessment.id}/rejection")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                Cas1AssessmentRejection(
-                  document = mapOf("document" to "value"),
-                  rejectionRationale = "reasoning",
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-            assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
-              .isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
-          }
-        }
-      }
-    }
-
     fun assessmentSummaryMapper(
       offenderDetails: CaseSummary,
       inmateDetails: InmateDetail?,
@@ -1625,6 +771,860 @@ class Cas1AssessmentTest : IntegrationTestBase() {
       assertThat(responseBody?.detail).isEqualTo(errorDetail)
 
       return response
+    }
+  }
+
+  @Nested
+  inner class GetAssessment {
+
+    @Test
+    fun `Get assessment by ID without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class)
+    fun `Get assessment by ID returns 200 with correct body for all roles`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        givenAUser { userEntity, _ ->
+          givenAnOffender { offenderDetails, inmateDetails ->
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+            }
+
+            webTestClient.get()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  cas1AssessmentTransformer.transformJpaToCas1Assessment(
+                    assessment,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(true)
+          },
+        ) { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.get()
+            .uri("/cas1/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @Test
+    fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(true)
+          },
+        ) { offenderDetails, inmateDetails ->
+
+          apDeliusContextMockUserAccess(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .withUserExcluded(false)
+              .withUserRestricted(false)
+              .produce(),
+            userEntity.deliusUsername,
+          )
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.get()
+            .uri("/cas1/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                cas1AssessmentTransformer.transformJpaToCas1Assessment(
+                  assessment,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `Get assessment by ID returns 200 when Offender is LAO and user does have LAO qualification but does not pass the LAO check`() {
+      givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        ) { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.get()
+            .uri("/cas1/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                cas1AssessmentTransformer.transformJpaToCas1Assessment(
+                  assessment,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
+              ),
+            )
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdateAssessment {
+    @Test
+    fun `Update does not let withdrawn assessments be updated`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withIsWithdrawn(true)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+            withIsWithdrawn(true)
+          }
+
+          webTestClient.put()
+            .uri("/cas1/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              UpdateAssessment(
+                data = mapOf("some text" to 5),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+        }
+      }
+    }
+
+    @Test
+    fun `Update assessment with an outstanding clarification note does not change the application status`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+            withDecision(null)
+          }
+
+          assessmentClarificationNoteEntityFactory.produceAndPersist {
+            withAssessment(assessment)
+            withResponse(null)
+            withResponseReceivedOn(null)
+            withCreatedBy(userEntity)
+          }.apply {
+            assessment.clarificationNotes = mutableListOf(this)
+          }
+
+          webTestClient.put()
+            .uri("/cas1/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              UpdateAssessment(
+                data = mapOf("some text" to 5),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat((persistedAssessment.data).toString()).isEqualTo("{\"some text\":5}")
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class ClarificationNoteToAssessment {
+
+    @Test
+    fun `Create clarification note returns 200 with correct body and creates and emits a domain event`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withNomsNumber(offenderDetails.otherIds.nomsNumber)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/notes")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewClarificationNote(
+                query = "some text",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.query").isEqualTo("some text")
+
+          val emittedMessage =
+            domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+
+          assertThat(emittedMessage.description).isEqualTo(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeDescription)
+          assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+          assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+          )
+
+          domainEventAsserter.assertDomainEventOfTypeStored(
+            application.id,
+            DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Update clarification note returns 201 with correct body`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
+            withAssessment(assessment)
+            withCreatedBy(userEntity)
+          }
+
+          webTestClient.put()
+            .uri("/cas1/assessments/${assessment.id}/notes/${clarificationNote.id}")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              UpdatedClarificationNote(
+                response = "some text",
+                responseReceivedOn = LocalDate.parse("2022-03-04"),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.response").isEqualTo("some text")
+            .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class AcceptAssessment {
+
+    @Test
+    fun `Accept assessment without JWT returns 401`() {
+      val placementDates = PlacementDates(
+        expectedArrival = LocalDate.now(),
+        duration = 12,
+      )
+
+      val placementRequirements = PlacementRequirements(
+        type = ApType.normal,
+        location = "B74",
+        radius = 50,
+        essentialCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.hasEnSuite),
+        desirableCriteria = listOf(PlacementCriteria.isCatered, PlacementCriteria.acceptsSexOffenders),
+      )
+
+      webTestClient.post()
+        .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/acceptance")
+        .bodyValue(
+          Cas1AssessmentAcceptance(
+            document = "{}",
+            requirements = placementRequirements,
+            placementDates = placementDates,
+            notes = "Some Notes",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, emits domain event and emails`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+          val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
+          val desirableCriteria =
+            listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
+
+          val placementDates = PlacementDates(
+            expectedArrival = LocalDate.now(),
+            duration = 12,
+          )
+
+          val placementRequirements = PlacementRequirements(
+            type = ApType.normal,
+            location = postcodeDistrict.outcode,
+            radius = 50,
+            essentialCriteria = essentialCriteria,
+            desirableCriteria = desirableCriteria,
+          )
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/acceptance")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentAcceptance(
+                document = mapOf("document" to "value"),
+                requirements = placementRequirements,
+                placementDates = placementDates,
+                notes = "Some Notes",
+                agreeWithShortNoticeReason = true,
+                agreeWithShortNoticeReasonComments = "comments",
+                reasonForLateApplication = "medical condition",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.submittedAt).isNotNull
+          assertThat(persistedAssessment.agreeWithShortNoticeReason).isTrue
+          assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("comments")
+          assertThat(persistedAssessment.reasonForLateApplication).isEqualTo("medical condition")
+
+          val emittedMessage =
+            domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+
+          assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+          assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+          assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+          assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+          )
+
+          domainEventAsserter.assertDomainEventOfTypeStored(
+            application.id,
+            DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+          )
+
+          domainEventAsserter.assertDomainEventOfTypeStored(
+            application.id,
+            DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
+          )
+
+          val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
+
+          assertThat(persistedPlacementRequest.allocatedToUser).isNull()
+          assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
+          assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
+          assertThat(persistedPlacementRequest.duration).isEqualTo(placementDates.duration)
+          assertThat(persistedPlacementRequest.notes).isEqualTo("Some Notes")
+
+          val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
+
+          assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
+          assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
+          assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
+
+          assertThat(persistedPlacementRequirements.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
+            placementRequirements.desirableCriteria.map { it.toString() },
+          )
+          assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
+            placementRequirements.essentialCriteria.map { it.toString() },
+          )
+
+          emailAsserter.assertEmailsRequestedCount(2)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ACCEPTED)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_SUBMITTED)
+        }
+      }
+    }
+
+    @Test
+    fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements, emits domain event and emails`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+          val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
+          val desirableCriteria =
+            listOf(PlacementCriteria.acceptsNonSexualChildOffenders, PlacementCriteria.acceptsSexOffenders)
+
+          val placementRequirements = PlacementRequirements(
+            type = ApType.normal,
+            location = postcodeDistrict.outcode,
+            radius = 50,
+            essentialCriteria = essentialCriteria,
+            desirableCriteria = desirableCriteria,
+          )
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/acceptance")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentAcceptance(
+                document = mapOf("document" to "value"),
+                requirements = placementRequirements,
+                notes = "Some Notes",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.submittedAt).isNotNull
+
+          val emittedMessage =
+            domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+
+          assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+          assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+          assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+          assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+          )
+
+          domainEventAsserter.assertDomainEventOfTypeStored(
+            application.id,
+            DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+          )
+
+          assertThat(placementRequestTestRepository.findByApplication(application)).isNull()
+
+          val persistedPlacementRequirements =
+            placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)!!
+
+          assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
+          assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
+          assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
+
+          assertThat(persistedPlacementRequirements.desirableCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
+            placementRequirements.desirableCriteria.map { it.toString() },
+          )
+          assertThat(persistedPlacementRequirements.essentialCriteria.map { it.propertyName }).containsExactlyInAnyOrderElementsOf(
+            placementRequirements.essentialCriteria.map { it.toString() },
+          )
+
+          emailAsserter.assertEmailsRequestedCount(1)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ACCEPTED)
+        }
+      }
+    }
+
+    @Test
+    fun `Accept assessment returns an error if the postcode cannot be found`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
+          val desirableCriteria =
+            listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+
+          val placementDates = PlacementDates(
+            expectedArrival = LocalDate.now(),
+            duration = 12,
+          )
+
+          val placementRequirements = PlacementRequirements(
+            type = ApType.normal,
+            location = "SW1",
+            radius = 50,
+            essentialCriteria = essentialCriteria,
+            desirableCriteria = desirableCriteria,
+          )
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/acceptance")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentAcceptance(
+                document = mapOf("document" to "value"),
+                requirements = placementRequirements,
+                placementDates = placementDates,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is4xxClientError
+            .expectBody()
+            .jsonPath("title").isEqualTo("Bad Request")
+            .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+            .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.postcodeDistrict")
+        }
+      }
+    }
+
+    @Test
+    fun `Accept assessment with an outstanding clarification note sets the application status correctly`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+            withDecision(null)
+          }
+
+          assessmentClarificationNoteEntityFactory.produceAndPersist {
+            withAssessment(assessment)
+            withResponse(null)
+            withResponseReceivedOn(null)
+            withCreatedBy(userEntity)
+          }.apply {
+            assessment.clarificationNotes = mutableListOf(this)
+          }
+
+          var persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+
+          val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+          val essentialCriteria = listOf(
+            PlacementCriteria.hasEnSuite,
+            PlacementCriteria.isRecoveryFocussed,
+          )
+          val desirableCriteria = listOf(
+            PlacementCriteria.acceptsNonSexualChildOffenders,
+            PlacementCriteria.acceptsSexOffenders,
+          )
+
+          val placementDates = PlacementDates(
+            expectedArrival = LocalDate.now(),
+            duration = 12,
+          )
+
+          val placementRequirements = PlacementRequirements(
+            type = ApType.normal,
+            location = postcodeDistrict.outcode,
+            radius = 50,
+            essentialCriteria = essentialCriteria,
+            desirableCriteria = desirableCriteria,
+          )
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/acceptance")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentAcceptance(
+                document = mapOf("document" to "value"),
+                requirements = placementRequirements,
+                placementDates = placementDates,
+                notes = "Some Notes",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class RejectAssessment {
+    @Test
+    fun `Reject assessment without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/rejection")
+        .bodyValue(AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Reject assessment returns 200, persists decision, emits SNS domain event message`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/rejection")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentRejection(
+                agreeWithShortNoticeReason = false,
+                agreeWithShortNoticeReasonComments = "rejection comments",
+                reasonForLateApplication = "medical condition",
+                document = mapOf("document" to "value"),
+                rejectionRationale = "reasoning",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.submittedAt).isNotNull
+          assertThat(persistedAssessment.agreeWithShortNoticeReason).isFalse
+          assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("rejection comments")
+          assertThat(persistedAssessment.reasonForLateApplication).isEqualTo("medical condition")
+
+          val emittedMessage =
+            snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+
+          assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+          assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+          assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+          assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+          )
+
+          emailAsserter.assertEmailsRequestedCount(1)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_REJECTED)
+        }
+      }
+    }
+
+    @Test
+    fun `Reject assessment with an outstanding clarification note sets the application status correctly`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+            withDecision(null)
+          }
+
+          assessmentClarificationNoteEntityFactory.produceAndPersist {
+            withAssessment(assessment)
+            withResponse(null)
+            withResponseReceivedOn(null)
+            withCreatedBy(userEntity)
+          }.apply {
+            assessment.clarificationNotes = mutableListOf(this)
+          }
+
+          val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+          webTestClient.post()
+            .uri("/cas1/assessments/${assessment.id}/rejection")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1AssessmentRejection(
+                document = mapOf("document" to "value"),
+                rejectionRationale = "reasoning",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
+        }
+      }
     }
   }
 
