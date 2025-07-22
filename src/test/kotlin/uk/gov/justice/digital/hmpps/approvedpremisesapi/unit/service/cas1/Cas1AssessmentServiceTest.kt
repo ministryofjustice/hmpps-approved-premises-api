@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.Ass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -930,6 +931,17 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
+      every {
+        offenderServiceMock.getPersonSummaryInfoResult(
+          assessment.application.crn,
+          LaoStrategy.NeverRestricted,
+        )
+      } returns
+        PersonSummaryInfoResult.Success.Full(
+          "crn1",
+          CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+        )
+
       every { userServiceMock.getUserForRequest() } returns user
 
       every {
@@ -1028,6 +1040,17 @@ class Cas1AssessmentServiceTest {
         offenderServiceMock.getPersonSummaryInfoResult(
           assessment.application.crn,
           user.cas1LaoStrategy(),
+        )
+      } returns
+        PersonSummaryInfoResult.Success.Full(
+          "crn1",
+          CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+        )
+
+      every {
+        offenderServiceMock.getPersonSummaryInfoResult(
+          assessment.application.crn,
+          LaoStrategy.NeverRestricted,
         )
       } returns
         PersonSummaryInfoResult.Success.Full(
@@ -1347,6 +1370,17 @@ class Cas1AssessmentServiceTest {
         offenderServiceMock.getPersonSummaryInfoResult(
           assessment.application.crn,
           user.cas1LaoStrategy(),
+        )
+      } returns
+        PersonSummaryInfoResult.Success.Full(
+          "crn1",
+          caseSummary,
+        )
+
+      every {
+        offenderServiceMock.getPersonSummaryInfoResult(
+          assessment.application.crn,
+          LaoStrategy.NeverRestricted,
         )
       } returns
         PersonSummaryInfoResult.Success.Full(
