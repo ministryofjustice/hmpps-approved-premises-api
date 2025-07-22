@@ -270,7 +270,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
 
     fun assertRow(row: RequestForPlacementReportRow) {
-      assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
+      assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2021-03-12")
       assertThat(row.requested_duration_days).isEqualTo("8")
@@ -307,7 +307,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
 
     fun assertRow(row: RequestForPlacementReportRow) {
-      assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
+      assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2024-01-01")
       assertThat(row.requested_duration_days).isNull()
@@ -334,7 +334,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
 
     fun assertRow(row: RequestForPlacementReportRow) {
-      assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
+      assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2022-12-31")
       assertThat(row.requested_duration_days).isNull()
@@ -374,6 +374,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     val submittedAt: LocalDateTime,
   ) {
     lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var placementApplicationId: UUID
 
     fun createRequestForPlacement() {
       application = createAndSubmitApplication(
@@ -404,7 +405,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         paroleDecisionDate = LocalDate.of(2020, 2, 10),
         submittedAt = submittedAt,
       )
-      decisionPlacementApplication(
+      placementApplicationId = decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2021, 3, 24, 15, 20, 0),
         decision = PlacementApplicationDecision.accepted,
@@ -412,7 +413,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
 
     fun assertRow(row: RequestForPlacementReportRow) {
-      assertThat(row.request_for_placement_id).matches("placement_application:[a-f0-9-]+")
+      assertThat(row.request_for_placement_id).isEqualTo(placementApplicationId.toString())
       assertThat(row.request_for_placement_type).isEqualTo(
         when (type) {
           PlacementType.rotl -> "ROTL"
@@ -434,6 +435,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   inner class PlacementAppRejectedManager {
     lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var placementApplicationId: UUID
 
     fun createRequestForPlacement() {
       application = createAndSubmitApplication(
@@ -464,7 +466,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         paroleDecisionDate = LocalDate.of(2020, 2, 10),
         submittedAt = LocalDateTime.of(2021, 3, 29, 23, 59, 59),
       )
-      decisionPlacementApplication(
+      placementApplicationId = decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2025, 12, 1, 15, 20, 0),
         decision = PlacementApplicationDecision.rejected,
@@ -472,7 +474,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
 
     fun assertRow(row: RequestForPlacementReportRow) {
-      assertThat(row.request_for_placement_id).matches("placement_application:[a-f0-9-]+")
+      assertThat(row.request_for_placement_id).isEqualTo(placementApplicationId.toString())
       assertThat(row.request_for_placement_type).isEqualTo("ROTL")
       assertThat(row.requested_arrival_date).isEqualTo("2029-01-01")
       assertThat(row.requested_duration_days).isEqualTo("25")
@@ -750,7 +752,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     application: ApprovedPremisesApplicationEntity,
     decisionMadeAt: LocalDateTime,
     decision: PlacementApplicationDecision,
-  ) {
+  ): UUID {
     clock.advanceOneMinute()
 
     cas1SimpleApiClient.placementApplicationReallocate(
@@ -761,9 +763,11 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     clock.setNow(decisionMadeAt)
 
+    val latestPlacementApplicationId = getPlacementApplication(application).id
+
     cas1SimpleApiClient.placementApplicationDecision(
       integrationTestBase = this,
-      placementApplicationId = getPlacementApplication(application).id,
+      placementApplicationId = latestPlacementApplicationId,
       assessorJwt = assessorJwt,
       body = PlacementApplicationDecisionEnvelope(
         decision = decision,
@@ -771,6 +775,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         decisionSummary = "decisionSummary",
       ),
     )
+
+    return latestPlacementApplicationId
   }
 
   private fun withdrawPlacementRequest(
