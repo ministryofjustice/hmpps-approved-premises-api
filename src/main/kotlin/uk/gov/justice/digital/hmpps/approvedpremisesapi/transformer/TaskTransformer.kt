@@ -107,6 +107,7 @@ class TaskTransformer(
     JpaPlacementType.ROTL -> ApiPlacementType.rotl
     JpaPlacementType.ADDITIONAL_PLACEMENT -> ApiPlacementType.additionalPlacement
     JpaPlacementType.RELEASE_FOLLOWING_DECISION -> ApiPlacementType.releaseFollowingDecision
+    JpaPlacementType.AUTOMATIC -> error("Automatic placement applications should not be returned as tasks")
   }
 
   private fun getPlacementApplicationStatus(entity: PlacementApplicationEntity): TaskStatus = when {

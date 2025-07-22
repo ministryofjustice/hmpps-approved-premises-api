@@ -39,6 +39,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   apType: ApprovedPremisesType? = null,
   expectedArrival: LocalDate? = null,
   duration: Int? = null,
+  automatic: Boolean = false,
 ): PlacementApplicationEntity {
   val userApArea = givenAnApArea()
 
@@ -84,6 +85,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     withIsWithdrawn(isWithdrawn)
     withExpectedArrival(expectedArrival)
     withDuration(duration)
+    withAutomatic(automatic)
   }
 
   return placementApplication
@@ -102,6 +104,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   application: ApprovedPremisesApplicationEntity? = null,
   expectedArrival: LocalDate? = null,
   duration: Int? = null,
+  automatic: Boolean = false,
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit = { },
 ): PlacementApplicationEntity {
   val placementApplication = givenAPlacementApplication(
@@ -118,6 +121,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     isWithdrawn = false,
     expectedArrival = expectedArrival,
     duration = duration,
+    automatic = automatic,
   )
   block(placementApplication)
   return placementApplication

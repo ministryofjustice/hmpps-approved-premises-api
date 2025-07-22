@@ -763,7 +763,7 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class PaginationAndWithdrawalExclusion : InitialiseDatabasePerClassTestBase() {
+    inner class PaginationAndExclusionOfIrrelevantTasks : InitialiseDatabasePerClassTestBase() {
       private val pageSize = 1
       private lateinit var counts: Map<TaskType, Map<String, Int>>
 
@@ -780,12 +780,10 @@ class Cas1TasksTest {
                 TaskType.assessment to mapOf(
                   "allocated" to 2,
                   "unallocated" to 3,
-                  "withdrawn" to 1,
                 ),
                 TaskType.placementApplication to mapOf(
                   "allocated" to 3,
                   "unallocated" to 2,
-                  "withdrawn" to 1,
                 ),
               )
 
@@ -810,14 +808,13 @@ class Cas1TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.assessment]!!["withdrawn"]!!) {
-                givenAnAssessmentForApprovedPremises(
-                  null,
-                  createdByUser = otherUser,
-                  crn = offenderDetails.otherIds.crn,
-                  isWithdrawn = true,
-                )
-              }
+              // withdrawn, ignored
+              givenAnAssessmentForApprovedPremises(
+                null,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                isWithdrawn = true,
+              )
 
               repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
                 givenAPlacementApplication(
@@ -840,16 +837,25 @@ class Cas1TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.placementApplication]!!["withdrawn"]!!) {
-                givenAPlacementApplication(
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                  isWithdrawn = true,
-                  expectedArrival = LocalDate.now(),
-                  duration = 1,
-                )
-              }
+              // withdrawn, ignored
+              givenAPlacementApplication(
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                isWithdrawn = true,
+                expectedArrival = LocalDate.now(),
+                duration = 1,
+              )
+
+              // automatic, ignored
+              givenAPlacementApplication(
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                expectedArrival = LocalDate.now(),
+                duration = 1,
+                automatic = true,
+              )
             }
           }
         }

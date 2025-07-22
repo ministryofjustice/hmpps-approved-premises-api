@@ -106,8 +106,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_application.allocated_to_user_id
       WHERE
-        'PLACEMENT_APPLICATION' in :taskTypes AND
-        placement_application.submitted_at IS NOT NULL
+        'PLACEMENT_APPLICATION' in :taskTypes 
+        AND placement_application.automatic IS FALSE 
+        AND placement_application.submitted_at IS NOT NULL
         AND placement_application.reallocated_at IS NULL
         AND placement_application.is_withdrawn is FALSE
         AND (

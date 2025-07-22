@@ -1,0 +1,1 @@
+ALTER TABLE placement_applications ADD automatic boolean DEFAULT false NOT NULL;

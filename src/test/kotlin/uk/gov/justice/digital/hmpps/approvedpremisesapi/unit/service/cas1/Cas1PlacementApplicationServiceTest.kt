@@ -5,6 +5,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -90,6 +91,34 @@ class Cas1PlacementApplicationServiceTest {
         .produce()
 
       every { userService.getUserForRequest() } returns user
+    }
+
+    @Test
+    fun success() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withDecision(AssessmentDecision.ACCEPTED)
+        .produce()
+
+      application.assessments = mutableListOf(
+        assessment,
+      )
+
+      val placementApplicationCaptor = slot<PlacementApplicationEntity>()
+
+      every { placementApplicationRepository.save(capture(placementApplicationCaptor)) } returnsArgument 0
+
+      cas1PlacementApplicationService.createPlacementApplication(application, user)
+
+      val persisted = placementApplicationCaptor.captured
+      assertThat(persisted.application).isEqualTo(application)
+      assertThat(persisted.createdAt).isWithinTheLastMinute()
+      assertThat(persisted.submissionGroupId).isNotNull()
+      assertThat(persisted.automatic).isFalse
     }
 
     @Test
