@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinu
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 class Cas1PlacementApplicationServiceTest {
   private val placementApplicationRepository = mockk<PlacementApplicationRepository>()
@@ -79,6 +80,57 @@ class Cas1PlacementApplicationServiceTest {
     Clock.systemDefaultZone(),
     lockablePlacementApplicationRepository,
   )
+
+  @Nested
+  inner class CreateAutomaticPlacementApplication {
+
+    @Test
+    fun success() {
+      val placementApplicationCaptor = slot<PlacementApplicationEntity>()
+
+      every { placementApplicationRepository.save(capture(placementApplicationCaptor)) } returnsArgument 0
+
+      val applicationCreator = UserEntityFactory().withDefaults().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(applicationCreator)
+        .withCreatedAt(OffsetDateTime.parse("2018-12-03T10:15:30+01:00"))
+        .withSubmittedAt(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
+        .produce()
+
+      service.createAutomaticPlacementApplication(
+        assessment = ApprovedPremisesAssessmentEntityFactory()
+          .withApplication(application)
+          .withSubmittedAt(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
+          .produce(),
+        expectedArrival = LocalDate.parse("2029-12-11"),
+        durationDays = 25,
+      )
+
+      val persisted = placementApplicationCaptor.captured
+
+      assertThat(persisted.expectedArrival).isEqualTo(LocalDate.parse("2029-12-11"))
+      assertThat(persisted.duration).isEqualTo(25)
+      assertThat(persisted.placementType).isEqualTo(JpaPlacementType.AUTOMATIC)
+      assertThat(persisted.application).isEqualTo(application)
+      assertThat(persisted.createdByUser).isEqualTo(applicationCreator)
+      assertThat(persisted.createdAt).isEqualTo(OffsetDateTime.parse("2018-12-03T10:15:30+01:00"))
+      assertThat(persisted.automatic).isTrue
+      assertThat(persisted.data).isNull()
+      assertThat(persisted.document).isNull()
+      assertThat(persisted.submittedAt).isEqualTo(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
+      assertThat(persisted.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
+      assertThat(persisted.decisionMadeAt).isEqualTo(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
+      assertThat(persisted.placementRequests).isEmpty()
+      assertThat(persisted.withdrawalReason).isNull()
+      assertThat(persisted.isWithdrawn).isFalse
+      assertThat(persisted.submissionGroupId).isNotNull
+      assertThat(persisted.dueAt).isNull()
+      assertThat(persisted.allocatedToUser).isNull()
+      assertThat(persisted.allocatedAt).isNull()
+      assertThat(persisted.reallocatedAt).isNull()
+    }
+  }
 
   @Nested
   inner class CreatePlacementApplicationTest {

@@ -8,8 +8,10 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import java.time.Clock
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
@@ -50,6 +53,50 @@ class Cas1PlacementApplicationService(
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   fun getAllSubmittedNonReallocatedApplications(applicationId: UUID): List<PlacementApplicationEntity> = placementApplicationRepository.findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId)
+
+  /**
+   * Create a 'pre approved' placement application that represents
+   * the placement dates requested on the original application,
+   * when defined
+   *
+   * Currently, this is created with an 'ACCEPTED' decision. In future iterations
+   * this will be created when the application is submitted with no decision
+   * and then the decision will be set according to the application
+   * assessment outcome.
+   */
+  fun createAutomaticPlacementApplication(
+    assessment: ApprovedPremisesAssessmentEntity,
+    expectedArrival: LocalDate,
+    durationDays: Int,
+  ): PlacementApplicationEntity {
+    val application = assessment.cas1Application()
+    return placementApplicationRepository.save(
+      placementApplicationRepository.save(
+        PlacementApplicationEntity(
+          id = UUID.randomUUID(),
+          application = application,
+          createdByUser = application.createdByUser,
+          createdAt = application.createdAt,
+          expectedArrival = expectedArrival,
+          duration = durationDays,
+          submittedAt = application.submittedAt,
+          decision = PlacementApplicationDecision.ACCEPTED,
+          decisionMadeAt = assessment.decisionMadeAt(),
+          placementType = PlacementType.AUTOMATIC,
+          automatic = true,
+          placementRequests = mutableListOf(),
+          submissionGroupId = UUID.randomUUID(),
+          withdrawalReason = null,
+          data = null,
+          document = null,
+          allocatedToUser = null,
+          allocatedAt = null,
+          reallocatedAt = null,
+          dueAt = null,
+        ),
+      ),
+    )
+  }
 
   fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,

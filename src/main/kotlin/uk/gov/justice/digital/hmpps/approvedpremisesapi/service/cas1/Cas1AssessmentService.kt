@@ -49,6 +49,7 @@ class Cas1AssessmentService(
   private val assessmentListener: AssessmentListener,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val clock: Clock,
 ) {
 
@@ -257,13 +258,19 @@ class Cas1AssessmentService(
       }
 
     if (hasPlacementDates) {
+      val automaticPlacementApplication = cas1PlacementApplicationService.createAutomaticPlacementApplication(
+        assessment = assessment,
+        expectedArrival = placementDates.expectedArrival,
+        durationDays = placementDates.duration,
+      )
+
       placementRequestService.createPlacementRequest(
         PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
         placementRequirementsResult,
         placementDates,
         notes,
         false,
-        null,
+        automaticPlacementApplication,
       )
     }
 

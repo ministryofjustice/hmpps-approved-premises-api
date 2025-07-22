@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
@@ -75,6 +77,7 @@ class Cas1AssessmentServiceTest {
   private val assessmentListener = mockk<AssessmentListener>()
   private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
   private val approvedPremisesAssessmentRepositoryMock = mockk<ApprovedPremisesAssessmentRepository>()
+  private val cas1PlacementApplicationServiceMock = mockk<Cas1PlacementApplicationService>()
 
   private val cas1AssessmentService = Cas1AssessmentService(
     userAccessServiceMock,
@@ -89,6 +92,7 @@ class Cas1AssessmentServiceTest {
     assessmentListener,
     assessmentClarificationNoteListener,
     approvedPremisesAssessmentRepositoryMock,
+    cas1PlacementApplicationServiceMock,
     Clock.systemDefaultZone(),
   )
 
@@ -903,7 +907,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `success emits domain event, sends email, does not create placement request when no date information provided`() {
+    fun `success when no placement date provided, emits domain event, sends email, does not create placement request or placement application`() {
       val assessment = assessmentFactory.produce()
       val application = assessment.application as ApprovedPremisesApplicationEntity
 
@@ -973,7 +977,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `success emits domain event, sends emails, creates placement request when placement dates provided`() {
+    fun `success when placement dates provided, emits domain event, sends emails, creates placement request and automatic placement application`() {
       val assessment = assessmentFactory.produce()
       val application = assessment.application as ApprovedPremisesApplicationEntity
 
@@ -983,7 +987,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       val placementDates = PlacementDates(
-        expectedArrival = LocalDate.now(),
+        expectedArrival = LocalDate.parse("2012-01-02"),
         duration = 12,
       )
 
@@ -1003,26 +1007,18 @@ class Cas1AssessmentServiceTest {
         )
       } returns CasResult.Success(placementRequirementEntity)
 
+      val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
       every {
-        placementRequestServiceMock.createPlacementRequest(
-          any(),
-          any(),
-          any(),
-          any(),
-          any(),
-          any(),
+        cas1PlacementApplicationServiceMock.createAutomaticPlacementApplication(
+          assessment,
+          expectedArrival = LocalDate.parse("2012-01-02"),
+          durationDays = 12,
         )
-      } returns PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
-        .withAssessment(assessment)
-        .withAllocatedToUser(user)
-        .produce()
+      } returns placementApplication
+
+      every {
+        placementRequestServiceMock.createPlacementRequest(any(), any(), any(), any(), any(), any())
+      } returns PlacementRequestEntityFactory().withDefaults().produce()
 
       every {
         offenderServiceMock.getPersonSummaryInfoResult(
@@ -1066,7 +1062,7 @@ class Cas1AssessmentServiceTest {
           placementDates = placementDates,
           notes = notes,
           isParole = false,
-          placementApplicationEntity = null,
+          placementApplicationEntity = placementApplication,
         )
       }
 
@@ -1084,7 +1080,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `CAS1 does not emit Domain Event when failing to create Placement Requirements`() {
+    fun `does not emit Domain Event when failing to create Placement Requirements`() {
       val assessment = assessmentFactory.produce()
 
       every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true

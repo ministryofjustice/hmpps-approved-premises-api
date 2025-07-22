@@ -185,6 +185,7 @@ enum class PlacementType {
   ROTL,
   RELEASE_FOLLOWING_DECISION,
   ADDITIONAL_PLACEMENT,
+  AUTOMATIC,
 }
 
 enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {

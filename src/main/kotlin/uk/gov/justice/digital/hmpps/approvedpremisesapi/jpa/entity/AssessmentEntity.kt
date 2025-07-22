@@ -246,6 +246,7 @@ abstract class AssessmentEntity(
 ) {
   @Suppress("unchecked")
   fun <T : ApplicationEntity> typedApplication(): T = application as T
+  fun decisionMadeAt() = submittedAt
 }
 
 /**
@@ -307,6 +308,7 @@ class ApprovedPremisesAssessmentEntity(
   dueAt,
 ) {
   fun isPendingAssessment() = this.submittedAt == null && this.reallocatedAt == null && !this.isWithdrawn
+  fun cas1Application() = this.application as ApprovedPremisesApplicationEntity
 }
 
 @Entity
