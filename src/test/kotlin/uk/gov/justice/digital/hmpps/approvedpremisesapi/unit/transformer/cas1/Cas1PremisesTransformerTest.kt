@@ -66,6 +66,7 @@ class Cas1PremisesTransformerTest {
           outOfServiceBeds = 2,
           availableBeds = 8,
           overbookingSummary = emptyList(),
+          localRestrictions = listOf("restrictions 1", "restrictions 2", "restrictions 3"),
         ),
       )
 
@@ -81,6 +82,7 @@ class Cas1PremisesTransformerTest {
       assertThat(result.supportsSpaceBookings).isTrue()
       assertThat(result.managerDetails).isEqualTo("manager details")
       assertThat(result.overbookingSummary).isEmpty()
+      assertThat(result.localRestrictions).isEqualTo(listOf("restrictions 1", "restrictions 2", "restrictions 3"))
     }
   }
 

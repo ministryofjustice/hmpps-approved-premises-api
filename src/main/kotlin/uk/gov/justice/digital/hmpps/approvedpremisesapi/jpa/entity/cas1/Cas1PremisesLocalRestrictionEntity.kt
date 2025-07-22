@@ -4,6 +4,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -13,6 +14,17 @@ interface Cas1PremisesLocalRestrictionRepository : JpaRepository<Cas1PremisesLoc
   fun findAllByApprovedPremisesId(approvedPremisesId: UUID): List<Cas1PremisesLocalRestrictionEntity>
 
   fun findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(approvedPremisesId: UUID): List<Cas1PremisesLocalRestrictionEntity>
+
+  @Query(
+    """
+    SELECT r.description
+    FROM Cas1PremisesLocalRestrictionEntity r
+    WHERE r.approvedPremisesId = :premisesId
+    AND r.archived = false
+    order by r.createdAt DESC
+  """,
+  )
+  fun findAllActiveRestrictionDescriptionsByPremisesId(premisesId: UUID): List<String>
 }
 
 @Entity

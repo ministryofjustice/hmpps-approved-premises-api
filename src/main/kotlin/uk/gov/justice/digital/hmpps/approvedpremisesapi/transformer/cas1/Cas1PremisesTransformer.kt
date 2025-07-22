@@ -28,6 +28,7 @@ class Cas1PremisesTransformer(
       supportsSpaceBookings = entity.supportsSpaceBookings,
       managerDetails = entity.managerDetails,
       overbookingSummary = premisesSummaryInfo.overbookingSummary,
+      localRestrictions = premisesSummaryInfo.localRestrictions,
     )
   }
 
