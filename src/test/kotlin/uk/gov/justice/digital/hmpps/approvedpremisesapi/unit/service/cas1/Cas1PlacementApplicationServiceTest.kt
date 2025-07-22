@@ -67,7 +67,7 @@ class Cas1PlacementApplicationServiceTest {
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
 
-  private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
+  private val service = Cas1PlacementApplicationService(
     placementApplicationRepository,
     userService,
     placementRequestService,
@@ -112,7 +112,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.save(capture(placementApplicationCaptor)) } returnsArgument 0
 
-      cas1PlacementApplicationService.createPlacementApplication(application, user)
+      service.createPlacementApplication(application, user)
 
       val persisted = placementApplicationCaptor.captured
       assertThat(persisted.application).isEqualTo(application)
@@ -137,7 +137,7 @@ class Cas1PlacementApplicationServiceTest {
         assessment,
       )
 
-      val result = cas1PlacementApplicationService.createPlacementApplication(application, user)
+      val result = service.createPlacementApplication(application, user)
 
       assertThatCasResult(result).isGeneralValidationError("You cannot request a placement request for an application that has been withdrawn")
     }
@@ -179,7 +179,7 @@ class Cas1PlacementApplicationServiceTest {
     fun `Submitting an application returns validation error if no dates defined`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
-      val result = cas1PlacementApplicationService.submitApplication(
+      val result = service.submitApplication(
         placementApplication.id,
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
@@ -202,7 +202,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
-      val result = cas1PlacementApplicationService.submitApplication(
+      val result = service.submitApplication(
         placementApplication.id,
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
@@ -230,7 +230,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
-      val result = cas1PlacementApplicationService.submitApplication(
+      val result = service.submitApplication(
         placementApplication.id,
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
@@ -267,7 +267,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } just Runs
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
-      val result = cas1PlacementApplicationService.submitApplication(
+      val result = service.submitApplication(
         placementApplication.id,
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
@@ -360,7 +360,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit
       every { cas1PlacementApplicationDomainEventService.placementApplicationAssessed(any(), any(), any()) } returns Unit
 
-      val result = cas1PlacementApplicationService.recordDecision(
+      val result = service.recordDecision(
         placementApplication.id,
         placementApplicationDecisionEnvelope,
       )
@@ -411,7 +411,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationRejected(any()) } returns Unit
       every { cas1PlacementApplicationDomainEventService.placementApplicationAssessed(any(), any(), any()) } returns Unit
 
-      val result = cas1PlacementApplicationService.recordDecision(
+      val result = service.recordDecision(
         placementApplication.id,
         placementApplicationDecisionEnvelope,
       )
@@ -488,7 +488,7 @@ class Cas1PlacementApplicationServiceTest {
       every { userService.getUserForRequest() } returns currentRequestUser
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), currentRequestUser) } just Runs
 
-      val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
+      val result = service.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThatCasResult(result).isSuccess().with { newPlacementApplication ->
 
@@ -539,7 +539,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } just Runs
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), currentRequestUser) } just Runs
 
-      val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
+      val result = service.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThatCasResult(result).isSuccess().with { newPlacementApplication ->
 
@@ -574,7 +574,7 @@ class Cas1PlacementApplicationServiceTest {
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns null
 
-      val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
+      val result = service.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThatCasResult(result).isNotFound("placement application", previousPlacementApplication.id)
     }
@@ -588,7 +588,7 @@ class Cas1PlacementApplicationServiceTest {
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
-      val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
+      val result = service.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThatCasResult(result).isGeneralValidationError("This placement application has already been completed")
     }
@@ -602,7 +602,7 @@ class Cas1PlacementApplicationServiceTest {
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
-      val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
+      val result = service.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThatCasResult(result).isConflictError()
         .hasEntityId(previousPlacementApplication.id)
@@ -614,7 +614,7 @@ class Cas1PlacementApplicationServiceTest {
       every { lockablePlacementApplicationRepository.acquirePessimisticLock(previousPlacementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
-      val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
+      val result = service.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.userId", "lackingMatcherRole")
     }
@@ -644,7 +644,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
 
-      val result = cas1PlacementApplicationService.getWithdrawableState(placementApplication, user)
+      val result = service.getWithdrawableState(placementApplication, user)
 
       assertThat(result.withdrawable).isFalse()
     }
@@ -663,7 +663,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
 
-      val result = cas1PlacementApplicationService.getWithdrawableState(placementApplication, user)
+      val result = service.getWithdrawableState(placementApplication, user)
 
       assertThat(result.withdrawn).isTrue()
       assertThat(result.withdrawable).isFalse()
@@ -682,7 +682,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
 
-      val result = cas1PlacementApplicationService.getWithdrawableState(placementApplication, user)
+      val result = service.getWithdrawableState(placementApplication, user)
 
       assertThat(result.withdrawable).isFalse()
     }
@@ -700,7 +700,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
 
-      val result = cas1PlacementApplicationService.getWithdrawableState(placementApplication, user)
+      val result = service.getWithdrawableState(placementApplication, user)
 
       assertThat(result.withdrawn).isFalse()
       assertThat(result.withdrawable).isTrue()
@@ -719,7 +719,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns canWithdraw
 
-      val result = cas1PlacementApplicationService.getWithdrawableState(placementApplication, user)
+      val result = service.getWithdrawableState(placementApplication, user)
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
     }
@@ -777,7 +777,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any(), any()) } returns Unit
 
-      val result = cas1PlacementApplicationService.withdrawPlacementApplication(
+      val result = service.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
         withdrawalContext = withdrawalContext,
@@ -810,7 +810,7 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any(), any()) } returns Unit
 
-      val result = cas1PlacementApplicationService.withdrawPlacementApplication(
+      val result = service.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
         withdrawalContext = WithdrawalContext(
@@ -841,7 +841,7 @@ class Cas1PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
       assertThatThrownBy {
-        cas1PlacementApplicationService.withdrawPlacementApplication(
+        service.withdrawPlacementApplication(
           placementApplication.id,
           PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
           withdrawalContext = WithdrawalContext(
@@ -865,7 +865,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
-      val result = cas1PlacementApplicationService.withdrawPlacementApplication(
+      val result = service.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
         withdrawalContext = WithdrawalContext(
