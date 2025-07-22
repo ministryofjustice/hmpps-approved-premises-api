@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas3
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
@@ -10,14 +11,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
@@ -539,7 +544,72 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `getPersonArrivedUpdatedDomainEvent transforms the booking and arrival updated information correctly without staff detail`() {
+  fun `getBedspaceArchiveEvent transforms the bedspace information correctly to a domain event`() {
+    val endDate = LocalDate.parse("2023-07-15")
+    val bedspaceId = UUID.randomUUID()
+    val probationRegion = probationRegionEntity()
+    val user = userEntity(probationRegion)
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
+      .produce()
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+    val bedspace = BedEntityFactory()
+      .withId(bedspaceId)
+      .withEndDate(endDate)
+      .withRoom(room)
+      .produce()
+
+    val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
+
+    assertThat(event.applicationId).isNull()
+    assertThat(event.bookingId).isNull()
+    assertThat(event.crn).isNull()
+    assertThat(event.nomsNumber).isNull()
+    assertThat(event.data.eventType).isEqualTo(EventType.bedspaceArchived)
+    assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
+    assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+    assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+    assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+  }
+
+  @Test
+  fun `getBedspaceArchiveEvent errors when endDate is null`() {
+    val bedspaceId = UUID.randomUUID()
+    val probationRegion = probationRegionEntity()
+    val user = userEntity(probationRegion)
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
+      .produce()
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+    val bedspace = BedEntityFactory()
+      .withId(bedspaceId)
+      .withRoom(room)
+      .withEndDate(null)
+      .produce()
+
+    val error = assertThrows<IllegalStateException> {
+      cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
+    }
+
+    assertThat(error.message).isEqualTo("Bedspace end date is null for bedspace id: ${bedspace.id}")
+  }
+
+  @Test
+  fun `getPersonArrivedUpdatedDomainEvent transforms the bedspace and arrival updated information correctly without staff detail`() {
     val arrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
     val expectedDepartureDate = LocalDate.parse("2023-10-15")
     val notes = "Some notes about the arrival"

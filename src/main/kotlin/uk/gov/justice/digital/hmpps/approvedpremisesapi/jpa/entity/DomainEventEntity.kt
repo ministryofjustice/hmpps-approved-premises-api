@@ -90,14 +90,6 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
   )
   fun findAllTimelineEventsByIds(applicationId: UUID?, spaceBookingId: UUID? = null): List<DomainEventSummary>
 
-  @Query(
-    "SELECT * FROM domain_events domain_event " +
-      "where date_part('month', domain_event.occurred_at) = :month " +
-      "AND date_part('year', domain_event.occurred_at) = :year ",
-    nativeQuery = true,
-  )
-  fun findAllCreatedInMonth(month: Int, year: Int): List<DomainEventEntity>
-
   fun findByApplicationIdOrderByCreatedAtAsc(applicationId: UUID): List<DomainEventEntity>
 
   fun findByCas1SpaceBookingId(bookingId: UUID): List<DomainEventEntity>
@@ -154,7 +146,7 @@ data class DomainEventEntity(
   val cas3PremisesId: UUID?,
   @Column(name = "cas3_bedspace_id")
   val cas3BedspaceId: UUID?,
-  val crn: String,
+  val crn: String?,
   @Enumerated(value = EnumType.STRING)
   val type: DomainEventType,
   val occurredAt: OffsetDateTime,
@@ -196,7 +188,6 @@ enum class MetaDataName {
   CAS1_REQUESTED_AP_TYPE,
   CAS1_PLACEMENT_REQUEST_ID,
   CAS1_CANCELLATION_ID,
-  CAS1_SPACE_BOOKING_ID,
 }
 
 enum class DomainEventCas {
@@ -488,6 +479,11 @@ enum class DomainEventType(
     DomainEventCas.CAS3,
     Cas3EventType.bookingCancelled.value,
     "A booking for a Transitional Accommodation premises has been cancelled",
+  ),
+  CAS3_BEDSPACE_ARCHIVED(
+    DomainEventCas.CAS3,
+    Cas3EventType.bedspaceArchived.value,
+    "A bedspace for a Transitional Accommodation premises has been archived",
   ),
   CAS3_BOOKING_CONFIRMED(
     DomainEventCas.CAS3,

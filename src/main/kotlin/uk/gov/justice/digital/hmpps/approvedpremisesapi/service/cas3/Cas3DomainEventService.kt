@@ -21,8 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -215,9 +217,23 @@ class Cas3DomainEventService(
     )
   }
 
+  @Transactional
+  fun saveBedspaceArchiveEvent(bedspace: BedEntity) {
+    val user = userService.getUserForRequest()
+    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.crn,
+      nomsNumber = domainEvent.nomsNumber,
+      triggerSourceType = TriggerSourceType.USER,
+      false,
+    )
+  }
+
   private fun <T : CAS3Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
-    crn: String,
+    crn: String?,
     nomsNumber: String?,
     triggerSourceType: TriggerSourceType,
     emit: Boolean = cas3DomainEventServiceConfig.emitForEvent(domainEvent.data.eventType),
@@ -251,14 +267,13 @@ class Cas3DomainEventService(
     )
 
     if (emit) {
-      val personReferenceIdentifiers = when (nomsNumber) {
-        null -> listOf(
-          SnsEventPersonReference("CRN", crn),
-        )
-        else -> listOf(
-          SnsEventPersonReference("CRN", crn),
-          SnsEventPersonReference("NOMS", nomsNumber),
-        )
+      val personReferenceIdentifiers = mutableListOf<SnsEventPersonReference>()
+
+      if (nomsNumber != null) {
+        personReferenceIdentifiers.add(SnsEventPersonReference("NOMS", nomsNumber))
+      }
+      if (crn != null) {
+        personReferenceIdentifiers.add(SnsEventPersonReference("CRN", crn))
       }
 
       val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(enumType, domainEvent.id)
@@ -274,7 +289,10 @@ class Cas3DomainEventService(
           bookingId = domainEvent.bookingId,
         ),
         personReference = SnsEventPersonReferenceCollection(
-          identifiers = personReferenceIdentifiers,
+          identifiers = listOfNotNull(
+            crn?.let { SnsEventPersonReference("CRN", it) },
+            nomsNumber?.let { SnsEventPersonReference("NOMS", it) },
+          ),
         ),
       )
 
@@ -307,6 +325,7 @@ class Cas3DomainEventService(
     CAS3PersonDepartureUpdatedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED
     CAS3AssessmentUpdatedEvent::class -> DomainEventType.CAS3_ASSESSMENT_UPDATED
     CAS3DraftReferralDeletedEvent::class -> DomainEventType.CAS3_DRAFT_REFERRAL_DELETED
+    CAS3BedspaceArchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_ARCHIVED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 

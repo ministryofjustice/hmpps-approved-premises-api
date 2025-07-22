@@ -377,8 +377,8 @@ class Cas1DomainEventService(
           applicationId = domainEvent.applicationId,
         ),
         personReference = SnsEventPersonReferenceCollection(
-          identifiers = listOf(
-            SnsEventPersonReference("CRN", crn),
+          identifiers = listOfNotNull(
+            crn?.let { SnsEventPersonReference("CRN", it) },
             SnsEventPersonReference("NOMS", nomsNumber),
           ),
         ),
