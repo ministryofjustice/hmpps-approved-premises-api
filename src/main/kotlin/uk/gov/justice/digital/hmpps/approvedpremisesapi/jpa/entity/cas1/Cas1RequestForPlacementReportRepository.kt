@@ -34,7 +34,7 @@ class Cas1RequestForPlacementReportRepository(
   
   SELECT 
     pr.id AS internal_placement_request_id,
-    CONCAT('placement_request:',paa.id) AS request_for_placement_id, 
+    paa.id AS request_for_placement_id, 
     'STANDARD' AS request_for_placement_type,
     to_char(paa.expected_arrival_date, 'YYYY-MM-DD') AS requested_arrival_date,
     pr.duration AS requested_duration_days,
@@ -85,7 +85,7 @@ UNION ALL
        
   SELECT 
     pr.id AS internal_placement_request_id,
-    CONCAT('placement_application:',pa.id) AS request_for_placement_id,
+    pa.id AS request_for_placement_id,
     CASE
       WHEN pa.placement_type = '0' THEN 'ROTL'
       WHEN pa.placement_type = '1' THEN 'RELEASE_FOLLOWING_DECISION'
