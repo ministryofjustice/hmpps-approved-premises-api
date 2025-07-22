@@ -70,6 +70,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
      * threshold was determined to be a preferable approach
      */
     internal const val UPCOMING_EXPECTED_DEPARTURE_THRESHOLD = "2025-01-01"
+    val UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE: LocalDate = LocalDate.parse(UPCOMING_EXPECTED_DEPARTURE_THRESHOLD)
 
     private const val SPACE_BOOKING_SELECT = """
       SELECT 
@@ -328,16 +329,25 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
 
   @Query
   fun existsByDeliusId(deliusId: String): Boolean
-}
 
-interface Cas1SpaceBookingDaySummarySearchResult {
-  val id: UUID
-  val crn: String
-  val canonicalArrivalDate: LocalDate
-  val canonicalDepartureDate: LocalDate
-  val tier: String?
-  val releaseType: String
-  val characteristicsPropertyNames: String?
+  /*
+  Checking cancellationRecordedAt shouldn't be required, because an arrived
+  booking can't be cancelled. Unfortunately, there are some historical bookings
+  with both an arrival and cancellation
+   */
+  @Query(
+    """
+    SELECT b FROM Cas1SpaceBookingEntity b 
+    INNER JOIN FETCH b.premises
+    WHERE 
+    b.crn = :crn AND 
+    b.actualArrivalDate IS NOT NULL AND 
+    b.actualDepartureDate IS NULL AND
+    b.cancellationOccurredAt IS NULL AND 
+    b.expectedDepartureDate >= :expectedDepartureThreshold
+    """,
+  )
+  fun findResidentSpaceBookingsForCrn(crn: String, expectedDepartureThreshold: LocalDate): List<Cas1SpaceBookingEntity>
 }
 
 interface Cas1SpaceBookingSearchResult {

@@ -25,8 +25,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository.Companion.UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableCas1SpaceBookingEntity
@@ -93,6 +95,10 @@ class Cas1BookingManagementServiceTest {
   @InjectMockKs
   lateinit var service: Cas1BookingManagementService
 
+  companion object {
+    const val CRN: String = "CRN1"
+  }
+
   @Nested
   inner class RecordArrival {
     private val existingArrivalDate = LocalDate.of(2024, 1, 1)
@@ -101,6 +107,7 @@ class Cas1BookingManagementServiceTest {
     private val arrivalTime = LocalTime.of(3, 4, 5)
 
     private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withCrn(CRN)
       .produce()
 
     private val premises = ApprovedPremisesEntityFactory()
@@ -243,6 +250,47 @@ class Cas1BookingManagementServiceTest {
     }
 
     @Test
+    fun `Returns error if CRN already resident elsewhere`() {
+      val user = UserEntityFactory().withDefaults().produce()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      every { spaceBookingRepository.findResidentSpaceBookingsForCrn(CRN, UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE) } returns listOf(
+        Cas1SpaceBookingEntityFactory()
+          .withPremises(
+            ApprovedPremisesEntityFactory()
+              .withDefaults()
+              .withName("The other premises")
+              .withCruManagementArea(
+                Cas1CruManagementAreaEntityFactory().withName("The CRU Name").produce(),
+              )
+              .produce(),
+          )
+          .produce(),
+      )
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+
+      val arrivalInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.ArrivalInfo>()
+      every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(capture(arrivalInfoCaptor)) } returns Unit
+      every { userService.getUserForRequest() } returns user
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        arrivalDate = arrivalDate,
+        arrivalTime = arrivalTime,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("Arrival cannot be recorded as CRN1 is recorded as resident at The other premises (The CRU Name)")
+    }
+
+    @Test
     fun `Returns success without updates if the space booking record already has the exact same arrival date and time recorded`() {
       val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(
         actualArrivalDate = existingArrivalDate,
@@ -281,8 +329,9 @@ class Cas1BookingManagementServiceTest {
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
-
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      every { spaceBookingRepository.findResidentSpaceBookingsForCrn(CRN, UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE) } returns emptyList()
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
