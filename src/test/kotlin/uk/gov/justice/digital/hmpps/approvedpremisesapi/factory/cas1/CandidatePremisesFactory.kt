@@ -26,5 +26,6 @@ class CandidatePremisesFactory : Factory<CandidatePremises> {
     "Some AP Area",
     "Area Code",
     characteristics = emptyList(),
+    localRestrictions = emptyList(),
   )
 }

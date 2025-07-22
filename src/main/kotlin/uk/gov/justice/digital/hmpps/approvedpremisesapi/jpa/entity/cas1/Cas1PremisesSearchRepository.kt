@@ -43,7 +43,8 @@ FROM
     aa.name AS ap_area_name,
     aa.identifier AS ap_area_identifier,
     ARRAY_REMOVE(ARRAY_AGG (DISTINCT premises_chars_resolved.property_name), null) as premises_characteristics,
-    ARRAY_REMOVE(ARRAY_AGG (DISTINCT room_chars_resolved.property_name), null) as room_characteristics
+    ARRAY_REMOVE(ARRAY_AGG (DISTINCT room_chars_resolved.property_name), null) as room_characteristics,
+    ARRAY_REMOVE(ARRAY_AGG (DISTINCT restrictions.description), null) as local_restrictions
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
@@ -53,6 +54,12 @@ FROM
   LEFT OUTER JOIN characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
   LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = rooms.id
   LEFT OUTER JOIN characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
+  LEFT OUTER JOIN LATERAL (
+    SELECT lr.description
+    FROM cas1_premises_local_restrictions lr
+    WHERE lr.archived = false AND lr.approved_premises_id = p.id
+    ORDER BY lr.created_at DESC
+) restrictions ON TRUE
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
@@ -136,6 +143,7 @@ class Cas1SpaceSearchRepository(
           SqlUtil.toStringList(rs.getArray("premises_characteristics")) +
             SqlUtil.toStringList(rs.getArray("room_characteristics"))
           ),
+        localRestrictions = SqlUtil.toStringList(rs.getArray("local_restrictions")),
       )
     }
   }
@@ -155,4 +163,5 @@ data class CandidatePremises(
   val apAreaName: String,
   val apAreaIdentifier: String,
   val characteristics: List<String>,
+  val localRestrictions: List<String>,
 )

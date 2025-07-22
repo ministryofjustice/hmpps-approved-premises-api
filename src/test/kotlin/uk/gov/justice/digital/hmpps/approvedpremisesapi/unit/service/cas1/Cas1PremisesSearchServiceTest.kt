@@ -56,6 +56,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area1",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -72,6 +73,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area2",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -88,6 +90,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area3",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
@@ -161,6 +164,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area1",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -177,6 +181,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area2",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -193,6 +198,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area3",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
@@ -254,6 +260,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area1",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -270,6 +277,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area2",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -286,6 +294,7 @@ class Cas1PremisesSearchServiceTest {
       "Some AP Area",
       "Area3",
       characteristics = emptyList(),
+      localRestrictions = emptyList(),
     )
 
     val spaceCharacteristicEntities = spaceCharacteristics.map { characteristicWithRandomModelScopeCalled(it.value) }

@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
@@ -38,6 +39,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   fun setup() {
     postCodeDistrictRepository.deleteAll()
     roomRepository.deleteAll()
+    cas1PremisesLocalRestrictionRepository.deleteAll()
     approvedPremisesRepository.deleteAll()
   }
 
@@ -109,6 +111,28 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
+      cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().minusDays(2))
+        withApprovedPremisesId(premiseWithCharacteristics.id)
+        withDescription("No hate based offences")
+        withCreatedByUserId(user.id)
+      }
+
+      cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().minusDays(1))
+        withApprovedPremisesId(premiseWithCharacteristics.id)
+        withDescription("No child rso")
+        withCreatedByUserId(user.id)
+      }
+
+      cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now())
+        withApprovedPremisesId(premiseWithCharacteristics.id)
+        withDescription("No offence against sex workers")
+        withCreatedByUserId(user.id)
+        withArchived(true)
+      }
+
       // premise that doesn't support space bookings
       givenAnApprovedPremises(
         latitude = (-0.01) - 0.08,
@@ -159,6 +183,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
           Cas1SpaceCharacteristic.hasLift,
           Cas1SpaceCharacteristic.hasEnSuite,
         ),
+        localRestrictions = listOf("No child rso", "No hate based offences"),
       )
     }
   }
@@ -283,6 +308,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     expected: ApprovedPremisesEntity,
     expectedApType: ApType = ApType.normal,
     expectedCharacteristics: List<Cas1SpaceCharacteristic>? = null,
+    localRestrictions: List<String> = emptyList(),
   ) {
     assertThat(actual.distanceInMiles).isGreaterThan(0f.toBigDecimal())
     assertThat(actual.premises).isNotNull
@@ -295,6 +321,9 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     if (expectedCharacteristics != null) {
       assertThat(premises.characteristics).containsExactlyInAnyOrder(*expectedCharacteristics.toTypedArray())
+    }
+    if (localRestrictions.isNotEmpty()) {
+      assertThat(premises.localRestrictions).containsExactly(*localRestrictions.toTypedArray())
     }
   }
 

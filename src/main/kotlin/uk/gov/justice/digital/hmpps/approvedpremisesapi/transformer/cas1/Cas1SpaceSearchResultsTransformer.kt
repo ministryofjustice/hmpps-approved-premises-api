@@ -38,6 +38,7 @@ class Cas1SpaceSearchResultsTransformer {
     characteristics = premises.characteristics.map {
       Cas1SpaceCharacteristic.valueOf(it)
     },
+    localRestrictions = premises.localRestrictions,
   )
 
   fun CandidatePremises.resolveFullAddress() = ApprovedPremisesEntity.resolveFullAddress(
