@@ -680,7 +680,7 @@ class Cas1AssessmentServiceTest {
   }
 
   @Nested
-  inner class Cas1AcceptAssessment {
+  inner class AcceptAssessment {
 
     lateinit var user: UserEntity
     lateinit var assessmentId: UUID
@@ -724,7 +724,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `CAS1 unauthorised when no user is allocated to the assessment`() {
+    fun `unauthorised when no user is allocated to the assessment`() {
       val assessment = assessmentFactory
         .withAllocatedToUser(null)
         .produce()
@@ -760,7 +760,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `CAS1 unauthorised when submitted user is not allocated to the assessment`() {
+    fun `unauthorised when submitted user is not allocated to the assessment`() {
       val assessment = assessmentFactory
         .withAllocatedToUser(UserEntityFactory().withDefaults().produce())
         .produce()
@@ -903,7 +903,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `CAS1 success returns updated assessment, emits domain event, sends email, does not create placement request when no date information provided`() {
+    fun `success emits domain event, sends email, does not create placement request when no date information provided`() {
       val assessment = assessmentFactory.produce()
       val application = assessment.application as ApprovedPremisesApplicationEntity
 
@@ -973,7 +973,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `CAS1 returns updated assessment, emits domain event, sends emails, creates placement request when requirements provided`() {
+    fun `success emits domain event, sends emails, creates placement request when placement dates provided`() {
       val assessment = assessmentFactory.produce()
       val application = assessment.application as ApprovedPremisesApplicationEntity
 
@@ -1057,29 +1057,29 @@ class Cas1AssessmentServiceTest {
         assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
         assertThat(updatedAssessment.submittedAt).isNotNull()
         assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+      }
 
-        verify(exactly = 1) {
-          placementRequestServiceMock.createPlacementRequest(
-            source = PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
-            placementRequirements = placementRequirementEntity,
-            placementDates = placementDates,
-            notes = notes,
-            isParole = false,
-            placementApplicationEntity = null,
-          )
-        }
+      verify(exactly = 1) {
+        placementRequestServiceMock.createPlacementRequest(
+          source = PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+          placementRequirements = placementRequirementEntity,
+          placementDates = placementDates,
+          notes = notes,
+          isParole = false,
+          placementApplicationEntity = null,
+        )
+      }
 
-        verify(exactly = 1) {
-          cas1AssessmentEmailServiceMock.assessmentAccepted(application)
-        }
+      verify(exactly = 1) {
+        cas1AssessmentEmailServiceMock.assessmentAccepted(application)
+      }
 
-        verify(exactly = 1) {
-          cas1AssessmentDomainEventService.assessmentAccepted(application, any(), any(), any(), any(), any())
-        }
+      verify(exactly = 1) {
+        cas1AssessmentDomainEventService.assessmentAccepted(application, any(), any(), any(), any(), any())
+      }
 
-        verify(exactly = 1) {
-          cas1PlacementRequestEmailService.placementRequestSubmitted(assessment.application as ApprovedPremisesApplicationEntity)
-        }
+      verify(exactly = 1) {
+        cas1PlacementRequestEmailService.placementRequestSubmitted(assessment.application as ApprovedPremisesApplicationEntity)
       }
     }
 
@@ -1131,7 +1131,7 @@ class Cas1AssessmentServiceTest {
   }
 
   @Nested
-  inner class Cas1RejectAssessment {
+  inner class RejectAssessment {
     val user = UserEntityFactory()
       .withDefaults()
       .withYieldedApArea {
