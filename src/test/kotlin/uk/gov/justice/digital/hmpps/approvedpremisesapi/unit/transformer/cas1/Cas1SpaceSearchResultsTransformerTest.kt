@@ -35,6 +35,7 @@ class Cas1SpaceSearchResultsTransformerTest {
         apAreaName = "Some AP Area 1",
         apAreaIdentifier = "Area1",
         characteristics = emptyList(),
+        localRestrictions = emptyList(),
       ),
       CandidatePremises(
         premisesId = candidatePremise2Id,
@@ -50,6 +51,7 @@ class Cas1SpaceSearchResultsTransformerTest {
         apAreaName = "Some AP Area 2",
         apAreaIdentifier = "Area2",
         characteristics = emptyList(),
+        localRestrictions = listOf("restriction 1", "restriction 2"),
       ),
     )
 
@@ -79,5 +81,6 @@ class Cas1SpaceSearchResultsTransformerTest {
     assertThat(premises2.apArea.code).isEqualTo("Area2")
     assertThat(premises2.characteristics).isEmpty()
     assertThat(actual.results[1].distanceInMiles).isEqualTo(BigDecimal.valueOf(2.0))
+    assertThat(premises2.localRestrictions).isEqualTo(listOf("restriction 1", "restriction 2"))
   }
 }
