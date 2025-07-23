@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationCas1DomainEventServiceTest.TestConstants.USERNAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiDecision
@@ -58,6 +59,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
     domainEventTransformer,
     apDeliusContextApiClient,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    Clock.systemDefaultZone(),
   )
 
   val user = UserEntityFactory()

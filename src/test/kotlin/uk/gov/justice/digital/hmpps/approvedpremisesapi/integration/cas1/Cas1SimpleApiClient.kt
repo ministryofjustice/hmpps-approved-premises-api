@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -217,6 +218,22 @@ class Cas1SimpleApiClient {
     integrationTestBase.webTestClient.put()
       .uri("/cas1/placement-applications/$placementApplicationId")
       .header("Authorization", "Bearer $creatorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementApplicationWithdraw(
+    integrationTestBase: IntegrationTestBase,
+    placementApplicationId: UUID,
+    body: WithdrawPlacementApplication,
+  ) {
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
+
+    integrationTestBase.webTestClient.post()
+      .uri("/cas1/placement-applications/$placementApplicationId/withdraw")
+      .header("Authorization", "Bearer $managerJwt")
       .bodyValue(body)
       .exchange()
       .expectStatus()
