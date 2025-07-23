@@ -34,9 +34,9 @@ class Cas1RequestForPlacementReportRepository(
   
   SELECT 
     pr.id AS internal_placement_request_id,
-    paa.id AS request_for_placement_id, 
+    pap.id AS request_for_placement_id, 
     'STANDARD' AS request_for_placement_type,
-    to_char(paa.expected_arrival_date, 'YYYY-MM-DD') AS requested_arrival_date,
+    to_char(pap.expected_arrival_date, 'YYYY-MM-DD') AS requested_arrival_date,
     pr.duration AS requested_duration_days,
     to_char(CAST(a.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     null AS parole_decision_date,
@@ -53,10 +53,10 @@ class Cas1RequestForPlacementReportRepository(
     END AS request_for_placement_withdrawal_reason,
     raw_applications_report.*
     
-  FROM placement_applications_placeholder paa
+  FROM placement_applications_placeholder pap
   
-    INNER JOIN approved_premises_applications apa ON apa.id = paa.application_id 
-    INNER JOIN raw_applications_report ON raw_applications_report.application_id = paa.application_id
+    INNER JOIN approved_premises_applications apa ON apa.id = pap.application_id 
+    INNER JOIN raw_applications_report ON raw_applications_report.application_id = pap.application_id
     INNER JOIN applications a ON a.id = apa.id
     LEFT OUTER JOIN LATERAL (
       SELECT assessments.*
@@ -77,6 +77,7 @@ class Cas1RequestForPlacementReportRepository(
                     cast(pr_withdrawn_event.data -> 'eventDetails' ->> 'matchRequestId' AS uuid) = pr.id
                     
   WHERE 
+    pap.archived is FALSE AND
     apa.arrival_date IS NOT NULL
     AND
     ($placementRequestsRangeConstraints)
@@ -132,7 +133,7 @@ UNION ALL
 
   val query = buildQuery(
     placementRequestsRangeConstraints = """
-      (paa.submitted_at >= :startDateTimeInclusive AND paa.submitted_at <= :endDateTimeInclusive) OR
+      (pap.submitted_at >= :startDateTimeInclusive AND pap.submitted_at <= :endDateTimeInclusive) OR
       (pr_withdrawn_event.occurred_at >= :startDateTimeInclusive AND pr_withdrawn_event.occurred_at <= :endDateTimeInclusive)
     """.trimIndent(),
     placementApplicationsRangeConstraints = """

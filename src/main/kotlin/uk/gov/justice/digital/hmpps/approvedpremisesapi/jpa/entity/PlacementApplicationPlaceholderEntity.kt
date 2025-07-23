@@ -35,4 +35,5 @@ data class PlacementApplicationPlaceholderEntity(
 
   val submittedAt: OffsetDateTime,
   val expectedArrivalDate: OffsetDateTime,
+  val archived: Boolean = false,
 )
