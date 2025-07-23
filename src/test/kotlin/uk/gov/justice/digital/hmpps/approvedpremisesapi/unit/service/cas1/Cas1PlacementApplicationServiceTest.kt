@@ -101,11 +101,15 @@ class Cas1PlacementApplicationServiceTest {
 
       val id = UUID.randomUUID()
 
+      val assessor = UserEntityFactory().withDefaults().produce()
+
       cas1PlacementApplicationService.createAutomaticPlacementApplication(
         id = id,
         assessment = ApprovedPremisesAssessmentEntityFactory()
           .withApplication(application)
           .withSubmittedAt(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
+          .withAllocatedToUser(assessor)
+          .withAllocatedAt(OffsetDateTime.parse("2018-12-05T10:15:30+01:00"))
           .produce(),
         expectedArrival = LocalDate.parse("2029-12-11"),
         durationDays = 25,
@@ -131,8 +135,8 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(persisted.isWithdrawn).isFalse
       assertThat(persisted.submissionGroupId).isNotNull
       assertThat(persisted.dueAt).isNull()
-      assertThat(persisted.allocatedToUser).isNull()
-      assertThat(persisted.allocatedAt).isNull()
+      assertThat(persisted.allocatedToUser).isEqualTo(assessor)
+      assertThat(persisted.allocatedAt).isEqualTo(OffsetDateTime.parse("2018-12-05T10:15:30+01:00"))
       assertThat(persisted.reallocatedAt).isNull()
     }
   }

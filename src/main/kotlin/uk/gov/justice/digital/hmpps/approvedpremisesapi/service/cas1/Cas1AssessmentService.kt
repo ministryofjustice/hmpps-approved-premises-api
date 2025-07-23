@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -56,6 +57,8 @@ class Cas1AssessmentService(
   private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val taskDeadlineService: Cas1TaskDeadlineService,
   private val userAllocator: UserAllocator,
+  private val placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val clock: Clock,
 ) {
 
@@ -301,6 +304,7 @@ class Cas1AssessmentService(
 
     if (includesRequestForPlacement) {
       createRequestForPlacement(
+        assessment,
         placementRequirementsResult,
         placementDates,
         notes,
@@ -330,17 +334,33 @@ class Cas1AssessmentService(
   }
 
   private fun createRequestForPlacement(
+    assessment: ApprovedPremisesAssessmentEntity,
     placementRequirements: PlacementRequirementsEntity,
     placementDates: PlacementDates,
     notes: String?,
   ) {
+    val application = assessment.application
+
+    val placementApplicationPlaceholder = placementApplicationPlaceholderRepository.findByApplication(application)
+      ?: error("Can't find placement application placeholder entry for application ${application.id}")
+
+    val placementApplicationAutomatic = cas1PlacementApplicationService.createAutomaticPlacementApplication(
+      id = placementApplicationPlaceholder.id,
+      assessment = assessment,
+      expectedArrival = placementDates.expectedArrival,
+      durationDays = placementDates.duration,
+    )
+
+    placementApplicationPlaceholder.archived = true
+    placementApplicationPlaceholderRepository.save(placementApplicationPlaceholder)
+
     placementRequestService.createPlacementRequest(
       PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
       placementRequirements,
       placementDates,
       notes,
       false,
-      null,
+      placementApplicationAutomatic,
     )
   }
 

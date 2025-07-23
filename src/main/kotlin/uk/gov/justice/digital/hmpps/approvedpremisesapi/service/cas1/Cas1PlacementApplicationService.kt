@@ -72,7 +72,7 @@ class Cas1PlacementApplicationService(
    * to each individual request for placement in a single data model.
    *
    * The ultimate goal is to create a `placement_application` on application submission (when an
-   * implicit request for placement is made), dropping the `placement_applications_automatic` table
+   * implicit request for placement is made), dropping the `placement_applications_placeholder` table
    * completely. At this point we will also track rejected implicit requests for placements via
    * `placement_applications`. This is complicated though because we need to consider the
    * assessment lifecycle and how that impacts the request for placement, including appeals.
@@ -103,8 +103,8 @@ class Cas1PlacementApplicationService(
           withdrawalReason = null,
           data = null,
           document = null,
-          allocatedToUser = null,
-          allocatedAt = null,
+          allocatedToUser = assessment.allocatedToUser,
+          allocatedAt = assessment.allocatedAt,
           reallocatedAt = null,
           dueAt = null,
         ),
