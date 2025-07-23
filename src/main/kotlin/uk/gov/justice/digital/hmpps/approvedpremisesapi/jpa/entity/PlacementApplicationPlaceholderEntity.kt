@@ -11,7 +11,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
-interface PlacementApplicationPlaceholderRepository : JpaRepository<PlacementApplicationPlaceholderEntity, UUID>
+interface PlacementApplicationPlaceholderRepository : JpaRepository<PlacementApplicationPlaceholderEntity, UUID> {
+  fun findByApplication(application: ApplicationEntity): PlacementApplicationPlaceholderEntity?
+}
 
 /**
  * Used to capture requests for placements implicit in the original applications
@@ -35,5 +37,5 @@ data class PlacementApplicationPlaceholderEntity(
 
   val submittedAt: OffsetDateTime,
   val expectedArrivalDate: OffsetDateTime,
-  val archived: Boolean = false,
+  var archived: Boolean = false,
 )
