@@ -4,6 +4,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -23,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationPlaceholderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -36,6 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
@@ -49,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
@@ -76,6 +82,8 @@ class Cas1AssessmentServiceTest {
   private val assessmentListener = mockk<AssessmentListener>()
   private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
   private val approvedPremisesAssessmentRepositoryMock = mockk<ApprovedPremisesAssessmentRepository>()
+  private val cas1PlacementApplicationServiceMock = mockk<Cas1PlacementApplicationService>()
+  private val placementApplicationPlaceholderRepositoryMock = mockk<PlacementApplicationPlaceholderRepository>()
 
   private val cas1AssessmentService = Cas1AssessmentService(
     userAccessServiceMock,
@@ -90,6 +98,8 @@ class Cas1AssessmentServiceTest {
     assessmentListener,
     assessmentClarificationNoteListener,
     approvedPremisesAssessmentRepositoryMock,
+    placementApplicationPlaceholderRepositoryMock,
+    cas1PlacementApplicationServiceMock,
     Clock.systemDefaultZone(),
   )
 
@@ -985,7 +995,7 @@ class Cas1AssessmentServiceTest {
     }
 
     @Test
-    fun `CAS1 returns updated assessment, emits domain event, sends emails, creates placement request when requirements provided`() {
+    fun `CAS1 returns updated assessment, emits domain event, sends emails, creates request for placement elements when requirements provided`() {
       val assessment = assessmentFactory.produce()
       val application = assessment.application as ApprovedPremisesApplicationEntity
 
@@ -995,7 +1005,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       val placementDates = PlacementDates(
-        expectedArrival = LocalDate.now(),
+        expectedArrival = LocalDate.parse("2026-05-09"),
         duration = 12,
       )
 
@@ -1014,6 +1024,21 @@ class Cas1AssessmentServiceTest {
           placementRequirements,
         )
       } returns placementRequirementEntity
+
+      val placeholder = PlacementApplicationPlaceholderEntityFactory().produce()
+      every {
+        placementApplicationPlaceholderRepositoryMock.findByApplication(application)
+      } returns placeholder
+
+      val placementApplicationAutomatic = PlacementApplicationEntityFactory().withDefaults().produce()
+      every {
+        cas1PlacementApplicationServiceMock.createAutomaticPlacementApplication(
+          id = placeholder.id,
+          assessment = assessment,
+          expectedArrival = LocalDate.parse("2026-05-09"),
+          durationDays = 12,
+        )
+      } returns placementApplicationAutomatic
 
       every {
         placementRequestServiceMock.createPlacementRequest(
@@ -1035,6 +1060,9 @@ class Cas1AssessmentServiceTest {
         .withAssessment(assessment)
         .withAllocatedToUser(user)
         .produce()
+
+      val updatedPlaceholder = slot<PlacementApplicationPlaceholderEntity>()
+      every { placementApplicationPlaceholderRepositoryMock.save(capture(updatedPlaceholder)) } returnsArgument 0
 
       every {
         offenderServiceMock.getPersonSummaryInfoResult(
@@ -1088,7 +1116,7 @@ class Cas1AssessmentServiceTest {
             placementDates = placementDates,
             notes = notes,
             isParole = false,
-            placementApplicationEntity = null,
+            placementApplicationEntity = placementApplicationAutomatic,
           )
         }
 
@@ -1103,6 +1131,9 @@ class Cas1AssessmentServiceTest {
         verify(exactly = 1) {
           cas1PlacementRequestEmailService.placementRequestSubmitted(assessment.application as ApprovedPremisesApplicationEntity)
         }
+
+        assertThat(updatedPlaceholder.captured.id).isEqualTo(placeholder.id)
+        assertThat(updatedPlaceholder.captured.archived).isTrue
       }
     }
   }
