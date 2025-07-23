@@ -805,6 +805,9 @@ class Cas3PremisesService(
       return@validatedCasResult errors()
     }
 
+    val originalStartDate = bedspace.startDate!!
+    val originalEndDate = bedspace.endDate!!
+
     // Update the bedspace to unarchive it
     val updatedBedspace = bedspaceRepository.save(
       bedspace.copy(
@@ -812,6 +815,8 @@ class Cas3PremisesService(
         endDate = null,
       ),
     )
+
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, originalStartDate, originalEndDate)
 
     success(updatedBedspace)
   }

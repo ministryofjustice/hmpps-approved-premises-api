@@ -544,6 +544,44 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
+  fun `getBedspaceUnarchiveEvent transforms the bedspace information correctly to a domain event`() {
+    val newStartDate = LocalDate.now().plusDays(5)
+    val currentEndDate = LocalDate.now().minusDays(2)
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val bedspaceId = UUID.randomUUID()
+    val probationRegion = probationRegionEntity()
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
+      .produce()
+    val user = userEntity(probationRegion)
+    val room = RoomEntityFactory().withPremises(premises).produce()
+    val bedspace = BedEntityFactory()
+      .withId(bedspaceId)
+      .withEndDate(null)
+      .withStartDate(newStartDate)
+      .withRoom(room)
+      .produce()
+
+    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
+
+    assertThat(event.applicationId).isNull()
+    assertThat(event.bookingId).isNull()
+    assertThat(event.crn).isNull()
+    assertThat(event.nomsNumber).isNull()
+    assertThat(event.data.eventType).isEqualTo(EventType.bedspaceUnarchived)
+    assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
+    assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+    assertThat(event.data.eventDetails.currentEndDate).isEqualTo(currentEndDate)
+    assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
+    assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
+  }
+
+  @Test
   fun `getBedspaceArchiveEvent transforms the bedspace information correctly to a domain event`() {
     val endDate = LocalDate.parse("2023-07-15")
     val bedspaceId = UUID.randomUUID()
@@ -609,7 +647,7 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `getPersonArrivedUpdatedDomainEvent transforms the bedspace and arrival updated information correctly without staff detail`() {
+  fun `getPersonArrivedUpdatedDomainEvent transforms the booking and arrival updated information correctly without staff detail`() {
     val arrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
     val expectedDepartureDate = LocalDate.parse("2023-10-15")
     val notes = "Some notes about the arrival"

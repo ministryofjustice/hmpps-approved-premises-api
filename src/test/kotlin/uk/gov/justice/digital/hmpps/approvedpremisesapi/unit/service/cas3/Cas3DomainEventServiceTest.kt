@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
@@ -1692,6 +1694,91 @@ class Cas3DomainEventServiceTest {
         data = data,
       ),
     )
+  }
+
+  @Test
+  fun `saveBedspaceUnarchiveEvent saves event but does not emit it`() {
+    val occuredAt = Instant.now()
+    val bedspaceId = UUID.randomUUID()
+    val newStartDate = LocalDate.now().plusDays(5)
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val currentEndDate = LocalDate.now().minusDays(2)
+    val id = UUID.randomUUID()
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      ).produce()
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
+      .produce()
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+    val room = RoomEntityFactory().withPremises(premises).produce()
+    val bedspace = BedEntityFactory()
+      .withId(bedspaceId)
+      .withEndDate(null)
+      .withStartDate(newStartDate)
+      .withRoom(room)
+      .produce()
+    val eventDetails = CAS3BedspaceUnarchiveEventDetails(
+      bedspaceId = bedspaceId,
+      userId = user.id,
+      newStartDate = newStartDate,
+      currentStartDate = currentStartDate,
+      currentEndDate = currentEndDate,
+    )
+    val data = CAS3BedspaceUnarchiveEvent(
+      eventDetails = eventDetails,
+      id = id,
+      timestamp = occuredAt,
+      eventType = EventType.bedspaceUnarchived,
+    )
+    val domainEventId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(currentStartDate), eq(currentEndDate), eq(user)) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+    every { userService.getUserForRequest() } returns user
+    every { userService.getUserForRequestOrNull() } returns user
+
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEvent.id &&
+            it.type == DomainEventType.CAS3_BEDSPACE_UNARCHIVED &&
+            it.crn == domainEvent.crn &&
+            it.cas3PremisesId == premises.id &&
+            it.cas3BedspaceId == bedspaceId &&
+            it.applicationId == null &&
+            it.cas1SpaceBookingId == null &&
+            it.assessmentId == null &&
+            it.service == "CAS3"
+          it.bookingId == null &&
+            it.nomsNumber == null &&
+            it.occurredAt.toInstant() == domainEvent.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
+        },
+      )
+    }
   }
 
   @Test

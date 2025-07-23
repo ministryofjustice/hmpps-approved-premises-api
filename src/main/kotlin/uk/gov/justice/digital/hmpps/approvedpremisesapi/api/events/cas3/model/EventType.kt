@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 enum class EventType(@get:JsonValue val value: String) {
 
   bedspaceArchived("accommodation.cas3.bedspace.archived"),
+  bedspaceUnarchived("accommodation.cas3.bedspace.unarchived"),
   bookingCancelled("accommodation.cas3.booking.cancelled"),
   bookingCancelledUpdated("accommodation.cas3.booking.cancelled.updated"),
   bookingConfirmed("accommodation.cas3.booking.confirmed"),

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingTopicException
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -231,6 +233,20 @@ class Cas3DomainEventService(
     )
   }
 
+  @Transactional
+  fun saveBedspaceUnarchiveEvent(bedspace: BedEntity, currentStartDate: LocalDate, currentEndDate: LocalDate) {
+    val user = userService.getUserForRequest()
+    val domainEvent = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.crn,
+      nomsNumber = domainEvent.nomsNumber,
+      triggerSourceType = TriggerSourceType.USER,
+      false,
+    )
+  }
+
   private fun <T : CAS3Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
     crn: String?,
@@ -313,6 +329,7 @@ class Cas3DomainEventService(
     }
   }
 
+  @Suppress("CyclomaticComplexMethod")
   private fun <T : CAS3Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
     CAS3BookingCancelledEvent::class -> DomainEventType.CAS3_BOOKING_CANCELLED
     CAS3BookingCancelledUpdatedEvent::class -> DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED
@@ -325,6 +342,7 @@ class Cas3DomainEventService(
     CAS3PersonDepartureUpdatedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED
     CAS3AssessmentUpdatedEvent::class -> DomainEventType.CAS3_ASSESSMENT_UPDATED
     CAS3DraftReferralDeletedEvent::class -> DomainEventType.CAS3_DRAFT_REFERRAL_DELETED
+    CAS3BedspaceUnarchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_UNARCHIVED
     CAS3BedspaceArchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_ARCHIVED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
