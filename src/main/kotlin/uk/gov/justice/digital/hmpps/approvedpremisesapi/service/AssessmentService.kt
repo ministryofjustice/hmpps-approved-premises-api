@@ -332,14 +332,7 @@ class AssessmentService(
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity) {
-      val placementRequirementsResult =
-        when (
-          val result =
-            cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
-        ) {
-          is CasResult.Success -> result.value
-          is CasResult.Error -> return result.reviseType()
-        }
+      val placementRequirementsResult = cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
 
       if (createPlacementRequest) {
         placementRequestService.createPlacementRequest(

@@ -1353,66 +1353,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Accept assessment returns an error if the postcode cannot be found`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(
-          probationArea = ProbationArea(
-            code = "N21",
-            description = randomStringMultiCaseWithNumbers(10),
-          ),
-        ),
-      ) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(userEntity)
-          }
-
-          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(userEntity)
-            withApplication(application)
-          }
-
-          val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-          val desirableCriteria =
-            listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
-
-          val placementDates = PlacementDates(
-            expectedArrival = LocalDate.now(),
-            duration = 12,
-          )
-
-          val placementRequirements = PlacementRequirements(
-            type = ApType.normal,
-            location = "SW1",
-            radius = 50,
-            essentialCriteria = essentialCriteria,
-            desirableCriteria = desirableCriteria,
-          )
-
-          webTestClient.post()
-            .uri("/cas1/assessments/${assessment.id}/acceptance")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              Cas1AssessmentAcceptance(
-                document = mapOf("document" to "value"),
-                requirements = placementRequirements,
-                placementDates = placementDates,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .is4xxClientError
-            .expectBody()
-            .jsonPath("title").isEqualTo("Bad Request")
-            .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
-            .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.postcodeDistrict")
-        }
-      }
-    }
-
-    @Test
     fun `Accept assessment with an outstanding clarification note sets the application status correctly`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(

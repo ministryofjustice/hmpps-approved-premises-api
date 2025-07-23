@@ -11,9 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -27,13 +24,10 @@ class Cas1PlacementRequirementsService(
   fun createPlacementRequirements(
     assessment: ApprovedPremisesAssessmentEntity,
     requirements: PlacementRequirements,
-  ): CasResult<PlacementRequirementsEntity> = validatedCasResult {
-    val postcodeDistrict = postcodeDistrictRepository.findByOutcode(requirements.location)
-      ?: return CasResult.FieldValidationError(
-        ValidationErrors().apply {
-          this["$.postcodeDistrict"] = "doesNotExist"
-        },
-      )
+  ): PlacementRequirementsEntity {
+    val outcode = requirements.location
+    val postcodeDistrict = postcodeDistrictRepository.findByOutcode(outcode)
+      ?: error("Postcode outcode '$outcode' not found")
 
     val desirableCriteria = toCharacteristics(requirements.desirableCriteria)
     val essentialCriteria = toCharacteristics(requirements.essentialCriteria)
@@ -52,7 +46,7 @@ class Cas1PlacementRequirementsService(
       ),
     )
 
-    return success(placementRequirementsEntity)
+    return placementRequirementsEntity
   }
 
   private fun toCharacteristics(criteria: List<PlacementCriteria>) = characteristicRepository.findAllWherePropertyNameIn(

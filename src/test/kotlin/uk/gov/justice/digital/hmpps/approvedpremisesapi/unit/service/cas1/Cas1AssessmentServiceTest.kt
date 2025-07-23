@@ -949,7 +949,7 @@ class Cas1AssessmentServiceTest {
           assessment,
           placementRequirements,
         )
-      } returns CasResult.Success(placementRequirementEntity)
+      } returns placementRequirementEntity
 
       every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
 
@@ -1013,7 +1013,7 @@ class Cas1AssessmentServiceTest {
           assessment,
           placementRequirements,
         )
-      } returns CasResult.Success(placementRequirementEntity)
+      } returns placementRequirementEntity
 
       every {
         placementRequestServiceMock.createPlacementRequest(
@@ -1103,52 +1103,6 @@ class Cas1AssessmentServiceTest {
         verify(exactly = 1) {
           cas1PlacementRequestEmailService.placementRequestSubmitted(assessment.application as ApprovedPremisesApplicationEntity)
         }
-      }
-    }
-
-    @Test
-    fun `CAS1 does not emit Domain Event when failing to create Placement Requirements`() {
-      val assessment = assessmentFactory.produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every { assessmentListener.preUpdate(any()) } returns Unit
-      every { approvedPremisesAssessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-
-      every {
-        cas1PlacementRequirementsServiceMock.createPlacementRequirements(
-          assessment,
-          placementRequirements,
-        )
-      } returns CasResult.GeneralValidationError("Couldn't create Placement Requirements")
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(
-          "crn1",
-          CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
-        )
-
-      val result = cas1AssessmentService.acceptAssessment(
-        user,
-        assessmentId,
-        "{\"test\": \"data\"}",
-        placementRequirements,
-        null,
-        null,
-        null,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("Couldn't create Placement Requirements")
-
-      verify(exactly = 1) {
-        cas1PlacementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements)
       }
     }
   }
