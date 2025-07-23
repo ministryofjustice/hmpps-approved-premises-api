@@ -1,18 +1,31 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedStatus
+import com.fasterxml.jackson.annotation.JsonInclude
+import java.time.LocalDate
+import java.util.UUID
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class Cas3VoidBedspace(
-    val id: java.util.UUID,
-    val startDate: java.time.LocalDate,
-    val endDate: java.time.LocalDate,
-    val bedId: java.util.UUID,
-    val bedName: kotlin.String,
-    val roomName: kotlin.String,
-    val reason: LostBedReason,
-    val status: LostBedStatus, val referenceNumber: kotlin.String? = null,
-    val notes: kotlin.String? = null,
-    val cancellation: LostBedCancellation? = null,
+  val id: UUID,
+  val startDate: LocalDate,
+  val endDate: LocalDate,
+  val bedspaceId: UUID,
+  val bedspaceName: String,
+  val reason: Cas3VoidBedspaceReason,
+  val status: Cas3VoidBedspaceStatus,
+  val referenceNumber: String?,
+  val notes: String?,
+  val cancellationDate: LocalDate?,
+  val cancellationNotes: String?,
 )
+
+data class Cas3VoidBedspaceReason(
+  val id: UUID,
+  val name: String,
+  val isActive: Boolean,
+)
+
+enum class Cas3VoidBedspaceStatus(val value: String) {
+  ACTIVE("active"),
+  CANCELLED("cancelled"),
+}

@@ -41,6 +41,6 @@ class ProbationDeliveryUnitEntityFactory : Factory<ProbationDeliveryUnitEntity> 
     id = this.id(),
     name = this.name(),
     deliusCode = this.deliusCode(),
-    probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a Probation Region"),
+    probationRegion = this.probationRegion?.invoke() ?: ProbationRegionEntityFactory().produce(),
   )
 }

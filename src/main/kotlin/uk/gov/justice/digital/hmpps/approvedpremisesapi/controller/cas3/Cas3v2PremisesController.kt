@@ -22,10 +22,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @SuppressWarnings("LongParameterList")
@@ -37,8 +39,10 @@ class Cas3v2PremisesController(
   private val cas3PremisesService: Cas3v2PremisesService,
   private val cas3BookingService: Cas3v2BookingService,
   private val bookingTransformer: Cas3BookingTransformer,
+  private val voidBedspaceService: Cas3v2VoidBedspaceService,
   private val offenderDetailService: OffenderDetailService,
-  private val voidBedspaceService: Cas3v2VoidBedspaceService
+  private val cas3UserAccessService: Cas3UserAccessService,
+  private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
 ) {
 
   @GetMapping("/premises/{premisesId}/bookings")
@@ -119,9 +123,16 @@ class Cas3v2PremisesController(
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(extractEntityFromCasResult(createdBookingResult), personInfo))
   }
 
-  @GetMapping("/cas3/premises/{premisesId}/void-bedspaces")
+  @GetMapping("/premises/{premisesId}/void-bedspaces")
   fun getVoidBedspaces(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3VoidBedspace>> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    val probationRegionId = premises.probationDeliveryUnit.probationRegion.id
 
-    return ResponseEntity.ok(listOf())
+    if (!cas3UserAccessService.canViewVoidBedspaces(probationRegionId)) throw ForbiddenProblem()
+
+    val voidBedspaces = voidBedspaceService.findVoidBedspaces(premises.id)
+      .map(cas3VoidBedspacesTransformer::toCas3VoidBedspace)
+
+    return ResponseEntity.ok(voidBedspaces)
   }
 }
