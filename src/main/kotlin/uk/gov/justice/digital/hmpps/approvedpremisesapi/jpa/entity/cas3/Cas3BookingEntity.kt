@@ -12,14 +12,17 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.v2.Cas3v2ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.v2.Cas3v2TurnaroundEntity
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
@@ -58,7 +61,7 @@ data class Cas3BookingEntity(
   var turnarounds: MutableList<Cas3v2TurnaroundEntity>,
   var nomsNumber: String?,
   @Enumerated(value = EnumType.STRING)
-  var status: BookingStatus?,
+  var status: Cas3BookingStatus?,
   @Version
   var version: Long = 1,
   var offenderName: String?,
@@ -134,4 +137,70 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     """,
   )
   fun findByBedspaceIdAndArrivingBeforeDate(bedspaceId: UUID, date: LocalDate): List<Cas3BookingEntity>
+
+  @Query(
+    """      
+      SELECT
+        b.crn AS personCrn,
+        b.offender_name AS personName,
+        b.id bookingId,
+        COALESCE(b.status, 'provisional') as bookingStatus,
+        b.arrival_date AS bookingStartDate,
+        b.departure_date AS bookingEndDate,
+        b.created_at AS bookingCreatedAt,
+        p.id premisesId,
+        p.name AS premisesName,
+        p.address_line1 AS premisesAddressLine1,
+        p.address_line2 AS premisesAddressLine2,
+        p.town AS premisesTown,
+        p.postcode AS premisesPostcode,
+        b2.id bedspaceId,
+        b2.reference AS bedspaceReference
+      FROM bookings b
+      LEFT JOIN cas3_bedspaces b2 ON b.bed_id = b2.id
+      LEFT JOIN cas3_premises p ON b.premises_id = p.id
+      LEFT JOIN probation_delivery_units pdu ON p.probation_delivery_unit_id = pdu.id
+      WHERE b.service = 'temporary-accommodation'
+      AND (:status is null or b.status = :status)
+      AND (:probationRegionId is null or pdu.probation_region_id = :probationRegionId)
+      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
+    """,
+    countQuery = """      
+      SELECT count(1)
+      FROM bookings b
+      LEFT JOIN cas3_bedspaces b2 ON b.bed_id = b2.id
+      LEFT JOIN cas3_premises p ON b.premises_id = p.id
+      LEFT JOIN probation_delivery_units pdu ON p.probation_delivery_unit_id = pdu.id
+      WHERE b.service = 'temporary-accommodation'
+      AND (:status is null or b.status = :status)
+      AND (:probationRegionId is null or pdu.probation_region_id = :probationRegionId)
+      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
+    """,
+    nativeQuery = true,
+  )
+  fun findBookings(
+    status: String?,
+    probationRegionId: UUID?,
+    crnOrName: String?,
+    pageable: Pageable?,
+  ): Page<Cas3v2BookingSearchResult>
+}
+
+@Suppress("TooManyFunctions")
+interface Cas3v2BookingSearchResult {
+  fun getPersonName(): String?
+  fun getPersonCrn(): String
+  fun getBookingStatus(): String
+  fun getBookingId(): UUID
+  fun getBookingStartDate(): LocalDate
+  fun getBookingEndDate(): LocalDate
+  fun getBookingCreatedAt(): Instant
+  fun getPremisesId(): UUID
+  fun getPremisesName(): String
+  fun getPremisesAddressLine1(): String
+  fun getPremisesAddressLine2(): String?
+  fun getPremisesTown(): String?
+  fun getPremisesPostcode(): String
+  fun getBedspaceId(): UUID
+  fun getBedspaceReference(): String
 }

@@ -15,8 +15,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingAndPersons
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -479,7 +479,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
@@ -553,7 +553,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == null &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
@@ -619,7 +619,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
@@ -690,7 +690,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
@@ -763,7 +763,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional &&
+              it.status == Cas3BookingStatus.provisional &&
               it.offenderName == "John Smith"
           },
         )
@@ -838,7 +838,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
@@ -912,7 +912,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
@@ -1032,7 +1032,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
@@ -1108,7 +1108,7 @@ class Cas3v2BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == assessment.application &&
-              it.status == BookingStatus.provisional
+              it.status == Cas3BookingStatus.provisional
           },
         )
       }
