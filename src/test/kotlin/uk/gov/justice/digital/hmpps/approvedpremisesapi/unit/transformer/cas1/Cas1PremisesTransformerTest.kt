@@ -4,11 +4,13 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import kotlinx.datetime.LocalDate
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -56,6 +58,9 @@ class Cas1PremisesTransformerTest {
         .withManagerDetails("manager details")
         .produce()
 
+      val restriction1 = Cas1PremisesLocalRestrictionSummary(UUID.randomUUID(), "restrictions 1", java.time.LocalDate.now())
+      val restriction2 = Cas1PremisesLocalRestrictionSummary(UUID.randomUUID(), "restrictions 2", java.time.LocalDate.now().minusDays(1))
+
       val expectedApArea = ApArea(UUID.randomUUID(), "id", "name")
       every { apAreaTransformer.transformJpaToApi(apArea) } returns expectedApArea
 
@@ -66,7 +71,10 @@ class Cas1PremisesTransformerTest {
           outOfServiceBeds = 2,
           availableBeds = 8,
           overbookingSummary = emptyList(),
-          localRestrictions = listOf("restrictions 1", "restrictions 2", "restrictions 3"),
+          localRestrictions = listOf(
+            restriction2,
+            restriction1,
+          ),
         ),
       )
 
@@ -82,7 +90,7 @@ class Cas1PremisesTransformerTest {
       assertThat(result.supportsSpaceBookings).isTrue()
       assertThat(result.managerDetails).isEqualTo("manager details")
       assertThat(result.overbookingSummary).isEmpty()
-      assertThat(result.localRestrictions).isEqualTo(listOf("restrictions 1", "restrictions 2", "restrictions 3"))
+      assertThat(result.localRestrictions).isEqualTo(listOf(restriction2, restriction1))
     }
   }
 
