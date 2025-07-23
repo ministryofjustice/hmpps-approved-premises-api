@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
@@ -256,13 +257,10 @@ class Cas1AssessmentService(
     val placementRequirementsResult = cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
 
     if (includesRequestForPlacement) {
-      placementRequestService.createPlacementRequest(
-        PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+      createRequestForPlacement(
         placementRequirementsResult,
         placementDates,
         notes,
-        false,
-        null,
       )
     }
 
@@ -286,6 +284,21 @@ class Cas1AssessmentService(
     }
 
     return CasResult.Success(savedAssessment)
+  }
+
+  private fun createRequestForPlacement(
+    placementRequirements: PlacementRequirementsEntity,
+    placementDates: PlacementDates,
+    notes: String?,
+  ) {
+    placementRequestService.createPlacementRequest(
+      PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+      placementRequirements,
+      placementDates,
+      notes,
+      false,
+      null,
+    )
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
