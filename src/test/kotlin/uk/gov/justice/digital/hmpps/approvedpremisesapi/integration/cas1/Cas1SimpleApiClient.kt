@@ -88,7 +88,7 @@ class Cas1SimpleApiClient {
     body: UpdateAssessment,
   ) {
     integrationTestBase.webTestClient.put()
-      .uri("/assessments/$assessmentId")
+      .uri("/cas1/assessments/$assessmentId")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -103,7 +103,7 @@ class Cas1SimpleApiClient {
     body: AssessmentAcceptance,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/assessments/$assessmentId/acceptance")
+      .uri("/cas1/assessments/$assessmentId/acceptance")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -118,7 +118,7 @@ class Cas1SimpleApiClient {
     body: AssessmentRejection,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/assessments/$assessmentId/rejection")
+      .uri("/cas1/assessments/$assessmentId/rejection")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -153,7 +153,7 @@ class Cas1SimpleApiClient {
     assessorJwt: String,
     body: NewClarificationNote,
   ): ClarificationNote = integrationTestBase.webTestClient.post()
-    .uri("/assessments/$assessmentId/notes")
+    .uri("/cas1/assessments/$assessmentId/notes")
     .header("Authorization", "Bearer $assessorJwt")
     .bodyValue(body)
     .exchange()
@@ -171,7 +171,7 @@ class Cas1SimpleApiClient {
     body: UpdatedClarificationNote,
   ) {
     integrationTestBase.webTestClient.put()
-      .uri("/assessments/$assessmentId/notes/$noteId")
+      .uri("/cas1/assessments/$assessmentId/notes/$noteId")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
