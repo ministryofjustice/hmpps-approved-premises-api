@@ -106,6 +106,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       "Bournemouth" -> "Bournemouth, Christchurch and Poole"
       "Camden (London)" -> "Camden"
       "Cheshire West" -> "Cheshire West and Chester"
+      "Ealing (London)" -> "Ealing"
       "Hull" -> "Kingston upon Hull, City of"
       "Islington (London)" -> "Islington"
       "Lewisham (London)" -> "Lewisham"
