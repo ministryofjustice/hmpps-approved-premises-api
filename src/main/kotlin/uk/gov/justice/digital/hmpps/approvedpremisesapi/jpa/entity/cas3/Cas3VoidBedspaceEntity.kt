@@ -66,6 +66,12 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
 
   @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb LEFT JOIN lb.cancellation c WHERE lb.premises.id = :premisesId AND c is NULL")
   fun findAllActiveForPremisesId(premisesId: UUID): List<Cas3VoidBedspaceEntity>
+
+  @Query(
+    "select vb from Cas3VoidBedspaceEntity vb where vb.bedspace.premises.id = :premisesId " +
+      "and vb.cancellationDate is null",
+  )
+  fun findActiveVoidBedspacesByPremisesId(premisesId: UUID): List<Cas3VoidBedspaceEntity>
 }
 
 @SuppressWarnings("LongParameterList")

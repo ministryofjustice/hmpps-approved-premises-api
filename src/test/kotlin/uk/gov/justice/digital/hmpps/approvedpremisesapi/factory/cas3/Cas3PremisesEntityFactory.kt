@@ -92,13 +92,12 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     this.status = { status }
   }
 
-  @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas3PremisesEntity = Cas3PremisesEntity(
     id = this.id(),
     name = this.name(),
     postcode = this.postcode(),
     localAuthorityArea = this.localAuthorityArea?.invoke()
-      ?: throw RuntimeException("Must provide a local authority area"),
+      ?: LocalAuthorityEntityFactory().produce(),
     bookings = mutableListOf(),
     addressLine1 = this.addressLine1(),
     addressLine2 = this.addressLine2(),
@@ -107,7 +106,7 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     characteristics = this.characteristics(),
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke()
-      ?: throw RuntimeException("Must provide a probation delivery unit"),
+      ?: ProbationDeliveryUnitEntityFactory().produce(),
     bedspaces = this.bedspaces(),
   )
 }
