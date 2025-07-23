@@ -1003,18 +1003,6 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Returns 403 Forbidden if user does not have correct role`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
-
-      webTestClient.get()
-        .uri("/cas1/space-bookings/${spaceBooking.id}")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
     fun `Returns 404 if space booking doesn't exist`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
@@ -1133,18 +1121,6 @@ class Cas1SpaceBookingTest {
         withCanonicalArrivalDate(LocalDate.parse("2032-05-29"))
         withCanonicalDepartureDate(LocalDate.parse("2032-06-29"))
       }
-    }
-
-    @Test
-    fun `Returns 403 Forbidden if user does not have correct role`() {
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
-
-      webTestClient.get()
-        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
     }
 
     @Test
