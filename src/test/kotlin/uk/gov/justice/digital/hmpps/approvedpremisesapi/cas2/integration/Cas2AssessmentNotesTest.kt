@@ -163,6 +163,10 @@ class Cas2AssessmentNotesTest(
                 withSubmittedAt(OffsetDateTime.now())
               }
 
+              application.createApplicationAssignment(referrer.activeCaseloadId!!, referrer)
+
+              cas2ApplicationRepository.save(application)
+
               val assessment = cas2AssessmentEntityFactory.produceAndPersist {
                 withApplication(application)
                 withNacroReferralId("OH123")
@@ -272,6 +276,10 @@ class Cas2AssessmentNotesTest(
                   withReferringPrisonCode(referrer.activeCaseloadId!!)
                 }
 
+                applicationEntity.createApplicationAssignment(referrer.activeCaseloadId!!, otherUser)
+
+                cas2ApplicationRepository.save(applicationEntity)
+
                 val assessment = cas2AssessmentEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withNacroReferralId("OH456")
@@ -336,6 +344,10 @@ class Cas2AssessmentNotesTest(
                 withCreatedByUser(referrer)
                 withSubmittedAt(OffsetDateTime.now())
               }
+
+              application.createApplicationAssignment(referrer.activeCaseloadId!!, referrer)
+
+              cas2ApplicationRepository.save(application)
 
               val assessment = cas2AssessmentEntityFactory.produceAndPersist {
                 withApplication(application)
@@ -445,6 +457,10 @@ class Cas2AssessmentNotesTest(
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withReferringPrisonCode(referrer.activeCaseloadId!!)
                 }
+
+                applicationEntity.createApplicationAssignment(referrer.activeCaseloadId!!, otherUser)
+
+                cas2ApplicationRepository.save(applicationEntity)
 
                 val assessment = cas2AssessmentEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
