@@ -68,6 +68,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL(ApprovedPremisesUserPermission.spaceBookingRecordNonArrival),
   CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL_NO_DATE_LIMIT(ApprovedPremisesUserPermission.spaceBookingRecordNonArrivalNoDateLimit),
   CAS1_SPACE_BOOKING_RECORD_KEYWORKER(ApprovedPremisesUserPermission.spaceBookingRecordKeyworker),
+
+  @Deprecated("This is no longer used and should be removed once usage removed from the UI")
   CAS1_SPACE_BOOKING_VIEW(ApprovedPremisesUserPermission.spaceBookingView),
   CAS1_SPACE_BOOKING_WITHDRAW(ApprovedPremisesUserPermission.spaceBookingWithdraw),
   CAS1_SPACE_BOOKING_SHORTEN(ApprovedPremisesUserPermission.spaceBookingShorten),

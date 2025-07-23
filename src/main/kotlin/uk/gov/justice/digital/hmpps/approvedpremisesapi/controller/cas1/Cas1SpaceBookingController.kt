@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_TRANSFER_CREATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
@@ -163,8 +162,6 @@ class Cas1SpaceBookingController(
   }
 
   override fun getSpaceBookingById(bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
-    userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_VIEW)
-
     val booking = extractEntityFromCasResult(spaceBookingService.getBooking(bookingId))
 
     return ResponseEntity
@@ -173,8 +170,6 @@ class Cas1SpaceBookingController(
   }
 
   override fun getSpaceBookingByPremiseAndId(premisesId: UUID, bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
-    userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_VIEW)
-
     val booking = extractEntityFromCasResult(spaceBookingService.getBookingForPremisesAndId(premisesId, bookingId))
 
     return ResponseEntity
