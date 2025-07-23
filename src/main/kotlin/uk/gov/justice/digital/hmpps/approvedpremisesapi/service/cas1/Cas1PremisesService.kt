@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -69,7 +70,14 @@ class Cas1PremisesService(
     val bedCount = premisesService.getBedCount(premise)
     val outOfServiceBedsCount = outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
     val spaceBookingCount = spaceBookingRepository.countActiveSpaceBookings(premisesId).toInt()
-    val localRestrictions = cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(premisesId)
+    val localRestrictions = cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(premisesId)
+      .map { restriction ->
+        Cas1PremisesLocalRestrictionSummary(
+          id = restriction.id,
+          description = restriction.description,
+          createdAt = restriction.createdAt.toLocalDate(),
+        )
+      }
 
     val overbookingSummary = if (!featureFlagService.getBooleanFlag("cas1-disable-overbooking-summary")) {
       premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
@@ -204,6 +212,6 @@ class Cas1PremisesService(
     val availableBeds: Int,
     val outOfServiceBeds: Int,
     val overbookingSummary: List<Cas1OverbookingRange>,
-    val localRestrictions: List<String> = emptyList(),
+    val localRestrictions: List<Cas1PremisesLocalRestrictionSummary> = emptyList(),
   )
 }

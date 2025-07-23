@@ -347,7 +347,7 @@ class Cas1PremisesController(
   @PostMapping("/premises/{premisesId}/local-restrictions")
   fun addLocalRestriction(
     @PathVariable premisesId: UUID,
-    @RequestBody payload: PremisesLocalRestriction,
+    @RequestBody payload: Cas1PremisesNewLocalRestriction,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
@@ -382,7 +382,7 @@ class Cas1PremisesController(
   @GetMapping("/premises/{premisesId}/local-restrictions")
   fun getLocalRestrictions(
     @PathVariable premisesId: UUID,
-  ): ResponseEntity<List<PremisesLocalRestrictionSummary>> {
+  ): ResponseEntity<List<Cas1PremisesLocalRestrictionSummary>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)
 
     val premises = cas1PremisesService.findPremiseById(premisesId)
@@ -390,7 +390,8 @@ class Cas1PremisesController(
 
     val restrictionsSummary = cas1PremisesService.getLocalRestrictions(premises.id)
       .map { restriction ->
-        PremisesLocalRestrictionSummary(
+        Cas1PremisesLocalRestrictionSummary(
+          id = restriction.id,
           description = restriction.description,
           createdAt = restriction.createdAt.toLocalDate(),
         )
@@ -464,12 +465,14 @@ data class Cas1PremiseCapacitySummary(
   val vacantBedCount: Int,
 )
 
-data class PremisesLocalRestriction(
+data class Cas1PremisesNewLocalRestriction(
   @Schema(description = "restriction to a premises")
   val description: String,
 )
 
-data class PremisesLocalRestrictionSummary(
+data class Cas1PremisesLocalRestrictionSummary(
+  @Schema(description = "restriction id")
+  val id: UUID,
   @Schema(description = "restriction description")
   val description: String,
   @Schema(description = "restriction added date")

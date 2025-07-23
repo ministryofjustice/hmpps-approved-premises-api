@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancyParameters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.PremisesLocalRestriction
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.PremisesLocalRestrictionSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesNewLocalRestriction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -193,14 +193,14 @@ class Cas1PremisesTest : IntegrationTestBase() {
         endDate = LocalDate.now().plusDays(2),
       )
 
-      cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+      val restriction1 = cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
         withApprovedPremisesId(premises.id)
         withDescription("No offence against sex workers")
         withCreatedAt(OffsetDateTime.now().minusDays(1))
         withCreatedByUserId(user.id)
       }
 
-      cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
+      val restriction2 = cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
         withApprovedPremisesId(premises.id)
         withDescription("No hate based offences")
         withCreatedAt(OffsetDateTime.now())
@@ -228,8 +228,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         Cas1OverbookingRange(LocalDate.now(), LocalDate.now().plusWeeks(12).minusDays(1)),
       )
       assertThat(summary.localRestrictions).containsExactly(
-        "No hate based offences",
-        "No offence against sex workers",
+        Cas1PremisesLocalRestrictionSummary(restriction2.id, restriction2.description, restriction2.createdAt.toLocalDate()),
+        Cas1PremisesLocalRestrictionSummary(restriction1.id, restriction1.description, restriction1.createdAt.toLocalDate()),
       )
     }
   }
@@ -1953,7 +1953,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .uri("/cas1/premises/${UUID.randomUUID()}/local-restrictions")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          PremisesLocalRestriction(
+          Cas1PremisesNewLocalRestriction(
             description = "description",
           ),
         )
@@ -1970,7 +1970,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .uri("/cas1/premises/${UUID.randomUUID()}/local-restrictions")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          PremisesLocalRestriction(
+          Cas1PremisesNewLocalRestriction(
             description = "description",
           ),
         )
@@ -1998,7 +1998,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .uri("/cas1/premises/${premises.id}/local-restrictions")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
-          PremisesLocalRestriction(
+          Cas1PremisesNewLocalRestriction(
             description = "No hate based offences",
           ),
         )
@@ -2063,7 +2063,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .bodyAsListOfObjects<PremisesLocalRestrictionSummary>()
+      .bodyAsListOfObjects<Cas1PremisesLocalRestrictionSummary>()
 
     assertThat(response.size).isEqualTo(3)
     assertThat(response.map { it.description }).containsExactly(

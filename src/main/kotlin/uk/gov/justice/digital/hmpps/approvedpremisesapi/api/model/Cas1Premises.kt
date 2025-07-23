@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 
 /**
  *
@@ -60,5 +61,5 @@ data class Cas1Premises(
     example = "No hate based offences",
     description = "A list of restrictions that apply specifically to this approved premises.",
   )
-  val localRestrictions: List<String>? = emptyList(),
+  val localRestrictions: List<Cas1PremisesLocalRestrictionSummary>? = emptyList(),
 )

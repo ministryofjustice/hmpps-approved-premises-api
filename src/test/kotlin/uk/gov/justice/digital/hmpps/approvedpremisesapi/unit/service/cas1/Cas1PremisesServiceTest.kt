@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -113,6 +114,23 @@ class Cas1PremisesServiceTest {
         byDay = emptyList(),
       )
 
+      val restriction1 = Cas1PremisesLocalRestrictionEntity(
+        id = UUID.randomUUID(),
+        description = "restriction1",
+        createdAt = OffsetDateTime.now(),
+        createdByUserId = UUID.randomUUID(),
+        approvedPremisesId = PREMISES_ID,
+        archived = false,
+      )
+      val restriction2 = Cas1PremisesLocalRestrictionEntity(
+        id = UUID.randomUUID(),
+        description = "restriction2",
+        createdAt = OffsetDateTime.now(),
+        createdByUserId = UUID.randomUUID(),
+        approvedPremisesId = PREMISES_ID,
+        archived = false,
+      )
+
       every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns false
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
@@ -120,7 +138,7 @@ class Cas1PremisesServiceTest {
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 4
-      every { cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(PREMISES_ID) } returns listOf("restriction1", "restriction2")
+      every { cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(PREMISES_ID) } returns listOf(restriction1, restriction2)
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -131,7 +149,12 @@ class Cas1PremisesServiceTest {
         assertThat(premisesSummaryInfo.outOfServiceBeds).isEqualTo(4)
         assertThat(premisesSummaryInfo.availableBeds).isEqualTo(48)
         assertThat(premisesSummaryInfo.overbookingSummary).isEmpty()
-        assertThat(premisesSummaryInfo.localRestrictions).isEqualTo(listOf("restriction1", "restriction2"))
+        assertThat(premisesSummaryInfo.localRestrictions).isEqualTo(
+          listOf(
+            Cas1PremisesLocalRestrictionSummary(restriction1.id, restriction1.description, restriction1.createdAt.toLocalDate()),
+            Cas1PremisesLocalRestrictionSummary(restriction2.id, restriction2.description, restriction2.createdAt.toLocalDate()),
+          ),
+        )
       }
     }
 
@@ -160,7 +183,7 @@ class Cas1PremisesServiceTest {
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 5
-      every { cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(PREMISES_ID) } returns emptyList()
+      every { cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(PREMISES_ID) } returns emptyList()
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -203,7 +226,7 @@ class Cas1PremisesServiceTest {
       every { spaceBookingRepository.countActiveSpaceBookings(eq(premises.id)) } returns 100
       every { premisesService.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
-      every { cas1PremisesLocalRestrictionRepository.findAllActiveRestrictionDescriptionsByPremisesId(PREMISES_ID) } returns emptyList()
+      every { cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(PREMISES_ID) } returns emptyList()
     }
 
     @Test
