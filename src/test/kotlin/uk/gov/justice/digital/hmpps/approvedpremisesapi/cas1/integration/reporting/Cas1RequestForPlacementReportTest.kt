@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
@@ -268,8 +267,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         expectedArrival = LocalDate.of(2021, 3, 12),
         duration = 8,
       )
-      withdrawPlacementRequest(
-        applicationId = application.id,
+      withdrawPlacementApplication(
+        placementApplicationId = getPlacementApplication(application).id,
         withdrawalDate = LocalDateTime.of(2021, 3, 15, 0, 10, 0),
         reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
       )
@@ -403,8 +402,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -476,8 +475,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -528,8 +527,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -561,8 +560,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -671,8 +670,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     applicationId: UUID,
     decisionDate: LocalDateTime,
     assessorJwt: String,
-    expectedArrival: LocalDate,
-    duration: Int,
+    expectedArrival: LocalDate?,
+    duration: Int?,
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
 
@@ -696,11 +695,12 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       AssessmentAcceptance(
         document = mapOf("document" to "value"),
         requirements = placementRequirements,
-        placementDates =
-        PlacementDates(
-          expectedArrival = expectedArrival,
-          duration = duration,
-        ),
+        placementDates = expectedArrival?.let {
+          PlacementDates(
+            expectedArrival = it,
+            duration = duration!!,
+          )
+        },
         apType = ApType.normal,
       ),
     )
@@ -819,24 +819,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       placementApplicationId,
       WithdrawPlacementApplication(
-        reason,
-      ),
-    )
-  }
-
-  private fun withdrawPlacementRequest(
-    applicationId: UUID,
-    withdrawalDate: LocalDateTime,
-    reason: WithdrawPlacementRequestReason,
-  ) {
-    clock.setNow(withdrawalDate)
-
-    val placementRequestId = getApplication(applicationId).placementRequests.first { it.isForApplicationsArrivalDate() }.id
-
-    cas1SimpleApiClient.placementRequestWithdraw(
-      this,
-      placementRequestId,
-      WithdrawPlacementRequest(
         reason,
       ),
     )

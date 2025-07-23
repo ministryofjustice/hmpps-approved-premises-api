@@ -89,6 +89,7 @@ UNION ALL
       WHEN pa.placement_type = '0' THEN 'ROTL'
       WHEN pa.placement_type = '1' THEN 'RELEASE_FOLLOWING_DECISION'
       WHEN pa.placement_type = '2' THEN 'ADDITIONAL_PLACEMENT'
+      WHEN pa.placement_type = '3' THEN 'STANDARD'
       ELSE ''
     END AS request_for_placement_type, 
     to_char(pa.expected_arrival, 'YYYY-MM-DD') AS requested_arrival_date,
