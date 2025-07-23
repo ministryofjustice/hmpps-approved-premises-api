@@ -247,14 +247,13 @@ class Cas1AssessmentService(
     preUpdateAssessment(assessment)
     val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
 
-    val placementRequirementsResult =
-      when (
-        val result =
-          cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
-      ) {
-        is CasResult.Success -> result.value
-        is CasResult.Error -> return result.reviseType()
-      }
+    /*
+    Note - these placement requirements are required for all subsequent placement applications linked
+    to the application, so they're created here even if a placement request isn't required
+
+    Ideally a placement requirements would be created for each individual placement application instead
+     */
+    val placementRequirementsResult = cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
 
     if (createPlacementRequest) {
       placementRequestService.createPlacementRequest(

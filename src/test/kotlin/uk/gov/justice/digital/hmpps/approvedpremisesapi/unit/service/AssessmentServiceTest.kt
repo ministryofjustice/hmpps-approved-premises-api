@@ -2819,7 +2819,7 @@ class AssessmentServiceTest {
           assessment,
           placementRequirements,
         )
-      } returns CasResult.Success(placementRequirementEntity)
+      } returns placementRequirementEntity
 
       every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
 
@@ -2883,7 +2883,7 @@ class AssessmentServiceTest {
           assessment,
           placementRequirements,
         )
-      } returns CasResult.Success(placementRequirementEntity)
+      } returns placementRequirementEntity
 
       every {
         placementRequestServiceMock.createPlacementRequest(
@@ -2963,49 +2963,6 @@ class AssessmentServiceTest {
         verify(exactly = 1) {
           cas1PlacementRequestEmailService.placementRequestSubmitted(assessment.application as ApprovedPremisesApplicationEntity)
         }
-      }
-    }
-
-    @Test
-    fun `CAS1 does not emit Domain Event when failing to create Placement Requirements`() {
-      val assessment = assessmentFactory.produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every { assessmentListener.preUpdate(any()) } returns Unit
-      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
-
-      every {
-        cas1PlacementRequirementsServiceMock.createPlacementRequirements(
-          assessment,
-          placementRequirements,
-        )
-      } returns CasResult.GeneralValidationError("Couldn't create Placement Requirements")
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce())
-
-      val result = assessmentService.acceptAssessment(
-        user,
-        assessmentId,
-        "{\"test\": \"data\"}",
-        placementRequirements,
-        null,
-        null,
-        null,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("Couldn't create Placement Requirements")
-
-      verify(exactly = 1) {
-        cas1PlacementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements)
       }
     }
 

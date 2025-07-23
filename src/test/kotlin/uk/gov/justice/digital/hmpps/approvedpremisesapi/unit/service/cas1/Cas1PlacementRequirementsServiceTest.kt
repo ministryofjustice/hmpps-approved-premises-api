@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCrite
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PostCodeDistrictEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
@@ -57,12 +56,12 @@ class Cas1PlacementRequirementsServiceTest {
       val characteristicIsEsap = createCas1Characteristic("isESAP")
       val characteristicIsCatered = createCas1Characteristic("isCatered")
 
-      every { postcodeDistrictRepository.findByOutcode("location") } returns PostCodeDistrictEntityFactory().produce()
+      every { postcodeDistrictRepository.findByOutcode("outcode value") } returns PostCodeDistrictEntityFactory().produce()
 
       val savedRequirementsCaptor = slot<PlacementRequirementsEntity>()
       every {
         placementRequirementsRepository.save(capture(savedRequirementsCaptor))
-      } returns PlacementRequirementsEntityFactory().withDefaults().produce()
+      } returnsArgument 0
 
       every {
         characteristicRepository.findAllWherePropertyNameIn(
@@ -84,11 +83,11 @@ class Cas1PlacementRequirementsServiceTest {
         )
       } returns listOf(characteristicIsEsap, characteristicIsCatered)
 
-      service.createPlacementRequirements(
+      val returnedRequirements = service.createPlacementRequirements(
         assessment = assessment,
         requirements = PlacementRequirements(
           type = ApType.normal,
-          location = "location",
+          location = "outcode value",
           radius = 5,
           essentialCriteria = listOf(PlacementCriteria.isSingle, PlacementCriteria.isPIPE),
           desirableCriteria = listOf(PlacementCriteria.isESAP, PlacementCriteria.isCatered),
@@ -96,6 +95,7 @@ class Cas1PlacementRequirementsServiceTest {
       )
 
       val savedRequirements = savedRequirementsCaptor.captured
+      assertThat(returnedRequirements).isSameAs(savedRequirements)
 
       assertThat(savedRequirements.essentialCriteria)
         .containsExactlyInAnyOrder(characteristicIsSingle, characteristicIsPipe)
