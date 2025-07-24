@@ -91,6 +91,8 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.save(capture(placementApplicationCaptor)) } returnsArgument 0
 
+      every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), createdByUserName = null) } just Runs
+
       val applicationCreator = UserEntityFactory().withDefaults().produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -130,7 +132,7 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(persisted.submittedAt).isEqualTo(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
       assertThat(persisted.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(persisted.decisionMadeAt).isEqualTo(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
-      assertThat(persisted.placementRequests).isEmpty()
+      assertThat(persisted.placementRequest).isNull()
       assertThat(persisted.withdrawalReason).isNull()
       assertThat(persisted.isWithdrawn).isFalse
       assertThat(persisted.submissionGroupId).isNotNull
@@ -138,6 +140,8 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(persisted.allocatedToUser).isEqualTo(assessor)
       assertThat(persisted.allocatedAt).isEqualTo(OffsetDateTime.parse("2018-12-05T10:15:30+01:00"))
       assertThat(persisted.reallocatedAt).isNull()
+
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(persisted, createdByUserName = null) }
     }
   }
 
