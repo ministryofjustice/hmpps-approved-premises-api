@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import arrow.core.Either
+import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -587,6 +588,26 @@ class Cas3PremisesService(
       }
     }
     return !validationErrors.any()
+  }
+
+  @Transactional
+  fun cancelScheduledArchivePremises(
+    premisesId: UUID,
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
+    val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
+      ?: return CasResult.NotFound("Premises", premisesId.toString())
+
+    if (premises.endDate == null) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotScheduledToArchive"
+    }
+
+    if (premises.endDate!! <= LocalDate.now()) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesAlreadyArchived"
+    }
+
+    premises.endDate = null
+
+    return success(premisesRepository.save(premises))
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")

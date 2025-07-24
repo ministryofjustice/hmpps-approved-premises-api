@@ -2726,4 +2726,182 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
     }
   }
+
+  @Nested
+  inner class CancelScheduledArchivePremises {
+    @Test
+    fun `Cancel scheduled archive premises returns 200 OK when successful`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(userEntity.probationRegion)
+            }
+          }
+          withStatus(PropertyStatus.active)
+          withYieldedEndDate { LocalDate.now().plusDays(10) }
+        }
+
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id)
+          .jsonPath("endDate").doesNotExist()
+
+        // Verify the premise was updated
+        val updatePremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatePremises.endDate).isNull()
+      }
+    }
+
+    @Test
+    fun `Cancel archive premises returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
+      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withStatus(PropertyStatus.active)
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Cancel archive premises returns 404 when premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+
+        val nonExistentPremises = UUID.randomUUID().toString()
+
+        webTestClient.put()
+          .uri("/cas3/premises/$nonExistentPremises/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Not Found")
+          .jsonPath("$.status").isEqualTo(404)
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $nonExistentPremises could be found")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premises returns 400 (premisesNotScheduledToArchive) when premise is not archived`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withYieldedEndDate { null }
+          withStatus(PropertyStatus.active)
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesNotScheduledToArchive")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premise returns 400 when premise already archived today`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withYieldedEndDate { LocalDate.now() }
+          withStatus(PropertyStatus.active)
+        }
+
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesAlreadyArchived")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premise returns 400 when premise has already been archived in the past`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withYieldedEndDate { LocalDate.now().minusDays(1) }
+          withStatus(PropertyStatus.active)
+        }
+
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesAlreadyArchived")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premises returns 403 when user does not have permission to manage premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        // Create premises in a different region
+        val otherRegion = probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea {
+            apAreaEntityFactory.produceAndPersist {
+              withDefaultCruManagementArea(givenACas1CruManagementArea())
+            }
+          }
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { otherRegion }
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
 }

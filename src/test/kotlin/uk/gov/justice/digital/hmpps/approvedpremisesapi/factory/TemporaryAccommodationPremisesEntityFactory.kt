@@ -108,6 +108,10 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.endDate = { endDate }
   }
 
+  fun withYieldedEndDate(endDate: Yielded<LocalDate?>) = apply {
+    this.endDate = endDate
+  }
+
   fun withTurnaroundWorkingDays(turnaroundWorkingDays: Int) = apply {
     this.turnaroundWorkingDays = { turnaroundWorkingDays }
   }
