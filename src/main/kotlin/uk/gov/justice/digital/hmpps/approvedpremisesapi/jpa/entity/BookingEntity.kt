@@ -140,14 +140,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findActiveOverlappingBookingByBed(bedId: UUID, date: LocalDate): List<BookingEntity>
 
   @Query(
-    """
-      SELECT id from bookings where premises_id = :premisesId 
-    """,
-    nativeQuery = true,
-  )
-  fun findAllIdsByPremisesId(premisesId: UUID): List<UUID>
-
-  @Query(
     "SELECT b FROM BookingEntity b WHERE b.service = :serviceName AND b.premises.id = :premisesId AND b.departureDate >= :date AND b.status in :statuses",
   )
   fun findFutureBookingsByPremisesIdAndStatus(serviceName: String, premisesId: UUID, date: LocalDate, statuses: List<BookingStatus>): List<BookingEntity>
@@ -327,6 +319,7 @@ data class BookingEntity(
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var turnarounds: MutableList<Cas3TurnaroundEntity>,
   var nomsNumber: String?,
+  @Deprecated("Bookings are no longer used in CAS1, this relationship can be removed")
   @OneToOne(mappedBy = "booking")
   var placementRequest: PlacementRequestEntity?,
   @Enumerated(value = EnumType.STRING)
