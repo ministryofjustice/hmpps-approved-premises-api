@@ -1,0 +1,550 @@
+{
+  "sections": [
+    {
+      "title": "Before you apply",
+      "tasks": [
+        {
+          "title": "Confirm eligibility",
+          "questionsAndAnswers": [
+            {
+              "question": "Is Ivor Record eligible for Short-Term Accommodation (CAS-2)?",
+              "answer": "Yes, I confirm Ivor Record is eligible"
+            }
+          ]
+        },
+        {
+          "title": "Confirm consent to share information",
+          "questionsAndAnswers": [
+            {
+              "question": "Has Ivor Record given their consent to apply for CAS-2?",
+              "answer": "Yes, Ivor Record has given their consent"
+            },
+            {
+              "question": "When did they give consent?",
+              "answer": "2 February 2025"
+            }
+          ]
+        },
+        {
+          "title": "Add HDC licence dates",
+          "questionsAndAnswers": [
+            {
+              "question": "HDC eligibility date",
+              "answer": "22 February 2024"
+            },
+            {
+              "question": "Conditional release date",
+              "answer": "28 April 2024"
+            }
+          ]
+        },
+        {
+          "title": "Add your details",
+          "questionsAndAnswers": [
+            {
+              "question": "Name",
+              "answer": "Roger Smith"
+            },
+            {
+              "question": "Email address",
+              "answer": "rsmith@justice.example.com"
+            },
+            {
+              "question": "What is your job title?",
+              "answer": "POM"
+            },
+            {
+              "question": "What is your contact telephone number?",
+              "answer": "07777 777 777"
+            }
+          ]
+        },
+        {
+          "title": "Check information needed from the applicant",
+          "questionsAndAnswers": [
+            {
+              "question": "Have you got all the information you need from the applicant?",
+              "answer": "Yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "About the applicant",
+      "tasks": [
+        {
+          "title": "Add personal information",
+          "questionsAndAnswers": [
+            {
+              "question": "Will Ivor Record have a working mobile phone when they are released?",
+              "answer": "yes"
+            },
+            {
+              "question": "What is their mobile number? (Optional)",
+              "answer": "07777 777 777"
+            },
+            {
+              "question": "Is their mobile a smart phone?",
+              "answer": "yes"
+            },
+            {
+              "question": "Is Ivor Record pregnant?",
+              "answer": "Yes"
+            },
+            {
+              "question": "When is their due date?",
+              "answer": "5 June 2024"
+            },
+            {
+              "question": "Does Ivor Record have a gender preference for their support worker?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What is their preference?",
+              "answer": "Female"
+            }
+          ]
+        },
+        {
+          "title": "Add address history",
+          "questionsAndAnswers": [
+            {
+              "question": "Did Ivor Record have an address before entering custody?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What was the address?",
+              "answer": "12 The Street\r\n\r\nLuton\r\n\r\nLU1 2BQ\r\n"
+            }
+          ]
+        },
+        {
+          "title": "Add equality and diversity monitoring information",
+          "questionsAndAnswers": [
+            {
+              "question": "Equality questions for Ivor Record",
+              "answer": "Yes, answer the equality questions (takes 2 minutes)"
+            },
+            {
+              "question": "Does Ivor Record have a disability?",
+              "answer": "Prefer not to say"
+            },
+            {
+              "question": "What is Ivor Record's sex?",
+              "answer": "Male"
+            },
+            {
+              "question": "Is the gender Ivor Record identifies with the same as the sex registered at birth?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Which of the following best describes Ivor Record's sexual orientation?",
+              "answer": "Prefer not to say"
+            },
+            {
+              "question": "What is Ivor Record's ethnic group?",
+              "answer": "White"
+            },
+            {
+              "question": "Which of the following best describes Ivor Record's White background?",
+              "answer": "English, Welsh, Scottish, Northern Irish or British"
+            },
+            {
+              "question": "What is Ivor Record's religion?",
+              "answer": "Atheist or Humanist"
+            },
+            {
+              "question": "Is Ivor Record a military veteran?",
+              "answer": "No"
+            },
+            {
+              "question": "Is Ivor Record a care leaver?",
+              "answer": "No"
+            },
+            {
+              "question": "Does Ivor Record have parental or carer responsibilities?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What is Ivor Record's legal marital or registered civil partnership status?",
+              "answer": "Never married and never registered in a civil partnership"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Area, funding and ID",
+      "tasks": [
+        {
+          "title": "Add exclusion zones and preferred areas",
+          "questionsAndAnswers": [
+            {
+              "question": "First preferred area",
+              "answer": "Luton"
+            },
+            {
+              "question": "Reason for first preference",
+              "answer": "This is where Mr Bertrand has spent the majority of his life and where his family live"
+            },
+            {
+              "question": "Second preferred area",
+              "answer": "Hertford"
+            },
+            {
+              "question": "Reason for second preference",
+              "answer": "Mr Bertrand has a sister in Hertford"
+            },
+            {
+              "question": "Does Ivor Record have any exclusion zones?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Provide details about the exclusion zone",
+              "answer": "Avoid Liverpool"
+            },
+            {
+              "question": "Does Ivor Record have any gang affiliations?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What is the name of the gang?",
+              "answer": "Gang name"
+            },
+            {
+              "question": "Where do they operate?",
+              "answer": "Derby"
+            },
+            {
+              "question": "Name any known rival gangs and where they operate (optional)",
+              "answer": "Rival gang detail"
+            },
+            {
+              "question": "Do they want to apply to live with their children in a family property?",
+              "answer": "Yes"
+            }
+          ]
+        },
+        {
+          "title": "Confirm funding and ID",
+          "questionsAndAnswers": [
+            {
+              "question": "How will Ivor Record pay for their accommodation and service charge?",
+              "answer": "Personal money or savings"
+            },
+            {
+              "question": "What is Ivor Record's National Insurance number? (Optional)",
+              "answer": "NS 123 288 12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Risks and needs",
+      "tasks": [
+        {
+          "title": "Add health needs",
+          "questionsAndAnswers": [
+            {
+              "question": "Do they take any illegal substances in custody?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What substances do they take?",
+              "answer": "Mr Bertrand is a heroin user"
+            },
+            {
+              "question": "Did they have any past issues with substance misuse before custody?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Describe their previous substance misuse",
+              "answer": "Mr Bertrand frequently used heroin"
+            },
+            {
+              "question": "Are they engaged with a drug and alcohol service in custody?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Is there an intention to refer them to a drug and alcohol service when they are released?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Name the drug and alcohol service",
+              "answer": "Drug Awareness Service"
+            },
+            {
+              "question": "Do they require any substitute medication for misused substances?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What substitute medication do they take?",
+              "answer": "Methadone"
+            },
+            {
+              "question": "Are they being released with naloxone?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Do they have any physical health needs?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Please describe their needs.",
+              "answer": "Mr Bertrand is in a wheelchair"
+            },
+            {
+              "question": "Can they climb stairs?",
+              "answer": "no"
+            },
+            {
+              "question": "Are they currently receiving any medication or treatment for their physical health?",
+              "answer": "No"
+            },
+            {
+              "question": "Can they live independently?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Do they require any additional support?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Please describe the types of support.",
+              "answer": "Mr Bertrand needs assistance with getting to appointments"
+            },
+            {
+              "question": "Do they have any mental health needs?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Please describe their mental health needs.",
+              "answer": "Mr Bertrand has a history of schizophrenic episodes and also suffers from epilepsy"
+            },
+            { "question": "How are they presenting?", "answer": "He presents with withdrawal and occasionally erratic behaviour." },
+            {
+              "question": "Are they engaged with any community mental health services?",
+              "answer": "No"
+            },
+            {
+              "question": "Are they engaged with any mental health services in custody?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Can they manage their own mental health medication on release?",
+              "answer": "They are not prescribed medication for their mental health"
+            },
+            {
+              "question": "Do they have any additional communication needs?",
+              "answer": "No"
+            },
+            {
+              "question": "Do they need an interpreter?",
+              "answer": "No"
+            },
+            {
+              "question": "Do they need any support to see, hear, speak, or understand?",
+              "answer": "No"
+            },
+            {
+              "question": "Do they have any additional needs relating to learning difficulties or neurodiversity?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Please describe their additional needs.",
+              "answer": "Mr Bertrand has been diagnosed with ADHD and has difficulty absorbing written information."
+            },
+            {
+              "question": "Are they vulnerable as a result of this condition?",
+              "answer": "No"
+            },
+            {
+              "question": "Do they have difficulties interacting with other people as a result of this condition?",
+              "answer": "No"
+            },
+            {
+              "question": "Is additional support required?",
+              "answer": "No"
+            },
+            {
+              "question": "Do they have a brain injury?",
+              "answer": "No"
+            },
+            {
+              "question": "Are they vulnerable as a result of this injury?",
+              "answer": "No"
+            },
+            {
+              "question": "Do they have difficulties interacting with other people as a result of this injury?",
+              "answer": "No"
+            },
+            {
+              "question": "Is additional support required?",
+              "answer": "No"
+            },
+            {
+              "question": "Are they managing any long term health conditions?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Please describe the long term health conditions.",
+              "answer": "Mr Bertrand has some complex vascular and circulatory issues which have contributed to his lack of mobility"
+            },
+            {
+              "question": "Have they experienced a stroke?",
+              "answer": "No"
+            },
+            {
+              "question": "Do they experience seizures?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Please describe the type and any treatment.",
+              "answer": "He has intermittent epilepsy which is well controlled by carbamazepine"
+            },
+            {
+              "question": "Are they currently receiving regular treatment for cancer?",
+              "answer": "No"
+            }
+          ]
+        },
+        {
+          "title": "Add risk to self information",
+          "questionsAndAnswers": [
+            {
+              "question": "Describe Ivor Record's current issues and needs related to self harm and suicide",
+              "answer": "[R8.1.1] Review 06.10.21:\r\n\r\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021..."
+            },
+            {
+              "question": "I confirm this information is relevant and up to date.",
+              "answer": "Confirmed"
+            },
+            {
+              "question": "Describe Ivor Record's current circumstances, issues and needs related to vulnerability",
+              "answer": "[R8.3.1] Review 06.10.21:\r\n\r\n        A previous assessor opined that Mr Smith was displaying all the characteristics of someone..."
+            },
+            {
+              "question": "I confirm this information is relevant and up to date.",
+              "answer": "Confirmed"
+            },
+            {
+              "question": "Describe Ivor Record's historical issues and needs related to self harm and suicide",
+              "answer": "[R8.1.4] Review 06.10.21:\r\n\r\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021 there..."
+            },
+            {
+              "question": "I confirm this information is relevant and up to date.",
+              "answer": "Confirmed"
+            },
+            {
+              "question": "Is there anything else to include about Ivor Record's risk to self?",
+              "answer": "No"
+            }
+          ]
+        },
+        {
+          "title": "Add risk of serious harm (RoSH) information",
+          "questionsAndAnswers": [
+            {
+              "question": "Who is at risk?",
+              "answer": "[R10.1] IN CUSTODY\r\n\r\nKNOWN ADULTS:\r\nSuch as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Smith cell.\r\n\r\nCHILDREN:\r\nSimon Smith, Roger Smith, Lindy Smith"
+            },
+            {
+              "question": "What is the nature of the risk?",
+              "answer": "[R10.2] IN CUSTODY:\r\n\r\nKNOWN ADULTS:\r\nIntimidation, threats of violence, use of weapons or boiling water, physical education and violent assault, long term psychological impact as a result of Mr Smith violent behaviour. This harm may be cause in the course of physical altercation due to seeking revenge or holding grudges..."
+            },
+            {
+              "question": "I confirm this information is relevant and up to date.",
+              "answer": "Confirmed"
+            },
+            {
+              "question": "What circumstances are likely to increase risk?",
+              "answer": "[R10.4] CIRCUMSTANCES:\r\nA lack of stable accommodation\r\nunemployment\r\nnon constructive use of time\r\nbreakdown of family support\r\nbeing unable to access benefits\r\n\r\nUNDERLYING FACTORS:\r\npro criminal attitudes supporting commission of crime..."
+            },
+            {
+              "question": "When is the risk likely to be greatest?",
+              "answer": "[R10.3] STATIC RISK FACTORS:\r\n\r\nMr Smith gender - At the time of the offence, Mr Smith was 35 years old and considered to be in the higher risk group.\r\n\r\nSTABLE DYNAMIC RISK FACTORS:\r\nThinking and behaviour - limited ability to manage mood or emotions poor impulse control. Mr Smith demonstrated cognitive deficit in committing the index offences and this still remains a concern..."
+            },
+            {
+              "question": "I confirm this information is relevant and up to date.",
+              "answer": "Confirmed"
+            },
+            {
+              "question": "What factors are likely to reduce risk?",
+              "answer": "[R10.5] Engage with Mental Health Services in prison and in the community.\r\nMaintain emotional stability.\r\nAbstain from alcohol.\r\nAbstain from illegal drugs.\r\nRegular testing for alcohol and drug use, in prison and on Licence.\r\nMaintain stable accommodation..."
+            },
+            {
+              "question": "I confirm this information is relevant and up to date.",
+              "answer": "Confirmed"
+            },
+            {
+              "question": "Are there any comments to add about cell sharing?",
+              "answer": "No"
+            },
+            {
+              "question": "Is there any other risk information for Ivor Record?",
+              "answer": "No"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Offence and licence information",
+      "tasks": [
+        {
+          "title": "Add current offences",
+          "questionsAndAnswers": [
+            {
+              "question": "Current offence 1",
+              "answer": "Arson (09000)\r\nundefined\r\n5 June 2020\r\n3 years\r\n\nSummary: summary detail\r\nOutstanding charges: Yes\r\nDetails of outstanding charges: The offence took place at the home of his ex-partner in Liverpool"
+            },
+            {
+              "question": "Current offence 2",
+              "answer": "Stalking (08000)\r\nundefined\r\n6 July 2023\r\n2 months\r\n\nSummary: This offence is against a victim living in Liverpool, see exclusion zones.\r\nOutstanding charges: No"
+            }
+          ]
+        },
+        {
+          "title": "Add offending history",
+          "questionsAndAnswers": [
+            {
+              "question": "Does Ivor Record have any previous convictions?",
+              "answer": "Yes, and there is relevant risk"
+            },
+            {
+              "question": "Historical offence 1",
+              "answer": "Burglary in a dwelling - 02800\r\nOther\r\n20 February 2020\r\n6 months\r\n\nSummary: Mr Bertrand entered the house of an associate John Smith on the night of Feb 20th, 2020 and took items of value including a laptop and flatscreen TV"
+            },
+            {
+              "question": "Historical offence 2",
+              "answer": "Failure to attend or stay for the duration of an initial assessment following test for a class A drug (Drugs Act 2005) - 19353\r\nDrugs\r\n15 June 2020\r\n2 days\r\n\nSummary: Mr Bertrand was stopped whilst driving erratically on the night of June 15 and refused to give a blood sample"
+            },
+            {
+              "question": "Historical offence 3",
+              "answer": "Dangerous driving/Aid, abet cause or permit reckless driving - 80200\r\nOther\r\n15 June 2020\r\n3 months\r\n\nSummary: Mr Bertrand was stopped on the A41 near Berkhamsted after being observed mounting the kerb at speed. "
+            }
+          ]
+        },
+        {
+          "title": "Add CPP details and HDC licence conditions",
+          "questionsAndAnswers": [
+            {
+              "question": "Who is Ivor Record's Community Probation Practitioner (CPP)?",
+              "answer": "Roger Smith\r\nLeeds\r\ncpp@justice.example.com\r\n01234 777 099"
+            },
+            {
+              "question": "Does Ivor Record have any non-standard licence conditions?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Describe the conditions",
+              "answer": "There are exclusion zones, please check"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
