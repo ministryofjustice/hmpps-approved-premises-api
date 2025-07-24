@@ -19,7 +19,6 @@ interface NonArrivalReasonRepository : JpaRepository<NonArrivalReasonEntity, UUI
 
   @Query("SELECT r FROM NonArrivalReasonEntity r WHERE r.isActive = true")
   fun findAllActiveReasons(): List<NonArrivalReasonEntity>
-  fun findByLegacyDeliusReasonCode(it: String): NonArrivalReasonEntity?
 }
 
 @Entity

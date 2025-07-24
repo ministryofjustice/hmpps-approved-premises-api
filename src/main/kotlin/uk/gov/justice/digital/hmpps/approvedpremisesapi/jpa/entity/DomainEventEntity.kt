@@ -114,19 +114,6 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     nativeQuery = true,
   )
   fun updateData(id: UUID, updatedData: String)
-
-  @Modifying
-  @Query(
-    """
-      UPDATE domain_events
-      SET 
-        booking_id = null,
-        cas1_space_booking_id = booking_id
-      WHERE booking_id = :bookingId  
-    """,
-    nativeQuery = true,
-  )
-  fun replaceBookingIdWithSpaceBookingId(bookingId: UUID)
 }
 
 @Entity

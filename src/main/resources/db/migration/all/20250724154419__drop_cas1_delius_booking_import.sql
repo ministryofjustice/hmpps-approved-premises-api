@@ -1,0 +1,1 @@
+DROP TABLE cas1_delius_booking_import;
