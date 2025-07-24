@@ -106,6 +106,7 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withRequestedDuration(6)
         .withAuthorisedDuration(7)
+        .withAutomatic(false)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -129,6 +130,7 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withRequestedDuration(6)
         .withAuthorisedDuration(7)
+        .withAutomatic(false)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -184,6 +186,7 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withRequestedDuration(6)
         .withAuthorisedDuration(7)
+        .withAutomatic(false)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -207,6 +210,7 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withRequestedDuration(6)
         .withAuthorisedDuration(7)
+        .withAutomatic(false)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -228,11 +232,32 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withRequestedDuration(6)
         .withAuthorisedDuration(7)
+        .withAutomatic(false)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
 
       assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
+    }
+
+    @Test
+    fun `Derives the correct type for an automatic placement application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withRequestedDuration(47)
+        .withAutomatic(true)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
+
+      assertThat(result.type).isEqualTo(RequestForPlacementType.automatic)
     }
 
     @ParameterizedTest
@@ -250,6 +275,7 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(5)
         .withRequestedDuration(6)
         .withAuthorisedDuration(7)
+        .withAutomatic(false)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(

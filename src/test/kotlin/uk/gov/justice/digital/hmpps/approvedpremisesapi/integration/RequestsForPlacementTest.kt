@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
@@ -54,7 +55,17 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withCreatedByUser(user)
           }
 
-          val submittedPlacementApplication = placementApplicationFactory.produceAndPersist {
+          val submittedInitialAutomaticPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withApplication(application)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withExpectedArrival(LocalDate.now())
+            withRequestedDuration(1)
+            withPlacementType(PlacementType.AUTOMATIC)
+            withAutomatic(true)
+          }
+
+          val submittedAdditionalPlacementApplication = placementApplicationFactory.produceAndPersist {
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -113,22 +124,66 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             .isOk
             .bodyAsListOfObjects<RequestForPlacement>()
 
-          assertThat(requestForPlacements).hasSize(4)
-          assertThat(requestForPlacements[0].id).isEqualTo(submittedPlacementApplication.id)
-          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements).hasSize(5)
+          assertThat(requestForPlacements[0].id).isEqualTo(submittedInitialAutomaticPlacementApplication.id)
+          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
 
-          assertThat(requestForPlacements[1].id).isEqualTo(withdrawnPlacementApplication.id)
+          assertThat(requestForPlacements[1].id).isEqualTo(submittedAdditionalPlacementApplication.id)
           assertThat(requestForPlacements[1].type).isEqualTo(RequestForPlacementType.manual)
-          assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+          assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
 
-          assertThat(requestForPlacements[2].id).isEqualTo(placementRequest.id)
-          assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.automatic)
-          assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+          assertThat(requestForPlacements[2].id).isEqualTo(withdrawnPlacementApplication.id)
+          assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
 
-          assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
+          assertThat(requestForPlacements[3].id).isEqualTo(placementRequest.id)
           assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
-          assertThat(requestForPlacements[3].isWithdrawn).isTrue()
+          assertThat(requestForPlacements[3].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+
+          assertThat(requestForPlacements[4].id).isEqualTo(withdrawnPlacementRequest.id)
+          assertThat(requestForPlacements[4].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[4].isWithdrawn).isTrue()
+        }
+      }
+    }
+
+    @Suppress("unused")
+    @Test
+    fun `Get legacy automatic Requests for Placement (no placement application)`() {
+      givenAUser { user, jwt ->
+        givenAnAssessmentForApprovedPremises(
+          allocatedToUser = null,
+          createdByUser = user,
+        ) { assessment, application ->
+          val placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withApplication(application)
+            withAssessment(assessment)
+            withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+            withDesirableCriteria(emptyList())
+            withEssentialCriteria(emptyList())
+          }
+
+          val placementRequest = placementRequestFactory.produceAndPersist {
+            withApplication(application)
+            withAssessment(assessment)
+            withPlacementRequirements(placementRequirements)
+            withCreatedAt(OffsetDateTime.now())
+            withPlacementApplication(null)
+          }
+
+          val requestForPlacements = webTestClient.get()
+            .uri("/applications/${application.id}/requests-for-placement")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<RequestForPlacement>()
+
+          assertThat(requestForPlacements).hasSize(1)
+          assertThat(requestForPlacements[0].id).isEqualTo(placementRequest.id)
+          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
         }
       }
     }
