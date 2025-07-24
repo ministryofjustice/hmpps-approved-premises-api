@@ -127,9 +127,7 @@ class UserTransformer(
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
-  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {
-    return userRole.role.permissions
-      .filter { it.isAvailable(environmentService) }
-      .map { it.cas1ApiValue as ApiUserPermission }
-  }
+  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> = userRole.role.permissions
+    .filter { it.isAvailable(environmentService) }
+    .map { it.cas1ApiValue as ApiUserPermission }
 }
