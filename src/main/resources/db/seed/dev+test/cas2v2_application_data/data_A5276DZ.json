@@ -1,0 +1,354 @@
+{
+  "confirm-eligibility": {
+    "confirm-eligibility": {
+      "isEligible": "yes"
+    }
+  },
+  "confirm-consent": {
+    "confirm-consent": {
+      "hasGivenConsent": "yes",
+      "consentDate": "2025-02-02",
+      "consentDate-year": "2025",
+      "consentDate-month": "2",
+      "consentDate-day": "2"
+    }
+  },
+  "referrer-details": {
+    "confirm-details": {
+      "name": "Courtney Clark",
+      "email": "rsmith@justice.example.com"
+    },
+    "job-title": { "jobTitle": "POM" },
+    "contact-number": { "telephone": "07777 777 777" }
+  },
+  "area-information": {
+    "first-preferred-area": {
+      "preferredArea": "Happisburgh",
+      "preferenceReason": "This is where Mr Record has spent the majority of his life and where his family live"
+    },
+    "second-preferred-area": {
+      "preferredArea": "Wymondham",
+      "preferenceReason": "Mr Record has a sister in Wymondham"
+    },
+    "exclusion-zones": {
+      "hasExclusionZones": "yes",
+      "exclusionZonesDetail": "Avoid Weybourne"
+    },
+    "gang-affiliations": {
+      "hasGangAffiliations": "yes",
+      "gangName": "Gang name",
+      "gangOperationArea": "Dereham",
+      "rivalGangDetail": "Rival gang detail"
+    },
+    "family-accommodation": {
+      "familyProperty": "yes"
+    }
+  },
+  "funding-information": {
+    "funding-source": {
+      "fundingSource": "personalSavings"
+    },
+    "national-insurance": {
+      "nationalInsuranceNumber": "NS 123 288 12"
+    }
+  },
+  "address-history": {
+    "previous-address": {
+      "hasPreviousAddress": "yes",
+      "previousAddressLine1": "12 The Street",
+      "previousAddressLine2": "",
+      "previousTownOrCity": "Happisburgh",
+      "previousCounty": "",
+      "previousPostcode": "LU1 2BQ"
+    }
+  },
+  "personal-information": {
+    "working-mobile-phone": {
+      "hasWorkingMobilePhone": "yes",
+      "mobilePhoneNumber": "07777 777 777",
+      "isSmartPhone": "yes"
+    },
+    "immigration-status": {
+      "immigrationStatus": "UK citizen"
+    },
+    "pregnancy-information": {
+      "isPregnant": "yes",
+      "dueDate-day": "5",
+      "dueDate-month": "6",
+      "dueDate-year": "2024"
+    },
+    "support-worker-preference": {
+      "hasSupportWorkerPreference": "yes",
+      "supportWorkerPreference": "female"
+    }
+  },
+  "equality-and-diversity-monitoring": {
+    "will-answer-equality-questions": {
+      "willAnswer": "yes"
+    },
+    "disability": {
+      "hasDisability": "preferNotToSay",
+      "otherDisability": ""
+    },
+    "sex-and-gender": {
+      "sex": "male",
+      "gender": "yes",
+      "optionalGenderIdentity": ""
+    },
+    "sexual-orientation": {
+      "orientation": "preferNotToSay",
+      "otherOrientation": ""
+    },
+    "ethnic-group": {
+      "ethnicGroup": "white"
+    },
+    "white-background": {
+      "whiteBackground": "english",
+      "optionalWhiteBackground": ""
+    },
+    "religion": {
+      "religion": "atheist"
+    },
+    "military-veteran": {
+      "isVeteran": "no"
+    },
+    "care-leaver": {
+      "isCareLeaver": "no"
+    },
+    "parental-carer-responsibilities": {
+      "hasParentalOrCarerResponsibilities": "yes"
+    },
+    "marital-status": {
+      "maritalStatus": "neverMarried"
+    }
+  },
+  "health-needs": {
+    "substance-misuse": {
+      "usesIllegalSubstances": "yes",
+      "substanceMisuse": "Mr Record is a cake user",
+      "pastSubstanceMisuse": "yes",
+      "pastSubstanceMisuseDetail": "Mr Record frequently used cake",
+      "engagedWithDrugAndAlcoholService": "yes",
+      "intentToReferToServiceOnRelease": "yes",
+      "drugAndAlcoholServiceDetail": "Cake Awareness Service",
+      "requiresSubstituteMedication": "yes",
+      "substituteMedicationDetail": "Biscuits",
+      "releasedWithNaloxone": "yes"
+    },
+    "physical-health": {
+      "hasPhyHealthNeeds": "yes",
+      "needsDetail": "Mr Record is in a wheelchair",
+      "canClimbStairs": "no",
+      "isReceivingMedicationOrTreatment": "no",
+      "medicationOrTreatmentDetail": "",
+      "canLiveIndependently": "yes",
+      "indyLivingDetail": "",
+      "requiresAdditionalSupport": "yes",
+      "addSupportDetail": "Mr Record needs assistance with getting to appointments"
+    },
+    "mental-health": {
+      "hasMentalHealthNeeds": "yes",
+      "needsDetail": "Mr Record has a history of schizophrenic episodes and also suffers from epilepsy",
+      "needsPresentation": "He presents with withdrawal and occasionally erratic behaviour.",
+      "isEngagedWithCommunity": "no",
+      "isEngagedWithServicesInCustody": "yes",
+      "canManageMedication": "notPrescribedMedication",
+      "canManageMedicationNotes": "",
+      "medicationIssues": "",
+      "cantManageMedicationNotes": ""
+    },
+    "communication-and-language": {
+      "hasCommunicationNeeds": "no",
+      "communicationDetail": "",
+      "requiresInterpreter": "no",
+      "interpretationDetail": "",
+      "hasSupportNeeds": "no",
+      "supportDetail": ""
+    },
+    "learning-difficulties": {
+      "hasLearningNeeds": "yes",
+      "needsDetail": "Mr Record has been diagnosed with ADHD and has difficulty absorbing written information.",
+      "isVulnerable": "no",
+      "vulnerabilityDetail": "",
+      "hasDifficultyInteracting": "no",
+      "interactionDetail": "",
+      "requiresAdditionalSupport": "no",
+      "addSupportDetail": ""
+    },
+    "brain-injury": {
+      "hasBrainInjury": "no",
+      "injuryDetail": "",
+      "isVulnerable": "no",
+      "vulnerabilityDetail": "",
+      "hasDifficultyInteracting": "no",
+      "interactionDetail": "",
+      "requiresAdditionalSupport": "no",
+      "addSupportDetail": ""
+    },
+    "other-health": {
+      "hasLongTermHealthCondition": "yes",
+      "healthConditionDetail": "Mr Record has some complex vascular and circulatory issues which have contributed to his lack of mobility",
+      "hasHadStroke": "no",
+      "hasSeizures": "yes",
+      "seizuresDetail": "He has intermittent epilepsy which is well controlled by carbamazepine",
+      "beingTreatedForCancer": "no"
+    }
+  },
+  "risk-to-self": {
+    "current-risk": {
+      "currentRiskDetail": "[R8.1.1] Review 06.10.21:\r\n\r\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021...",
+      "confirmation": "confirmed"
+    },
+    "vulnerability": {
+      "vulnerabilityDetail": "[R8.3.1] Review 06.10.21:\r\n\r\n        A previous assessor opined that Mr Clark was displaying all the characteristics of someone...",
+      "confirmation": "confirmed"
+    },
+    "historical-risk": {
+      "historicalRiskDetail": "[R8.1.4] Review 06.10.21:\r\n\r\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021 there...",
+      "confirmation": "confirmed"
+    },
+    "oasys-import": {
+      "oasysImportedDate": "2023-11-28T11:42:22.183Z",
+      "oasysStartedDate": "2023-11-20",
+      "oasysCompletedDate": "2023-11-22"
+    },
+    "acct": {},
+    "additional-information": {
+      "hasAdditionalInformation": "no",
+      "additionalInformationDetail": ""
+    }
+  },
+  "risk-of-serious-harm": {
+    "summary-data": {
+      "status": "retrieved",
+      "value": {
+        "overallRisk": "High",
+        "riskToChildren": "Medium",
+        "riskToPublic": "High",
+        "riskToKnownAdult": "High",
+        "riskToStaff": "Low",
+        "lastUpdated": "2022-11-02"
+      },
+      "oasysImportedDate": "2023-11-28T11:42:22.183Z",
+      "oasysStartedDate": "2023-11-20",
+      "oasysCompletedDate": "2023-11-22"
+    },
+    "risk-to-others": {
+      "whoIsAtRisk": "[R10.1] IN CUSTODY\r\n\r\nKNOWN ADULTS:\r\nSuch as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Clark cell.\r\n\r\nCHILDREN:\r\nSimon Clark, Courtney Clark, Lindy Clark",
+      "natureOfRisk": "[R10.2] IN CUSTODY:\r\n\r\nKNOWN ADULTS:\r\nIntimidation, threats of violence, use of weapons or boiling water, physical education and violent assault, long term psychological impact as a result of Mr Clark violent behaviour. This harm may be cause in the course of physical altercation due to seeking revenge or holding grudges...",
+      "confirmation": "confirmed"
+    },
+    "risk-factors": {
+      "circumstancesLikelyToIncreaseRisk": "[R10.4] CIRCUMSTANCES:\r\nA lack of stable accommodation\r\nunemployment\r\nnon constructive use of time\r\nbreakdown of family support\r\nbeing unable to access benefits\r\n\r\nUNDERLYING FACTORS:\r\npro criminal attitudes supporting commission of crime...",
+      "whenIsRiskLikelyToBeGreatest": "[R10.3] STATIC RISK FACTORS:\r\n\r\nMr Clark gender - At the time of the offence, Mr Clark was 35 years old and considered to be in the higher risk group.\r\n\r\nSTABLE DYNAMIC RISK FACTORS:\r\nThinking and behaviour - limited ability to manage mood or emotions poor impulse control. Mr Clark demonstrated cognitive deficit in committing the index offences and this still remains a concern...",
+      "confirmation": "confirmed"
+    },
+    "reducing-risk": {
+      "factorsLikelyToReduceRisk": "[R10.5] Engage with Mental Health Services in prison and in the community.\r\nMaintain emotional stability.\r\nAbstain from alcohol.\r\nAbstain from illegal drugs.\r\nRegular testing for alcohol and drug use, in prison and on Licence.\r\nMaintain stable accommodation...",
+      "confirmation": "confirmed"
+    },
+    "oasys-import": {
+      "oasysImportedDate": "2023-11-28T11:43:06.137Z"
+    },
+    "summary": {
+      "additionalComments": ""
+    },
+    "risk-management-arrangements": {
+      "arrangements": "no",
+      "mappaDetails": "",
+      "maracDetails": "",
+      "iomDetails": ""
+    },
+    "cell-share-information": {
+      "hasCellShareComments": "no",
+      "cellShareInformationDetail": ""
+    },
+    "additional-risk-information": {
+      "hasAdditionalInformation": "no",
+      "additionalInformationDetail": ""
+    }
+  },
+  "current-offences": {
+    "current-offence-data": [
+      {
+        "titleAndNumber": "Arson (09000)",
+        "offenceCategory": "Arson",
+        "offenceDate-day": "5",
+        "offenceDate-month": "6",
+        "offenceDate-year": "2020",
+        "sentenceLength": "3 years",
+        "summary": "summary detail",
+        "outstandingCharges": "yes",
+        "outstandingChargesDetail": "The offence took place at the home of his ex-partner in Liverpool"
+      },
+      {
+        "titleAndNumber": "Stalking (08000)",
+        "offenceCategory": "Stalking",
+        "offenceDate-day": "6",
+        "offenceDate-month": "7",
+        "offenceDate-year": "2023",
+        "sentenceLength": "2 months",
+        "summary": "This offence is against a victim living in Liverpool, see exclusion zones.",
+        "outstandingCharges": "no"
+      }
+    ],
+    "current-offences": {}
+  },
+  "offending-history": {
+    "any-previous-convictions": {
+      "hasAnyPreviousConvictions": "yesRelevantRisk"
+    },
+    "offence-history-data": [
+      {
+        "titleAndNumber": "Burglary in a dwelling - 02800",
+        "offenceCategory": "other",
+        "offenceDate-day": "20",
+        "offenceDate-month": "2",
+        "offenceDate-year": "2020",
+        "sentenceLength": "6 months",
+        "summary": "Mr Record entered the house of an associate John Clark on the night of Feb 20th, 2020 and took items of value including a laptop and flatscreen TV"
+      },
+      {
+        "titleAndNumber": "Failure to attend or stay for the duration of an initial assessment following test for a class A drug (Drugs Act 2005) - 19353",
+        "offenceCategory": "drugs",
+        "offenceDate-day": "15",
+        "offenceDate-month": "06",
+        "offenceDate-year": "2020",
+        "sentenceLength": "2 days",
+        "summary": "Mr Record was stopped whilst driving erratically on the night of June 15 and refused to give a blood sample"
+      },
+      {
+        "titleAndNumber": "Dangerous driving/Aid, abet cause or permit reckless driving - 80200",
+        "offenceCategory": "other",
+        "offenceDate-day": "15",
+        "offenceDate-month": "06",
+        "offenceDate-year": "2020",
+        "sentenceLength": "3 months",
+        "summary": "Mr Record was stopped on the A41 near Berkhamsted after being observed mounting the kerb at speed. "
+      }
+    ],
+    "offence-history": {}
+  },
+  "cpp-details-and-hdc-licence-conditions": {
+    "cpp-details": {
+      "name": "Courtney Clark",
+      "probationRegion": "Leeds",
+      "email": "cpp@justice.example.com",
+      "telephone": "01234 777 099"
+    },
+    "non-standard-licence-conditions": {
+      "nonStandardLicenceConditions": "yes",
+      "nonStandardLicenceConditionsDetail": "There are exclusion zones, please check"
+    }
+  },
+  "information-needed-from-applicant": {
+    "information-needed-from-applicant": {
+      "hasInformationNeeded": "yes"
+    }
+  },
+  "check-your-answers": {
+    "check-your-answers": {
+      "checkYourAnswers": "confirmed"
+    }
+  }
+}
