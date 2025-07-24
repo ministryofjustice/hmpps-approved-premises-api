@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -33,6 +34,7 @@ class Cas1PlacementApplicationDomainEventService(
   private val domainEventTransformer: DomainEventTransformer,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  val clock: Clock,
 ) {
 
   fun placementApplicationSubmitted(
@@ -96,7 +98,7 @@ class Cas1PlacementApplicationDomainEventService(
     val user = withdrawalContext.withdrawalTriggeredBy.user
 
     val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = Instant.now()
+    val eventOccurredAt = Instant.now(clock)
     val application = placementApplication.application
 
     val eventDetails = PlacementApplicationWithdrawn(

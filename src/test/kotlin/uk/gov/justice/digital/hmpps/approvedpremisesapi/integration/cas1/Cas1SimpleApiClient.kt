@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -88,7 +89,7 @@ class Cas1SimpleApiClient {
     body: UpdateAssessment,
   ) {
     integrationTestBase.webTestClient.put()
-      .uri("/assessments/$assessmentId")
+      .uri("/cas1/assessments/$assessmentId")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -103,7 +104,7 @@ class Cas1SimpleApiClient {
     body: AssessmentAcceptance,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/assessments/$assessmentId/acceptance")
+      .uri("/cas1/assessments/$assessmentId/acceptance")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -118,7 +119,7 @@ class Cas1SimpleApiClient {
     body: AssessmentRejection,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/assessments/$assessmentId/rejection")
+      .uri("/cas1/assessments/$assessmentId/rejection")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -153,7 +154,7 @@ class Cas1SimpleApiClient {
     assessorJwt: String,
     body: NewClarificationNote,
   ): ClarificationNote = integrationTestBase.webTestClient.post()
-    .uri("/assessments/$assessmentId/notes")
+    .uri("/cas1/assessments/$assessmentId/notes")
     .header("Authorization", "Bearer $assessorJwt")
     .bodyValue(body)
     .exchange()
@@ -171,7 +172,7 @@ class Cas1SimpleApiClient {
     body: UpdatedClarificationNote,
   ) {
     integrationTestBase.webTestClient.put()
-      .uri("/assessments/$assessmentId/notes/$noteId")
+      .uri("/cas1/assessments/$assessmentId/notes/$noteId")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -217,6 +218,22 @@ class Cas1SimpleApiClient {
     integrationTestBase.webTestClient.put()
       .uri("/cas1/placement-applications/$placementApplicationId")
       .header("Authorization", "Bearer $creatorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun placementApplicationWithdraw(
+    integrationTestBase: IntegrationTestBase,
+    placementApplicationId: UUID,
+    body: WithdrawPlacementApplication,
+  ) {
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
+
+    integrationTestBase.webTestClient.post()
+      .uri("/cas1/placement-applications/$placementApplicationId/withdraw")
+      .header("Authorization", "Bearer $managerJwt")
       .bodyValue(body)
       .exchange()
       .expectStatus()

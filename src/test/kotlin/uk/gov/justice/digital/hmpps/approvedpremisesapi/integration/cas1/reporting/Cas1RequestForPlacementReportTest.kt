@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
@@ -32,8 +33,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -68,7 +71,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   lateinit var assessor: UserEntity
   lateinit var assessorJwt: String
 
-  val standardRFPNotAssessed = StandardRFPNotAssessed()
+  val standardRFPSubmittedNotAssessedAndWithdrawn = StandardRFPSubmittedNotAssessedAndWithdrawn()
   val standardRFPRejectedManager = StandardRFPRejectedManager()
   val standardRFPAcceptedAndWithdrawnManager = StandardRFPAcceptedAndWithdrawnManager()
 
@@ -78,14 +81,17 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   val placementAppRotlAcceptedManager = PlacementAppAssessedManager(
     type = PlacementType.rotl,
     submittedAt = LocalDateTime.of(2021, 3, 22, 9, 49, 0),
+    withdraw = false,
   )
   val placementAppAdditionalAcceptedManager = PlacementAppAssessedManager(
     type = PlacementType.additionalPlacement,
     submittedAt = LocalDateTime.of(2021, 3, 23, 9, 49, 0),
+    withdraw = false,
   )
-  val placementAppParoleAcceptedManager = PlacementAppAssessedManager(
+  val placementAppParoleAcceptedAndWithdrawnManager = PlacementAppAssessedManager(
     type = PlacementType.releaseFollowingDecision,
     submittedAt = LocalDateTime.of(2021, 3, 24, 9, 49, 0),
+    withdraw = true,
   )
   val placementAppRejectedManager = PlacementAppRejectedManager()
 
@@ -104,7 +110,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     assessor = assessorDetails.first
     assessorJwt = assessorDetails.second
 
-    standardRFPNotAssessed.createRequestForPlacement()
+    standardRFPSubmittedNotAssessedAndWithdrawn.createRequestForPlacement()
     standardRFPRejectedManager.createRequestForPlacement()
     standardRFPAcceptedAndWithdrawnManager.createRequestForPlacement()
     standardRFPSubmittedBeforeReportingPeriod.createRequestForPlacement()
@@ -112,7 +118,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     placementAppRotlAcceptedManager.createRequestForPlacement()
     placementAppAdditionalAcceptedManager.createRequestForPlacement()
-    placementAppParoleAcceptedManager.createRequestForPlacement()
+    placementAppParoleAcceptedAndWithdrawnManager.createRequestForPlacement()
     placementAppRejectedManager.createRequestForPlacement()
     placementAppSubmittedBeforeReportingPeriod.createRequestForPlacement()
     placementAppSubmittedAfterReportingPeriod.createRequestForPlacement()
@@ -192,10 +198,10 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
         standardRFPAcceptedAndWithdrawnManager.assertRow(actual[0])
         standardRFPRejectedManager.assertRow(actual[1])
-        standardRFPNotAssessed.assertRow(actual[2])
+        standardRFPSubmittedNotAssessedAndWithdrawn.assertRow(actual[2])
         placementAppRotlAcceptedManager.assertRow(actual[3])
         placementAppAdditionalAcceptedManager.assertRow(actual[4])
-        placementAppParoleAcceptedManager.assertRow(actual[5])
+        placementAppParoleAcceptedAndWithdrawnManager.assertRow(actual[5])
         placementAppRejectedManager.assertRow(actual[6])
       }
   }
@@ -322,7 +328,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  inner class StandardRFPNotAssessed {
+  inner class StandardRFPSubmittedNotAssessedAndWithdrawn {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createRequestForPlacement() {
@@ -330,6 +336,12 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "StandardRFPNotAssessed",
         submittedAt = LocalDateTime.of(2021, 3, 1, 15, 25, 5),
         arrivalDateOnApplication = LocalDate.of(2022, 12, 31),
+      )
+
+      withdrawApplication(
+        applicationId = application.id,
+        withdrawalDate = LocalDateTime.of(2022, 1, 12, 10, 15, 0),
+        reason = WithdrawalReason.duplicateApplication,
       )
     }
 
@@ -343,8 +355,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2021-03-01T15:25:05Z")
       assertThat(row.request_for_placement_decision).isNull()
       assertThat(row.request_for_placement_decision_made_date).isNull()
-      assertThat(row.request_for_placement_withdrawal_date).isNull()
-      assertThat(row.request_for_placement_withdrawal_reason).isNull()
+      assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2022-01-12T10:15:00Z")
+      assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("duplicate_application")
       assertThat(row.crn).isEqualTo("StandardRFPNotAssessed")
     }
   }
@@ -372,6 +384,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   inner class PlacementAppAssessedManager(
     val type: PlacementType,
     val submittedAt: LocalDateTime,
+    val withdraw: Boolean = false,
   ) {
     lateinit var application: ApprovedPremisesApplicationEntity
     lateinit var placementApplicationId: UUID
@@ -410,6 +423,13 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         decisionMadeAt = LocalDateTime.of(2021, 3, 24, 15, 20, 0),
         decision = PlacementApplicationDecision.accepted,
       )
+      if (withdraw) {
+        withdrawPlacementApplication(
+          placementApplicationId = placementApplicationId,
+          withdrawalDate = LocalDateTime.of(2022, 5, 12, 10, 15, 0),
+          reason = WithdrawPlacementRequestReason.changeInCircumstances,
+        )
+      }
     }
 
     fun assertRow(row: RequestForPlacementReportRow) {
@@ -427,8 +447,13 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.parole_decision_date).isEqualTo("2020-02-10")
       assertThat(row.request_for_placement_decision).isEqualTo("ACCEPTED")
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2021-03-24T15:20:00Z")
-      assertThat(row.request_for_placement_withdrawal_date).isNull()
-      assertThat(row.request_for_placement_withdrawal_reason).isNull()
+      if (withdraw) {
+        assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2022-05-12T10:15:00Z")
+        assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("CHANGE_IN_CIRCUMSTANCES")
+      } else {
+        assertThat(row.request_for_placement_withdrawal_date).isNull()
+        assertThat(row.request_for_placement_withdrawal_reason).isNull()
+      }
       assertThat(row.crn).isEqualTo("${type}PlacementAppAssessed")
     }
   }
@@ -779,6 +804,22 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     return latestPlacementApplicationId
   }
 
+  private fun withdrawPlacementApplication(
+    placementApplicationId: UUID,
+    withdrawalDate: LocalDateTime,
+    reason: WithdrawPlacementRequestReason,
+  ) {
+    clock.setNow(withdrawalDate)
+
+    cas1SimpleApiClient.placementApplicationWithdraw(
+      this,
+      placementApplicationId,
+      WithdrawPlacementApplication(
+        reason,
+      ),
+    )
+  }
+
   private fun withdrawPlacementRequest(
     applicationId: UUID,
     withdrawalDate: LocalDateTime,
@@ -794,6 +835,20 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       WithdrawPlacementRequest(
         reason,
       ),
+    )
+  }
+
+  private fun withdrawApplication(
+    applicationId: UUID,
+    withdrawalDate: LocalDateTime,
+    reason: WithdrawalReason,
+  ) {
+    clock.setNow(withdrawalDate)
+
+    cas1SimpleApiClient.applicationWithdraw(
+      this,
+      applicationId,
+      NewWithdrawal(reason),
     )
   }
 
