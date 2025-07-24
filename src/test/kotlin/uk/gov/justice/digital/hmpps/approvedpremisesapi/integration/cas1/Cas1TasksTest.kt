@@ -69,11 +69,6 @@ import kotlin.random.Random
 
 class Cas1TasksTest {
 
-  private val baseUrls = listOf(
-    "/tasks",
-    "/cas1/tasks",
-  )
-
   @Nested
   inner class GetTasksTest {
 
@@ -136,20 +131,18 @@ class Cas1TasksTest {
                   offenderSummaries,
                 ),
               )
-              baseUrls.forEach { url ->
-                webTestClient.get()
-                  .uri("$url?page=1&sortBy=createdAt&sortDirection=asc")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      expectedTasks,
-                    ),
-                  )
-              }
+              webTestClient.get()
+                .uri("/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    expectedTasks,
+                  ),
+                )
             }
           }
         }
@@ -305,22 +298,20 @@ class Cas1TasksTest {
       @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `Get all tasks filters by a single type`(taskType: TaskType) {
         val expectedTasks = tasks[taskType]!!.sortedBy { it.dueDate }
-        baseUrls.forEach { baseUrl ->
-          val url = "$baseUrl?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType.value}"
+        val url = "/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType.value}"
 
-          webTestClient.get()
-            .uri(url)
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                expectedTasks,
-              ),
-            )
-        }
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
       }
 
       @ParameterizedTest
@@ -601,22 +592,20 @@ class Cas1TasksTest {
       @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `it filters by CRU area and task type`(taskType: TaskType) {
         val expectedTasks = tasks[taskType]
-        baseUrls.forEach { baseUrl ->
-          val url = "$baseUrl?type=${taskType.value}&cruManagementAreaId=${cruArea.id}"
+        val url = "/cas1/tasks?type=${taskType.value}&cruManagementAreaId=${cruArea.id}"
 
-          webTestClient.get()
-            .uri(url)
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                expectedTasks,
-              ),
-            )
-        }
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
       }
 
       @ParameterizedTest
@@ -719,22 +708,20 @@ class Cas1TasksTest {
       @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `it filters by user and task type`(taskType: TaskType) {
         val expectedTasks = tasks[taskType]
-        baseUrls.forEach { baseUrl ->
-          val url = "$baseUrl?type=${taskType.value}&allocatedToUserId=${user.id}"
+        val url = "/cas1/tasks?type=${taskType.value}&allocatedToUserId=${user.id}"
 
-          webTestClient.get()
-            .uri(url)
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                expectedTasks,
-              ),
-            )
-        }
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
       }
 
       @ParameterizedTest
@@ -1105,22 +1092,20 @@ class Cas1TasksTest {
           tasks[TaskType.placementApplication]!![qualification]!!,
         ).flatten()
 
-        baseUrls.forEach { baseUrl ->
-          val url = "$baseUrl?requiredQualification=${qualification.name.lowercase()}"
+        val url = "/cas1/tasks?requiredQualification=${qualification.name.lowercase()}"
 
-          webTestClient.get()
-            .uri(url)
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                expectedTasks,
-              ),
-            )
-        }
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
       }
     }
 
@@ -1210,43 +1195,39 @@ class Cas1TasksTest {
       @ParameterizedTest
       @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `Get all tasks filters by name and task type`(taskType: TaskType) {
-        baseUrls.forEach { baseUrl ->
-          val url = "$baseUrl?type=${taskType.value}&crnOrName=someone"
+        val url = "/cas1/tasks?type=${taskType.value}&crnOrName=someone"
 
-          webTestClient.get()
-            .uri(url)
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(nameMatchTasks[taskType]),
-              ),
-            )
-        }
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(nameMatchTasks[taskType]),
+            ),
+          )
       }
 
       @ParameterizedTest
       @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `Get all tasks filters by CRN and task type`(taskType: TaskType) {
-        baseUrls.forEach { baseUrl ->
-          val url = "$baseUrl?type=${taskType.value}&crnOrName=$crn"
+        val url = "/cas1/tasks?type=${taskType.value}&crnOrName=$crn"
 
-          webTestClient.get()
-            .uri(url)
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(crnMatchTasks[taskType]),
-              ),
-            )
-        }
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(crnMatchTasks[taskType]),
+            ),
+          )
       }
 
       @ParameterizedTest
