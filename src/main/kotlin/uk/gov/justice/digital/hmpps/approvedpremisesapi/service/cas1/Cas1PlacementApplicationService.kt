@@ -77,6 +77,11 @@ class Cas1PlacementApplicationService(
    * completely. At this point we will also track rejected implicit requests for placements via
    * `placement_applications`. This is complicated though because we need to consider the
    * assessment lifecycle and how that impacts the request for placement, including appeals.
+   *
+   * Note that the caller of this function triggers emails related to the request for placement
+   * being accepted and creation of the placement request. Logically this should probably be
+   * moved into this function (or at least under the ownership of this service), similar
+   * to the `recordDecision` function
    */
   fun createAutomaticPlacementApplication(
     id: UUID,
@@ -85,7 +90,7 @@ class Cas1PlacementApplicationService(
     durationDays: Int,
   ): PlacementApplicationEntity {
     val application = assessment.cas1Application()
-    return placementApplicationRepository.save(
+    val placementApplication = placementApplicationRepository.save(
       placementApplicationRepository.save(
         PlacementApplicationEntity(
           id = id,
@@ -94,7 +99,7 @@ class Cas1PlacementApplicationService(
           createdAt = application.createdAt,
           expectedArrival = expectedArrival,
           duration = durationDays,
-          submittedAt = application.submittedAt,
+          submittedAt = application.submittedAt!!,
           decision = JpaPlacementApplicationDecision.ACCEPTED,
           decisionMadeAt = assessment.decisionMadeAt(),
           placementType = PlacementType.AUTOMATIC,
@@ -111,6 +116,13 @@ class Cas1PlacementApplicationService(
         ),
       ),
     )
+
+    cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(
+      placementApplication = placementApplication,
+      createdByUserName = null,
+    )
+
+    return placementApplication
   }
 
   fun createPlacementApplication(
@@ -352,8 +364,8 @@ class Cas1PlacementApplicationService(
 
     placementApplicationsWithDates.forEach { placementApplication ->
       cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(
-        placementApplication,
-        userService.getDeliusUserNameForRequest(),
+        placementApplication = placementApplication,
+        createdByUserName = userService.getDeliusUserNameForRequest(),
       )
       cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
       if (baselinePlacementApplication.allocatedToUser != null) {

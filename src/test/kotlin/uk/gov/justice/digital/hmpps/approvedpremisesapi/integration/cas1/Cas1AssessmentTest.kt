@@ -1160,6 +1160,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
+            withSubmittedAt(OffsetDateTime.now())
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -1382,6 +1383,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+            withSubmittedAt(OffsetDateTime.now())
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

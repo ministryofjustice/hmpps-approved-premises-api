@@ -80,7 +80,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
@@ -2842,7 +2841,7 @@ class AssessmentServiceTest {
         assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
 
         verify(exactly = 0) {
-          placementRequestServiceMock.createPlacementRequest(any(), any(), any(), any(), false, null)
+          placementRequestServiceMock.createPlacementRequest(any(), any(), any(), false, null)
         }
 
         verify(exactly = 1) {
@@ -2887,7 +2886,6 @@ class AssessmentServiceTest {
 
       every {
         placementRequestServiceMock.createPlacementRequest(
-          any(),
           any(),
           any(),
           any(),
@@ -2943,7 +2941,6 @@ class AssessmentServiceTest {
 
         verify(exactly = 1) {
           placementRequestServiceMock.createPlacementRequest(
-            source = PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
             placementRequirements = placementRequirementEntity,
             placementDates = placementDates,
             notes = notes,
