@@ -15,11 +15,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
@@ -33,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -52,6 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService as Cas3DomainEventService
@@ -62,6 +67,7 @@ class Cas3v2BookingServiceTest {
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val mockBookingRepository = mockk<Cas3v2BookingRepository>()
+  private val mockArrivalRepository = mockk<Cas3ArrivalRepository>()
   private val mockBedspaceRepository = mockk<Cas3BedspacesRepository>()
   private val mockCas3v2TurnaroundRepository = mockk<Cas3v2TurnaroundRepository>()
   private val mockCas3VoidBedspacesRepository = mockk<Cas3VoidBedspacesRepository>()
@@ -70,9 +76,10 @@ class Cas3v2BookingServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockOffenderDetailService = mockk<OffenderDetailService>()
 
-  private fun createCas3BookingService(): Cas3v2BookingService = Cas3v2BookingService(
+  private fun createCas3v2BookingService(): Cas3v2BookingService = Cas3v2BookingService(
     cas3BookingRepository = mockBookingRepository,
     cas3BedspaceRepository = mockBedspaceRepository,
+    cas3ArrivalRepository = mockArrivalRepository,
     cas3v2TurnaroundRepository = this.mockCas3v2TurnaroundRepository,
     assessmentRepository = mockAssessmentRepository,
     cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
@@ -84,7 +91,7 @@ class Cas3v2BookingServiceTest {
     offenderDetailService = mockOffenderDetailService,
   )
 
-  private val cas3BookingService = createCas3BookingService()
+  private val cas3BookingService = createCas3v2BookingService()
 
   private val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()
@@ -262,7 +269,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBedspaceRepository.findByIdOrNull(bedId) } returns null
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedId, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedId, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedId,
@@ -304,7 +311,7 @@ class Cas3v2BookingServiceTest {
       val assessmentId = UUID.randomUUID()
 
       every { mockBedspaceRepository.findByIdOrNull(bedId) } returns null
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedId, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedId, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedId,
@@ -349,7 +356,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBedspaceRepository.findByIdOrNull(bedId) } returns bedspace
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedId, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedId, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedId,
@@ -397,7 +404,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bed.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bed.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bed.id,
@@ -442,7 +449,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -515,7 +522,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -582,7 +589,7 @@ class Cas3v2BookingServiceTest {
       val bookingSlot = slot<Cas3BookingEntity>()
       every { mockBookingRepository.save(capture(bookingSlot)) } answers { bookingSlot.captured }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -653,7 +660,7 @@ class Cas3v2BookingServiceTest {
       val bookingSlot = slot<Cas3BookingEntity>()
       every { mockBookingRepository.save(capture(bookingSlot)) } answers { bookingSlot.captured }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -723,7 +730,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -801,7 +808,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -875,7 +882,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -949,7 +956,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -994,7 +1001,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } throws RuntimeException("DB exception")
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -1069,7 +1076,7 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
 
-      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate) } returns listOf()
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
         mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
@@ -1156,6 +1163,145 @@ class Cas3v2BookingServiceTest {
         .produce()
 
       return assessment
+    }
+  }
+
+  @Nested
+  inner class CreateArrival {
+    private val cas3BookingEntity = createCas3Booking()
+
+    @BeforeEach
+    fun setup() {
+      every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as Cas3ArrivalEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any(Cas3BookingEntity::class), any(UserEntity::class)) } just Runs
+    }
+
+    @Test
+    fun `createArrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+      val result = cas3BookingService.createArrival(
+        booking = cas3BookingEntity,
+        arrivalDate = LocalDate.parse("2022-08-27"),
+        expectedDepartureDate = LocalDate.parse("2022-08-26"),
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.expectedDepartureDate", "beforeBookingArrivalDate")
+
+      verify(exactly = 0) { mockArrivalRepository.save(any()) }
+      verify(exactly = 0) { mockBookingRepository.save(any()) }
+      verify(exactly = 0) { mockCas3DomainEventService.savePersonArrivedEvent(cas3BookingEntity, user) }
+    }
+
+    @Test
+    fun `createArrival should return success response when arrival exists for a Booking and save and emit the event`() {
+      val userEntity = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+      val arrivalEntity = Cas3ArrivalEntityFactory()
+        .withBooking(cas3BookingEntity)
+        .produce()
+      cas3BookingEntity.arrivals += arrivalEntity
+
+      every { mockCas3DomainEventService.savePersonArrivedUpdatedEvent(any(Cas3BookingEntity::class), any(UserEntity::class)) } just Runs
+
+      val result = cas3BookingService.createArrival(
+        booking = cas3BookingEntity,
+        arrivalDate = LocalDate.parse("2022-08-25"),
+        expectedDepartureDate = LocalDate.parse("2022-08-26"),
+        notes = "notes",
+        user = userEntity,
+      )
+
+      assertThatCasResult(result).isSuccess()
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.arrivalDate).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(result.value.arrivalDateTime).isEqualTo(Instant.parse("2022-08-25T00:00:00Z"))
+        assertThat(result.value.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
+      }
+
+      verify(exactly = 1) { mockArrivalRepository.save(any()) }
+      verify(exactly = 1) { mockBookingRepository.save(any()) }
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePersonArrivedUpdatedEvent(cas3BookingEntity, userEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.savePersonArrivedEvent(cas3BookingEntity, userEntity)
+      }
+    }
+
+    @Test
+    fun `createArrival returns Success with correct result when validation passed and saves domain event`() {
+      val userEntity = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+      val result = cas3BookingService.createArrival(
+        booking = cas3BookingEntity,
+        arrivalDate = LocalDate.parse("2022-08-27"),
+        expectedDepartureDate = LocalDate.parse("2022-08-29"),
+        notes = "notes",
+        user = userEntity,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
+        assertThat(result.value.arrivalDateTime).isEqualTo(Instant.parse("2022-08-27T00:00:00Z"))
+        assertThat(result.value.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
+      }
+
+      verify(exactly = 1) { mockArrivalRepository.save(any()) }
+      verify(exactly = 1) { mockBookingRepository.save(any()) }
+      verify(exactly = 1) { mockCas3DomainEventService.savePersonArrivedEvent(cas3BookingEntity, userEntity) }
+    }
+
+    @Test
+    fun `createArrival returns Success with correct result when validation passed and saves domain event without staff detail`() {
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any(Cas3BookingEntity::class), user) } just Runs
+
+      val result = cas3BookingService.createArrival(
+        booking = cas3BookingEntity,
+        arrivalDate = LocalDate.parse("2022-08-27"),
+        expectedDepartureDate = LocalDate.parse("2022-08-29"),
+        notes = "notes",
+        user = user,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
+        assertThat(result.value.arrivalDateTime).isEqualTo(Instant.parse("2022-08-27T00:00:00Z"))
+        assertThat(result.value.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
+      }
+
+      verify(exactly = 1) { mockArrivalRepository.save(any()) }
+      verify(exactly = 1) { mockBookingRepository.save(any()) }
+      verify(exactly = 1) { mockCas3DomainEventService.savePersonArrivedEvent(cas3BookingEntity, user) }
+    }
+
+    private fun createCas3Booking(): Cas3BookingEntity {
+      val premises = Cas3PremisesEntityFactory()
+        .withDefaults()
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+      val bedspace = Cas3BedspaceEntityFactory()
+        .withPremises(premises)
+        .produce()
+      return Cas3BookingEntityFactory()
+        .withPremises(premises)
+        .withBedspace(bedspace)
+        .produce()
     }
   }
 }

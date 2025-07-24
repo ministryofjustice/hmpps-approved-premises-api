@@ -678,7 +678,7 @@ class Cas3BookingServiceTest {
     fun setup() {
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockCas3DomainEventService.savePersonArrivedEvent(any(), any(UserEntity::class)) } just Runs
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any(BookingEntity::class), any(UserEntity::class)) } just Runs
     }
 
     @Test
@@ -712,7 +712,7 @@ class Cas3BookingServiceTest {
         .produce()
       bookingEntity.arrivals += arrivalEntity
 
-      every { mockCas3DomainEventService.savePersonArrivedUpdatedEvent(any(), any(UserEntity::class)) } just Runs
+      every { mockCas3DomainEventService.savePersonArrivedUpdatedEvent(any(BookingEntity::class), any(UserEntity::class)) } just Runs
 
       val result = cas3BookingService.createArrival(
         booking = bookingEntity,
@@ -768,7 +768,7 @@ class Cas3BookingServiceTest {
 
     @Test
     fun `createArrival returns Success with correct result when validation passed and saves domain event without staff detail`() {
-      every { mockCas3DomainEventService.savePersonArrivedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any(BookingEntity::class), user) } just Runs
 
       val result = cas3BookingService.createArrival(
         booking = bookingEntity,

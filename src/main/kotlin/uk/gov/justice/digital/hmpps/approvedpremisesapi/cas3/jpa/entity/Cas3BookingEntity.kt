@@ -134,9 +134,10 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
       AND NOT EXISTS (SELECT na FROM Cas3NonArrivalEntity na WHERE na.booking = b)
       AND b.arrivalDate <= :date
       AND SIZE(b.cancellations) = 0
+      AND (CAST(:excludeBookingId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :excludeBookingId)
     """,
   )
-  fun findByBedspaceIdAndArrivingBeforeDate(bedspaceId: UUID, date: LocalDate): List<Cas3BookingEntity>
+  fun findByBedspaceIdAndArrivingBeforeDate(bedspaceId: UUID, date: LocalDate, excludeBookingId: UUID?): List<Cas3BookingEntity>
 
   @Query(
     """      

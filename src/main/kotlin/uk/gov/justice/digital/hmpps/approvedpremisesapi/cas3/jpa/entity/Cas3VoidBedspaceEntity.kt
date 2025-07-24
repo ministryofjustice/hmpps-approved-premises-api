@@ -41,6 +41,19 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
   @Query(
     """
     SELECT lb 
+    FROM Cas3VoidBedspaceEntity lb 
+    WHERE lb.bedspace.id = :bedspaceId AND 
+          lb.startDate <= :endDate AND 
+          lb.endDate >= :startDate AND 
+          (CAST(:bookingId as org.hibernate.type.UUIDCharType) IS NULL OR lb.id != :bookingId) AND 
+          lb.cancellationDate is NULL
+  """,
+  )
+  fun findByBedspaceIdAndOverlappingDateV2(bedspaceId: UUID, startDate: LocalDate, endDate: LocalDate, bookingId: UUID?): List<Cas3VoidBedspaceEntity>
+
+  @Query(
+    """
+    SELECT lb 
     FROM Cas3VoidBedspaceEntity lb
     WHERE lb.bedspace.id = :bedspaceId 
     AND lb.startDate <= :endDate

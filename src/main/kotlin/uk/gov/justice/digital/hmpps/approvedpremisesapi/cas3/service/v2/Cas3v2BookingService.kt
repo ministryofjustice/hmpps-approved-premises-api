@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
@@ -27,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -35,6 +38,7 @@ import java.util.UUID
 class Cas3v2BookingService(
   private val cas3BookingRepository: Cas3v2BookingRepository,
   private val cas3BedspaceRepository: Cas3BedspacesRepository,
+  private val cas3ArrivalRepository: Cas3ArrivalRepository,
   private val cas3v2TurnaroundRepository: Cas3v2TurnaroundRepository,
   private val assessmentRepository: AssessmentRepository,
   private val offenderService: OffenderService,
@@ -85,7 +89,7 @@ class Cas3v2BookingService(
       return@validatedCasResult fieldValidationError
     }
 
-    getBookingWithConflictingDates(arrivalDate, departureDate, bedspaceId)?.let {
+    getBookingWithConflictingDates(arrivalDate, departureDate, bookingId = null, bedspaceId)?.let {
       return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate()} which overlaps with the desired dates"
     }
 
@@ -176,12 +180,67 @@ class Cas3v2BookingService(
     success(booking)
   }
 
-  private fun getBookingWithConflictingDates(
+  @Transactional
+  fun createArrival(
+    user: UserEntity,
+    booking: Cas3BookingEntity,
+    arrivalDate: LocalDate,
+    expectedDepartureDate: LocalDate,
+    notes: String?,
+  ): CasResult<Cas3ArrivalEntity> = validatedCasResult {
+    if (expectedDepartureDate.isBefore(arrivalDate)) {
+      "$.expectedDepartureDate" hasValidationError "beforeBookingArrivalDate"
+      return@validatedCasResult fieldValidationError
+    }
+    val isFirstArrival = booking.arrivals.isEmpty()
+    val arrivalEntity = cas3ArrivalRepository.save(
+      Cas3ArrivalEntity(
+        id = UUID.randomUUID(),
+        arrivalDate = arrivalDate,
+        arrivalDateTime = arrivalDate.toLocalDateTime().toInstant(),
+        expectedDepartureDate = expectedDepartureDate,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
+    booking.arrivalDate = arrivalDate
+    booking.departureDate = expectedDepartureDate
+    booking.status = Cas3BookingStatus.arrived
+    updateBooking(booking)
+
+    booking.arrivals += arrivalEntity
+
+    when (isFirstArrival) {
+      true -> cas3DomainEventService.savePersonArrivedEvent(booking, user)
+      else -> cas3DomainEventService.savePersonArrivedUpdatedEvent(booking, user)
+    }
+
+    success(arrivalEntity)
+  }
+
+  private fun updateBooking(bookingEntity: Cas3BookingEntity) = cas3BookingRepository.save(bookingEntity)
+
+  fun getBookingWithConflictingDates(
     arrivalDate: LocalDate,
     closedDate: LocalDate,
+    bookingId: UUID?,
     bedspaceId: UUID,
-  ): Cas3BookingEntity? = cas3BookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspaceId, closedDate)
+  ): Cas3BookingEntity? = cas3BookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspaceId, closedDate, excludeBookingId = bookingId)
     .firstOrNull { it.lastUnavailableDate() >= arrivalDate }
+
+  fun getVoidBedspaceWithConflictingDates(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    bookingId: UUID?,
+    bedspaceId: UUID,
+  ) = cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+    bedspaceId,
+    startDate,
+    endDate,
+    bookingId,
+  ).firstOrNull()
 
   fun Cas3BookingEntity.lastUnavailableDate() = workingDayService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
 }
