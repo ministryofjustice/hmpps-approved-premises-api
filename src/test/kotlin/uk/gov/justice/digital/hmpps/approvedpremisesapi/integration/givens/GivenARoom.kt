@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
@@ -10,6 +11,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesRoom(
   code: String = randomStringMultiCaseWithNumbers(6),
   name: String = randomStringMultiCaseWithNumbers(8),
   bedCount: Int = 0,
+  characteristics: List<CharacteristicEntity> = emptyList(),
 ): RoomEntity {
   val resolvedPremises = premises ?: approvedPremisesEntityFactory.produceAndPersist {
     withProbationRegion(givenAProbationRegion())
@@ -20,6 +22,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesRoom(
     withPremises(resolvedPremises)
     withCode(code)
     withName(name)
+    withCharacteristics(characteristics)
   }
 
   repeat(bedCount) {

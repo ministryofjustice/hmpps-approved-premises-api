@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Overbookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesJdbcRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
@@ -31,6 +32,7 @@ import java.util.UUID
 @Service
 class Cas1PremisesService(
   val premisesRepository: ApprovedPremisesRepository,
+  val premisesJdbcRepository: ApprovedPremisesJdbcRepository,
   val bedRepository: BedRepository,
   val premisesService: PremisesService,
   val outOfServiceBedService: Cas1OutOfServiceBedService,
@@ -78,6 +80,7 @@ class Cas1PremisesService(
           createdAt = restriction.createdAt.toLocalDate(),
         )
       }
+    val characteristicPropertyNames = premisesJdbcRepository.findAllCharacteristicPropertyNames(premisesId)
 
     val overbookingSummary = if (!featureFlagService.getBooleanFlag("cas1-disable-overbooking-summary")) {
       premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
@@ -93,6 +96,7 @@ class Cas1PremisesService(
         outOfServiceBeds = outOfServiceBedsCount,
         overbookingSummary = overbookingSummary,
         localRestrictions = localRestrictions,
+        characteristicPropertyNames = characteristicPropertyNames,
       ),
     )
   }
@@ -213,5 +217,6 @@ class Cas1PremisesService(
     val outOfServiceBeds: Int,
     val overbookingSummary: List<Cas1OverbookingRange>,
     val localRestrictions: List<Cas1PremisesLocalRestrictionSummary> = emptyList(),
+    val characteristicPropertyNames: List<String>,
   )
 }

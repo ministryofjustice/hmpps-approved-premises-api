@@ -126,8 +126,8 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.qCode = { qCode }
   }
 
-  fun withCharacteristics(characteristics: MutableList<CharacteristicEntity>) = apply {
-    this.characteristics = { characteristics }
+  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = apply {
+    this.characteristics = { characteristics.toMutableList() }
   }
 
   fun withCharacteristicsList(characteristics: List<CharacteristicEntity>) = withCharacteristics(characteristics.toMutableList())

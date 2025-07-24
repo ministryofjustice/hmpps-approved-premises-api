@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOutOfServiceBed
@@ -82,7 +83,7 @@ import java.util.UUID
 class Cas1PremisesTest : IntegrationTestBase() {
 
   @Nested
-  inner class GetPremisesSummary : InitialiseDatabasePerClassTestBase() {
+  inner class GetPremises : InitialiseDatabasePerClassTestBase() {
 
     lateinit var premises: ApprovedPremisesEntity
     lateinit var offender: CaseSummary
@@ -104,6 +105,17 @@ class Cas1PremisesTest : IntegrationTestBase() {
           apArea = givenAnApArea(name = "The ap area name"),
         ),
         managerDetails = "manager details",
+        characteristics = listOf(characteristicRepository.findCas1ByPropertyName("isSuitableForVulnerable")!!),
+      )
+
+      givenAnApprovedPremisesRoom(
+        premises,
+        characteristics = listOf(characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!),
+      )
+
+      givenAnApprovedPremisesRoom(
+        premises,
+        characteristics = listOf(characteristicRepository.findCas1ByPropertyName("isArsonSuitable")!!),
       )
     }
 
@@ -133,7 +145,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @SuppressWarnings("UnusedPrivateProperty")
     @Test
-    fun `Returns premises summary`() {
+    fun `Returns premises`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       repeat((1..10).count()) {
@@ -230,6 +242,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.localRestrictions).containsExactly(
         Cas1PremisesLocalRestrictionSummary(restriction2.id, restriction2.description, restriction2.createdAt.toLocalDate()),
         Cas1PremisesLocalRestrictionSummary(restriction1.id, restriction1.description, restriction1.createdAt.toLocalDate()),
+      )
+      assertThat(summary.characteristics).containsExactlyInAnyOrder(
+        Cas1SpaceCharacteristic.isArsonSuitable,
+        Cas1SpaceCharacteristic.hasEnSuite,
+        Cas1SpaceCharacteristic.isSuitableForVulnerable,
       )
     }
   }
