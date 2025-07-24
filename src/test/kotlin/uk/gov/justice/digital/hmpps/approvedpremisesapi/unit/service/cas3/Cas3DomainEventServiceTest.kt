@@ -1251,7 +1251,7 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getPersonArrivedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
@@ -1325,7 +1325,7 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getPersonArrivedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
@@ -1383,7 +1383,7 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getPersonArrivedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
@@ -2563,7 +2563,7 @@ class Cas3DomainEventServiceTest {
 
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { cas3DomainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
 
@@ -2629,7 +2629,7 @@ class Cas3DomainEventServiceTest {
 
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { cas3DomainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
@@ -2666,7 +2666,7 @@ class Cas3DomainEventServiceTest {
 
     every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { cas3DomainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     assertThatExceptionOfType(RuntimeException::class.java)
       .isThrownBy { cas3DomainEventService.savePersonArrivedUpdatedEvent(bookingEntity, user) }

@@ -9,10 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas3Arrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingAndPersons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -22,8 +26,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.time.LocalDate
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -35,6 +41,7 @@ class Cas3v2PremisesController(
   private val cas3PremisesService: Cas3v2PremisesService,
   private val cas3BookingService: Cas3v2BookingService,
   private val bookingTransformer: Cas3BookingTransformer,
+  private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
   private val offenderDetailService: OffenderDetailService,
 ) {
 
@@ -114,5 +121,66 @@ class Cas3v2PremisesController(
     )
 
     return ResponseEntity.ok(bookingTransformer.transformJpaToApi(extractEntityFromCasResult(createdBookingResult), personInfo))
+  }
+
+  @PostMapping("/premises/{premisesId}/bookings/{bookingId}/arrivals")
+  fun premisesPremisesIdBookingsBookingIdArrivalsPost(
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+    @RequestBody newArrival: NewCas3Arrival,
+  ): ResponseEntity<Cas3Arrival> {
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId).booking
+    val user = usersService.getUserForRequest()
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+      throw ForbiddenProblem()
+    }
+
+    throwIfBookingDatesConflict(newArrival.arrivalDate, newArrival.expectedDepartureDate, bookingId, bedspaceId = booking.bedspace.id)
+    throwIfVoidBedspaceDatesConflict(newArrival.arrivalDate, newArrival.expectedDepartureDate, bookingId = null, bedspaceId = booking.bedspace.id)
+
+    val result = cas3BookingService.createArrival(
+      booking = booking,
+      arrivalDate = newArrival.arrivalDate,
+      expectedDepartureDate = newArrival.expectedDepartureDate,
+      notes = newArrival.notes,
+      user = user,
+    )
+
+    return ResponseEntity.ok(cas3ArrivalTransformer.transformJpaToApi(extractEntityFromCasResult(result)))
+  }
+
+  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): Cas3BookingAndPersons {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+    val bookingResult = cas3BookingService.getBooking(bookingId, premises.id)
+    return extractEntityFromCasResult(bookingResult)
+  }
+
+  private fun throwIfBookingDatesConflict(
+    arrivalDate: LocalDate,
+    departureDate: LocalDate,
+    thisEntityId: UUID?,
+    bedspaceId: UUID,
+  ) {
+    cas3BookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedspaceId)?.let {
+      throw ConflictProblem(
+        it.id,
+        "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates",
+      )
+    }
+  }
+
+  private fun throwIfVoidBedspaceDatesConflict(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    bookingId: UUID?,
+    bedspaceId: UUID,
+  ) {
+    cas3BookingService.getVoidBedspaceWithConflictingDates(startDate, endDate, bookingId, bedspaceId)?.let {
+      throw ConflictProblem(
+        it.id,
+        "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
+      )
+    }
   }
 }
