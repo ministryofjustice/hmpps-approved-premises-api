@@ -23,6 +23,7 @@ class EnvironmentService(
   fun isPreProd() = profileActive("preprod")
 
   fun isNotATestEnvironment() = isProd() || isPreProd() || (!isDev() && !isIntegrationTest())
+  fun isNotProd() = !isProd()
 
   fun profileActive(name: String) = environment.activeProfiles.any { it.equals(name, ignoreCase = true) }
 }

@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
@@ -42,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_USER_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
@@ -56,14 +58,16 @@ class UserTransformerTest {
   private val probationRegionTransformer = mockk<ProbationRegionTransformer>()
   private val probationDeliveryUnitTransformer = mockk<ProbationDeliveryUnitTransformer>()
   private val apAreaTransformer = mockk<ApAreaTransformer>()
+  private val environmentService = mockk<EnvironmentService>()
 
-  private val userTransformer = UserTransformer(probationRegionTransformer, probationDeliveryUnitTransformer, apAreaTransformer)
+  private val userTransformer = UserTransformer(probationRegionTransformer, probationDeliveryUnitTransformer, apAreaTransformer, environmentService)
 
   private val apArea = ApArea(randomUUID(), "someIdentifier", "someName")
 
   @BeforeEach
   fun setup() {
     every { probationRegionTransformer.transformJpaToApi(any()) } returns ProbationRegion(randomUUID(), "someName")
+    every { environmentService.isProd() } returns false
   }
 
   @Nested
@@ -182,6 +186,7 @@ class UserTransformerTest {
       )
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+      every { environmentService.isProd() } returns true
 
       val result =
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
@@ -279,6 +284,40 @@ class UserTransformerTest {
       assertThatThrownBy {
         userTransformer.transformJpaToApi(user, approvedPremises)
       }.hasMessage("Internal Server Error: CAS1 user ${user.id} should have AP Area Set")
+    }
+
+    @Test
+    fun `should not include experimental permission for production`() {
+      val user = buildUserEntity(
+        role = UserRole.CAS1_JANITOR,
+        apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
+      )
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+      every { environmentService.isNotProd() } returns false
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.permissions).doesNotContain(ApprovedPremisesUserPermission.cas1TestExperimentalPermission)
+    }
+
+    @Test
+    fun `should include experimental permission for non production`() {
+      val user = buildUserEntity(
+        role = UserRole.CAS1_JANITOR,
+        apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
+      )
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+      every { environmentService.isNotProd() } returns true
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.permissions).contains(ApprovedPremisesUserPermission.cas1TestExperimentalPermission)
     }
   }
 

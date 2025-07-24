@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -25,11 +26,13 @@ class Cas1FutureManagerUserAccessTest {
   private val userService = mockk<UserService>()
   private val offenderService = mockk<OffenderService>()
   private val requestContextService = mockk<RequestContextService>()
+  private val environmentService = mockk<EnvironmentService>()
 
   private val userAccessService = UserAccessService(
     userService,
     offenderService,
     requestContextService,
+    environmentService,
   )
 
   private val probationRegionId = UUID.randomUUID()
@@ -58,6 +61,7 @@ class Cas1FutureManagerUserAccessTest {
     futureManager.addRoleForUnitTest(UserRole.CAS1_FUTURE_MANAGER)
     every { userService.getUserForRequest() } returns futureManager
     every { requestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
+    every { environmentService.isProd() } returns false
   }
 
   @Nested

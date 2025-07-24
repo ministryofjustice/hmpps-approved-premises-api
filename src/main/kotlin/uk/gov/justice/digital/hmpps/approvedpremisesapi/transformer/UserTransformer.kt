@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission as ApiUserPermission
@@ -27,6 +28,7 @@ class UserTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
   private val apAreaTransformer: ApAreaTransformer,
+  private val environmentService: EnvironmentService,
 ) {
 
   fun transformJpaToAPIUserWithWorkload(jpa: UserEntity, userWorkload: UserWorkload): UserWithWorkload = UserWithWorkload(
@@ -125,6 +127,9 @@ class UserTransformer(
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
-  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> = userRole.role.permissions
-    .mapNotNull { it.cas1ApiValue }
+  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {
+    return userRole.role.permissions
+      .filter { it.isAvailable(environmentService) }
+      .map { it.cas1ApiValue as ApiUserPermission }
+  }
 }

@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 
-enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
+enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val experimental: Boolean = false) {
   @Deprecated("This should no longer be used on the UI or API")
   CAS1_ADHOC_BOOKING_CREATE(ApprovedPremisesUserPermission.adhocBookingCreate),
 
@@ -25,8 +26,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_BOOKING_WITHDRAW(ApprovedPremisesUserPermission.bookingWithdraw),
   CAS1_BOOKING_CHANGE_DATES(ApprovedPremisesUserPermission.bookingChangeDates),
 
-  CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList),
-  CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView),
+  CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList, experimental = true),
+  CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView, experimental = true),
 
   CAS1_OFFLINE_APPLICATION_VIEW(ApprovedPremisesUserPermission.offlineApplicationView),
 
@@ -72,9 +73,10 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   @Deprecated("This is no longer used and should be removed once usage removed from the UI")
   CAS1_SPACE_BOOKING_VIEW(ApprovedPremisesUserPermission.spaceBookingView),
   CAS1_SPACE_BOOKING_WITHDRAW(ApprovedPremisesUserPermission.spaceBookingWithdraw),
-  CAS1_SPACE_BOOKING_SHORTEN(ApprovedPremisesUserPermission.spaceBookingShorten),
 
-  CAS1_NATIONAL_OCCUPANCY_VIEW(ApprovedPremisesUserPermission.nationalOccupancyView),
+  CAS1_SPACE_BOOKING_SHORTEN(ApprovedPremisesUserPermission.spaceBookingShorten, experimental = true),
+
+  CAS1_NATIONAL_OCCUPANCY_VIEW(ApprovedPremisesUserPermission.nationalOccupancyView, experimental = true),
 
   CAS1_PREMISES_CAPACITY_REPORT_VIEW(ApprovedPremisesUserPermission.premisesCapacityReportView),
   CAS1_PREMISES_VIEW(ApprovedPremisesUserPermission.premisesView),
@@ -92,15 +94,20 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_REPORTS_VIEW_WITH_PII(ApprovedPremisesUserPermission.reportsViewWithPii),
   CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS(ApprovedPremisesUserPermission.requestForPlacementWithdrawOthers),
 
-  CAS1_TRANSFER_ASSESS(ApprovedPremisesUserPermission.transferAssess),
+  CAS1_TRANSFER_ASSESS(ApprovedPremisesUserPermission.transferAssess, experimental = true),
 
   /**
    * Create a planned transfer request or immediately action an emergency transfer
    */
-  CAS1_TRANSFER_CREATE(ApprovedPremisesUserPermission.transferCreate),
+  CAS1_TRANSFER_CREATE(ApprovedPremisesUserPermission.transferCreate, experimental = true),
 
-  CAS1_PLACEMENT_APPEAL_CREATE(ApprovedPremisesUserPermission.placementAppealCreate),
-  CAS1_PLACEMENT_APPEAL_ASSESS(ApprovedPremisesUserPermission.placementAppealAssess),
+  CAS1_PLACEMENT_APPEAL_CREATE(ApprovedPremisesUserPermission.placementAppealCreate, experimental = true),
+  CAS1_PLACEMENT_APPEAL_ASSESS(ApprovedPremisesUserPermission.placementAppealAssess, experimental = true),
 
-  CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE(ApprovedPremisesUserPermission.premisesLocalRestrictionsManage),
+  CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE(ApprovedPremisesUserPermission.premisesLocalRestrictionsManage, experimental = true),
+
+  CAS1_TEST_EXPERIMENTAL_PERMISSION(ApprovedPremisesUserPermission.cas1TestExperimentalPermission, experimental = true),
+  ;
+
+  fun isAvailable(environmentService: EnvironmentService): Boolean = !experimental || environmentService.isNotProd()
 }
