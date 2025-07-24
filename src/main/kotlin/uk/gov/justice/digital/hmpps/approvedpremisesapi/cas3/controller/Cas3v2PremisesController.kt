@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingAndPersons
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
@@ -21,7 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspacesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -46,6 +50,7 @@ class Cas3v2PremisesController(
   private val cas3BookingService: Cas3v2BookingService,
   private val bookingTransformer: Cas3BookingTransformer,
   private val voidBedspaceService: Cas3v2VoidBedspaceService,
+  private val cas3CancellationTransformer: Cas3CancellationTransformer,
   private val offenderDetailService: OffenderDetailService,
   private val cas3UserAccessService: Cas3UserAccessService,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
@@ -82,11 +87,19 @@ class Cas3v2PremisesController(
 
   @GetMapping("/premises/{premisesId}/bookings/{bookingId}")
   fun premisesPremisesIdBookingsBookingIdGet(@PathVariable premisesId: UUID, @PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> = runBlocking {
-    val bookingAndPersonsResult = cas3BookingService.getBooking(bookingId, premisesId)
-    val bookingAndPersons = extractEntityFromCasResult(bookingAndPersonsResult)
+    val user = usersService.getUserForRequest()
+    val bookingResult = cas3BookingService.getBooking(bookingId, premisesId, user)
+    val booking = extractEntityFromCasResult(bookingResult)
+    val personInfo = offenderDetailService.getPersonInfoResult(
+      booking.crn,
+      user.deliusUsername,
+      user.hasQualification(
+        UserQualification.LAO,
+      ),
+    )
     val apiBooking = bookingTransformer.transformJpaToApi(
-      bookingAndPersons.booking,
-      bookingAndPersons.personInfo,
+      booking,
+      personInfo,
     )
     ResponseEntity.ok(apiBooking)
   }
@@ -149,8 +162,8 @@ class Cas3v2PremisesController(
     @PathVariable bookingId: UUID,
     @RequestBody newArrival: NewCas3Arrival,
   ): ResponseEntity<Cas3Arrival> {
-    val booking = getBookingForPremisesOrThrow(premisesId, bookingId).booking
     val user = usersService.getUserForRequest()
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId, user)
     if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
@@ -169,10 +182,33 @@ class Cas3v2PremisesController(
     return ResponseEntity.ok(cas3ArrivalTransformer.transformJpaToApi(extractEntityFromCasResult(result)))
   }
 
-  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): Cas3BookingAndPersons {
+  @PostMapping("/premises/{premisesId}/bookings/{bookingId}/cancellations")
+  fun premisesPremisesIdBookingsBookingIdCancellationsPost(
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+    @RequestBody body: NewCancellation,
+  ): ResponseEntity<Cas3Cancellation> {
+    val user = usersService.getUserForRequest()
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId, user)
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = cas3BookingService.createCancellation(
+      booking = booking,
+      cancelledAt = body.date,
+      reasonId = body.reason,
+      notes = body.notes,
+      user = user,
+    )
+    val cancellation = extractEntityFromCasResult(result)
+    return ResponseEntity.ok(cas3CancellationTransformer.transformJpaToApi(cancellation))
+  }
+
+  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID, user: UserEntity): Cas3BookingEntity {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
-    val bookingResult = cas3BookingService.getBooking(bookingId, premises.id)
+    val bookingResult = cas3BookingService.getBooking(bookingId, premises.id, user)
     return extractEntityFromCasResult(bookingResult)
   }
 

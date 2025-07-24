@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
@@ -61,6 +62,31 @@ class Cas3DomainEventBuilder(
 ) {
   fun getBookingCancelledDomainEvent(
     booking: BookingEntity,
+    user: UserEntity,
+  ): DomainEvent<CAS3BookingCancelledEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    val cancellation = booking.cancellation!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = cancellation.createdAt.toInstant(),
+      data = CAS3BookingCancelledEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation, user),
+      ),
+    )
+  }
+
+  fun getBookingCancelledDomainEvent(
+    booking: Cas3BookingEntity,
     user: UserEntity,
   ): DomainEvent<CAS3BookingCancelledEvent> {
     val domainEventId = UUID.randomUUID()
@@ -457,6 +483,27 @@ class Cas3DomainEventBuilder(
     )
   }
 
+  fun getBookingCancelledUpdatedDomainEvent(booking: Cas3BookingEntity, user: UserEntity?): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
+    val domainEventId = UUID.randomUUID()
+    val cancellation = booking.cancellation!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = cancellation.createdAt.toInstant(),
+      data = CAS3BookingCancelledUpdatedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingCancelledUpdated,
+        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation, user),
+      ),
+    )
+  }
+
   fun buildPersonArrivedUpdatedDomainEvent(
     booking: BookingEntity,
     user: UserEntity?,
@@ -609,6 +656,26 @@ class Cas3DomainEventBuilder(
     application: TemporaryAccommodationApplicationEntity?,
     booking: BookingEntity,
     cancellation: CancellationEntity,
+    user: UserEntity?,
+  ) = CAS3BookingCancelledEventDetails(
+    applicationId = application?.id,
+    applicationUrl = application.toUrl(),
+    bookingId = booking.id,
+    bookingUrl = booking.toUrl(),
+    personReference = PersonReference(
+      crn = booking.crn,
+      noms = booking.nomsNumber,
+    ),
+    cancellationReason = cancellation.reason.name,
+    notes = cancellation.notes,
+    cancelledAt = cancellation.date,
+    cancelledBy = user?.let { populateStaffMember(it) },
+  )
+
+  private fun buildCAS3BookingCancelledEventDetails(
+    application: TemporaryAccommodationApplicationEntity?,
+    booking: Cas3BookingEntity,
+    cancellation: Cas3CancellationEntity,
     user: UserEntity?,
   ) = CAS3BookingCancelledEventDetails(
     applicationId = application?.id,
