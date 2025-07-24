@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -94,7 +95,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByCas1SpaceBookingId(bookingId: UUID): List<DomainEventEntity>
 
-  fun findByType(type: DomainEventType): List<DomainEventEntity>
+  fun findFirstByCas3BedspaceId(cas3BedspaceId: UUID): DomainEventEntity<CAS3BedspaceArchiveEvent>?
 
   @Query(
     """SELECT id FROM DomainEventEntity where type = :type AND bookingId = :bookingId""",

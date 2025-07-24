@@ -73,6 +73,8 @@ class Cas3DomainEventService(
       ?: throw MissingTopicException("domainevents not found")
   }
 
+  fun findByCas3BedspaceId(id: UUID) = domainEventRepository.findFirstByCas3BedspaceId(id)
+
   fun getBookingCancelledEvent(id: UUID) = get<CAS3BookingCancelledEvent>(id)
 
   fun getBookingConfirmedEvent(id: UUID) = get<CAS3BookingConfirmedEvent>(id)

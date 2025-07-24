@@ -4,14 +4,18 @@ import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -41,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -817,6 +822,34 @@ class Cas3PremisesService(
     )
 
     cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, originalStartDate, originalEndDate)
+
+    success(updatedBedspace)
+  }
+
+  fun cancelUnarchiveBedspace(
+    premises: PremisesEntity,
+    bedspaceId: UUID,
+  ): CasResult<BedEntity> = validatedCasResult {
+    val bedspace = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedspaceId }
+      ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+
+    if (bedspace.startDate == null) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "startDateMissing"
+    }
+
+    // Check if bedspace is already online
+    if (bedspace.getCas3BedspaceStatus() == Cas3BedspaceStatus.online || bedspace.startDate!! <= LocalDate.now()) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyOnline"
+    }
+
+    val domainEvent =  cas3DomainEventService.findByCas3BedspaceId(bedspaceId)
+
+    // Update the bedspace to cancel scheduled archive
+    val updatedBedspace = bedspaceRepository.save(
+      bedspace.copy(
+        startDate = domainEvent.,
+      ),
+    )
 
     success(updatedBedspace)
   }
