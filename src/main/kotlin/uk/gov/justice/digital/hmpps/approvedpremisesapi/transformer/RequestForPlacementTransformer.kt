@@ -23,7 +23,11 @@ class RequestForPlacementTransformer(
     createdByUserId = placementApplicationEntity.createdByUser.id,
     createdAt = placementApplicationEntity.createdAt.toInstant(),
     isWithdrawn = placementApplicationEntity.isWithdrawn,
-    type = RequestForPlacementType.manual,
+    type = if (placementApplicationEntity.automatic) {
+      RequestForPlacementType.automatic
+    } else {
+      RequestForPlacementType.manual
+    },
     placementDates = listOf(placementApplicationEntity.placementDates()!!.toApiType()),
     requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementApplicationEntity.expectedArrival!!,
