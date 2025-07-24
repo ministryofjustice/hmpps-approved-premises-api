@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
@@ -99,6 +100,38 @@ SELECT
     nativeQuery = true,
   )
   fun findTemporaryAccommodationPremisesByService(service: String, pageable: Pageable): Slice<TemporaryAccommodationPremisesEntity>
+}
+
+@Repository
+class ApprovedPremisesJdbcRepository(private val jdbcTemplate: NamedParameterJdbcTemplate) {
+  fun findAllCharacteristicPropertyNames(
+    premisesId: UUID,
+  ): List<String> {
+    val params = mutableMapOf("premisesId" to premisesId)
+
+    val result = jdbcTemplate.query(
+      """
+      SELECT 
+        ARRAY_REMOVE(ARRAY_AGG (DISTINCT premises_chars_resolved.property_name), null) as premises_characteristics,
+        ARRAY_REMOVE(ARRAY_AGG (DISTINCT room_chars_resolved.property_name), null) as room_characteristics
+      FROM approved_premises ap
+      LEFT OUTER JOIN rooms ON rooms.premises_id = ap.premises_id
+      LEFT OUTER JOIN premises_characteristics premises_chars ON premises_chars.premises_id = ap.premises_id
+      LEFT OUTER JOIN characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
+      LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = rooms.id
+      LEFT OUTER JOIN characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
+      WHERE 
+      ap.premises_id = :premisesId
+      GROUP BY ap.premises_id
+      """.trimIndent(),
+      params,
+    ) { rs, _ ->
+      SqlUtil.toStringList(rs.getArray("premises_characteristics")) +
+        SqlUtil.toStringList(rs.getArray("room_characteristics"))
+    }
+
+    return result.firstOrNull() ?: emptyList()
+  }
 }
 
 @Repository

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Overbookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesJdbcRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
@@ -76,6 +77,9 @@ class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var clock: Clock
+
+  @MockK
+  lateinit var premisesJdbcRepository: ApprovedPremisesJdbcRepository
 
   @InjectMockKs
   lateinit var service: Cas1PremisesService
@@ -139,6 +143,7 @@ class Cas1PremisesServiceTest {
       every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 4
       every { cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(PREMISES_ID) } returns listOf(restriction1, restriction2)
+      every { premisesJdbcRepository.findAllCharacteristicPropertyNames(PREMISES_ID) } returns listOf("char1", "char2")
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -155,6 +160,7 @@ class Cas1PremisesServiceTest {
             Cas1PremisesLocalRestrictionSummary(restriction2.id, restriction2.description, restriction2.createdAt.toLocalDate()),
           ),
         )
+        assertThat(premisesSummaryInfo.characteristicPropertyNames).containsExactly("char1", "char2")
       }
     }
 
@@ -184,6 +190,7 @@ class Cas1PremisesServiceTest {
       every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 5
       every { cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(PREMISES_ID) } returns emptyList()
+      every { premisesJdbcRepository.findAllCharacteristicPropertyNames(PREMISES_ID) } returns emptyList()
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -227,6 +234,7 @@ class Cas1PremisesServiceTest {
       every { premisesService.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(PREMISES_ID) } returns emptyList()
+      every { premisesJdbcRepository.findAllCharacteristicPropertyNames(PREMISES_ID) } returns emptyList()
     }
 
     @Test

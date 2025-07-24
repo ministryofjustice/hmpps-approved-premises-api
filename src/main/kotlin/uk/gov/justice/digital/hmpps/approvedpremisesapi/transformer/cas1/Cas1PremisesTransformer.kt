@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -29,6 +30,7 @@ class Cas1PremisesTransformer(
       managerDetails = entity.managerDetails,
       overbookingSummary = premisesSummaryInfo.overbookingSummary,
       localRestrictions = premisesSummaryInfo.localRestrictions,
+      characteristics = premisesSummaryInfo.characteristicPropertyNames.map { Cas1SpaceCharacteristic.valueOf(it) },
     )
   }
 

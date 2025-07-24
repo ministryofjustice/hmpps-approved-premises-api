@@ -48,8 +48,8 @@ class RoomEntityFactory : Factory<RoomEntity> {
     this.premises = premises
   }
 
-  fun withCharacteristics(characteristics: MutableList<CharacteristicEntity>) = apply {
-    this.characteristics = { characteristics }
+  fun withCharacteristics(characteristics: List<CharacteristicEntity>) = apply {
+    this.characteristics = { characteristics.toMutableList() }
   }
 
   fun withCharacteristics(vararg characteristics: CharacteristicEntity) = apply {

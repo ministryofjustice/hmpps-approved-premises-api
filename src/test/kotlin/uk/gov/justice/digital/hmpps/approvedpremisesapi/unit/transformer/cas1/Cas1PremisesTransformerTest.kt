@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -71,6 +72,7 @@ class Cas1PremisesTransformerTest {
           outOfServiceBeds = 2,
           availableBeds = 8,
           overbookingSummary = emptyList(),
+          characteristicPropertyNames = listOf("hasBrailleSignage", "hasCrib7Bedding"),
           localRestrictions = listOf(
             restriction2,
             restriction1,
@@ -90,7 +92,8 @@ class Cas1PremisesTransformerTest {
       assertThat(result.supportsSpaceBookings).isTrue()
       assertThat(result.managerDetails).isEqualTo("manager details")
       assertThat(result.overbookingSummary).isEmpty()
-      assertThat(result.localRestrictions).isEqualTo(listOf(restriction2, restriction1))
+      assertThat(result.localRestrictions).containsExactly(restriction2, restriction1)
+      assertThat(result.characteristics).containsExactlyInAnyOrder(Cas1SpaceCharacteristic.hasBrailleSignage, Cas1SpaceCharacteristic.hasCrib7Bedding)
     }
   }
 

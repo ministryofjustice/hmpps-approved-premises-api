@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 
@@ -21,45 +20,44 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Prem
  */
 data class Cas1Premises(
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @Schema(example = "Hope House", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @Schema(example = "Hope House")
+  val name: kotlin.String,
 
-  @Schema(example = "NEHOPE1", required = true, description = "")
-  @get:JsonProperty("apCode", required = true) val apCode: kotlin.String,
+  @Schema(example = "NEHOPE1")
+  val apCode: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "Full address, excluding postcode")
-  @get:JsonProperty("fullAddress", required = true) val fullAddress: kotlin.String,
+  @Schema(description = "Full address, excluding postcode")
+  val fullAddress: kotlin.String,
 
-  @Schema(example = "LS1 3AD", required = true, description = "")
-  @get:JsonProperty("postcode", required = true) val postcode: kotlin.String,
+  @Schema(example = "LS1 3AD")
+  val postcode: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("apArea", required = true) val apArea: ApArea,
+  val apArea: ApArea,
 
-  @Schema(example = "22", required = true, description = "The total number of beds in this premises")
-  @get:JsonProperty("bedCount", required = true) val bedCount: kotlin.Int,
+  @Schema(example = "22", description = "The total number of beds in this premises")
+  val bedCount: kotlin.Int,
 
-  @Schema(example = "20", required = true, description = "The total number of beds available at this moment in time")
-  @get:JsonProperty("availableBeds", required = true) val availableBeds: kotlin.Int,
+  @Schema(example = "20", description = "The total number of beds available at this moment in time")
+  val availableBeds: kotlin.Int,
 
-  @Schema(example = "2", required = true, description = "The total number of out of service beds at this moment in time")
-  @get:JsonProperty("outOfServiceBeds", required = true) val outOfServiceBeds: kotlin.Int,
+  @Schema(example = "2", description = "The total number of out of service beds at this moment in time")
+  val outOfServiceBeds: kotlin.Int,
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("supportsSpaceBookings", required = true) val supportsSpaceBookings: kotlin.Boolean,
+  val supportsSpaceBookings: kotlin.Boolean,
 
-  @Schema(example = "null", required = true, description = "over-bookings for the next 12 weeks")
-  @get:JsonProperty("overbookingSummary", required = true) val overbookingSummary: kotlin.collections.List<Cas1OverbookingRange>,
+  @Schema(description = "over-bookings for the next 12 weeks")
+  val overbookingSummary: kotlin.collections.List<Cas1OverbookingRange>,
 
-  @Schema(example = "null", description = "")
-  @get:JsonProperty("managerDetails") val managerDetails: kotlin.String? = null,
+  val managerDetails: kotlin.String? = null,
 
   @Schema(
     example = "No hate based offences",
     description = "A list of restrictions that apply specifically to this approved premises.",
   )
   val localRestrictions: List<Cas1PremisesLocalRestrictionSummary>? = emptyList(),
+
+  @Schema(description = "Room and premise characteristics")
+  val characteristics: List<Cas1SpaceCharacteristic>,
 )
