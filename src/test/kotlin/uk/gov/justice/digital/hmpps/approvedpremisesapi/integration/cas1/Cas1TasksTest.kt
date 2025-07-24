@@ -32,13 +32,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
@@ -364,128 +362,6 @@ class Cas1TasksTest {
 
         webTestClient.get()
           .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-    }
-
-    @Deprecated("Superseded by FilterByCruManagementArea")
-    @Nested
-    inner class FilterByApArea : InitialiseDatabasePerClassTestBase() {
-      private lateinit var tasks: Map<TaskType, List<Task>>
-
-      lateinit var jwt: String
-      lateinit var apArea: ApAreaEntity
-
-      @Autowired
-      lateinit var taskTransformer: TaskTransformer
-
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
-
-              apArea = givenAnApArea()
-              val apArea2 = givenAnApArea()
-
-              val offenderSummaries = getOffenderSummaries(offenderDetails)
-
-              val (assessment) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea,
-              )
-
-              givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea2,
-              )
-
-              val placementApplication = givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                apArea = apArea,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
-
-              givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                apArea = apArea2,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
-
-              val assessments = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  assessment,
-                  offenderSummaries,
-                ),
-              )
-
-              val placementApplications = listOf(
-                taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication,
-                  offenderSummaries,
-                ),
-              )
-
-              tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-              )
-            }
-          }
-        }
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
-      fun `it filters by Ap Area and task type`(taskType: TaskType) {
-        val expectedTasks = tasks[taskType]
-        val url = "/tasks?type=${taskType.value}&apAreaId=${apArea.id}"
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @Test
-      fun `it filters by all areas with no task type`() {
-        val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementApplication]!!,
-        ).flatten().sortedBy { it.dueDate }
-
-        webTestClient.get()
-          .uri("/tasks?apAreaId=${apArea.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
