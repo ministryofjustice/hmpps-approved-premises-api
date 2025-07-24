@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -84,22 +83,20 @@ class TasksTest {
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks without JWT returns 401`(url: String) {
+      @Test
+      fun `Get all tasks without JWT returns 401`() {
         webTestClient.get()
-          .uri(url)
+          .uri("/tasks")
           .exchange()
           .expectStatus()
           .isUnauthorized
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks without cru member, matcher or assessor permissions returns 403`(url: String) {
+      @Test
+      fun `Get all tasks without cru member, matcher or assessor permissions returns 403`() {
         givenAUser { _, jwt ->
           webTestClient.get()
-            .uri(url)
+            .uri("/tasks")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -148,9 +145,8 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks returns 200 when no type retains original sort order`(baseUrl: String) {
+      @Test
+      fun `Get all tasks returns 200 when no type retains original sort order`() {
         givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
@@ -194,7 +190,7 @@ class TasksTest {
               )
 
               webTestClient.get()
-                .uri("$baseUrl?page=1&sortBy=createdAt&sortDirection=asc")
+                .uri("/tasks?page=1&sortBy=createdAt&sortDirection=asc")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -207,7 +203,7 @@ class TasksTest {
                 )
 
               webTestClient.get()
-                .uri("$baseUrl?page=1&sortBy=createdAt&sortDirection=desc")
+                .uri("/tasks?page=1&sortBy=createdAt&sortDirection=desc")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -314,36 +310,9 @@ class TasksTest {
           )
       }
 
-      @ParameterizedTest
-      @CsvSource(
-        "/tasks,assessment,placementApplication",
-        "/cas1/tasks,assessment,placementApplication",
-      )
-      fun `Get all tasks filters by multiple types`(baseUrl: String, taskType1: TaskType, taskType2: TaskType) {
-        val url = "$baseUrl?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType1.value}&types=${taskType2.value}"
-        val expectedTasks = listOf(
-          tasks[taskType1]!!,
-          tasks[taskType2]!!,
-        ).flatten().sortedBy { it.dueDate }
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks returns all task types`(baseUrl: String) {
-        val url = "$baseUrl?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementApplication"
+      @Test
+      fun `Get all tasks filters by multiple types`() {
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementApplication"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
           tasks[TaskType.placementApplication]!!,
@@ -363,10 +332,31 @@ class TasksTest {
           )
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks returns all task types by default`(baseUrl: String) {
-        val url = "$baseUrl?page=1&sortBy=createdAt&sortDirection=asc"
+      @Test
+      fun `Get all tasks returns all task types`() {
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementApplication"
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!!,
+          tasks[TaskType.placementApplication]!!,
+        ).flatten().sortedBy { it.dueDate }
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @Test
+      fun `Get all tasks returns all task types by default`() {
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
           tasks[TaskType.placementApplication]!!,
@@ -608,16 +598,15 @@ class TasksTest {
           )
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `it filters by all areas with no task type`(baseUrl: String) {
+      @Test
+      fun `it filters by all areas with no task type`() {
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
           tasks[TaskType.placementApplication]!!,
         ).flatten().sortedBy { it.dueDate }
 
         webTestClient.get()
-          .uri("$baseUrl?cruManagementAreaId=${cruArea.id}")
+          .uri("/tasks?cruManagementAreaId=${cruArea.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -724,15 +713,14 @@ class TasksTest {
           )
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `it filters by user with all tasks`(baseUrl: String) {
+      @Test
+      fun `it filters by user with all tasks`() {
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
           tasks[TaskType.placementApplication]!!,
         ).flatten().sortedBy { it.dueDate }
 
-        val url = "$baseUrl?allocatedToUserId=${user.id}"
+        val url = "/tasks?allocatedToUserId=${user.id}"
 
         webTestClient.get()
           .uri(url)
@@ -850,50 +838,34 @@ class TasksTest {
 
       @ParameterizedTest
       @CsvSource(
-        "/tasks,assessment,allocated,1",
-        "/tasks,assessment,allocated,2",
-        "/tasks,assessment,unallocated,1",
-        "/tasks,assessment,unallocated,1",
-        "/tasks,placementApplication,allocated,1",
-        "/tasks,placementApplication,allocated,2",
-        "/tasks,placementApplication,unallocated,1",
-        "/tasks,placementApplication,unallocated,2",
-
-        "/cas1/tasks,assessment,allocated,1",
-        "/cas1/tasks,assessment,allocated,2",
-        "/cas1/tasks,assessment,unallocated,1",
-        "/cas1/tasks,assessment,unallocated,1",
-        "/cas1/tasks,placementApplication,allocated,1",
-        "/cas1/tasks,placementApplication,allocated,2",
-        "/cas1/tasks,placementApplication,unallocated,1",
-        "/cas1/tasks,placementApplication,unallocated,2",
+        "assessment,allocated,1",
+        "assessment,allocated,2",
+        "assessment,unallocated,1",
+        "assessment,unallocated,1",
+        "placementApplication,allocated,1",
+        "placementApplication,allocated,2",
+        "placementApplication,unallocated,1",
+        "placementApplication,unallocated,2",
       )
       fun `get all tasks returns page counts when taskType and allocated filter are set`(
-        baseUrl: String,
         taskType: TaskType,
         allocatedFilter: String,
         pageNumber: String,
       ) {
         val itemCount = counts[taskType]!![allocatedFilter]!!
-        val url = "$baseUrl?type=${taskType.value}&perPage=$pageSize&page=$pageNumber&allocatedFilter=$allocatedFilter"
+        val url = "/tasks?type=${taskType.value}&perPage=$pageSize&page=$pageNumber&allocatedFilter=$allocatedFilter"
 
         expectCountHeaders(url, pageNumber.toInt(), itemCount)
       }
 
       @ParameterizedTest
       @CsvSource(
-        "/tasks,allocated,1",
-        "/tasks,allocated,2",
-        "/tasks,unallocated,1",
-        "/tasks,unallocated,1",
-
-        "/cas1/tasks,allocated,1",
-        "/cas1/tasks,allocated,2",
-        "/cas1/tasks,unallocated,1",
-        "/cas1/tasks,unallocated,1",
+        "allocated,1",
+        "allocated,2",
+        "unallocated,1",
+        "unallocated,1",
       )
       fun `get all tasks returns page counts for all tasks when allocated filter is set`(
-        baseUrl: String,
         allocatedFilter: String,
         pageNumber: String,
       ) {
@@ -902,20 +874,17 @@ class TasksTest {
           counts[TaskType.placementApplication]!![allocatedFilter]!!,
         ).sum()
 
-        val url = "$baseUrl?&page=$pageNumber&perPage=$pageSize&allocatedFilter=$allocatedFilter"
+        val url = "/tasks?&page=$pageNumber&perPage=$pageSize&allocatedFilter=$allocatedFilter"
 
         expectCountHeaders(url, pageNumber.toInt(), itemCount)
       }
 
       @ParameterizedTest
       @CsvSource(
-        "/tasks,1",
-        "/tasks,2",
-
-        "/cas1/tasks,1",
-        "/cas1/tasks,2",
+        "1",
+        "2",
       )
-      fun `get all tasks returns page count when no allocated filter is set`(baseUrl: String, pageNumber: Int) {
+      fun `get all tasks returns page count when no allocated filter is set`(pageNumber: Int) {
         val itemCount = listOf(
           counts[TaskType.assessment]!!["allocated"]!!,
           counts[TaskType.assessment]!!["unallocated"]!!,
@@ -923,7 +892,7 @@ class TasksTest {
           counts[TaskType.placementApplication]!!["unallocated"]!!,
         ).sum()
 
-        expectCountHeaders("$baseUrl?&page=$pageNumber&perPage=$pageSize", pageNumber, itemCount)
+        expectCountHeaders("/tasks?&page=$pageNumber&perPage=$pageSize", pageNumber, itemCount)
       }
 
       private fun expectCountHeaders(url: String, pageNumber: Int, itemCount: Int) {
@@ -1035,36 +1004,23 @@ class TasksTest {
 
       @ParameterizedTest
       @CsvSource(
-        "/tasks,assessment,PIPE",
-        "/tasks,assessment,ESAP",
-        "/tasks,assessment,EMERGENCY",
-        "/tasks,assessment,RECOVERY_FOCUSED",
-        "/tasks,assessment,MENTAL_HEALTH_SPECIALIST",
+        "assessment,PIPE",
+        "assessment,ESAP",
+        "assessment,EMERGENCY",
+        "assessment,RECOVERY_FOCUSED",
+        "assessment,MENTAL_HEALTH_SPECIALIST",
 
-        "/tasks,placementApplication,PIPE",
-        "/tasks,placementApplication,ESAP",
-        "/tasks,placementApplication,EMERGENCY",
-        "/tasks,placementApplication,RECOVERY_FOCUSED",
-        "/tasks,placementApplication,MENTAL_HEALTH_SPECIALIST",
-
-        "/cas1/tasks,assessment,PIPE",
-        "/cas1/tasks,assessment,ESAP",
-        "/cas1/tasks,assessment,EMERGENCY",
-        "/cas1/tasks,assessment,RECOVERY_FOCUSED",
-        "/cas1/tasks,assessment,MENTAL_HEALTH_SPECIALIST",
-
-        "/cas1/tasks,placementApplication,PIPE",
-        "/cas1/tasks,placementApplication,ESAP",
-        "/cas1/tasks,placementApplication,EMERGENCY",
-        "/cas1/tasks,placementApplication,RECOVERY_FOCUSED",
-        "/cas1/tasks,placementApplication,MENTAL_HEALTH_SPECIALIST",
+        "placementApplication,PIPE",
+        "placementApplication,ESAP",
+        "placementApplication,EMERGENCY",
+        "placementApplication,RECOVERY_FOCUSED",
+        "placementApplication,MENTAL_HEALTH_SPECIALIST",
       )
       fun `Get all tasks filters by task type and required qualification`(
-        baseUrl: String,
         taskType: TaskType,
         qualification: UserQualification,
       ) {
-        val url = "$baseUrl?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
+        val url = "/tasks?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
         val expectedTasks = tasks[taskType]!![qualification]!!
 
         webTestClient.get()
@@ -1230,10 +1186,9 @@ class TasksTest {
           )
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks filters by name without task type`(baseUrl: String) {
-        val url = "$baseUrl?crnOrName=someone"
+      @Test
+      fun `Get all tasks filters by name without task type`() {
+        val url = "/tasks?crnOrName=someone"
         val expectedTasks = listOf(
           nameMatchTasks[TaskType.assessment],
           nameMatchTasks[TaskType.placementApplication],
@@ -1253,10 +1208,9 @@ class TasksTest {
           )
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks filters by CRN without task type`(baseUrl: String) {
-        val url = "$baseUrl?crnOrName=$crn"
+      @Test
+      fun `Get all tasks filters by CRN without task type`() {
+        val url = "/tasks?crnOrName=$crn"
         val expectedTasks = listOf(
           crnMatchTasks[TaskType.assessment],
           crnMatchTasks[TaskType.placementApplication],
@@ -1365,11 +1319,10 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks shows incomplete tasks by default`(baseUrl: String) {
+      @Test
+      fun `Get all tasks shows incomplete tasks by default`() {
         webTestClient.get()
-          .uri(baseUrl)
+          .uri("/tasks")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -1382,13 +1335,12 @@ class TasksTest {
           )
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks shows allows showing completed tasks`(baseUrl: String) {
+      @Test
+      fun `Get all tasks shows allows showing completed tasks`() {
         objectMapper.setDateFormat(SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss"))
 
         val rawResponseBody = webTestClient.get()
-          .uri("$baseUrl?isCompleted=true")
+          .uri("/tasks?isCompleted=true")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -1557,11 +1509,10 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by createdAt in ascending order by default`(baseUrl: String) {
+      @Test
+      fun `Get all tasks sorts by createdAt in ascending order by default`() {
         val response = webTestClient.get()
-          .uri("$baseUrl?isCompleted=true&page=1&perPage=10")
+          .uri("/tasks?isCompleted=true&page=1&perPage=10")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -1577,10 +1528,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by createdAt in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=createdAt&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by createdAt in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1599,10 +1549,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by createdAt in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=createdAt&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by createdAt in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=createdAt&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1621,10 +1570,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by dueAt in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=dueAt&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by dueAt in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1642,10 +1590,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by dueAt in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=dueAt&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by dueAt in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=dueAt&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1663,10 +1610,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by allocatedTo in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=allocatedTo&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by allocatedTo in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1684,10 +1630,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by allocatedTo in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=allocatedTo&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by allocatedTo in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1705,10 +1650,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by person in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=person&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by person in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1726,10 +1670,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by person in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=person&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by person in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=person&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1747,10 +1690,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by completedAt in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=completedAt&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by completedAt in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1769,10 +1711,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by completedAt in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=completedAt&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by completedAt in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=completedAt&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1791,10 +1732,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by taskType in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=taskType&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by taskType in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1812,10 +1752,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by expected arrival date in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by expected arrival date in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1833,10 +1772,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by expected arrival date in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by expected arrival date in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1854,10 +1792,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by taskType in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=taskType&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by taskType in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1875,10 +1812,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by decision in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=decision&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by decision in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1897,10 +1833,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by decision in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=decision&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by decision in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=decision&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1919,10 +1854,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by apType in ascending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=apType&sortDirection=asc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by apType in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=apType&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1940,10 +1874,9 @@ class TasksTest {
         }
       }
 
-      @ParameterizedTest
-      @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-      fun `Get all tasks sorts by apType in descending order`(baseUrl: String) {
-        val url = "$baseUrl?isCompleted=true&sortBy=apType&sortDirection=desc&page=1&perPage=10"
+      @Test
+      fun `Get all tasks sorts by apType in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=apType&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
           .uri(url)
@@ -1983,19 +1916,17 @@ class TasksTest {
     @Autowired
     lateinit var userTransformer: UserTransformer
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Request without JWT returns 401`(baseUrl: String) {
+    @Test
+    fun `Request without JWT returns 401`() {
       webTestClient.get()
-        .uri("$baseUrl/assessment/f601ff2d-b1e0-4878-8731-ccfa19a2ce84")
+        .uri("/tasks/assessment/f601ff2d-b1e0-4878-8731-ccfa19a2ce84")
         .exchange()
         .expectStatus()
         .isUnauthorized
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Unknown task type for an application returns 404`(baseUrl: String) {
+    @Test
+    fun `Unknown task type for an application returns 404`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAnAssessmentForApprovedPremises(
@@ -2004,7 +1935,7 @@ class TasksTest {
             crn = offenderDetails.otherIds.crn,
           ) { _, application ->
             webTestClient.get()
-              .uri("$baseUrl/unknown-task/${application.id}")
+              .uri("/tasks/unknown-task/${application.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -2014,9 +1945,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `If request is for an application only returns active users with ASSESSOR role`(baseUrl: String) {
+    @Test
+    fun `If request is for an application only returns active users with ASSESSOR role`() {
       val (creator, _) = givenAUser()
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
       val (assessor, _) = givenAUser(
@@ -2041,7 +1971,7 @@ class TasksTest {
         ) { assessment, _ ->
 
           webTestClient.get()
-            .uri("$baseUrl/assessment/${assessment.id}")
+            .uri("/tasks/assessment/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -2071,9 +2001,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `If request is for an appealed application only returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
+    @Test
+    fun `If request is for an appealed application only returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
@@ -2094,7 +2023,7 @@ class TasksTest {
                   dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
                 ) { assessment, _ ->
                   webTestClient.get()
-                    .uri("$baseUrl/assessment/${assessment.id}")
+                    .uri("/tasks/assessment/${assessment.id}")
                     .header("Authorization", "Bearer $jwt")
                     .exchange()
                     .expectStatus()
@@ -2136,9 +2065,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `If request is for an appealed application returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`(baseUrl: String) {
+    @Test
+    fun `If request is for an appealed application returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
@@ -2156,7 +2084,7 @@ class TasksTest {
                 dueAt = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS),
               ) { assessment, _ ->
                 webTestClient.get()
-                  .uri("$baseUrl/assessment/${assessment.id}")
+                  .uri("/tasks/assessment/${assessment.id}")
                   .header("Authorization", "Bearer $jwt")
                   .exchange()
                   .expectStatus()
@@ -2180,9 +2108,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `If request is for a placement application that is not submitted, return not found because a task doesn't yet exist to complete`(baseUrl: String) {
+    @Test
+    fun `If request is for a placement application that is not submitted, return not found because a task doesn't yet exist to complete`() {
       val (creatingUser, jwt) = givenAUser()
 
       val placementApplication = givenAPlacementApplication(
@@ -2193,16 +2120,15 @@ class TasksTest {
       )
 
       webTestClient.get()
-        .uri("$baseUrl/placement-application/${placementApplication.id}")
+        .uri("/tasks/placement-application/${placementApplication.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isNotFound
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `If request is for a placement application only returns active users with ASSESSOR role, with correct workload`(baseUrl: String) {
+    @Test
+    fun `If request is for a placement application only returns active users with ASSESSOR role, with correct workload`() {
       // ignored, wrong role
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
@@ -2272,7 +2198,7 @@ class TasksTest {
       }
 
       webTestClient.get()
-        .uri("$baseUrl/placement-application/${placementApplication.id}")
+        .uri("/tasks/placement-application/${placementApplication.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -2346,11 +2272,10 @@ class TasksTest {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocate application to different assessor without JWT returns 401`(baseUrl: String) {
+    @Test
+    fun `Reallocate application to different assessor without JWT returns 401`() {
       webTestClient.post()
-        .uri("$baseUrl/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
         .bodyValue(
           NewReallocation(
             userId = UUID.randomUUID(),
@@ -2361,12 +2286,11 @@ class TasksTest {
         .isUnauthorized
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocate application to different assessor without CAS1_CRU_MEMBER role returns 403`(baseUrl: String) {
+    @Test
+    fun `Reallocate application to different assessor without CAS1_CRU_MEMBER role returns 403`() {
       givenAUser { _, jwt ->
         webTestClient.post()
-          .uri("$baseUrl/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+          .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.approvedPremises.value)
           .bodyValue(
@@ -2380,9 +2304,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one, sends emails`(baseUrl: String) {
+    @Test
+    fun `Reallocate assessment to different assessor returns 201, creates new assessment, deallocates old one, sends emails`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { currentlyAllocatedUser, _ ->
           givenAUser(
@@ -2396,7 +2319,7 @@ class TasksTest {
               ) { existingAssessment, application ->
 
                 webTestClient.post()
-                  .uri("$baseUrl/assessment/${existingAssessment.id}/allocations")
+                  .uri("/tasks/assessment/${existingAssessment.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .bodyValue(
@@ -2436,9 +2359,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocate assessment to different assessor returns an error if the assessment has already been allocated`(baseUrl: String) {
+    @Test
+    fun `Reallocate assessment to different assessor returns an error if the assessment has already been allocated`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
           givenAUser(
@@ -2453,7 +2375,7 @@ class TasksTest {
               ) { existingAssessment, application ->
 
                 webTestClient.post()
-                  .uri("$baseUrl/assessment/${existingAssessment.id}/allocations")
+                  .uri("/tasks/assessment/${existingAssessment.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .bodyValue(
@@ -2476,9 +2398,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocating a placement application to different assessor returns 201, creates new placement application, deallocates old one`(baseUrl: String) {
+    @Test
+    fun `Reallocating a placement application to different assessor returns 201, creates new placement application, deallocates old one`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
@@ -2494,7 +2415,7 @@ class TasksTest {
                 duration = 15,
               ) { placementApplication ->
                 webTestClient.post()
-                  .uri("$baseUrl/placement-application/${placementApplication.id}/allocations")
+                  .uri("/tasks/placement-application/${placementApplication.id}/allocations")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .bodyValue(
@@ -2534,9 +2455,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Reallocating a Temporary Accommodation assessment does not require a request body`(baseUrl: String) {
+    @Test
+    fun `Reallocating a Temporary Accommodation assessment does not require a request body`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { originalUser, _ ->
         givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { expectedUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
@@ -2546,7 +2466,7 @@ class TasksTest {
               crn = offenderDetails.otherIds.crn,
             ) { assessment, _ ->
               webTestClient.post()
-                .uri("$baseUrl/assessment/${assessment.id}/allocations")
+                .uri("/tasks/assessment/${assessment.id}/allocations")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
                 .bodyValue(Unit)
@@ -2566,23 +2486,21 @@ class TasksTest {
 
   @Nested
   inner class DeallocateTaskTest : IntegrationTestBase() {
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Deallocate assessment without JWT returns 401 Unauthorized`(baseUrl: String) {
+    @Test
+    fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
       webTestClient.delete()
-        .uri("$baseUrl/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isUnauthorized
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Deallocate Temporary Accommodation assessment without CAS3_ASSESSOR role returns 403 Forbidden`(baseUrl: String) {
+    @Test
+    fun `Deallocate Temporary Accommodation assessment without CAS3_ASSESSOR role returns 403 Forbidden`() {
       givenAUser { _, jwt ->
         webTestClient.delete()
-          .uri("$baseUrl/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+          .uri("/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
@@ -2591,9 +2509,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Deallocate Approved Premises assessment returns 403 Forbidden`(baseUrl: String) {
+    @Test
+    fun `Deallocate Approved Premises assessment returns 403 Forbidden`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAUser { _, _ ->
@@ -2603,7 +2520,7 @@ class TasksTest {
               crn = offenderDetails.otherIds.crn,
             ) { assessment, _ ->
               webTestClient.delete()
-                .uri("$baseUrl/assessment/${assessment.id}/allocations")
+                .uri("/tasks/assessment/${assessment.id}/allocations")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
                 .exchange()
@@ -2615,9 +2532,8 @@ class TasksTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = ["/tasks", "/cas1/tasks"])
-    fun `Deallocate Temporary Accommodation assessment returns 200 and unassigns the allocated user`(baseUrl: String) {
+    @Test
+    fun `Deallocate Temporary Accommodation assessment returns 200 and unassigns the allocated user`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAnAssessmentForTemporaryAccommodation(
@@ -2627,7 +2543,7 @@ class TasksTest {
           ) { existingAssessment, _ ->
 
             webTestClient.delete()
-              .uri("$baseUrl/assessment/${existingAssessment.id}/allocations")
+              .uri("/tasks/assessment/${existingAssessment.id}/allocations")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
               .exchange()
