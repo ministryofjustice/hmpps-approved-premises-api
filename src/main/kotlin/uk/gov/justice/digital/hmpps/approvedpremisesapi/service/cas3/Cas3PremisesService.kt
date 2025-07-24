@@ -821,6 +821,33 @@ class Cas3PremisesService(
     success(updatedBedspace)
   }
 
+  fun cancelArchiveBedspace(
+    premises: PremisesEntity,
+    bedspaceId: UUID,
+  ): CasResult<BedEntity> = validatedCasResult {
+    val bedspace = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedspaceId }
+      ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+
+    // Check if bedspace not scheduled to archive
+    if (bedspace.endDate == null) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotScheduledToArchive"
+    }
+
+    // Check if bedspace is already archived
+    if (bedspace.isCas3BedspaceArchived()) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyArchived"
+    }
+
+    // Update the bedspace to cancel scheduled archive
+    val updatedBedspace = bedspaceRepository.save(
+      bedspace.copy(
+        endDate = null,
+      ),
+    )
+
+    success(updatedBedspace)
+  }
+
   private fun tryGetProbationDeliveryUnit(
     probationDeliveryUnitIdentifier: Either<String, UUID>?,
     probationRegionId: UUID,

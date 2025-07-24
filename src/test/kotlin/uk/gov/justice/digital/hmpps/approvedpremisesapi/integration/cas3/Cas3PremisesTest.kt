@@ -2288,4 +2288,189 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
     }
   }
+
+  @Nested
+  inner class CancelArchiveBedspace {
+    @Test
+    fun `Cancel archive bedspace returns 200 OK when successful`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val scheduledToArchivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().plusDays(1)) // Archived tomorrow
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${scheduledToArchivedBedspace.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(scheduledToArchivedBedspace.id)
+          .jsonPath("endDate").isEqualTo(null)
+
+        // Verify the bedspace was updated
+        val updatedBedspace = bedRepository.findById(scheduledToArchivedBedspace.id).get()
+        assertThat(updatedBedspace.endDate).isNull()
+      }
+    }
+
+    @Test
+    fun `Cancel archive bedspace returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
+      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val scheduledToArchivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().plusDays(1)) // Archived tomorrow
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${scheduledToArchivedBedspace.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Cancel archive bedspace returns 400 when bedspace does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val nonExistentBedspaceId = UUID.randomUUID()
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/bedspaces/$nonExistentBedspaceId/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("doesNotExist")
+      }
+    }
+
+    @Test
+    fun `Cancel archive bedspace returns 400 when bedspace is not archived`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val onlineBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(10))
+          withEndDate(null) // Not archived
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${onlineBedspace.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceNotScheduledToArchive")
+      }
+    }
+
+    @Test
+    fun `Cancel archive bedspace returns 400 when bedspace is already archived`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val onlineBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(10))
+          withEndDate(LocalDate.now().minusDays(1)) // Already archived
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${onlineBedspace.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceAlreadyArchived")
+      }
+    }
+
+    @Test
+    fun `Cancel archive bedspace returns 403 when user does not have permission to manage premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        // Create premises in a different region
+        val otherRegion = probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea {
+            apAreaEntityFactory.produceAndPersist {
+              withDefaultCruManagementArea(givenACas1CruManagementArea())
+            }
+          }
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { otherRegion }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val archivedBedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(1))
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
 }

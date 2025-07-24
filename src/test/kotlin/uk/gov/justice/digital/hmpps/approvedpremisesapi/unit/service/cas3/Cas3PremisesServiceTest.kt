@@ -2195,4 +2195,104 @@ class Cas3PremisesServiceTest {
       assertThatCasResult(result).isSuccess()
     }
   }
+
+  @Nested
+  inner class CancelArchiveBedspace {
+    @Test
+    fun `cancelArchiveBedspace returns Success when scheduled archive is cancelled`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
+      val scheduledToarchiveBedspace = BedEntityFactory()
+        .withYieldedRoom { room }
+        .withStartDate(LocalDate.now().minusDays(30))
+        .withEndDate(LocalDate.now().plusDays(1)) // Archived tomorrow
+        .produce()
+
+      premises.rooms.add(room)
+      room.beds.add(scheduledToarchiveBedspace)
+
+      val updatedBedspace = scheduledToarchiveBedspace.copy(endDate = null)
+
+      every { bedRepositoryMock.save(any()) } returns updatedBedspace
+
+      val result = premisesService.cancelArchiveBedspace(premises, scheduledToarchiveBedspace.id)
+
+      assertThatCasResult(result).isSuccess().with { bed ->
+        assertThat(bed.id).isEqualTo(scheduledToarchiveBedspace.id)
+        assertThat(bed.endDate).isNull()
+      }
+
+      verify(exactly = 1) {
+        bedRepositoryMock.save(
+          match<BedEntity> {
+            it.id == scheduledToarchiveBedspace.id && it.endDate == null
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `cancelArchiveBedspace returns FieldValidationError when bedspace does not exist`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+      val nonExistentBedspaceId = UUID.randomUUID()
+
+      val result = premisesService.cancelArchiveBedspace(premises, nonExistentBedspaceId)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "doesNotExist")
+    }
+
+    @Test
+    fun `cancelArchiveBedspace returns FieldValidationError when bedspace is not scheduled to be archived`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
+      val onlineBedspace = BedEntityFactory()
+        .withYieldedRoom { room }
+        .withStartDate(LocalDate.now().minusDays(10))
+        .withEndDate(null) // Not archived
+        .produce()
+
+      premises.rooms.add(room)
+      room.beds.add(onlineBedspace)
+
+      val result = premisesService.cancelArchiveBedspace(premises, onlineBedspace.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceNotScheduledToArchive")
+    }
+
+    @Test
+    fun `cancelArchiveBedspace returns FieldValidationError when bedspace is already archived`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
+      val onlineBedspace = BedEntityFactory()
+        .withYieldedRoom { room }
+        .withStartDate(LocalDate.now().minusDays(10))
+        .withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
+        .produce()
+
+      premises.rooms.add(room)
+      room.beds.add(onlineBedspace)
+
+      val result = premisesService.cancelArchiveBedspace(premises, onlineBedspace.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceAlreadyArchived")
+    }
+
+    @Test
+    fun `cancelArchiveBedspace returns FieldValidationError when bedspace is already archived (today)`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
+      val onlineBedspace = BedEntityFactory()
+        .withYieldedRoom { room }
+        .withStartDate(LocalDate.now().minusDays(10))
+        .withEndDate(LocalDate.now()) // Archived today
+        .produce()
+
+      premises.rooms.add(room)
+      room.beds.add(onlineBedspace)
+
+      val result = premisesService.cancelArchiveBedspace(premises, onlineBedspace.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceAlreadyArchived")
+    }
+  }
 }
