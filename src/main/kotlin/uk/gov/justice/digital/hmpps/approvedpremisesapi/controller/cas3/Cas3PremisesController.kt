@@ -369,6 +369,25 @@ class Cas3PremisesController(
     )
   }
 
+  @PutMapping("/premises/{premisesId}/cancel-archive")
+  fun cancelScheduledArchivePremises(
+    @PathVariable premisesId: UUID
+  ) : ResponseEntity<Cas3Premises> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val updatedPremises = extractEntityFromCasResult(
+      cas3PremisesService.cancelScheduledArchivePremises(premisesId),
+    )
+
+    return ResponseEntity.ok(
+      cas3PremisesTransformer.transformDomainToApi(updatedPremises)
+    )
+  }
+
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): BookingEntity {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
