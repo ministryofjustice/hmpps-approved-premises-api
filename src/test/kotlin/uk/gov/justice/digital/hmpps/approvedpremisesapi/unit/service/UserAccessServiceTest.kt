@@ -27,12 +27,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
@@ -46,11 +48,13 @@ class UserAccessServiceTest {
   private val userService = mockk<UserService>()
   private val offenderService = mockk<OffenderService>()
   private val requestContextService = mockk<RequestContextService>()
+  private val environmentService = mockk<EnvironmentService>()
 
   private val userAccessService = UserAccessService(
     userService,
     offenderService,
     requestContextService,
+    environmentService,
   )
 
   private val probationRegionId = UUID.randomUUID()
@@ -132,6 +136,7 @@ class UserAccessServiceTest {
   @BeforeEach
   fun setup() {
     every { userService.getUserForRequest() } returns user
+    every { environmentService.isNotProd() } returns true
   }
 
   @Test
@@ -977,6 +982,28 @@ class UserAccessServiceTest {
     user.addRoleForUnitTest(CAS3_REFERRER)
 
     assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.temporaryAccommodation)).isFalse()
+  }
+
+  @Test
+  fun `currentUserHasPermission denies experimental permissions in production environment`() {
+    user.addRoleForUnitTest(CAS1_JANITOR)
+
+    every { environmentService.isNotProd() } returns false
+
+    val result = userAccessService.currentUserHasPermission(UserPermission.CAS1_TEST_EXPERIMENTAL_PERMISSION)
+
+    assertThat(result).isFalse
+  }
+
+  @Test
+  fun `currentUserHasPermission allows experimental permissions in non-production environment`() {
+    user.addRoleForUnitTest(CAS1_JANITOR)
+
+    every { environmentService.isNotProd() } returns true
+
+    val result = userAccessService.currentUserHasPermission(UserPermission.CAS1_TEST_EXPERIMENTAL_PERMISSION)
+
+    assertThat(result).isTrue
   }
 
   @Nested

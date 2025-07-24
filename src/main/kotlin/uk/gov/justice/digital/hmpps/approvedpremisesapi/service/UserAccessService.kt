@@ -27,6 +27,7 @@ class UserAccessService(
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val requestContextService: RequestContextService,
+  private val environmentService: EnvironmentService,
 ) {
   fun ensureCurrentUserHasPermission(permission: UserPermission) {
     if (!currentUserHasPermission(permission)) {
@@ -34,8 +35,12 @@ class UserAccessService(
     }
   }
 
-  fun currentUserHasPermission(permission: UserPermission) = userService.getUserForRequest().hasPermission(permission)
-
+  fun currentUserHasPermission(permission: UserPermission): Boolean {
+    if (!permission.isAvailable(environmentService)) {
+      return false
+    }
+    return userService.getUserForRequest().hasPermission(permission)
+  }
   fun currentUserCanAccessRegion(service: ServiceName, probationRegionId: UUID?) = userCanAccessRegion(userService.getUserForRequest(), service, probationRegionId)
 
   fun userCanAccessRegion(user: UserEntity, service: ServiceName, probationRegionId: UUID?) = userHasAllRegionsAccess(user, service) || user.probationRegion.id == probationRegionId
