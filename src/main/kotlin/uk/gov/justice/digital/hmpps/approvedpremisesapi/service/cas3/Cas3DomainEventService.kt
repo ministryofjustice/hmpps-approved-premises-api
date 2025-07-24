@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -71,6 +72,12 @@ class Cas3DomainEventService(
   private val domainTopic by lazy {
     hmppsQueueService.findByTopicId("domainevents")
       ?: throw MissingTopicException("domainevents not found")
+  }
+
+  fun getLastBedspaceUnarchiveEventDetails(bedspaceId: UUID): CAS3BedspaceUnarchiveEventDetails? {
+    val domainEventEntity = domainEventRepository.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceId, DomainEventType.CAS3_BEDSPACE_UNARCHIVED) ?: return null
+
+    return objectMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
   }
 
   fun getBookingCancelledEvent(id: UUID) = get<CAS3BookingCancelledEvent>(id)

@@ -373,6 +373,26 @@ class Cas3PremisesController(
     )
   }
 
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-unarchive")
+  fun cancelUnarchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = extractEntityFromCasResult(
+      cas3PremisesService.cancelUnarchiveBedspace(bedspaceId),
+    )
+
+    return ResponseEntity.ok(
+      cas3BedspaceTransformer.transformJpaToApi(result),
+    )
+  }
+
   @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-archive")
   fun cancelArchiveBedspace(
     @PathVariable premisesId: UUID,
