@@ -210,7 +210,7 @@ class Cas1AssessmentService(
     acceptingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
-    placementRequirements: PlacementRequirements?,
+    placementRequirements: PlacementRequirements,
     placementDates: PlacementDates?,
     apType: ApType?,
     notes: String?,
@@ -226,11 +226,6 @@ class Cas1AssessmentService(
       else -> return validation
     }
 
-    val validationErrors = ValidationErrors()
-    if (placementRequirements == null) {
-      validationErrors["$.requirements"] = "empty"
-      return CasResult.FieldValidationError(validationErrors)
-    }
     when (val dataValidation = validateAssessmentData(assessment)) {
       is CasResult.Success -> {}
       is CasResult.Error -> return dataValidation

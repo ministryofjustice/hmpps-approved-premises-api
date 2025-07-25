@@ -681,7 +681,7 @@ class Cas1AssessmentServiceTest {
   }
 
   @Nested
-  inner class Cas1AcceptAssessment {
+  inner class AcceptAssessment {
 
     lateinit var user: UserEntity
     lateinit var assessmentId: UUID
@@ -1108,7 +1108,7 @@ class Cas1AssessmentServiceTest {
   }
 
   @Nested
-  inner class Cas1RejectAssessment {
+  inner class RejectAssessment {
     val user = UserEntityFactory()
       .withDefaults()
       .withYieldedApArea {
