@@ -327,9 +327,6 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   )
   fun hasNonCancelledTransfer(spaceBookingId: UUID): Boolean
 
-  @Query
-  fun existsByDeliusId(deliusId: String): Boolean
-
   /*
   Checking cancellationRecordedAt shouldn't be required, because an arrived
   booking can't be cancelled. Unfortunately, there are some historical bookings
@@ -420,7 +417,12 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "offline_application_id")
   val offlineApplication: OfflineApplicationEntity?,
   /**
-   * Placement request will only be null for migrated [BookingEntity]s, where adhoc = true
+   * Placement request can be null for the following:
+   *
+   * 1. A booking linked to an offlineApplication (these are legacy and shouldn't be created anymore)
+   * 2. A booking created from a migrated booking, where adhoc was originally true (these are legacy and shouldn't be created anymore)
+   * 3. A booking created from a migrated cancelled booking. In this case the legacy data model didn't track placement
+   *    request ids for cancelled (and subsequently rebooked) bookings
    */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_request_id")
