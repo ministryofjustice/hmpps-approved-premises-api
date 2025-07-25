@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
@@ -49,6 +50,7 @@ class Cas1AssessmentService(
   private val assessmentListener: AssessmentListener,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
+  private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val clock: Clock,
 ) {
 
@@ -58,6 +60,8 @@ class Cas1AssessmentService(
     assessmentId: UUID,
     data: String?,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
+    lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
+
     val assessment = when (val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
@@ -219,6 +223,8 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
+    lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
+
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
@@ -290,6 +296,8 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
+    lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
+
     val assessment = when (val validation = validateAssessmentForDecision(rejectingUser, assessmentId)) {
       is CasResult.Success -> validation.value
       else -> return validation
