@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -204,6 +205,7 @@ class Cas1AssessmentService(
     return CasResult.Success(savedNote)
   }
 
+  @Transactional
   @SuppressWarnings("TooGenericExceptionThrown", "ReturnCount")
   fun acceptAssessment(
     acceptingUser: UserEntity,
@@ -277,6 +279,7 @@ class Cas1AssessmentService(
     return CasResult.Success(savedAssessment)
   }
 
+  @Transactional
   @SuppressWarnings("TooGenericExceptionThrown")
   fun rejectAssessment(
     rejectingUser: UserEntity,

@@ -146,7 +146,6 @@ class Cas1AssessmentsController(
     )
   }
 
-  @Transactional
   override fun acceptAssessment(
     assessmentId: UUID,
     cas1AssessmentAcceptance: Cas1AssessmentAcceptance,
@@ -173,7 +172,6 @@ class Cas1AssessmentsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  @Transactional
   override fun rejectAssessment(
     assessmentId: UUID,
     cas1AssessmentRejection: Cas1AssessmentRejection,
