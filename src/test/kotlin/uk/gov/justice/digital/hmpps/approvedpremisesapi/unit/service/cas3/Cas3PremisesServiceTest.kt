@@ -2513,10 +2513,9 @@ class Cas3PremisesServiceTest {
     fun `When cancelling a scheduled archive premise whose end date is in the future, return success`() {
       val premises = updatePremisesEntity()
       premises.endDate = LocalDate.now().plusDays(1)
-
-      mockCommonPremisesDependencies(premises)
+      premises.status = PropertyStatus.active
       every { premisesRepositoryMock.save(any()) } returns premises
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns premises
+      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
 
       val result = premisesService.cancelScheduledArchivePremises(
         premises.id,
@@ -2533,8 +2532,7 @@ class Cas3PremisesServiceTest {
       val premises = updatePremisesEntity()
       premises.endDate = null
 
-      mockCommonPremisesDependencies(premises)
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns premises
+      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
 
       val result = premisesService.cancelScheduledArchivePremises(
         premises.id,
@@ -2546,31 +2544,18 @@ class Cas3PremisesServiceTest {
       )
     }
 
-    @Test
-    fun `When cancelling a scheduled archive premise whose end date is today, return premisesAlreadyArchived`() {
+    @ParameterizedTest(name = "When cancelling a scheduled archive premise whose end date is [{0}], return premisesAlreadyArchived")
+    @CsvSource(
+      value = [
+        "Today",
+        "Before Today",
+      ],
+    )
+    fun `When cancelling a scheduled archive premise whose end date is in the past, return premisesAlreadyArchived`(label: String) {
       val premises = updatePremisesEntity()
-      premises.endDate = LocalDate.now()
+      premises.endDate = if (label == "Today") LocalDate.now() else LocalDate.now().minusDays(1)
 
-      mockCommonPremisesDependencies(premises)
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns premises
-
-      val result = premisesService.cancelScheduledArchivePremises(
-        premises.id,
-      )
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage(
-        "$.premisesId",
-        "premisesAlreadyArchived",
-      )
-    }
-
-    @Test
-    fun `When cancelling a scheduled archive premise whose end date is yesterday, return premisesAlreadyArchived`() {
-      val premises = updatePremisesEntity()
-      premises.endDate = LocalDate.now().minusDays(1)
-
-      mockCommonPremisesDependencies(premises)
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns premises
+      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
 
       val result = premisesService.cancelScheduledArchivePremises(
         premises.id,
@@ -2599,6 +2584,7 @@ class Cas3PremisesServiceTest {
         .withProbationRegion(probationRegion)
         .withProbationDeliveryUnit(probationDeliveryUnit)
         .withLocalAuthorityArea(localAuthority)
+        .withStatus(PropertyStatus.archived)
         .produce()
     }
 
