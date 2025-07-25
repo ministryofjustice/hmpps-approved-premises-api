@@ -1,10 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.TasksCas1Delegate
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -45,7 +52,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCa
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 Tasks")
 class Cas1TasksController(
   private val userService: UserService,
   private val assessmentService: AssessmentService,
@@ -55,22 +63,27 @@ class Cas1TasksController(
   private val enumConverterFactory: EnumConverterFactory,
   private val userTransformer: UserTransformer,
   private val cas1TaskService: Cas1TaskService,
-) : TasksCas1Delegate {
+) {
 
-  override fun tasksGet(
-    type: TaskType?,
-    types: List<TaskType>?,
-    page: Int?,
-    perPage: Int?,
-    sortBy: TaskSortField?,
-    sortDirection: SortDirection?,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-    cruManagementAreaId: UUID?,
-    allocatedToUserId: UUID?,
-    requiredQualification: ApiUserQualification?,
-    crnOrName: String?,
-    isCompleted: Boolean?,
+  @Operation(summary = "List all tasks")
+  @GetMapping(
+    value = ["/tasks"],
+    produces = ["application/json"],
+  )
+  fun tasksGet(
+    @RequestParam type: TaskType?,
+    @RequestParam types: List<TaskType>?,
+    @RequestParam page: Int?,
+    @RequestParam perPage: Int?,
+    @RequestParam sortBy: TaskSortField?,
+    @RequestParam sortDirection: SortDirection?,
+    @RequestParam allocatedFilter: AllocatedFilter?,
+    @RequestParam apAreaId: UUID?,
+    @RequestParam cruManagementAreaId: UUID?,
+    @RequestParam allocatedToUserId: UUID?,
+    @RequestParam requiredQualification: ApiUserQualification?,
+    @RequestParam crnOrName: String?,
+    @RequestParam isCompleted: Boolean?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
@@ -125,7 +138,12 @@ class Cas1TasksController(
     TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
   }
 
-  override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
+  @Operation(summary = "Gets a task for an application")
+  @GetMapping(
+    value = ["/tasks/{taskType}/{id}"],
+    produces = ["application/json"],
+  )
+  fun tasksTaskTypeIdGet(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
 
     val taskInfo = when (toTaskType(taskType)) {
@@ -195,12 +213,18 @@ class Cas1TasksController(
     val requiredPermission: UserPermission,
   )
 
+  @Operation(summary = "Reallocates a task for an application")
+  @PostMapping(
+    value = ["/tasks/{taskType}/{id}/allocations"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
   @Transactional
-  override fun tasksTaskTypeIdAllocationsPost(
-    id: UUID,
-    taskType: String,
-    xServiceName: ServiceName,
-    body: NewReallocation?,
+  fun tasksTaskTypeIdAllocationsPost(
+    @PathVariable id: UUID,
+    @PathVariable taskType: String,
+    @RequestHeader("X-Service-Name") xServiceName: ServiceName,
+    @RequestBody body: NewReallocation?,
   ): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
 
@@ -225,8 +249,13 @@ class Cas1TasksController(
     return ResponseEntity(reallocatedTask, HttpStatus.CREATED)
   }
 
+  @Operation(summary = "Unallocates a task for an application")
+  @DeleteMapping(
+    value = ["/tasks/{taskType}/{id}/allocations"],
+    produces = ["application/problem+json"],
+  )
   @Transactional
-  override fun tasksTaskTypeIdAllocationsDelete(id: UUID, taskType: String): ResponseEntity<Unit> {
+  fun tasksTaskTypeIdAllocationsDelete(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val type = toTaskType(taskType)
