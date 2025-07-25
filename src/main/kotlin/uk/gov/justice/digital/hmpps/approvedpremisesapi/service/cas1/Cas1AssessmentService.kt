@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -15,12 +16,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -49,6 +50,7 @@ class Cas1AssessmentService(
   private val assessmentListener: AssessmentListener,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
+  private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val clock: Clock,
 ) {
 
@@ -58,6 +60,8 @@ class Cas1AssessmentService(
     assessmentId: UUID,
     data: String?,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
+    lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
+
     val assessment = when (val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
@@ -205,12 +209,13 @@ class Cas1AssessmentService(
     return CasResult.Success(savedNote)
   }
 
+  @Transactional
   @SuppressWarnings("TooGenericExceptionThrown", "ReturnCount")
   fun acceptAssessment(
     acceptingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
-    placementRequirements: PlacementRequirements?,
+    placementRequirements: PlacementRequirements,
     placementDates: PlacementDates?,
     apType: ApType?,
     notes: String?,
@@ -218,22 +223,14 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
+    lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
+
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
-    val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
+    val assessment = when (val validation = validateAssessmentForDecision(acceptingUser, assessmentId)) {
       is CasResult.Success -> validation.value
       else -> return validation
-    }
-
-    val validationErrors = ValidationErrors()
-    if (placementRequirements == null) {
-      validationErrors["$.requirements"] = "empty"
-      return CasResult.FieldValidationError(validationErrors)
-    }
-    when (val dataValidation = validateAssessmentData(assessment)) {
-      is CasResult.Success -> {}
-      is CasResult.Error -> return dataValidation
     }
 
     assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
@@ -288,6 +285,7 @@ class Cas1AssessmentService(
     return CasResult.Success(savedAssessment)
   }
 
+  @Transactional
   @SuppressWarnings("TooGenericExceptionThrown")
   fun rejectAssessment(
     rejectingUser: UserEntity,
@@ -298,14 +296,11 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
-    val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
+    lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
+
+    val assessment = when (val validation = validateAssessmentForDecision(rejectingUser, assessmentId)) {
       is CasResult.Success -> validation.value
       else -> return validation
-    }
-
-    when (val dataValidation = validateAssessmentData(assessment)) {
-      is CasResult.Success -> {}
-      is CasResult.Error -> return dataValidation
     }
 
     assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
@@ -350,7 +345,7 @@ class Cas1AssessmentService(
   }
 
   @SuppressWarnings("ReturnCount")
-  private fun validateAssessment(
+  private fun validateAssessmentForDecision(
     user: UserEntity,
     assessmentId: UUID,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
@@ -374,21 +369,11 @@ class Cas1AssessmentService(
       return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
     }
 
-    return CasResult.Success(assessment)
-  }
-
-  private fun validateAssessmentData(
-    assessment: ApprovedPremisesAssessmentEntity,
-  ): CasResult<ApprovedPremisesAssessmentEntity> {
-    val validationErrors = ValidationErrors()
     if (assessment.data == null) {
-      validationErrors["$.data"] = "empty"
+      return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
     }
-    return if (validationErrors.any()) {
-      CasResult.FieldValidationError(validationErrors)
-    } else {
-      CasResult.Success(assessment)
-    }
+
+    return CasResult.Success(assessment)
   }
 
   private fun getOffenderDetails(offenderCrn: String, laoStrategy: LaoStrategy): CaseSummary? {

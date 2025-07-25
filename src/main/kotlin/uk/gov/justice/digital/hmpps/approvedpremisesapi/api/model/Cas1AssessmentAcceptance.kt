@@ -20,7 +20,7 @@ data class Cas1AssessmentAcceptance(
   @get:JsonProperty("document", required = true) val document: kotlin.Any,
 
   @Schema(example = "null", description = "")
-  @get:JsonProperty("requirements") val requirements: PlacementRequirements? = null,
+  @get:JsonProperty("requirements") val requirements: PlacementRequirements,
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("placementDates") val placementDates: PlacementDates? = null,
