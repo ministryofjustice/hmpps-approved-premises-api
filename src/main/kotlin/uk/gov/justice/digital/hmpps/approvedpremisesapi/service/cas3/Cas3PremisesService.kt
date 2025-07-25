@@ -604,6 +604,7 @@ class Cas3PremisesService(
     }
 
     premises.endDate = null
+    premises.status = PropertyStatus.active
 
     return success(premisesRepository.save(premises))
   }

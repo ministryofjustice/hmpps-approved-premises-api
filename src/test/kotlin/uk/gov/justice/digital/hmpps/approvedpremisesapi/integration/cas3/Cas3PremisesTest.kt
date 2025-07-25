@@ -2484,7 +2484,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Cancel scheduled archive premises returns 200 OK when successful`() {
       givenATemporaryAccommodationPremisesWithUserScheduledForArchive(
         roles = listOf(UserRole.CAS3_ASSESSOR),
-        archiveDate = LocalDate.now().plusDays(10)
+        archiveDate = LocalDate.now().plusDays(10),
+        premisesStatus = PropertyStatus.archived,
       ) { userEntity, jwt, premises ->
         givenATemporaryAccommodationRooms(premises = premises)
 
@@ -2501,13 +2502,14 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // Verify the premise was updated
         val updatePremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
         assertThat(updatePremises.endDate).isNull()
+        assertThat(updatePremises.status).isEqualTo(PropertyStatus.active)
       }
     }
 
     @Test
     fun `Cancel archive premises returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
       givenATemporaryAccommodationPremisesWithUser(
-        roles = listOf(UserRole.CAS3_REFERRER)
+        roles = listOf(UserRole.CAS3_REFERRER),
       ) { userEntity, jwt, premises ->
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
@@ -2539,7 +2541,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Cancel scheduled archive premises returns 400 (premisesNotScheduledToArchive) when premise is not archived`() {
       givenATemporaryAccommodationPremisesWithUser(
-        roles = listOf(UserRole.CAS3_ASSESSOR)
+        roles = listOf(UserRole.CAS3_ASSESSOR),
       ) { userEntity, jwt, premises ->
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
@@ -2558,7 +2560,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Cancel scheduled archive premise returns 400 when premise already archived today`() {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
-        premisesEndDate = LocalDate.now()
+        premisesEndDate = LocalDate.now(),
+        premisesStatus = PropertyStatus.archived,
       ) { userEntity, jwt, premises ->
         givenATemporaryAccommodationRooms(premises = premises)
 
@@ -2579,7 +2582,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Cancel scheduled archive premise returns 400 when premise has already been archived in the past`() {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
-        premisesEndDate = LocalDate.now().minusDays(1)
+        premisesEndDate = LocalDate.now().minusDays(1),
       ) { userEntity, jwt, premises ->
         givenATemporaryAccommodationRooms(premises = premises)
 

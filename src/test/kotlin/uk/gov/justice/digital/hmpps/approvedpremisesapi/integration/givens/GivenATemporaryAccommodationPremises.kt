@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 
-
 fun IntegrationTestBase.givenATemporaryAccommodationPremises(
   region: ProbationRegionEntity = givenAProbationRegion(),
   status: PropertyStatus = PropertyStatus.active,
@@ -28,7 +27,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremises(
       }
     }
     withStatus(status)
-    withYieldedEndDate { endDate }
+    withEndDate(endDate)
   }
 
   block?.invoke(premises)
@@ -173,11 +172,14 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesScheduledForArchive(
 fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithUserScheduledForArchive(
   roles: List<UserRole> = emptyList(),
   archiveDate: LocalDate = LocalDate.now().plusDays(10),
+  premisesStatus: PropertyStatus = PropertyStatus.active,
   block: (user: UserEntity, jwt: String, premises: TemporaryAccommodationPremisesEntity) -> Unit,
 ) {
   givenATemporaryAccommodationPremisesWithUser(
     roles = roles,
     premisesEndDate = archiveDate,
+    premisesStatus = premisesStatus,
+
   ) { user, jwt, premises ->
     block(user, jwt, premises)
   }

@@ -50,7 +50,6 @@ fun IntegrationTestBase.givenATemporaryAccommodationBeds(
   return beds
 }
 
-
 fun IntegrationTestBase.givenATemporaryAccommodationBedWithPremises(
   premises: TemporaryAccommodationPremisesEntity? = null,
   startDate: LocalDate = LocalDate.now().minusDays(30),
