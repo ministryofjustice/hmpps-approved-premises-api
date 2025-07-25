@@ -67,6 +67,8 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
+      UserPermission.CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE,
+      UserPermission.CAS1_NATIONAL_OCCUPANCY_VIEW,
     ),
   ),
 

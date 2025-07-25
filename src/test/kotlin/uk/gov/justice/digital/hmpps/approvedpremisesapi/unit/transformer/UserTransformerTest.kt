@@ -67,7 +67,7 @@ class UserTransformerTest {
   @BeforeEach
   fun setup() {
     every { probationRegionTransformer.transformJpaToApi(any()) } returns ProbationRegion(randomUUID(), "someName")
-    every { environmentService.isProd() } returns false
+    every { environmentService.isNotProd() } returns false
   }
 
   @Nested
@@ -186,7 +186,7 @@ class UserTransformerTest {
       )
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
-      every { environmentService.isProd() } returns true
+      every { environmentService.isNotProd() } returns true
 
       val result =
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
@@ -416,7 +416,8 @@ class UserTransformerTest {
 
       assertThat(result.deliusUsername).isEqualTo("userName")
       assertThat(result.loadError).isEqualTo(null)
-      verify(exactly = 1) { userTransformer.transformJpaToApi(user, approvedPremises) }
+      verify { userTransformer.transformJpaToApi(user, approvedPremises) }
+      verify { environmentService.isNotProd() }
     }
   }
 
