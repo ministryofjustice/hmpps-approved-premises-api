@@ -35,6 +35,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremisesWithUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremisesWithUserScheduledForArchive
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationRooms
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
@@ -2731,22 +2735,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   inner class CancelScheduledArchivePremises {
     @Test
     fun `Cancel scheduled archive premises returns 200 OK when successful`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { userEntity.probationRegion }
-          withYieldedProbationDeliveryUnit {
-            probationDeliveryUnitFactory.produceAndPersist {
-              withProbationRegion(userEntity.probationRegion)
-            }
-          }
-          withStatus(PropertyStatus.active)
-          withYieldedEndDate { LocalDate.now().plusDays(10) }
-        }
-
-        roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
+      givenATemporaryAccommodationPremisesWithUserScheduledForArchive(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        archiveDate = LocalDate.now().plusDays(10)
+      ) { userEntity, jwt, premises ->
+        givenATemporaryAccommodationRooms(premises = premises)
 
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
@@ -2766,13 +2759,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Cancel archive premises returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
-      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { userEntity.probationRegion }
-          withStatus(PropertyStatus.active)
-        }
-
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_REFERRER)
+      ) { userEntity, jwt, premises ->
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
           .header("Authorization", "Bearer $jwt")
@@ -2785,7 +2774,6 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Cancel archive premises returns 404 when premises does not exist`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-
         val nonExistentPremises = UUID.randomUUID().toString()
 
         webTestClient.put()
@@ -2803,14 +2791,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Cancel scheduled archive premises returns 400 (premisesNotScheduledToArchive) when premise is not archived`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { userEntity.probationRegion }
-          withYieldedEndDate { null }
-          withStatus(PropertyStatus.active)
-        }
-
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR)
+      ) { userEntity, jwt, premises ->
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
           .header("Authorization", "Bearer $jwt")
@@ -2826,17 +2809,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Cancel scheduled archive premise returns 400 when premise already archived today`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { userEntity.probationRegion }
-          withYieldedEndDate { LocalDate.now() }
-          withStatus(PropertyStatus.active)
-        }
-
-        roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesEndDate = LocalDate.now()
+      ) { userEntity, jwt, premises ->
+        givenATemporaryAccommodationRooms(premises = premises)
 
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
@@ -2853,17 +2830,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Cancel scheduled archive premise returns 400 when premise has already been archived in the past`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { userEntity.probationRegion }
-          withYieldedEndDate { LocalDate.now().minusDays(1) }
-          withStatus(PropertyStatus.active)
-        }
-
-        roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesEndDate = LocalDate.now().minusDays(1)
+      ) { userEntity, jwt, premises ->
+        givenATemporaryAccommodationRooms(premises = premises)
 
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
@@ -2890,17 +2861,14 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           }
         }
 
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { otherRegion }
+        givenATemporaryAccommodationPremises(region = otherRegion) { premises ->
+          webTestClient.put()
+            .uri("/cas3/premises/${premises.id}/cancel-archive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
         }
-
-        webTestClient.put()
-          .uri("/cas3/premises/${premises.id}/cancel-archive")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
       }
     }
   }
