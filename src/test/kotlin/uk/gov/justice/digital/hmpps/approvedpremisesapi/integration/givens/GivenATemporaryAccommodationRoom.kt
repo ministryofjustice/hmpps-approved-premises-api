@@ -46,4 +46,4 @@ fun IntegrationTestBase.givenATemporaryAccommodationRooms(
 
   block?.invoke(rooms)
   return rooms
-} 
+}
