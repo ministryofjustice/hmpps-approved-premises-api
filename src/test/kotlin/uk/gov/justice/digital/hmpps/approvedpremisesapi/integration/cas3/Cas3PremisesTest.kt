@@ -2226,7 +2226,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val onlineBedspace = bedEntityFactory.produceAndPersist {
           withRoom(room)
           withStartDate(LocalDate.now().minusDays(10))
-          withEndDate(null) // Not archived
+          withEndDate(null)
         }
 
         val restartDate = LocalDate.now().plusDays(1)
@@ -2278,6 +2278,259 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Nested
+  inner class UnarchivePremises {
+    @Test
+    fun `Unarchive premises returns 200 OK when successful`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withProbationDeliveryUnit(pdu)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(1))
+          withStatus(PropertyStatus.archived)
+        }
+
+        val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
+          withPremises(premises)
+        }
+
+        val bedspaces = mutableListOf<BedEntity>()
+
+        rooms.forEach { room ->
+          bedspaces.addAll(
+            bedEntityFactory.produceAndPersistMultiple(2) {
+              withRoom(room)
+              withStartDate(LocalDate.now().minusDays(30))
+              withEndDate(LocalDate.now().minusDays(1))
+            },
+          )
+        }
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+          .jsonPath("status").isEqualTo("online")
+
+        val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.active)
+        assertThat(updatedPremises.endDate).isNull()
+
+        val updatedBedspaces = bedRepository.findAll()
+        assertThat(updatedBedspaces).hasSize(4)
+        updatedBedspaces.forEach { bedspace ->
+          assertThat(bedspace.startDate).isEqualTo(restartDate)
+          assertThat(bedspace.endDate).isNull()
+        }
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when restart date is too far in the past`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withProbationDeliveryUnit(pdu)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(10))
+          withStatus(PropertyStatus.archived)
+        }
+
+        val restartDate = LocalDate.now().minusDays(8)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidRestartDateInThePast")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when restart date is too far in the future`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withProbationDeliveryUnit(pdu)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(1))
+          withStatus(PropertyStatus.archived)
+        }
+
+        val restartDate = LocalDate.now().plusDays(8)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidRestartDateInTheFuture")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when restart date is before last archive end date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val lastArchiveEndDate = LocalDate.now().minusDays(5)
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withProbationDeliveryUnit(pdu)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(lastArchiveEndDate)
+          withStatus(PropertyStatus.archived)
+        }
+
+        val restartDate = lastArchiveEndDate.minusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("beforeLastPremisesArchivedDate")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 404 when premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val nonExistentPremisesId = UUID.randomUUID()
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/$nonExistentPremisesId/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Not Found")
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $nonExistentPremisesId could be found")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when premises is not archived`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withStatus(PropertyStatus.active)
+        }
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesNotArchived")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 403 when user does not have permission to manage premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        // Create premises in a different region
+        val otherRegion = probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea {
+            apAreaEntityFactory.produceAndPersist {
+              withDefaultCruManagementArea(givenACas1CruManagementArea())
+            }
+          }
+        }
+
+        val pdu = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(otherRegion)
+        }
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { otherRegion }
+          withProbationDeliveryUnit(pdu)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(1))
+          withStatus(PropertyStatus.archived)
+        }
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/unarchive")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             mapOf("restartDate" to restartDate.toString()),
