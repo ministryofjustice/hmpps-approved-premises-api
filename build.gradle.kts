@@ -78,7 +78,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.9")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
 }
