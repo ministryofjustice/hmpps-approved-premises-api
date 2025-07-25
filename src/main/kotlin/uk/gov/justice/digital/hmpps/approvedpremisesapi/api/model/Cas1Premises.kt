@@ -57,4 +57,7 @@ data class Cas1Premises(
 
   @Schema(description = "Room and premise characteristics")
   val characteristics: List<Cas1SpaceCharacteristic>,
+
+  @Schema(description = "This is deprecated and only returns an empty list", deprecated = true)
+  val overbookingSummary: List<Cas1OverbookingRange> = emptyList(),
 )
