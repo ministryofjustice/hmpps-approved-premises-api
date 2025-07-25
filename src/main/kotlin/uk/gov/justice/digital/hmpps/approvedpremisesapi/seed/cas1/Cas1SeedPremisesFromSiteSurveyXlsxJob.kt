@@ -193,7 +193,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
         latitude = premisesInfo.latitude,
         point = premisesInfo.point,
         gender = siteSurvey.maleFemale.toApprovedPremisesGender(),
-        supportsSpaceBookings = false,
+        supportsSpaceBookings = true,
         // A new row is required in site surveys to capture this
         managerDetails = null,
         cruManagementArea = cruManagementArea,
