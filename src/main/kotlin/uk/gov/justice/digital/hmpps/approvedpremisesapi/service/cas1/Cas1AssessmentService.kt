@@ -221,7 +221,7 @@ class Cas1AssessmentService(
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
-    val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
+    val assessment = when (val validation = validateAssessmentForDecision(acceptingUser, assessmentId)) {
       is CasResult.Success -> validation.value
       else -> return validation
     }
@@ -298,7 +298,7 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
-    val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
+    val assessment = when (val validation = validateAssessmentForDecision(rejectingUser, assessmentId)) {
       is CasResult.Success -> validation.value
       else -> return validation
     }
@@ -350,7 +350,7 @@ class Cas1AssessmentService(
   }
 
   @SuppressWarnings("ReturnCount")
-  private fun validateAssessment(
+  private fun validateAssessmentForDecision(
     user: UserEntity,
     assessmentId: UUID,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
