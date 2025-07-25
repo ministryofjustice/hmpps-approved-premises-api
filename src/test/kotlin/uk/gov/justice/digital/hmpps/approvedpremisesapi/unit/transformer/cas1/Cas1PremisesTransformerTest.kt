@@ -71,7 +71,6 @@ class Cas1PremisesTransformerTest {
           bedCount = 10,
           outOfServiceBeds = 2,
           availableBeds = 8,
-          overbookingSummary = emptyList(),
           characteristicPropertyNames = listOf("hasBrailleSignage", "hasCrib7Bedding"),
           localRestrictions = listOf(
             restriction2,
@@ -91,7 +90,6 @@ class Cas1PremisesTransformerTest {
       assertThat(result.apArea).isEqualTo(expectedApArea)
       assertThat(result.supportsSpaceBookings).isTrue()
       assertThat(result.managerDetails).isEqualTo("manager details")
-      assertThat(result.overbookingSummary).isEmpty()
       assertThat(result.localRestrictions).containsExactly(restriction2, restriction1)
       assertThat(result.characteristics).containsExactlyInAnyOrder(Cas1SpaceCharacteristic.hasBrailleSignage, Cas1SpaceCharacteristic.hasCrib7Bedding)
     }

@@ -47,9 +47,6 @@ data class Cas1Premises(
 
   val supportsSpaceBookings: kotlin.Boolean,
 
-  @Schema(description = "over-bookings for the next 12 weeks")
-  val overbookingSummary: kotlin.collections.List<Cas1OverbookingRange>,
-
   val managerDetails: kotlin.String? = null,
 
   @Schema(

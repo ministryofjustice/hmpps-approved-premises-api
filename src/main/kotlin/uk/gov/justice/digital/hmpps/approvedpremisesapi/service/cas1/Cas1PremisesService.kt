@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
@@ -44,9 +43,6 @@ class Cas1PremisesService(
   private val clock: Clock,
   private val cas1BedsRepository: Cas1BedsRepository,
 ) {
-  companion object {
-    private const val OVERBOOKING_RANGE_DURATION_WEEKS = 12L
-  }
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -82,37 +78,16 @@ class Cas1PremisesService(
       }
     val characteristicPropertyNames = premisesJdbcRepository.findAllCharacteristicPropertyNames(premisesId)
 
-    val overbookingSummary = if (!featureFlagService.getBooleanFlag("cas1-disable-overbooking-summary")) {
-      premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
-    } else {
-      emptyList()
-    }
-
     return CasResult.Success(
       Cas1PremisesInfo(
         entity = premise,
         bedCount = bedCount,
         availableBeds = bedCount - outOfServiceBedsCount - spaceBookingCount,
         outOfServiceBeds = outOfServiceBedsCount,
-        overbookingSummary = overbookingSummary,
         localRestrictions = localRestrictions,
         characteristicPropertyNames = characteristicPropertyNames,
       ),
     )
-  }
-
-  private fun buildOverBookingSummary(premises: ApprovedPremisesEntity): List<Cas1OverbookingRange> {
-    val premisesCapacitySummary = spacePlanningService.capacity(
-      premises.id,
-      rangeInclusive = DateRange(LocalDate.now(), LocalDate.now().plusWeeks(OVERBOOKING_RANGE_DURATION_WEEKS).minusDays(1)),
-      excludeSpaceBookingId = null,
-    )
-
-    val overbookedDays = premisesCapacitySummary
-      .byDay
-      .filter { it.isPremiseOverbooked() }
-
-    return Cas1PremiseOverbookingCalculator().calculate(overbookedDays)
   }
 
   fun getPremises(gender: ApprovedPremisesGender?, apAreaId: UUID?, cruManagementAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId, cruManagementAreaId)
@@ -215,7 +190,6 @@ class Cas1PremisesService(
     val bedCount: Int,
     val availableBeds: Int,
     val outOfServiceBeds: Int,
-    val overbookingSummary: List<Cas1OverbookingRange>,
     val localRestrictions: List<Cas1PremisesLocalRestrictionSummary> = emptyList(),
     val characteristicPropertyNames: List<String>,
   )
