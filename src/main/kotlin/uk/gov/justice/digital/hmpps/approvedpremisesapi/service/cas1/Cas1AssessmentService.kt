@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.Ass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -226,11 +225,6 @@ class Cas1AssessmentService(
       else -> return validation
     }
 
-    when (val dataValidation = validateAssessmentData(assessment)) {
-      is CasResult.Success -> {}
-      is CasResult.Error -> return dataValidation
-    }
-
     assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
     assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
     assessment.reasonForLateApplication = reasonForLateApplication
@@ -296,11 +290,6 @@ class Cas1AssessmentService(
     val assessment = when (val validation = validateAssessmentForDecision(rejectingUser, assessmentId)) {
       is CasResult.Success -> validation.value
       else -> return validation
-    }
-
-    when (val dataValidation = validateAssessmentData(assessment)) {
-      is CasResult.Success -> {}
-      is CasResult.Error -> return dataValidation
     }
 
     assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
@@ -369,21 +358,11 @@ class Cas1AssessmentService(
       return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
     }
 
-    return CasResult.Success(assessment)
-  }
-
-  private fun validateAssessmentData(
-    assessment: ApprovedPremisesAssessmentEntity,
-  ): CasResult<ApprovedPremisesAssessmentEntity> {
-    val validationErrors = ValidationErrors()
     if (assessment.data == null) {
-      validationErrors["$.data"] = "empty"
+      return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
     }
-    return if (validationErrors.any()) {
-      CasResult.FieldValidationError(validationErrors)
-    } else {
-      CasResult.Success(assessment)
-    }
+
+    return CasResult.Success(assessment)
   }
 
   private fun getOffenderDetails(offenderCrn: String, laoStrategy: LaoStrategy): CaseSummary? {
