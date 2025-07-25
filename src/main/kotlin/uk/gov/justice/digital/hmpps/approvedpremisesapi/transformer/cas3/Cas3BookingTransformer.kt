@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
@@ -56,12 +53,6 @@ class Cas3BookingTransformer(
       premises = jpa.premises.let { Cas3BookingPremisesSummary(it.id, it.name) },
     )
   }
-
-  fun transformToWithdrawable(jpa: Cas3BookingEntity) = Withdrawable(
-    jpa.id,
-    WithdrawableType.booking,
-    listOf(DatePeriod(jpa.arrivalDate, jpa.departureDate)),
-  )
 
   private fun determineStatus(jpa: Cas3BookingEntity): Cas3BookingStatus {
     val (hasNonZeroDayTurnaround, hasZeroDayTurnaround, turnaroundPeriodEnded) = isTurnaroundPeriodEnded(jpa)

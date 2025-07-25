@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationProvider
@@ -27,8 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -1957,32 +1954,6 @@ class BookingTransformerTest {
         turnaroundStartDate = LocalDate.parse("2022-08-31"),
         effectiveEndDate = LocalDate.parse("2022-09-05"),
         premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-      ),
-    )
-  }
-
-  @Test
-  fun `Booking is correctly transformed to withdrawable`() {
-    val id = UUID.randomUUID()
-
-    val jpa = baseBookingEntity.copy(
-      id = id,
-      arrivalDate = LocalDate.of(2023, 12, 11),
-      departureDate = LocalDate.of(2024, 11, 29),
-    )
-
-    val result = bookingTransformer.transformToWithdrawable(jpa)
-
-    assertThat(result).isEqualTo(
-      Withdrawable(
-        id,
-        WithdrawableType.booking,
-        listOf(
-          DatePeriod(
-            LocalDate.of(2023, 12, 11),
-            LocalDate.of(2024, 11, 29),
-          ),
-        ),
       ),
     )
   }
