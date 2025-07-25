@@ -16,7 +16,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
@@ -236,9 +235,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.availableBeds).isEqualTo(-6)
       assertThat(summary.apArea.name).isEqualTo("The ap area name")
       assertThat(summary.managerDetails).isEqualTo("manager details")
-      assertThat(summary.overbookingSummary).containsExactly(
-        Cas1OverbookingRange(LocalDate.now(), LocalDate.now().plusWeeks(12).minusDays(1)),
-      )
       assertThat(summary.localRestrictions).containsExactly(
         Cas1PremisesLocalRestrictionSummary(restriction2.id, restriction2.description, restriction2.createdAt.toLocalDate()),
         Cas1PremisesLocalRestrictionSummary(restriction1.id, restriction1.description, restriction1.createdAt.toLocalDate()),

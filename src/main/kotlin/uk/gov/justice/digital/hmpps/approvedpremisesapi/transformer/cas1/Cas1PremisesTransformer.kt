@@ -28,7 +28,6 @@ class Cas1PremisesTransformer(
       apArea = apAreaTransformer.transformJpaToApi(entity.probationRegion.apArea!!),
       supportsSpaceBookings = entity.supportsSpaceBookings,
       managerDetails = entity.managerDetails,
-      overbookingSummary = premisesSummaryInfo.overbookingSummary,
       localRestrictions = premisesSummaryInfo.localRestrictions,
       characteristics = premisesSummaryInfo.characteristicPropertyNames.map { Cas1SpaceCharacteristic.valueOf(it) },
     )
