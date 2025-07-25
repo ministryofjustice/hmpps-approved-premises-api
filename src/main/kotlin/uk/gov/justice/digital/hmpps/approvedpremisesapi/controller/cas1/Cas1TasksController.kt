@@ -70,7 +70,7 @@ class Cas1TasksController(
     value = ["/tasks"],
     produces = ["application/json"],
   )
-  fun tasksGet(
+  fun getTasks(
     @RequestParam type: TaskType?,
     @RequestParam types: List<TaskType>?,
     @RequestParam page: Int?,
@@ -143,7 +143,7 @@ class Cas1TasksController(
     value = ["/tasks/{taskType}/{id}"],
     produces = ["application/json"],
   )
-  fun tasksTaskTypeIdGet(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<TaskWrapper> {
+  fun getTask(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
 
     val taskInfo = when (toTaskType(taskType)) {
@@ -220,7 +220,7 @@ class Cas1TasksController(
     consumes = ["application/json"],
   )
   @Transactional
-  fun tasksTaskTypeIdAllocationsPost(
+  fun reallocateTask(
     @PathVariable id: UUID,
     @PathVariable taskType: String,
     @RequestHeader("X-Service-Name") xServiceName: ServiceName,
@@ -255,7 +255,7 @@ class Cas1TasksController(
     produces = ["application/problem+json"],
   )
   @Transactional
-  fun tasksTaskTypeIdAllocationsDelete(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<Unit> {
+  fun unallocateTask(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val type = toTaskType(taskType)
