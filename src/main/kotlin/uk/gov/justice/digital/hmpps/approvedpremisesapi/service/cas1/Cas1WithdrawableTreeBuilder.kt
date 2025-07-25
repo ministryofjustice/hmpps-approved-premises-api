@@ -44,10 +44,6 @@ class Cas1WithdrawableTreeBuilder(
       children.add(treeForPlacementApp(it, user).rootNode)
     }
 
-    bookingService.getAllAdhocOrUnknownForApplication(application).forEach {
-      children.add(treeForBooking(it, user).rootNode)
-    }
-
     return WithdrawableTree(
       rootNode = WithdrawableTreeNode(
         applicationId = application.id,

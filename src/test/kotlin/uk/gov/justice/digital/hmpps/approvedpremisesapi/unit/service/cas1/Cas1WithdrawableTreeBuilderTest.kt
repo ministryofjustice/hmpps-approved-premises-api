@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -16,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -85,8 +83,8 @@ class Cas1WithdrawableTreeBuilderTest {
     val initialPlacementRequest = createPlacementRequest()
     setupWithdrawableState(initialPlacementRequest, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
 
-    val initialPlacementRequestBooking = createBooking(adhoc = false)
-    initialPlacementRequest.booking = initialPlacementRequestBooking
+    val initialPlacementRequestBooking = createSpaceBooking()
+    initialPlacementRequest.spaceBookings = mutableListOf(initialPlacementRequestBooking)
     setupWithdrawableState(initialPlacementRequestBooking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false))
 
     every {
@@ -114,87 +112,18 @@ class Cas1WithdrawableTreeBuilderTest {
       cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApplication2)
 
-    val adhocBooking1 = createBooking(adhoc = true)
-    setupWithdrawableState(adhocBooking1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-
-    every {
-      bookingService.getAllAdhocOrUnknownForApplication(application)
-    } returns listOf(adhocBooking1)
-
     val result = service.treeForApp(application, user)
 
     assertThat(result.render(includeIds = false).trim()).isEqualTo(
       """
 Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
 ---> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-------> Booking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
+------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
 ------> PlacementRequest(), withdrawn:Y, withdrawable:N, mayDirectlyWithdraw:N
 ---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
 ---------> SpaceBooking(), withdrawn:Y, withdrawable:N, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
----> Booking(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-
-Notes: []
-      """
-        .trim(),
-    )
-  }
-
-  @Test
-  fun `tree for app excludes placement request's bookings if bookings are adhoc or potentially adhoc`() {
-    every {
-      cas1ApplicationService.getWithdrawableState(application, user)
-    } returns WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true)
-
-    val initialPlacementRequest = createPlacementRequest()
-    setupWithdrawableState(initialPlacementRequest, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-
-    val initialPlacementRequestBooking = createBooking(adhoc = true)
-    initialPlacementRequest.booking = initialPlacementRequestBooking
-    setupWithdrawableState(initialPlacementRequestBooking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false))
-
-    every {
-      placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)
-    } returns listOf(
-      initialPlacementRequest,
-    )
-
-    val placementApp1 = createPlacementApplication()
-    setupWithdrawableState(placementApp1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp1PlacementRequest1 = createPlacementRequest()
-    placementApp1.placementRequests.add(placementApp1PlacementRequest1)
-    setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
-    placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
-    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false))
-
-    val placementApp2 = createPlacementApplication()
-    setupWithdrawableState(placementApp2, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp2PlacementRequest1 = createPlacementRequest()
-    placementApp2.placementRequests.add(placementApp2PlacementRequest1)
-    setupWithdrawableState(placementApp2PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp2PlacementRequest1Booking = createBooking(adhoc = null)
-    placementApp2PlacementRequest1.booking = placementApp2PlacementRequest1Booking
-    setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false))
-
-    every {
-      cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
-    } returns listOf(placementApp1, placementApp2)
-
-    every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
-
-    val result = service.treeForApp(application, user)
-
-    assertThat(result.render(includeIds = false).trim()).isEqualTo(
-      """
-Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
----> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
----> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
----------> Booking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
----> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
 
 Notes: []
       """
@@ -211,8 +140,8 @@ Notes: []
     val initialPlacementRequest = createPlacementRequest()
     setupWithdrawableState(initialPlacementRequest, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
 
-    val initialPlacementRequestBooking = createBooking(adhoc = false)
-    initialPlacementRequest.booking = initialPlacementRequestBooking
+    val initialPlacementRequestBooking = createSpaceBooking()
+    initialPlacementRequest.spaceBookings = mutableListOf(initialPlacementRequestBooking)
     setupWithdrawableState(initialPlacementRequestBooking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false))
 
     every {
@@ -226,8 +155,8 @@ Notes: []
     val placementApp1PlacementRequest1 = createPlacementRequest()
     placementApp1.placementRequests.add(placementApp1PlacementRequest1)
     setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
-    placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
+    val placementApp1PlacementRequest1Booking = createSpaceBooking()
+    placementApp1PlacementRequest1.spaceBookings = mutableListOf(placementApp1PlacementRequest1Booking)
     setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1))
 
     val placementApp2 = createPlacementApplication()
@@ -235,8 +164,8 @@ Notes: []
     val placementApp2PlacementRequest1 = createPlacementRequest()
     placementApp2.placementRequests.add(placementApp2PlacementRequest1)
     setupWithdrawableState(placementApp2PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp2PlacementRequest1Booking = createBooking(adhoc = false)
-    placementApp2PlacementRequest1.booking = placementApp2PlacementRequest1Booking
+    val placementApp2PlacementRequest1Booking = createSpaceBooking()
+    placementApp2PlacementRequest1.spaceBookings = mutableListOf(placementApp2PlacementRequest1Booking)
     setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true))
 
     every {
@@ -251,13 +180,13 @@ Notes: []
       """
 Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-------> Booking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
+------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
----------> Booking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
+---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
 ------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
----------> Booking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
+---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
 
 Notes: [1 or more placements cannot be withdrawn as they have an arrival]
       """
@@ -280,8 +209,8 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     val placementApp1PlacementRequest1 = createPlacementRequest()
     placementApp1.placementRequests.add(placementApp1PlacementRequest1)
     setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
-    placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
+    val placementApp1PlacementRequest1Booking = createSpaceBooking()
+    placementApp1PlacementRequest1.spaceBookings = mutableListOf(placementApp1PlacementRequest1Booking)
     setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInDelius))
 
     every {
@@ -297,7 +226,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
 Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
----------> Booking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInDelius
+---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInDelius
 
 Notes: [1 or more placements cannot be withdrawn as they have an arrival recorded in Delius]
       """
@@ -370,12 +299,6 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     .withCreatedByUser(user)
     .produce()
 
-  private fun createBooking(adhoc: Boolean?) = BookingEntityFactory()
-    .withDefaults()
-    .withApplication(application)
-    .withAdhoc(adhoc)
-    .produce()
-
   private fun createSpaceBooking() = Cas1SpaceBookingEntityFactory()
     .withApplication(application)
     .produce()
@@ -383,12 +306,6 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
   private fun setupWithdrawableState(placementRequest: PlacementRequestEntity, state: WithdrawableState) {
     every {
       placementRequestService.getWithdrawableState(placementRequest, user)
-    } returns state
-  }
-
-  private fun setupWithdrawableState(booking: BookingEntity, state: WithdrawableState) {
-    every {
-      bookingService.getWithdrawableState(booking, user)
     } returns state
   }
 
