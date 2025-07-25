@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplicationPlaceholder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
@@ -54,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1158,6 +1160,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
+            withSubmittedAt(OffsetDateTime.now())
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -1166,6 +1169,8 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           }
 
           val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+
+          givenAPlacementApplicationPlaceholder(application)
 
           val essentialCriteria = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isRecoveryFocussed)
           val desirableCriteria =
@@ -1231,6 +1236,14 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
           )
 
+          val placementApplication = placementApplicationRepository.findByApplication(application)[0]
+          assertThat(placementApplication.automatic).isTrue
+          assertThat(placementApplication.placementType).isEqualTo(PlacementType.AUTOMATIC)
+          assertThat(placementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
+          assertThat(placementApplication.duration).isEqualTo(placementDates.duration)
+
+          assertThat(placementApplicationPlaceholderRepository.findByApplication(application)!!.archived).isTrue
+
           val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
 
           assertThat(persistedPlacementRequest.allocatedToUser).isNull()
@@ -1238,6 +1251,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
           assertThat(persistedPlacementRequest.duration).isEqualTo(placementDates.duration)
           assertThat(persistedPlacementRequest.notes).isEqualTo("Some Notes")
+          assertThat(persistedPlacementRequest.placementApplication!!.id).isEqualTo(placementApplication.id)
 
           val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
 
@@ -1369,6 +1383,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+            withSubmittedAt(OffsetDateTime.now())
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -1389,6 +1404,8 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           var persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
             .isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+
+          givenAPlacementApplicationPlaceholder(application)
 
           val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 

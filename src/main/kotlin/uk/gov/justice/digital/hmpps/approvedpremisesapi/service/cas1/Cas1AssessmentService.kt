@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
@@ -49,6 +51,8 @@ class Cas1AssessmentService(
   private val assessmentListener: AssessmentListener,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
+  private val placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val clock: Clock,
 ) {
 
@@ -219,7 +223,7 @@ class Cas1AssessmentService(
     reasonForLateApplication: String? = null,
   ): CasResult<ApprovedPremisesAssessmentEntity> {
     val acceptedAt = OffsetDateTime.now(clock)
-    val createPlacementRequest = placementDates != null
+    val includesRequestForPlacement = placementDates != null
 
     val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
       is CasResult.Success -> validation.value
@@ -255,14 +259,12 @@ class Cas1AssessmentService(
      */
     val placementRequirementsResult = cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
 
-    if (createPlacementRequest) {
-      placementRequestService.createPlacementRequest(
-        PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+    if (includesRequestForPlacement) {
+      createRequestForPlacement(
+        assessment,
         placementRequirementsResult,
         placementDates,
         notes,
-        false,
-        null,
       )
     }
 
@@ -281,11 +283,49 @@ class Cas1AssessmentService(
     )
     cas1AssessmentEmailService.assessmentAccepted(application)
 
-    if (createPlacementRequest) {
+    if (includesRequestForPlacement) {
+      // it may be worth moving this logic into cas1PlacementApplicationService.createAutomaticPlacementApplication
+      // so all emails related to requests for placements are managed in cas1PlacementApplicationService
+      // before doing this carefully review which emails are sent for this path and the
+      // cas1PlacementApplicationService.recordDecision (accepted) path
       cas1PlacementRequestEmailService.placementRequestSubmitted(application)
     }
 
     return CasResult.Success(savedAssessment)
+  }
+
+  private fun createRequestForPlacement(
+    assessment: ApprovedPremisesAssessmentEntity,
+    placementRequirements: PlacementRequirementsEntity,
+    placementDates: PlacementDates,
+    notes: String?,
+  ) {
+    val application = assessment.application
+
+    val placementApplicationPlaceholder = placementApplicationPlaceholderRepository.findByApplication(application)
+      ?: error("Can't find placement application placeholder entry for application ${application.id}")
+
+    val placementApplicationAutomatic = cas1PlacementApplicationService.createAutomaticPlacementApplication(
+      id = placementApplicationPlaceholder.id,
+      assessment = assessment,
+      expectedArrival = placementDates.expectedArrival,
+      durationDays = placementDates.duration,
+    )
+
+    placementApplicationPlaceholder.archived = true
+    placementApplicationPlaceholderRepository.save(placementApplicationPlaceholder)
+
+    // This logic should probably be moved into the call to
+    // cas1PlacementApplicationService.createAutomaticPlacementApplication
+    // ensuring that the Cas1PlacementApplicationService manages all
+    // creations of placement requests from placement applications
+    placementRequestService.createPlacementRequest(
+      placementRequirements,
+      placementDates,
+      notes,
+      false,
+      placementApplicationAutomatic,
+    )
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")

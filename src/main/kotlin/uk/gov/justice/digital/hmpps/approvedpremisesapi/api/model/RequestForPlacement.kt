@@ -42,6 +42,7 @@ data class RequestForPlacement(
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("dates", required = true) val dates: PlacementDates,
 
+  @Deprecated("use 'dates' instead")
   @Schema(example = "null", required = true, description = "Requests for placements only have one set of placement dates, use 'dates' instead")
   @get:JsonProperty("placementDates", required = true) val placementDates: kotlin.collections.List<PlacementDates>,
 

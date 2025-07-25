@@ -307,6 +307,8 @@ class ApprovedPremisesAssessmentEntity(
   dueAt,
 ) {
   fun isPendingAssessment() = this.submittedAt == null && this.reallocatedAt == null && !this.isWithdrawn
+  fun decisionMadeAt() = submittedAt
+  fun cas1Application() = this.application as ApprovedPremisesApplicationEntity
 }
 
 @Entity
