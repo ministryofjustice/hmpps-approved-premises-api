@@ -35,6 +35,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremisesWithUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremisesWithUserScheduledForArchive
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationRooms
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
@@ -2723,6 +2727,151 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+  }
+
+  @Nested
+  inner class CancelScheduledArchivePremises {
+    @Test
+    fun `Cancel scheduled archive premises returns 200 OK when successful`() {
+      givenATemporaryAccommodationPremisesWithUserScheduledForArchive(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        archiveDate = LocalDate.now().plusDays(10),
+        premisesStatus = PropertyStatus.archived,
+      ) { userEntity, jwt, premises ->
+        givenATemporaryAccommodationRooms(premises = premises)
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id)
+          .jsonPath("endDate").doesNotExist()
+
+        // Verify the premise was updated
+        val updatePremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatePremises.endDate).isNull()
+        assertThat(updatePremises.status).isEqualTo(PropertyStatus.active)
+      }
+    }
+
+    @Test
+    fun `Cancel archive premises returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_REFERRER),
+      ) { userEntity, jwt, premises ->
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Cancel archive premises returns 404 when premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val nonExistentPremises = UUID.randomUUID().toString()
+
+        webTestClient.put()
+          .uri("/cas3/premises/$nonExistentPremises/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Not Found")
+          .jsonPath("$.status").isEqualTo(404)
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $nonExistentPremises could be found")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premises returns 400 (premisesNotScheduledToArchive) when premise is not archived`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+      ) { userEntity, jwt, premises ->
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesNotScheduledToArchive")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premise returns 400 when premise already archived today`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesEndDate = LocalDate.now(),
+        premisesStatus = PropertyStatus.archived,
+      ) { userEntity, jwt, premises ->
+        givenATemporaryAccommodationRooms(premises = premises)
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesAlreadyArchived")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premise returns 400 when premise has already been archived in the past`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesEndDate = LocalDate.now().minusDays(1),
+      ) { userEntity, jwt, premises ->
+        givenATemporaryAccommodationRooms(premises = premises)
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesAlreadyArchived")
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled archive premises returns 403 when user does not have permission to manage premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        // Create premises in a different region
+        val otherRegion = probationRegionEntityFactory.produceAndPersist {
+          withYieldedApArea {
+            apAreaEntityFactory.produceAndPersist {
+              withDefaultCruManagementArea(givenACas1CruManagementArea())
+            }
+          }
+        }
+
+        givenATemporaryAccommodationPremises(region = otherRegion) { premises ->
+          webTestClient.put()
+            .uri("/cas3/premises/${premises.id}/cancel-archive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
       }
     }
   }

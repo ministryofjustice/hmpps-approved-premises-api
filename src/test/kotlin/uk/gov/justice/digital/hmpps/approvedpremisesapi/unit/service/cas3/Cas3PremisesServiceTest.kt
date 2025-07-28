@@ -2506,4 +2506,95 @@ class Cas3PremisesServiceTest {
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceAlreadyArchived")
     }
   }
+
+  @Nested
+  inner class CancelScheduledArchivePremises {
+    @Test
+    fun `When cancelling a scheduled archive premise whose end date is in the future, return success`() {
+      val premises = updatePremisesEntity()
+      premises.endDate = LocalDate.now().plusDays(1)
+      premises.status = PropertyStatus.active
+      every { premisesRepositoryMock.save(any()) } returns premises
+      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
+
+      val result = premisesService.cancelScheduledArchivePremises(
+        premises.id,
+      )
+
+      assertThatCasResult(result).isSuccess()
+        .with { updatedPremises ->
+          updatedPremises.endDate = null
+        }
+    }
+
+    @Test
+    fun `When cancelling a scheduled archive premise whose end date is null, return premisesNotScheduledToArchive`() {
+      val premises = updatePremisesEntity()
+      premises.endDate = null
+
+      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
+
+      val result = premisesService.cancelScheduledArchivePremises(
+        premises.id,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage(
+        "$.premisesId",
+        "premisesNotScheduledToArchive",
+      )
+    }
+
+    @ParameterizedTest(name = "When cancelling a scheduled archive premise whose end date is [{0}], return premisesAlreadyArchived")
+    @CsvSource(
+      value = [
+        "Today",
+        "Before Today",
+      ],
+    )
+    fun `When cancelling a scheduled archive premise whose end date is in the past, return premisesAlreadyArchived`(label: String) {
+      val premises = updatePremisesEntity()
+      premises.endDate = if (label == "Today") LocalDate.now() else LocalDate.now().minusDays(1)
+
+      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
+
+      val result = premisesService.cancelScheduledArchivePremises(
+        premises.id,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage(
+        "$.premisesId",
+        "premisesAlreadyArchived",
+      )
+    }
+
+    private fun updatePremisesEntity(): TemporaryAccommodationPremisesEntity {
+      val probationRegion = ProbationRegionEntityFactory()
+        .withApArea(ApAreaEntityFactory().produce())
+        .produce()
+
+      val localAuthority = LocalAuthorityEntityFactory()
+        .produce()
+
+      val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      return temporaryAccommodationPremisesFactory
+        .withService(ServiceName.temporaryAccommodation.value)
+        .withProbationRegion(probationRegion)
+        .withProbationDeliveryUnit(probationDeliveryUnit)
+        .withLocalAuthorityArea(localAuthority)
+        .withStatus(PropertyStatus.archived)
+        .produce()
+    }
+
+    private fun mockCommonPremisesDependencies(premises: TemporaryAccommodationPremisesEntity) {
+      val probationRegion = premises.probationRegion
+      val localAuthorityArea = premises.localAuthorityArea!!
+      val probationDeliveryUnit = premises.probationDeliveryUnit!!
+      every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
+      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
+      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit
+    }
+  }
 }
