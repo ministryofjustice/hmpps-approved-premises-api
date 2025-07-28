@@ -137,6 +137,5 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     isWithdrawn = this.isWithdrawn(),
     placementApplication = this.placementApplication(),
     withdrawalReason = this.withdrawalReason(),
-    dueAt = this.dueAt(),
   )
 }
