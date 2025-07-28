@@ -33,7 +33,7 @@ enum class MigrationJobType(@get:JsonValue val value: kotlin.String) {
   cas1UpdateRoomCodes("cas1_update_room_codes"),
   updateCas1ApplicationsWithOffender("update_cas1_applications_with_offender"),
   updateCas3BedspaceModelData("update_cas3_bedspace_model_data"),
-  updateCas3VoidBedspaceCancellationData("update_cas3_void_bedspace_cancellation_data"),
+  updateCas3VoidBedspaceData("update_cas3_void_bedspace_data"),
   cas1CapacityPerformanceTest("cas1_capacity_performance_test"),
   ;
 
