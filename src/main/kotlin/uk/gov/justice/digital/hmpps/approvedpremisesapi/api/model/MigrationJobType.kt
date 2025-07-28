@@ -29,6 +29,7 @@ enum class MigrationJobType(@get:JsonValue val value: kotlin.String) {
   updateCas1ArsonSuitableToArsonOffences("update_cas1_arson_suitable_to_arson_offences"),
   updateCas1BackfillArsonSuitable("update_cas1_backfill_arson_suitable"),
   updateCas1ApprovedPremisesAssessmentReportProperties("update_cas1_approved_premises_assessment_report_properties"),
+  cas1BookingNotMadeReallocation("cas1_booking_not_made_reallocation"),
   cas1UpdateRoomCodes("cas1_update_room_codes"),
   updateCas1ApplicationsWithOffender("update_cas1_applications_with_offender"),
   updateCas3BedspaceModelData("update_cas3_bedspace_model_data"),
