@@ -34,8 +34,21 @@ class Cas1BookingNotMadeReallocationJob(
         "placement request $id with arrival date $expectedArrival and duration $duration",
     )
 
-    val allPlacementRequests = placementRequest.application.placementRequests
+    val nonReallocatedEquivalent = findNonReallocatedEquivalent(placementRequest)
 
+    placementRequest.bookingNotMades.forEach {
+      log.info("Moving booking not made ${it.id} from placement request $id to ${nonReallocatedEquivalent.id}")
+      it.placementRequest = nonReallocatedEquivalent
+      bookingNotMadeRepository.save(it)
+    }
+  }
+
+  private fun findNonReallocatedEquivalent(placementRequest: PlacementRequestEntity): PlacementRequestEntity {
+    val id = placementRequest.id
+    val expectedArrival = placementRequest.expectedArrival
+    val duration = placementRequest.duration
+
+    val allPlacementRequests = placementRequest.application.placementRequests
     val nonReallocatedEquivalents = allPlacementRequests
       .filter { it.reallocatedAt == null }
       .filter { it.expectedArrival == expectedArrival && it.duration == duration }
@@ -48,12 +61,6 @@ class Cas1BookingNotMadeReallocationJob(
       error("Found multiple non-reallocated placement request for $id. Not sure what to do")
     }
 
-    val nonReallocatedEquivalent = nonReallocatedEquivalents.first()
-
-    placementRequest.bookingNotMades.forEach {
-      log.info("Moving booking not made ${it.id} from placement request $id to ${nonReallocatedEquivalent.id}")
-      it.placementRequest = nonReallocatedEquivalent
-      bookingNotMadeRepository.save(it)
-    }
+    return nonReallocatedEquivalents.first()
   }
 }
