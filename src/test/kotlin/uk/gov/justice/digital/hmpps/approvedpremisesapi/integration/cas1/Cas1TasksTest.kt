@@ -2033,6 +2033,8 @@ class Cas1TasksTest {
       }
       // withdrawn, ignored
       createPlacementApplication(assessedAt = null, allocatableUser, creatingUser, crn, isWithdrawn = true)
+      // automatic, ignored
+      createPlacementApplication(assessedAt = null, allocatableUser, creatingUser, crn, automatic = true)
 
       val numAppAssessCompletedBetween1And7DaysAgo = 4
       repeat(numAppAssessCompletedBetween1And7DaysAgo) {
@@ -2045,6 +2047,8 @@ class Cas1TasksTest {
         val days = kotlin.random.Random.nextInt(1, 7).toLong()
         createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
       }
+      // automatic, ignored
+      createPlacementApplication(OffsetDateTime.now().minusDays(1), allocatableUser, creatingUser, crn, automatic = true)
 
       val numAppAssessCompletedBetween8And30DaysAgo = 4
       repeat(numAppAssessCompletedBetween8And30DaysAgo) {
@@ -2057,6 +2061,8 @@ class Cas1TasksTest {
         val days = kotlin.random.Random.nextInt(8, 30).toLong()
         createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, creatingUser, crn)
       }
+      // automatic, ignored
+      createPlacementApplication(OffsetDateTime.now().minusDays(10), allocatableUser, creatingUser, crn, automatic = true)
 
       // completed after 30 days ago, ignored
       repeat(10) {
@@ -2113,12 +2119,14 @@ class Cas1TasksTest {
       )
     }
 
+    @SuppressWarnings("LongParameterList")
     private fun createPlacementApplication(
       assessedAt: OffsetDateTime?,
       allocatedUser: UserEntity,
       createdByUser: UserEntity,
       crn: String,
       isWithdrawn: Boolean = false,
+      automatic: Boolean = false,
     ) {
       givenAPlacementApplication(
         createdByUser = createdByUser,
@@ -2127,6 +2135,7 @@ class Cas1TasksTest {
         decisionMadeAt = assessedAt,
         crn = crn,
         isWithdrawn = isWithdrawn,
+        automatic = automatic,
       )
     }
   }
