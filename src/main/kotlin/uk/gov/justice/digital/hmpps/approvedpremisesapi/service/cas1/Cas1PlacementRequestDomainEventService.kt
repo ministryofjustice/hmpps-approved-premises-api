@@ -26,7 +26,8 @@ class Cas1PlacementRequestDomainEventService(
     /**
      * We only raise domain events for the match request [PlacementRequestEntity] that was created
      * automatically when the application was assessed (i.e. the one created to fulfill the arrival
-     * date specified on the application).
+     * date specified on the application), if there is no corresponding
+     * placement_application[automatic=true] (in which case a domain event is raised for that instead)
      *
      * For more information on why we do this, see [PlacementRequestEntity.isForApplicationsArrivalDate]
      *
