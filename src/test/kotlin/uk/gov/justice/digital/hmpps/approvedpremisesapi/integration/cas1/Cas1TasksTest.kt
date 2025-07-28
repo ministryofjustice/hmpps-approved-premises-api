@@ -2366,23 +2366,9 @@ class Cas1TasksTest {
     fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
       webTestClient.delete()
         .uri("/cas1/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
         .expectStatus()
         .isUnauthorized
-    }
-
-    @Test
-    fun `Deallocate Temporary Accommodation assessment without CAS3_ASSESSOR role returns 403 Forbidden`() {
-      givenAUser { _, jwt ->
-        webTestClient.delete()
-          .uri("/cas1/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
     }
 
     @Test
@@ -2403,34 +2389,6 @@ class Cas1TasksTest {
                 .expectStatus()
                 .isForbidden
             }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Deallocate Temporary Accommodation assessment returns 200 and unassigns the allocated user`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAnAssessmentForTemporaryAccommodation(
-            allocatedToUser = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
-          ) { existingAssessment, _ ->
-
-            webTestClient.delete()
-              .uri("/cas1/tasks/assessment/${existingAssessment.id}/allocations")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-              .exchange()
-              .expectStatus()
-              .isNoContent
-
-            val assessment =
-              temporaryAccommodationAssessmentRepository.findAll().first { it.id == existingAssessment.id }
-
-            assertThat(assessment.allocatedToUser).isNull()
-            assertThat(assessment.allocatedAt).isNull()
           }
         }
       }
