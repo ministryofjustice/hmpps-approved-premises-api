@@ -8,9 +8,12 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.NamedAttributeNode
+import jakarta.persistence.NamedEntityGraph
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
@@ -38,6 +41,7 @@ interface UserRepository :
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role and u.isActive = true")
   fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
 
+  @EntityGraph(value = "Cas1TaskWorkload")
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role in (:roles) and u.isActive = true")
   fun findActiveUsersWithAtLeastOneRole(roles: List<UserRole>): List<UserEntity>
 
@@ -68,6 +72,15 @@ interface UserRepository :
 }
 
 @Entity
+@NamedEntityGraph(
+  name = "Cas1TaskWorkload",
+  attributeNodes = [
+    NamedAttributeNode("qualifications"),
+    NamedAttributeNode("probationRegion"),
+    NamedAttributeNode("cruManagementArea"),
+    NamedAttributeNode("apArea"),
+  ],
+)
 @Table(name = "users")
 data class UserEntity(
   @Id
