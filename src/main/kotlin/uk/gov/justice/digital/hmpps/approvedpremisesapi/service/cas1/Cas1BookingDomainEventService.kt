@@ -269,6 +269,7 @@ class Cas1BookingDomainEventService(
     )
   }
 
+  @Deprecated("This can be removed")
   fun bookingCancelled(
     booking: BookingEntity,
     user: UserEntity,

@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
@@ -31,14 +30,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 class Cas1WithdrawableTreeBuilderTest {
 
   private val placementRequestService = mockk<Cas1PlacementRequestService>()
-  private val bookingService = mockk<BookingService>()
   private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
   private val cas1ApplicationService = mockk<Cas1ApplicationService>()
   private val cas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
 
   private val service = Cas1WithdrawableTreeBuilder(
     placementRequestService,
-    bookingService,
     cas1PlacementApplicationService,
     cas1ApplicationService,
     cas1SpaceBookingService,
@@ -172,8 +169,6 @@ Notes: []
       cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1, placementApp2)
 
-    every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
-
     val result = service.treeForApp(application, user)
 
     assertThat(result.render(includeIds = false).trim()).isEqualTo(
@@ -216,8 +211,6 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     every {
       cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1)
-
-    every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
 
     val result = service.treeForApp(application, user)
 
@@ -268,8 +261,6 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival recorde
     every {
       cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
     } returns listOf(placementApp1)
-
-    every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
 
     val result = service.treeForApp(application, user)
 

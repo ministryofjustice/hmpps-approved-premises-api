@@ -7,17 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -27,22 +20,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -54,17 +40,14 @@ class BookingService(
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
-  private val cancellationRepository: CancellationRepository,
   private val cas3ConfirmationRepository: Cas3ConfirmationRepository,
   private val dateChangeRepository: DateChangeRepository,
-  private val cancellationReasonRepository: CancellationReasonRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val deliusService: DeliusService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
-  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
@@ -152,98 +135,6 @@ class BookingService(
    * bookings for certain operations (e.g. withdrawals)
    */
   fun getAllAdhocOrUnknownForApplication(applicationEntity: ApplicationEntity) = bookingRepository.findAllAdhocOrUnknownByApplication(applicationEntity)
-
-  /**
-   * This function should not be called directly. Instead, use [WithdrawableService.withdrawBooking] that
-   * will indirectly invoke this function. It will also ensure that:
-   *
-   * 1. The entity is withdrawable, and error if not
-   * 2. The user is allowed to withdraw it, and error if not
-   * 3. If withdrawn, all descendants entities are withdrawn, where applicable
-   */
-  @SuppressWarnings("ReturnCount")
-  @Transactional
-  fun createCas1Cancellation(
-    booking: BookingEntity,
-    cancelledAt: LocalDate,
-    userProvidedReason: UUID?,
-    notes: String?,
-    otherReason: String?,
-    withdrawalContext: WithdrawalContext,
-  ): CasResult<CancellationEntity> {
-    if (booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
-      return CasResult.GeneralValidationError("Application is not for CAS1")
-    }
-
-    val existingCancellation = booking.cancellation
-    if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
-      return CasResult.Success(existingCancellation)
-    }
-
-    val resolvedReasonId = toCas1CancellationReason(withdrawalContext, userProvidedReason)
-
-    val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
-    if (reason == null) {
-      return CasResult.FieldValidationError(mapOf("$.reason" to "doesNotExist"))
-    } else if (!reason.serviceScopeMatches(booking.service)) {
-      return CasResult.FieldValidationError(mapOf("$.reason" to "incorrectCancellationReasonServiceScope"))
-    }
-
-    if (reason.name == "Other" && otherReason.isNullOrEmpty()) {
-      return CasResult.FieldValidationError(mapOf("$.otherReason" to "empty"))
-    }
-
-    val cancellationEntity = cancellationRepository.save(
-      CancellationEntity(
-        id = UUID.randomUUID(),
-        date = cancelledAt,
-        reason = reason,
-        notes = notes,
-        booking = booking,
-        createdAt = OffsetDateTime.now(),
-        otherReason = otherReason,
-      ),
-    )
-    booking.status = BookingStatus.cancelled
-    updateBooking(booking)
-    booking.cancellations += cancellationEntity
-
-    val user = when (withdrawalContext.withdrawalTriggeredBy) {
-      is WithdrawalTriggeredBySeedJob -> null
-      is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
-    }
-    if (shouldCreateDomainEventForBooking(booking, user)) {
-      cas1BookingDomainEventService.bookingCancelled(booking, user!!, cancellationEntity, reason)
-    }
-
-    cas1ApplicationStatusService.lastBookingCancelled(
-      booking = booking,
-      isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking,
-    )
-
-    val application = booking.application as ApprovedPremisesApplicationEntity?
-    application?.let {
-      cas1BookingEmailService.bookingWithdrawn(
-        application = it,
-        booking = booking,
-        placementApplication = booking.placementRequest?.placementApplication,
-        withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
-      )
-    }
-
-    return CasResult.Success(cancellationEntity)
-  }
-
-  private fun toCas1CancellationReason(
-    withdrawalContext: WithdrawalContext,
-    userProvidedReason: UUID?,
-  ) = when (withdrawalContext.triggeringEntityType) {
-    WithdrawableEntityType.Application -> CAS1_RELATED_APP_WITHDRAWN_ID
-    WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
-    WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
-    WithdrawableEntityType.Booking -> userProvidedReason ?: throw InternalServerErrorProblem("User provided reason is required")
-    WithdrawableEntityType.SpaceBooking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to Booking")
-  }
 
   @Transactional
   fun createConfirmation(
