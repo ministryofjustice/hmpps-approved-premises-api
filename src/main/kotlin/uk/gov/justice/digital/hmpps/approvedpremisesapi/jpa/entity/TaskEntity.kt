@@ -232,7 +232,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         (
           SELECT COUNT(1)
             FROM placement_applications pa
-            WHERE pa.allocated_to_user_id = u.id
+            WHERE pa.allocated_to_user_id = u.id AND
+            pa.automatic IS FALSE
             AND 
               (
                 pa.submitted_at IS NULL
@@ -296,6 +297,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           placement_applications placement_application
         where
           placement_application.allocated_to_user_id = u.id
+          and placement_application.automatic is false
           and placement_application.reallocated_at is null
           and placement_application.is_withdrawn != true
           and placement_application.decision_made_at is null
@@ -307,6 +309,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           placement_applications placement_application
         where
           placement_application.allocated_to_user_id = u.id
+          and placement_application.automatic is false
           and placement_application.reallocated_at is null
           and placement_application.decision_made_at > current_date - interval '7' day
       ) as completedPlacementApplicationsInTheLastSevenDays,
@@ -317,6 +320,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           placement_applications placement_application
         where
           placement_application.allocated_to_user_id = u.id
+          and placement_application.automatic is false
           and placement_application.reallocated_at is null
           and placement_application.decision_made_at > current_date - interval '30' day
       ) as completedPlacementApplicationsInTheLastThirtyDays
