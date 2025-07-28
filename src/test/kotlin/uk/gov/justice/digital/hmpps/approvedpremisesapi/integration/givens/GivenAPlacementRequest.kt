@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
@@ -57,6 +58,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   essentialCriteria: List<CharacteristicEntity>? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   apType: ApprovedPremisesType? = null,
+  createdAt: OffsetDateTime = OffsetDateTime.now().randomDateTimeBefore(30),
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   var risksFactory = PersonRisksFactory()
 
@@ -83,6 +85,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   val app = application ?: approvedPremisesApplicationEntityFactory.produceAndPersist {
     crn?.let { withCrn(it) }
     name?.let { withName(it) }
+    withCreatedAt(createdAt)
     withCreatedByUser(createdByUser)
     withSubmittedAt(applicationSubmittedAt)
     withReleaseType("licence")

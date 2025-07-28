@@ -58,6 +58,15 @@ class Cas1BookingNotMadeReallocationJob(
     }
 
     if (nonReallocatedEquivalents.size > 1) {
+      val activeReallocatedEquivalents = nonReallocatedEquivalents.filter { !it.isWithdrawn }
+      if (activeReallocatedEquivalents.size == 1) {
+        return activeReallocatedEquivalents.first()
+      }
+
+      if (nonReallocatedEquivalents.all { it.isWithdrawn }) {
+        return nonReallocatedEquivalents.maxByOrNull { it.createdAt }!!
+      }
+
       error("Found multiple non-reallocated placement request for $id. Not sure what to do")
     }
 
