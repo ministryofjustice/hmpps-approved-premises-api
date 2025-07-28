@@ -2875,4 +2875,135 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
     }
   }
+
+  @Nested
+  inner class GetPremisesBedspaceTotals {
+    @Test
+    fun `Get premises bedspace totals returns 200 with correct totals`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremises(region = userEntity.probationRegion) { premises ->
+
+          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
+            withPremises(premises)
+          }
+
+          // Online
+          rooms.forEach { room ->
+            bedEntityFactory.produceAndPersistMultiple(1) {
+              withRoom(room)
+              withStartDate(LocalDate.now().minusDays(10))
+              withEndDate(null)
+            }
+          }
+
+          // Upcoming
+          rooms.forEach { room ->
+            bedEntityFactory.produceAndPersistMultiple(2) {
+              withRoom(room)
+              withStartDate(LocalDate.now().plusDays(5))
+              withEndDate(null)
+            }
+          }
+
+          // Archived
+          rooms.forEach { room ->
+            bedEntityFactory.produceAndPersistMultiple(3) {
+              withRoom(room)
+              withStartDate(LocalDate.now().minusDays(30))
+              withEndDate(LocalDate.now().minusDays(5))
+            }
+          }
+
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}/bedspace-totals")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.status").isEqualTo("online")
+            .jsonPath("$.totalOnlineBedspaces").isEqualTo(2)
+            .jsonPath("$.totalUpcomingBedspaces").isEqualTo(4)
+            .jsonPath("$.totalArchivedBedspaces").isEqualTo(6)
+        }
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 200 with zero totals when premises has no bedspaces`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremises(region = userEntity.probationRegion) { premises ->
+          roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}/bedspace-totals")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.status").isEqualTo("online")
+            .jsonPath("$.totalOnlineBedspaces").isEqualTo(0)
+            .jsonPath("$.totalUpcomingBedspaces").isEqualTo(0)
+            .jsonPath("$.totalArchivedBedspaces").isEqualTo(0)
+        }
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 404 when premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val nonExistentPremisesId = UUID.randomUUID()
+
+        webTestClient.get()
+          .uri("/cas3/premises/$nonExistentPremisesId/bedspace-totals")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 403 when user does not have permission to view premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremises { premises ->
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}/bedspace-totals")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 200 with archived status for archived premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremises(
+          region = userEntity.probationRegion,
+          status = PropertyStatus.archived,
+        ) { premises ->
+
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}/bedspace-totals")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.status").isEqualTo("archived")
+            .jsonPath("$.totalOnlineBedspaces").isEqualTo(0)
+            .jsonPath("$.totalUpcomingBedspaces").isEqualTo(0)
+            .jsonPath("$.totalArchivedBedspaces").isEqualTo(0)
+        }
+      }
+    }
+  }
 }

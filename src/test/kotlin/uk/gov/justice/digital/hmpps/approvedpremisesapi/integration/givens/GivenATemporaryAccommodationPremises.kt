@@ -156,19 +156,6 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
   }
 }
 
-fun IntegrationTestBase.givenATemporaryAccommodationPremisesScheduledForArchive(
-  region: ProbationRegionEntity = givenAProbationRegion(),
-  archiveDate: LocalDate = LocalDate.now().plusDays(10),
-  block: (premises: TemporaryAccommodationPremisesEntity) -> Unit,
-) {
-  val premises = givenATemporaryAccommodationPremises(
-    region = region,
-    status = PropertyStatus.active,
-    endDate = archiveDate,
-  )
-  block(premises)
-}
-
 fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithUserScheduledForArchive(
   roles: List<UserRole> = emptyList(),
   archiveDate: LocalDate = LocalDate.now().plusDays(10),
