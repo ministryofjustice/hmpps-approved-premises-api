@@ -729,7 +729,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "is_parole": ${placementRequest.isParole},
         "is_withdrawn": ${placementRequest.isWithdrawn},
         "withdrawal_reason": "${placementRequest.withdrawalReason}",
-        "due_at": "$DUE_AT"
       }
     """.trimIndent()
 

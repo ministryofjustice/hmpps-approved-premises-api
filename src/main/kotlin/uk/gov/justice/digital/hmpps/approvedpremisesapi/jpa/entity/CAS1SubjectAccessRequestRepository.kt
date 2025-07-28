@@ -302,8 +302,7 @@ from
               pr.notes,
               pr.is_parole,
               pr.is_withdrawn,
-              pr.withdrawal_reason,
-              pr.due_at
+              pr.withdrawal_reason
           from placement_requests pr 
           inner join applications app on
             app.id = pr.application_id
