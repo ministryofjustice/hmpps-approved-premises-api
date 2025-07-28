@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -25,14 +23,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
@@ -46,9 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -68,12 +60,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -87,10 +75,8 @@ class BookingServiceTest {
 
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
-  private val mockCancellationRepository = mockk<CancellationRepository>()
   private val mockCas3ConfirmationRepository = mockk<Cas3ConfirmationRepository>()
   private val mockDateChangeRepository = mockk<DateChangeRepository>()
-  private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val mockCas3LostBedsRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserService = mockk<UserService>()
@@ -98,7 +84,6 @@ class BookingServiceTest {
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockCas1BookingEmailService = mockk<Cas1BookingEmailService>()
   private val mockDeliusService = mockk<DeliusService>()
-  private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
 
   fun createBookingService(): BookingService = BookingService(
@@ -106,17 +91,14 @@ class BookingServiceTest {
     workingDayService = mockWorkingDayService,
     bookingRepository = mockBookingRepository,
     arrivalRepository = mockArrivalRepository,
-    cancellationRepository = mockCancellationRepository,
     cas3ConfirmationRepository = mockCas3ConfirmationRepository,
     dateChangeRepository = mockDateChangeRepository,
-    cancellationReasonRepository = mockCancellationReasonRepository,
     cas3VoidBedspacesRepository = mockCas3LostBedsRepository,
     userService = mockUserService,
     userAccessService = mockUserAccessService,
     cas1BookingEmailService = mockCas1BookingEmailService,
     deliusService = mockDeliusService,
     cas1BookingDomainEventService = mockCas1BookingDomainEventService,
-    cas1ApplicationStatusService = mockCas1ApplicationStatusService,
   )
 
   private val bookingService = createBookingService()
@@ -367,489 +349,6 @@ class BookingServiceTest {
       assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("CAS3 booking arrival not supported here, preferred method is createArrival in Cas3BookingService")
       verify(exactly = 0) {
         mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, user)
-      }
-    }
-  }
-
-  @Nested
-  inner class CreateCas1Cancellation {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-
-    val reason = CancellationReasonEntityFactory().withServiceScope("*").produce()
-    val reasonId = reason.id
-
-    @Test
-    fun `createCancellation is idempotent if the booking is already cancelled`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val cancellationEntity = CancellationEntityFactory()
-        .withBooking(bookingEntity)
-        .withReason(reason)
-        .produce()
-
-      bookingEntity.cancellations = mutableListOf(cancellationEntity)
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = UUID.randomUUID(),
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-
-      assertThat(result.value).isEqualTo(cancellationEntity)
-      verify(exactly = 0) { mockBookingRepository.save(any()) }
-    }
-
-    @Test
-    fun `createCancellation returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-26"))
-        .withPremises(premises)
-        .produce()
-
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns null
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
-        entry("$.reason", "doesNotExist"),
-      )
-    }
-
-    @Test
-    fun `createCancellation returns FieldValidationError with correct param to message map when reason is 'Other' and 'otherReason' is blank`() {
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-26"))
-        .withPremises(premises)
-        .produce()
-
-      val reasonEntity = CancellationReasonEntityFactory()
-        .withServiceScope(ServiceName.approvedPremises.value)
-        .withName("Other")
-        .produce()
-
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
-        entry("$.otherReason", "empty"),
-      )
-    }
-
-    @Test
-    fun `createCancellation returns FieldValidationError with correct param to message map when the cancellation reason has the wrong service scope`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withServiceName(ServiceName.approvedPremises)
-        .produce()
-
-      val otherReason = CancellationReasonEntityFactory()
-        .withServiceScope(ServiceName.temporaryAccommodation.value)
-        .produce()
-
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns otherReason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
-        entry("$.reason", "incorrectCancellationReasonServiceScope"),
-      )
-    }
-
-    @Test
-    fun `createCancellation returns Success with correct result when validation passed`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.value.reason).isEqualTo(reason)
-      assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
-
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
-      }
-    }
-
-    @Test
-    fun `createCancellation returns Success with correct result with other reason validation passed`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val otherReason = CancellationReasonEntityFactory()
-        .withServiceScope(ServiceName.approvedPremises.value)
-        .withName("Other")
-        .produce()
-
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
-      every { mockCancellationReasonRepository.findByIdOrNull(otherReason.id) } returns otherReason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = otherReason.id,
-        notes = "notes",
-        otherReason = "Other reason",
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.value.reason).isEqualTo(otherReason)
-      assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.otherReason).isEqualTo("Other reason")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
-
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
-      }
-    }
-
-    @Test
-    fun `createCancellation emits domain event when linked to Application`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withApplication(application)
-        .withCrn(application.crn)
-        .produce()
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-
-      val cancellationSaveArgument = slot<CancellationEntity>()
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
-      every { mockCancellationRepository.save(capture(cancellationSaveArgument)) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
-
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, null, WithdrawalTriggeredByUser(user)) } returns Unit
-
-      val cancelledAt = LocalDate.parse("2022-08-25")
-      val notes = "notes"
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = cancelledAt,
-        userProvidedReason = reasonId,
-        notes = notes,
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.value.reason).isEqualTo(reason)
-      assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
-
-      verify(exactly = 1) {
-        mockCas1BookingDomainEventService.bookingCancelled(
-          bookingEntity,
-          user,
-          cancellationSaveArgument.captured,
-          reason,
-        )
-      }
-
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
-      }
-    }
-
-    @Test
-    fun `createCancellation triggers emails when linked to Application`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withApplication(application)
-        .withCrn(application.crn)
-        .withPlacementRequest(
-          PlacementRequestEntityFactory()
-            .withDefaults()
-            .withPlacementApplication(placementApplication)
-            .produce(),
-        )
-        .produce()
-
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, placementApplication, WithdrawalTriggeredByUser(user)) } returns Unit
-
-      val cancelledAt = LocalDate.parse("2022-08-25")
-      val notes = "notes"
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = cancelledAt,
-        userProvidedReason = reasonId,
-        notes = notes,
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, placementApplication, WithdrawalTriggeredByUser(user)) }
-    }
-
-    @Test
-    fun `createCancellation emits domain event when linked to an offline application with an eventNumber`() {
-      val application = OfflineApplicationEntityFactory()
-        .withEventNumber("123")
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withOfflineApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-      val cancellationSaveArgument = slot<CancellationEntity>()
-      every { mockCancellationRepository.save(capture(cancellationSaveArgument)) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any()) } just Runs
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val cancelledAt = LocalDate.parse("2022-08-25")
-      val notes = "notes"
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = cancelledAt,
-        userProvidedReason = reasonId,
-        notes = notes,
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.value.reason).isEqualTo(reason)
-      assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
-
-      verify(exactly = 1) {
-        mockCas1BookingDomainEventService.bookingCancelled(
-          bookingEntity,
-          user,
-          cancellationSaveArgument.captured,
-          reason,
-        )
-      }
-
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
-      }
-    }
-
-    @Test
-    fun `createCancellation does not emit domain event when linked to an offline application without a eventNumber`() {
-      val application = OfflineApplicationEntityFactory()
-        .withEventNumber(null)
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withOfflineApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, true) } returns Unit
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val cancelledAt = LocalDate.parse("2022-08-25")
-      val notes = "notes"
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = cancelledAt,
-        userProvidedReason = reasonId,
-        notes = notes,
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.value.reason).isEqualTo(reason)
-      assertThat(result.value.notes).isEqualTo("notes")
-      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
-
-      verify(exactly = 0) {
-        mockCas1BookingDomainEventService.bookingCancelled(any(), any(), any(), any())
-      }
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(WithdrawableEntityType::class, names = ["SpaceBooking"], mode = EnumSource.Mode.EXCLUDE)
-    fun `createCancellation sets correct reason if withdrawal triggered by other entity`(triggeringEntity: WithdrawableEntityType) {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val expectedReasonId = when (triggeringEntity) {
-        WithdrawableEntityType.Application -> CancellationReasonRepository.CAS1_RELATED_APP_WITHDRAWN_ID
-        WithdrawableEntityType.PlacementApplication -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
-        WithdrawableEntityType.PlacementRequest -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
-        WithdrawableEntityType.Booking -> reasonId
-        WithdrawableEntityType.SpaceBooking -> reasonId
-      }
-
-      every { mockCas1ApplicationStatusService.lastBookingCancelled(bookingEntity, triggeringEntity == WithdrawableEntityType.Booking) } returns Unit
-      every { mockCancellationReasonRepository.findByIdOrNull(expectedReasonId) } returns reason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        otherReason = null,
-        withdrawalContext = WithdrawalContext(
-          WithdrawalTriggeredByUser(user),
-          triggeringEntity,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.reason).isEqualTo(reason)
-
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
       }
     }
   }

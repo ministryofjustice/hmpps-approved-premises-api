@@ -8,7 +8,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
@@ -17,8 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
@@ -1598,32 +1595,6 @@ class Cas3BookingTransformerTest {
         effectiveEndDate = LocalDate.parse("2022-09-05"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
         bedspace = bedspaceModel,
-      ),
-    )
-  }
-
-  @Test
-  fun `Booking is correctly transformed to withdrawable`() {
-    val id = UUID.randomUUID()
-
-    val jpa = baseBookingEntity.copy(
-      id = id,
-      arrivalDate = LocalDate.of(2023, 12, 11),
-      departureDate = LocalDate.of(2024, 11, 29),
-    )
-
-    val result = bookingTransformer.transformToWithdrawable(jpa)
-
-    assertThat(result).isEqualTo(
-      Withdrawable(
-        id,
-        WithdrawableType.booking,
-        listOf(
-          DatePeriod(
-            LocalDate.of(2023, 12, 11),
-            LocalDate.of(2024, 11, 29),
-          ),
-        ),
       ),
     )
   }

@@ -8,7 +8,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -619,7 +618,7 @@ class Cas1PlacementRequestServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking", "PlacementRequest", "SpaceBooking"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = WithdrawableEntityType::class, names = ["PlacementRequest", "SpaceBooking"], mode = EnumSource.Mode.EXCLUDE)
     fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity and user permissions not checked`(triggeringEntity: WithdrawableEntityType) {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
@@ -643,7 +642,6 @@ class Cas1PlacementRequestServiceTest {
       val expectedWithdrawalReason = when (triggeringEntity) {
         WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
         WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
-        WithdrawableEntityType.Booking -> providedReason
         WithdrawableEntityType.PlacementRequest -> providedReason
         WithdrawableEntityType.SpaceBooking -> providedReason
       }
@@ -659,38 +657,6 @@ class Cas1PlacementRequestServiceTest {
           },
         )
       }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking"], mode = EnumSource.Mode.INCLUDE)
-    fun `withdrawPlacementRequest throws exception if withdrawal triggered by invalid entity`(triggeringEntity: WithdrawableEntityType) {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val placementRequest = createValidPlacementRequest(application, user)
-      val placementRequestId = placementRequest.id
-
-      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
-      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-
-      val providedReason = PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-
-      assertThatThrownBy {
-        placementRequestService.withdrawPlacementRequest(
-          placementRequestId,
-          providedReason,
-          WithdrawalContext(
-            WithdrawalTriggeredByUser(user),
-            triggeringEntity,
-            placementRequestId,
-          ),
-        )
-      }.hasMessage("Internal Server Error: Withdrawing a ${triggeringEntity.name} should not cascade to PlacementRequests")
     }
 
     @Test

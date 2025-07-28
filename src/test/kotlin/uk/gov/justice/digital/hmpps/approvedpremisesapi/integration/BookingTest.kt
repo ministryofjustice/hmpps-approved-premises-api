@@ -18,19 +18,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulGetReferralDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -43,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -2372,236 +2367,6 @@ class BookingTest : IntegrationTestBase() {
             .isNotFound
             .expectBody()
             .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class CreateCancellationCas1 {
-
-    @Test
-    fun `Create Cancellation without JWT returns 401`() {
-      webTestClient.post()
-        .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/cancellations")
-        .bodyValue(
-          NewCancellation(
-            date = LocalDate.parse("2022-08-17"),
-            reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @ParameterizedTest
-    @EnumSource(
-      value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"],
-      mode = EnumSource.Mode.EXCLUDE,
-    )
-    fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        givenAUser(roles = listOf(role)) { applicant, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            val apArea = givenAnApArea()
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(applicant)
-              withApArea(apArea)
-              withSubmittedAt(OffsetDateTime.now())
-            }
-
-            val booking = bookingEntityFactory.produceAndPersist {
-              withYieldedPremises {
-                givenAnApprovedPremises()
-              }
-              withCrn(offenderDetails.otherIds.crn)
-              withApplication(application)
-            }
-
-            val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-              withServiceScope("*")
-            }
-
-            webTestClient.post()
-              .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                NewCancellation(
-                  date = LocalDate.parse("2022-08-17"),
-                  reason = cancellationReason.id,
-                  notes = null,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has role CRU_MEMBER`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
-        givenAUser { applicant, _ ->
-          givenAUser { placementApplicationCreator, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              val apArea = givenAnApArea()
-
-              val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(applicant)
-                withApArea(apArea)
-                withSubmittedAt(OffsetDateTime.now())
-                withCruManagementArea(givenACas1CruManagementArea())
-              }
-
-              val placementApplication = placementApplicationFactory.produceAndPersist {
-                withCreatedByUser(placementApplicationCreator)
-                withApplication(application)
-              }
-
-              val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-                withApplication(application)
-                withSubmittedAt(OffsetDateTime.now())
-                withAllocatedToUser(applicant)
-                withDecision(AssessmentDecision.ACCEPTED)
-              }
-
-              val placementRequirements = placementRequirementsFactory.produceAndPersist {
-                withApplication(application)
-                withAssessment(assessment)
-                withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-                withDesirableCriteria(
-                  characteristicEntityFactory.produceAndPersistMultiple(5),
-                )
-                withEssentialCriteria(
-                  characteristicEntityFactory.produceAndPersistMultiple(3),
-                )
-              }
-
-              val booking = bookingEntityFactory.produceAndPersist {
-                withYieldedPremises {
-                  givenAnApprovedPremises()
-                }
-                withCrn(offenderDetails.otherIds.crn)
-                withApplication(application)
-              }
-
-              placementRequestFactory.produceAndPersist {
-                withAllocatedToUser(applicant)
-                withApplication(application)
-                withAssessment(assessment)
-                withPlacementRequirements(placementRequirements)
-                withPlacementApplication(placementApplication)
-                withBooking(booking)
-              }
-
-              val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-                withServiceScope("*")
-              }
-
-              apDeliusContextMockSuccessfulGetReferralDetails(
-                crn = booking.crn,
-                bookingId = booking.id.toString(),
-                arrivedAt = null,
-                departedAt = null,
-              )
-
-              webTestClient.post()
-                .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-                .header("Authorization", "Bearer $jwt")
-                .bodyValue(
-                  NewCancellation(
-                    date = LocalDate.parse("2022-08-17"),
-                    reason = cancellationReason.id,
-                    notes = null,
-                  ),
-                )
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-                .jsonPath(".date").isEqualTo("2022-08-17")
-                .jsonPath(".notes").isEqualTo(null)
-                .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
-                .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
-                .jsonPath(".reason.isActive").isEqualTo(true)
-                .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
-
-              val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
-              assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-
-              emailAsserter.assertEmailsRequestedCount(4)
-              emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
-              emailAsserter.assertEmailRequested(
-                placementApplicationCreator.email!!,
-                Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
-              )
-              emailAsserter.assertEmailRequested(
-                booking.premises.emailAddress!!,
-                Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
-              )
-              emailAsserter.assertEmailRequested(
-                application.cruManagementArea!!.emailAddress!!,
-                Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
-              )
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create Cancellation on CAS1 Booking on a premises that does not exist returns 404 Not Found`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
-        givenAUser { applicant, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            val apArea = givenAnApArea()
-
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(applicant)
-              withApArea(apArea)
-              withSubmittedAt(OffsetDateTime.now())
-            }
-
-            val booking = bookingEntityFactory.produceAndPersist {
-              withYieldedPremises {
-                givenAnApprovedPremises()
-              }
-              withCrn(offenderDetails.otherIds.crn)
-              withApplication(application)
-            }
-
-            val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-              withServiceScope("*")
-            }
-
-            val premisesId = UUID.randomUUID()
-
-            webTestClient.post()
-              .uri("/premises/$premisesId/bookings/${booking.id}/cancellations")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                NewCancellation(
-                  date = LocalDate.now().plusDays(13),
-                  reason = cancellationReason.id,
-                  notes = null,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isNotFound
-              .expectBody()
-              .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
-          }
         }
       }
     }

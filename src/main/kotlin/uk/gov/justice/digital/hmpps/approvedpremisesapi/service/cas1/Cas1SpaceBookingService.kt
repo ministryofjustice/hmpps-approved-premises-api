@@ -495,7 +495,6 @@ class Cas1SpaceBookingService(
     WithdrawableEntityType.Application -> CAS1_RELATED_APP_WITHDRAWN_ID
     WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
     WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
-    WithdrawableEntityType.Booking -> throw InternalServerErrorProblem("Withdrawing a SpaceBooking should not cascade to Booking")
     WithdrawableEntityType.SpaceBooking -> userProvidedCancellationReasonId!!
   }
 

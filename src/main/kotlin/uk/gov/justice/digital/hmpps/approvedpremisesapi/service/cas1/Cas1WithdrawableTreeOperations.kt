@@ -4,10 +4,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations.Constants.MAX_WITHDRAWAL_COUNT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractMessageFromCasResult
 import java.time.LocalDate
@@ -15,8 +13,6 @@ import java.time.LocalDate
 @Service
 class Cas1WithdrawableTreeOperations(
   private val placementRequestService: Cas1PlacementRequestService,
-  private val bookingService: BookingService,
-  private val bookingRepository: BookingRepository,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
@@ -95,27 +91,6 @@ class Cas1WithdrawableTreeOperations(
             "Failed to automatically withdraw PlacementApplication ${node.entityId} " +
               "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +
               "with error type ${result::class}",
-          )
-        }
-      }
-      WithdrawableEntityType.Booking -> {
-        val booking = bookingRepository.findByIdOrNull(node.entityId)!!
-
-        val bookingCancellationResult = bookingService.createCas1Cancellation(
-          booking = booking,
-          cancelledAt = LocalDate.now(),
-          userProvidedReason = null,
-          notes = "Automatically withdrawn as ${context.triggeringEntityType.label} was withdrawn",
-          withdrawalContext = context,
-          otherReason = null,
-        )
-
-        when (bookingCancellationResult) {
-          is CasResult.Success -> Unit
-          else -> log.error(
-            "Failed to automatically withdraw Booking ${booking.id} " +
-              "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +
-              "with message ${extractMessageFromCasResult(bookingCancellationResult)}",
           )
         }
       }

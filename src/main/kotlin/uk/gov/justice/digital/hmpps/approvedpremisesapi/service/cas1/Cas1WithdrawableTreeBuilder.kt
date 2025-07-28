@@ -3,12 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import java.util.UUID
 
 /**
@@ -28,7 +26,6 @@ import java.util.UUID
 @Component
 class Cas1WithdrawableTreeBuilder(
   @Lazy private val placementRequestService: Cas1PlacementRequestService,
-  @Lazy private val bookingService: BookingService,
   @Lazy private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   @Lazy private val cas1ApplicationService: Cas1ApplicationService,
   @Lazy private val cas1SpaceBookingService: Cas1SpaceBookingService,
@@ -42,10 +39,6 @@ class Cas1WithdrawableTreeBuilder(
 
     cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id).forEach {
       children.add(treeForPlacementApp(it, user).rootNode)
-    }
-
-    bookingService.getAllAdhocOrUnknownForApplication(application).forEach {
-      children.add(treeForBooking(it, user).rootNode)
     }
 
     return WithdrawableTree(
@@ -83,22 +76,6 @@ class Cas1WithdrawableTreeBuilder(
   }
 
   fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTree {
-    /*
-     * Some legacy adhoc bookings were incorrectly linked to placement requests,
-     * and in some cases these placement requests had completely different dates
-     * from the bookings. Until these relationships are removed, we should exclude
-     * this relationship for any adhoc booking as to avoid unexpected withdrawal
-     * cascading.
-     *
-     * If adhoc is null, we treat it as 'potentially adhoc' and exclude it.
-     */
-    val booking = placementRequest.booking
-    val bookingChildren = if (booking != null && booking.adhoc == false) {
-      listOf(treeForBooking(booking, user).rootNode)
-    } else {
-      emptyList()
-    }
-
     val spaceBookingChildren = placementRequest.spaceBookings.map { treeForSpaceBooking(it, user).rootNode }
 
     return WithdrawableTree(
@@ -108,21 +85,10 @@ class Cas1WithdrawableTreeBuilder(
         entityId = placementRequest.id,
         status = placementRequestService.getWithdrawableState(placementRequest, user),
         dates = listOf(WithdrawableDatePeriod(placementRequest.expectedArrival, placementRequest.expectedDeparture())),
-        children = bookingChildren + spaceBookingChildren,
+        children = spaceBookingChildren,
       ),
     )
   }
-
-  fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTree = WithdrawableTree(
-    WithdrawableTreeNode(
-      applicationId = booking.application?.id,
-      entityType = WithdrawableEntityType.Booking,
-      entityId = booking.id,
-      status = bookingService.getWithdrawableState(booking, user),
-      dates = listOf(WithdrawableDatePeriod(booking.arrivalDate, booking.departureDate)),
-      children = emptyList(),
-    ),
-  )
 
   fun treeForSpaceBooking(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableTree = WithdrawableTree(
     WithdrawableTreeNode(

@@ -34,6 +34,7 @@ class Cas1ApplicationStatusService(
     bookingMade(spaceBooking.application!!)
   }
 
+  @Deprecated("This can be removed")
   fun lastBookingCancelled(
     booking: BookingEntity,
     isUserRequestedWithdrawal: Boolean,

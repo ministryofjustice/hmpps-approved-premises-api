@@ -39,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -62,7 +61,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3VoidBedspaceService
@@ -111,7 +109,6 @@ class PremisesController(
   private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
   private val bedSummaryTransformer: BedSummaryTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
-  private val cas1WithdrawableService: Cas1WithdrawableService,
   private val requestContextService: RequestContextService,
   private val offenderDetailService: OffenderDetailService,
 ) : PremisesApiDelegate {
@@ -465,19 +462,6 @@ class PremisesController(
     }
 
     when (booking.premises) {
-      is ApprovedPremisesEntity -> {
-        val result = cas1WithdrawableService.withdrawBooking(
-          booking = booking,
-          user = user,
-          cancelledAt = body.date,
-          userProvidedReason = body.reason,
-          notes = body.notes,
-          otherReason = body.otherReason,
-        )
-        val cancellation = extractEntityFromCasResult(result)
-        return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
-      }
-
       is TemporaryAccommodationPremisesEntity -> {
         val result = cas3BookingService.createCancellation(
           booking = booking,

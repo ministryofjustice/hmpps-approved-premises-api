@@ -5,8 +5,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -14,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -23,7 +20,6 @@ class Cas1WithdrawableService(
   private val cas1ApplicationService: Cas1ApplicationService,
   private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
-  private val bookingService: BookingService,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1WithdrawableTreeBuilder: Cas1WithdrawableTreeBuilder,
   private val cas1WithdrawableTreeOperations: Cas1WithdrawableTreeOperations,
@@ -138,36 +134,6 @@ class Cas1WithdrawableService(
   }
 
   @Transactional
-  fun withdrawBooking(
-    booking: BookingEntity,
-    user: UserEntity,
-    cancelledAt: LocalDate,
-    userProvidedReason: UUID?,
-    notes: String?,
-    otherReason: String?,
-  ): CasResult<CancellationEntity> {
-    val withdrawalContext = WithdrawalContext(
-      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
-      triggeringEntityType = WithdrawableEntityType.Booking,
-      triggeringEntityId = booking.id,
-    )
-
-    return withdraw(
-      cas1WithdrawableTreeBuilder.treeForBooking(booking, user).rootNode,
-      withdrawalContext,
-    ) {
-      bookingService.createCas1Cancellation(
-        booking,
-        cancelledAt,
-        userProvidedReason,
-        notes,
-        otherReason,
-        withdrawalContext,
-      )
-    }
-  }
-
-  @Transactional
   fun withdrawSpaceBooking(
     spaceBooking: Cas1SpaceBookingEntity,
     user: UserEntity,
@@ -276,7 +242,6 @@ enum class WithdrawableEntityType(val label: String) {
    */
   PlacementRequest("Request for Placement"),
   PlacementApplication("Request for Placement"),
-  Booking("Placement"),
   SpaceBooking("Space Booking"),
 }
 

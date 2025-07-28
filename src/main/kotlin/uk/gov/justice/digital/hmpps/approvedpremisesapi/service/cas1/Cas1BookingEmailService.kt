@@ -65,6 +65,7 @@ class Cas1BookingEmailService(
     }
   }
 
+  @Deprecated("This can be removed")
   fun bookingWithdrawn(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
