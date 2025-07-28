@@ -64,7 +64,6 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
 
     val (offender) = givenAnOffender()
     val (placementRequest) = givenAPlacementRequest(
-      placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,
     )

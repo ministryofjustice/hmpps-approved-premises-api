@@ -115,7 +115,6 @@ class PlacementRequestTransformerTest {
   private val placementRequestFactory = PlacementRequestEntityFactory()
     .withApplication(application)
     .withAssessment(assessment)
-    .withAllocatedToUser(user)
 
   private val mockRisks = mockk<PersonRisks>()
   private val mockPersonInfo = mockk<Person>()

@@ -217,7 +217,6 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       )
     }
 
-    withAllocatedToUser(application.createdByUser)
     withApplication(application)
     withAssessment(assessment)
     withPlacementRequirements(placementRequirements)

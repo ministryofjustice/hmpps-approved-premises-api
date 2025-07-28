@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -567,9 +566,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val assessment = approvedPremisesAssessmentEntity(application)
     val booking = bookingEntity(offender, application)
     val placementApplication = placementApplicationEntity(application)
-    val allocatedUser = userEntity()
 
-    val placementRequest = placementRequestEntity(booking, assessment, application, allocatedUser, placementApplication)
+    val placementRequest = placementRequestEntity(booking, assessment, application, placementApplication)
     val result =
       sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
     val expectedJson = """
@@ -605,8 +603,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val assessment = approvedPremisesAssessmentEntity(application)
     val booking = bookingEntity(offender, application)
     val placementApplication = placementApplicationEntity(application)
-    val allocatedUser = userEntity()
-    val placementRequest = placementRequestEntity(booking, assessment, application, allocatedUser, placementApplication)
+    val placementRequest = placementRequestEntity(booking, assessment, application, placementApplication)
     val bookingNotMade = bookingNotMadeEntity(placementRequest)
 
     val result =
@@ -918,7 +915,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     booking: BookingEntity,
     assessment: ApprovedPremisesAssessmentEntity,
     application: ApprovedPremisesApplicationEntity,
-    allocatedUser: UserEntity,
     placementApplication: PlacementApplicationEntity,
   ) = placementRequestFactory.produceAndPersist {
     withBooking(booking)
@@ -926,7 +922,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withApplication(application)
     withPlacementApplication(placementApplication)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    withAllocatedToUser(allocatedUser)
     withDueAt(OffsetDateTime.parse(DUE_AT))
     withDuration(5)
     withExpectedArrival(LocalDate.parse(arrivedAtDateOnly))

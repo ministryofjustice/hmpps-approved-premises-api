@@ -506,7 +506,6 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
   ): Cas1SpaceBookingEntity {
     val (user) = givenAUser()
     val (placementRequest) = givenAPlacementRequest(
-      placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,
     )

@@ -1079,7 +1079,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
       apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offenderA, offenderB, offenderOffline))
 
       givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
         crn = offenderA.crn,
@@ -1104,7 +1103,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
       }
 
       givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
         crn = offenderB.crn,

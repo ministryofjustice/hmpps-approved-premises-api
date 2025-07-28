@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -25,7 +24,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
   private var assessment: Yielded<ApprovedPremisesAssessmentEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
-  private var allocatedToUser: Yielded<UserEntity?> = { null }
   private var booking: Yielded<BookingEntity?> = { null }
   private var spaceBookings: Yielded<MutableList<Cas1SpaceBookingEntity>> = { mutableListOf() }
   private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
@@ -49,10 +47,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
 
   fun withExpectedArrival(expectedArrival: LocalDate) = apply {
     this.expectedArrival = { expectedArrival }
-  }
-
-  fun withAllocatedToUser(user: UserEntity) = apply {
-    this.allocatedToUser = { user }
   }
 
   fun withBooking(booking: BookingEntity?) = apply {
@@ -127,7 +121,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an Application"),
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an Assessment"),
     createdAt = this.createdAt(),
-    allocatedToUser = this.allocatedToUser(),
     booking = this.booking(),
     spaceBookings = this.spaceBookings(),
     bookingNotMades = this.bookingNotMades(),

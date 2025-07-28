@@ -150,7 +150,6 @@ class Cas1PlacementRequestServiceTest {
       assertThat(placementRequest.assessment.id).isEqualTo(assessment.id)
       assertThat(placementRequest.application.id).isEqualTo(application.id)
       assertThat(placementRequest.isParole).isFalse()
-      assertThat(placementRequest.allocatedToUser).isNull()
 
       verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
     }
@@ -202,7 +201,6 @@ class Cas1PlacementRequestServiceTest {
         )
         .withApplication(application)
         .withAssessment(assessment)
-        .withAllocatedToUser(otherUser)
         .produce()
 
       val mockCancellations = mockk<List<CancellationEntity>>()
@@ -267,7 +265,6 @@ class Cas1PlacementRequestServiceTest {
             .withAssessment(assessment)
             .produce(),
         )
-        .withAllocatedToUser(requestingUser)
         .withApplication(application)
         .withAssessment(assessment)
         .produce()
@@ -983,7 +980,6 @@ class Cas1PlacementRequestServiceTest {
         )
         .withApplication(application)
         .withAssessment(assessment)
-        .withAllocatedToUser(otherUser)
         .produce()
 
       every {
@@ -1042,7 +1038,6 @@ class Cas1PlacementRequestServiceTest {
       )
       .withApplication(application)
       .withAssessment(assessment)
-      .withAllocatedToUser(assigneeUser)
       .apply {
         if (arrivalDate != null) {
           this.withExpectedArrival(arrivalDate)
@@ -1073,7 +1068,6 @@ class Cas1PlacementRequestServiceTest {
       )
       .withApplication(application)
       .withAssessment(assessment)
-      .withAllocatedToUser(assigneeUser)
       .withPlacementApplication(placementApplication)
       .produce()
 

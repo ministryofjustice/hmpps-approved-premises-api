@@ -250,11 +250,6 @@ data class PlacementRequestEntity(
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var spaceBookings: MutableList<Cas1SpaceBookingEntity>,
 
-  @Deprecated("Placement requests are no longer allocated to users")
-  @ManyToOne
-  @JoinColumn(name = "allocated_to_user_id")
-  var allocatedToUser: UserEntity?,
-
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var bookingNotMades: MutableList<BookingNotMadeEntity>,
 

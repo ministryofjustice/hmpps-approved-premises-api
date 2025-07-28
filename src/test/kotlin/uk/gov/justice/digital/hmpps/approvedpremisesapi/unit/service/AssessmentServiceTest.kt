@@ -2903,7 +2903,6 @@ class AssessmentServiceTest {
         )
         .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
         .withAssessment(assessment)
-        .withAllocatedToUser(user)
         .produce()
 
       every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(

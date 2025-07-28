@@ -32,7 +32,6 @@ import java.time.OffsetDateTime
   "LongParameterList",
 )
 fun IntegrationTestBase.givenAPlacementRequest(
-  placementRequestAllocatedTo: UserEntity? = null,
   assessmentAllocatedTo: UserEntity? = null,
   createdByUser: UserEntity = givenAUser().first,
   crn: String? = null,
@@ -123,9 +122,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   }
 
   val placementRequest = placementRequestFactory.produceAndPersist {
-    if (placementRequestAllocatedTo != null) {
-      withAllocatedToUser(placementRequestAllocatedTo)
-    }
     withApplication(app)
     withAssessment(assessment)
     if (reallocated) {
@@ -167,7 +163,6 @@ private fun ApprovedPremisesApplicationEntityFactory.applyQualification(required
   "LongParameterList",
 )
 fun IntegrationTestBase.givenAPlacementRequest(
-  placementRequestAllocatedTo: UserEntity?,
   assessmentAllocatedTo: UserEntity? = null,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
@@ -187,7 +182,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val result = givenAPlacementRequest(
-    placementRequestAllocatedTo,
     assessmentAllocatedTo,
     createdByUser,
     crn,

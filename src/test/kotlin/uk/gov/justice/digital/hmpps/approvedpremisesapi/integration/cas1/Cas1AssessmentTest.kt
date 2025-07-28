@@ -1233,7 +1233,6 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
 
-          assertThat(persistedPlacementRequest.allocatedToUser).isNull()
           assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
           assertThat(persistedPlacementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
           assertThat(persistedPlacementRequest.duration).isEqualTo(placementDates.duration)

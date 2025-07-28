@@ -65,7 +65,6 @@ class Cas1ChangeRequestTest {
     fun `Returns 403 when type is appeal and role is invalid`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
@@ -96,7 +95,6 @@ class Cas1ChangeRequestTest {
     fun `Returns 403 when type is planned transfer and role is invalid`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
@@ -127,7 +125,6 @@ class Cas1ChangeRequestTest {
     fun `Returns 400 when type is extension`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
@@ -153,7 +150,6 @@ class Cas1ChangeRequestTest {
     fun `Returns 200 when post new placement appeal change request is successful`() {
       givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
           cruManagementArea = givenACas1CruManagementArea(emailAddress = "cruManagement@test.com"),
@@ -194,7 +190,6 @@ class Cas1ChangeRequestTest {
     fun `Returns 200 when post new planned transfer change request is successful`() {
       givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
           cruManagementArea = givenACas1CruManagementArea(emailAddress = "cruManagement@test.com"),

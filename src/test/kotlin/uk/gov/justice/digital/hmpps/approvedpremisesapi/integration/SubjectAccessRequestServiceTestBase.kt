@@ -268,7 +268,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
   ): Cas1SpaceBookingEntity {
     val (user, _) = givenAUser()
     val (placementRequest) = givenAPlacementRequest(
-      placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,
     )

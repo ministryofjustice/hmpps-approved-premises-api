@@ -311,7 +311,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
     return List(count) {
       givenAPlacementRequest(
-        user, user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn,
+        user, user, reallocated = isReallocated, isWithdrawn = isWithdrawn,
         isParole = isParole, crn = crn, name = name, expectedArrival = expectedArrival, tier = tier,
       ).first
     }
