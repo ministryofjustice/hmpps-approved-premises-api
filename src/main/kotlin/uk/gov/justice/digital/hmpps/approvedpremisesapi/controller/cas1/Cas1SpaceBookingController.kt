@@ -1,10 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.SpaceBookingsCas1Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPlacementAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
@@ -21,8 +31,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
@@ -58,7 +70,8 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 Space Booking")
 class Cas1SpaceBookingController(
   private val userAccessService: UserAccessService,
   private val userService: UserService,
@@ -73,16 +86,31 @@ class Cas1SpaceBookingController(
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val cas1BookingManagementService: Cas1BookingManagementService,
   private val offenderDetailService: OffenderDetailService,
-) : SpaceBookingsCas1Delegate {
+) {
 
-  override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
+  @SuppressWarnings("UnusedParameter")
+  @Operation(summary = "Returns timeline of a specific space booking with a given ID")
+  @GetMapping("/premises/{premisesId}/space-bookings/{bookingId}/timeline")
+  fun getSpaceBookingTimeline(
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+  ): ResponseEntity<List<Cas1TimelineEvent>> {
     val events = cas1TimelineService.getSpaceBookingTimeline(bookingId)
     return ResponseEntity.ok(events)
   }
 
-  override fun createSpaceBooking(
-    placementRequestId: UUID,
-    body: Cas1NewSpaceBooking,
+  @Operation(
+    summary = "Create a booking for a space in premises, associated with a given placement request",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1SpaceBooking::class))]),
+      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @PostMapping("/placement-requests/{placementRequestId}/space-bookings")
+  fun createSpaceBooking(
+    @PathVariable placementRequestId: UUID,
+    @RequestBody body: Cas1NewSpaceBooking,
   ): ResponseEntity<Cas1SpaceBooking> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_CREATE)
 
@@ -113,15 +141,17 @@ class Cas1SpaceBookingController(
     return ResponseEntity.ok(toCas1SpaceBooking(booking))
   }
 
-  override fun getSpaceBookings(
-    premisesId: UUID,
-    residency: Cas1SpaceBookingResidency?,
-    crnOrName: String?,
-    keyWorkerStaffCode: String?,
-    sortDirection: SortDirection?,
-    sortBy: Cas1SpaceBookingSummarySortField?,
-    page: Int?,
-    perPage: Int?,
+  @Operation(summary = "Lists space bookings for the premises, given optional filtering criteria")
+  @GetMapping("/premises/{premisesId}/space-bookings")
+  fun getSpaceBookings(
+    @Parameter(description = "ID of the premises to show space bookings for", required = true) @PathVariable premisesId: UUID,
+    @RequestParam residency: Cas1SpaceBookingResidency?,
+    @RequestParam crnOrName: String?,
+    @RequestParam keyWorkerStaffCode: String?,
+    @RequestParam sortDirection: SortDirection?,
+    @RequestParam sortBy: Cas1SpaceBookingSummarySortField?,
+    @RequestParam page: Int?,
+    @RequestParam perPage: Int?,
   ): ResponseEntity<List<Cas1SpaceBookingSummary>> {
     userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_LIST)
 
@@ -161,7 +191,9 @@ class Cas1SpaceBookingController(
       .body(summaries)
   }
 
-  override fun getSpaceBookingById(bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
+  @Operation(summary = "Returns space booking information for a given id")
+  @GetMapping("/space-bookings/{bookingId}")
+  fun getSpaceBookingById(@Parameter(description = "ID of the space booking") @PathVariable bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
     val booking = extractEntityFromCasResult(spaceBookingService.getBooking(bookingId))
 
     return ResponseEntity
@@ -169,7 +201,12 @@ class Cas1SpaceBookingController(
       .body(toCas1SpaceBooking(booking))
   }
 
-  override fun getSpaceBookingByPremiseAndId(premisesId: UUID, bookingId: UUID): ResponseEntity<Cas1SpaceBooking> {
+  @Operation(summary = "Returns space booking information for a given id")
+  @GetMapping("/premises/{premisesId}/space-bookings/{bookingId}")
+  fun getSpaceBookingByPremiseAndId(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking") @PathVariable bookingId: UUID,
+  ): ResponseEntity<Cas1SpaceBooking> {
     val booking = extractEntityFromCasResult(spaceBookingService.getBookingForPremisesAndId(premisesId, bookingId))
 
     return ResponseEntity
@@ -177,10 +214,11 @@ class Cas1SpaceBookingController(
       .body(toCas1SpaceBooking(booking))
   }
 
-  override fun updateSpaceBooking(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1UpdateSpaceBooking: Cas1UpdateSpaceBooking,
+  @PatchMapping("/premises/{premisesId}/space-bookings/{bookingId}")
+  fun updateSpaceBooking(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1UpdateSpaceBooking: Cas1UpdateSpaceBooking,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_CREATE)
 
@@ -210,10 +248,11 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun shortenSpaceBooking(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1ShortenSpaceBooking: Cas1ShortenSpaceBooking,
+  @PatchMapping("/premises/{premisesId}/space-bookings/{bookingId}/shorten")
+  fun shortenSpaceBooking(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1ShortenSpaceBooking: Cas1ShortenSpaceBooking,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_SHORTEN)
 
@@ -232,10 +271,11 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun recordArrival(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1NewArrival: Cas1NewArrival,
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/arrival")
+  fun recordArrival(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1NewArrival: Cas1NewArrival,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL)
 
@@ -260,10 +300,11 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun recordDeparture(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1NewDeparture: Cas1NewDeparture,
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/departure")
+  fun recordDeparture(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1NewDeparture: Cas1NewDeparture,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE)
 
@@ -300,10 +341,11 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun assignKeyworker(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1AssignKeyWorker: Cas1AssignKeyWorker,
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/keyworker")
+  fun assignKeyworker(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1AssignKeyWorker: Cas1AssignKeyWorker,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER)
 
@@ -317,10 +359,11 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun cancelSpaceBooking(
-    premisesId: UUID,
-    bookingId: UUID,
-    body: Cas1NewSpaceBookingCancellation,
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/cancellations")
+  fun cancelSpaceBooking(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody body: Cas1NewSpaceBookingCancellation,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW)
 
@@ -345,7 +388,12 @@ class Cas1SpaceBookingController(
   }
 
   @Transactional
-  override fun appeal(premisesId: UUID, bookingId: UUID, body: Cas1ApprovedPlacementAppeal): ResponseEntity<Unit> {
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/appeal")
+  fun appeal(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody body: Cas1ApprovedPlacementAppeal,
+  ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS)
     val spaceBooking = extractEntityFromCasResult(
       cas1SpaceBookingService.getBookingForPremisesAndId(premisesId, bookingId),
@@ -374,10 +422,11 @@ class Cas1SpaceBookingController(
       )
   }
 
-  override fun recordNonArrival(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1NonArrival: Cas1NonArrival,
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/non-arrival")
+  fun recordNonArrival(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1NonArrival: Cas1NonArrival,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL)
 
@@ -394,10 +443,12 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun emergencyTransfer(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
+  @Operation(summary = "Creates a space booking without a change request and truncates the departure date of the existing space booking")
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer")
+  fun emergencyTransfer(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(CAS1_TRANSFER_CREATE)
 
@@ -410,10 +461,13 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun plannedTransfer(
-    premisesId: UUID,
-    bookingId: UUID,
-    cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
+  @SuppressWarnings("UnusedParameter")
+  @Operation(summary = "Creates a space booking for a planned transfer change request and truncates the departure date of the existing space booking. Will close the planned transfer change request.")
+  @PostMapping("/premises/{premisesId}/space-bookings/{bookingId}/planned-transfer")
+  fun plannedTransfer(
+    @Parameter(description = "ID of the corresponding premises", required = true) @PathVariable premisesId: UUID,
+    @Parameter(description = "ID of the space booking", required = true) @PathVariable bookingId: UUID,
+    @RequestBody cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_TRANSFER_ASSESS)
 
