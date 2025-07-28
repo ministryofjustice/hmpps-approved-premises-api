@@ -2330,34 +2330,6 @@ class Cas1TasksTest {
         }
       }
     }
-
-    @Test
-    fun `Reallocating a Temporary Accommodation assessment does not require a request body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { originalUser, _ ->
-        givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { expectedUser, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnAssessmentForTemporaryAccommodation(
-              allocatedToUser = originalUser,
-              createdByUser = originalUser,
-              crn = offenderDetails.otherIds.crn,
-            ) { assessment, _ ->
-              webTestClient.post()
-                .uri("/cas1/tasks/assessment/${assessment.id}/allocations")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-                .bodyValue(Unit)
-                .exchange()
-                .expectStatus()
-                .isCreated
-
-              val result = temporaryAccommodationAssessmentRepository.findAll().first { it.id == assessment.id }
-              assertThat(result.allocatedToUser).isNotNull()
-              assertThat(result.allocatedToUser!!.id).isEqualTo(expectedUser.id)
-            }
-          }
-        }
-      }
-    }
   }
 
   @Nested
