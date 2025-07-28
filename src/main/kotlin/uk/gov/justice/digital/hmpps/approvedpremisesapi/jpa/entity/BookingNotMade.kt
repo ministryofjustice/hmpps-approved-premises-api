@@ -20,7 +20,7 @@ data class BookingNotMadeEntity(
   val id: UUID,
   @ManyToOne
   @JoinColumn(name = "placement_request_id")
-  val placementRequest: PlacementRequestEntity,
+  var placementRequest: PlacementRequestEntity,
   val createdAt: OffsetDateTime,
   val notes: String?,
 ) {

@@ -132,6 +132,9 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   @Query("UPDATE PlacementRequestEntity p SET p.dueAt = :dueAt WHERE p.id = :id")
   fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
 
+  @Query("SELECT p from PlacementRequestEntity p WHERE p.reallocatedAt IS NOT NULL AND p.bookingNotMades IS NOT EMPTY")
+  fun reallocatedAtWithBookingNotMade(): List<PlacementRequestEntity>
+
   @Query(
     """
     WITH UNFILTERED AS (
