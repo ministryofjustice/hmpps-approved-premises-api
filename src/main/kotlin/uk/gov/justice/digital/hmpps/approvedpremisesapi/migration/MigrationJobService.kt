@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3Updat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateBookingOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdatePremisesStartDateJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3VoidBedspaceCancellationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3VoidBedspaceJob
 import kotlin.reflect.KClass
 
 @Service
@@ -67,7 +67,7 @@ class MigrationJobService(
         MigrationJobType.cas1UpdateRoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
         MigrationJobType.updateCas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
         MigrationJobType.updateCas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
-        MigrationJobType.updateCas3VoidBedspaceCancellationData -> getBean(Cas3VoidBedspaceCancellationJob::class)
+        MigrationJobType.updateCas3VoidBedspaceData -> getBean(Cas3VoidBedspaceJob::class)
         MigrationJobType.cas1CapacityPerformanceTest -> getBean(Cas1CapacityPerformanceTestJob::class)
       }
 

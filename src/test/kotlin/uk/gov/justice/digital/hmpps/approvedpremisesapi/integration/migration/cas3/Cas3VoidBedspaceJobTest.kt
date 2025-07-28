@@ -12,14 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3VoidBedspaceMigrationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
-class Cas3VoidBedspaceCancellationJobTest : MigrationJobTestBase() {
+class Cas3VoidBedspaceJobTest : MigrationJobTestBase() {
 
   @SpykBean
-  private lateinit var cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository
+  private lateinit var cas3VoidBedspacesRepository: Cas3VoidBedspaceMigrationRepository
 
   @Autowired
   private lateinit var cas3BedspacesRepository: Cas3BedspacesRepository
@@ -66,35 +67,47 @@ class Cas3VoidBedspaceCancellationJobTest : MigrationJobTestBase() {
     givenAUser { user, _ ->
 
       val premises = createPremises(user)
-      val voidBedspaces = createVoidBedspaces(premises, 25)
+      val voidBedspaces = createVoidBedspaces(premises, 50)
 
       // this job needs to have ran first.
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData)
       val bedspaces = cas3BedspacesRepository.findAll().filter { it.premises.id == premises.id }
       assertThat(bedspaces).hasSize(voidBedspaces.size)
 
-      val bedspacesToCancel = voidBedspaces.take(20)
+      val bedspacesToCancel = voidBedspaces.asSequence().shuffled().take(20).toList()
 
       // cancel some voids
       bedspacesToCancel.forEach {
         cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
           withVoidBedspace(it)
           withNotes(randomStringMultiCaseWithNumbers(50))
+          withCreatedAt(OffsetDateTime.now())
         }
       }
 
-      migrationJobService.runMigrationJob(MigrationJobType.updateCas3VoidBedspaceCancellationData, 10)
+      migrationJobService.runMigrationJob(MigrationJobType.updateCas3VoidBedspaceData, 10)
 
-      val cancelledVoidBedspaces = cas3VoidBedspacesRepository.findAll().filter { it.cancellation != null }
+      val migratedBedspaces = cas3VoidBedspacesRepository.findAll()
+
+      assertThat(migratedBedspaces.filter { it.cancellation == null }).hasSize(30)
+
+      val cancelledVoidBedspaces = migratedBedspaces.filter { it.cancellation != null }.map { it.id }
       assertThat(cancelledVoidBedspaces).hasSize(20)
-      cancelledVoidBedspaces.forEach {
-        assertThat(it.cancellationDate).isEqualTo(it.cancellation!!.createdAt)
-        assertThat(it.cancellationNotes).isEqualTo(it.cancellation!!.notes)
+      assertThat(cancelledVoidBedspaces).containsAll(bedspacesToCancel.map { it.id }.toList().sorted())
+
+      migratedBedspaces.forEach {
         assertThat(it.bedspace!!.id).isEqualTo(it.bed!!.id)
+        if (it.cancellation == null) {
+          assertThat(it.cancellationDate).isNull()
+          assertThat(it.cancellationNotes).isNull()
+        } else {
+          assertThat(it.cancellationDate).isNotNull
+          assertThat(it.notes).isNotNull
+        }
       }
 
-      // should be called twice - 20 cancelled bedspaces with a page size of 10
-      verify(exactly = 2) { cas3VoidBedspacesRepository.saveAllAndFlush<Cas3VoidBedspaceEntity>(any()) }
+      // should be called 5 times - 50 records
+      verify(exactly = 5) { cas3VoidBedspacesRepository.saveAllAndFlush<Cas3VoidBedspaceEntity>(any()) }
     }
   }
 }
