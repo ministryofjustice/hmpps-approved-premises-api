@@ -44,7 +44,6 @@ class UserTransformer(
     numTasksCompleted7Days = userWorkload.numTasksCompleted7Days,
     numTasksCompleted30Days = userWorkload.numTasksCompleted30Days,
     qualifications = jpa.qualifications.distinctBy { it.qualification }.map(::transformQualificationToApi),
-    roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
     apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
     cruManagementArea = jpa.cruManagementArea?.toNamedId(),
   )

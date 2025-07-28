@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -145,65 +146,75 @@ class Cas1TasksController(
   )
   fun getTask(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
-
-    val taskInfo = when (toTaskType(taskType)) {
-      TaskType.assessment -> {
-        val assessment = extractEntityFromCasResult(
-          assessmentService.getAssessmentAndValidate(user, id),
-        ) as ApprovedPremisesAssessmentEntity
-        val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
-
-        val requiredPermission = if (assessment.createdFromAppeal) {
-          UserPermission.CAS1_ASSESS_APPEALED_APPLICATION
-        } else {
-          UserPermission.CAS1_ASSESS_APPLICATION
-        }
-
-        TaskInfo(
-          transformedTask = getAssessmentTask(assessment, offenderSummaries),
-          crn = assessment.application.crn,
-          requiredQualifications = assessment.application.getRequiredQualifications(),
-          requiredPermission = requiredPermission,
-        )
-      }
-
-      TaskType.placementApplication -> {
-        val placementApplication = extractEntityFromCasResult(
-          cas1PlacementApplicationService.getApplication(id),
-        )
-
-        if (!placementApplication.isSubmitted()) {
-          throw NotFoundProblem(id, "Task")
-        }
-
-        val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
-
-        TaskInfo(
-          transformedTask = getPlacementApplicationTask(placementApplication, offenderSummaries),
-          crn = placementApplication.application.crn,
-          requiredQualifications = placementApplication.application.getRequiredQualifications(),
-          requiredPermission = UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
-        )
-      }
-    }
-
-    val users = userService.getAllocatableUsersForAllocationType(
+    val taskInfo = getTaskInfoByType(toTaskType(taskType), id, user)
+    val transformedAllocatableUsers = getTransformedAllocatableUsers(
       taskInfo.crn,
       taskInfo.requiredQualifications,
       taskInfo.requiredPermission,
     )
-
-    val workload = cas1TaskService.getUserWorkloads(users.map { it.id })
-    val transformedAllocatableUsers = users.map {
-      userTransformer.transformJpaToAPIUserWithWorkload(it, workload[it.id]!!)
-    }
-
     return ResponseEntity.ok(
       TaskWrapper(
         task = taskInfo.transformedTask,
         users = transformedAllocatableUsers,
       ),
     )
+  }
+
+  private fun getTaskInfoByType(taskType: TaskType, id: UUID, user: UserEntity): TaskInfo = when (taskType) {
+    TaskType.assessment -> getAssessmentTaskInfo(id, user)
+    TaskType.placementApplication -> getPlacementApplicationTaskInfo(id, user)
+  }
+
+  private fun getAssessmentTaskInfo(id: UUID, user: UserEntity): TaskInfo {
+    val assessment = extractEntityFromCasResult(
+      assessmentService.getAssessmentAndValidate(user, id),
+    ) as ApprovedPremisesAssessmentEntity
+
+    val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
+    val requiredPermission = if (assessment.createdFromAppeal) {
+      UserPermission.CAS1_ASSESS_APPEALED_APPLICATION
+    } else {
+      UserPermission.CAS1_ASSESS_APPLICATION
+    }
+
+    return TaskInfo(
+      transformedTask = getAssessmentTask(assessment, offenderSummaries),
+      crn = assessment.application.crn,
+      requiredQualifications = assessment.application.getRequiredQualifications(),
+      requiredPermission = requiredPermission,
+    )
+  }
+
+  private fun getPlacementApplicationTaskInfo(id: UUID, user: UserEntity): TaskInfo {
+    val placementApplication = extractEntityFromCasResult(
+      cas1PlacementApplicationService.getApplication(id),
+    )
+
+    if (!placementApplication.isSubmitted()) {
+      throw NotFoundProblem(id, "Task")
+    }
+
+    val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
+
+    return TaskInfo(
+      transformedTask = getPlacementApplicationTask(placementApplication, offenderSummaries),
+      crn = placementApplication.application.crn,
+      requiredQualifications = placementApplication.application.getRequiredQualifications(),
+      requiredPermission = UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
+    )
+  }
+
+  private fun getTransformedAllocatableUsers(
+    crn: String,
+    requiredQualifications: List<UserQualification>,
+    requiredPermission: UserPermission,
+  ): List<UserWithWorkload> {
+    val users = userService.getAllocatableUsersForAllocationType(crn, requiredQualifications, requiredPermission)
+    val workloads = cas1TaskService.getUserWorkloads(users.map { it.id })
+
+    return users.map {
+      userTransformer.transformJpaToAPIUserWithWorkload(it, workloads[it.id]!!)
+    }
   }
 
   private data class TaskInfo(

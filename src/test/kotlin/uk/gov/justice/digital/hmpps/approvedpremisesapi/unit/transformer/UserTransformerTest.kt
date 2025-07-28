@@ -325,35 +325,6 @@ class UserTransformerTest {
   inner class TransformJpaToApiUserWithWorkload {
 
     @Test
-    fun `transformJpaToAPIUserWithWorkload should return distinct roles`() {
-      val user = buildUserEntity(
-        role = CAS1_CRU_MEMBER,
-        apArea = ApAreaEntityFactory().produce(),
-      )
-      user.addRoleForUnitTest(CAS1_CRU_MEMBER)
-      user.addRoleForUnitTest(CAS1_CRU_MEMBER)
-      user.addRoleForUnitTest(CAS1_CRU_MEMBER)
-      user.addRoleForUnitTest(CAS1_REPORT_VIEWER)
-
-      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
-
-      val workload = UserWorkload(
-        0,
-        0,
-        0,
-      )
-
-      val result = userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
-
-      assertThat(result.roles).isEqualTo(
-        listOf(
-          cruMember,
-          reportViewer,
-        ),
-      )
-    }
-
-    @Test
     fun `transformJpaToAPIUserWithWorkload should return areas`() {
       val apAreaEntity = ApAreaEntityFactory().produce()
       val cruManagementArea = Cas1CruManagementAreaEntityFactory().produce()
