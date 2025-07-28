@@ -156,7 +156,7 @@ Notes: []
     placementApp1PlacementRequest1.spaceBookings = mutableListOf(placementApp1PlacementRequest1Booking)
     setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInCas1))
 
-    val placementApp2 = createPlacementApplication()
+    val placementApp2 = createPlacementApplication(automatic = true)
     setupWithdrawableState(placementApp2, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp2PlacementRequest1 = createPlacementRequest()
     placementApp2.placementRequests.add(placementApp2PlacementRequest1)
@@ -179,7 +179,7 @@ Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
----> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
+---> PlacementApplication() automatic, withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
 ------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
 ---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
 
@@ -285,9 +285,10 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     .withPlacementRequirements(placementRequirements)
     .produce()
 
-  private fun createPlacementApplication() = PlacementApplicationEntityFactory()
+  private fun createPlacementApplication(automatic: Boolean = false) = PlacementApplicationEntityFactory()
     .withApplication(application)
     .withCreatedByUser(user)
+    .withAutomatic(automatic)
     .produce()
 
   private fun createSpaceBooking() = Cas1SpaceBookingEntityFactory()

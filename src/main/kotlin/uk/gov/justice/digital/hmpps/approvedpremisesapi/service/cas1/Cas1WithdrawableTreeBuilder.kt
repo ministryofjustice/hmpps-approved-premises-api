@@ -71,6 +71,11 @@ class Cas1WithdrawableTreeBuilder(
           },
         ),
         children = children,
+        additionalInfo = if (placementApplication.automatic) {
+          " automatic"
+        } else {
+          ""
+        },
       ),
     )
   }
@@ -136,6 +141,7 @@ data class WithdrawableTreeNode(
   val status: WithdrawableState,
   val dates: List<WithdrawableDatePeriod> = emptyList(),
   val children: List<WithdrawableTreeNode> = emptyList(),
+  val additionalInfo: String = "",
 ) {
   fun flatten(): List<WithdrawableTreeNode> = listOf(this) + collectDescendants()
 
@@ -170,8 +176,9 @@ data class WithdrawableTreeNode(
     } else {
       ""
     }
+
     val description = "" +
-      "$entityType($abbreviatedId), " +
+      "$entityType($abbreviatedId)$additionalInfo, " +
       "withdrawn:${yesOrNo(status.withdrawn)}, " +
       "withdrawable:${yesOrNo(status.withdrawable)}, " +
       "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}" +
