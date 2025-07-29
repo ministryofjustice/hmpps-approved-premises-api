@@ -137,7 +137,7 @@ class RequestForPlacementTransformerTest {
         .withPlacementRequirements(placementRequirements)
         .produce()
         .apply {
-          placementApplication.placementRequests = mutableListOf(this)
+          placementApplication.placementRequest = this
         }
 
       val premises = ApprovedPremisesEntityFactory()

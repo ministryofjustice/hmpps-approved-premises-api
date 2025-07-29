@@ -68,18 +68,20 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       givenAnOffender { offenderDetails, _ ->
         val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-        val placementApplication = createPlacementApplication(application)
+        val placementApplication1 = createPlacementApplication(application)
         val placementRequest1 = createPlacementRequest(application) {
           withExpectedArrival(LocalDate.of(2023, 1, 1))
-          withPlacementApplication(placementApplication)
+          withPlacementApplication(placementApplication1)
         }
+        val placementApplication2 = createPlacementApplication(application)
         val placementRequest2 = createPlacementRequest(application) {
           withExpectedArrival(LocalDate.of(2023, 1, 10))
-          withPlacementApplication(placementApplication)
+          withPlacementApplication(placementApplication2)
         }
+        val placementApplication3 = createPlacementApplication(application)
         val placementRequest3 = createPlacementRequest(application) {
           withExpectedArrival(LocalDate.of(2023, 1, 20))
-          withPlacementApplication(placementApplication)
+          withPlacementApplication(placementApplication3)
         }
 
         seed(
@@ -98,7 +100,9 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
           ),
         )
 
-        assertPlacementApplicationNotWithdrawn(placementApplication)
+        assertPlacementApplicationNotWithdrawn(placementApplication1)
+        assertPlacementApplicationNotWithdrawn(placementApplication2)
+        assertPlacementApplicationNotWithdrawn(placementApplication3)
 
         assertPlacementRequestWithdrawn(placementRequest1, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
         assertPlacementRequestNotWithdrawn(placementRequest2)

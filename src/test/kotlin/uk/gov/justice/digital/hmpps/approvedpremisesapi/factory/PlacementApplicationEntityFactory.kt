@@ -127,7 +127,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     decisionMadeAt = this.decisionMadeAt(),
     placementType = this.placementType(),
     automatic = this.automatic(),
-    placementRequests = mutableListOf(),
+    placementRequest = null,
     withdrawalReason = this.withdrawalReason(),
     dueAt = this.dueAt(),
     submissionGroupId = this.submissionGroupId(),

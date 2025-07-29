@@ -85,7 +85,7 @@ class Cas1PlacementApplicationService(
         decisionMadeAt = null,
         placementType = null,
         automatic = false,
-        placementRequests = mutableListOf(),
+        placementRequest = null,
         withdrawalReason = null,
         dueAt = null,
         submissionGroupId = UUID.randomUUID(),

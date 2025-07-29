@@ -76,7 +76,7 @@ class RequestForPlacementTransformer(
 
   private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
     this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-    this.placementRequests.any { pr -> pr.hasActiveBooking() } -> RequestForPlacementStatus.placementBooked
+    this.placementRequest?.hasActiveBooking() == true -> RequestForPlacementStatus.placementBooked
     this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.requestRejected
     this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.awaitingMatch
     this.isSubmitted() -> RequestForPlacementStatus.requestSubmitted

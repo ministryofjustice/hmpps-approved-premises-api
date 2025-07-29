@@ -54,7 +54,7 @@ class Cas1WithdrawableTreeBuilder(
   }
 
   fun treeForPlacementApp(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableTree {
-    val children = placementApplication.placementRequests.map { treeForPlacementReq(it, user).rootNode }
+    val children = listOfNotNull(placementApplication.placementRequest?.let { treeForPlacementReq(it, user).rootNode })
 
     return WithdrawableTree(
       WithdrawableTreeNode(
