@@ -35,9 +35,8 @@ seed:
     script:
       cas1-enabled: true
       cas2-enabled: true
-      cas2v2-enabled: false
+      cas2v2-enabled: true
       noms: A5276DZ
-      noms-cas2v2: MDI
 
 spring:
   datasource:
