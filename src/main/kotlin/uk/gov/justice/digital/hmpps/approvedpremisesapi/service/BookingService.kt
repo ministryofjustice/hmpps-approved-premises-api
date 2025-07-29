@@ -5,7 +5,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -24,8 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -42,7 +39,6 @@ class BookingService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
-  private val deliusService: DeliusService,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
@@ -110,26 +106,6 @@ class BookingService(
 
     return success(arrivalEntity)
   }
-
-  fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState = WithdrawableState(
-    withdrawable = booking.isInCancellableStateCas1(),
-    withdrawn = booking.isCancelled,
-    userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
-    blockingReason = if (booking.hasArrivals()) {
-      BlockingReason.ArrivalRecordedInCas1
-    } else if (deliusService.referralHasArrival(booking)) {
-      BlockingReason.ArrivalRecordedInDelius
-    } else {
-      null
-    },
-  )
-
-  /**
-   * In CAS1 there are some legacy applications where the adhoc status is not known, indicated
-   * by the adhoc column being null. These are typically treated the same as adhoc
-   * bookings for certain operations (e.g. withdrawals)
-   */
-  fun getAllAdhocOrUnknownForApplication(applicationEntity: ApplicationEntity) = bookingRepository.findAllAdhocOrUnknownByApplication(applicationEntity)
 
   @Transactional
   fun createConfirmation(

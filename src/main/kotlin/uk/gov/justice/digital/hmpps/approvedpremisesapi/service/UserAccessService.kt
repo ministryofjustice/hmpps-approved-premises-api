@@ -98,7 +98,6 @@ class UserAccessService(
    * It doesn't consider if the booking is in a cancellable state
    */
   fun userMayCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is ApprovedPremisesEntity -> user.hasPermission(UserPermission.CAS1_BOOKING_WITHDRAW)
     is TemporaryAccommodationPremisesEntity -> userCanManageCas3PremisesBookings(user, booking.premises)
     else -> false
   }

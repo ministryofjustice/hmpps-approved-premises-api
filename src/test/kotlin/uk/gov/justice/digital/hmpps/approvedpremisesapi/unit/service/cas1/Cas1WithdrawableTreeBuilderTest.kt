@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
@@ -184,44 +183,6 @@ Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
 ---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
 
 Notes: [1 or more placements cannot be withdrawn as they have an arrival]
-      """
-        .trim(),
-    )
-  }
-
-  @Test
-  fun `tree for app blocks withdrawal if booking has arrival in Delius`() {
-    every {
-      cas1ApplicationService.getWithdrawableState(application, user)
-    } returns WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = true)
-
-    every {
-      placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)
-    } returns emptyList()
-
-    val placementApp1 = createPlacementApplication()
-    setupWithdrawableState(placementApp1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp1PlacementRequest1 = createPlacementRequest()
-    placementApp1.placementRequests.add(placementApp1PlacementRequest1)
-    setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
-    val placementApp1PlacementRequest1Booking = createSpaceBooking()
-    placementApp1PlacementRequest1.spaceBookings = mutableListOf(placementApp1PlacementRequest1Booking)
-    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawn = false, withdrawable = true, userMayDirectlyWithdraw = false, blockingReason = ArrivalRecordedInDelius))
-
-    every {
-      cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
-    } returns listOf(placementApp1)
-
-    val result = service.treeForApp(application, user)
-
-    assertThat(result.render(includeIds = false).trim()).isEqualTo(
-      """
-Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
----> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
-------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
----------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInDelius
-
-Notes: [1 or more placements cannot be withdrawn as they have an arrival recorded in Delius]
       """
         .trim(),
     )

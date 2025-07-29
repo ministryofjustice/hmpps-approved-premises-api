@@ -352,8 +352,6 @@ data class BookingEntity(
       return Cas1ApplicationFacade(application as ApprovedPremisesApplicationEntity?, offlineApplication)
     }
 
-  fun isInCancellableStateCas1() = !isCancelled && !hasArrivals()
-
   fun isActive() = !isCancelled
 
   fun hasArrivals() = arrivals.isNotEmpty()

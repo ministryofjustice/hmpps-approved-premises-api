@@ -483,10 +483,6 @@ class UserAccessServiceTest {
 
   @Nested
   inner class UserMayCancelBooking {
-    private val cas1Booking = BookingEntityFactory()
-      .withPremises(approvedPremises)
-      .produce()
-
     private val cas3BookingNotInUserRegion = BookingEntityFactory()
       .withPremises(temporaryAccommodationPremisesNotInUserRegion)
       .produce()
@@ -494,31 +490,6 @@ class UserAccessServiceTest {
     private val cas3BookingInUserRegion = BookingEntityFactory()
       .withPremises(temporaryAccommodationPremisesInUserRegion)
       .produce()
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class)
-    fun `userMayCancelBooking returns true if the given premises is a CAS1 premises and the user has either the CAS1_CRU_MEMBER, CRU_MEMBER or JANITOR user role`(
-      role: UserRole,
-    ) {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      user.addRoleForUnitTest(role)
-
-      val canCancelBooking = listOf(
-        CAS1_CRU_MEMBER,
-        CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
-        CAS1_JANITOR,
-      ).contains(role)
-
-      assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
-    }
-
-    @Test
-    fun `userMayCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isFalse
-    }
 
     @Test
     fun `userMayCancelBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
