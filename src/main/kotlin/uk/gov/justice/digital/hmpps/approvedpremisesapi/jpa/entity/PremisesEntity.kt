@@ -395,3 +395,10 @@ data class ApprovedPremisesBasicSummary(
   val town: String?,
   val postcode: String,
 )
+
+data class TemporaryAccommodationPremisesTotalBedspacesByStatus(
+  val premisesId: UUID,
+  val onlineBedspaces: Int,
+  val upcomingBedspaces: Int,
+  val archivedBedspaces: Int,
+)

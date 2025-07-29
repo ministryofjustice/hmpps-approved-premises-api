@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesBedspaceTotals
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
@@ -129,6 +131,28 @@ class Cas3PremisesController(
     }
 
     return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises))
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspace-totals")
+  fun getPremisesBedspaceTotals(@PathVariable premisesId: UUID): ResponseEntity<Cas3PremisesBedspaceTotals> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val totalBedspaceByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
+
+    val result = Cas3PremisesBedspaceTotals(
+      id = premises.id,
+      status = if (premises.status == PropertyStatus.active) Cas3PremisesStatus.online else Cas3PremisesStatus.archived,
+      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
+      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
+      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+    )
+
+    return ResponseEntity.ok(result)
   }
 
   @GetMapping("/premises/{premisesId}/bedspaces")

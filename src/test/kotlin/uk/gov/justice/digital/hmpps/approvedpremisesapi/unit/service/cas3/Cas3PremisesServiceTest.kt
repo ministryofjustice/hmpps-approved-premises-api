@@ -2587,14 +2587,5 @@ class Cas3PremisesServiceTest {
         .withStatus(PropertyStatus.archived)
         .produce()
     }
-
-    private fun mockCommonPremisesDependencies(premises: TemporaryAccommodationPremisesEntity) {
-      val probationRegion = premises.probationRegion
-      val localAuthorityArea = premises.localAuthorityArea!!
-      val probationDeliveryUnit = premises.probationDeliveryUnit!!
-      every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
-      every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
-      every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit
-    }
   }
 }
