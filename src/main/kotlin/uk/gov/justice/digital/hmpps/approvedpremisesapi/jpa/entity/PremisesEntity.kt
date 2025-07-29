@@ -174,6 +174,8 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
 
   @Query("SELECT id FROM ApprovedPremisesEntity")
   fun findAllIds(): List<UUID>
+
+  fun findByName(name: String): ApprovedPremisesEntity
 }
 
 @SuppressWarnings("LongParameterList")
