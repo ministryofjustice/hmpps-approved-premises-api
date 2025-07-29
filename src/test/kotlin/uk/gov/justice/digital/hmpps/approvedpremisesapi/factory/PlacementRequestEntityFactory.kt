@@ -27,7 +27,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var booking: Yielded<BookingEntity?> = { null }
   private var spaceBookings: Yielded<MutableList<Cas1SpaceBookingEntity>> = { mutableListOf() }
   private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
-  private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var notes: Yielded<String?> = { null }
   private var isParole: Yielded<Boolean> = { false }
   private var isWithdrawn: Yielded<Boolean> = { false }
@@ -73,14 +72,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.placementRequirements = { placementRequirements }
   }
 
-  fun withReallocatedAt(reallocatedAt: OffsetDateTime?) = apply {
-    this.reallocatedAt = { reallocatedAt }
-  }
-
-  fun withBookingNotMades(bookingNotMades: MutableList<BookingNotMadeEntity>) = apply {
-    this.bookingNotMades = { bookingNotMades }
-  }
-
   fun withNotes(notes: String?) = apply {
     this.notes = { notes }
   }
@@ -124,7 +115,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     booking = this.booking(),
     spaceBookings = this.spaceBookings(),
     bookingNotMades = this.bookingNotMades(),
-    reallocatedAt = this.reallocatedAt(),
     notes = this.notes(),
     isParole = this.isParole(),
     isWithdrawn = this.isWithdrawn(),

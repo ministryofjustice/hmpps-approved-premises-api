@@ -169,8 +169,6 @@ class WithdrawalTest : IntegrationTestBase() {
               nonArrivalConfirmedAt = null,
             )
 
-            createPlacementRequest(application, reallocatedAt = OffsetDateTime.now())
-
             createPlacementRequest(application, isWithdrawn = true)
 
             val placementApplication = createPlacementApplication(application, DateSpan(nowPlusDays(50), duration = 6))
@@ -1439,7 +1437,6 @@ class WithdrawalTest : IntegrationTestBase() {
 
   private fun createPlacementRequest(
     application: ApprovedPremisesApplicationEntity,
-    reallocatedAt: OffsetDateTime? = null,
     isWithdrawn: Boolean = false,
     placementApplication: PlacementApplicationEntity? = null,
   ) = placementRequestFactory.produceAndPersist {
@@ -1460,7 +1457,6 @@ class WithdrawalTest : IntegrationTestBase() {
     withApplication(application)
     withAssessment(assessment)
     withPlacementRequirements(placementRequirements)
-    withReallocatedAt(reallocatedAt)
     withIsWithdrawn(isWithdrawn)
     withPlacementApplication(placementApplication)
   }

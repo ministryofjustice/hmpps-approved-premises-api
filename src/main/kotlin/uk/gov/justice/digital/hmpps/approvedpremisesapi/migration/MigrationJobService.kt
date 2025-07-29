@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ArsonSuitableToArsonOffencesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillOfflineApplicationName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BookingNotMadeReallocationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1CapacityPerformanceTestJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1IsArsonSuitableBackfillJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
@@ -63,7 +62,6 @@ class MigrationJobService(
         MigrationJobType.updateCas1ArsonSuitableToArsonOffences -> getBean(Cas1ArsonSuitableToArsonOffencesJob::class)
         MigrationJobType.updateCas1BackfillArsonSuitable -> getBean(Cas1IsArsonSuitableBackfillJob::class)
         MigrationJobType.updateCas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
-        MigrationJobType.cas1BookingNotMadeReallocation -> getBean(Cas1BookingNotMadeReallocationJob::class)
         MigrationJobType.cas1UpdateRoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
         MigrationJobType.updateCas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
         MigrationJobType.updateCas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
