@@ -23,7 +23,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var cas1SpaceBookingId: Yielded<UUID?> = { null }
   private var cas3PremisesId: Yielded<UUID?> = { null }
   private var cas3BedspaceId: Yielded<UUID?> = { null }
-  private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
+  private var crn: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var type: Yielded<DomainEventType> = { DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED }
   private var occurredAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
@@ -56,12 +56,8 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.cas1SpaceBookingId = { cas1SpaceBookingId }
   }
 
-  fun withCrn(crn: String) = apply {
+  fun withCrn(crn: String?) = apply {
     this.crn = { crn }
-  }
-
-  fun withCas3PremisesId(cas3PremisesId: UUID?) = apply {
-    this.cas3PremisesId = { cas3PremisesId }
   }
 
   fun withCas3BedspaceId(cas3BedspaceId: UUID?) = apply {

@@ -69,7 +69,6 @@ class Cas3PremisesService(
     const val MAX_LENGTH_BEDSPACE_REFERENCE = 3
     const val MAX_MONTHS_ARCHIVE_BEDSPACE = 3
     const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 7
-    const val MAX_MONTHS_ARCHIVE_PREMISES = 3
     const val MAX_DAYS_UNARCHIVE_PREMISES: Long = 7
   }
 
@@ -838,6 +837,29 @@ class Cas3PremisesService(
     )
 
     cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, originalStartDate, originalEndDate)
+
+    success(updatedBedspace)
+  }
+
+  fun cancelUnarchiveBedspace(
+    bedspaceId: UUID,
+  ): CasResult<BedEntity> = validatedCasResult {
+    val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
+      ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+
+    if (bedspace.isCas3BedspaceOnline()) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyOnline"
+    }
+
+    val eventDetails = cas3DomainEventService.getLastBedspaceUnarchiveEventDetails(bedspace.id)
+      ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotScheduledToUnarchive"
+
+    val updatedBedspace = bedspaceRepository.save(
+      bedspace.copy(
+        startDate = eventDetails.currentStartDate,
+        endDate = eventDetails.currentEndDate,
+      ),
+    )
 
     success(updatedBedspace)
   }

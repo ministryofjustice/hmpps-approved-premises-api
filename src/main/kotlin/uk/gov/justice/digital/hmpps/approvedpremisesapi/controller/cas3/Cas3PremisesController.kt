@@ -51,7 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.time.ZoneOffset
 import java.util.UUID
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 @Cas3Controller
 class Cas3PremisesController(
   private val userService: UserService,
@@ -370,6 +370,26 @@ class Cas3PremisesController(
 
     return ResponseEntity.ok(
       futureBookings.map { fb -> cas3FutureBookingTransformer.transformJpaToApi(fb.booking, fb.personInfo) },
+    )
+  }
+
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-unarchive")
+  fun cancelUnarchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanManagePremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = extractEntityFromCasResult(
+      cas3PremisesService.cancelUnarchiveBedspace(bedspaceId),
+    )
+
+    return ResponseEntity.ok(
+      cas3BedspaceTransformer.transformJpaToApi(result),
     )
   }
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
@@ -16,6 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
@@ -33,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas3IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremisesWithUser
@@ -58,7 +60,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3PremisesTest : Cas3IntegrationTestBase() {
@@ -226,7 +230,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           postcode = premises.postcode,
           town = premises.town,
           notes = premises.notes,
-          probationRegionId = premises.probationRegion?.id!!,
+          probationRegionId = premises.probationRegion.id,
           probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
           localAuthorityAreaId = premises.localAuthorityArea?.id!!,
           characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
@@ -290,7 +294,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           postcode = premises.postcode,
           town = premises.town,
           notes = premises.notes,
-          probationRegionId = premises.probationRegion?.id!!,
+          probationRegionId = premises.probationRegion.id,
           probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
           localAuthorityAreaId = premises.localAuthorityArea?.id!!,
           characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
@@ -325,9 +329,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           postcode = "postcode",
           town = "town",
           notes = "notes",
-          probationRegionId = user.probationRegion?.id!!,
-          probationDeliveryUnitId = probationDeliveryUnit?.id!!,
-          localAuthorityAreaId = localAuthorityArea?.id!!,
+          probationRegionId = user.probationRegion.id,
+          probationDeliveryUnitId = probationDeliveryUnit.id,
+          localAuthorityAreaId = localAuthorityArea.id,
           characteristicIds = emptyList(),
           turnaroundWorkingDayCount = 2,
         )
@@ -557,7 +561,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Get all Premises returns OK with correct premises sorted and containing online, upcoming and archived bedspaces`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val (premises, expectedPremisesSummaries) = getListPremises(user.probationRegion)
+        val (_, expectedPremisesSummaries) = getListPremises(user.probationRegion)
 
         assertUrlReturnsPremises(
           jwt,
@@ -605,7 +609,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest()
+    @ParameterizedTest
     @EnumSource(value = Cas3PremisesSortBy::class)
     fun `Get all Premises returns OK with correct premises sorted by PDU or LA`(sortBy: Cas3PremisesSortBy) {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
@@ -1203,9 +1207,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           }.apply { room.beds.add(this) }
 
           if (bedspace.endDate!! > LocalDate.now()) {
-            expectedBedspaces.add(createCas3Bedspoace(bedspace, room, Cas3BedspaceStatus.online))
+            expectedBedspaces.add(createCas3Bedspace(bedspace, room, Cas3BedspaceStatus.online))
           } else {
-            expectedBedspaces.add(createCas3Bedspoace(bedspace, room, Cas3BedspaceStatus.archived))
+            expectedBedspaces.add(createCas3Bedspace(bedspace, room, Cas3BedspaceStatus.archived))
           }
         }
 
@@ -1218,7 +1222,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withRoom(roomWithoutEndDate)
           withStartDate(LocalDate.now().randomDateBefore(180))
         }.apply { roomWithoutEndDate.beds.add(this) }
-        expectedBedspaces.add(createCas3Bedspoace(bedspaceWithoutEndDate, roomWithoutEndDate, Cas3BedspaceStatus.online))
+        expectedBedspaces.add(createCas3Bedspace(bedspaceWithoutEndDate, roomWithoutEndDate, Cas3BedspaceStatus.online))
 
         val roomWithUpcomingBedspace = roomEntityFactory.produceAndPersist {
           withPremises(premises)
@@ -1229,7 +1233,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withRoom(roomWithUpcomingBedspace)
           withStartDate(LocalDate.now().plusDays(10))
         }.apply { roomWithUpcomingBedspace.beds.add(this) }
-        expectedBedspaces.add(createCas3Bedspoace(upcomingBedspace, roomWithUpcomingBedspace, Cas3BedspaceStatus.upcoming))
+        expectedBedspaces.add(createCas3Bedspace(upcomingBedspace, roomWithUpcomingBedspace, Cas3BedspaceStatus.upcoming))
 
         val expectedCas3Bedspaces = Cas3Bedspaces(
           bedspaces = expectedBedspaces,
@@ -1380,7 +1384,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       return response
     }
 
-    private fun createCas3Bedspoace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus) = Cas3Bedspace(
+    private fun createCas3Bedspace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus) = Cas3Bedspace(
       id = bed.id,
       reference = room.name,
       startDate = bed.startDate!!,
@@ -1448,7 +1452,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Get Bedspace by ID returns Not Found with correct body when Premises does not exist`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val (premises, bedspace) = createPremisesAndBedspace(user.probationRegion, emptyList())
+        val (_, bedspace) = createPremisesAndBedspace(user.probationRegion, emptyList())
 
         val unexistPremisesId = UUID.randomUUID().toString()
 
@@ -1469,7 +1473,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Get Bedspace by ID returns Not Found with correct body when Bedspace does not exist`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val (premises, bedspace) = createPremisesAndBedspace(user.probationRegion, emptyList())
+        val (premises, _) = createPremisesAndBedspace(user.probationRegion, emptyList())
 
         val unexistBedspaceId = UUID.randomUUID().toString()
 
@@ -1710,7 +1714,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Create new bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
 
         val newBedspace = Cas3NewBedspace(
@@ -1961,7 +1965,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `When archive a bedspace for a Premises that not exist returns 404 Not Found`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
         val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
         val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
@@ -2019,7 +2023,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `When archive a bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
         val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
         val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
@@ -2253,19 +2257,10 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Unarchive bedspace returns 403 when user does not have permission to manage premises`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        // Create premises in a different region
-        val otherRegion = probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist {
-              withDefaultCruManagementArea(givenACas1CruManagementArea())
-            }
-          }
-        }
-
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { otherRegion }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2460,7 +2455,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Unarchive premises returns 404 when premises does not exist`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val nonExistentPremisesId = UUID.randomUUID()
         val restartDate = LocalDate.now().plusDays(1)
 
@@ -2508,40 +2503,33 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Unarchive premises returns 403 when user does not have permission to manage premises`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        // Create premises in a different region
-        val otherRegion = probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist {
-              withDefaultCruManagementArea(givenACas1CruManagementArea())
-            }
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenAProbationRegion { otherRegion ->
+          val pdu = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(otherRegion)
           }
+
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { otherRegion }
+            withProbationDeliveryUnit(pdu)
+            withStartDate(LocalDate.now().minusDays(30))
+            withEndDate(LocalDate.now().minusDays(1))
+            withStatus(PropertyStatus.archived)
+          }
+
+          val restartDate = LocalDate.now().plusDays(1)
+
+          webTestClient.post()
+            .uri("/cas3/premises/${premises.id}/unarchive")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              mapOf("restartDate" to restartDate.toString()),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
         }
-
-        val pdu = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(otherRegion)
-        }
-
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { otherRegion }
-          withProbationDeliveryUnit(pdu)
-          withStartDate(LocalDate.now().minusDays(30))
-          withEndDate(LocalDate.now().minusDays(1))
-          withStatus(PropertyStatus.archived)
-        }
-
-        val restartDate = LocalDate.now().plusDays(1)
-
-        webTestClient.post()
-          .uri("/cas3/premises/${premises.id}/unarchive")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            mapOf("restartDate" to restartDate.toString()),
-          )
-          .exchange()
-          .expectStatus()
-          .isForbidden
       }
     }
   }
@@ -2695,20 +2683,24 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
-    fun `Cancel archive bedspace returns 403 when user does not have permission to manage premises in that region`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        // Create premises in a different region
-        val otherRegion = probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist {
-              withDefaultCruManagementArea(givenACas1CruManagementArea())
-            }
-          }
-        }
+    fun `Cancel archive bedspace returns 404 when the premises is not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
 
+        webTestClient.put()
+          .uri("/cas3/premises/${UUID.randomUUID()}/bedspaces/${UUID.randomUUID()}/cancel-archive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Cancel archive bedspace returns 403 when user does not have permission to manage premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { otherRegion }
+          withYieldedProbationRegion { givenAProbationRegion() }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2729,6 +2721,181 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isForbidden
       }
     }
+
+    @Nested
+    inner class CancelUnarchiveBedspace {
+      @Test
+      fun `Cancel unarchive bedspace returns 200 OK when successful`() {
+        givenATemporaryAccommodationPremisesWithUser(
+          roles = listOf(UserRole.CAS3_ASSESSOR),
+        ) { userEntity, jwt, premises ->
+          val originalStartDate = LocalDate.now().minusDays(10)
+          val newStartDate = LocalDate.now().plusDays(10)
+
+          val room = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val scheduledToUnarchivedBedspace = bedEntityFactory.produceAndPersist {
+            withRoom(room)
+            withStartDate(newStartDate)
+            withEndDate(null)
+          }
+
+          val eventId = UUID.randomUUID()
+
+          val envelopedData = CAS3BedspaceUnarchiveEvent(
+            id = eventId,
+            timestamp = Instant.now(),
+            eventType = EventType.bedspaceUnarchived,
+            eventDetails = CAS3BedspaceUnarchiveEventDetails(
+              bedspaceId = scheduledToUnarchivedBedspace.id,
+              userId = userEntity.id,
+              currentStartDate = originalStartDate,
+              currentEndDate = originalStartDate.plusDays(2),
+              newStartDate = newStartDate,
+            ),
+          )
+
+          domainEventFactory.produceAndPersist {
+            withId(eventId)
+            withCreatedAt(OffsetDateTime.now())
+            withCas3BedspaceId(scheduledToUnarchivedBedspace.id)
+            withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+            withData(objectMapper.writeValueAsString(envelopedData))
+          }
+
+          val envelopedDataFirst = CAS3BedspaceUnarchiveEvent(
+            id = eventId,
+            timestamp = Instant.now(),
+            eventType = EventType.bedspaceUnarchived,
+            eventDetails = CAS3BedspaceUnarchiveEventDetails(
+              bedspaceId = scheduledToUnarchivedBedspace.id,
+              userId = userEntity.id,
+              currentStartDate = originalStartDate.minusDays(20),
+              currentEndDate = originalStartDate.plusDays(2),
+              newStartDate = newStartDate,
+            ),
+          )
+
+          domainEventFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withCreatedAt(OffsetDateTime.now().minusDays(10))
+            withCas3BedspaceId(scheduledToUnarchivedBedspace.id)
+            withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+            withData(objectMapper.writeValueAsString(envelopedDataFirst))
+          }
+
+          webTestClient.put()
+            .uri("/cas3/premises/${premises.id}/bedspaces/${scheduledToUnarchivedBedspace.id}/cancel-unarchive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("id").isEqualTo(scheduledToUnarchivedBedspace.id)
+            .jsonPath("startDate").isEqualTo(originalStartDate)
+            .jsonPath("endDate").isEqualTo(originalStartDate.plusDays(2))
+
+          // Verify the bedspace was updated
+          val updatedBedspace = bedRepository.findById(scheduledToUnarchivedBedspace.id).get()
+          assertThat(updatedBedspace.startDate).isEqualTo(originalStartDate)
+        }
+      }
+
+      @Test
+      fun `Cancel unarchive bedspace returns 400 when it has a field validation error (startDate is today)`() {
+        givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt, premises ->
+          val startDate = LocalDate.now()
+
+          val room = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val scheduledToUnarchivedBedspace = bedEntityFactory.produceAndPersist {
+            withRoom(room)
+            withStartDate(startDate)
+            withEndDate(null)
+          }
+
+          webTestClient.put()
+            .uri("/cas3/premises/${premises.id}/bedspaces/${scheduledToUnarchivedBedspace.id}/cancel-unarchive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("Bad Request")
+            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+            .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceAlreadyOnline")
+
+          // Verify the bedspace was not updated
+          val originalBedspace = bedRepository.findById(scheduledToUnarchivedBedspace.id).get()
+          assertThat(originalBedspace.startDate).isEqualTo(startDate)
+        }
+      }
+
+      @Test
+      fun `Cancel unarchive bedspace returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
+        givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt, premises ->
+          val room = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val scheduledToUnarchivedBedspace = bedEntityFactory.produceAndPersist {
+            withRoom(room)
+            withStartDate(LocalDate.now().minusDays(30))
+            withEndDate(null)
+          }
+
+          webTestClient.put()
+            .uri("/cas3/premises/${premises.id}/bedspaces/${scheduledToUnarchivedBedspace.id}/cancel-unarchive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+
+      @Test
+      fun `Cancel unarchive bedspace returns 404 when the bedspace is not found`() {
+        givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
+          webTestClient.put()
+            .uri("/cas3/premises/${UUID.randomUUID()}/bedspaces/${UUID.randomUUID()}/cancel-unarchive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isNotFound
+        }
+      }
+
+      @Test
+      fun `Cancel unarchive bedspace returns 403 when user does not have permission to manage premises in that region`() {
+        givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { givenAProbationRegion() }
+          }
+          val room = roomEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val scheduledToUnarchivedBedspace = bedEntityFactory.produceAndPersist {
+            withRoom(room)
+            withStartDate(LocalDate.now().minusDays(30))
+            withEndDate(null)
+          }
+
+          webTestClient.put()
+            .uri("/cas3/premises/${premises.id}/bedspaces/${scheduledToUnarchivedBedspace.id}/cancel-unarchive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
   }
 
   @Nested
@@ -2739,7 +2906,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         roles = listOf(UserRole.CAS3_ASSESSOR),
         archiveDate = LocalDate.now().plusDays(10),
         premisesStatus = PropertyStatus.archived,
-      ) { userEntity, jwt, premises ->
+      ) { _, jwt, premises ->
         givenATemporaryAccommodationRooms(premises = premises)
 
         webTestClient.put()
@@ -2763,7 +2930,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Cancel archive premises returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_REFERRER),
-      ) { userEntity, jwt, premises ->
+      ) { _, jwt, premises ->
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
           .header("Authorization", "Bearer $jwt")
@@ -2775,7 +2942,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Cancel archive premises returns 404 when premises does not exist`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val nonExistentPremises = UUID.randomUUID().toString()
 
         webTestClient.put()
@@ -2795,7 +2962,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Cancel scheduled archive premises returns 400 (premisesNotScheduledToArchive) when premise is not archived`() {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
-      ) { userEntity, jwt, premises ->
+      ) { _, jwt, premises ->
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
           .header("Authorization", "Bearer $jwt")
@@ -2815,7 +2982,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         roles = listOf(UserRole.CAS3_ASSESSOR),
         premisesEndDate = LocalDate.now(),
         premisesStatus = PropertyStatus.archived,
-      ) { userEntity, jwt, premises ->
+      ) { _, jwt, premises ->
         givenATemporaryAccommodationRooms(premises = premises)
 
         webTestClient.put()
@@ -2836,7 +3003,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
         premisesEndDate = LocalDate.now().minusDays(1),
-      ) { userEntity, jwt, premises ->
+      ) { _, jwt, premises ->
         givenATemporaryAccommodationRooms(premises = premises)
 
         webTestClient.put()
@@ -2854,17 +3021,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
     @Test
     fun `Cancel scheduled archive premises returns 403 when user does not have permission to manage premises in that region`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        // Create premises in a different region
-        val otherRegion = probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist {
-              withDefaultCruManagementArea(givenACas1CruManagementArea())
-            }
-          }
-        }
-
-        givenATemporaryAccommodationPremises(region = otherRegion) { premises ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenATemporaryAccommodationPremises(region = givenAProbationRegion()) { premises ->
           webTestClient.put()
             .uri("/cas3/premises/${premises.id}/cancel-archive")
             .header("Authorization", "Bearer $jwt")

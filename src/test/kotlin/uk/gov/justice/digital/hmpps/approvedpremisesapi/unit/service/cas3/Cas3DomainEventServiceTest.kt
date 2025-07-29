@@ -129,6 +129,47 @@ class Cas3DomainEventServiceTest {
   }
 
   @Test
+  fun `getLastBedspaceUnarchiveEventDetails returns null when event does not exist`() {
+    val id = UUID.randomUUID()
+
+    every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(id, DomainEventType.CAS3_BEDSPACE_UNARCHIVED) } returns null
+
+    assertThat(cas3DomainEventService.getLastBedspaceUnarchiveEventDetails(id)).isNull()
+  }
+
+  @Test
+  fun `getLastBedspaceUnarchiveEventDetails returns original start date and end date`() {
+    val id = UUID.randomUUID()
+    val bedspaceId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    val newStartDate = LocalDate.now().plusDays(1)
+    val currentStartDate = LocalDate.now().minusDays(2)
+    val currentEndDate = LocalDate.now().minusDays(1)
+
+    val data = CAS3BedspaceUnarchiveEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bedspaceUnarchived,
+      eventDetails = CAS3BedspaceUnarchiveEventDetails(bedspaceId, user.id, currentStartDate, currentEndDate, newStartDate),
+    )
+
+    every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceId, DomainEventType.CAS3_BEDSPACE_UNARCHIVED) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(null)
+      .withCrn(null)
+      .withCas3BedspaceId(bedspaceId)
+      .withNomsNumber(null)
+      .withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val eventDetails = cas3DomainEventService.getLastBedspaceUnarchiveEventDetails(bedspaceId)
+    assertThat(eventDetails?.currentStartDate).isEqualTo(currentStartDate)
+    assertThat(eventDetails?.currentEndDate).isEqualTo(currentEndDate)
+  }
+
+  @Test
   fun `getBookingCancelledEvent returns event`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
