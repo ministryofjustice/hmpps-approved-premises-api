@@ -51,7 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.time.ZoneOffset
 import java.util.UUID
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 @Cas3Controller
 class Cas3PremisesController(
   private val userService: UserService,
