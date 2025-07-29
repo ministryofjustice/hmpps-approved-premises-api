@@ -35,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledUpdatedEvent
@@ -2106,6 +2108,81 @@ class Cas3DomainEventServiceTest {
             it.assessmentId == null &&
             it.service == "CAS3"
           it.bookingId == null &&
+            it.nomsNumber == null &&
+            it.occurredAt.toInstant() == domainEvent.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `savePremisesUnarchiveEvent saves event but does not emit it`() {
+    val occurredAt = Instant.now()
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val newStartDate = LocalDate.now().plusDays(5)
+    val id = UUID.randomUUID()
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      ).produce()
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
+      .produce()
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+    val eventDetails = CAS3PremisesUnarchiveEventDetails(
+      premisesId = premises.id,
+      userId = user.id,
+      currentStartDate = currentStartDate,
+      newStartDate = newStartDate,
+    )
+    val data = CAS3PremisesUnarchiveEvent(
+      eventDetails = eventDetails,
+      id = id,
+      timestamp = occurredAt,
+      eventType = EventType.premisesUnarchived,
+    )
+    val domainEventId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(eq(premises), eq(currentStartDate), eq(newStartDate), eq(user)) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+    every { userService.getUserForRequest() } returns user
+    every { userService.getUserForRequestOrNull() } returns user
+
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, newStartDate)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEvent.id &&
+            it.type == DomainEventType.CAS3_PREMISES_UNARCHIVED &&
+            it.crn == domainEvent.crn &&
+            it.cas3PremisesId == premises.id &&
+            it.cas3BedspaceId == null &&
+            it.applicationId == null &&
+            it.cas1SpaceBookingId == null &&
+            it.assessmentId == null &&
+            it.service == "CAS3" &&
+            it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEvent.data) &&

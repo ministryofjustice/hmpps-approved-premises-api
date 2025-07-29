@@ -637,14 +637,7 @@ class Cas3DomainEventBuilderTest {
     val currentStartDate = LocalDate.now().minusDays(20)
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
-    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
-      .withProbationRegion(probationRegion).produce()
-    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withLocalAuthorityArea(localAuthorityArea)
-      .withProbationDeliveryUnit(probationDeliveryUnit)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
     val user = userEntity(probationRegion)
     val room = RoomEntityFactory().withPremises(premises).produce()
     val bedspace = BedEntityFactory()
@@ -656,16 +649,44 @@ class Cas3DomainEventBuilderTest {
 
     val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
 
-    assertThat(event.applicationId).isNull()
-    assertThat(event.bookingId).isNull()
-    assertThat(event.crn).isNull()
-    assertThat(event.nomsNumber).isNull()
-    assertThat(event.data.eventType).isEqualTo(EventType.bedspaceUnarchived)
-    assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
-    assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
-    assertThat(event.data.eventDetails.currentEndDate).isEqualTo(currentEndDate)
-    assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
-    assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
+    assertAll({
+      assertThat(event.applicationId).isNull()
+      assertThat(event.bookingId).isNull()
+      assertThat(event.crn).isNull()
+      assertThat(event.nomsNumber).isNull()
+      assertThat(event.data.eventType).isEqualTo(EventType.bedspaceUnarchived)
+      assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
+      assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+      assertThat(event.data.eventDetails.currentEndDate).isEqualTo(currentEndDate)
+      assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
+      assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
+    })
+  }
+
+  @Test
+  fun `getPremisesUnarchiveEvent transforms the premises information correctly to a domain event`() {
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val newStartDate = LocalDate.now().plusDays(5)
+    val probationRegion = probationRegionEntity()
+    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
+    val user = userEntity(probationRegion)
+
+    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, user)
+
+    assertAll({
+      assertThat(event.applicationId).isNull()
+      assertThat(event.bookingId).isNull()
+      assertThat(event.crn).isNull()
+      assertThat(event.nomsNumber).isNull()
+      assertThat(event.data.eventType).isEqualTo(EventType.premisesUnarchived)
+      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+      assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
+      assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
+      assertThat(event.occurredAt).isWithinTheLastMinute()
+      assertThat(event.data.timestamp).isWithinTheLastMinute()
+      assertThat(event.id).isEqualTo(event.data.id)
+    })
   }
 
   @Test
@@ -674,14 +695,7 @@ class Cas3DomainEventBuilderTest {
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
     val user = userEntity(probationRegion)
-    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
-      .withProbationRegion(probationRegion).produce()
-    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withLocalAuthorityArea(localAuthorityArea)
-      .withProbationDeliveryUnit(probationDeliveryUnit)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
     val room = RoomEntityFactory()
       .withPremises(premises)
       .produce()
@@ -693,15 +707,19 @@ class Cas3DomainEventBuilderTest {
 
     val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
 
-    assertThat(event.applicationId).isNull()
-    assertThat(event.bookingId).isNull()
-    assertThat(event.crn).isNull()
-    assertThat(event.nomsNumber).isNull()
-    assertThat(event.data.eventType).isEqualTo(EventType.bedspaceArchived)
-    assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
-    assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
-    assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
-    assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+    assertAll(
+      {
+        assertThat(event.applicationId).isNull()
+        assertThat(event.bookingId).isNull()
+        assertThat(event.crn).isNull()
+        assertThat(event.nomsNumber).isNull()
+        assertThat(event.data.eventType).isEqualTo(EventType.bedspaceArchived)
+        assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
+        assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+        assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+        assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+      },
+    )
   }
 
   @Test
@@ -709,14 +727,7 @@ class Cas3DomainEventBuilderTest {
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
     val user = userEntity(probationRegion)
-    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
-      .withProbationRegion(probationRegion).produce()
-    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withLocalAuthorityArea(localAuthorityArea)
-      .withProbationDeliveryUnit(probationDeliveryUnit)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
     val room = RoomEntityFactory()
       .withPremises(premises)
       .produce()
@@ -871,6 +882,17 @@ class Cas3DomainEventBuilderTest {
     )
     .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
     .produce()
+
+  private fun createCas3PremisesEntityWithDependencies(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity {
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    return TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
+      .produce()
+  }
 
   private fun probationRegionEntity() = ProbationRegionEntityFactory()
     .withApArea(

@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
@@ -37,8 +39,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
@@ -285,6 +289,30 @@ class Cas3DomainEventBuilder(
     )
   }
 
+  fun getPremisesUnarchiveEvent(
+    premises: TemporaryAccommodationPremisesEntity,
+    currentStartDate: LocalDate,
+    newStartDate: LocalDate,
+    user: UserEntity,
+  ): DomainEvent<CAS3PremisesUnarchiveEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3PremisesUnarchiveEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.premisesUnarchived,
+        eventDetails = buildCAS3PremisesUnarchiveEventDetails(premises, currentStartDate, newStartDate, user),
+      ),
+    )
+  }
+
   fun getBedspaceUnarchiveEvent(
     bedspace: BedEntity,
     currentStartDate: LocalDate,
@@ -505,6 +533,18 @@ class Cas3DomainEventBuilder(
     applicationUrl = application.toUrl(),
     reasonDetail = null,
     recordedBy = user?.let { populateStaffMember(it) },
+  )
+
+  private fun buildCAS3PremisesUnarchiveEventDetails(
+    premises: PremisesEntity,
+    currentStartDate: LocalDate,
+    newStartDate: LocalDate,
+    user: UserEntity,
+  ) = CAS3PremisesUnarchiveEventDetails(
+    premisesId = premises.id,
+    userId = user.id,
+    currentStartDate = currentStartDate,
+    newStartDate = newStartDate,
   )
 
   private fun buildCAS3BedspaceArchiveEventDetails(
