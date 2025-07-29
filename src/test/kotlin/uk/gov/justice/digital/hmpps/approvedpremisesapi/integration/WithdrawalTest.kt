@@ -1457,7 +1457,6 @@ class WithdrawalTest : IntegrationTestBase() {
       )
     }
 
-    withAllocatedToUser(application.createdByUser)
     withApplication(application)
     withAssessment(assessment)
     withPlacementRequirements(placementRequirements)

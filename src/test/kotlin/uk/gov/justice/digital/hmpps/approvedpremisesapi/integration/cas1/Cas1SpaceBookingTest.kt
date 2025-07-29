@@ -98,7 +98,6 @@ class Cas1SpaceBookingTest {
     fun `Booking a space without JWT returns 401`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, _ ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
@@ -165,7 +164,6 @@ class Cas1SpaceBookingTest {
     fun `Booking a space for an unknown premises returns 400 Bad Request`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
@@ -194,7 +192,6 @@ class Cas1SpaceBookingTest {
     fun `Booking a space where the departure date is before the arrival date returns 400 Bad Request`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
         ) { placementRequest, _ ->
@@ -225,7 +222,6 @@ class Cas1SpaceBookingTest {
     fun `Booking a space returns OK with the correct data, updates app status, emits domain event and emails`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { applicant, jwt ->
         givenAPlacementRequest(
-          placementRequestAllocatedTo = applicant,
           assessmentAllocatedTo = applicant,
           createdByUser = applicant,
           caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
@@ -915,7 +911,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1063,7 +1058,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1185,7 +1179,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1226,7 +1219,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1272,7 +1264,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1391,7 +1382,6 @@ class Cas1SpaceBookingTest {
       )
       val placementApplication = givenAPlacementApplication(application = application)
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         application = application,
         placementApplication = placementApplication,
@@ -1451,7 +1441,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1593,7 +1582,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1634,7 +1622,6 @@ class Cas1SpaceBookingTest {
 
       val (user) = givenAUser()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1681,7 +1668,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1747,7 +1733,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1834,7 +1819,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1877,7 +1861,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1927,7 +1910,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -1974,7 +1956,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -2022,7 +2003,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
       val (offender) = givenAnOffender()
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -2105,7 +2085,6 @@ class Cas1SpaceBookingTest {
 
       val (placementRequest) = givenAPlacementRequest(
         application = application,
-        placementRequestAllocatedTo = applicant,
         assessmentAllocatedTo = applicant,
         createdByUser = applicant,
         placementApplication = placementApplication,
@@ -2263,7 +2242,6 @@ class Cas1SpaceBookingTest {
       givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
 
         val (placementRequest) = givenAPlacementRequest(
-          placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = applicant,
         )
@@ -2359,7 +2337,6 @@ class Cas1SpaceBookingTest {
       }
 
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
         application = application,
@@ -2433,7 +2410,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
 
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -2521,7 +2497,6 @@ class Cas1SpaceBookingTest {
       val (user) = givenAUser()
 
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
       )
@@ -2713,7 +2688,6 @@ class Cas1SpaceBookingTest {
       }
 
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
         application = application,
@@ -2837,7 +2811,6 @@ class Cas1SpaceBookingTest {
       }
 
       val (placementRequest) = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
         application = application,
@@ -2988,7 +2961,6 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
       withCurrentRestriction(isRestricted)
     })
     val (placementRequest) = givenAPlacementRequest(
-      placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,
       crn = offender.otherIds.crn,

@@ -1277,7 +1277,6 @@ class Cas1TasksTest {
               )
 
               val (placementRequest1, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
@@ -1288,7 +1287,6 @@ class Cas1TasksTest {
               )
 
               val (placementRequest2, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
@@ -1301,7 +1299,6 @@ class Cas1TasksTest {
 
               val offenderSummaries = getOffenderSummaries(offenderDetails)
               val (placementRequest3, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,

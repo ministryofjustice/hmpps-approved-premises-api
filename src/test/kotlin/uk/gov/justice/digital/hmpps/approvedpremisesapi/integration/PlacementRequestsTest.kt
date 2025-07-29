@@ -117,7 +117,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unmatchedOffender.otherIds.crn,
@@ -155,7 +154,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, _ ->
           val (unmatchedPlacementRequest) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unmatchedOffender.otherIds.crn,
@@ -186,7 +184,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
           // withdrawn placement request with booking, ignored
           givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
@@ -196,7 +193,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           }
 
           val (placementRequestWithBooking) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
@@ -205,7 +201,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           }
 
           val (placementRequestPreviouslyUnableToMatchNowHasBooking) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
@@ -216,7 +211,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
           // withdrawn placement request with space booking, ignored
           givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
@@ -229,7 +223,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           }
 
           val (placementRequestWithSpaceBooking) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
@@ -241,7 +234,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           }
 
           val (placementRequestPreviouslyUnableToMatchNowHasSpaceBooking) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
@@ -278,7 +270,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
           // withdrawn, ignore
           givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unableToMatchOffender.otherIds.crn,
@@ -288,7 +279,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           }
 
           val (unableToMatchPlacementRequest) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unableToMatchOffender.otherIds.crn,
@@ -298,7 +288,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
           // previously unable to match, now has booking, ignored
           givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unableToMatchOffender.otherIds.crn,
@@ -308,7 +297,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           }
 
           val (hasCancelledBookingPlacementRequest) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unableToMatchOffender.otherIds.crn,
@@ -324,7 +312,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
           // previously unable to match, now has space booking, ignored
           givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unableToMatchOffender.otherIds.crn,
@@ -337,7 +324,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           }
 
           val (hasCancelledSpaceBookingPlacementRequest) = givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unableToMatchOffender.otherIds.crn,
@@ -1077,11 +1063,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
 
       return placementRequestFactory.produceAndPersist {
-        withAllocatedToUser(
-          userEntityFactory.produceAndPersist {
-            withProbationRegion(probationRegion)
-          },
-        )
         withApplication(application)
         withAssessment(assessment)
         withPlacementRequirements(placementRequirements)
@@ -1115,7 +1096,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1152,7 +1132,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
             },
           ) { offenderDetails, _ ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1179,7 +1158,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
             },
           ) { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1225,7 +1203,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
             },
           ) { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1258,7 +1235,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1333,7 +1309,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {
               givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
@@ -1386,7 +1361,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = user) {
               givenAPlacementRequest(
-                placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = user,
                 createdByUser = creator,
                 crn = offenderDetails.otherIds.crn,
@@ -1415,7 +1389,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = offenderDetails.otherIds.crn,

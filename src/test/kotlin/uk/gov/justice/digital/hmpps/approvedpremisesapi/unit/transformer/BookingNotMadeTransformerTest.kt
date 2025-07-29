@@ -16,10 +16,6 @@ class BookingNotMadeTransformerTest {
 
   @Test
   fun `transformJpaToApi transforms correctly`() {
-    val requestingUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
     val otherUser = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
@@ -40,7 +36,6 @@ class BookingNotMadeTransformerTest {
           .withAssessment(assessment)
           .produce(),
       )
-      .withAllocatedToUser(requestingUser)
       .withApplication(application)
       .withAssessment(assessment)
       .produce()

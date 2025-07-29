@@ -71,7 +71,6 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
     }
 
     val placementRequest = placementRequestFactory.produceAndPersist {
-      withAllocatedToUser(user)
       withApplication(application)
       withAssessment(assessment)
       withPlacementRequirements(placementRequirements)

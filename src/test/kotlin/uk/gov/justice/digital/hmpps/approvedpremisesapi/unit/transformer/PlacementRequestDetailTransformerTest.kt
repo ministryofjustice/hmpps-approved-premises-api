@@ -376,7 +376,6 @@ class PlacementRequestDetailTransformerTest {
     val placementRequestEntity = PlacementRequestEntityFactory()
       .withApplication(application)
       .withAssessment(assessment)
-      .withAllocatedToUser(user)
       .withPlacementRequirements(placementRequirementsEntity)
       .produce()
 

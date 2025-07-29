@@ -1053,7 +1053,6 @@ class Cas1AssessmentServiceTest {
         )
         .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
         .withAssessment(assessment)
-        .withAllocatedToUser(user)
         .produce()
 
       every {

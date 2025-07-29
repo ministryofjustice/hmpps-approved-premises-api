@@ -37,7 +37,6 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
     givenAPlacementRequest(
-      placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
       createdByUser = user,
       application = application,
