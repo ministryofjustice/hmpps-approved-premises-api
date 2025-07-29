@@ -27,46 +27,6 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
   lateinit var realPlacementRequestRepository: PlacementRequestRepository
 
   @Nested
-  inner class FindAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse {
-    private lateinit var nonParolePlacementRequests: List<PlacementRequestEntity>
-    private lateinit var parolePlacementRequests: List<PlacementRequestEntity>
-
-    @BeforeEach
-    fun setup() {
-      nonParolePlacementRequests = createPlacementRequests(4, isWithdrawn = false, isReallocated = false, isParole = false)
-      parolePlacementRequests = createPlacementRequests(4, isWithdrawn = false, isReallocated = false, isParole = true)
-
-      createPlacementRequests(1, isWithdrawn = false, isReallocated = true, isParole = true)
-      createPlacementRequests(1, isWithdrawn = false, isReallocated = true, isParole = false)
-
-      createPlacementRequests(1, isWithdrawn = true, isReallocated = false, isParole = true)
-      createPlacementRequests(1, isWithdrawn = true, isReallocated = false, isParole = false)
-
-      createPlacementRequests(1, isWithdrawn = true, isReallocated = true, isParole = true)
-      createPlacementRequests(1, isWithdrawn = true, isReallocated = true, isParole = false)
-    }
-
-    @Test
-    fun `findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse returns all results when no page is provided`() {
-      val nonParoleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, null)
-      val paroleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(true, null)
-
-      assertThat(nonParoleResults.content.map { it.id }).isEqualTo(nonParolePlacementRequests.map { it.id })
-      assertThat(paroleResults.content.map { it.id }).isEqualTo(parolePlacementRequests.map { it.id })
-    }
-
-    @Test
-    fun `findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse returns paginated results when a page is provided`() {
-      val pageable = PageRequest.of(1, 2, Sort.by("createdAt"))
-      val nonParoleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageable)
-      val paroleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(true, pageable)
-
-      assertThat(nonParoleResults.content.map { it.id }).isEqualTo(listOf(nonParolePlacementRequests[2], nonParolePlacementRequests[3]).map { it.id })
-      assertThat(paroleResults.content.map { it.id }).isEqualTo(listOf(parolePlacementRequests[2], parolePlacementRequests[3]).map { it.id })
-    }
-  }
-
-  @Nested
   inner class AllForDashboard {
     private lateinit var placementRequestsWithBooking: List<PlacementRequestEntity>
     private lateinit var placementRequestsWithSpaceBooking: List<PlacementRequestEntity>
