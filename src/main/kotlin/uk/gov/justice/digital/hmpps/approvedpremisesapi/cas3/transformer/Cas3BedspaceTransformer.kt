@@ -2,8 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 
@@ -12,7 +13,7 @@ class Cas3BedspaceTransformer(
   private val characteristicTransformer: CharacteristicTransformer,
   private val cas3BedspaceCharacteristicTransformer: Cas3BedspaceCharacteristicTransformer,
 ) {
-  fun transformJpaToApi(bed: BedEntity) = Cas3Bedspace(
+  fun transformJpaToApi(bed: BedEntity, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
     id = bed.id,
     reference = bed.room.name,
     startDate = bed.startDate!!,
@@ -20,9 +21,10 @@ class Cas3BedspaceTransformer(
     status = bed.getCas3BedspaceStatus(),
     notes = bed.room.notes,
     characteristics = bed.room.characteristics.map(characteristicTransformer::transformJpaToApi),
+    archiveHistory = archiveHistory,
   )
 
-  fun transformJpaToApi(jpa: Cas3BedspacesEntity) = Cas3Bedspace(
+  fun transformJpaToApi(jpa: Cas3BedspacesEntity, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
     id = jpa.id,
     reference = jpa.reference,
     startDate = jpa.startDate!!,
@@ -30,5 +32,6 @@ class Cas3BedspaceTransformer(
     notes = jpa.notes,
     status = Cas3BedspaceStatus.online, // sets online as default for now - will change when we get there
     bedspaceCharacteristics = jpa.characteristics.map(cas3BedspaceCharacteristicTransformer::transformJpaToApi),
+    archiveHistory = archiveHistory,
   )
 }

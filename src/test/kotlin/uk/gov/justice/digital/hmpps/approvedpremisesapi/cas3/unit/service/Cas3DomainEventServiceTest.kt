@@ -83,6 +83,7 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
@@ -128,6 +129,100 @@ class Cas3DomainEventServiceTest {
     every { mockDomainEventUrlConfig.getUrlForDomainEventId(any(), any()) } returns detailUrl
     every { userService.getUserForRequestOrNull() } returns user
   }
+
+  @Test
+  fun `getBedspaceDomainEvents returns list of bedspace archive events`() {
+    val bedspaceId = UUID.randomUUID()
+    val premisesId = UUID.randomUUID()
+    val userId = UUID.randomUUID()
+
+    // Archive event scheduled for today
+    val endDateToday = LocalDate.now()
+    val dataToday = createCAS3BedspaceArchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, endDate = endDateToday)
+    val domainEventEntityToday = createArchiveDomainEvent(dataToday)
+
+    // Unarchive event scheduled for yesterday
+    val newStartDateYesterday = LocalDate.now().minusDays(1)
+    val dataYesterday = createCAS3BedspaceUnarchiveEvent(bedspaceId = bedspaceId, userId = userId, newStartDate = newStartDateYesterday)
+    val domainEventEntityYesterday = createUnarchiveDomainEvent(dataYesterday)
+
+    // Archive event scheduled for tomorrow
+    val endDateTomorrow = LocalDate.now().plusDays(1)
+    val dataTomorrow = createCAS3BedspaceArchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, endDate = endDateTomorrow)
+    val domainEventEntityTomorrow = createArchiveDomainEvent(dataTomorrow)
+
+    every { domainEventRepositoryMock.findBedspaceDomainEventsByType(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED.toString(), DomainEventType.CAS3_BEDSPACE_UNARCHIVED.toString())) } returns listOf(
+      domainEventEntityYesterday,
+      domainEventEntityToday,
+      domainEventEntityTomorrow,
+    )
+
+    val event = cas3DomainEventService.getBedspaceDomainEvents(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED))
+    assertThat(event).isEqualTo(
+      listOf(
+        domainEventEntityYesterday,
+        domainEventEntityToday,
+        domainEventEntityTomorrow,
+      ),
+    )
+  }
+
+  private fun createArchiveDomainEvent(data: CAS3BedspaceArchiveEvent) = createDomainEvent(
+    data.id,
+    data.eventDetails.bedspaceId,
+    data.timestamp.atOffset(ZoneOffset.UTC),
+    objectMapper.writeValueAsString(data),
+    DomainEventType.CAS3_BEDSPACE_ARCHIVED,
+  )
+
+  private fun createCAS3BedspaceArchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, endDate: LocalDate): CAS3BedspaceArchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3BedspaceArchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bedspaceArchived,
+      eventDetails = CAS3BedspaceArchiveEventDetails(
+        bedspaceId = bedspaceId,
+        userId = userId,
+        premisesId = premisesId,
+        endDate = endDate,
+      ),
+    )
+  }
+
+  private fun createUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
+    data.id,
+    data.eventDetails.bedspaceId,
+    data.timestamp.atOffset(ZoneOffset.UTC),
+    objectMapper.writeValueAsString(data),
+    DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
+  )
+
+  private fun createCAS3BedspaceUnarchiveEvent(bedspaceId: UUID, userId: UUID, newStartDate: LocalDate): CAS3BedspaceUnarchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3BedspaceUnarchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bedspaceUnarchived,
+      eventDetails = CAS3BedspaceUnarchiveEventDetails(
+        bedspaceId = bedspaceId,
+        userId = userId,
+        currentStartDate = LocalDate.now(),
+        currentEndDate = LocalDate.now(),
+        newStartDate = newStartDate,
+      ),
+    )
+  }
+
+  private fun createDomainEvent(id: UUID, bedspaceId: UUID, occurredAt: OffsetDateTime, data: String, type: DomainEventType) = DomainEventEntityFactory()
+    .withId(id)
+    .withCas3BedspaceId(bedspaceId)
+    .withType(type)
+    .withData(data)
+    .withOccurredAt(occurredAt)
+    .produce()
 
   @Test
   fun `getBookingCancelledEvent returns null when event does not exist`() {
