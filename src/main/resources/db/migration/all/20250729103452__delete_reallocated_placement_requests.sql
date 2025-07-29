@@ -1,0 +1,1 @@
+DELETE from placement_requests where reallocated_at is not null;
