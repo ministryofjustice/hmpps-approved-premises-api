@@ -88,7 +88,7 @@ class Cas1TasksController(
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
-    if (!user.hasPermission(UserPermission.CAS1_TASKS_LIST)) {
+    if (!user.hasPermission(UserPermission.CAS1_TASKS_LIST) || !user.hasPermission(UserPermission.CAS1_VIEW_MANAGE_TASKS)) {
       throw ForbiddenProblem()
     }
 
