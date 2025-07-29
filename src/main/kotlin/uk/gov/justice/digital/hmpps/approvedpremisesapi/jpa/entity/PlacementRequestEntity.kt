@@ -51,8 +51,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       left join ap_areas area on area.id = apa.ap_area_id
       left join applications application on application.id = pq.application_id
     where
-      pq.reallocated_at IS NULL 
-      AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
+      (:status IS NULL OR pq.is_withdrawn IS FALSE)
       AND (:status IS NULL OR (
         CASE
           WHEN EXISTS (
@@ -123,9 +122,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     pageable: Pageable? = null,
   ): Page<PlacementRequestEntity>
 
-  @Query("SELECT p from PlacementRequestEntity p WHERE p.reallocatedAt IS NOT NULL AND p.bookingNotMades IS NOT EMPTY")
-  fun reallocatedAtWithBookingNotMade(): List<PlacementRequestEntity>
-
   @Query(
     """
     WITH UNFILTERED AS (
@@ -137,7 +133,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS personTier,
       pq.application_id AS applicationId,
       apa.name as personName,
-      pq.reallocated_at as reallocatedAt,
       pq.is_withdrawn as isWithdrawn,
       pq.booking_id as bookingId,
       pq.is_parole as isParole,
@@ -182,8 +177,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       CASE WHEN hasLegacyBooking THEN 'matched' WHEN hasSpaceBooking THEN 'matched' WHEN hasBookingNotMade THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
       FROM UNFILTERED
       WHERE
-      reallocatedAt IS NULL
-      AND (:tier IS NULL OR personTier = :tier)
+      (:tier IS NULL OR personTier = :tier)
       AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR requestedPlacementArrivalDate >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS DATE) IS NULL OR requestedPlacementArrivalDate <= :arrivalDateTo)
       AND (:requestType IS NULL OR requestType = :requestType)
@@ -253,17 +247,6 @@ data class PlacementRequestEntity(
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var bookingNotMades: MutableList<BookingNotMadeEntity>,
 
-  @Deprecated(
-    """
-    Placement requests are no longer allocated to users
-    
-    Note that because placement requests with a value in this field are excluded from
-    lists of active placement requests, we need to be careful if/when removing this
-    column to ensure such placement requests are still not shown
-    """,
-  )
-  var reallocatedAt: OffsetDateTime?,
-
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "placement_requirements_id")
   var placementRequirements: PlacementRequirementsEntity,
@@ -284,9 +267,7 @@ data class PlacementRequestEntity(
 
   fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 
-  fun isReallocated() = reallocatedAt != null
-
-  fun isActive() = !isWithdrawn && !isReallocated()
+  fun isActive() = !isWithdrawn
 
   /**
    * In the model we don't currently have an entity representing the placement request

@@ -36,7 +36,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   createdByUser: UserEntity = givenAUser().first,
   crn: String? = null,
   name: String? = null,
-  reallocated: Boolean = false,
   isWithdrawn: Boolean = false,
   withdrawalReason: PlacementRequestWithdrawalReason? = null,
   isParole: Boolean = false,
@@ -124,9 +123,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   val placementRequest = placementRequestFactory.produceAndPersist {
     withApplication(app)
     withAssessment(assessment)
-    if (reallocated) {
-      withReallocatedAt(OffsetDateTime.now())
-    }
     withIsWithdrawn(isWithdrawn)
     withWithdrawalReason(withdrawalReason)
     withIsParole(isParole)
@@ -166,7 +162,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   assessmentAllocatedTo: UserEntity? = null,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
-  reallocated: Boolean = false,
   expectedArrival: LocalDate? = null,
   tier: String? = null,
   isWithdrawn: Boolean = false,
@@ -185,7 +180,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
     assessmentAllocatedTo,
     createdByUser,
     crn,
-    reallocated = reallocated,
     expectedArrival = expectedArrival,
     tier = tier,
     isWithdrawn = isWithdrawn,

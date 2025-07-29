@@ -109,14 +109,6 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
           }
 
-          val reallocatedPlacementRequest = placementRequestFactory.produceAndPersist {
-            withApplication(application)
-            withAssessment(assessment)
-            withPlacementRequirements(placementRequirements)
-            withCreatedAt(OffsetDateTime.now())
-            withReallocatedAt(OffsetDateTime.now())
-          }
-
           val requestForPlacements = webTestClient.get()
             .uri("/applications/${application.id}/requests-for-placement")
             .header("Authorization", "Bearer $jwt")

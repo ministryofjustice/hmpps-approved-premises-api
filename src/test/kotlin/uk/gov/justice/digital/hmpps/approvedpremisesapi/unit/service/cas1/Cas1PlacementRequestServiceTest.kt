@@ -65,7 +65,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.Clock
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1PlacementRequestServiceTest {
@@ -304,18 +303,6 @@ class Cas1PlacementRequestServiceTest {
       .produce()
 
     @Test
-    fun `getWithdrawableState not withdrawable if reallocated`() {
-      val placementRequest = createValidPlacementRequest(application, user)
-      placementRequest.reallocatedAt = OffsetDateTime.now()
-
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
-
-      val result = placementRequestService.getWithdrawableState(placementRequest, user)
-
-      assertThat(result.withdrawable).isFalse()
-    }
-
-    @Test
     fun `getWithdrawableState not withdrawable if already withdrawn`() {
       val placementRequest = createValidPlacementRequest(application, user)
       placementRequest.isWithdrawn = true
@@ -332,7 +319,6 @@ class Cas1PlacementRequestServiceTest {
     fun `getWithdrawableState withdrawable if not already withdrawn and not reallocated`() {
       val placementRequest = createValidPlacementRequest(application, user)
       placementRequest.isWithdrawn = false
-      placementRequest.reallocatedAt = null
 
       every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
 
@@ -460,14 +446,10 @@ class Cas1PlacementRequestServiceTest {
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
 
-      val reallocatedPlacementRequest = createValidPlacementRequest(application, user)
-      reallocatedPlacementRequest.reallocatedAt = OffsetDateTime.now()
-
       every {
         placementRequestRepository.findByApplication(application)
       } returns listOf(
         withdrawnPlacementRequest,
-        reallocatedPlacementRequest,
       )
       every {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
@@ -505,9 +487,6 @@ class Cas1PlacementRequestServiceTest {
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
 
-      val reallocatedPlacementRequest = createValidPlacementRequest(application, user)
-      withdrawnPlacementRequest.reallocatedAt = OffsetDateTime.now()
-
       val activePlacementRequest = createValidPlacementRequest(application, user)
 
       every {
@@ -515,7 +494,6 @@ class Cas1PlacementRequestServiceTest {
       } returns listOf(
         withdrawnPlacementRequest,
         activePlacementRequest,
-        reallocatedPlacementRequest,
       )
 
       val result = placementRequestService.withdrawPlacementRequest(
@@ -545,14 +523,10 @@ class Cas1PlacementRequestServiceTest {
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
 
-      val reallocatedPlacementRequest = createValidPlacementRequest(application, user)
-      reallocatedPlacementRequest.reallocatedAt = OffsetDateTime.now()
-
       every {
         placementRequestRepository.findByApplication(application)
       } returns listOf(
         withdrawnPlacementRequest,
-        reallocatedPlacementRequest,
       )
 
       val result = placementRequestService.withdrawPlacementRequest(
@@ -582,14 +556,10 @@ class Cas1PlacementRequestServiceTest {
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
 
-      val reallocatedPlacementRequest = createValidPlacementRequest(application, user)
-      reallocatedPlacementRequest.reallocatedAt = OffsetDateTime.now()
-
       every {
         placementRequestRepository.findByApplication(application)
       } returns listOf(
         withdrawnPlacementRequest,
-        reallocatedPlacementRequest,
       )
 
       val result = placementRequestService.withdrawPlacementRequest(

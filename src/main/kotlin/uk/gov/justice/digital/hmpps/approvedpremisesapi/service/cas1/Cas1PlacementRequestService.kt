@@ -200,7 +200,6 @@ class Cas1PlacementRequestService(
       booking = null,
       spaceBookings = mutableListOf(),
       bookingNotMades = mutableListOf(),
-      reallocatedAt = null,
       notes = notes,
       isParole = isParole,
       isWithdrawn = false,
@@ -301,7 +300,6 @@ class Cas1PlacementRequestService(
    */
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) = placementRequestRepository.findByApplicationId(applicationId)
     .filter { it.isForApplicationsArrivalDate() }
-    .filter { !it.isReallocated() }
 
   private fun updateApplicationStatusOnWithdrawal(
     placementRequest: PlacementRequestEntity,
