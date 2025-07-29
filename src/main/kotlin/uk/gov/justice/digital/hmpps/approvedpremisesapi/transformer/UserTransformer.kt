@@ -80,7 +80,7 @@ class UserTransformer(
       cruManagementArea = cruManagementArea.toNamedId(),
       cruManagementAreaDefault = apArea.defaultCruManagementArea.toNamedId(),
       cruManagementAreaOverride = jpa.cruManagementAreaOverride?.toNamedId(),
-      version = UserEntity.getVersionHashCode((jpa.roles.map { it.role })),
+      version = UserEntity.getVersionHashCode((jpa.roles.map { it.role }), environmentService),
     )
   }
 

@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
@@ -137,11 +138,15 @@ data class UserEntity(
   override fun toString() = "User $id"
 
   companion object {
-    fun getVersionHashCode(roles: List<UserRole>): Int {
+    fun getVersionHashCode(roles: List<UserRole>, environmentService: EnvironmentService): Int {
       val normalisedRoles = roles.toSet().sortedBy { it.name }
       return Objects.hash(
         normalisedRoles.map { it.name },
-        normalisedRoles.map { it.permissions.map { permission -> permission.name } },
+        normalisedRoles.map {
+          it.permissions
+            .filter { permission -> permission.isAvailable(environmentService) }
+            .map { permission -> permission.name }
+        },
       )
     }
   }
