@@ -63,6 +63,7 @@ class UserService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
+  private val environmentService: EnvironmentService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -112,7 +113,7 @@ class UserService(
 
       return UserVersionInfo(
         userId = userId,
-        version = UserEntity.getVersionHashCode(roles),
+        version = UserEntity.getVersionHashCode(roles, environmentService),
       )
     }
   }

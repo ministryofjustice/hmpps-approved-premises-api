@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
@@ -77,6 +78,7 @@ class UserServiceTest {
   private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
+  private val mockEnvironmentService = mockk<EnvironmentService>()
 
   private val userService = UserService(
     mockUserServiceConfig,
@@ -92,6 +94,7 @@ class UserServiceTest {
     mockProbationDeliveryUnitRepository,
     mockApDeliusContextApiClient,
     mockCas1CruManagementAreaRepository,
+    mockEnvironmentService,
   )
 
   @BeforeEach
@@ -595,6 +598,38 @@ class UserServiceTest {
       every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
 
       assertThat(userService.getUserForRequestVersionInfo()).isNull()
+    }
+
+    @Test
+    fun `getUserForRequestVersion returns different values for version when environment changes`() {
+      val username = "SOMEPERSON"
+      val userId = UUID.randomUUID()
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
+
+      every { mockUserRepository.findRoleAssignmentByUsername(username) } returns listOf(
+        RoleAssignmentByNameImpl(
+          userId = userId,
+          roleName = UserRole.CAS1_JANITOR.name,
+        ),
+      )
+
+      every { mockEnvironmentService.isNotProd() } returns true
+
+      val resultNonProd = userService.getUserForRequestVersionInfo()!!
+      val versionNonProd = resultNonProd.version
+
+      every { mockEnvironmentService.isNotProd() } returns false
+
+      val resultProd = userService.getUserForRequestVersionInfo()!!
+      val versionProd = resultProd.version
+
+      assertThat(resultNonProd.userId).isEqualTo(userId)
+      assertThat(resultProd.userId).isEqualTo(userId)
+
+      assertThat(versionNonProd).isNotEqualTo(versionProd)
     }
   }
 
