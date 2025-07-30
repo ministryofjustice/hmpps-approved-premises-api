@@ -11,7 +11,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class DocumentFromDeliusApiFactory : Factory<APDeliusDocument> {
+class APDeliusDocumentFactory : Factory<APDeliusDocument> {
   private var id: Yielded<String?> = { UUID.randomUUID().toString() }
   private var description: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var level: Yielded<String> = { randomInt(1, 5).toString() }

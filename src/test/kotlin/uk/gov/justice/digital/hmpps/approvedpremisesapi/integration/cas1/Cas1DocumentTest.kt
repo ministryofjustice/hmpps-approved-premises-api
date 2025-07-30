@@ -4,15 +4,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.ContentDisposition
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFromDeliusApiFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.APDeliusDocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulDocumentDownloadCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulDocumentsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.UUID
 
 class Cas1DocumentTest : InitialiseDatabasePerClassTestBase() {
@@ -22,85 +19,60 @@ class Cas1DocumentTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Returns 404 when document doesn't exist for CRN`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
-            withCrn(offenderDetails.otherIds.crn)
-            withConvictionId(12345)
-          }
+      val (_, jwt) = givenAUser()
+      val (offenderDetails, _) = givenAnOffender()
 
-          val convictionLevelDocId = UUID.randomUUID()
-          val documents = stubDocumentsFromDelius(convictionLevelDocId)
+      apDeliusContextMockSuccessfulDocumentsCall(
+        crn = offenderDetails.otherIds.crn,
+        documents = listOf(
+          APDeliusDocumentFactory().produce(),
+          APDeliusDocumentFactory().produce(),
+          APDeliusDocumentFactory().produce(),
+        ),
+      )
 
-          apDeliusContextMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
-
-          val notFoundDocId = UUID.randomUUID()
-          webTestClient.get()
-            .uri("/cas1/documents/${application.crn}/$notFoundDocId")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isNotFound
-        }
-      }
+      val nonExistentDocumentId = UUID.randomUUID()
+      webTestClient.get()
+        .uri("/cas1/documents/${offenderDetails.otherIds.crn}/$nonExistentDocumentId")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
     }
 
     @Test
     fun success() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
-            withCrn(offenderDetails.otherIds.crn)
-            withConvictionId(12345)
-          }
-          val convictionLevelDocId = UUID.randomUUID()
-          val documents = stubDocumentsFromDelius(convictionLevelDocId)
-          val docFileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
+      val (_, jwt) = givenAUser()
+      val (offenderDetails, _) = givenAnOffender()
 
-          apDeliusContextMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, documents)
-          apDeliusContextMockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, convictionLevelDocId, docFileContents)
+      val requestedDocumentId = UUID.randomUUID()
+      val docFileContents = "I AM A MOCK DOCUMENT".byteInputStream().readAllBytes()
 
-          val result = webTestClient.get()
-            .uri("/cas1/documents/${application.crn}/$convictionLevelDocId")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectHeader()
-            .contentDisposition(ContentDisposition.parse("attachment; filename=\"conviction_level_doc.pdf\""))
-            .expectBody()
-            .returnResult()
-
-          assertThat(result.responseBody).isEqualTo(docFileContents)
-        }
-      }
-    }
-
-    private fun stubDocumentsFromDelius(convictionLevelDocId: UUID): List<APDeliusDocument> = listOf(
-      DocumentFromDeliusApiFactory()
-        .withId(UUID.randomUUID().toString())
-        .withDescription("Offender level doc description")
-        .withLevel("LEVEL-1")
-        .withEventNumber("2")
-        .withFilename("offender_level_doc.pdf")
-        .withTypeCode("TYPE-1")
-        .withTypeDescription("Type 1 Description")
-        .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.systemDefault()))
-        .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.systemDefault()))
-        .produce(),
-      DocumentFromDeliusApiFactory()
-        .withId(convictionLevelDocId.toString())
-        .withDescription("Conviction level doc description")
-        .withLevel("LEVEL-2")
-        .withEventNumber("1")
+      val requestedDocument = APDeliusDocumentFactory()
+        .withId(requestedDocumentId.toString())
         .withFilename("conviction_level_doc.pdf")
-        .withTypeCode("TYPE-2")
-        .withTypeDescription("Type 2 Description")
-        .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00").atZone(ZoneId.systemDefault()))
-        .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00").atZone(ZoneId.systemDefault()))
-        .produce(),
-    )
+        .produce()
+
+      val otherDocument = APDeliusDocumentFactory()
+        .withId(UUID.randomUUID().toString())
+        .withFilename("offender_level_doc.pdf")
+        .produce()
+
+      apDeliusContextMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, listOf(otherDocument, requestedDocument))
+      apDeliusContextMockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, requestedDocumentId, docFileContents)
+
+      val result = webTestClient.get()
+        .uri("/cas1/documents/${offenderDetails.otherIds.crn}/$requestedDocumentId")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader()
+        .contentDisposition(ContentDisposition.parse("attachment; filename=\"conviction_level_doc.pdf\""))
+        .expectBody()
+        .returnResult()
+
+      assertThat(result.responseBody).isEqualTo(docFileContents)
+    }
   }
 }

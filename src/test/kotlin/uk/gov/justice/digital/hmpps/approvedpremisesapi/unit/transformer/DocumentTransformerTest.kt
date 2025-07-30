@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFromDeliusApiFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.APDeliusDocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.Instant
@@ -50,7 +50,7 @@ class DocumentTransformerTest {
     val offenderDocId = UUID.randomUUID()
     val convictionDocId = UUID.randomUUID()
     val deliusDocs = stubDocumentsFromDelius(offenderDocId, convictionDocId) + listOf(
-      DocumentFromDeliusApiFactory()
+      APDeliusDocumentFactory()
         .withId(null)
         .withDescription("Null Id description")
         .withLevel(DocumentLevel.offender.value)
@@ -71,7 +71,7 @@ class DocumentTransformerTest {
   }
 
   private fun stubDocumentsFromDelius(offenderDocId: UUID, convictionDocId: UUID): List<APDeliusDocument> = listOf(
-    DocumentFromDeliusApiFactory()
+    APDeliusDocumentFactory()
       .withId(offenderDocId.toString())
       .withDescription("Offender level doc description")
       .withLevel(DocumentLevel.offender.value)
@@ -82,7 +82,7 @@ class DocumentTransformerTest {
       .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.of("UTC")))
       .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.of("UTC")))
       .produce(),
-    DocumentFromDeliusApiFactory()
+    APDeliusDocumentFactory()
       .withId(convictionDocId.toString())
       .withDescription("Conviction level doc description")
       .withLevel(DocumentLevel.conviction.value)
