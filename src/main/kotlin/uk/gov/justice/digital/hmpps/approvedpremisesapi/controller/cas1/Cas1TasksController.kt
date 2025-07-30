@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskService
@@ -64,6 +65,7 @@ class Cas1TasksController(
   private val enumConverterFactory: EnumConverterFactory,
   private val userTransformer: UserTransformer,
   private val cas1TaskService: Cas1TaskService,
+  private val requestContextService: RequestContextService,
 ) {
 
   @Operation(summary = "List all tasks")
@@ -88,7 +90,7 @@ class Cas1TasksController(
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
-    if (!user.hasPermission(UserPermission.CAS1_TASKS_LIST)) {
+    if (requestContextService.getServiceForRequest() == ServiceName.approvedPremises && !user.hasPermission(UserPermission.CAS1_TASKS_LIST)) {
       throw ForbiddenProblem()
     }
 
@@ -146,6 +148,11 @@ class Cas1TasksController(
   )
   fun getTask(@PathVariable id: UUID, @PathVariable taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
+
+    if (!user.hasPermission(UserPermission.CAS1_TASKS_LIST)) {
+      throw ForbiddenProblem()
+    }
+
     val taskInfo = getTaskInfoByType(toTaskType(taskType), id, user)
     val transformedAllocatableUsers = getTransformedAllocatableUsers(
       taskInfo.crn,
@@ -238,6 +245,10 @@ class Cas1TasksController(
     @RequestBody body: NewReallocation?,
   ): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
+
+    if (requestContextService.getServiceForRequest() == ServiceName.approvedPremises && !user.hasPermission(UserPermission.CAS1_TASK_ALLOCATE)) {
+      throw ForbiddenProblem()
+    }
 
     val type = toTaskType(taskType)
 

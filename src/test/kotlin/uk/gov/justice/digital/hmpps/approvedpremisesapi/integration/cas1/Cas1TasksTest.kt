@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -26,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
@@ -94,6 +92,7 @@ class Cas1TasksTest {
           webTestClient.get()
             .uri("/cas1/tasks")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
             .expectStatus()
             .isForbidden
@@ -101,8 +100,8 @@ class Cas1TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"])
-      fun `Get all tasks returns 200 when have CAS1_CRU_MEMBER roles`(role: UserRole) {
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"])
+      fun `Get all tasks returns 200 when have CAS1_CRU_MEMBER or CAS1_AP_AREA_MANAGER roles`(role: UserRole) {
         givenAUser(roles = listOf(role)) { _, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
@@ -141,9 +140,10 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks returns 200 when no type retains original sort order`() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"])
+      fun `Get all tasks returns 200 when no type retains original sort order`(role: UserRole) {
+        givenAUser(roles = listOf(role)) { user, jwt ->
           givenAUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
 
@@ -217,80 +217,70 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class FilterByType : InitialiseDatabasePerClassTestBase() {
-      private lateinit var tasks: Map<TaskType, List<Task>>
-      lateinit var jwt: String
+    inner class FilterByType : IntegrationTestBase() {
 
       @Autowired
       lateinit var taskTransformer: TaskTransformer
 
-      @BeforeAll
-      fun stubBankHolidaysApi() {
-        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-      }
+      fun setupTasksForUser(user: UserEntity): Map<TaskType, List<Task>> {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails, _) = givenAnOffender()
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
+        val offenderSummaries = getOffenderSummaries(offenderDetails)
 
-              val offenderSummaries = getOffenderSummaries(offenderDetails)
+        val (task2, _) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+        )
 
-              val (task2, _) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
+        val task4 = givenAPlacementApplication(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              val task4 = givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        val (task5) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+        )
 
-              val (task5) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
+        val placementApplications = listOf(
+          taskTransformer.transformPlacementApplicationToTask(
+            task4,
+            offenderSummaries,
+          ),
+        )
 
-              val placementApplications = listOf(
-                taskTransformer.transformPlacementApplicationToTask(
-                  task4,
-                  offenderSummaries,
-                ),
-              )
+        val assessments = listOf(
+          taskTransformer.transformAssessmentToTask(
+            task2,
+            offenderSummaries,
+          ),
+          taskTransformer.transformAssessmentToTask(
+            task5,
+            offenderSummaries,
+          ),
+        )
 
-              val assessments = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  task2,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  task5,
-                  offenderSummaries,
-                ),
-              )
-
-              tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-              )
-            }
-          }
-        }
+        val tasks = mapOf(
+          TaskType.assessment to assessments,
+          TaskType.placementApplication to placementApplications,
+        )
+        return tasks
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
-      fun `Get all tasks filters by a single type`(taskType: TaskType) {
-        val expectedTasks = tasks[taskType]!!.sortedBy { it.dueDate }
-        val url = "/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType.value}"
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filtered by assessments`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
+        val expectedTasks = tasks[TaskType.assessment]!!.sortedBy { it.dueDate }
+        val url = "/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment"
 
         webTestClient.get()
           .uri(url)
@@ -306,8 +296,33 @@ class Cas1TasksTest {
           )
       }
 
-      @Test
-      fun `Get all tasks filters by multiple types`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filtered by placement applications`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
+        val expectedTasks = tasks[TaskType.placementApplication]!!.sortedBy { it.dueDate }
+        val url = "/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=PlacementApplication"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filters by multiple types`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
         val url = "/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementApplication"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
@@ -328,8 +343,11 @@ class Cas1TasksTest {
           )
       }
 
-      @Test
-      fun `Get all tasks returns all task types`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks returns all task types`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
         val url = "/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementApplication"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
@@ -350,8 +368,11 @@ class Cas1TasksTest {
           )
       }
 
-      @Test
-      fun `Get all tasks returns all task types by default`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks returns all task types by default`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
         val url = "/cas1/tasks?page=1&sortBy=createdAt&sortDirection=asc"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
@@ -374,89 +395,82 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class FilterByCruManagementArea : InitialiseDatabasePerClassTestBase() {
-      private lateinit var tasks: Map<TaskType, List<Task>>
-
-      lateinit var jwt: String
-      lateinit var cruArea: Cas1CruManagementAreaEntity
+    inner class FilterByCruManagementArea : IntegrationTestBase() {
 
       @Autowired
       lateinit var taskTransformer: TaskTransformer
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
+      fun setupTasksForUser(user: UserEntity): Pair<Map<TaskType, List<Task>>, Cas1CruManagementAreaEntity> {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails, _) = givenAnOffender()
 
-              cruArea = givenACas1CruManagementArea()
-              val cruArea2 = givenACas1CruManagementArea()
+        val cruArea = givenACas1CruManagementArea()
+        val cruArea2 = givenACas1CruManagementArea()
 
-              val offenderSummaries = getOffenderSummaries(offenderDetails)
+        val offenderSummaries = getOffenderSummaries(offenderDetails)
 
-              val (assessment) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                cruManagementArea = cruArea,
-              )
+        val (assessment) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          cruManagementArea = cruArea,
+        )
 
-              givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                cruManagementArea = cruArea2,
-              )
+        givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          cruManagementArea = cruArea2,
+        )
 
-              val placementApplication = givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                cruManagementArea = cruArea,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        val placementApplication = givenAPlacementApplication(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          cruManagementArea = cruArea,
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                cruManagementArea = cruArea2,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        givenAPlacementApplication(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          cruManagementArea = cruArea2,
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              val assessments = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  assessment,
-                  offenderSummaries,
-                ),
-              )
+        val assessments = listOf(
+          taskTransformer.transformAssessmentToTask(
+            assessment,
+            offenderSummaries,
+          ),
+        )
 
-              val placementApplications = listOf(
-                taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication,
-                  offenderSummaries,
-                ),
-              )
+        val placementApplications = listOf(
+          taskTransformer.transformPlacementApplicationToTask(
+            placementApplication,
+            offenderSummaries,
+          ),
+        )
 
-              tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-              )
-            }
-          }
-        }
+        val tasks = mapOf(
+          TaskType.assessment to assessments,
+          TaskType.placementApplication to placementApplications,
+        )
+        return Pair(tasks, cruArea)
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
-      fun `it filters by CRU area and task type`(taskType: TaskType) {
-        val expectedTasks = tasks[taskType]
-        val url = "/cas1/tasks?type=${taskType.value}&cruManagementAreaId=${cruArea.id}"
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `it filters by CRU area and assessment type`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val (tasks, cruArea) = setupTasksForUser(user)
+        val expectedTasks = tasks[TaskType.assessment]
+        val url = "/cas1/tasks?type=Assessment&cruManagementAreaId=${cruArea.id}"
 
         webTestClient.get()
           .uri(url)
@@ -472,8 +486,33 @@ class Cas1TasksTest {
           )
       }
 
-      @Test
-      fun `it filters by all areas with no task type`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `it filters by CRU area and placement application type`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val (tasks, cruArea) = setupTasksForUser(user)
+        val expectedTasks = tasks[TaskType.placementApplication]
+        val url = "/cas1/tasks?type=PlacementApplication&cruManagementAreaId=${cruArea.id}"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `it filters by all areas with no task type`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val (tasks, cruArea) = setupTasksForUser(user)
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
           tasks[TaskType.placementApplication]!!,
@@ -495,83 +534,75 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class FilterByUser : InitialiseDatabasePerClassTestBase() {
-      private lateinit var tasks: Map<TaskType, List<Task>>
-
-      lateinit var jwt: String
-      lateinit var user: UserEntity
+    inner class FilterByUser : IntegrationTestBase() {
 
       @Autowired
       lateinit var taskTransformer: TaskTransformer
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
-              this.user = user
+      fun setupTasksForUser(user: UserEntity): Map<TaskType, List<Task>> {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails, _) = givenAnOffender()
 
-              val offenderSummaries = getOffenderSummaries(offenderDetails)
+        val offenderSummaries = getOffenderSummaries(offenderDetails)
 
-              val (allocatableAssessment) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = user,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
+        val (allocatableAssessment) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = user,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+        )
 
-              givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
+        givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+        )
 
-              val allocatablePlacementApplication = givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        val allocatablePlacementApplication = givenAPlacementApplication(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              givenAPlacementApplication(
-                createdByUser = user,
-                allocatedToUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        givenAPlacementApplication(
+          createdByUser = user,
+          allocatedToUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              val assessments = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  allocatableAssessment,
-                  offenderSummaries,
-                ),
-              )
+        val assessments = listOf(
+          taskTransformer.transformAssessmentToTask(
+            allocatableAssessment,
+            offenderSummaries,
+          ),
+        )
 
-              val placementApplications = listOf(
-                taskTransformer.transformPlacementApplicationToTask(
-                  allocatablePlacementApplication,
-                  offenderSummaries,
-                ),
-              )
+        val placementApplications = listOf(
+          taskTransformer.transformPlacementApplicationToTask(
+            allocatablePlacementApplication,
+            offenderSummaries,
+          ),
+        )
 
-              tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-              )
-            }
-          }
-        }
+        val tasks = mapOf(
+          TaskType.assessment to assessments,
+          TaskType.placementApplication to placementApplications,
+        )
+        return tasks
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
-      fun `it filters by user and task type`(taskType: TaskType) {
-        val expectedTasks = tasks[taskType]
-        val url = "/cas1/tasks?type=${taskType.value}&allocatedToUserId=${user.id}"
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `it filters by user and assessment task type`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
+        val expectedTasks = tasks[TaskType.assessment]
+        val url = "/cas1/tasks?type=Assessment&allocatedToUserId=${user.id}"
 
         webTestClient.get()
           .uri(url)
@@ -587,8 +618,33 @@ class Cas1TasksTest {
           )
       }
 
-      @Test
-      fun `it filters by user with all tasks`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `it filters by user and placement application task type`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
+        val expectedTasks = tasks[TaskType.placementApplication]
+        val url = "/cas1/tasks?type=PlacementApplication&allocatedToUserId=${user.id}"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `it filters by user with all tasks`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val tasks = setupTasksForUser(user)
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
           tasks[TaskType.placementApplication]!!,
@@ -612,132 +668,142 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class PaginationAndExclusionOfIrrelevantTasks : InitialiseDatabasePerClassTestBase() {
+    inner class PaginationAndExclusionOfIrrelevantTasks : IntegrationTestBase() {
       private val pageSize = 1
-      private lateinit var counts: Map<TaskType, Map<String, Int>>
 
-      lateinit var jwt: String
+      fun setupTasksForUser(user: UserEntity): Map<TaskType, Map<String, Int>> {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails, _) = givenAnOffender()
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
+        val counts = mapOf(
+          TaskType.assessment to mapOf(
+            "allocated" to 2,
+            "unallocated" to 3,
+          ),
+          TaskType.placementApplication to mapOf(
+            "allocated" to 3,
+            "unallocated" to 2,
+          ),
+        )
 
-              counts = mapOf(
-                TaskType.assessment to mapOf(
-                  "allocated" to 2,
-                  "unallocated" to 3,
-                ),
-                TaskType.placementApplication to mapOf(
-                  "allocated" to 3,
-                  "unallocated" to 2,
-                ),
-              )
-
-              repeat(counts[TaskType.assessment]!!["allocated"]!!) {
-                givenAnAssessmentForApprovedPremises(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails.otherIds.crn,
-                )
-              }
-
-              repeat(counts[TaskType.assessment]!!["unallocated"]!!) {
-                givenAnAssessmentForApprovedPremises(
-                  null,
-                  createdByUser = otherUser,
-                  crn = offenderDetails.otherIds.crn,
-                )
-              }
-
-              // withdrawn, ignored
-              givenAnAssessmentForApprovedPremises(
-                null,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                isWithdrawn = true,
-              )
-
-              repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
-                givenAPlacementApplication(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                  expectedArrival = LocalDate.now(),
-                  duration = 1,
-                )
-              }
-
-              repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
-                givenAPlacementApplication(
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                  expectedArrival = LocalDate.now(),
-                  duration = 1,
-                )
-              }
-
-              // withdrawn, ignored
-              givenAPlacementApplication(
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                isWithdrawn = true,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
-
-              // automatic, ignored
-              givenAPlacementApplication(
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-                automatic = true,
-              )
-            }
-          }
+        repeat(counts[TaskType.assessment]!!["allocated"]!!) {
+          givenAnAssessmentForApprovedPremises(
+            allocatedToUser = otherUser,
+            createdByUser = otherUser,
+            crn = offenderDetails.otherIds.crn,
+          )
         }
+
+        repeat(counts[TaskType.assessment]!!["unallocated"]!!) {
+          givenAnAssessmentForApprovedPremises(
+            null,
+            createdByUser = otherUser,
+            crn = offenderDetails.otherIds.crn,
+          )
+        }
+
+        // withdrawn, ignored
+        givenAnAssessmentForApprovedPremises(
+          null,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          isWithdrawn = true,
+        )
+
+        repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
+          givenAPlacementApplication(
+            createdByUser = user,
+            allocatedToUser = user,
+            crn = offenderDetails.otherIds.crn,
+            submittedAt = OffsetDateTime.now(),
+            expectedArrival = LocalDate.now(),
+            duration = 1,
+          )
+        }
+
+        repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
+          givenAPlacementApplication(
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn,
+            submittedAt = OffsetDateTime.now(),
+            expectedArrival = LocalDate.now(),
+            duration = 1,
+          )
+        }
+
+        // withdrawn, ignored
+        givenAPlacementApplication(
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          isWithdrawn = true,
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
+
+        // automatic, ignored
+        givenAPlacementApplication(
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+          automatic = true,
+        )
+        return counts
       }
 
       @ParameterizedTest
       @CsvSource(
-        "assessment,allocated,1",
-        "assessment,allocated,2",
-        "assessment,unallocated,1",
-        "assessment,unallocated,1",
-        "placementApplication,allocated,1",
-        "placementApplication,allocated,2",
-        "placementApplication,unallocated,1",
-        "placementApplication,unallocated,2",
+        "CAS1_CRU_MEMBER,assessment,allocated,1",
+        "CAS1_CRU_MEMBER,assessment,allocated,2",
+        "CAS1_CRU_MEMBER,assessment,unallocated,1",
+        "CAS1_CRU_MEMBER,assessment,unallocated,1",
+        "CAS1_CRU_MEMBER,placementApplication,allocated,1",
+        "CAS1_CRU_MEMBER,placementApplication,allocated,2",
+        "CAS1_CRU_MEMBER,placementApplication,unallocated,1",
+        "CAS1_CRU_MEMBER,placementApplication,unallocated,2",
+        "CAS1_AP_AREA_MANAGER,assessment,allocated,1",
+        "CAS1_AP_AREA_MANAGER,assessment,allocated,2",
+        "CAS1_AP_AREA_MANAGER,assessment,unallocated,1",
+        "CAS1_AP_AREA_MANAGER,assessment,unallocated,1",
+        "CAS1_AP_AREA_MANAGER,placementApplication,allocated,1",
+        "CAS1_AP_AREA_MANAGER,placementApplication,allocated,2",
+        "CAS1_AP_AREA_MANAGER,placementApplication,unallocated,1",
+        "CAS1_AP_AREA_MANAGER,placementApplication,unallocated,2",
       )
       fun `get all tasks returns page counts when taskType and allocated filter are set`(
+        userRole: String,
         taskType: TaskType,
         allocatedFilter: String,
         pageNumber: String,
       ) {
+        val (user, jwt) = givenAUser(roles = listOf(UserRole.valueOf(userRole)))
+        val counts = setupTasksForUser(user)
         val itemCount = counts[taskType]!![allocatedFilter]!!
         val url = "/cas1/tasks?type=${taskType.value}&perPage=$pageSize&page=$pageNumber&allocatedFilter=$allocatedFilter"
 
-        expectCountHeaders(url, pageNumber.toInt(), itemCount)
+        expectCountHeaders(url, jwt, pageNumber.toInt(), itemCount)
       }
 
       @ParameterizedTest
       @CsvSource(
-        "allocated,1",
-        "allocated,2",
-        "unallocated,1",
-        "unallocated,1",
+        "CAS1_CRU_MEMBER,allocated,1",
+        "CAS1_CRU_MEMBER,allocated,2",
+        "CAS1_CRU_MEMBER,unallocated,1",
+        "CAS1_CRU_MEMBER,unallocated,1",
+        "CAS1_AP_AREA_MANAGER,allocated,1",
+        "CAS1_AP_AREA_MANAGER,allocated,2",
+        "CAS1_AP_AREA_MANAGER,unallocated,1",
+        "CAS1_AP_AREA_MANAGER,unallocated,1",
       )
       fun `get all tasks returns page counts for all tasks when allocated filter is set`(
+        userRole: String,
         allocatedFilter: String,
         pageNumber: String,
       ) {
+        val (user, jwt) = givenAUser(roles = listOf(UserRole.valueOf(userRole)))
+        val counts = setupTasksForUser(user)
         val itemCount = listOf(
           counts[TaskType.assessment]!![allocatedFilter]!!,
           counts[TaskType.placementApplication]!![allocatedFilter]!!,
@@ -745,15 +811,19 @@ class Cas1TasksTest {
 
         val url = "/cas1/tasks?&page=$pageNumber&perPage=$pageSize&allocatedFilter=$allocatedFilter"
 
-        expectCountHeaders(url, pageNumber.toInt(), itemCount)
+        expectCountHeaders(url, jwt, pageNumber.toInt(), itemCount)
       }
 
       @ParameterizedTest
       @CsvSource(
-        "1",
-        "2",
+        "CAS1_CRU_MEMBER,1",
+        "CAS1_CRU_MEMBER,2",
+        "CAS1_AP_AREA_MANAGER,1",
+        "CAS1_AP_AREA_MANAGER,2",
       )
-      fun `get all tasks returns page count when no allocated filter is set`(pageNumber: Int) {
+      fun `get all tasks returns page count when no allocated filter is set`(role: String, pageNumber: Int) {
+        val (user, jwt) = givenAUser(roles = listOf(UserRole.valueOf(role)))
+        val counts = setupTasksForUser(user)
         val itemCount = listOf(
           counts[TaskType.assessment]!!["allocated"]!!,
           counts[TaskType.assessment]!!["unallocated"]!!,
@@ -761,10 +831,10 @@ class Cas1TasksTest {
           counts[TaskType.placementApplication]!!["unallocated"]!!,
         ).sum()
 
-        expectCountHeaders("/cas1/tasks?&page=$pageNumber&perPage=$pageSize", pageNumber, itemCount)
+        expectCountHeaders("/cas1/tasks?&page=$pageNumber&perPage=$pageSize", jwt, pageNumber, itemCount)
       }
 
-      private fun expectCountHeaders(url: String, pageNumber: Int, itemCount: Int) {
+      private fun expectCountHeaders(url: String, jwt: String, pageNumber: Int, itemCount: Int) {
         webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
@@ -781,114 +851,121 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class FilterQualification : InitialiseDatabasePerClassTestBase() {
-      lateinit var jwt: String
-
-      lateinit var tasks: Map<TaskType, Map<UserQualification, List<Task>>>
+    inner class FilterQualification : IntegrationTestBase() {
 
       @Autowired
       lateinit var taskTransformer: TaskTransformer
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
+      fun setupForUser(user: UserEntity): Map<TaskType, MutableMap<UserQualification, List<Task>>> {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails, _) = givenAnOffender()
 
-              val offenderSummaries = getOffenderSummaries(offenderDetails)
-              val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
-              val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
+        val offenderSummaries = getOffenderSummaries(offenderDetails)
+        val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
+        val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
 
-              fun createAssessmentTask(
-                requiredQualification: UserQualification?,
-                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
-              ): Task {
-                val (assessment) = givenAnAssessmentForApprovedPremises(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails.otherIds.crn,
-                  requiredQualification = requiredQualification,
-                  noticeType = noticeType,
-                )
+        fun createAssessmentTask(
+          requiredQualification: UserQualification?,
+          noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
+        ): Task {
+          val (assessment) = givenAnAssessmentForApprovedPremises(
+            allocatedToUser = otherUser,
+            createdByUser = otherUser,
+            crn = offenderDetails.otherIds.crn,
+            requiredQualification = requiredQualification,
+            noticeType = noticeType,
+          )
 
-                return taskTransformer.transformAssessmentToTask(
-                  assessment,
-                  offenderSummaries,
-                )
-              }
-
-              fun createPlacementApplicationTask(
-                requiredQualification: UserQualification?,
-                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
-              ): Task {
-                val placementApplication = givenAPlacementApplication(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                  requiredQualification = requiredQualification,
-                  noticeType = noticeType,
-                  expectedArrival = LocalDate.now(),
-                  duration = 1,
-                )
-
-                return taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication,
-                  offenderSummaries,
-                )
-              }
-
-              listOf(
-                UserQualification.ESAP,
-                UserQualification.PIPE,
-                UserQualification.RECOVERY_FOCUSED,
-                UserQualification.MENTAL_HEALTH_SPECIALIST,
-              ).forEach { qualification ->
-                assessmentTasks[qualification] = listOf(
-                  createAssessmentTask(qualification),
-                )
-                placementApplicationTasks[qualification] = listOf(
-                  createPlacementApplicationTask(qualification),
-                )
-              }
-
-              assessmentTasks[UserQualification.EMERGENCY] = listOf(
-                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.emergency),
-              )
-              placementApplicationTasks[UserQualification.EMERGENCY] = listOf(
-                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.emergency),
-              )
-
-              tasks = mapOf(
-                TaskType.assessment to assessmentTasks,
-                TaskType.placementApplication to placementApplicationTasks,
-              )
-            }
-          }
+          return taskTransformer.transformAssessmentToTask(
+            assessment,
+            offenderSummaries,
+          )
         }
+
+        fun createPlacementApplicationTask(
+          requiredQualification: UserQualification?,
+          noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
+        ): Task {
+          val placementApplication = givenAPlacementApplication(
+            createdByUser = user,
+            allocatedToUser = user,
+            crn = offenderDetails.otherIds.crn,
+            submittedAt = OffsetDateTime.now(),
+            requiredQualification = requiredQualification,
+            noticeType = noticeType,
+            expectedArrival = LocalDate.now(),
+            duration = 1,
+          )
+
+          return taskTransformer.transformPlacementApplicationToTask(
+            placementApplication,
+            offenderSummaries,
+          )
+        }
+
+        listOf(
+          UserQualification.ESAP,
+          UserQualification.PIPE,
+          UserQualification.RECOVERY_FOCUSED,
+          UserQualification.MENTAL_HEALTH_SPECIALIST,
+        ).forEach { qualification ->
+          assessmentTasks[qualification] = listOf(
+            createAssessmentTask(qualification),
+          )
+          placementApplicationTasks[qualification] = listOf(
+            createPlacementApplicationTask(qualification),
+          )
+        }
+
+        assessmentTasks[UserQualification.EMERGENCY] = listOf(
+          createAssessmentTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+          createAssessmentTask(null, Cas1ApplicationTimelinessCategory.emergency),
+        )
+        placementApplicationTasks[UserQualification.EMERGENCY] = listOf(
+          createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+          createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.emergency),
+        )
+
+        val tasks = mapOf(
+          TaskType.assessment to assessmentTasks,
+          TaskType.placementApplication to placementApplicationTasks,
+        )
+        return tasks
       }
 
       @ParameterizedTest
       @CsvSource(
-        "assessment,PIPE",
-        "assessment,ESAP",
-        "assessment,EMERGENCY",
-        "assessment,RECOVERY_FOCUSED",
-        "assessment,MENTAL_HEALTH_SPECIALIST",
+        "CAS1_CRU_MEMBER,assessment,PIPE",
+        "CAS1_CRU_MEMBER,assessment,ESAP",
+        "CAS1_CRU_MEMBER,assessment,EMERGENCY",
+        "CAS1_CRU_MEMBER,assessment,RECOVERY_FOCUSED",
+        "CAS1_CRU_MEMBER,assessment,MENTAL_HEALTH_SPECIALIST",
 
-        "placementApplication,PIPE",
-        "placementApplication,ESAP",
-        "placementApplication,EMERGENCY",
-        "placementApplication,RECOVERY_FOCUSED",
-        "placementApplication,MENTAL_HEALTH_SPECIALIST",
+        "CAS1_CRU_MEMBER,placementApplication,PIPE",
+        "CAS1_CRU_MEMBER,placementApplication,ESAP",
+        "CAS1_CRU_MEMBER,placementApplication,EMERGENCY",
+        "CAS1_CRU_MEMBER,placementApplication,RECOVERY_FOCUSED",
+        "CAS1_CRU_MEMBER,placementApplication,MENTAL_HEALTH_SPECIALIST",
+
+        "CAS1_AP_AREA_MANAGER,assessment,PIPE",
+        "CAS1_AP_AREA_MANAGER,assessment,ESAP",
+        "CAS1_AP_AREA_MANAGER,assessment,EMERGENCY",
+        "CAS1_AP_AREA_MANAGER,assessment,RECOVERY_FOCUSED",
+        "CAS1_AP_AREA_MANAGER,assessment,MENTAL_HEALTH_SPECIALIST",
+
+        "CAS1_AP_AREA_MANAGER,placementApplication,PIPE",
+        "CAS1_AP_AREA_MANAGER,placementApplication,ESAP",
+        "CAS1_AP_AREA_MANAGER,placementApplication,EMERGENCY",
+        "CAS1_AP_AREA_MANAGER,placementApplication,RECOVERY_FOCUSED",
+        "CAS1_AP_AREA_MANAGER,placementApplication,MENTAL_HEALTH_SPECIALIST",
       )
       fun `Get all tasks filters by task type and required qualification`(
+        userRole: String,
         taskType: TaskType,
         qualification: UserQualification,
       ) {
+        val (user, jwt) = givenAUser(roles = listOf(UserRole.valueOf(userRole)))
+        val tasks = setupForUser(user)
         val url = "/cas1/tasks?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
         val expectedTasks = tasks[taskType]!![qualification]!!
 
@@ -911,7 +988,38 @@ class Cas1TasksTest {
         value = UserQualification::class,
         names = ["EMERGENCY", "ESAP", "PIPE", "RECOVERY_FOCUSED", "MENTAL_HEALTH_SPECIALIST"],
       )
-      fun `Get all tasks required qualification`(qualification: UserQualification) {
+      fun `Get all tasks required qualification for CAS1_CRU_MEMBER`(qualification: UserQualification) {
+        val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+        val tasks = setupForUser(user)
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!![qualification]!!,
+          tasks[TaskType.placementApplication]!![qualification]!!,
+        ).flatten()
+
+        val url = "/cas1/tasks?requiredQualification=${qualification.name.lowercase()}"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @ParameterizedTest
+      @EnumSource(
+        value = UserQualification::class,
+        names = ["EMERGENCY", "ESAP", "PIPE", "RECOVERY_FOCUSED", "MENTAL_HEALTH_SPECIALIST"],
+      )
+      fun `Get all tasks required qualification for CAS1_AP_AREA_MANAGER`(qualification: UserQualification) {
+        val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_AP_AREA_MANAGER))
+        val tasks = setupForUser(user)
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!![qualification]!!,
           tasks[TaskType.placementApplication]!![qualification]!!,
@@ -935,9 +1043,7 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class FilterByNameOrCrn : InitialiseDatabasePerClassTestBase() {
-      lateinit var jwt: String
-      lateinit var crn: String
+    inner class FilterByNameOrCrn : IntegrationTestBase() {
 
       private lateinit var nameMatchTasks: Map<TaskType, Task>
       private lateinit var crnMatchTasks: Map<TaskType, Task>
@@ -945,82 +1051,77 @@ class Cas1TasksTest {
       @Autowired
       lateinit var taskTransformer: TaskTransformer
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails1, _ ->
-              givenAnOffender { offenderDetails2, _ ->
-                this.jwt = jwt
-                this.crn = offenderDetails2.otherIds.crn
+      fun setupForUser(user: UserEntity): String {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails1, _) = givenAnOffender()
+        val (offenderDetails2, _) = givenAnOffender()
 
-                val offenderSummaries1 = getOffenderSummaries(offenderDetails1)
-                val offenderSummaries2 = getOffenderSummaries(offenderDetails2)
-                val (assessment1, _) = givenAnAssessmentForApprovedPremises(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails1.otherIds.crn,
-                  name = "SOMEONE",
-                )
+        val offenderSummaries1 = getOffenderSummaries(offenderDetails1)
+        val offenderSummaries2 = getOffenderSummaries(offenderDetails2)
+        val (assessment1, _) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails1.otherIds.crn,
+          name = "SOMEONE",
+        )
 
-                val (assessment2, _) = givenAnAssessmentForApprovedPremises(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails2.otherIds.crn,
-                  name = "ANOTHER",
-                )
+        val (assessment2, _) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails2.otherIds.crn,
+          name = "ANOTHER",
+        )
 
-                val placementApplication1 = givenAPlacementApplication(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  crn = offenderDetails1.otherIds.crn,
-                  name = "SOMEONE",
-                  submittedAt = OffsetDateTime.now(),
-                  expectedArrival = LocalDate.now(),
-                  duration = 1,
-                )
+        val placementApplication1 = givenAPlacementApplication(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = offenderDetails1.otherIds.crn,
+          name = "SOMEONE",
+          submittedAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-                val placementApplication2 = givenAPlacementApplication(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  crn = offenderDetails2.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                  name = "ANOTHER",
-                  expectedArrival = LocalDate.now(),
-                  duration = 1,
-                )
+        val placementApplication2 = givenAPlacementApplication(
+          createdByUser = user,
+          allocatedToUser = user,
+          crn = offenderDetails2.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          name = "ANOTHER",
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-                nameMatchTasks = mapOf(
-                  TaskType.assessment to taskTransformer.transformAssessmentToTask(
-                    assessment1,
-                    offenderSummaries1,
-                  ),
-                  TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
-                    placementApplication1,
-                    offenderSummaries1,
-                  ),
-                )
+        nameMatchTasks = mapOf(
+          TaskType.assessment to taskTransformer.transformAssessmentToTask(
+            assessment1,
+            offenderSummaries1,
+          ),
+          TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
+            placementApplication1,
+            offenderSummaries1,
+          ),
+        )
 
-                crnMatchTasks = mapOf(
-                  TaskType.assessment to taskTransformer.transformAssessmentToTask(
-                    assessment2,
-                    offenderSummaries2,
-                  ),
-                  TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
-                    placementApplication2,
-                    offenderSummaries2,
-                  ),
-                )
-              }
-            }
-          }
-        }
+        crnMatchTasks = mapOf(
+          TaskType.assessment to taskTransformer.transformAssessmentToTask(
+            assessment2,
+            offenderSummaries2,
+          ),
+          TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
+            placementApplication2,
+            offenderSummaries2,
+          ),
+        )
+        return offenderDetails2.otherIds.crn
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
-      fun `Get all tasks filters by name and task type`(taskType: TaskType) {
-        val url = "/cas1/tasks?type=${taskType.value}&crnOrName=someone"
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filters by name and assessment task type`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        setupForUser(user)
+        val url = "/cas1/tasks?type=Assessment&crnOrName=someone"
 
         webTestClient.get()
           .uri(url)
@@ -1031,15 +1132,17 @@ class Cas1TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(nameMatchTasks[taskType]),
+              listOf(nameMatchTasks[TaskType.assessment]!!),
             ),
           )
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
-      fun `Get all tasks filters by CRN and task type`(taskType: TaskType) {
-        val url = "/cas1/tasks?type=${taskType.value}&crnOrName=$crn"
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filters by name and placement application task type`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        setupForUser(user)
+        val url = "/cas1/tasks?type=PlacementApplication&crnOrName=someone"
 
         webTestClient.get()
           .uri(url)
@@ -1050,13 +1153,58 @@ class Cas1TasksTest {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(crnMatchTasks[taskType]),
+              listOf(nameMatchTasks[TaskType.placementApplication]!!),
             ),
           )
       }
 
-      @Test
-      fun `Get all tasks filters by name without task type`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filters by CRN and assessment task type`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val crn = setupForUser(user)
+        val url = "/cas1/tasks?type=Assessment&crnOrName=$crn"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(crnMatchTasks[TaskType.assessment]!!),
+            ),
+          )
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filters by CRN and placement application task type`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val crn = setupForUser(user)
+        val url = "/cas1/tasks?type=PlacementApplication&crnOrName=$crn"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(crnMatchTasks[TaskType.placementApplication]!!),
+            ),
+          )
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filters by name without task type`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        setupForUser(user)
         val url = "/cas1/tasks?crnOrName=someone"
         val expectedTasks = listOf(
           nameMatchTasks[TaskType.assessment],
@@ -1077,8 +1225,11 @@ class Cas1TasksTest {
           )
       }
 
-      @Test
-      fun `Get all tasks filters by CRN without task type`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks filters by CRN without task type`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val crn = setupForUser(user)
         val url = "/cas1/tasks?crnOrName=$crn"
         val expectedTasks = listOf(
           crnMatchTasks[TaskType.assessment],
@@ -1101,95 +1252,87 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class FilterByCompleted : InitialiseDatabasePerClassTestBase() {
-      lateinit var jwt: String
-      lateinit var crn: String
-
-      private lateinit var incompleteTasks: List<Task>
-      private lateinit var completeTasks: List<Task>
+    inner class FilterByCompleted : IntegrationTestBase() {
 
       @Autowired
       lateinit var taskTransformer: TaskTransformer
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
-              this.crn = offenderDetails.otherIds.crn
+      fun setupForUser(user: UserEntity): Triple<String, List<Task>, List<Task>> {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails, _) = givenAnOffender()
 
-              val offenderSummaries = getOffenderSummaries(offenderDetails)
+        val offenderSummaries = getOffenderSummaries(offenderDetails)
 
-              val (assessment1, _) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS),
-              )
+        val (assessment1, _) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS),
+        )
 
-              val (assessment2, _) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
+        val (assessment2, _) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+        )
 
-              val placementApplication1 = givenAPlacementApplication(
-                createdByUser = otherUser,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        val placementApplication1 = givenAPlacementApplication(
+          createdByUser = otherUser,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              val placementApplication2 = givenAPlacementApplication(
-                createdByUser = otherUser,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                decision = ACCEPTED,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        val placementApplication2 = givenAPlacementApplication(
+          createdByUser = otherUser,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now(),
+          decision = ACCEPTED,
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              incompleteTasks = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  assessment1,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication1,
-                  offenderSummaries,
-                ),
-              )
+        val incompleteTasks = listOf(
+          taskTransformer.transformAssessmentToTask(
+            assessment1,
+            offenderSummaries,
+          ),
+          taskTransformer.transformPlacementApplicationToTask(
+            placementApplication1,
+            offenderSummaries,
+          ),
+        )
 
-              completeTasks = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  assessment2,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  assessmentTestRepository.findAllByApplication(placementApplication1.application)[0],
-                  offenderSummaries,
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  assessmentTestRepository.findAllByApplication(placementApplication2.application)[0],
-                  offenderSummaries,
-                ),
-                taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication2,
-                  offenderSummaries,
-                ),
-              )
-            }
-          }
-        }
+        val completeTasks = listOf(
+          taskTransformer.transformAssessmentToTask(
+            assessment2,
+            offenderSummaries,
+          ),
+          taskTransformer.transformAssessmentToTask(
+            assessmentTestRepository.findAllByApplication(placementApplication1.application)[0],
+            offenderSummaries,
+          ),
+          taskTransformer.transformAssessmentToTask(
+            assessmentTestRepository.findAllByApplication(placementApplication2.application)[0],
+            offenderSummaries,
+          ),
+          taskTransformer.transformPlacementApplicationToTask(
+            placementApplication2,
+            offenderSummaries,
+          ),
+        )
+        return Triple(offenderDetails.otherIds.crn, incompleteTasks, completeTasks)
       }
 
-      @Test
-      fun `Get all tasks shows incomplete tasks by default`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks shows incomplete tasks by default`(role: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(role))
+        val (_, incompleteTasks, _) = setupForUser(user)
         webTestClient.get()
           .uri("/cas1/tasks")
           .header("Authorization", "Bearer $jwt")
@@ -1204,8 +1347,11 @@ class Cas1TasksTest {
           )
       }
 
-      @Test
-      fun `Get all tasks shows allows showing completed tasks`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks shows allows showing completed tasks`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val (_, _, completeTasks) = setupForUser(user)
         objectMapper.setDateFormat(SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss"))
 
         val rawResponseBody = webTestClient.get()
@@ -1234,149 +1380,149 @@ class Cas1TasksTest {
     }
 
     @Nested
-    inner class SortByTest : InitialiseDatabasePerClassTestBase() {
-      lateinit var jwt: String
-      lateinit var crn: String
-
-      private lateinit var tasks: Map<UUID, Task>
-      private lateinit var assessments: Map<UUID, AssessmentEntity>
-      private lateinit var placementRequests: Map<UUID, PlacementRequestEntity>
-      private lateinit var placementApplications: Map<UUID, PlacementApplicationEntity>
+    inner class SortByTest : IntegrationTestBase() {
 
       @Autowired
       lateinit var taskTransformer: TaskTransformer
 
-      @BeforeAll
-      fun setup() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-          givenAUser { otherUser, _ ->
-            givenAnOffender { offenderDetails, _ ->
-              this.jwt = jwt
-              this.crn = offenderDetails.otherIds.crn
+      fun setupForUser(user: UserEntity): TaskSortTestData {
+        val (otherUser, _) = givenAUser()
+        val (offenderDetails, _) = givenAnOffender()
+        val (assessment1, _) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          apType = ApprovedPremisesType.ESAP,
+        )
 
-              val (assessment1, _) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                apType = ApprovedPremisesType.ESAP,
-              )
+        val (assessment2, _) = givenAnAssessmentForApprovedPremises(
+          allocatedToUser = otherUser,
+          createdByUser = otherUser,
+          crn = offenderDetails.otherIds.crn,
+          createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          apType = ApprovedPremisesType.MHAP_ELLIOTT_HOUSE,
+        )
 
-              val (assessment2, _) = givenAnAssessmentForApprovedPremises(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                apType = ApprovedPremisesType.MHAP_ELLIOTT_HOUSE,
-              )
+        val (placementRequest1, _) = givenAPlacementRequest(
+          assessmentAllocatedTo = otherUser,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn,
+          booking = bookingEntityFactory.produceAndPersist {
+            withPremises(givenAnApprovedPremises())
+          },
+          apType = ApprovedPremisesType.ESAP,
+        )
 
-              val (placementRequest1, _) = givenAPlacementRequest(
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                booking = bookingEntityFactory.produceAndPersist {
-                  withPremises(givenAnApprovedPremises())
-                },
-                apType = ApprovedPremisesType.ESAP,
-              )
+        val (placementRequest2, _) = givenAPlacementRequest(
+          assessmentAllocatedTo = otherUser,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn,
+          dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          booking = bookingEntityFactory.produceAndPersist {
+            withPremises(givenAnApprovedPremises())
+          },
+          apType = ApprovedPremisesType.RFAP,
+        )
 
-              val (placementRequest2, _) = givenAPlacementRequest(
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                booking = bookingEntityFactory.produceAndPersist {
-                  withPremises(givenAnApprovedPremises())
-                },
-                apType = ApprovedPremisesType.RFAP,
-              )
+        val offenderSummaries = getOffenderSummaries(offenderDetails)
+        val (placementRequest3, _) = givenAPlacementRequest(
+          assessmentAllocatedTo = otherUser,
+          createdByUser = user,
+          crn = offenderDetails.otherIds.crn,
+          dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          apType = ApprovedPremisesType.PIPE,
+        )
 
-              val offenderSummaries = getOffenderSummaries(offenderDetails)
-              val (placementRequest3, _) = givenAPlacementRequest(
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                apType = ApprovedPremisesType.PIPE,
-              )
+        placementRequest3.bookingNotMades = mutableListOf(
+          bookingNotMadeFactory.produceAndPersist {
+            withPlacementRequest(placementRequest3)
+          },
+        )
 
-              placementRequest3.bookingNotMades = mutableListOf(
-                bookingNotMadeFactory.produceAndPersist {
-                  withPlacementRequest(placementRequest3)
-                },
-              )
+        val placementApplication1 = givenAPlacementApplication(
+          createdByUser = otherUser,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          decision = REJECTED,
+          apType = ApprovedPremisesType.MHAP_ST_JOSEPHS,
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              val placementApplication1 = givenAPlacementApplication(
-                createdByUser = otherUser,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                decision = REJECTED,
-                apType = ApprovedPremisesType.MHAP_ST_JOSEPHS,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        val placementApplication2 = givenAPlacementApplication(
+          createdByUser = otherUser,
+          allocatedToUser = user,
+          crn = offenderDetails.otherIds.crn,
+          submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+          decision = ACCEPTED,
+          apType = ApprovedPremisesType.NORMAL,
+          expectedArrival = LocalDate.now(),
+          duration = 1,
+        )
 
-              val placementApplication2 = givenAPlacementApplication(
-                createdByUser = otherUser,
-                allocatedToUser = user,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-                decision = ACCEPTED,
-                apType = ApprovedPremisesType.NORMAL,
-                expectedArrival = LocalDate.now(),
-                duration = 1,
-              )
+        val assessments = mapOf(
+          assessment1.id to assessment1,
+          assessment2.id to assessment2,
+          placementRequest1.assessment.id to placementRequest1.assessment,
+          placementRequest2.assessment.id to placementRequest2.assessment,
+          placementRequest3.assessment.id to placementRequest3.assessment,
+          placementApplication1.application.getLatestAssessment()!!.id to placementApplication1.application.getLatestAssessment()!!,
+          placementApplication2.application.getLatestAssessment()!!.id to placementApplication2.application.getLatestAssessment()!!,
+        )
 
-              assessments = mapOf(
-                assessment1.id to assessment1,
-                assessment2.id to assessment2,
-                placementRequest1.assessment.id to placementRequest1.assessment,
-                placementRequest2.assessment.id to placementRequest2.assessment,
-                placementRequest3.assessment.id to placementRequest3.assessment,
-                placementApplication1.application.getLatestAssessment()!!.id to placementApplication1.application.getLatestAssessment()!!,
-                placementApplication2.application.getLatestAssessment()!!.id to placementApplication2.application.getLatestAssessment()!!,
-              )
+        val placementRequests = mapOf(
+          placementRequest1.id to placementRequest1,
+          placementRequest2.id to placementRequest2,
+          placementRequest3.id to placementRequest3,
+        )
 
-              placementRequests = mapOf(
-                placementRequest1.id to placementRequest1,
-                placementRequest2.id to placementRequest2,
-                placementRequest3.id to placementRequest3,
-              )
+        val placementApplications = mapOf(
+          placementApplication1.id to placementApplication1,
+          placementApplication2.id to placementApplication2,
+        )
 
-              placementApplications = mapOf(
-                placementApplication1.id to placementApplication1,
-                placementApplication2.id to placementApplication2,
-              )
+        val tasks = mutableMapOf<UUID, Task>()
+        tasks.putAll(
+          assessments.mapValues {
+            taskTransformer.transformAssessmentToTask(
+              it.value,
+              offenderSummaries,
+            )
+          },
+        )
+        tasks.putAll(
+          placementApplications.mapValues {
+            taskTransformer.transformPlacementApplicationToTask(
+              it.value,
+              offenderSummaries,
+            )
+          },
+        )
 
-              tasks = mapOf()
-              tasks += assessments.mapValues {
-                taskTransformer.transformAssessmentToTask(
-                  it.value,
-                  offenderSummaries,
-                )
-              }
-              tasks += placementApplications.mapValues {
-                taskTransformer.transformPlacementApplicationToTask(
-                  it.value,
-                  offenderSummaries,
-                )
-              }
-            }
-          }
-        }
+        return TaskSortTestData(
+          crn = offenderDetails.otherIds.crn,
+          tasks = tasks,
+          assessments = assessments,
+          placementRequests = placementRequests,
+          placementApplications = placementApplications,
+        )
       }
 
-      @Test
-      fun `Get all tasks sorts by createdAt in ascending order by default`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by createdAt in ascending order by default`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val response = webTestClient.get()
           .uri("/cas1/tasks?isCompleted=true&page=1&perPage=10")
           .header("Authorization", "Bearer $jwt")
@@ -1385,17 +1531,20 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskCreatedAt = tasks.values.map { getCreatedAt(it) }
+        val expectedTaskCreatedAt = taskSortTestData.tasks.values.map { getCreatedAt(it, taskSortTestData) }
           .sortedWith(compareBy(nullsLast()) { it })
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
-          assertThat(getCreatedAt(task)).isEqualTo(expectedTaskCreatedAt[index])
+          assertThat(getCreatedAt(task, taskSortTestData)).isEqualTo(expectedTaskCreatedAt[index])
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by createdAt in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by createdAt in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=createdAt&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1406,17 +1555,20 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskCreatedAt = tasks.values.map { getCreatedAt(it) }
+        val expectedTaskCreatedAt = taskSortTestData.tasks.values.map { getCreatedAt(it, taskSortTestData) }
           .sortedWith(compareBy(nullsLast()) { it })
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
-          assertThat(getCreatedAt(task)).isEqualTo(expectedTaskCreatedAt[index])
+          assertThat(getCreatedAt(task, taskSortTestData)).isEqualTo(expectedTaskCreatedAt[index])
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by createdAt in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by createdAt in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=createdAt&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1427,17 +1579,20 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskCreatedAt = tasks.values.map { getCreatedAt(it) }
+        val expectedTaskCreatedAt = taskSortTestData.tasks.values.map { getCreatedAt(it, taskSortTestData) }
           .sortedWith(compareByDescending(nullsLast()) { it })
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
-          assertThat(getCreatedAt(task)).isEqualTo(expectedTaskCreatedAt[index])
+          assertThat(getCreatedAt(task, taskSortTestData)).isEqualTo(expectedTaskCreatedAt[index])
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by dueAt in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by dueAt in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=dueAt&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1448,7 +1603,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskDueAt = tasks.values.map { it.dueAt }.sorted()
+        val expectedTaskDueAt = taskSortTestData.tasks.values.map { it.dueAt }.sorted()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1456,8 +1611,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by dueAt in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by dueAt in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=dueAt&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1468,7 +1626,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskDueAt = tasks.values.map { it.dueAt }.sortedDescending()
+        val expectedTaskDueAt = taskSortTestData.tasks.values.map { it.dueAt }.sortedDescending()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1476,8 +1634,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by allocatedTo in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by allocatedTo in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1488,7 +1649,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskAllocatedName = tasks.values.map { it.allocatedToStaffMember!!.name }.sorted()
+        val expectedTaskAllocatedName = taskSortTestData.tasks.values.map { it.allocatedToStaffMember!!.name }.sorted()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1496,8 +1657,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by allocatedTo in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by allocatedTo in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=allocatedTo&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1508,7 +1672,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskAllocatedName = tasks.values.map { it.allocatedToStaffMember!!.name }.sortedDescending()
+        val expectedTaskAllocatedName = taskSortTestData.tasks.values.map { it.allocatedToStaffMember!!.name }.sortedDescending()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1516,8 +1680,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by person in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by person in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=person&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1528,7 +1695,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskPersonNames = tasks.values.map { it.personName }.sorted()
+        val expectedTaskPersonNames = taskSortTestData.tasks.values.map { it.personName }.sorted()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1536,8 +1703,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by person in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by person in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=person&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1548,7 +1718,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskPersonNames = tasks.values.map { it.personName }.sortedDescending()
+        val expectedTaskPersonNames = taskSortTestData.tasks.values.map { it.personName }.sortedDescending()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1556,8 +1726,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by completedAt in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by completedAt in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=completedAt&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1568,7 +1741,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskCompletedAts = tasks.values.map { it.outcomeRecordedAt }
+        val expectedTaskCompletedAts = taskSortTestData.tasks.values.map { it.outcomeRecordedAt }
           .sortedWith(compareBy(nullsLast()) { it })
 
         assertThat(response).hasSize(9)
@@ -1577,8 +1750,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by completedAt in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by completedAt in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=completedAt&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1589,7 +1765,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskCompletedAts = tasks.values.map { it.outcomeRecordedAt }
+        val expectedTaskCompletedAts = taskSortTestData.tasks.values.map { it.outcomeRecordedAt }
           .sortedWith(compareByDescending(nullsLast()) { it })
 
         assertThat(response).hasSize(9)
@@ -1598,8 +1774,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by taskType in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by taskType in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=taskType&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1610,7 +1789,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskTypes = tasks.values.map { it.taskType }.sorted()
+        val expectedTaskTypes = taskSortTestData.tasks.values.map { it.taskType }.sorted()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1618,8 +1797,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by expected arrival date in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by expected arrival date in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1630,7 +1812,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedArrivalDates = tasks.values.map { it.expectedArrivalDate.toString() }.sorted()
+        val expectedArrivalDates = taskSortTestData.tasks.values.map { it.expectedArrivalDate.toString() }.sorted()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1638,8 +1820,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by expected arrival date in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by expected arrival date in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1650,7 +1835,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedArrivalDates = tasks.values.map { it.expectedArrivalDate.toString() }.sortedDescending()
+        val expectedArrivalDates = taskSortTestData.tasks.values.map { it.expectedArrivalDate.toString() }.sortedDescending()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1658,8 +1843,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by taskType in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by taskType in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=taskType&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1670,7 +1858,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskTypes = tasks.values.map { it.taskType }.sortedDescending()
+        val expectedTaskTypes = taskSortTestData.tasks.values.map { it.taskType }.sortedDescending()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1678,8 +1866,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by decision in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by decision in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=decision&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1690,7 +1881,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedDecisions = tasks.values.map { getDecision(it) }
+        val expectedDecisions = taskSortTestData.tasks.values.map { getDecision(it) }
           .sortedWith(compareBy(nullsLast()) { it })
 
         assertThat(response).hasSize(9)
@@ -1699,8 +1890,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by decision in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by decision in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=decision&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1711,7 +1905,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedDecisions = tasks.values.map { getDecision(it) }
+        val expectedDecisions = taskSortTestData.tasks.values.map { getDecision(it) }
           .sortedWith(compareByDescending(nullsLast()) { it })
 
         assertThat(response).hasSize(9)
@@ -1720,8 +1914,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by apType in ascending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by apType in ascending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=apType&sortDirection=asc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1732,7 +1929,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskApType = tasks.values.map { it.apType.value }.sorted()
+        val expectedTaskApType = taskSortTestData.tasks.values.map { it.apType.value }.sorted()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1740,8 +1937,11 @@ class Cas1TasksTest {
         }
       }
 
-      @Test
-      fun `Get all tasks sorts by apType in descending order`() {
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.INCLUDE)
+      fun `Get all tasks sorts by apType in descending order`(userRole: UserRole) {
+        val (user, jwt) = givenAUser(roles = listOf(userRole))
+        val taskSortTestData = setupForUser(user)
         val url = "/cas1/tasks?isCompleted=true&sortBy=apType&sortDirection=desc&page=1&perPage=10"
 
         val response = webTestClient.get()
@@ -1752,7 +1952,7 @@ class Cas1TasksTest {
           .isOk
           .bodyAsListOfObjects<Task>()
 
-        val expectedTaskApType = tasks.values.map { it.apType.value }.sortedDescending()
+        val expectedTaskApType = taskSortTestData.tasks.values.map { it.apType.value }.sortedDescending()
 
         assertThat(response).hasSize(9)
         response.forEachIndexed { index, task ->
@@ -1766,9 +1966,9 @@ class Cas1TasksTest {
         else -> fail()
       }
 
-      private fun getCreatedAt(task: Task): OffsetDateTime = when (task) {
-        is AssessmentTask -> assessments[task.id]!!.createdAt
-        is PlacementApplicationTask -> placementApplications[task.id]!!.createdAt
+      private fun getCreatedAt(task: Task, taskSortTestData: TaskSortTestData): OffsetDateTime = when (task) {
+        is AssessmentTask -> taskSortTestData.assessments[task.id]!!.createdAt
+        is PlacementApplicationTask -> taskSortTestData.placementApplications[task.id]!!.createdAt
         else -> fail()
       }
     }
@@ -1781,6 +1981,26 @@ class Cas1TasksTest {
 
     @Autowired
     lateinit var userTransformer: UserTransformer
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Return 403 forbidden for users with roles other than CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR, CAS1_AP_AREA_MANAGER`(userRole: UserRole) {
+      val (user, jwt) = givenAUser(roles = listOf(userRole))
+
+      val placementApplication = givenAPlacementApplication(
+        createdByUser = user,
+        allocatedToUser = user,
+        crn = "CRN123",
+        submittedAt = OffsetDateTime.now(),
+      )
+
+      webTestClient.get()
+        .uri("/cas1/tasks/placement-application/${placementApplication.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
 
     @Test
     fun `Request without JWT returns 401`() {
@@ -1976,7 +2196,7 @@ class Cas1TasksTest {
 
     @Test
     fun `If request is for a placement application that is not submitted, return not found because a task doesn't yet exist to complete`() {
-      val (creatingUser, jwt) = givenAUser()
+      val (creatingUser, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       val placementApplication = givenAPlacementApplication(
         createdByUser = creatingUser,
@@ -2003,7 +2223,7 @@ class Cas1TasksTest {
 
       val (allocatableUser, _) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
 
-      val (creatingUser, jwt) = givenAUser()
+      val (creatingUser, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       val (offenderDetails) = givenAnOffender()
       val crn = offenderDetails.otherIds.crn
@@ -2145,6 +2365,23 @@ class Cas1TasksTest {
     @BeforeEach
     fun stubBankHolidaysApi() {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Return 400 bad request for users with roles other than CAS1_CRU_MEMBER`(userRole: UserRole) {
+      val (_, jwt) = givenAUser(roles = listOf(userRole))
+      webTestClient.post()
+        .uri("/cas1/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewReallocation(
+            userId = UUID.randomUUID(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
     }
 
     @Test
@@ -2333,6 +2570,19 @@ class Cas1TasksTest {
 
   @Nested
   inner class DeallocateTaskTest : IntegrationTestBase() {
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Return 403 forbidden for users with roles other than CAS1_CRU_MEMBER`(userRole: UserRole) {
+      val (_, jwt) = givenAUser(roles = listOf(userRole))
+      webTestClient.delete()
+        .uri("/cas1/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
     @Test
     fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
       webTestClient.delete()
@@ -2377,5 +2627,13 @@ class Cas1TasksTest {
       )
         .produce(),
     ),
+  )
+
+  data class TaskSortTestData(
+    val crn: String,
+    val tasks: Map<UUID, Task>,
+    val assessments: Map<UUID, AssessmentEntity>,
+    val placementRequests: Map<UUID, PlacementRequestEntity>,
+    val placementApplications: Map<UUID, PlacementApplicationEntity>,
   )
 }

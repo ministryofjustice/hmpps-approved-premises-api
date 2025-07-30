@@ -803,17 +803,10 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanReallocateTask returns false otherwise if the current request has 'X-Service-Name' header with value 'approved-premises'`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanReallocateTask(user)).isFalse
-  }
-
-  @Test
-  fun `userCanReallocateTask returns false by default`() {
+  fun `userCanReallocateTask returns true by default`() {
     currentRequestIsForArbitraryService()
 
-    assertThat(userAccessService.userCanReallocateTask(user)).isFalse
+    assertThat(userAccessService.userCanReallocateTask(user)).isTrue
   }
 
   @Test
