@@ -9,6 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2StatusUpdateMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBedSpaceStartDateJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBookingOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdatePremisesStartDateJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3VoidBedspaceJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ArsonSuitableToArsonOffencesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillOfflineApplicationName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
@@ -19,13 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1Updat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApprovedPremisesApplicationWithOffenderJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateAssessmentReportPropertiesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateRoomCodesJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3MigrateNewBedspaceModelDataJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateApplicationOffenderNameJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateBedSpaceStartDateJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateBookingOffenderNameJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3UpdatePremisesStartDateJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3VoidBedspaceJob
 import kotlin.reflect.KClass
 
 @Service

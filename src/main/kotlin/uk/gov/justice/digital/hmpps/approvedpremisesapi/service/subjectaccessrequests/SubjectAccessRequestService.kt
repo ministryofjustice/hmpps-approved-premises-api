@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.CAS3SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS3SubjectAccessRequestRepository
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonProbationSubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 import java.time.LocalDate

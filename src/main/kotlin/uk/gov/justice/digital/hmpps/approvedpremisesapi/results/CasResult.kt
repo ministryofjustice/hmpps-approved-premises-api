@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.results
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Cas3ValidationMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 

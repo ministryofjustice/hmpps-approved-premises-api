@@ -5,7 +5,7 @@ import com.opencsv.bean.CsvBindByName
 import com.opencsv.bean.CsvToBeanBuilder
 import com.opencsv.bean.HeaderColumnNameMappingStrategy
 import com.opencsv.bean.StatefulBeanToCsvBuilder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.FutureBookingsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.FutureBookingsReportRow
 import java.io.OutputStream
 import java.io.StringReader
 import java.nio.charset.Charset

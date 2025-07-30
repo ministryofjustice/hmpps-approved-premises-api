@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSearchResultTransformer
 
 @Service

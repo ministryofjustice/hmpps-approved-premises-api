@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util
 
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Cas3ValidationMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
 fun <T> assertThatCasResult(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)

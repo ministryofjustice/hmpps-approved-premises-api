@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3Event
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 
 class CAS3BedspaceUnarchiveEvent(
   val eventDetails: CAS3BedspaceUnarchiveEventDetails,
