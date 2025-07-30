@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
@@ -226,7 +227,7 @@ class Cas1AssessmentService(
     lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
 
     val acceptedAt = OffsetDateTime.now(clock)
-    val createPlacementRequest = placementDates != null
+    val includesRequestForPlacement = placementDates != null
 
     val assessment = when (val validation = validateAssessmentForDecision(acceptingUser, assessmentId)) {
       is CasResult.Success -> validation.value
@@ -252,14 +253,11 @@ class Cas1AssessmentService(
      */
     val placementRequirementsResult = cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
 
-    if (createPlacementRequest) {
-      placementRequestService.createPlacementRequest(
-        PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+    if (includesRequestForPlacement) {
+      createRequestForPlacement(
         placementRequirementsResult,
         placementDates,
         notes,
-        false,
-        null,
       )
     }
 
@@ -278,11 +276,26 @@ class Cas1AssessmentService(
     )
     cas1AssessmentEmailService.assessmentAccepted(application)
 
-    if (createPlacementRequest) {
+    if (includesRequestForPlacement) {
       cas1PlacementRequestEmailService.placementRequestSubmitted(application)
     }
 
     return CasResult.Success(savedAssessment)
+  }
+
+  private fun createRequestForPlacement(
+    placementRequirements: PlacementRequirementsEntity,
+    placementDates: PlacementDates,
+    notes: String?,
+  ) {
+    placementRequestService.createPlacementRequest(
+      PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+      placementRequirements,
+      placementDates,
+      notes,
+      false,
+      null,
+    )
   }
 
   @Transactional
