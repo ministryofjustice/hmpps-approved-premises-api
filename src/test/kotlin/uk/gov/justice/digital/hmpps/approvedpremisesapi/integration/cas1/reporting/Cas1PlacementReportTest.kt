@@ -106,7 +106,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
     assessorJwt = assessorDetails.second
 
     user = givenAUser(
-      roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA),
+      roles = listOf(UserRole.CAS1_CRU_MEMBER),
     ).first
 
     criteria = mutableListOf(

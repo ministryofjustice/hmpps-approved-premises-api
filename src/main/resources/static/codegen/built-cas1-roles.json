@@ -55,40 +55,6 @@
     ]
   },
   {
-    "name" : "cru_member_find_and_book_beta",
-    "permissions" : [
-      "cas1_adhoc_booking_create",
-      "cas1_application_withdraw_others",
-      "cas1_booking_change_dates",
-      "cas1_booking_withdraw",
-      "cas1_offline_application_view",
-      "cas1_out_of_service_bed_cancel",
-      "cas1_out_of_service_bed_create",
-      "cas1_out_of_service_bed_create_bed_on_hold",
-      "cas1_placement_request_record_unable_to_match",
-      "cas1_premises_capacity_report_view",
-      "cas1_premises_view",
-      "cas1_request_for_placement_withdraw_others",
-      "cas1_space_booking_create",
-      "cas1_space_booking_list",
-      "cas1_space_booking_view",
-      "cas1_space_booking_withdraw",
-      "cas1_tasks_allocate",
-      "cas1_tasks_list",
-      "cas1_user_list",
-      "cas1_view_cru_dashboard",
-      "cas1_view_manage_tasks",
-      "cas1_view_out_of_service_beds"
-    ]
-  },
-  {
-    "name" : "cru_member_enable_out_of_service_beds",
-    "permissions" : [
-      "cas1_out_of_service_bed_create",
-      "cas1_view_out_of_service_beds"
-    ]
-  },
-  {
     "name" : "change_request_dev",
     "permissions" : [
       "cas1_change_request_list",
@@ -201,6 +167,7 @@
   {
     "name" : "ap_area_manager",
     "permissions" : [
+      "cas1_tasks_list",
       "cas1_view_manage_tasks"
     ]
   }

@@ -357,7 +357,7 @@ class Cas1OutOfServiceBedServiceTest {
         .withDefaults()
         .produce()
         .apply {
-          roles.add(UserRoleAssignmentEntity(UUID.randomUUID(), this, UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+          roles.add(UserRoleAssignmentEntity(UUID.randomUUID(), this, UserRole.CAS1_CRU_MEMBER))
         }
 
       every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
@@ -644,7 +644,7 @@ class Cas1OutOfServiceBedServiceTest {
       val user = UserEntityFactory()
         .withDefaults()
         .produce().apply {
-          roles.add(UserRoleAssignmentEntity(UUID.randomUUID(), this, UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+          roles.add(UserRoleAssignmentEntity(UUID.randomUUID(), this, UserRole.CAS1_CRU_MEMBER))
         }
 
       every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed

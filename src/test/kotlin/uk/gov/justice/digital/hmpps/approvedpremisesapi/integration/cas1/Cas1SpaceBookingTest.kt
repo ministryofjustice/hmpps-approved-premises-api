@@ -96,7 +96,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space without JWT returns 401`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, _ ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, _ ->
         givenAPlacementRequest(
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -135,7 +135,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space for an unknown placement request returns 400 Bad Request`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
         val placementRequestId = UUID.randomUUID()
@@ -162,7 +162,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space for an unknown premises returns 400 Bad Request`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAPlacementRequest(
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -190,7 +190,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space where the departure date is before the arrival date returns 400 Bad Request`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAPlacementRequest(
           assessmentAllocatedTo = user,
           createdByUser = user,
@@ -220,7 +220,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Booking a space returns OK with the correct data, updates app status, emits domain event and emails`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { applicant, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { applicant, jwt ->
         givenAPlacementRequest(
           assessmentAllocatedTo = applicant,
           createdByUser = applicant,
@@ -2136,7 +2136,7 @@ class Cas1SpaceBookingTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Cancellation with invalid role returns 401`(role: UserRole) {
@@ -2159,7 +2159,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Cancellation returns OK, updates status and sends emails when user has role CRU_MEMBER`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
           .header("Authorization", "Bearer $jwt")
@@ -2373,7 +2373,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Update space booking returns OK, and correctly update booking dates`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       webTestClient.patch()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}")
@@ -2405,7 +2405,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Update space booking returns OK, and correctly update the room characteristics`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       val (user) = givenAUser()
 
@@ -2492,7 +2492,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Update space booking correctly removes existing room characteristics when none provided`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       val (user) = givenAUser()
 

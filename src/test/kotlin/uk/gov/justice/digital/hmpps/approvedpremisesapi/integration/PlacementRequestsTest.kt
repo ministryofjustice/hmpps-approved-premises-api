@@ -100,7 +100,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
     fun `Get dashboard without CAS1_VIEW_CRU_DASHBOARD permission returns 401`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -1302,7 +1302,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA"], mode = EnumSource.Mode.INCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"], mode = EnumSource.Mode.INCLUDE)
     fun `Create a Booking Not Made from a Placement Request returns 200 and creates a domain event`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         givenAUser { otherUser, _ ->
@@ -1357,7 +1357,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @Test
     fun `Withdraw Placement Request without CAS1_CRU_MEMBER returns 403`() {
       givenAUser { creator, _ ->
-        givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, UserRole.CAS1_JANITOR)) { user, jwt ->
+        givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_JANITOR)) { user, jwt ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = user) {
               givenAPlacementRequest(

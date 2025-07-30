@@ -575,7 +575,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     premisesName: String = randomStringMultiCaseWithNumbers(8),
   ): UUID {
     val managerJwt = givenAUser(
-      roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA),
+      roles = listOf(UserRole.CAS1_CRU_MEMBER),
       staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "Jeff", surname = "Jefferson"), deliusUsername = matcherUsername),
       probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
