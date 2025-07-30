@@ -58,8 +58,6 @@ user-allocations:
     esap-assessments:
       allocate-to-user: JIMSNOWLDAP
 
-assign-default-region-to-users-with-unknown-region: true
-
 # Logging
 
 log-client-credentials-jwt-info: true

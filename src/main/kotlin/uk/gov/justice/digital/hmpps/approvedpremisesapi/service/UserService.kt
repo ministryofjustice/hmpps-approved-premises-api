@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -18,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -44,20 +42,13 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 @Service
-class UserServiceConfig(
-  @Value("\${assign-default-region-to-users-with-unknown-region}") val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
-)
-
-@Service
 class UserService(
-  private val userServiceConfig: UserServiceConfig,
   private val requestContextService: RequestContextService,
   private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
   private val userRepository: UserRepository,
   private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
-  private val probationRegionRepository: ProbationRegionRepository,
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
   private val cas1ApAreaMappingService: Cas1ApAreaMappingService,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
@@ -371,15 +362,10 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    var staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea.code)
+    val staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea.code)
 
     if (staffProbationRegion == null) {
-      if (userServiceConfig.assignDefaultRegionToUsersWithUnknownRegion) {
-        log.warn("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername', assigning a default region of 'North West'.")
-        staffProbationRegion = probationRegionRepository.findByName("North West")!!
-      } else {
-        throw RuntimeException("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername'")
-      }
+      throw RuntimeException("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername'")
     }
 
     val pduResult = findDeliusUserLastPdu(staffUserDetails)
