@@ -48,7 +48,6 @@ generic-service:
     URL-TEMPLATES_FRONTEND_APPLICATION-APPEAL: https://approved-premises.hmpps.service.justice.gov.uk/applications/#applicationId/appeals/#appealId
     URL-TEMPLATES_FRONTEND_APPLICATION-TIMELINE: https://approved-premises.hmpps.service.justice.gov.uk/applications/#applicationId?tab=timeline
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises.hmpps.service.justice.gov.uk/assessments/#id
-    URL-TEMPLATES_FRONTEND_BOOKING: https://approved-premises.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
     URL-TEMPLATES_FRONTEND_CAS1_CRU-DASHBOARD: https://approved-premises.hmpps.service.justice.gov.uk/admin/cru-dashboard
     URL-TEMPLATES_FRONTEND_CAS1_CRU-OPEN-CHANGE-REQUESTS: https://approved-premises.hmpps.service.justice.gov.uk/admin/cru-dashboard/change-requests
     URL-TEMPLATES_FRONTEND_CAS1_SPACE-BOOKING: https://approved-premises.hmpps.service.justice.gov.uk/manage/premises/#premisesId/placements/#bookingId

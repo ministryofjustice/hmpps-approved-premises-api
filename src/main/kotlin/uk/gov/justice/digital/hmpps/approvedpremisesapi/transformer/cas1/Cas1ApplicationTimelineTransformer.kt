@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 class Cas1ApplicationTimelineTransformer(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.cas1.space-booking}") private val cas1SpaceBookingUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-appeal}") private val appealUrlTemplate: UrlTemplate,
   private val cas1DomainEventDescriber: Cas1DomainEventDescriber,
@@ -75,20 +74,6 @@ class Cas1ApplicationTimelineTransformer(
     )
   }
 
-  private fun bookingUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.bookingId?.let {
-    domainEventSummary.premisesId?.let {
-      Cas1TimelineEventAssociatedUrl(
-        Cas1TimelineEventUrlType.booking,
-        bookingUrlTemplate.resolve(
-          mapOf(
-            "premisesId" to domainEventSummary.premisesId.toString(),
-            "bookingId" to domainEventSummary.bookingId.toString(),
-          ),
-        ),
-      )
-    }
-  }
-
   private fun cas1SpaceBookingUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.cas1SpaceBookingId?.let {
     domainEventSummary.premisesId?.let {
       Cas1TimelineEventAssociatedUrl(
@@ -115,7 +100,6 @@ class Cas1ApplicationTimelineTransformer(
     else -> listOfNotNull(
       applicationUrlOrNull(domainEventSummary),
       assessmentUrlOrNull(domainEventSummary),
-      bookingUrlOrNull(domainEventSummary),
       cas1SpaceBookingUrlOrNull(domainEventSummary),
     )
   }

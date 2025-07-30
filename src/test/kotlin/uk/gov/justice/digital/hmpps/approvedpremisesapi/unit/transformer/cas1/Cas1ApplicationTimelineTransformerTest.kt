@@ -38,7 +38,6 @@ class Cas1ApplicationTimelineTransformerTest {
   private val applicationTimelineTransformer = Cas1ApplicationTimelineTransformer(
     applicationUrlTemplate = UrlTemplate("http://somehost:3000/applications/#id"),
     assessmentUrlTemplate = UrlTemplate("http://somehost:3000/assessments/#id"),
-    bookingUrlTemplate = UrlTemplate("http://somehost:3000/premises/#premisesId/bookings/#bookingId"),
     cas1SpaceBookingUrlTemplate = UrlTemplate("http://somehost:3000/manage/premises/#premisesId/bookings/#bookingId"),
     appealUrlTemplate = UrlTemplate("http://somehost:3000/applications/#applicationId/appeals/#appealId"),
     mockCas1DomainEventDescriber,
@@ -198,40 +197,6 @@ class Cas1ApplicationTimelineTransformerTest {
   }
 
   @Test
-  fun `transformDomainEventSummaryToTimelineEvent adds bookingUrl if booking id defined`() {
-    val bookingId = UUID.randomUUID()
-    val premisesId = UUID.randomUUID()
-    val domainEvent = DomainEventSummaryImpl(
-      id = UUID.randomUUID().toString(),
-      type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      occurredAt = OffsetDateTime.now(),
-      bookingId = bookingId,
-      applicationId = null,
-      assessmentId = null,
-      premisesId = premisesId,
-      appealId = null,
-      cas1SpaceBookingId = null,
-      triggerSource = null,
-      triggeredByUser = null,
-      schemaVersion = null,
-    )
-
-    every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
-
-    assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
-      Cas1TimelineEvent(
-        id = domainEvent.id,
-        type = Cas1TimelineEventType.bookingMade,
-        occurredAt = domainEvent.occurredAt.toInstant(),
-        associatedUrls = listOf(
-          Cas1TimelineEventAssociatedUrl(Cas1TimelineEventUrlType.booking, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
-        ),
-        content = "Some event",
-      ),
-    )
-  }
-
-  @Test
   fun `transformDomainEventSummaryToTimelineEvent adds cas1SpaceBookingUrl if cas1 space booking id defined`() {
     val spaceBookingId = UUID.randomUUID()
     val premisesId = UUID.randomUUID()
@@ -377,19 +342,19 @@ class Cas1ApplicationTimelineTransformerTest {
   fun `transformDomainEventSummaryToTimelineEvent adds all possible url types`() {
     val applicationId = UUID.randomUUID()
     val assessmentId = UUID.randomUUID()
-    val bookingId = UUID.randomUUID()
+    val spaceBookingId = UUID.randomUUID()
     val premisesId = UUID.randomUUID()
     val appealId = UUID.randomUUID()
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
       occurredAt = OffsetDateTime.now(),
-      bookingId = bookingId,
+      bookingId = null,
       applicationId = applicationId,
       assessmentId = assessmentId,
       premisesId = premisesId,
       appealId = appealId,
-      cas1SpaceBookingId = null,
+      cas1SpaceBookingId = spaceBookingId,
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
@@ -405,7 +370,7 @@ class Cas1ApplicationTimelineTransformerTest {
         associatedUrls = listOf(
           Cas1TimelineEventAssociatedUrl(Cas1TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
           Cas1TimelineEventAssociatedUrl(Cas1TimelineEventUrlType.assessment, "http://somehost:3000/assessments/$assessmentId"),
-          Cas1TimelineEventAssociatedUrl(Cas1TimelineEventUrlType.booking, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
+          Cas1TimelineEventAssociatedUrl(Cas1TimelineEventUrlType.spaceBooking, "http://somehost:3000/manage/premises/$premisesId/bookings/$spaceBookingId"),
         ),
         content = "Some event",
       ),
