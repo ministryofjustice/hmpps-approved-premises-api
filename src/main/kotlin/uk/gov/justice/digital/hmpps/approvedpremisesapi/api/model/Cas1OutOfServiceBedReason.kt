@@ -1,22 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.fasterxml.jackson.annotation.JsonValue
+import java.util.UUID
 
-/**
- *
- * @param id
- * @param name
- * @param isActive
- */
 data class Cas1OutOfServiceBedReason(
-
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
-
-  @Schema(example = "Double Room with Single Occupancy - Other (Non-FM)", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
-
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
+  val id: UUID,
+  val name: String,
+  val isActive: Boolean,
+  val referenceType: Cas1OutOfServiceBedReasonReferenceType,
 )
+
+enum class Cas1OutOfServiceBedReasonReferenceType(@get:JsonValue val value: String) {
+  CRN("crn"),
+  WORK_ORDER("workOrder"),
+}

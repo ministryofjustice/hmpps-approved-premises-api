@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
@@ -27,4 +29,11 @@ data class Cas1OutOfServiceBedReasonEntity(
   val createdAt: OffsetDateTime,
   val name: String,
   val isActive: Boolean,
+  @Enumerated(EnumType.STRING)
+  val referenceType: Cas1OutOfServiceBedReasonEntityReferenceType,
 )
+
+enum class Cas1OutOfServiceBedReasonEntityReferenceType {
+  CRN,
+  WORK_ORDER,
+}

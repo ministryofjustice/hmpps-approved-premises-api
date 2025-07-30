@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReasonReferenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
@@ -44,6 +45,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     id = UUID.randomUUID(),
     name = "Some Reason",
     isActive = true,
+    referenceType = Cas1OutOfServiceBedReasonReferenceType.CRN,
   )
 
   private val expectedUser = ApprovedPremisesUserFactory().produce()

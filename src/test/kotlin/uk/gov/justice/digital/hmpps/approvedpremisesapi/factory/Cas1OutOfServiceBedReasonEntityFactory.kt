@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntityReferenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -12,6 +13,7 @@ class Cas1OutOfServiceBedReasonEntityFactory : Factory<Cas1OutOfServiceBedReason
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var isActive: Yielded<Boolean> = { true }
+  private var referenceType = { Cas1OutOfServiceBedReasonEntityReferenceType.WORK_ORDER }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -29,10 +31,15 @@ class Cas1OutOfServiceBedReasonEntityFactory : Factory<Cas1OutOfServiceBedReason
     this.isActive = { isActive }
   }
 
+  fun withReferenceType(referenceType: Cas1OutOfServiceBedReasonEntityReferenceType) = apply {
+    this.referenceType = { referenceType }
+  }
+
   override fun produce(): Cas1OutOfServiceBedReasonEntity = Cas1OutOfServiceBedReasonEntity(
     id = this.id(),
     createdAt = this.createdAt(),
     name = this.name(),
     isActive = this.isActive(),
+    referenceType = this.referenceType(),
   )
 }

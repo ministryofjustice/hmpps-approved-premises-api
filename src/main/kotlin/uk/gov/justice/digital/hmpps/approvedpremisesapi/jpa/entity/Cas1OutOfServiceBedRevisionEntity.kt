@@ -34,6 +34,9 @@ data class Cas1OutOfServiceBedRevisionEntity(
    * This date is inclusive. The bed will be unavailable for the whole of the day
    */
   var endDate: LocalDate,
+  /**
+   * The type of value in here is determined by Cas1OutOfServiceBedReasonEntity.referenceType
+   */
   var referenceNumber: String?,
   var notes: String?,
   @ManyToOne(fetch = FetchType.LAZY)
