@@ -26,7 +26,8 @@ interface DocumentsApi {
     tags = ["Application data"],
     summary = "Downloads a document",
     operationId = "documentsCrnDocumentIdGet",
-    description = """""",
+    description = "Deprecated. Use /cas1/documents/{crn}/{documentId}",
+    deprecated = true,
     responses = [
       ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = org.springframework.core.io.Resource::class))]),
       ApiResponse(responseCode = "404", description = "invalid applicationId or documentId", content = [Content(schema = Schema(implementation = Problem::class))]),
