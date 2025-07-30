@@ -92,7 +92,7 @@ class Cas1WithdrawableTreeBuilderTest {
     val placementApp1 = createPlacementApplication()
     setupWithdrawableState(placementApp1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1 = createPlacementRequest()
-    placementApp1.placementRequests.add(placementApp1PlacementRequest1)
+    placementApp1.placementRequest = placementApp1PlacementRequest1
     setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawn = true, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1SpaceBooking1 = createSpaceBooking()
     placementApp1PlacementRequest1.spaceBookings.add(placementApp1PlacementRequest1SpaceBooking1)
@@ -149,7 +149,7 @@ Notes: []
     val placementApp1 = createPlacementApplication()
     setupWithdrawableState(placementApp1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1 = createPlacementRequest()
-    placementApp1.placementRequests.add(placementApp1PlacementRequest1)
+    placementApp1.placementRequest = placementApp1PlacementRequest1
     setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1Booking = createSpaceBooking()
     placementApp1PlacementRequest1.spaceBookings = mutableListOf(placementApp1PlacementRequest1Booking)
@@ -158,7 +158,7 @@ Notes: []
     val placementApp2 = createPlacementApplication(automatic = true)
     setupWithdrawableState(placementApp2, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp2PlacementRequest1 = createPlacementRequest()
-    placementApp2.placementRequests.add(placementApp2PlacementRequest1)
+    placementApp2.placementRequest = placementApp2PlacementRequest1
     setupWithdrawableState(placementApp2PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp2PlacementRequest1Booking = createSpaceBooking()
     placementApp2PlacementRequest1.spaceBookings = mutableListOf(placementApp2PlacementRequest1Booking)
@@ -210,7 +210,7 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     val placementApp1 = createPlacementApplication()
     setupWithdrawableState(placementApp1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1 = createPlacementRequest()
-    placementApp1.placementRequests.add(placementApp1PlacementRequest1)
+    placementApp1.placementRequest = placementApp1PlacementRequest1
     setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawn = false, withdrawable = false, userMayDirectlyWithdraw = false))
     val placementApp1PlacementRequest1SpaceBooking = createSpaceBooking()
     placementApp1PlacementRequest1.spaceBookings.add(placementApp1PlacementRequest1SpaceBooking)

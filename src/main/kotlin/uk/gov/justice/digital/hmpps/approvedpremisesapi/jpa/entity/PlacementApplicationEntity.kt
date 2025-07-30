@@ -10,7 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
@@ -114,16 +114,8 @@ data class PlacementApplicationEntity(
    */
   val automatic: Boolean,
 
-  /**
-   * It was previously possible to re-allocate a PlacementRequest, which would create a copy
-   * of the placement request with the new allocation. This would result in multiple
-   * placement requests linked to a single placement application.
-   *
-   * If those reallocated placement requests were removed (or the FK nulled), this could
-   * be converted into a one to one relationship
-   */
-  @OneToMany(mappedBy = "placementApplication", fetch = FetchType.LAZY)
-  var placementRequests: MutableList<PlacementRequestEntity>,
+  @OneToOne(mappedBy = "placementApplication", fetch = FetchType.LAZY)
+  var placementRequest: PlacementRequestEntity?,
 
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementApplicationWithdrawalReason?,
