@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruMana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -56,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserServiceConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -65,14 +63,12 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 class UserServiceTest {
-  private val mockUserServiceConfig = mockk<UserServiceConfig>()
   private val mockRequestContextService = mockk<RequestContextService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserRepository = mockk<UserRepository>()
   private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
   private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
-  private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockCas1ApAreaMappingService = mockk<Cas1ApAreaMappingService>()
@@ -81,14 +77,12 @@ class UserServiceTest {
   private val mockEnvironmentService = mockk<EnvironmentService>()
 
   private val userService = UserService(
-    mockUserServiceConfig,
     mockRequestContextService,
     mockHttpAuthService,
     mockOffenderService,
     mockUserRepository,
     mockUserRoleAssignmentRepository,
     mockUserQualificationAssignmentRepository,
-    mockProbationRegionRepository,
     mockProbationAreaProbationRegionMappingRepository,
     mockCas1ApAreaMappingService,
     mockProbationDeliveryUnitRepository,
@@ -96,11 +90,6 @@ class UserServiceTest {
     mockCas1CruManagementAreaRepository,
     mockEnvironmentService,
   )
-
-  @BeforeEach
-  fun setup() {
-    every { mockUserServiceConfig.assignDefaultRegionToUsersWithUnknownRegion } returns false
-  }
 
   @Nested
   inner class GetExistingUserOrCreate {

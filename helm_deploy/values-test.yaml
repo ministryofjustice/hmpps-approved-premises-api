@@ -34,7 +34,6 @@ generic-service:
     SERVICES_PRISONER-SEARCH_BASE-URL: https://prisoner-search-dev.prison.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/test,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
-    ASSIGN-DEFAULT-REGION-TO-USERS-WITH-UNKNOWN-REGION: true
     SENTRY_ENVIRONMENT: test
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: false
