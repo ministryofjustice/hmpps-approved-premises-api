@@ -1,0 +1,5 @@
+DELETE FROM user_role_assignments
+WHERE role IN (
+      'CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS',
+      'CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA'
+    );
