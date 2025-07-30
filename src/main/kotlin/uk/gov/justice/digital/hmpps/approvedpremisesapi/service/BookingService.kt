@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -26,8 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -45,9 +42,7 @@ class BookingService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
-  private val cas1BookingEmailService: Cas1BookingEmailService,
   private val deliusService: DeliusService,
-  private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
@@ -162,10 +157,6 @@ class BookingService(
     return success(cas3ConfirmationEntity)
   }
 
-  private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?): Boolean = booking.service == ServiceName.approvedPremises.value &&
-    user != null &&
-    (booking.application != null || booking.offlineApplication?.eventNumber != null)
-
   @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
   fun createDateChange(
@@ -230,35 +221,6 @@ class BookingService(
         dateChanges.add(dateChangeEntity)
       },
     )
-
-    if (shouldCreateDomainEventForBooking(booking, user)) {
-      cas1BookingDomainEventService.bookingChanged(
-        booking = booking,
-        changedBy = user,
-        bookingChangedAt = OffsetDateTime.now(),
-        previousArrivalDateIfChanged = if (previousArrivalDate != effectiveNewArrivalDate) {
-          previousArrivalDate
-        } else {
-          null
-        },
-        previousDepartureDateIfChanged = if (previousDepartureDate != effectiveNewDepartureDate) {
-          previousDepartureDate
-        } else {
-          null
-        },
-      )
-    }
-
-    if (booking.service == ServiceName.approvedPremises.value) {
-      val application = booking.application as ApprovedPremisesApplicationEntity?
-      application?.let {
-        cas1BookingEmailService.bookingAmended(
-          application = it,
-          booking = booking,
-          placementApplication = booking.placementRequest?.placementApplication,
-        )
-      }
-    }
 
     return success(dateChangeEntity)
   }

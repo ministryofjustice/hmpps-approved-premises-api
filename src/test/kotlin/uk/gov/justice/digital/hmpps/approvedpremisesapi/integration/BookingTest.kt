@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -14,14 +13,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -3025,110 +3021,6 @@ class BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
-      }
-    }
-  }
-
-  @Nested
-  inner class Cas1DateChange {
-
-    @Test
-    fun `CAS1 Date Change without JWT returns 401`() {
-      webTestClient.post()
-        .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/date-changes")
-        .bodyValue(
-          NewDateChange(
-            newArrivalDate = null,
-            newDepartureDate = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `CAS1 Date Change for a booking on a premises that does not exist returns 404 Not Found`() {
-      givenAUser(roles = emptyList()) { _, jwt ->
-        val premises = givenAnApprovedPremises()
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withArrivalDate(LocalDate.parse("2022-08-18"))
-          withDepartureDate(LocalDate.parse("2022-08-20"))
-          withPremises(premises)
-        }
-
-        val premisesId = UUID.randomUUID()
-
-        webTestClient.post()
-          .uri("/premises/$premisesId/bookings/${booking.id}/date-changes")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewDateChange(
-              newArrivalDate = null,
-              newDepartureDate = null,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isNotFound
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"])
-    fun `CAS1 Date Change with correct role returns 200, persists date change and raises domain event`(role: UserRole) {
-      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-      givenAUser(roles = listOf(role)) { user, jwt ->
-        val premises = givenAnApprovedPremises()
-
-        val application = givenASubmittedApplication(
-          createdByUser = user,
-        )
-
-        val booking = givenABooking(
-          crn = application.crn,
-          application = application,
-          premises = premises,
-          arrivalDate = LocalDate.parse("2022-08-18"),
-          departureDate = LocalDate.parse("2022-08-20"),
-        )
-
-        webTestClient.post()
-          .uri("/premises/${premises.id}/bookings/${booking.id}/date-changes")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewDateChange(
-              newArrivalDate = LocalDate.parse("2023-07-13"),
-              newDepartureDate = LocalDate.parse("2023-07-15"),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-
-        val persistedBooking = bookingRepository.findByIdOrNull(booking.id)!!
-
-        assertThat(persistedBooking.arrivalDate).isEqualTo(LocalDate.parse("2023-07-13"))
-        assertThat(persistedBooking.departureDate).isEqualTo(LocalDate.parse("2023-07-15"))
-        assertThat(persistedBooking.dateChanges).singleElement()
-        val persistedDateChange = persistedBooking.dateChanges.first()
-        assertThat(persistedDateChange.previousArrivalDate).isEqualTo(LocalDate.parse("2022-08-18"))
-        assertThat(persistedDateChange.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-20"))
-        assertThat(persistedDateChange.newArrivalDate).isEqualTo(LocalDate.parse("2023-07-13"))
-        assertThat(persistedDateChange.newDepartureDate).isEqualTo(LocalDate.parse("2023-07-15"))
-
-        domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-        val savedEvent = domainEventAsserter.assertDomainEventOfTypeStored(
-          application.id,
-          DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-        )
-        assertThat(savedEvent.bookingId).isEqualTo(booking.id)
-
-        emailAsserter.assertEmailsRequestedCount(2)
       }
     }
   }
