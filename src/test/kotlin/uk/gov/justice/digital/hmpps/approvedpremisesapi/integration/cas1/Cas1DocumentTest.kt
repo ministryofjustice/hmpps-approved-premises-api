@@ -21,7 +21,7 @@ class Cas1DocumentTest : InitialiseDatabasePerClassTestBase() {
   inner class GetDocument {
 
     @Test
-    fun `Download document - returns 404 when not found in documents meta data`() {
+    fun `Returns 404 when document doesn't exist for CRN`() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -47,7 +47,7 @@ class Cas1DocumentTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Download document - returns 200 with correct body and headers`() {
+    fun success() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
