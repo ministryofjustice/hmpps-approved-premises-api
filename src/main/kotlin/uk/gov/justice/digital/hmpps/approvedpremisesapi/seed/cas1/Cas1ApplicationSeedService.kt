@@ -373,7 +373,7 @@ class Cas1ApplicationSeedService(
         cancellations = mutableListOf(),
         confirmation = null,
         extensions = mutableListOf(),
-        premises = approvedPremisesRepository.findAll().first(),
+        premises = approvedPremisesRepository.findByName("SWSC Men Premise 1"),
         bed = null,
         service = ServiceName.approvedPremises.value,
         originalArrivalDate = bookingArrivalDate,
