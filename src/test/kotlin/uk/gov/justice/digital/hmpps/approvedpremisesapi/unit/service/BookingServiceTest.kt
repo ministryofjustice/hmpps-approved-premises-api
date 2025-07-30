@@ -1,11 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
@@ -27,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
@@ -60,13 +57,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService as Cas3DomainEventService
 
 class BookingServiceTest {
   private val mockOffenderDetailService = mockk<OffenderDetailService>()
@@ -82,9 +77,7 @@ class BookingServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockAssessmentService = mockk<AssessmentService>()
-  private val mockCas1BookingEmailService = mockk<Cas1BookingEmailService>()
   private val mockDeliusService = mockk<DeliusService>()
-  private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
 
   fun createBookingService(): BookingService = BookingService(
     offenderDetailService = mockOffenderDetailService,
@@ -96,9 +89,7 @@ class BookingServiceTest {
     cas3VoidBedspacesRepository = mockCas3LostBedsRepository,
     userService = mockUserService,
     userAccessService = mockUserAccessService,
-    cas1BookingEmailService = mockCas1BookingEmailService,
     deliusService = mockDeliusService,
-    cas1BookingDomainEventService = mockCas1BookingDomainEventService,
   )
 
   private val bookingService = createBookingService()
@@ -146,7 +137,12 @@ class BookingServiceTest {
       .withStaffKeyWorkerCode(keyWorker.code)
       .produce()
 
-    assertThat(bookingService.getBookingForPremises(premisesEntityFactory.withId(UUID.randomUUID()).produce(), bookingId))
+    assertThat(
+      bookingService.getBookingForPremises(
+        premisesEntityFactory.withId(UUID.randomUUID()).produce(),
+        bookingId,
+      ),
+    )
       .isEqualTo(GetBookingForPremisesResult.BookingNotFound)
   }
 
@@ -206,7 +202,13 @@ class BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderDetailService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every {
+        mockOffenderDetailService.getPersonInfoResult(
+          bookingEntity.crn,
+          user.deliusUsername,
+          user.hasQualification(UserQualification.LAO),
+        )
+      } returns personInfo
 
       val result = bookingService.getBooking(bookingEntity.id)
 
@@ -611,7 +613,13 @@ class BookingServiceTest {
         .produce()
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns listOf(conflictingBooking)
+      every {
+        mockBookingRepository.findByBedIdAndArrivingBeforeDate(
+          temporaryAccommodationBed.id,
+          LocalDate.parse("2023-07-14"),
+          booking.id,
+        )
+      } returns listOf(conflictingBooking)
 
       val result = bookingService.createDateChange(
         booking = booking,
@@ -642,7 +650,13 @@ class BookingServiceTest {
         .produce()
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
+      every {
+        mockBookingRepository.findByBedIdAndArrivingBeforeDate(
+          temporaryAccommodationBed.id,
+          LocalDate.parse("2023-07-14"),
+          booking.id,
+        )
+      } returns emptyList()
       every {
         mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(
           temporaryAccommodationBed.id,
@@ -673,8 +687,21 @@ class BookingServiceTest {
         .produce()
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
-      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-16"), LocalDate.parse("2023-07-14"), null) } returns emptyList()
+      every {
+        mockBookingRepository.findByBedIdAndArrivingBeforeDate(
+          temporaryAccommodationBed.id,
+          LocalDate.parse("2023-07-14"),
+          booking.id,
+        )
+      } returns emptyList()
+      every {
+        mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(
+          temporaryAccommodationBed.id,
+          LocalDate.parse("2023-07-16"),
+          LocalDate.parse("2023-07-14"),
+          null,
+        )
+      } returns emptyList()
 
       val result = bookingService.createDateChange(
         booking = booking,
@@ -846,191 +873,6 @@ class BookingServiceTest {
           },
         )
       }
-    }
-
-    @Test
-    fun `emits domain event when booking has associated application, only arrival date changed`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val booking = BookingEntityFactory()
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .withServiceName(ServiceName.approvedPremises)
-        .withArrivalDate(LocalDate.parse("2023-07-14"))
-        .withDepartureDate(LocalDate.parse("2023-07-16"))
-        .withApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-      every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockCas1BookingEmailService.bookingAmended(any(), any(), any()) } just runs
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any(), any(), any()) } just Runs
-
-      val newArrivalDate = LocalDate.parse("2023-07-15")
-      val newDepartureDate = LocalDate.parse("2023-07-16")
-
-      val result = bookingService.createDateChange(
-        booking = booking,
-        user = user,
-        newArrivalDate = newArrivalDate,
-        newDepartureDate = newDepartureDate,
-      )
-
-      assertThatCasResult(result).isSuccess()
-      result as CasResult.Success
-
-      verify {
-        mockDateChangeRepository.save(
-          match {
-            it.booking.id == booking.id &&
-              it.changedByUser == user &&
-              it.newArrivalDate == LocalDate.parse("2023-07-15") &&
-              it.newDepartureDate == LocalDate.parse("2023-07-16") &&
-              it.previousArrivalDate == LocalDate.parse("2023-07-14") &&
-              it.previousDepartureDate == LocalDate.parse("2023-07-16")
-          },
-        )
-      }
-
-      verify {
-        mockBookingRepository.save(
-          match {
-            it.id == booking.id &&
-              it.arrivalDate == LocalDate.parse("2023-07-15") &&
-              it.departureDate == LocalDate.parse("2023-07-16")
-          },
-        )
-      }
-
-      verify(exactly = 1) {
-        mockCas1BookingDomainEventService.bookingChanged(
-          booking = booking,
-          changedBy = user,
-          bookingChangedAt = any(),
-          previousArrivalDateIfChanged = LocalDate.of(2023, 7, 14),
-          previousDepartureDateIfChanged = null,
-        )
-      }
-
-      verify(exactly = 1) {
-        mockCas1BookingEmailService.bookingAmended(
-          application = booking.application as ApprovedPremisesApplicationEntity,
-          booking = booking,
-          placementApplication = booking.placementRequest?.placementApplication,
-        )
-      }
-    }
-
-    @Test
-    fun `emits domain event when booking has associated offline application with an event number, only departure date changed`() {
-      val application = OfflineApplicationEntityFactory()
-        .withEventNumber("123")
-        .produce()
-
-      val booking = BookingEntityFactory()
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .withServiceName(ServiceName.approvedPremises)
-        .withArrivalDate(LocalDate.parse("2023-07-14"))
-        .withDepartureDate(LocalDate.parse("2023-07-16"))
-        .withOfflineApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-      every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any(), any(), any()) } just Runs
-
-      val newArrivalDate = LocalDate.parse("2023-07-14")
-      val newDepartureDate = LocalDate.parse("2023-07-22")
-
-      val result = bookingService.createDateChange(
-        booking = booking,
-        user = user,
-        newArrivalDate = newArrivalDate,
-        newDepartureDate = newDepartureDate,
-      )
-
-      assertThatCasResult(result).isSuccess()
-      result as CasResult.Success
-
-      verify(exactly = 1) {
-        mockCas1BookingDomainEventService.bookingChanged(
-          booking = booking,
-          changedBy = user,
-          bookingChangedAt = any(),
-          previousArrivalDateIfChanged = null,
-          previousDepartureDateIfChanged = LocalDate.of(2023, 7, 16),
-        )
-      }
-    }
-
-    @Test
-    fun `does not emit domain event when booking has associated offline application without an event number`() {
-      val application = OfflineApplicationEntityFactory()
-        .withEventNumber(null)
-        .produce()
-
-      val booking = BookingEntityFactory()
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .withServiceName(ServiceName.approvedPremises)
-        .withArrivalDate(LocalDate.parse("2023-07-14"))
-        .withDepartureDate(LocalDate.parse("2023-07-16"))
-        .withOfflineApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-      every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any(), any(), any()) } just Runs
-
-      val newArrivalDate = LocalDate.parse("2023-07-18")
-      val newDepartureDate = LocalDate.parse("2023-07-22")
-
-      val result = bookingService.createDateChange(
-        booking = booking,
-        user = user,
-        newArrivalDate = newArrivalDate,
-        newDepartureDate = newDepartureDate,
-      )
-
-      assertThatCasResult(result).isSuccess()
-      result as CasResult.Success
-
-      verify {
-        mockDateChangeRepository.save(
-          match {
-            it.booking.id == booking.id &&
-              it.changedByUser == user &&
-              it.newArrivalDate == LocalDate.parse("2023-07-18") &&
-              it.newDepartureDate == LocalDate.parse("2023-07-22") &&
-              it.previousArrivalDate == LocalDate.parse("2023-07-14") &&
-              it.previousDepartureDate == LocalDate.parse("2023-07-16")
-          },
-        )
-      }
-
-      verify {
-        mockBookingRepository.save(
-          match {
-            it.id == booking.id &&
-              it.arrivalDate == LocalDate.parse("2023-07-18") &&
-              it.departureDate == LocalDate.parse("2023-07-22")
-          },
-        )
-      }
-
-      verify(exactly = 0) { mockCas1BookingDomainEventService wasNot Called }
     }
   }
 }
