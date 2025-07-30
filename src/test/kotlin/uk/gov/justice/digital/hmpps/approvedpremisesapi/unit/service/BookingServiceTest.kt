@@ -9,8 +9,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -50,13 +48,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
@@ -77,7 +73,6 @@ class BookingServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockAssessmentService = mockk<AssessmentService>()
-  private val mockDeliusService = mockk<DeliusService>()
 
   fun createBookingService(): BookingService = BookingService(
     offenderDetailService = mockOffenderDetailService,
@@ -89,7 +84,6 @@ class BookingServiceTest {
     cas3VoidBedspacesRepository = mockCas3LostBedsRepository,
     userService = mockUserService,
     userAccessService = mockUserAccessService,
-    deliusService = mockDeliusService,
   )
 
   private val bookingService = createBookingService()
@@ -439,132 +433,6 @@ class BookingServiceTest {
     }
     .withApplication(application.let { application })
     .produce()
-
-  @Nested
-  inner class GetWithdrawableState {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val premises = ApprovedPremisesEntityFactory()
-      .withDefaultProbationRegion()
-      .withDefaultLocalAuthorityArea()
-      .produce()
-
-    @Test
-    fun `getWithdrawableState not withdrawable if has arrivals`() {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      booking.arrivals.add(
-        ArrivalEntityFactory().withBooking(booking).produce(),
-      )
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.withdrawable).isFalse()
-    }
-
-    @Test
-    fun `getWithdrawableState not withdrawable if already cancelled`() {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      booking.cancellations.add(
-        CancellationEntityFactory().withBooking(booking).withDefaults().produce(),
-      )
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockDeliusService.referralHasArrival(booking) } returns false
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.withdrawn).isTrue()
-      assertThat(result.withdrawable).isFalse()
-    }
-
-    @Test
-    fun `getWithdrawableState withdrawable if has no arrivals in CAS1 and Delius and not already cancelled`() {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockDeliusService.referralHasArrival(booking) } returns false
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.withdrawn).isFalse()
-      assertThat(result.withdrawable).isTrue()
-    }
-
-    @ParameterizedTest
-    @CsvSource("true", "false")
-    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns canWithdraw
-      every { mockDeliusService.referralHasArrival(booking) } returns false
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
-    }
-
-    @Test
-    fun `getWithdrawableState blockingReason is null if no arrivals in CAS1 or Delius`() {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .withArrivals(mutableListOf())
-        .produce()
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockDeliusService.referralHasArrival(booking) } returns false
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.blockingReason).isNull()
-    }
-
-    @Test
-    fun `getWithdrawableState blockingReason is ArrivalRecordedInCas1 if has arrival recorded in CAS1`() {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      booking.arrivals.add(
-        ArrivalEntityFactory()
-          .withBooking(booking)
-          .produce(),
-      )
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.blockingReason).isEqualTo(BlockingReason.ArrivalRecordedInCas1)
-    }
-
-    @Test
-    fun `getWithdrawableState blockingReason is ArrivalRecordedInDelius if has no CAS1 arrivals and arrival recorded in Delius`() {
-      val booking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
-      every { mockDeliusService.referralHasArrival(booking) } returns true
-
-      val result = bookingService.getWithdrawableState(booking, user)
-
-      assertThat(result.blockingReason).isEqualTo(BlockingReason.ArrivalRecordedInDelius)
-    }
-  }
 
   @Nested
   inner class CreateDateChange {
