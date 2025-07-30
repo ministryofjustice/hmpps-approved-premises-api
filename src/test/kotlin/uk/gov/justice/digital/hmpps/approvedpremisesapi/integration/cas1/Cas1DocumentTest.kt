@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulDocumentDownloadCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulDocumentsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import java.util.UUID
 
 class Cas1DocumentTest : InitialiseDatabasePerClassTestBase() {
@@ -38,6 +39,58 @@ class Cas1DocumentTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isNotFound
+    }
+
+    @Test
+    fun `Return 403 if caller doesn't have access to LAO offender`() {
+      val (_, jwt) = givenAUser()
+      val (offenderDetails, _) = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCurrentRestriction(true)
+        },
+      )
+
+      val nonExistentDocumentId = UUID.randomUUID()
+      webTestClient.get()
+        .uri("/cas1/documents/${offenderDetails.otherIds.crn}/$nonExistentDocumentId")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Return document when caller doesn't have access to LAO offender but they have LAO qualification`() {
+      val (_, jwt) = givenAUser(qualifications = listOf(UserQualification.LAO))
+      val (offenderDetails, _) = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCurrentRestriction(true)
+        },
+      )
+
+      val requestedDocumentId = UUID.randomUUID()
+      val requestedDocument = APDeliusDocumentFactory()
+        .withId(requestedDocumentId.toString())
+        .withFilename("the_doc_name.txt")
+        .produce()
+
+      val docFileContents = "I AM A MOCK DOCUMENT".byteInputStream().readAllBytes()
+
+      apDeliusContextMockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, listOf(requestedDocument))
+      apDeliusContextMockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, requestedDocumentId, docFileContents)
+
+      val result = webTestClient.get()
+        .uri("/cas1/documents/${offenderDetails.otherIds.crn}/${requestedDocument.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader()
+        .contentDisposition(ContentDisposition.parse("attachment; filename=\"the_doc_name.txt\""))
+        .expectBody()
+        .returnResult()
+
+      assertThat(result.responseBody).isEqualTo(docFileContents)
     }
 
     @Test
