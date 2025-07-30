@@ -92,6 +92,7 @@ class Cas1TasksTest {
           webTestClient.get()
             .uri("/cas1/tasks")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
             .expectStatus()
             .isForbidden
@@ -1981,6 +1982,26 @@ class Cas1TasksTest {
     @Autowired
     lateinit var userTransformer: UserTransformer
 
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Return 403 forbidden for users with roles other than CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR, CAS1_AP_AREA_MANAGER`(userRole: UserRole) {
+      val (user, jwt) = givenAUser(roles = listOf(userRole))
+
+      val placementApplication = givenAPlacementApplication(
+        createdByUser = user,
+        allocatedToUser = user,
+        crn = "CRN123",
+        submittedAt = OffsetDateTime.now(),
+      )
+
+      webTestClient.get()
+        .uri("/cas1/tasks/placement-application/${placementApplication.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
     @Test
     fun `Request without JWT returns 401`() {
       webTestClient.get()
@@ -2175,7 +2196,7 @@ class Cas1TasksTest {
 
     @Test
     fun `If request is for a placement application that is not submitted, return not found because a task doesn't yet exist to complete`() {
-      val (creatingUser, jwt) = givenAUser()
+      val (creatingUser, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       val placementApplication = givenAPlacementApplication(
         createdByUser = creatingUser,
@@ -2202,7 +2223,7 @@ class Cas1TasksTest {
 
       val (allocatableUser, _) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
 
-      val (creatingUser, jwt) = givenAUser()
+      val (creatingUser, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       val (offenderDetails) = givenAnOffender()
       val crn = offenderDetails.otherIds.crn
@@ -2344,6 +2365,23 @@ class Cas1TasksTest {
     @BeforeEach
     fun stubBankHolidaysApi() {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Return 400 bad request for users with roles other than CAS1_CRU_MEMBER`(userRole: UserRole) {
+      val (_, jwt) = givenAUser(roles = listOf(userRole))
+      webTestClient.post()
+        .uri("/cas1/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewReallocation(
+            userId = UUID.randomUUID(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
     }
 
     @Test
@@ -2532,6 +2570,19 @@ class Cas1TasksTest {
 
   @Nested
   inner class DeallocateTaskTest : IntegrationTestBase() {
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Return 403 forbidden for users with roles other than CAS1_CRU_MEMBER`(userRole: UserRole) {
+      val (_, jwt) = givenAUser(roles = listOf(userRole))
+      webTestClient.delete()
+        .uri("/cas1/tasks/assessment/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
     @Test
     fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
       webTestClient.delete()
