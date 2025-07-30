@@ -71,7 +71,7 @@ class Cas1StartupScript(
         state = state,
       )
     } catch (e: Exception) {
-      seedLogger.error("Creating application with crn $crn failed", e)
+      throw RuntimeException("Creating application with crn $crn failed", e)
     }
   }
 
@@ -84,7 +84,7 @@ class Cas1StartupScript(
     try {
       cas1ApplicationSeedService.createOfflineApplicationWithBooking(deliusUserName, crn)
     } catch (e: Exception) {
-      seedLogger.error("Creating offline application with crn $crn failed", e)
+      throw RuntimeException("Creating offline application with crn $crn failed", e)
     }
   }
 }

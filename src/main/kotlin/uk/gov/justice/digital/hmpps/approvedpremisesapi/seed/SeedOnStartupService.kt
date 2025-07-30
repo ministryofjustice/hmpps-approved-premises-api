@@ -75,7 +75,7 @@ class SeedOnStartupService(
             csv.file.path
           }
 
-          seedService.seedData(seedFileType, seedFileType.value) { filePath }
+          seedService.seedDataThrowErrors(seedFileType, seedFileType.value) { filePath }
         }
       }
     }

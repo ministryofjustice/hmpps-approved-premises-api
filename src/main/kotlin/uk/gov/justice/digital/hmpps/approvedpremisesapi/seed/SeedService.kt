@@ -61,72 +61,76 @@ class SeedService(
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
-  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown", "TooGenericExceptionCaught")
   fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
     try {
-      val seedDescription = "'$seedFileType' for file '$filename'"
-      seedLogger.info("Starting seed request: $seedDescription")
-
-      if (filename.contains("/") || filename.contains("\\")) {
-        throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
-      }
-
-      val job: SeedJob<*> = when (seedFileType) {
-        SeedFileType.approvedPremises -> getBean(Cas1SeedPremisesFromCsvJob::class)
-        SeedFileType.approvedPremisesRooms -> getBean(ApprovedPremisesRoomsSeedJob::class)
-        SeedFileType.user -> getBean(UsersSeedJob::class)
-        SeedFileType.usersBasic -> getBean(UsersBasicSeedJob::class)
-        SeedFileType.nomisUsers -> getBean(NomisUsersSeedJob::class)
-        SeedFileType.externalUsers -> getBean(ExternalUsersSeedJob::class)
-        SeedFileType.cas2Applications -> getBean(Cas2ApplicationsSeedJob::class)
-        SeedFileType.cas2v2Applications -> getBean(Cas2v2ApplicationsSeedJob::class)
-        SeedFileType.cas2v2Users -> getBean(Cas2v2UsersSeedJob::class)
-        SeedFileType.approvedPremisesUsers -> getBean(Cas1UsersSeedJob::class)
-        SeedFileType.temporaryAccommodationUsers -> getBean(Cas3UsersSeedJob::class)
-        SeedFileType.characteristics -> getBean(CharacteristicsSeedJob::class)
-        SeedFileType.updateNomsNumber -> getBean(Cas1UpdateNomsNumberSeedJob::class)
-        SeedFileType.temporaryAccommodationPremises -> getBean(TemporaryAccommodationPremisesSeedJob::class)
-        SeedFileType.temporaryAccommodationBedspace -> getBean(TemporaryAccommodationBedspaceSeedJob::class)
-        SeedFileType.approvedPremisesAssessmentMoreInfoBugFix -> getBean(Cas1FurtherInfoBugFixSeedJob::class)
-        SeedFileType.approvedPremisesRedactAssessmentDetails -> getBean(Cas1RemoveAssessmentDetailsSeedJob::class)
-        SeedFileType.approvedPremisesWithdrawPlacementRequest -> getBean(Cas1WithdrawPlacementRequestSeedJob::class)
-        SeedFileType.approvedPremisesReplayDomainEvents -> getBean(Cas1DomainEventReplaySeedJob::class)
-        SeedFileType.approvedPremisesDuplicateApplication -> getBean(Cas1DuplicateApplicationSeedJob::class)
-        SeedFileType.approvedPremisesUpdateEventNumber -> getBean(Cas1UpdateEventNumberSeedJob::class)
-        SeedFileType.approvedPremisesLinkBookingToPlacementRequest -> getBean(Cas1LinkBookingToPlacementRequestSeedJob::class)
-        SeedFileType.approvedPremisesOutOfServiceBeds -> getBean(Cas1OutOfServiceBedSeedJob::class)
-        SeedFileType.updateUsersFromApi -> getBean(UpdateUsersFromApiSeedJob::class)
-        SeedFileType.approvedPremisesCruManagementAreas -> getBean(Cas1CruManagementAreaSeedJob::class)
-        SeedFileType.approvedPremisesUpdateSpaceBooking -> getBean(Cas1UpdateSpaceBookingSeedJob::class)
-        SeedFileType.approvedPremisesCreateTestApplications -> getBean(Cas1CreateTestApplicationsSeedJob::class)
-        SeedFileType.temporaryAccommodationReferralRejection -> getBean(Cas3ReferralRejectionSeedJob::class)
-        SeedFileType.approvedPremisesDeleteApplicationTimelineNotes -> getBean(Cas1SoftDeleteApplicationTimelineNotes::class)
-        SeedFileType.approvedPremisesRemapBedCodes -> getBean(Cas1RemapBedCodesSeedService::class)
-        SeedFileType.approvedPremisesUpdateActualArrivalDate -> getBean(Cas1UpdateActualArrivalDateSeedJob::class)
-        SeedFileType.approvedPremisesUpdateApplicationContactDetails -> getBean(Cas1UpdateApplicationContactDetailsSeedJob::class)
-        SeedFileType.approvedPremisesUpdatePremisesStatus -> getBean(Cas1UpdatePremisesStatusSeedJob::class)
-        SeedFileType.shortTermAccommodationCreateOmus -> getBean(ShortTermAccommodationCreateOmusSeedJob::class)
-        SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
-        SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2NomisUserEmailSeedJob::class)
-      }
-
-      val seedStarted = LocalDateTime.now()
-
-      if (job.runInTransaction && job.processRowsConcurrently) {
-        error("Can't run a job in a transaction and process rows in parallel")
-      }
-
-      val rowsProcessed = if (job.runInTransaction) {
-        transactionTemplate.execute { processJob(job, resolveCsvPath) }
-      } else {
-        processJob(job, resolveCsvPath)
-      }
-
-      val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
-      seedLogger.info("Seed request complete for $seedDescription. Took $timeTaken millis and processed $rowsProcessed rows")
+      seedDataThrowErrors(seedFileType, filename, resolveCsvPath)
     } catch (exception: Throwable) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
+  }
+
+  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown", "TooGenericExceptionCaught")
+  fun seedDataThrowErrors(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
+    val seedDescription = "'$seedFileType' for file '$filename'"
+    seedLogger.info("Starting seed request: $seedDescription")
+
+    if (filename.contains("/") || filename.contains("\\")) {
+      throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
+    }
+
+    val job: SeedJob<*> = when (seedFileType) {
+      SeedFileType.approvedPremises -> getBean(Cas1SeedPremisesFromCsvJob::class)
+      SeedFileType.approvedPremisesRooms -> getBean(ApprovedPremisesRoomsSeedJob::class)
+      SeedFileType.user -> getBean(UsersSeedJob::class)
+      SeedFileType.usersBasic -> getBean(UsersBasicSeedJob::class)
+      SeedFileType.nomisUsers -> getBean(NomisUsersSeedJob::class)
+      SeedFileType.externalUsers -> getBean(ExternalUsersSeedJob::class)
+      SeedFileType.cas2Applications -> getBean(Cas2ApplicationsSeedJob::class)
+      SeedFileType.cas2v2Applications -> getBean(Cas2v2ApplicationsSeedJob::class)
+      SeedFileType.cas2v2Users -> getBean(Cas2v2UsersSeedJob::class)
+      SeedFileType.approvedPremisesUsers -> getBean(Cas1UsersSeedJob::class)
+      SeedFileType.temporaryAccommodationUsers -> getBean(Cas3UsersSeedJob::class)
+      SeedFileType.characteristics -> getBean(CharacteristicsSeedJob::class)
+      SeedFileType.updateNomsNumber -> getBean(Cas1UpdateNomsNumberSeedJob::class)
+      SeedFileType.temporaryAccommodationPremises -> getBean(TemporaryAccommodationPremisesSeedJob::class)
+      SeedFileType.temporaryAccommodationBedspace -> getBean(TemporaryAccommodationBedspaceSeedJob::class)
+      SeedFileType.approvedPremisesAssessmentMoreInfoBugFix -> getBean(Cas1FurtherInfoBugFixSeedJob::class)
+      SeedFileType.approvedPremisesRedactAssessmentDetails -> getBean(Cas1RemoveAssessmentDetailsSeedJob::class)
+      SeedFileType.approvedPremisesWithdrawPlacementRequest -> getBean(Cas1WithdrawPlacementRequestSeedJob::class)
+      SeedFileType.approvedPremisesReplayDomainEvents -> getBean(Cas1DomainEventReplaySeedJob::class)
+      SeedFileType.approvedPremisesDuplicateApplication -> getBean(Cas1DuplicateApplicationSeedJob::class)
+      SeedFileType.approvedPremisesUpdateEventNumber -> getBean(Cas1UpdateEventNumberSeedJob::class)
+      SeedFileType.approvedPremisesLinkBookingToPlacementRequest -> getBean(Cas1LinkBookingToPlacementRequestSeedJob::class)
+      SeedFileType.approvedPremisesOutOfServiceBeds -> getBean(Cas1OutOfServiceBedSeedJob::class)
+      SeedFileType.updateUsersFromApi -> getBean(UpdateUsersFromApiSeedJob::class)
+      SeedFileType.approvedPremisesCruManagementAreas -> getBean(Cas1CruManagementAreaSeedJob::class)
+      SeedFileType.approvedPremisesUpdateSpaceBooking -> getBean(Cas1UpdateSpaceBookingSeedJob::class)
+      SeedFileType.approvedPremisesCreateTestApplications -> getBean(Cas1CreateTestApplicationsSeedJob::class)
+      SeedFileType.temporaryAccommodationReferralRejection -> getBean(Cas3ReferralRejectionSeedJob::class)
+      SeedFileType.approvedPremisesDeleteApplicationTimelineNotes -> getBean(Cas1SoftDeleteApplicationTimelineNotes::class)
+      SeedFileType.approvedPremisesRemapBedCodes -> getBean(Cas1RemapBedCodesSeedService::class)
+      SeedFileType.approvedPremisesUpdateActualArrivalDate -> getBean(Cas1UpdateActualArrivalDateSeedJob::class)
+      SeedFileType.approvedPremisesUpdateApplicationContactDetails -> getBean(Cas1UpdateApplicationContactDetailsSeedJob::class)
+      SeedFileType.approvedPremisesUpdatePremisesStatus -> getBean(Cas1UpdatePremisesStatusSeedJob::class)
+      SeedFileType.shortTermAccommodationCreateOmus -> getBean(ShortTermAccommodationCreateOmusSeedJob::class)
+      SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
+      SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2NomisUserEmailSeedJob::class)
+    }
+
+    val seedStarted = LocalDateTime.now()
+
+    if (job.runInTransaction && job.processRowsConcurrently) {
+      error("Can't run a job in a transaction and process rows in parallel")
+    }
+
+    val rowsProcessed = if (job.runInTransaction) {
+      transactionTemplate.execute { processJob(job, resolveCsvPath) }
+    } else {
+      processJob(job, resolveCsvPath)
+    }
+
+    val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
+    seedLogger.info("Seed request complete for $seedDescription. Took $timeTaken millis and processed $rowsProcessed rows")
   }
 
   private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
