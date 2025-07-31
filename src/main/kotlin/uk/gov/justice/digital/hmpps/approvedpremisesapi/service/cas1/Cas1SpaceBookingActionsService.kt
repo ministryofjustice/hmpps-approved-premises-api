@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionOutcome.Available
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionOutcome.Unavailable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction.APPEAL_CREATE
@@ -18,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookin
 
 @Service
 class Cas1SpaceBookingActionsService(
-  val userAccessService: UserAccessService,
+  val userAccessService: Cas1UserAccessService,
   val spaceBookingRepository: Cas1SpaceBookingRepository,
   val changeRequestRepository: Cas1ChangeRequestRepository,
 ) {

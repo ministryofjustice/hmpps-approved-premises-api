@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -19,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.util.UUID
 
 @Service
@@ -27,20 +25,7 @@ class UserAccessService(
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val requestContextService: RequestContextService,
-  private val environmentService: EnvironmentService,
 ) {
-  fun ensureCurrentUserHasPermission(permission: UserPermission) {
-    if (!currentUserHasPermission(permission)) {
-      throw ForbiddenProblem("Permission ${permission.name} is required")
-    }
-  }
-
-  fun currentUserHasPermission(permission: UserPermission): Boolean {
-    if (!permission.isAvailable(environmentService)) {
-      return false
-    }
-    return userService.getUserForRequest().hasPermission(permission)
-  }
   fun currentUserCanAccessRegion(service: ServiceName, probationRegionId: UUID?) = userCanAccessRegion(userService.getUserForRequest(), service, probationRegionId)
 
   fun userCanAccessRegion(user: UserEntity, service: ServiceName, probationRegionId: UUID?) = userHasAllRegionsAccess(user, service) || user.probationRegion.id == probationRegionId
@@ -64,13 +49,11 @@ class UserAccessService(
   fun currentUserCanManagePremises(premises: PremisesEntity) = userCanManagePremises(userService.getUserForRequest(), premises)
 
   fun userCanManagePremises(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> true
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
 
   fun currentUserCanChangeBookingDate(premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> userService.getUserForRequest().hasPermission(UserPermission.CAS1_BOOKING_CHANGE_DATES)
     is TemporaryAccommodationPremisesEntity -> currentUserCanManageCas3PremisesBookings(premises)
     else -> false
   }
@@ -78,7 +61,6 @@ class UserAccessService(
   fun currentUserCanManageCas3PremisesBookings(premises: PremisesEntity) = userCanManageCas3PremisesBookings(userService.getUserForRequest(), premises)
 
   fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is ApprovedPremisesEntity -> true
     is TemporaryAccommodationPremisesEntity -> userCanManageCas3PremisesBookings(user, booking.premises)
     else -> false
   }

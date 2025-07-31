@@ -27,13 +27,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
@@ -47,13 +45,11 @@ class UserAccessServiceTest {
   private val userService = mockk<UserService>()
   private val offenderService = mockk<OffenderService>()
   private val requestContextService = mockk<RequestContextService>()
-  private val environmentService = mockk<EnvironmentService>()
 
   private val userAccessService = UserAccessService(
     userService,
     offenderService,
     requestContextService,
-    environmentService,
   )
 
   private val probationRegionId = UUID.randomUUID()
@@ -135,7 +131,6 @@ class UserAccessServiceTest {
   @BeforeEach
   fun setup() {
     every { userService.getUserForRequest() } returns user
-    every { environmentService.isNotProd() } returns true
   }
 
   @Test
@@ -251,13 +246,6 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanManagePremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanManagePremises(user, approvedPremises)).isTrue
-  }
-
-  @Test
   fun `userCanManagePremises returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
@@ -281,13 +269,6 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanManagePremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanManagePremises(approvedPremises)).isTrue
   }
 
   @Test
@@ -319,10 +300,6 @@ class UserAccessServiceTest {
   @Nested
   inner class UserCanViewBooking {
 
-    private val cas1Booking = BookingEntityFactory()
-      .withPremises(approvedPremises)
-      .produce()
-
     private val cas3BookingNotInUserRegion = BookingEntityFactory()
       .withPremises(temporaryAccommodationPremisesNotInUserRegion)
       .produce()
@@ -330,13 +307,6 @@ class UserAccessServiceTest {
     private val cas3BookingInUserRegion = BookingEntityFactory()
       .withPremises(temporaryAccommodationPremisesInUserRegion)
       .produce()
-
-    @Test
-    fun `userCanViewBooking CAS1 always returns true`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      assertThat(userAccessService.userCanViewBooking(user, cas1Booking)).isTrue
-    }
 
     @Test
     fun `userCanViewBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
@@ -933,28 +903,6 @@ class UserAccessServiceTest {
     assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.temporaryAccommodation)).isFalse()
   }
 
-  @Test
-  fun `currentUserHasPermission denies experimental permissions in production environment`() {
-    user.addRoleForUnitTest(CAS1_JANITOR)
-
-    every { environmentService.isNotProd() } returns false
-
-    val result = userAccessService.currentUserHasPermission(UserPermission.CAS1_TEST_EXPERIMENTAL_PERMISSION)
-
-    assertThat(result).isFalse
-  }
-
-  @Test
-  fun `currentUserHasPermission allows experimental permissions in non-production environment`() {
-    user.addRoleForUnitTest(CAS1_JANITOR)
-
-    every { environmentService.isNotProd() } returns true
-
-    val result = userAccessService.currentUserHasPermission(UserPermission.CAS1_TEST_EXPERIMENTAL_PERMISSION)
-
-    assertThat(result).isTrue
-  }
-
   @Nested
   inner class UserMayWithdrawApplication {
 
@@ -1255,23 +1203,6 @@ class UserAccessServiceTest {
 
   @Nested
   inner class CurrentUserCanChangeBookingDate {
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_CRU_MEMBER" ])
-    fun `returns true if the given premises is an Approved Premises and the current user has the CRU_MEMBER role`(role: UserRole) {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      user.addRoleForUnitTest(role)
-
-      assertThat(userAccessService.currentUserCanChangeBookingDate(approvedPremises)).isTrue
-    }
-
-    @Test
-    fun `returns false if the given premises is an Approved Premises and the current user has no suitable role`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      assertThat(userAccessService.currentUserCanChangeBookingDate(approvedPremises)).isFalse
-    }
 
     @Test
     fun `returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
