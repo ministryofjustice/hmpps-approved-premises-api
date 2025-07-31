@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Constants.com
 
 private object Constants {
   val commonCruMemberPermissions = listOf(
-    UserPermission.CAS1_ADHOC_BOOKING_CREATE,
     UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
     UserPermission.CAS1_BOOKING_CHANGE_DATES,
     UserPermission.CAS1_BOOKING_WITHDRAW,
