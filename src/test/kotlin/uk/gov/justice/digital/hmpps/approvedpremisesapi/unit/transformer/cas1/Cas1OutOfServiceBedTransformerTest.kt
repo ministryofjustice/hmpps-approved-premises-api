@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReasonReferenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedStatus
@@ -84,6 +85,7 @@ class Cas1OutOfServiceBedTransformerTest {
       id = UUID.randomUUID(),
       name = randomStringLowerCase(12),
       isActive = true,
+      referenceType = Cas1OutOfServiceBedReasonReferenceType.WORK_ORDER,
     )
 
     val historyItem = Cas1OutOfServiceBedRevision(
@@ -151,6 +153,7 @@ class Cas1OutOfServiceBedTransformerTest {
       id = UUID.randomUUID(),
       name = randomStringLowerCase(12),
       isActive = true,
+      referenceType = Cas1OutOfServiceBedReasonReferenceType.CRN,
     )
 
     val cancellation = Cas1OutOfServiceBedCancellation(

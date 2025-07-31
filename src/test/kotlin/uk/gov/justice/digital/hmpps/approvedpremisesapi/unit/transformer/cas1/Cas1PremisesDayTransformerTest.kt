@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReasonReferenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
@@ -62,7 +63,12 @@ class Cas1PremisesDayTransformerTest {
         bedId = UUID.randomUUID(),
         startDate = LocalDate.now().minusDays(5),
         endDate = LocalDate.now().plusDays(5),
-        reason = Cas1OutOfServiceBedReason(UUID.randomUUID(), "reason", true),
+        reason = Cas1OutOfServiceBedReason(
+          UUID.randomUUID(),
+          "reason",
+          true,
+          Cas1OutOfServiceBedReasonReferenceType.WORK_ORDER,
+        ),
         characteristics = listOf(Cas1SpaceCharacteristic.isSingle),
       ),
     )
