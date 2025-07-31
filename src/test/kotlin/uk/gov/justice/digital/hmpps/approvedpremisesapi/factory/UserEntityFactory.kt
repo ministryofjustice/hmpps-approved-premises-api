@@ -163,6 +163,10 @@ class UserEntityFactory : Factory<UserEntity> {
     this.teamCodes = { teamCodes }
   }
 
+  fun withRoles(vararg roles: UserRole) = apply {
+    this.roleEnums = roles.toList()
+  }
+
   fun withRoleEnums(roles: List<UserRole>) = apply {
     this.roleEnums = roles
   }

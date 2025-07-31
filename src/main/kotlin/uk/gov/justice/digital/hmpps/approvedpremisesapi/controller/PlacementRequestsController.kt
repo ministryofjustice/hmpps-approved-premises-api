@@ -23,10 +23,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService.PlacementRequestAndCancellations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
@@ -45,7 +45,7 @@ class PlacementRequestsController(
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
-  private val userAccessService: UserAccessService,
+  private val userAccessService: Cas1UserAccessService,
   private val offenderDetailService: OffenderDetailService,
 ) : PlacementRequestsApiDelegate {
 

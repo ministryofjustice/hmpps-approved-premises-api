@@ -16,24 +16,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3PremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
@@ -47,13 +40,11 @@ class UserAccessServiceTest {
   private val userService = mockk<UserService>()
   private val offenderService = mockk<OffenderService>()
   private val requestContextService = mockk<RequestContextService>()
-  private val environmentService = mockk<EnvironmentService>()
 
   private val userAccessService = UserAccessService(
     userService,
     offenderService,
     requestContextService,
-    environmentService,
   )
 
   private val probationRegionId = UUID.randomUUID()
@@ -135,7 +126,6 @@ class UserAccessServiceTest {
   @BeforeEach
   fun setup() {
     every { userService.getUserForRequest() } returns user
-    every { environmentService.isNotProd() } returns true
   }
 
   @Test
@@ -199,13 +189,6 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewPremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanViewPremises(user, approvedPremises)).isTrue
-  }
-
-  @Test
   fun `userCanViewPremises returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
@@ -229,13 +212,6 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanViewPremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanViewPremises(approvedPremises)).isTrue
   }
 
   @Test
@@ -265,13 +241,6 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanManagePremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanManagePremises(user, approvedPremises)).isTrue
-  }
-
-  @Test
   fun `userCanManagePremises returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
@@ -295,13 +264,6 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanManagePremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanManagePremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanManagePremises(approvedPremises)).isTrue
   }
 
   @Test
@@ -333,10 +295,6 @@ class UserAccessServiceTest {
   @Nested
   inner class UserCanViewBooking {
 
-    private val cas1Booking = BookingEntityFactory()
-      .withPremises(approvedPremises)
-      .produce()
-
     private val cas3BookingNotInUserRegion = BookingEntityFactory()
       .withPremises(temporaryAccommodationPremisesNotInUserRegion)
       .produce()
@@ -344,13 +302,6 @@ class UserAccessServiceTest {
     private val cas3BookingInUserRegion = BookingEntityFactory()
       .withPremises(temporaryAccommodationPremisesInUserRegion)
       .produce()
-
-    @Test
-    fun `userCanViewBooking CAS1 always returns true`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      assertThat(userAccessService.userCanViewBooking(user, cas1Booking)).isTrue
-    }
 
     @Test
     fun `userCanViewBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
@@ -947,277 +898,6 @@ class UserAccessServiceTest {
     assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.temporaryAccommodation)).isFalse()
   }
 
-  @Test
-  fun `currentUserHasPermission denies experimental permissions in production environment`() {
-    user.addRoleForUnitTest(CAS1_JANITOR)
-
-    every { environmentService.isNotProd() } returns false
-
-    val result = userAccessService.currentUserHasPermission(UserPermission.CAS1_TEST_EXPERIMENTAL_PERMISSION)
-
-    assertThat(result).isFalse
-  }
-
-  @Test
-  fun `currentUserHasPermission allows experimental permissions in non-production environment`() {
-    user.addRoleForUnitTest(CAS1_JANITOR)
-
-    every { environmentService.isNotProd() } returns true
-
-    val result = userAccessService.currentUserHasPermission(UserPermission.CAS1_TEST_EXPERIMENTAL_PERMISSION)
-
-    assertThat(result).isTrue
-  }
-
-  @Nested
-  inner class UserMayWithdrawApplication {
-
-    @Test
-    fun `userMayWithdrawApplication returns true if application was created by user`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawApplication(user, application)).isTrue
-    }
-
-    @Test
-    fun `userMayWithdrawApplication returns false if application was not created by user`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(anotherUserInRegion)
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawApplication(user, application)).isFalse()
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawApplication returns true if submitted and has CRU_MEMBER or JANITOR role`(
-      role: UserRole,
-    ) {
-      val otherUser = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      otherUser.addRoleForUnitTest(role)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val canCancelApplication = listOf(CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
-
-      assertThat(userAccessService.userMayWithdrawApplication(otherUser, application)).isEqualTo(canCancelApplication)
-    }
-
-    @Test
-    fun `userMayWithdrawApplication returns false if not submitted and has CAS1_CRU_MEMBER role`() {
-      val cruMember = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      cruMember.roles.add(
-        UserRoleAssignmentEntityFactory()
-          .withUser(user)
-          .withRole(CAS1_CRU_MEMBER)
-          .produce(),
-      )
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawApplication(cruMember, application)).isFalse()
-    }
-
-    @Test
-    fun `userMayWithdrawApplication returns false if not CAS1`() {
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withCreatedByUser(anotherUserInRegion)
-        .withProbationRegion(probationRegion)
-        .withSubmittedAt(null)
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawApplication(user, application)).isFalse
-    }
-  }
-
-  @Nested
-  inner class UserMayWithdrawPlacementRequest {
-
-    @Test
-    fun `userMayWithdrawPlacementRequest returns true if application was created by user`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)).isTrue
-    }
-
-    @Test
-    fun `userMayWithdrawPlacementRequest returns false if application was not created by user and doesn't have CAS1_CRU_MEMBER role`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(anotherUserInRegion)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)).isFalse
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementRequest returns true if user has CAS1_CRU_MEMBER or JANITOR role`(
-      role: UserRole,
-    ) {
-      val otherUser = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      otherUser.addRoleForUnitTest(role)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .produce()
-
-      val canWithdrawPlacementRequest = listOf(CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
-
-      assertThat(userAccessService.userMayWithdrawPlacementRequest(otherUser, placementRequest)).isEqualTo(canWithdrawPlacementRequest)
-    }
-  }
-
-  @Nested
-  inner class UserMayWithdrawPlacementApplication {
-
-    @Test
-    fun `userMayWithdrawPlacementApplication returns true if application was created by user`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withCreatedByUser(user)
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isTrue
-    }
-
-    @Test
-    fun `userMayWithdrawPlacementApplication returns false if application was not created by user`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(anotherUserInRegion)
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withCreatedByUser(anotherUserInRegion)
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isFalse
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementApplication returns true if submitted and has CRU_MEMBER or JANITOR role`(
-      role: UserRole,
-    ) {
-      val otherUser = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      otherUser.addRoleForUnitTest(role)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val canCancelPlacementApp = listOf(CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
-
-      assertThat(userAccessService.userMayWithdrawPlacementApplication(otherUser, placementApplication)).isEqualTo(canCancelPlacementApp)
-    }
-
-    @Test
-    fun `userMayWithdrawPlacementApplication returns false if not submitted and has CAS1_CRU_MEMBER role`() {
-      val cruMember = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      cruMember.roles.add(
-        UserRoleAssignmentEntityFactory()
-          .withUser(user)
-          .withRole(CAS1_CRU_MEMBER)
-          .produce(),
-      )
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(anotherUserInRegion)
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withCreatedByUser(anotherUserInRegion)
-        .withSubmittedAt(null)
-        .produce()
-
-      assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isFalse
-    }
-  }
-
   @Nested
   inner class UserCanAccessTemporaryAccommodationApplication {
 
@@ -1269,23 +949,6 @@ class UserAccessServiceTest {
 
   @Nested
   inner class CurrentUserCanChangeBookingDate {
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_CRU_MEMBER" ])
-    fun `returns true if the given premises is an Approved Premises and the current user has the CRU_MEMBER role`(role: UserRole) {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      user.addRoleForUnitTest(role)
-
-      assertThat(userAccessService.currentUserCanChangeBookingDate(approvedPremises)).isTrue
-    }
-
-    @Test
-    fun `returns false if the given premises is an Approved Premises and the current user has no suitable role`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      assertThat(userAccessService.currentUserCanChangeBookingDate(approvedPremises)).isFalse
-    }
 
     @Test
     fun `returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {

@@ -11,9 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStrea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.ReportDateRange
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -26,7 +26,7 @@ private const val MONTH_MIN = 1
 @Service
 class Cas1ReportsController(
   private val cas1ReportService: Cas1ReportService,
-  private val userAccessService: UserAccessService,
+  private val userAccessService: Cas1UserAccessService,
 ) : ReportsCas1Delegate {
 
   companion object {

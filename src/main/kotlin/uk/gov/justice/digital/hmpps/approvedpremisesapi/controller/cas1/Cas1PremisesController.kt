@@ -31,11 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Repo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
@@ -43,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService.Cas1PremisesSearchCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
@@ -61,7 +60,7 @@ import java.util.UUID
 @Cas1Controller
 @Tag(name = "CAS1 Premises")
 class Cas1PremisesController(
-  private val userAccessService: UserAccessService,
+  private val userAccessService: Cas1UserAccessService,
   private val userService: UserService,
   private val cas1PremisesService: Cas1PremisesService,
   private val cas1PremisesTransformer: Cas1PremisesTransformer,
@@ -161,10 +160,6 @@ class Cas1PremisesController(
     val premises = cas1PremisesService.findPremiseById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
     return ResponseEntity.ok(
       cas1PremisesService.getActiveBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi),
     )
@@ -176,12 +171,8 @@ class Cas1PremisesController(
     @PathVariable premisesId: UUID,
     @PathVariable bedId: UUID,
   ): ResponseEntity<Cas1BedDetail> {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    cas1PremisesService.findPremiseById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
 
     return ResponseEntity.ok(
       cas1BedDetailTransformer.transformToApi(
