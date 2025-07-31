@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -23,7 +22,7 @@ import java.util.UUID
 @Service
 class Cas1AppealService(
   private val appealRepository: AppealRepository,
-  private val assessmentService: AssessmentService,
+  private val cas1AssessmentService: Cas1AssessmentService,
   private val cas1AppealEmailService: Cas1AppealEmailService,
   private val cas1AppealDomainEventService: Cas1AppealDomainEventService,
 ) {
@@ -87,11 +86,11 @@ class Cas1AppealService(
 
       when (decision) {
         AppealDecision.accepted -> {
-          assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
+          cas1AssessmentService.createAssessment(application, createdFromAppeal = true)
           cas1AppealEmailService.appealSuccess(application, appeal)
         }
         AppealDecision.rejected -> {
-          cas1AppealEmailService.appealFailed(application as ApprovedPremisesApplicationEntity)
+          cas1AppealEmailService.appealFailed(application)
         }
       }
 

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -9,11 +10,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -27,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -39,9 +44,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -54,7 +61,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -79,6 +88,8 @@ class Cas1AssessmentServiceTest {
   private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
   private val approvedPremisesAssessmentRepositoryMock = mockk<ApprovedPremisesAssessmentRepository>()
   private val lockableAssessmentRepositoryMock = mockk<LockableAssessmentRepository>()
+  private val userAllocatorMock = mockk<UserAllocator>()
+  private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
 
   private val cas1AssessmentService = Cas1AssessmentService(
     userAccessServiceMock,
@@ -94,6 +105,8 @@ class Cas1AssessmentServiceTest {
     assessmentClarificationNoteListener,
     approvedPremisesAssessmentRepositoryMock,
     lockableAssessmentRepositoryMock,
+    cas1TaskDeadlineServiceMock,
+    userAllocatorMock,
     Clock.systemDefaultZone(),
   )
 
@@ -257,6 +270,157 @@ class Cas1AssessmentServiceTest {
 
     assertThat(result.id).isEqualTo(assessmentId.toString())
     assertThat(result.entityType).isEqualTo("AssessmentEntity")
+  }
+
+  @Nested
+  inner class CreateAssessments {
+
+    private val actingUser = UserEntityFactory()
+      .withDeliusUsername("Acting User")
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }.produce()
+
+    @ParameterizedTest
+    @CsvSource(
+      value = [
+        "emergency,true", "standard,true", "shortNotice,true",
+        "emergency,false", "standard,false", "shortNotice,false",
+      ],
+    )
+    fun `create CAS1 Assessment creates an Assessment, sends allocation email and allocated domain event`(
+      timelinessCategory: Cas1ApplicationTimelinessCategory,
+      createdFromAppeal: Boolean,
+    ) {
+      val userWithLeastAllocatedAssessments = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+        .apply {
+          roles += UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS1_ASSESSOR)
+            .produce()
+
+          qualifications += UserQualificationAssignmentEntityFactory()
+            .withUser(this)
+            .withQualification(UserQualification.PIPE)
+            .produce()
+
+          if (timelinessCategory != Cas1ApplicationTimelinessCategory.standard) {
+            qualifications += UserQualificationAssignmentEntityFactory()
+              .withUser(this)
+              .withQualification(UserQualification.EMERGENCY)
+              .produce()
+          }
+        }
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .withApType(ApprovedPremisesType.PIPE)
+        .withNoticeType(timelinessCategory)
+        .produce()
+
+      val dueAt = OffsetDateTime.now()
+
+      every { assessmentListener.prePersist(any()) } returns Unit
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+      every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
+
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
+      if (createdFromAppeal) {
+        every { cas1AssessmentEmailServiceMock.appealedAssessmentAllocated(any(), any(), any()) } just Runs
+      } else {
+        every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+      }
+
+      every { userServiceMock.getUserForRequest() } returns actingUser
+
+      every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
+
+      val assessment = cas1AssessmentService.createAssessment(application, createdFromAppeal)
+
+      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments && it.dueAt == dueAt }) }
+
+      if (createdFromAppeal) {
+        verify(exactly = 1) {
+          cas1AssessmentEmailServiceMock.appealedAssessmentAllocated(
+            match { it.id == userWithLeastAllocatedAssessments.id },
+            any<UUID>(),
+            application,
+          )
+        }
+      } else {
+        verify(exactly = 1) {
+          cas1AssessmentEmailServiceMock.assessmentAllocated(
+            match { it.id == userWithLeastAllocatedAssessments.id },
+            any<UUID>(),
+            application,
+            dueAt,
+            timelinessCategory == Cas1ApplicationTimelinessCategory.emergency,
+          )
+        }
+      }
+
+      verify {
+        cas1AssessmentDomainEventService.assessmentAllocated(
+          assessment,
+          allocatedToUser = userWithLeastAllocatedAssessments,
+          allocatingUser = null,
+        )
+      }
+    }
+
+    @Test
+    fun `create CAS1 Assessment doesn't create allocated domain event if no suitable allocation found`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .withApType(ApprovedPremisesType.PIPE)
+        .withNoticeType(Cas1ApplicationTimelinessCategory.shortNotice)
+        .produce()
+
+      val dueAt = OffsetDateTime.now()
+
+      every { assessmentListener.prePersist(any()) } returns Unit
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+      every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns null
+
+      every { cas1TaskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
+      every { cas1AssessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+
+      every { userServiceMock.getUserForRequest() } returns actingUser
+
+      every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
+
+      cas1AssessmentService.createAssessment(application, createdFromAppeal = false)
+
+      verify { cas1AssessmentDomainEventService wasNot Called }
+    }
   }
 
   @Nested

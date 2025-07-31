@@ -4,6 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
@@ -52,8 +54,52 @@ class Cas1AssessmentService(
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
+  private val taskDeadlineService: Cas1TaskDeadlineService,
+  private val userAllocator: UserAllocator,
   private val clock: Clock,
 ) {
+
+  fun createAssessment(application: ApprovedPremisesApplicationEntity, createdFromAppeal: Boolean = false): ApprovedPremisesAssessmentEntity {
+    val dateTimeNow = OffsetDateTime.now(clock)
+
+    var assessment = ApprovedPremisesAssessmentEntity(
+      id = UUID.randomUUID(),
+      application = application,
+      data = null,
+      document = null,
+      allocatedToUser = null,
+      allocatedAt = dateTimeNow,
+      reallocatedAt = null,
+      createdAt = dateTimeNow,
+      submittedAt = null,
+      decision = null,
+      rejectionRationale = null,
+      clarificationNotes = mutableListOf(),
+      referralHistoryNotes = mutableListOf(),
+      isWithdrawn = false,
+      createdFromAppeal = createdFromAppeal,
+      dueAt = null,
+    )
+
+    assessment.dueAt = taskDeadlineService.getDeadline(assessment)
+
+    val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
+    assessment.allocatedToUser = allocatedUser
+
+    assessmentListener.prePersist(assessment)
+    assessment = assessmentRepository.save(assessment)
+
+    if (allocatedUser != null) {
+      if (createdFromAppeal) {
+        cas1AssessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application)
+      } else {
+        cas1AssessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
+      }
+      cas1AssessmentDomainEventService.assessmentAllocated(assessment, allocatedUser, allocatingUser = null)
+    }
+
+    return assessment
+  }
 
   @SuppressWarnings("ReturnCount")
   fun updateAssessment(

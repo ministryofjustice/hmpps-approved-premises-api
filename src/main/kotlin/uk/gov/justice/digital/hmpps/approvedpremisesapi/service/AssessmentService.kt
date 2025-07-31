@@ -46,7 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -67,7 +66,6 @@ class AssessmentService(
   private val offenderService: OffenderService,
   private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
-  private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
@@ -158,48 +156,6 @@ class AssessmentService(
     }
 
     return CasResult.Success(assessment)
-  }
-
-  fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity, createdFromAppeal: Boolean = false): ApprovedPremisesAssessmentEntity {
-    val dateTimeNow = OffsetDateTime.now(clock)
-
-    var assessment = ApprovedPremisesAssessmentEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      data = null,
-      document = null,
-      allocatedToUser = null,
-      allocatedAt = dateTimeNow,
-      reallocatedAt = null,
-      createdAt = dateTimeNow,
-      submittedAt = null,
-      decision = null,
-      rejectionRationale = null,
-      clarificationNotes = mutableListOf(),
-      referralHistoryNotes = mutableListOf(),
-      isWithdrawn = false,
-      createdFromAppeal = createdFromAppeal,
-      dueAt = null,
-    )
-
-    assessment.dueAt = cas1TaskDeadlineService.getDeadline(assessment)
-
-    val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
-    assessment.allocatedToUser = allocatedUser
-
-    prePersistAssessment(assessment)
-    assessment = assessmentRepository.save(assessment)
-
-    if (allocatedUser != null) {
-      if (createdFromAppeal) {
-        cas1AssessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application)
-      } else {
-        cas1AssessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
-      }
-      cas1AssessmentDomainEventService.assessmentAllocated(assessment, allocatedUser, allocatingUser = null)
-    }
-
-    return assessment
   }
 
   fun createTemporaryAccommodationAssessment(

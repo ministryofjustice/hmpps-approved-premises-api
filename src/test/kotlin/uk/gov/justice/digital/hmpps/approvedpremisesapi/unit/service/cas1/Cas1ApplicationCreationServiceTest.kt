@@ -57,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Mana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
@@ -65,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
@@ -77,7 +77,7 @@ import java.util.UUID
 class Cas1ApplicationCreationServiceTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
-  private val mockAssessmentService = mockk<AssessmentService>()
+  private val mockCas1AssessmentService = mockk<Cas1AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
@@ -96,7 +96,7 @@ class Cas1ApplicationCreationServiceTest {
   private val applicationService = Cas1ApplicationCreationService(
     mockApplicationRepository,
     mockOffenderRisksService,
-    mockAssessmentService,
+    mockCas1AssessmentService,
     mockOfflineApplicationRepository,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
@@ -694,7 +694,7 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(persistedApplication.licenceExpiryDate).isNull()
 
       verify { mockApplicationRepository.save(any()) }
-      verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
+      verify(exactly = 1) { mockCas1AssessmentService.createAssessment(application) }
 
       verify(exactly = 1) {
         mockCas1ApplicationDomainEventService.applicationSubmitted(
@@ -776,7 +776,7 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
 
       verify { mockApplicationRepository.save(any()) }
-      verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
+      verify(exactly = 1) { mockCas1AssessmentService.createAssessment(application) }
 
       verify(exactly = 1) {
         mockCas1ApplicationDomainEventService.applicationSubmitted(
@@ -856,7 +856,7 @@ class Cas1ApplicationCreationServiceTest {
       assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
 
       verify { mockApplicationRepository.save(any()) }
-      verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
+      verify(exactly = 1) { mockCas1AssessmentService.createAssessment(application) }
 
       verify(exactly = 1) {
         mockCas1ApplicationDomainEventService.applicationSubmitted(
@@ -1008,7 +1008,7 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockApAreaRepository.findByIdOrNull(apArea.id) } returns apArea
 
-      every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
+      every { mockCas1AssessmentService.createAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(user)
         .produce()
