@@ -1,4 +1,6 @@
+
 plugins {
+  // this adds the appinsights agent (see AppInsightsConfigManager.kt)
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.4"
   kotlin("plugin.spring") version "2.1.21"
   kotlin("plugin.jpa") version "2.1.21"
