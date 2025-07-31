@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
@@ -187,6 +188,31 @@ class Cas3DomainEventBuilder(
 
   fun getPersonArrivedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
+  ): DomainEvent<CAS3PersonArrivedEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    val arrival = booking.arrival!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = arrival.arrivalDateTime,
+      data = CAS3PersonArrivedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.personArrived,
+        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival, user),
+      ),
+    )
+  }
+
+  fun getPersonArrivedDomainEvent(
+    booking: Cas3BookingEntity,
     user: UserEntity?,
   ): DomainEvent<CAS3PersonArrivedEvent> {
     val domainEventId = UUID.randomUUID()
@@ -402,6 +428,30 @@ class Cas3DomainEventBuilder(
     )
   }
 
+  fun buildPersonArrivedUpdatedDomainEvent(
+    booking: Cas3BookingEntity,
+    user: UserEntity?,
+  ): DomainEvent<CAS3PersonArrivedUpdatedEvent> {
+    val domainEventId = UUID.randomUUID()
+    val arrival = booking.arrival!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = arrival.arrivalDateTime,
+      data = CAS3PersonArrivedUpdatedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.personArrivedUpdated,
+        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival, user),
+      ),
+    )
+  }
+
   fun getDraftReferralDeletedEvent(
     application: ApplicationEntity,
     user: UserEntity,
@@ -521,6 +571,34 @@ class Cas3DomainEventBuilder(
       postcode = booking.premises.postcode,
       town = booking.premises.town,
       region = booking.premises.probationRegion.name,
+    ),
+    arrivedAt = arrival.arrivalDateTime,
+    expectedDepartureOn = arrival.expectedDepartureDate,
+    notes = arrival.notes ?: "",
+    recordedBy = user?.let { populateStaffMember(it) },
+  )
+
+  private fun createCas3PersonArrivedEventDetails(
+    application: TemporaryAccommodationApplicationEntity?,
+    booking: Cas3BookingEntity,
+    arrival: Cas3ArrivalEntity,
+    user: UserEntity?,
+  ) = CAS3PersonArrivedEventDetails(
+    applicationId = application?.id,
+    applicationUrl = application.toUrl(),
+    bookingId = booking.id,
+    bookingUrl = booking.toUrl(),
+    personReference = PersonReference(
+      crn = booking.crn,
+      noms = booking.nomsNumber,
+    ),
+    deliusEventNumber = application?.eventNumber ?: "",
+    premises = Premises(
+      addressLine1 = booking.premises.addressLine1,
+      addressLine2 = booking.premises.addressLine2,
+      postcode = booking.premises.postcode,
+      town = booking.premises.town,
+      region = booking.premises.probationDeliveryUnit.probationRegion.name,
     ),
     arrivedAt = arrival.arrivalDateTime,
     expectedDepartureOn = arrival.expectedDepartureDate,
