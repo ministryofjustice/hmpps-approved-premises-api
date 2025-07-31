@@ -6,17 +6,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -27,22 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationErro
 interface BookingsApi {
 
   fun getDelegate(): BookingsApiDelegate = object : BookingsApiDelegate {}
-
-  @Operation(
-    tags = ["default"],
-    summary = "Gets a booking",
-    operationId = "bookingsBookingIdGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successfully retrieved booking", content = [Content(schema = Schema(implementation = Booking::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/bookings/{bookingId}"],
-    produces = ["application/json"],
-  )
-  fun bookingsBookingIdGet(@Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<Booking> = getDelegate().bookingsBookingIdGet(bookingId)
 
   @Operation(
     tags = ["default"],

@@ -60,59 +60,6 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetBooking {
-
-    @Test
-    fun `Get a booking without JWT returns 401`() {
-      webTestClient.get()
-        .uri("/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Get a non existant booking returns 404`() {
-      webTestClient.get()
-        .uri("/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Get a booking returns OK with the correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-          val premises = givenAnApprovedPremises()
-
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withServiceName(ServiceName.approvedPremises)
-          }
-
-          webTestClient.get()
-            .uri("/bookings/${booking.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                bookingTransformer.transformJpaToApi(
-                  booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                ),
-              ),
-            )
-        }
-      }
-    }
-  }
-
-  @Nested
   inner class GetBookingForPremises {
 
     @Test
