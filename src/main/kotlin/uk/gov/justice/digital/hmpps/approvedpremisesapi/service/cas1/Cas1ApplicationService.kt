@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.util.UUID
@@ -29,7 +28,7 @@ class Cas1ApplicationService(
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
-  private val assessmentService: AssessmentService,
+  private val cas1AssessmentService: Cas1AssessmentService,
   private val userAccessService: Cas1UserAccessService,
 ) {
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
@@ -112,7 +111,7 @@ class Cas1ApplicationService(
     cas1ApplicationEmailService.applicationWithdrawn(updatedApplication, user)
 
     updatedApplication.assessments.map {
-      assessmentService.updateCas1AssessmentWithdrawn(it.id, user)
+      cas1AssessmentService.updateAssessmentWithdrawn(it.id, user)
     }
 
     return CasResult.Success(Unit)

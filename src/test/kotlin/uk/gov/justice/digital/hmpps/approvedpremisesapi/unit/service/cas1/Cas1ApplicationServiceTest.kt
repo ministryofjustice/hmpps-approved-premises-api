@@ -15,17 +15,18 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import java.util.UUID
 
@@ -52,7 +53,7 @@ class Cas1ApplicationServiceTest {
   private lateinit var cas1ApplicationEmailService: Cas1ApplicationEmailService
 
   @MockK
-  private lateinit var assessmentService: AssessmentService
+  private lateinit var cas1AssessmentService: Cas1AssessmentService
 
   @MockK
   private lateinit var userAccessService: Cas1UserAccessService
@@ -112,12 +113,19 @@ class Cas1ApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      application.assessments.add(assessment)
+
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
       every { userAccessService.userMayWithdrawApplication(user, application) } returns true
       every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
       every { cas1ApplicationStatusService.applicationWithdrawn(any()) } just Runs
       every { cas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
       every { cas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
+      every { cas1AssessmentService.updateAssessmentWithdrawn(any(), any()) } just Runs
 
       val result = service.withdrawApprovedPremisesApplication(
         application.id,
@@ -142,6 +150,7 @@ class Cas1ApplicationServiceTest {
       verify { cas1ApplicationStatusService.applicationWithdrawn(application) }
       verify { cas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
       verify { cas1ApplicationEmailService.applicationWithdrawn(application, user) }
+      verify { cas1AssessmentService.updateAssessmentWithdrawn(assessment.id, user) }
     }
 
     @Test

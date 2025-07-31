@@ -718,25 +718,6 @@ class AssessmentService(
     return CasResult.Success(referralHistoryNoteEntity)
   }
 
-  fun updateCas1AssessmentWithdrawn(assessmentId: UUID, withdrawingUser: UserEntity) {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      val isPendingAssessment = assessment.isPendingAssessment()
-
-      assessment.isWithdrawn = true
-
-      preUpdateAssessment(assessment)
-      assessmentRepository.save(assessment)
-
-      cas1AssessmentEmailService.assessmentWithdrawn(
-        assessment = assessment,
-        isAssessmentPending = isPendingAssessment,
-        withdrawingUser = withdrawingUser,
-        application = assessment.application as ApprovedPremisesApplicationEntity,
-      )
-    }
-  }
-
   private fun AssessmentEntity.addSystemNote(user: UserEntity, type: ReferralHistorySystemNoteType) {
     this.referralHistoryNotes += assessmentReferralHistoryNoteRepository.save(
       AssessmentReferralHistorySystemNoteEntity(

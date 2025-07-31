@@ -345,6 +345,25 @@ class Cas1AssessmentService(
     return CasResult.Success(savedAssessment)
   }
 
+  fun updateAssessmentWithdrawn(assessmentId: UUID, withdrawingUser: UserEntity) {
+    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val isPendingAssessment = assessment.isPendingAssessment()
+
+      assessment.isWithdrawn = true
+
+      preUpdateAssessment(assessment)
+      assessmentRepository.save(assessment)
+
+      cas1AssessmentEmailService.assessmentWithdrawn(
+        assessment = assessment,
+        isAssessmentPending = isPendingAssessment,
+        withdrawingUser = withdrawingUser,
+        application = assessment.application as ApprovedPremisesApplicationEntity,
+      )
+    }
+  }
+
   private fun prePersistClarificationNote(note: AssessmentClarificationNoteEntity) {
     assessmentClarificationNoteListener.prePersist(note)
   }
