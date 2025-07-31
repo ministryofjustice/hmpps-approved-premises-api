@@ -1166,6 +1166,8 @@ class AssessmentTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenSomeOffenders { offenderSequence ->
           val offenders = offenderSequence.take(5).toList()
+          apDeliusContextAddListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, _) -> offenderDetails.asCaseSummary() })
+
           data class AssessmentParams(
             val assessment: TemporaryAccommodationAssessmentEntity,
             val offenderDetails: OffenderDetailSummary,
@@ -1247,15 +1249,13 @@ class AssessmentTest : IntegrationTestBase() {
                       (
                         it.assessment.application as
                           TemporaryAccommodationApplicationEntity
-                        ).probationDeliveryUnit?.name
+                        ).probationDeliveryUnit?.name?.lowercase()
                     },
                   )
                   .map(toSummary),
               )
             }
           }
-
-          apDeliusContextAddListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, inmateDetails) -> offenderDetails.asCaseSummary() })
 
           assertResponseForUrl(
             jwt,
