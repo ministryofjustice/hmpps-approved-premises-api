@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import java.time.Clock
@@ -39,7 +38,7 @@ class Cas1PlacementApplicationService(
   private val userService: UserService,
   private val placementRequestService: Cas1PlacementRequestService,
   private val userAllocator: UserAllocator,
-  private val userAccessService: UserAccessService,
+  private val userAccessService: Cas1UserAccessService,
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
