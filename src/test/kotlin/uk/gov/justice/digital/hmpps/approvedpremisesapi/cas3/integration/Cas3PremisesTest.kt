@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -202,43 +203,28 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   inner class UpdatePremises {
     @Test
     fun `Update premises returns 200 OK with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+      ) { user, jwt, premises ->
+
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
           withProbationRegion(user.probationRegion)
         }
 
-        val premisesCharacteristics = getPremisesCharacteristics().toMutableList()
-
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-          withProbationDeliveryUnit(probationDeliveryUnit)
-          withLocalAuthorityArea(localAuthorityArea)
-          withStatus(PropertyStatus.active)
-          withAddressLine2(randomStringUpperCase(10))
-          withCharacteristics(
-            mutableListOf(
-              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
-              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
-              pickRandomCharacteristicAndRemoveFromList(premisesCharacteristics),
-            ),
-          )
-        }
-
         val updatedPremises = Cas3UpdatePremises(
-          reference = premises.name,
-          addressLine1 = premises.addressLine1,
-          addressLine2 = premises.addressLine2,
-          postcode = premises.postcode,
-          town = premises.town,
-          notes = premises.notes,
+          reference = randomStringMultiCaseWithNumbers(10),
+          addressLine1 = randomStringMultiCaseWithNumbers(25),
+          addressLine2 = randomStringMultiCaseWithNumbers(10),
+          postcode = randomPostCode(),
+          town = randomNumberChars(10),
+          notes = randomStringMultiCaseWithNumbers(100),
           probationRegionId = premises.probationRegion.id,
-          probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+          probationDeliveryUnitId = probationDeliveryUnit.id,
           localAuthorityAreaId = premises.localAuthorityArea?.id!!,
           characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
             characteristic.id
           },
-          turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+          turnaroundWorkingDayCount = 3,
         )
 
         webTestClient.put()
@@ -251,14 +237,14 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .expectBody()
           .jsonPath("reference").isEqualTo(updatedPremises.reference)
           .jsonPath("addressLine1").isEqualTo(updatedPremises.addressLine1)
-          .jsonPath("addressLine2").isEqualTo(updatedPremises.addressLine2)
-          .jsonPath("town").isEqualTo(updatedPremises.town)
+          .jsonPath("addressLine2").isEqualTo(updatedPremises.addressLine2!!)
+          .jsonPath("town").isEqualTo(updatedPremises.town!!)
           .jsonPath("postcode").isEqualTo(updatedPremises.postcode)
           .jsonPath("localAuthorityArea.id").isEqualTo(updatedPremises.localAuthorityAreaId.toString())
           .jsonPath("probationRegion.id").isEqualTo(updatedPremises.probationRegionId.toString())
           .jsonPath("probationDeliveryUnit.id").isEqualTo(updatedPremises.probationDeliveryUnitId.toString())
-          .jsonPath("notes").isEqualTo(updatedPremises.notes)
-          .jsonPath("turnaroundWorkingDays").isEqualTo(updatedPremises.turnaroundWorkingDayCount.toString())
+          .jsonPath("notes").isEqualTo(updatedPremises.notes!!)
+          .jsonPath("turnaroundWorkingDays").isEqualTo(3)
           .jsonPath("characteristics[*].id").isEqualTo(updatedPremises.characteristicIds.map { it.toString() })
       }
     }

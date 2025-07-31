@@ -370,6 +370,7 @@ class Cas3PremisesService(
   @SuppressWarnings("CyclomaticComplexMethod")
   fun updatePremises(
     premises: TemporaryAccommodationPremisesEntity,
+    reference: String,
     addressLine1: String,
     addressLine2: String?,
     town: String?,
@@ -379,7 +380,7 @@ class Cas3PremisesService(
     characteristicIds: List<UUID>,
     notes: String?,
     probationDeliveryUnitId: UUID,
-    turnaroundWorkingDayCount: Int,
+    turnaroundWorkingDays: Int,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
     val localAuthorityArea = localAuthorityAreaId?.let { id ->
       localAuthorityAreaRepository.findByIdOrNull(id).also { result ->
@@ -392,26 +393,37 @@ class Cas3PremisesService(
     if (probationRegion == null) {
       "$.probationRegionId" hasValidationError "doesNotExist"
     }
-    val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
-    if (result == null) {
+    val probationDeliveryUnit = probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
+    if (probationDeliveryUnit == null) {
       "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
     }
-    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
-    if (turnaroundWorkingDayCount < 0) {
-      "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
+
+    if (reference.isEmpty()) {
+      "$.reference" hasValidationError "empty"
+    } else if (!premisesRepository.nameIsUniqueForType(reference, TemporaryAccommodationPremisesEntity::class.java)) {
+      "$.reference" hasValidationError "notUnique"
     }
+
     if (addressLine1.isEmpty()) {
       "$.address" hasValidationError "empty"
     }
+
     if (postcode.isEmpty()) {
       "$.postcode" hasValidationError "empty"
     }
+
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
+    if (turnaroundWorkingDays < 0) {
+      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
+    }
+
     if (validationErrors.any()) {
       return fieldValidationError
     }
 
     premises
       .apply {
+        premises.name = reference
         premises.addressLine1 = addressLine1
         premises.addressLine2 = addressLine2
         premises.town = town
