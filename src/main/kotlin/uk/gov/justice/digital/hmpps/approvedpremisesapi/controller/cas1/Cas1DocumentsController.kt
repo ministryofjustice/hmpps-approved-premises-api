@@ -8,15 +8,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.io.OutputStream
 import java.util.UUID
@@ -40,7 +38,9 @@ class Cas1DocumentsController(
   ): ResponseEntity<StreamingResponseBody> {
     val user = userService.getUserForRequest()
 
-    getOffenderDetails(crn, user)
+    if (!offenderService.canAccessOffender(crn, user.cas1LaoStrategy())) {
+      throw ForbiddenProblem()
+    }
 
     val documentsMetaData = getDocuments(crn)
 
@@ -54,17 +54,6 @@ class Cas1DocumentsController(
       },
       HttpStatus.OK,
     )
-  }
-
-  private fun getOffenderDetails(crn: String, user: UserEntity) {
-    val offenderDetailsResult =
-      offenderService.getOffenderByCrn(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-
-    when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> Unit
-    }
   }
 
   private fun getDocument(crn: String, documentId: UUID, outputStream: OutputStream) {
