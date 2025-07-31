@@ -266,8 +266,6 @@ class PremisesService(
     )
   }
 
-  fun getBeds(premisesId: UUID) = bedRepository.findAllBedsForPremises(premisesId)
-
   @Transactional
   fun deletePremises(premises: PremisesEntity): ValidatableActionResult<Unit> = validated {
     if (premises.bookings.any()) {

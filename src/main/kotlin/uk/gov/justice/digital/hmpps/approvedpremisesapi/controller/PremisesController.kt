@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
@@ -66,7 +65,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTransformer
@@ -107,7 +105,6 @@ class PremisesController(
   private val roomTransformer: RoomTransformer,
   private val cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer,
   private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
-  private val bedSummaryTransformer: BedSummaryTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
   private val requestContextService: RequestContextService,
   private val offenderDetailService: OffenderDetailService,
@@ -846,17 +843,6 @@ class PremisesController(
 
       else -> error("This endpoint does not support create turnarounds for bookings with premise type: ${booking.premises::class.qualifiedName}")
     }
-  }
-
-  override fun premisesPremisesIdBedsGet(premisesId: UUID): ResponseEntity<List<BedSummary>> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(premisesService.getBeds(premisesId).map(bedSummaryTransformer::transformToApi))
   }
 
   @SuppressWarnings("ThrowsCount")

@@ -5,7 +5,6 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.context.request.NativeWebRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
@@ -59,21 +58,6 @@ interface PremisesApiDelegate {
         }
         if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
           ApiUtil.setExampleResponse(request, "application/problem+json", "Custom MIME type example not yet supported: application/problem+json")
-          break
-        }
-      }
-    }
-    return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
-  }
-
-  /**
-   * @see PremisesApi#premisesPremisesIdBedsGet
-   */
-  fun premisesPremisesIdBedsGet(premisesId: java.util.UUID): ResponseEntity<List<BedSummary>> {
-    getRequest().ifPresent { request ->
-      for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "[ {  \"name\" : \"name\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"roomName\" : \"roomName\",  \"status\" : \"occupied\"}, {  \"name\" : \"name\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"roomName\" : \"roomName\",  \"status\" : \"occupied\"} ]")
           break
         }
       }
