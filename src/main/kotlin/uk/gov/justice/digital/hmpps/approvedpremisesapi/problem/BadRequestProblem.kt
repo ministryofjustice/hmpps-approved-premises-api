@@ -20,7 +20,8 @@ class BadRequestProblem(
         ParamError(
           propertyName = it.key,
           errorType = it.value.errorType,
-          errorDetail = it.value.errorDetail,
+          entityId = it.value.entityId,
+          value = it.value.value,
         )
       } ?: emptyList()
       ),
@@ -29,11 +30,13 @@ class BadRequestProblem(
 
 data class ParamDetails(
   val errorType: String,
-  val errorDetail: String? = null,
+  val entityId: String? = null,
+  val value: String? = null,
 )
 
 data class ParamError(
   val propertyName: String,
   val errorType: String,
-  val errorDetail: String? = null,
+  val entityId: String? = null,
+  val value: String? = null,
 )

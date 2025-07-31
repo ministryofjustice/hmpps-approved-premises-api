@@ -19,7 +19,7 @@ fun <EntityType> extractEntityFromAuthorisableActionResult(result: AuthorisableA
 @Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableActionResult<EntityType>) = when (result) {
   is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-  is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value, errorDetail = null) })
+  is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value) })
   is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   is ValidatableActionResult.Success -> result.entity
 }
@@ -50,11 +50,17 @@ fun <EntityType> extractEntityFromCasResult(result: CasResult<EntityType>) = whe
   is CasResult.Unauthorised -> throw ForbiddenProblem(result.message)
   is CasResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
   is CasResult.FieldValidationError -> throw BadRequestProblem(
-    invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value, errorDetail = null) },
+    invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value) },
   )
   is CasResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
   is CasResult.Cas3FieldValidationError -> throw BadRequestProblem(
-    invalidParams = result.validationMessages.mapValues { ParamDetails(errorType = it.value.message, errorDetail = it.value.value) },
+    invalidParams = result.validationMessages.mapValues {
+      ParamDetails(
+        errorType = it.value.message,
+        entityId = it.value.entityId,
+        value = it.value.value,
+      )
+    },
   )
 }
 

@@ -161,10 +161,10 @@ class CasResultCas3FieldValidationErrorAssertions<T>(actual: CasResult.Cas3Field
     actual,
     CasResultCas3FieldValidationErrorAssertions::class.java,
   ) {
-  fun hasMessage(field: String, expectedMessage: String, expectedValue: String): CasResultCas3FieldValidationErrorAssertions<T> {
+  fun hasMessage(field: String, expectedId: String, expectedMessage: String, expectedValue: String): CasResultCas3FieldValidationErrorAssertions<T> {
     val validationMessages = actual.validationMessages
 
-    assertThat(validationMessages).containsEntry(field, Cas3ValidationMessage(expectedMessage, expectedValue))
+    assertThat(validationMessages).containsEntry(field, Cas3ValidationMessage(expectedId, expectedMessage, expectedValue))
 
     return this
   }

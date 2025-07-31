@@ -637,6 +637,7 @@ class Cas3PremisesService(
         Cas3ValidationErrors().apply {
           this["$.endDate"] = Cas3ValidationMessage(
             message = "existingVoid",
+            entityId = bedspace.id.toString(),
             value = lastOverlapVoid?.endDate?.plusDays(1).toString(),
           )
         },
@@ -648,6 +649,7 @@ class Cas3PremisesService(
           Cas3ValidationErrors().apply {
             this["$.endDate"] = Cas3ValidationMessage(
               message = "existingBookings",
+              entityId = bedspace.id.toString(),
               value = lastOverlapBooking.departureDate.plusDays(1).toString(),
             )
           },
@@ -657,6 +659,7 @@ class Cas3PremisesService(
           Cas3ValidationErrors().apply {
             this["$.endDate"] = Cas3ValidationMessage(
               message = "existingTurnaround",
+              entityId = bedspace.id.toString(),
               value = lastTurnaroundDate.plusDays(1).toString(),
             )
           },

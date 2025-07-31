@@ -2017,7 +2017,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$.title").isEqualTo("Bad Request")
           .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingBookings")
-          .jsonPath("$.invalid-params[0].errorDetail").isEqualTo(bookingDepartureDate.plusDays(1).toString())
+          .jsonPath("$.invalid-params[0].entityId").isEqualTo(bedspace.id.toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(bookingDepartureDate.plusDays(1).toString())
       }
     }
 
