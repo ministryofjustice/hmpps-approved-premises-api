@@ -1073,7 +1073,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
 
-      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingVoid", voidBedspace.endDate.plusDays(1).toString())
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspace.id.toString(), "existingVoid", voidBedspace.endDate.plusDays(1).toString())
     }
 
     @Test
@@ -1094,7 +1094,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
 
-      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingBookings", booking.departureDate.plusDays(1).toString())
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspace.id.toString(), "existingBookings", booking.departureDate.plusDays(1).toString())
     }
 
     @Test
@@ -1120,7 +1120,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
 
-      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingTurnaround", booking.departureDate.plusDays(3).toString())
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspace.id.toString(), "existingTurnaround", booking.departureDate.plusDays(3).toString())
     }
 
     @Test
@@ -1149,7 +1149,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
 
-      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingVoid", voidBedspace.endDate.plusDays(1).toString())
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspace.id.toString(), "existingVoid", voidBedspace.endDate.plusDays(1).toString())
     }
 
     @Test
@@ -1175,7 +1175,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.archiveBedspace(bedspace.id, archiveDate)
 
-      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", "existingTurnaround", booking.departureDate.plusDays(3).toString())
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspace.id.toString(), "existingTurnaround", booking.departureDate.plusDays(3).toString())
     }
   }
 

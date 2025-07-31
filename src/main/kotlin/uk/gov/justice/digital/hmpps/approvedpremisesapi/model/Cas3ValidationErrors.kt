@@ -6,6 +6,7 @@ value class Cas3ValidationErrors(private val errorMap: MutableMap<String, Cas3Va
 }
 
 data class Cas3ValidationMessage(
+  val entityId: String,
   val message: String,
   val value: String,
 )
