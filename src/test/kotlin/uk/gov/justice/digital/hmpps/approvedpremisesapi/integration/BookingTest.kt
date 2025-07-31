@@ -16,14 +16,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -73,20 +71,16 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking belonging to another premises returns not found`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { _, jwt ->
         givenAnOffender(
           offenderDetailsConfigBlock = {
             withNomsNumber(null)
           },
         ) { offenderDetails, _ ->
-          val premises = givenAnApprovedPremises()
-
-          val keyWorker = ContextStaffMemberFactory().produce()
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+          val premises = givenATemporaryAccommodationPremises()
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
-            withStaffKeyWorkerCode(keyWorker.code)
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(null)
             withServiceName(ServiceName.approvedPremises)
@@ -98,37 +92,6 @@ class BookingTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isNotFound()
-        }
-      }
-    }
-
-    @Test
-    fun `Get a booking for an Approved Premises returns OK with the correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-          val premises = givenAnApprovedPremises()
-
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withServiceName(ServiceName.approvedPremises)
-          }
-
-          webTestClient.get()
-            .uri("/premises/${premises.id}/bookings/${booking.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                bookingTransformer.transformJpaToApi(
-                  booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                ),
-              ),
-            )
         }
       }
     }
@@ -161,42 +124,6 @@ class BookingTest : IntegrationTestBase() {
               ),
             ),
           )
-      }
-    }
-
-    @Test
-    fun `Get a booking for an Approved Premises returns OK with the correct body when the NOMS number is null`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withNomsNumber(null)
-          },
-        ) { offenderDetails, _ ->
-          val premises = givenAnApprovedPremises()
-
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withNomsNumber(null)
-            withServiceName(ServiceName.approvedPremises)
-          }
-
-          webTestClient.get()
-            .uri("/premises/${premises.id}/bookings/${booking.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                bookingTransformer.transformJpaToApi(
-                  booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
-                ),
-              ),
-            )
-        }
       }
     }
 
@@ -504,7 +431,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Booking without JWT returns 401`() {
-    val premises = givenAnApprovedPremises()
+    val premises = givenATemporaryAccommodationPremises()
 
     webTestClient.post()
       .uri("/premises/${premises.id}/bookings")
@@ -513,7 +440,7 @@ class BookingTest : IntegrationTestBase() {
           crn = "a crn",
           arrivalDate = LocalDate.parse("2022-08-12"),
           departureDate = LocalDate.parse("2022-08-30"),
-          serviceName = ServiceName.approvedPremises,
+          serviceName = ServiceName.temporaryAccommodation,
           bedId = UUID.randomUUID(),
         ),
       )
