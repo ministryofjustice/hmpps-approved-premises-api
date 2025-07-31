@@ -73,34 +73,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   ),
 
   /**
-   * A temporary role used while rolling out Find and Booking functionality
-   */
-  CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.cruMemberFindAndBookBeta,
-    permissions = commonCruMemberPermissions + listOf(
-      UserPermission.CAS1_PREMISES_CAPACITY_REPORT_VIEW,
-      UserPermission.CAS1_SPACE_BOOKING_CREATE,
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD,
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL,
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
-    ),
-  ),
-
-  /**
-   * A temporary role used while rolling out OOSB functionality
-   */
-  CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.cruMemberEnableOutOfServiceBeds,
-    permissions = listOf(
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
-    ),
-  ),
-
-  /**
    * A temporary role used while rolling out change request functionality
    */
   CAS1_CHANGE_REQUEST_DEV(

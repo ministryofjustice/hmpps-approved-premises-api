@@ -63,7 +63,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
@@ -1573,7 +1572,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, mode = EnumSource.Mode.EXCLUDE, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA" ])
+    @EnumSource(value = UserRole::class, mode = EnumSource.Mode.EXCLUDE, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR"])
     fun `Role without CAS1_VIEW_PREMISES is denied`(role: UserRole) {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
@@ -1844,7 +1843,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     fun success() {
       clock.setNow(LocalDateTime.parse("2025-05-01T10:15:30"))
 
-      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       webTestClient.get()
         .uri("/cas1/premises/occupancy-report")

@@ -294,7 +294,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
         listOf(activeReason1, activeReason2, onHoldReason).map { reason -> reasonTransformer.transformJpaToApi(reason) },
       )
 
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
 
       webTestClient.get()
         .uri("/cas1/reference-data/out-of-service-bed-reasons")

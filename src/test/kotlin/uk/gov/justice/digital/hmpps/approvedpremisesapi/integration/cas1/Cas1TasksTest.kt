@@ -1983,7 +1983,7 @@ class Cas1TasksTest {
     lateinit var userTransformer: UserTransformer
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_AP_AREA_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Return 403 forbidden for users with roles other than CAS1_CRU_MEMBER, CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA, CAS1_JANITOR, CAS1_AP_AREA_MANAGER`(userRole: UserRole) {
       val (user, jwt) = givenAUser(roles = listOf(userRole))
 

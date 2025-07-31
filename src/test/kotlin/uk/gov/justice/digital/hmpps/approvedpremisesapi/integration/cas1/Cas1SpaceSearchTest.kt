@@ -81,7 +81,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val premises = (0..4).map {
@@ -197,7 +197,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = gender == ApprovedPremisesGender.WOMAN)
 
       val expectedPremises = (0..4).map {
@@ -257,7 +257,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       fun createAp(characteristics: List<CharacteristicEntity>) = givenAnApprovedPremises(
@@ -336,7 +336,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val expectedPremises = (0..4).map {
@@ -414,7 +414,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val expectedPremises = (0..4).map {

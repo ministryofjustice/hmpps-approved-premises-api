@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 /**
 *
-* Values: assessor,futureManager,changeRequestDev,cruMember,cruMemberFindAndBookBeta,cruMemberEnableOutOfServiceBeds,applicant,reportViewer,reportViewerWithPii,excludedFromAssessAllocation,excludedFromMatchAllocation,excludedFromPlacementApplicationAllocation,appealsManager,janitor,userManager
+* Values: assessor,futureManager,changeRequestDev,cruMember,applicant,reportViewer,reportViewerWithPii,excludedFromAssessAllocation,excludedFromMatchAllocation,excludedFromPlacementApplicationAllocation,appealsManager,janitor,userManager
 */
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApprovedPremisesUserRole(@get:JsonValue val value: kotlin.String) {
@@ -14,8 +14,6 @@ enum class ApprovedPremisesUserRole(@get:JsonValue val value: kotlin.String) {
   futureManager("future_manager"),
   changeRequestDev("change_request_dev"),
   cruMember("cru_member"),
-  cruMemberFindAndBookBeta("cru_member_find_and_book_beta"),
-  cruMemberEnableOutOfServiceBeds("cru_member_enable_out_of_service_beds"),
   applicant("applicant"),
   reportViewer("report_viewer"),
   reportViewerWithPii("report_viewer_with_pii"),
