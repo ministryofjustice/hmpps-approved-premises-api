@@ -69,6 +69,7 @@ class Cas1ApplicationCreationService(
   private val offenderDetailService: OffenderDetailService,
 ) {
 
+  @Transactional
   fun createApprovedPremisesApplication(
     offenderDetails: OffenderDetailSummary,
     user: UserEntity,
@@ -132,7 +133,7 @@ class Cas1ApplicationCreationService(
     return success(createdApplication)
   }
 
-  fun createApprovedPremisesApplicationEntity(
+  private fun createApprovedPremisesApplicationEntity(
     crn: String,
     user: UserEntity,
     convictionId: Long?,
