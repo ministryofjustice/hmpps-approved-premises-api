@@ -1,125 +1,223 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
 
+@ExtendWith(MockKExtension::class)
 class Cas3VoidBedspacesTransformerTest {
-  private val cas3VoidBedspaceReasonTransformer = mockk<Cas3VoidBedspaceReasonTransformer>()
-  private val cas3VoidBedspaceCancellationTransformer = mockk<Cas3VoidBedspaceCancellationTransformer>()
+  @MockK
+  lateinit var cas3VoidBedspaceReasonTransformer: Cas3VoidBedspaceReasonTransformer
 
-  private val cas3VoidBedspacesTransformer = Cas3VoidBedspacesTransformer(cas3VoidBedspaceReasonTransformer, cas3VoidBedspaceCancellationTransformer)
+  @MockK
+  lateinit var cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer
 
-  val premises = TemporaryAccommodationPremisesEntityFactory()
-    .withYieldedProbationRegion {
-      ProbationRegionEntityFactory()
-        .withYieldedApArea {
-          ApAreaEntityFactory()
-            .produce()
-        }
-        .produce()
-    }
-    .withYieldedLocalAuthorityArea {
-      LocalAuthorityEntityFactory()
-        .produce()
-    }
-    .produce()
+  @InjectMockKs
+  lateinit var cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer
 
-  val room = RoomEntityFactory()
-    .withYieldedPremises { premises }
-    .produce()
+  @Nested
+  inner class V1TransformerTests {
 
-  val bed = BedEntityFactory()
-    .withYieldedRoom { room }
-    .produce()
-
-  private val voidBedspace = Cas3VoidBedspaceEntityFactory()
-    .withYieldedReason {
-      Cas3VoidBedspaceReasonEntityFactory()
-        .produce()
-    }
-    .withYieldedPremises { premises }
-    .withYieldedBed { bed }
-    .produce()
-
-  @Test
-  fun `Void Bedspace entity is correctly transformed`() {
-    every { cas3VoidBedspaceReasonTransformer.transformJpaToApi(voidBedspace.reason) } returns LostBedReason(
-      id = voidBedspace.reason.id,
-      name = voidBedspace.reason.name,
-      isActive = true,
-      serviceScope = "approved-premises",
-    )
-
-    val result = cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspace)
-
-    assertThat(result.id).isEqualTo(voidBedspace.id)
-    assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
-    assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
-    assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
-    assertThat(result.notes).isEqualTo(voidBedspace.notes)
-    assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
-    assertThat(result.status).isEqualTo(LostBedStatus.active)
-    assertThat(result.cancellation).isNull()
-    assertThat(result.bedId).isEqualTo(bed.id)
-    assertThat(result.bedName).isEqualTo(bed.name)
-    assertThat(result.roomName).isEqualTo(room.name)
-  }
-
-  @Test
-  fun `A cancelled void bedspace entity is correctly transformed`() {
-    val lostBedCancellation = Cas3VoidBedspaceCancellationEntityFactory()
-      .withYieldedVoidBedspace { voidBedspace }
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea {
+            ApAreaEntityFactory()
+              .produce()
+          }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea {
+        LocalAuthorityEntityFactory()
+          .produce()
+      }
       .produce()
 
-    voidBedspace.cancellation = lostBedCancellation
+    val room = RoomEntityFactory()
+      .withYieldedPremises { premises }
+      .produce()
 
-    every { cas3VoidBedspaceReasonTransformer.transformJpaToApi(voidBedspace.reason) } returns LostBedReason(
-      id = voidBedspace.reason.id,
-      name = voidBedspace.reason.name,
-      isActive = true,
-      serviceScope = "approved-premises",
+    val bed = BedEntityFactory()
+      .withYieldedRoom { room }
+      .produce()
+
+    private val voidBedspace = Cas3VoidBedspaceEntityFactory()
+      .withYieldedReason {
+        Cas3VoidBedspaceReasonEntityFactory()
+          .produce()
+      }
+      .withYieldedPremises { premises }
+      .withYieldedBed { bed }
+      .produce()
+
+    @Test
+    fun `Void Bedspace entity is correctly transformed`() {
+      every { cas3VoidBedspaceReasonTransformer.transformJpaToApi(voidBedspace.reason) } returns LostBedReason(
+        id = voidBedspace.reason.id,
+        name = voidBedspace.reason.name,
+        isActive = true,
+        serviceScope = "approved-premises",
+      )
+
+      val result = cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspace)
+
+      assertThat(result.id).isEqualTo(voidBedspace.id)
+      assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
+      assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
+      assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
+      assertThat(result.notes).isEqualTo(voidBedspace.notes)
+      assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
+      assertThat(result.status).isEqualTo(LostBedStatus.active)
+      assertThat(result.cancellation).isNull()
+      assertThat(result.bedId).isEqualTo(bed.id)
+      assertThat(result.bedName).isEqualTo(bed.name)
+      assertThat(result.roomName).isEqualTo(room.name)
+    }
+
+    @Test
+    fun `A cancelled void bedspace entity is correctly transformed`() {
+      val lostBedCancellation = Cas3VoidBedspaceCancellationEntityFactory()
+        .withYieldedVoidBedspace { voidBedspace }
+        .produce()
+
+      voidBedspace.cancellation = lostBedCancellation
+
+      every { cas3VoidBedspaceReasonTransformer.transformJpaToApi(voidBedspace.reason) } returns LostBedReason(
+        id = voidBedspace.reason.id,
+        name = voidBedspace.reason.name,
+        isActive = true,
+        serviceScope = "approved-premises",
+      )
+
+      val now = Instant.now()
+      every { cas3VoidBedspaceCancellationTransformer.transformJpaToApi(voidBedspace.cancellation!!) } returns LostBedCancellation(
+        id = voidBedspace.cancellation!!.id,
+        createdAt = now,
+        notes = "Some notes",
+      )
+
+      val result = cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspace)
+
+      assertThat(result.id).isEqualTo(voidBedspace.id)
+      assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
+      assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
+      assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
+      assertThat(result.notes).isEqualTo(voidBedspace.notes)
+      assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
+      assertThat(result.status).isEqualTo(LostBedStatus.cancelled)
+      assertThat(result.cancellation).isNotNull
+      assertThat(result.cancellation!!.id).isEqualTo(voidBedspace.cancellation!!.id)
+      assertThat(result.cancellation!!.createdAt).isEqualTo(now)
+      assertThat(result.cancellation!!.notes).isEqualTo("Some notes")
+      assertThat(result.bedId).isEqualTo(bed.id)
+      assertThat(result.bedName).isEqualTo(bed.name)
+      assertThat(result.roomName).isEqualTo(room.name)
+    }
+  }
+
+  @Nested
+  inner class Cas3v2VoidBedspaces {
+
+    @BeforeEach
+    fun setup() {
+      reason = Cas3VoidBedspaceReasonEntityFactory().produce()
+      every { cas3VoidBedspaceReasonTransformer.toCas3VoidBedspaceReason(any()) } returns Cas3VoidBedspaceReason(
+        reason.id,
+        reason.name,
+        reason.isActive,
+      )
+    }
+
+    lateinit var reason: Cas3VoidBedspaceReasonEntity
+
+    private fun createVoidBedspaceEntity(
+      cancellationDate: OffsetDateTime? = null,
+      cancellationNotes: String? = null,
+    ) = Cas3VoidBedspaceEntity(
+      id = UUID.randomUUID(),
+      startDate = LocalDate.now(),
+      endDate = LocalDate.now().plusDays(100),
+      bedspace = Cas3BedspaceEntityFactory().produce(),
+      reason = reason,
+      referenceNumber = "REFERENCE",
+      notes = "NOTES",
+      cancellationDate = cancellationDate,
+      cancellationNotes = cancellationNotes,
+      premises = null,
+      cancellation = null,
+      bed = null,
     )
 
-    val now = Instant.now()
-    every { cas3VoidBedspaceCancellationTransformer.transformJpaToApi(voidBedspace.cancellation!!) } returns LostBedCancellation(
-      id = voidBedspace.cancellation!!.id,
-      createdAt = now,
-      notes = "Some notes",
-    )
+    @Test
+    fun `active void bedspace is correctly transformed`() {
+      val voidBedspaceEntity = createVoidBedspaceEntity()
+      val transformed = cas3VoidBedspacesTransformer.toCas3VoidBedspace(voidBedspaceEntity)
+      assertCommonFields(transformed, voidBedspaceEntity)
+      assertThat(transformed.status).isEqualTo(Cas3VoidBedspaceStatus.ACTIVE)
+      assertThat(transformed.reason.isActive).isEqualTo(voidBedspaceEntity.reason.isActive)
+      assertThat(transformed.cancellationDate).isNull()
+      assertThat(transformed.cancellationNotes).isNull()
+    }
 
-    val result = cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspace)
+    @Test
+    fun `cancelled void bedspace is correctly transformed`() {
+      val cancelledDate = OffsetDateTime.now()
+      val cancelledNotes = "some cancellations notes"
+      val voidBedspaceEntity =
+        createVoidBedspaceEntity(cancellationDate = cancelledDate, cancellationNotes = cancelledNotes)
 
-    assertThat(result.id).isEqualTo(voidBedspace.id)
-    assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
-    assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
-    assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
-    assertThat(result.notes).isEqualTo(voidBedspace.notes)
-    assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
-    assertThat(result.status).isEqualTo(LostBedStatus.cancelled)
-    assertThat(result.cancellation).isNotNull
-    assertThat(result.cancellation!!.id).isEqualTo(voidBedspace.cancellation!!.id)
-    assertThat(result.cancellation!!.createdAt).isEqualTo(now)
-    assertThat(result.cancellation!!.notes).isEqualTo("Some notes")
-    assertThat(result.bedId).isEqualTo(bed.id)
-    assertThat(result.bedName).isEqualTo(bed.name)
-    assertThat(result.roomName).isEqualTo(room.name)
+      val transformed = cas3VoidBedspacesTransformer.toCas3VoidBedspace(voidBedspaceEntity)
+      assertCommonFields(transformed, voidBedspaceEntity)
+      assertThat(transformed.status).isEqualTo(Cas3VoidBedspaceStatus.CANCELLED)
+      assertThat(transformed.reason.isActive).isEqualTo(voidBedspaceEntity.reason.isActive)
+      assertThat(transformed.cancellationDate).isEqualTo(cancelledDate.toLocalDate())
+      assertThat(transformed.cancellationNotes).isEqualTo(cancelledNotes)
+    }
+
+    fun assertCommonFields(transformed: Cas3VoidBedspace, voidBedspaceEntity: Cas3VoidBedspaceEntity) {
+      assertAll({
+        assertThat(transformed.id).isEqualTo(voidBedspaceEntity.id)
+        assertThat(transformed.startDate).isEqualTo(voidBedspaceEntity.startDate)
+        assertThat(transformed.endDate).isEqualTo(voidBedspaceEntity.endDate)
+        assertThat(transformed.bedspaceId).isEqualTo(voidBedspaceEntity.bedspace!!.id)
+        assertThat(transformed.bedspaceName).isEqualTo(voidBedspaceEntity.bedspace!!.reference)
+        assertThat(transformed.reason.id).isEqualTo(voidBedspaceEntity.reason.id)
+        assertThat(transformed.reason.name).isEqualTo(voidBedspaceEntity.reason.name)
+        assertThat(transformed.referenceNumber).isEqualTo(voidBedspaceEntity.referenceNumber)
+        assertThat(transformed.notes).isEqualTo(voidBedspaceEntity.notes)
+      })
+    }
   }
 }

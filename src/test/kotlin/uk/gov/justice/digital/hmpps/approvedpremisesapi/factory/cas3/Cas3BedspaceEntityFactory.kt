@@ -15,7 +15,7 @@ import java.util.UUID
 
 class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var premises: Yielded<Cas3PremisesEntity>? = null
+  private var premises: Yielded<Cas3PremisesEntity> = { Cas3PremisesEntityFactory().produce() }
   private var characteristics: Yielded<MutableList<Cas3BedspaceCharacteristicEntity>> = { mutableListOf() }
   private var reference: Yielded<String> = { randomStringUpperCase(6) }
   private var notes: Yielded<String?> = { null }
@@ -54,7 +54,7 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas3BedspacesEntity = Cas3BedspacesEntity(
     id = this.id(),
-    premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
+    premises = this.premises.invoke(),
     characteristics = this.characteristics(),
     reference = this.reference(),
     notes = this.notes(),
