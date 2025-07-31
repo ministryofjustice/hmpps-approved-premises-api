@@ -47,7 +47,7 @@ import java.util.UUID
 import kotlin.reflect.KClass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType as Cas1EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType as Cas2EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType as Cas3EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType as Cas3EventType
 
 @Repository
 interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {

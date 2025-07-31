@@ -7,8 +7,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3BedspaceCharacteristicAssignmentId
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3.Cas3PremisesCharacteristicAssignmentId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3BedspaceCharacteristicAssignmentId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3PremisesCharacteristicAssignmentId
 import java.util.UUID
 
 @Repository
