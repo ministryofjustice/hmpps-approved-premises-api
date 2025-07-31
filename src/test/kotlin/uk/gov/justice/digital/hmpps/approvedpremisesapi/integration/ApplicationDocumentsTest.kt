@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ContentDisposition
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFromDeliusApiFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.APDeliusDocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulDocumentDownloadCall
@@ -114,7 +114,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   private fun stubDocumentsFromDelius(convictionLevelDocId: UUID): List<APDeliusDocument> = listOf(
-    DocumentFromDeliusApiFactory()
+    APDeliusDocumentFactory()
       .withId(UUID.randomUUID().toString())
       .withDescription("Offender level doc description")
       .withLevel("LEVEL-1")
@@ -125,7 +125,7 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
       .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.systemDefault()))
       .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.systemDefault()))
       .produce(),
-    DocumentFromDeliusApiFactory()
+    APDeliusDocumentFactory()
       .withId(convictionLevelDocId.toString())
       .withDescription("Conviction level doc description")
       .withLevel("LEVEL-2")
