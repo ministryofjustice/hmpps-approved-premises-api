@@ -16,18 +16,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenATemporaryAccommodationPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -441,32 +439,6 @@ class PremisesTest {
     }
 
     @Test
-    fun `Trying to create a new Approved Premises with no local authority area id returns 400`() {
-      webTestClient.post()
-        .uri("/premises")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.approvedPremises.value)
-        .bodyValue(
-          NewPremises(
-            name = "arbitrary_test_name",
-            addressLine1 = "1 somewhere",
-            postcode = "AB456CD",
-            notes = "some arbitrary notes",
-            localAuthorityAreaId = null,
-            probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
-            characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .is4xxClientError
-        .expectBody()
-        .jsonPath("title").isEqualTo("Bad Request")
-        .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
-    }
-
-    @Test
     fun `Trying to create a new Temporary Accommodation premises with a probation region that's not the user's region returns 403 Forbidden`() {
       webTestClient.post()
         .uri("/premises")
@@ -588,63 +560,6 @@ class PremisesTest {
 
   @Nested
   inner class UpdatePremises : IntegrationTestBase() {
-    @Test
-    fun `When an Approved Premises is updated then all field data is persisted`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
-
-        val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedPremises { premises }
-        }
-
-        val bed1 = bedEntityFactory.produceAndPersist {
-          withRoom(rooms[0])
-        }
-
-        val bed2 = bedEntityFactory.produceAndPersist {
-          withRoom(rooms[1])
-        }
-
-        rooms[0].beds += bed1
-        rooms[1].beds += bed2
-
-        webTestClient.put()
-          .uri("/premises/${premises.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdatePremises(
-              addressLine1 = "1 somewhere updated",
-              addressLine2 = "Some other district",
-              town = "Somewhere Else",
-              postcode = "AB456CD",
-              notes = "some arbitrary notes updated",
-              // Allerdale
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
-              // North West
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
-          .jsonPath("addressLine2").isEqualTo("Some other district")
-          .jsonPath("town").isEqualTo("Somewhere Else")
-          .jsonPath("postcode").isEqualTo("AB456CD")
-          .jsonPath("notes").isEqualTo("some arbitrary notes updated")
-          .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
-          .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
-          .jsonPath("probationRegion.id").isEqualTo("a02b7727-63aa-46f2-80f1-e0b05b31903c")
-          .jsonPath("probationRegion.name").isEqualTo("North West")
-          .jsonPath("status").isEqualTo("archived")
-          .jsonPath("turnaroundWorkingDayCount").doesNotExist()
-
-        assertApprovedPremisesBedSpaceIsNotArchived(premises)
-      }
-    }
 
     @Test
     fun `When a Temporary Accommodation Premises is updated then all field data is persisted`() {
@@ -911,68 +826,17 @@ class PremisesTest {
     }
 
     @Test
-    fun `Trying to update a premises with an invalid local authority area id returns 400`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
-
-        webTestClient.put()
-          .uri("/premises/${premises.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdatePremises(
-              addressLine1 = "1 somewhere updated",
-              addressLine2 = "Some other district",
-              town = "Somewhere Else",
-              postcode = "AB456CD",
-              notes = "some arbitrary notes updated",
-              // not in db
-              localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"),
-              probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
-      }
-    }
-
-    @Test
-    fun `Trying to update an Approved Premises with no local authority area id returns 400`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
-
-        webTestClient.put()
-          .uri("/premises/${premises.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdatePremises(
-              addressLine1 = "1 somewhere updated",
-              postcode = "AB456CD",
-              notes = "some arbitrary notes updated",
-              localAuthorityAreaId = null,
-              probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
-      }
-    }
-
-    @Test
     fun `Trying to update a premises with an invalid probation region id returns 400`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(user.probationRegion)
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+          }
+        }
 
         webTestClient.put()
           .uri("/premises/${premises.id}")
@@ -1173,49 +1037,6 @@ class PremisesTest {
     }
 
     @Test
-    fun `Trying to update the name of an Approved Premises has no effect`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises(name = "old-premises-name")
-
-        webTestClient.put()
-          .uri("/premises/${premises.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdatePremises(
-              addressLine1 = "1 somewhere updated",
-              addressLine2 = "Some other district",
-              town = "Somewhere Else",
-              postcode = "AB456CD",
-              notes = "some arbitrary notes updated",
-              // Allerdale
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
-              // North West
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.archived,
-              name = "new-premises-name",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
-          .jsonPath("addressLine2").isEqualTo("Some other district")
-          .jsonPath("town").isEqualTo("Somewhere Else")
-          .jsonPath("postcode").isEqualTo("AB456CD")
-          .jsonPath("notes").isEqualTo("some arbitrary notes updated")
-          .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
-          .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
-          .jsonPath("probationRegion.id").isEqualTo("a02b7727-63aa-46f2-80f1-e0b05b31903c")
-          .jsonPath("probationRegion.name").isEqualTo("North West")
-          .jsonPath("status").isEqualTo("archived")
-          .jsonPath("turnaroundWorkingDayCount").doesNotExist()
-          .jsonPath("name").isEqualTo("old-premises-name")
-      }
-    }
-
-    @Test
     fun `Updating a Temporary Accommodation premises does not change the name when it's not provided`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
@@ -1339,17 +1160,6 @@ class PremisesTest {
       }
     }
 
-    private fun assertApprovedPremisesBedSpaceIsNotArchived(premisesToGet: ApprovedPremisesEntity) {
-      val approvedPremises = approvedPremisesRepository.findById(premisesToGet.id)
-      assertThat(approvedPremises).isNotNull()
-      assertThat(approvedPremises.get().rooms).isNotEmpty()
-      approvedPremises.get().rooms.forEach { room ->
-        room.beds.forEach { bed ->
-          assertThat(bed.endDate).isNull()
-        }
-      }
-    }
-
     private fun assertTemporaryAccommodationPremisesBedSpaceIsArchived(premisesToGet: TemporaryAccommodationPremisesEntity) {
       val temporaryAccommodationPremise = temporaryAccommodationPremisesRepository.findById(premisesToGet.id)
       assertThat(temporaryAccommodationPremise).isNotNull()
@@ -1369,9 +1179,9 @@ class PremisesTest {
 
     @Test
     fun `Get Premises by ID returns OK with correct body`() {
-      givenAUser { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)) { _, jwt ->
         val premises = (0..5).map {
-          givenAnApprovedPremises()
+          givenATemporaryAccommodationPremises()
         }.onEach {
           addRoomsAndBeds(it, roomCount = 4, 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
@@ -1393,24 +1203,18 @@ class PremisesTest {
 
     @Test
     fun `Get Premises by ID returns OK with correct body when capacity is used`() {
-      givenAUser { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)) { _, jwt ->
         val premises = (0..5).map {
-          givenAnApprovedPremises()
+          givenATemporaryAccommodationPremises()
         }.onEach {
           addRoomsAndBeds(it, roomCount = 4, 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        val keyWorker = ContextStaffMemberFactory().produce()
-        premises.forEach {
-          apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, it.qCode)
         }
 
         bookingEntityFactory.produceAndPersist {
           withPremises(premises[2])
           withArrivalDate(LocalDate.now().minusDays(2))
           withDepartureDate(LocalDate.now().plusDays(4))
-          withStaffKeyWorkerCode(keyWorker.code)
         }
 
         val premisesToGet = premises[2]
@@ -1696,8 +1500,16 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room without a name returns 400`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(user.probationRegion)
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+          }
+        }
 
         webTestClient.post()
           .uri("/premises/${premises.id}/rooms")
@@ -1779,12 +1591,20 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room with a characteristic of the wrong model scope returns 400`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(user.probationRegion)
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+          }
+        }
 
         val characteristicId = characteristicEntityFactory.produceAndPersist {
           withModelScope("premises")
-          withServiceScope("approved-premises")
+          withServiceScope("temporary-accommodation")
         }.id
 
         webTestClient.post()
@@ -1973,10 +1793,15 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room with a characteristic of the wrong service scope returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { user.probationRegion }
+          withProbationRegion(user.probationRegion)
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+          }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2009,8 +1834,16 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room with a characteristic of the wrong model scope returns 400`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(user.probationRegion)
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            }
+          }
+        }
 
         val room = roomEntityFactory.produceAndPersist {
           withYieldedPremises { premises }
@@ -2019,7 +1852,7 @@ class PremisesTest {
 
         val characteristicId = characteristicEntityFactory.produceAndPersist {
           withModelScope("premises")
-          withServiceScope("approved-premises")
+          withServiceScope("temporary-accommodation")
         }.id
 
         webTestClient.put()
@@ -2072,45 +1905,6 @@ class PremisesTest {
           .exchange()
           .expectStatus()
           .isForbidden
-      }
-    }
-
-    @Test
-    fun `Trying to update the name of an Approved Premises Room has no effect`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
-
-        val room = roomEntityFactory.produceAndPersist {
-          withYieldedPremises { premises }
-          withName("old-room-name")
-        }
-
-        val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
-          withModelScope("room")
-          withServiceScope("approved-premises")
-          withName("Floor level access")
-        }.map { it.id }
-
-        webTestClient.put()
-          .uri("/premises/${premises.id}/rooms/${room.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdateRoom(
-              notes = "test notes",
-              characteristicIds = characteristicIds,
-              name = "new-room-name",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("name").isEqualTo("old-room-name")
-          .jsonPath("notes").isEqualTo("test notes")
-          .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
-          .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
-          .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "approved-premises" })
-          .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
       }
     }
 
@@ -2902,8 +2696,8 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID returns OK with correct body`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)) { _, jwt ->
+        val premises = givenATemporaryAccommodationPremises()
 
         val room = roomEntityFactory.produceAndPersist {
           withYieldedPremises { premises }
@@ -2926,7 +2720,7 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID returns Not Found with correct body when Premises does not exist`() {
-      val premises = givenAnApprovedPremises()
+      val premises = givenATemporaryAccommodationPremises()
 
       val room = roomEntityFactory.produceAndPersist {
         withYieldedPremises { premises }
@@ -2953,8 +2747,8 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID returns Not Found with correct body when Room does not exist`() {
-      givenAUser { _, jwt ->
-        val premises = givenAnApprovedPremises()
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)) { _, jwt ->
+        val premises = givenATemporaryAccommodationPremises()
 
         val roomIdToRequest = UUID.randomUUID().toString()
 
