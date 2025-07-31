@@ -100,6 +100,7 @@ val buildDir = layout.buildDirectory.asFile.get()
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    finalizedBy("generateCas1Roles")
     getByName("check") {
       dependsOn(":ktlintCheck", "detekt")
     }
@@ -194,10 +195,6 @@ tasks.register<JavaExec>("generateCas1Roles") {
   classpath = sourceSets["main"].runtimeClasspath
 
   outputs.file(file("built-cas1-roles.json"))
-}
-
-tasks.named("assemble") {
-  finalizedBy("generateCas1Roles")
 }
 
 allOpen {
