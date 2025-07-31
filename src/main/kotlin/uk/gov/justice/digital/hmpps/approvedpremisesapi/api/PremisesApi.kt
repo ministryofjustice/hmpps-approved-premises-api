@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
@@ -73,22 +72,6 @@ interface PremisesApi {
     consumes = ["application/json"],
   )
   fun premisesPost(@Parameter(description = "", required = true) @RequestBody body: NewPremises, @Parameter(description = "If given, persist the service name against this property", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?): ResponseEntity<Premises> = getDelegate().premisesPost(body, xServiceName)
-
-  @Operation(
-    tags = ["Rooms"],
-    summary = "Lists all beds for the given premises",
-    operationId = "premisesPremisesIdBedsGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = BedSummary::class)))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/premises/{premisesId}/beds"],
-    produces = ["application/json"],
-  )
-  fun premisesPremisesIdBedsGet(@Parameter(description = "ID of the premises to list the beds for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<List<BedSummary>> = getDelegate().premisesPremisesIdBedsGet(premisesId)
 
   @Operation(
     tags = ["Operations on bookings"],

@@ -29,9 +29,6 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 
   fun findByCodeAndRoomId(bedCode: String, roomId: UUID): BedEntity?
 
-  @Query(nativeQuery = true)
-  fun findAllBedsForPremises(premisesId: UUID): List<DomainBedSummary>
-
   fun findByRoomPremisesId(premisesId: UUID): List<BedEntity>
 
   fun findByRoomPremisesIdAndEndDateIsNull(premisesId: UUID): List<BedEntity>
