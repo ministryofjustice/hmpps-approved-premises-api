@@ -199,13 +199,6 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewPremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanViewPremises(user, approvedPremises)).isTrue
-  }
-
-  @Test
   fun `userCanViewPremises returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
@@ -229,13 +222,6 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanViewPremises(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanViewPremises returns true if the given premises is an Approved Premises`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanViewPremises(approvedPremises)).isTrue
   }
 
   @Test

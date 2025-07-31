@@ -57,7 +57,6 @@ class UserAccessService(
   fun currentUserCanViewPremises(premises: PremisesEntity) = userCanViewPremises(userService.getUserForRequest(), premises)
 
   fun userCanViewPremises(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> true
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }

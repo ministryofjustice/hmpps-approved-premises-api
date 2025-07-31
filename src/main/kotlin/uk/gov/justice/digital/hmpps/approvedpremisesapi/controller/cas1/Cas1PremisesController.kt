@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Repo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
@@ -161,10 +160,6 @@ class Cas1PremisesController(
     val premises = cas1PremisesService.findPremiseById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
     return ResponseEntity.ok(
       cas1PremisesService.getActiveBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi),
     )
@@ -176,12 +171,8 @@ class Cas1PremisesController(
     @PathVariable premisesId: UUID,
     @PathVariable bedId: UUID,
   ): ResponseEntity<Cas1BedDetail> {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    cas1PremisesService.findPremiseById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
 
     return ResponseEntity.ok(
       cas1BedDetailTransformer.transformToApi(
