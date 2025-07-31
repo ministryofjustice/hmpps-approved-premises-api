@@ -103,7 +103,6 @@ class UserTransformer(
     UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(userName, ProfileResponse.LoadError.staffRecordNotFound)
     is UserService.GetUserResponse.Success -> ProfileResponse(userName, user = transformJpaToApi(userResponse.user, xServiceName))
   }
-
   private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? = when (userRole.role.service) {
     ServiceName.approvedPremises -> userRole.role.cas1ApiValue!!
     else -> null
