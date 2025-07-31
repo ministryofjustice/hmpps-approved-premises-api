@@ -1,3 +1,4 @@
 delius_username,notes,roles,qualifications,remove_existing_roles_and_qualifications
 temporary-accommodation-training-2,Used by CAS3 E2E and manual testing,"CAS3_ASSESSOR,CAS3_REPORTER",,YES
 temporary-accommodation-training-1,Used by CAS3 E2E and manual testing,CAS3_REFERRER,,YES
+AutomatedTestUser,Used by probation-integration E2E. We leave existing roles to avoid wiping out CAS1 qualifications,CAS3_REFERRER,,NO
