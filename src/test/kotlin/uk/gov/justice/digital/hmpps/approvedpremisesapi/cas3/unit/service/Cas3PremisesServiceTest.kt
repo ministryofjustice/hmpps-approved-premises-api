@@ -351,6 +351,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -360,12 +361,13 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isSuccess()
         .with { updatedPremises ->
           assertThat(updatedPremises.id).isNotNull()
+          assertThat(updatedPremises.name).isEqualTo(premises.name)
           assertThat(updatedPremises.addressLine1).isEqualTo(premises.addressLine1)
           assertThat(updatedPremises.addressLine2).isEqualTo(premises.addressLine2)
           assertThat(updatedPremises.town).isEqualTo(premises.town)
@@ -386,12 +388,14 @@ class Cas3PremisesServiceTest {
       val localAuthorityArea = premises.localAuthorityArea!!
       val probationDeliveryUnit = premises.probationDeliveryUnit!!
 
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(nonExistProbationRegionId) } returns null
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -401,7 +405,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationRegionId", "doesNotExist")
@@ -414,12 +418,14 @@ class Cas3PremisesServiceTest {
       val probationDeliveryUnit = premises.probationDeliveryUnit!!
       val nonExistLocalAuthorityId = UUID.randomUUID()
 
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(nonExistLocalAuthorityId) } returns null
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -429,7 +435,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.localAuthorityAreaId", "doesNotExist")
@@ -442,12 +448,14 @@ class Cas3PremisesServiceTest {
       val localAuthorityArea = premises.localAuthorityArea!!
       val nonExistPduId = UUID.randomUUID()
 
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(nonExistPduId, probationRegion.id) } returns null
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -457,10 +465,57 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = nonExistPduId,
-        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.probationDeliveryUnitId", "doesNotExist")
+    }
+
+    @Test
+    fun `When update a premises with empty reference returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+
+      mockCommonPremisesDependencies(premises)
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        reference = "",
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
+      )
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "empty")
+    }
+
+    @Test
+    fun `When update a premises with existing premises reference returns a FieldValidationError with the correct message`() {
+      val premises = updatePremisesEntity()
+
+      mockCommonPremisesDependencies(premises)
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns false
+
+      val result = premisesService.updatePremises(
+        premises = premises,
+        reference = premises.name,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+        localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+        probationRegionId = premises.probationRegion.id,
+        characteristicIds = emptyList(),
+        notes = premises.notes,
+        probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
+      )
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "notUnique")
     }
 
     @Test
@@ -471,6 +526,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = "",
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -480,7 +536,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.address", "empty")
     }
@@ -493,6 +549,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -502,7 +559,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+        turnaroundWorkingDays = premises.turnaroundWorkingDays,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.postcode", "empty")
@@ -516,6 +573,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -525,10 +583,10 @@ class Cas3PremisesServiceTest {
         characteristicIds = emptyList(),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = -2,
+        turnaroundWorkingDays = -2,
       )
 
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.turnaroundWorkingDayCount", "isNotAPositiveInteger")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.turnaroundWorkingDays", "isNotAPositiveInteger")
     }
 
     @Test
@@ -541,6 +599,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -550,7 +609,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = listOf(nonExistCharacteristicId),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = -2,
+        turnaroundWorkingDays = 2,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "doesNotExist")
@@ -572,6 +631,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -581,7 +641,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = listOf(premisesCharacteristic.id),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = -2,
+        turnaroundWorkingDays = 2,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicModelScope")
@@ -604,6 +664,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.updatePremises(
         premises = premises,
+        reference = premises.name,
         addressLine1 = premises.addressLine1,
         addressLine2 = premises.addressLine2,
         town = premises.town,
@@ -613,7 +674,7 @@ class Cas3PremisesServiceTest {
         characteristicIds = listOf(premisesCharacteristic.id),
         notes = premises.notes,
         probationDeliveryUnitId = premises.probationDeliveryUnit?.id!!,
-        turnaroundWorkingDayCount = -2,
+        turnaroundWorkingDays = 2,
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.characteristics[0]", "incorrectCharacteristicServiceScope")
@@ -633,6 +694,8 @@ class Cas3PremisesServiceTest {
 
       return temporaryAccommodationPremisesFactory
         .withService(ServiceName.temporaryAccommodation.value)
+        .withName("Reference Name")
+        .withAddressLine1("address 1")
         .withProbationRegion(probationRegion)
         .withProbationDeliveryUnit(probationDeliveryUnit)
         .withLocalAuthorityArea(localAuthority)
@@ -643,6 +706,7 @@ class Cas3PremisesServiceTest {
       val probationRegion = premises.probationRegion
       val localAuthorityArea = premises.localAuthorityArea!!
       val probationDeliveryUnit = premises.probationDeliveryUnit!!
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit

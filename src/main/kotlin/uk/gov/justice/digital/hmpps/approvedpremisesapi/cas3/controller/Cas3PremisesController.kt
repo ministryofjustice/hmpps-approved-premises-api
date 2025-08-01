@@ -115,7 +115,8 @@ class Cas3PremisesController(
       characteristicIds = body.characteristicIds,
       notes = body.notes,
       probationDeliveryUnitId = body.probationDeliveryUnitId,
-      turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
+      turnaroundWorkingDays = body.turnaroundWorkingDayCount,
+      reference = body.reference,
     )
       .let { extractEntityFromCasResult(it) }
       .let { cas3PremisesTransformer.transformDomainToApi(it) }
