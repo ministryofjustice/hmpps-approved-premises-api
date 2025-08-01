@@ -4,9 +4,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 
 enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val experimental: Boolean = false) {
-  @Deprecated("This should no longer be used on the UI or API")
-  CAS1_ADHOC_BOOKING_CREATE(ApprovedPremisesUserPermission.adhocBookingCreate),
-
   /**
    * If the user can be allocated and assess an appealed application
    * If given this role the user must also have CAS1_ASSESS_APPLICATION

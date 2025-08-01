@@ -2,28 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Constants.commonCruMemberPermissions
-
-private object Constants {
-  val commonCruMemberPermissions = listOf(
-    UserPermission.CAS1_ADHOC_BOOKING_CREATE,
-    UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
-    UserPermission.CAS1_BOOKING_CHANGE_DATES,
-    UserPermission.CAS1_BOOKING_WITHDRAW,
-    UserPermission.CAS1_OFFLINE_APPLICATION_VIEW,
-    UserPermission.CAS1_PLACEMENT_REQUEST_RECORD_UNABLE_TO_MATCH,
-    UserPermission.CAS1_PREMISES_VIEW,
-    UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
-    UserPermission.CAS1_SPACE_BOOKING_LIST,
-    UserPermission.CAS1_SPACE_BOOKING_VIEW,
-    UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
-    UserPermission.CAS1_TASKS_LIST,
-    UserPermission.CAS1_USER_LIST,
-    UserPermission.CAS1_VIEW_CRU_DASHBOARD,
-    UserPermission.CAS1_VIEW_MANAGE_TASKS,
-    UserPermission.CAS1_TASK_ALLOCATE,
-  )
-}
 
 enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremisesUserRole?, val permissions: List<UserPermission> = emptyList()) {
 
@@ -60,15 +38,30 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_CRU_MEMBER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.cruMember,
-    permissions = commonCruMemberPermissions + listOf(
-      UserPermission.CAS1_PREMISES_CAPACITY_REPORT_VIEW,
-      UserPermission.CAS1_SPACE_BOOKING_CREATE,
+    permissions = listOf(
+      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
+      UserPermission.CAS1_BOOKING_CHANGE_DATES,
+      UserPermission.CAS1_BOOKING_WITHDRAW,
+      UserPermission.CAS1_NATIONAL_OCCUPANCY_VIEW,
+      UserPermission.CAS1_OFFLINE_APPLICATION_VIEW,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL,
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
+      UserPermission.CAS1_PLACEMENT_REQUEST_RECORD_UNABLE_TO_MATCH,
+      UserPermission.CAS1_PREMISES_CAPACITY_REPORT_VIEW,
       UserPermission.CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE,
-      UserPermission.CAS1_NATIONAL_OCCUPANCY_VIEW,
+      UserPermission.CAS1_PREMISES_VIEW,
+      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
+      UserPermission.CAS1_SPACE_BOOKING_CREATE,
+      UserPermission.CAS1_SPACE_BOOKING_LIST,
+      UserPermission.CAS1_SPACE_BOOKING_VIEW,
+      UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
+      UserPermission.CAS1_TASK_ALLOCATE,
+      UserPermission.CAS1_TASKS_LIST,
+      UserPermission.CAS1_USER_LIST,
+      UserPermission.CAS1_VIEW_CRU_DASHBOARD,
+      UserPermission.CAS1_VIEW_MANAGE_TASKS,
+      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
     ),
   ),
 

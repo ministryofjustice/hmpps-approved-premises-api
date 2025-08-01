@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonValue
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
 
-  adhocBookingCreate("cas1_adhoc_booking_create"),
   applicationWithdrawOthers("cas1_application_withdraw_others"),
   assessAppealedApplication("cas1_assess_appealed_application"),
   assessApplication("cas1_assess_application"),
