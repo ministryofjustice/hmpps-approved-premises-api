@@ -139,15 +139,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             crn = unmatchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
 
-            // create a cancelled booking
-            createBookingNotMadeRecord(placementRequest)
-            createBooking(placementRequest)
-            val cancellation = cancellationEntityFactory.produceAndPersist {
-              withBooking(placementRequest.booking!!)
-              withReason(cancellationReasonEntityFactory.produceAndPersist())
-            }
-            placementRequest.booking!!.cancellations.add(cancellation)
-
             // create a cancelled space booking
             createBookingNotMadeRecord(placementRequest)
             val spaceBooking = createSpaceBooking(placementRequest)

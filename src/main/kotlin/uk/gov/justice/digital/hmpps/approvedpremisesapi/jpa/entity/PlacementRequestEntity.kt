@@ -141,7 +141,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       apa.cas1_cru_management_area_id as cruManagementAreaId,
       CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,      
       spaceBookings.id IS NOT NULL AS hasSpaceBooking,   
-      (SELECT EXISTS (SELECT 1 FROM booking_not_mades bnm WHERE bnm.placement_request_id = pq.id)) AS hasBookingNotMade,
+      bnm.id IS NOT NULL AS hasBookingNotMade,
       application.submitted_at::date AS applicationSubmittedDate,
       spaceBookingPremises.name AS spaceBookingPremisesName,
       spaceBookings.canonical_arrival_date AS spaceBookingArrivalDate
@@ -158,6 +158,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         LIMIT 1
       ) spaceBookings ON TRUE
       LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
+      LEFT JOIN booking_not_mades bnm ON bnm.placement_request_id = pq.id
     ),
     EXC_STATUS AS (
       SELECT *,
