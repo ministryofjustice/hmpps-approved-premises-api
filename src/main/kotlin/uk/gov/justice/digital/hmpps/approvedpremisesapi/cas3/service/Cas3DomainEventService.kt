@@ -100,6 +100,8 @@ class Cas3DomainEventService(
 
   fun getAssessmentUpdatedEvents(assessmentId: UUID) = domainEventRepository.findByAssessmentIdAndType(assessmentId, DomainEventType.CAS3_ASSESSMENT_UPDATED)
 
+  fun getBedspaceArchiveOrUnarchiveEvents(id: UUID): List<DomainEventEntity> = domainEventRepository.findArchivedOrUnarchivedBedspaceEvent(id)
+
   private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 

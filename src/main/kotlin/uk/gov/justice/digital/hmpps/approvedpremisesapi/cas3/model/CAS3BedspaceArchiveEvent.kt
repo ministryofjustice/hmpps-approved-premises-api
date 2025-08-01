@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 
-class CAS3BedspaceArchiveEvent(
+data class CAS3BedspaceArchiveEvent(
   val eventDetails: CAS3BedspaceArchiveEventDetails,
 
   override val id: java.util.UUID,

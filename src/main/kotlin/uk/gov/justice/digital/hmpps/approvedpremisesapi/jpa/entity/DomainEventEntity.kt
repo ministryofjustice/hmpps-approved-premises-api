@@ -98,6 +98,17 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(cas3BedspaceId: UUID, type: DomainEventType): DomainEventEntity?
 
+  @Query(
+    """
+SELECT
+    d.*
+    FROM domain_events d
+WHERE d.cas3_bedspace_id = :cas3BedspaceId and (d.type = 'CAS3_BEDSPACE_UNARCHIVED' or d.type = 'CAS3_BEDSPACE_ARCHIVED')
+    """,
+    nativeQuery = true,
+  )
+  fun findArchivedOrUnarchivedBedspaceEvent(cas3BedspaceId: UUID): List<DomainEventEntity>
+
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
 
   @Modifying
