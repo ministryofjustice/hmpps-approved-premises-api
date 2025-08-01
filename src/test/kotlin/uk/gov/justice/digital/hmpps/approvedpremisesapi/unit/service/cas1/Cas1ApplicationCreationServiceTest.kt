@@ -118,7 +118,7 @@ class Cas1ApplicationCreationServiceTest {
   inner class CreateApprovedPremisesApplication {
 
     @Test
-    fun `createApprovedPremisesApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
+    fun `Returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
@@ -144,7 +144,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `createApprovedPremisesApplication returns Success with created Application, persists Risk data and Offender name`() {
+    fun `Returns Success with created Application, persists Risk data and Offender name`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
@@ -501,7 +501,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `submitApprovedPremisesApplication returns NotFound when application doesn't exist`() {
+    fun `Returns NotFound when application doesn't exist`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(
@@ -515,7 +515,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `submitApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
+    fun `Returns Unauthorised when application doesn't belong to request user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -534,7 +534,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `submitApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
+    fun `Returns GeneralValidationError when application has already been submitted`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -562,7 +562,7 @@ class Cas1ApplicationCreationServiceTest {
       names = [ "STARTED" ],
     )
     @ParameterizedTest
-    fun `submitApprovedPremisesApplication returns GeneralValidationError when application doesn't have status 'STARTED'`(state: ApprovedPremisesApplicationStatus) {
+    fun `Returns GeneralValidationError when application doesn't have status 'STARTED'`(state: ApprovedPremisesApplicationStatus) {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -582,7 +582,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `submitApprovedPremisesApplication returns GeneralValidationError when applicantIsNotCaseManager is true and no case manager details are provided`() {
+    fun `Returns GeneralValidationError when applicantIsNotCaseManager is true and no case manager details are provided`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(user)
@@ -623,7 +623,7 @@ class Cas1ApplicationCreationServiceTest {
     @EnumSource(value = SituationOption::class)
     @NullSource
     @Suppress("CyclomaticComplexMethod")
-    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, triggers email`(
+    fun `Returns Success, creates assessment and stores event, triggers email`(
       situation: SituationOption?,
     ) {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
@@ -710,7 +710,7 @@ class Cas1ApplicationCreationServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Cas1ApplicationTimelinessCategory::class)
-    fun `submitApprovedPremisesApplication sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
+    fun `Sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         apType = ApType.pipe,
@@ -792,7 +792,7 @@ class Cas1ApplicationCreationServiceTest {
 
     @ParameterizedTest
     @EnumSource(ApType::class)
-    fun `submitApprovedPremisesApplication sets apType correctly`(apType: ApType) {
+    fun `Sets apType correctly`(apType: ApType) {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isWomensApplication = false,
@@ -870,7 +870,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `submitApprovedPremisesApplication updates existing application user details`() {
+    fun `Updates existing application user details`() {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         apType = ApType.pipe,
@@ -951,7 +951,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     @Test
-    fun `updateApprovedPremisesApplication if applicant is now case manager, removes existing case manager user details`() {
+    fun `If applicant is now case manager, removes existing case manager user details`() {
       defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         apType = ApType.pipe,
