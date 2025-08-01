@@ -182,60 +182,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should return 1 placement request when it has an active booking`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { unmatchedOffender, unmatchedInmate ->
-          givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = unmatchedOffender.otherIds.crn,
-          ) { placementRequest, _ ->
-
-            // create a cancelled space booking
-            createBookingNotMadeRecord(placementRequest)
-            val spaceBooking = createSpaceBooking(placementRequest)
-            spaceBooking.cancellationOccurredAt = LocalDate.now()
-            cas1SpaceBookingRepository.save(spaceBooking)
-
-            // create a booking
-            createBooking(
-              placementRequest,
-              premises = givenAnApprovedPremises("legacy_booking_premises"),
-              arrivalDate = LocalDate.parse("2025-01-01"),
-            )
-
-            // should return 1 placement request from GET /cas1/placement-requests
-            val summaries = webTestClient.get()
-              .uri("/cas1/placement-requests")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
-
-            assertThat(summaries).hasSize(1)
-
-            val person = personTransformer.transformModelToPersonApi(
-              PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
-            )
-
-            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
-            assertThat(summaries[0].person).isEqualTo(person)
-            assertThat(summaries[0].placementRequestStatus).isEqualTo(cas1PlacementRequestSummaryTransformer.getStatus(placementRequest))
-            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
-            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
-            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
-            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
-            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
-            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
-            assertThat(summaries[0].firstBookingPremisesName).isEqualTo("legacy_booking_premises")
-            assertThat(summaries[0].firstBookingArrivalDate).isEqualTo(LocalDate.parse("2025-01-01"))
-          }
-        }
-      }
-    }
-
-    @Test
     fun `should return 1 placement request when it has an active space booking`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
@@ -428,33 +374,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { matchedOffender, _ ->
 
-          // withdrawn placement request with booking, ignored
-          givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = matchedOffender.otherIds.crn,
-            isWithdrawn = true,
-          ) { placementRequest, _ ->
-            createBooking(placementRequest)
-          }
-
-          val (placementRequestWithBooking) = givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = matchedOffender.otherIds.crn,
-          ) { placementRequest, _ ->
-            createBooking(placementRequest)
-          }
-
-          val (placementRequestPreviouslyUnableToMatchNowHasBooking) = givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = matchedOffender.otherIds.crn,
-          ) { placementRequest, _ ->
-            createBookingNotMadeRecord(placementRequest)
-            createBooking(placementRequest)
-          }
-
           // withdrawn placement request with space booking, ignored
           givenAPlacementRequest(
             assessmentAllocatedTo = user,
@@ -491,8 +410,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
 
           assertThat(result.map { it.id }).containsExactlyInAnyOrder(
-            placementRequestWithBooking.id,
-            placementRequestPreviouslyUnableToMatchNowHasBooking.id,
             placementRequestWithSpaceBooking.id,
             placementRequestPreviouslyUnableToMatchNowHasSpaceBooking.id,
           )
@@ -521,30 +438,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-          }
-
-          // previously unable to match, now has booking, ignored
-          givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = unableToMatchOffender.otherIds.crn,
-          ) { placementRequest, _ ->
-            createBookingNotMadeRecord(placementRequest)
-            createBooking(placementRequest)
-          }
-
-          val (hasCancelledBookingPlacementRequest) = givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = unableToMatchOffender.otherIds.crn,
-          ) { placementRequest, _ ->
-            createBookingNotMadeRecord(placementRequest)
-            createBooking(placementRequest)
-            val cancellation = cancellationEntityFactory.produceAndPersist {
-              withBooking(placementRequest.booking!!)
-              withReason(cancellationReasonEntityFactory.produceAndPersist())
-            }
-            placementRequest.booking!!.cancellations.add(cancellation)
           }
 
           // previously unable to match, now has space booking, ignored
@@ -578,7 +471,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
           assertThat(result.map { it.id }).containsExactlyInAnyOrder(
             unableToMatchPlacementRequest.id,
-            hasCancelledBookingPlacementRequest.id,
             hasCancelledSpaceBookingPlacementRequest.id,
           )
         }

@@ -140,12 +140,9 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       pq.created_at as created_at,
       apa.cas1_cru_management_area_id as cruManagementAreaId,
       CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,      
-      (SELECT EXISTS (SELECT 1 FROM cancellations c right join bookings booking on c.booking_id = booking.id WHERE booking.id = pq.booking_id AND c.id IS NULL)) AS hasLegacyBooking,
       (SELECT EXISTS (SELECT 1 FROM cas1_space_bookings sb WHERE sb.placement_request_id = pq.id AND sb.cancellation_occurred_at IS NULL)) AS hasSpaceBooking,   
       (SELECT EXISTS (SELECT 1 FROM booking_not_mades bnm WHERE bnm.placement_request_id = pq.id)) AS hasBookingNotMade,
       application.submitted_at::date AS applicationSubmittedDate,
-      CASE WHEN legacyBookingCancellations.id IS NULL THEN legacyBookingPremises.name ELSE NULL END AS legacyBookingPremisesName,
-      CASE WHEN legacyBookingCancellations.id IS NULL THEN legacyBookings.arrival_date ELSE NULL END AS legacyBookingArrivalDate,
       spaceBookingPremises.name AS spaceBookingPremisesName,
       spaceBookings.canonical_arrival_date AS spaceBookingArrivalDate
       FROM
@@ -153,8 +150,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       LEFT JOIN approved_premises_applications apa ON apa.id = pq.application_id
       LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
       LEFT JOIN applications application ON application.id = pq.application_id
-      LEFT JOIN bookings legacyBookings ON pq.booking_id = legacyBookings.id
-      LEFT JOIN premises legacyBookingPremises ON legacyBookings.premises_id = legacyBookingPremises.id
       LEFT OUTER JOIN LATERAL (
         SELECT id, premises_id, canonical_arrival_date
         FROM cas1_space_bookings b
@@ -163,7 +158,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         LIMIT 1
       ) spaceBookings ON TRUE
       LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
-      LEFT JOIN cancellations legacyBookingCancellations ON legacyBookingCancellations.booking_id = legacyBookings.id
       WHERE
       (:crn IS NULL OR (SELECT EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn))) IS TRUE)
       AND (:crnOrName IS NULL OR (
@@ -172,9 +166,9 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     ),
     EXC_STATUS AS (
       SELECT *,
-      COALESCE (legacyBookingPremisesName, spaceBookingPremisesName) AS bookingPremisesName,
-      COALESCE (legacyBookingArrivalDate, spaceBookingArrivalDate) AS bookingArrivalDate,
-      CASE WHEN hasLegacyBooking THEN 'matched' WHEN hasSpaceBooking THEN 'matched' WHEN hasBookingNotMade THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
+      spaceBookingPremisesName AS bookingPremisesName,
+      spaceBookingArrivalDate AS bookingArrivalDate,
+      CASE WHEN hasSpaceBooking THEN 'matched' WHEN hasBookingNotMade THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
       FROM UNFILTERED
       WHERE
       (:tier IS NULL OR personTier = :tier)
