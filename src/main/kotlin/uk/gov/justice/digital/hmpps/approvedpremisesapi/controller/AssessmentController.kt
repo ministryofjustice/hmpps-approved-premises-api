@@ -1,11 +1,17 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.swagger.v3.oas.annotations.Operation
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.AssessmentsApiDelegate
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
@@ -32,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -40,7 +47,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortByName
 import java.util.UUID
 
-@Service
+@Suppress("LongParameterList", "ThrowsCount")
+@RestController
 class AssessmentController(
   private val objectMapper: ObjectMapper,
   private val assessmentService: AssessmentService,
@@ -50,20 +58,29 @@ class AssessmentController(
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
-) : AssessmentsApiDelegate {
+) {
 
-  override fun assessmentsGet(
-    xServiceName: ServiceName,
-    sortDirection: SortDirection?,
-    sortBy: AssessmentSortField?,
-    statuses: List<AssessmentStatus>?,
-    crnOrName: String?,
-    page: Int?,
-    perPage: Int?,
+  @PaginationHeaders
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Gets assessments the user is authorised to view",
+    description = """This endpoint is deprecated; please use the CAS-specific endpoint instead""",
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/assessments"],
+    produces = ["application/json"],
+  )
+  fun assessmentsGet(
+    @RequestHeader(name = "X-Service-Name") xServiceName: ServiceName,
+    @RequestParam(defaultValue = "asc") sortDirection: SortDirection,
+    @RequestParam(defaultValue = "arrivalDate") sortBy: AssessmentSortField,
+    @RequestParam statuses: List<AssessmentStatus>?,
+    @RequestParam crnOrName: String?,
+    @RequestParam page: Int?,
+    @RequestParam perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
-    val resolvedSortDirection = sortDirection ?: SortDirection.asc
-    val resolvedSortBy = sortBy ?: AssessmentSortField.assessmentArrivalDate
     val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
 
     val (summaries, metadata) = when (xServiceName) {
@@ -75,18 +92,24 @@ class AssessmentController(
           crnOrName,
           xServiceName,
           domainSummaryStatuses,
-          PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage),
+          PageCriteria(sortBy, sortDirection, page, perPage),
         )
         val transformSummaries = when (sortBy) {
           AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
-          AssessmentSortField.personName -> transformDomainToApi(summaries, user.cas3LaoStrategy()).sortByName(resolvedSortDirection)
+          AssessmentSortField.personName -> transformDomainToApi(summaries, user.cas3LaoStrategy()).sortByName(
+            sortDirection,
+          )
           else -> transformDomainToApi(summaries, user.cas3LaoStrategy())
         }
         Pair(transformSummaries, metadata)
       }
 
       else -> {
-        val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage))
+        val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(
+          user,
+          domainSummaryStatuses,
+          PageCriteria(sortBy, sortDirection, page, perPage),
+        )
         Pair(transformDomainToApi(summaries, user.cas1LaoStrategy()), metadata)
       }
     }
@@ -112,7 +135,16 @@ class AssessmentController(
     }
   }
 
-  override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Assessment> {
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Gets a single assessment by its id",
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/assessments/{assessmentId}"],
+    produces = ["application/json"],
+  )
+  fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
 
     val assessment = extractEntityFromCasResult(assessmentService.getAssessmentAndValidate(user, assessmentId))
@@ -126,11 +158,21 @@ class AssessmentController(
     return ResponseEntity.ok(transformedResponse)
   }
 
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Updates an assessment",
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/assessments/{assessmentId}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
   @Transactional
-  override fun assessmentsAssessmentIdPut(
-    assessmentId: UUID,
-    updateAssessment: UpdateAssessment,
-    xServiceName: ServiceName?,
+  fun assessmentsAssessmentIdPut(
+    @PathVariable assessmentId: UUID,
+    @RequestBody updateAssessment: UpdateAssessment,
+    @RequestHeader("X-Service-Name") xServiceName: ServiceName?,
   ): ResponseEntity<Assessment> {
     val user = userService.getUserForRequest()
     val assessment =
@@ -161,8 +203,20 @@ class AssessmentController(
     )
   }
 
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Accepts an Assessment",
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/acceptance"],
+    consumes = ["application/json"],
+  )
   @Transactional
-  override fun assessmentsAssessmentIdAcceptancePost(assessmentId: UUID, assessmentAcceptance: AssessmentAcceptance): ResponseEntity<Unit> {
+  fun assessmentsAssessmentIdAcceptancePost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody assessmentAcceptance: AssessmentAcceptance,
+  ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
@@ -185,8 +239,20 @@ class AssessmentController(
     return ResponseEntity(HttpStatus.OK)
   }
 
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Rejects an Assessment",
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/rejection"],
+    consumes = ["application/json"],
+  )
   @Transactional
-  override fun assessmentsAssessmentIdRejectionPost(assessmentId: UUID, assessmentRejection: AssessmentRejection): ResponseEntity<Unit> {
+  fun assessmentsAssessmentIdRejectionPost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody assessmentRejection: AssessmentRejection,
+  ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
@@ -210,16 +276,34 @@ class AssessmentController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun assessmentsAssessmentIdClosurePost(assessmentId: UUID): ResponseEntity<Unit> {
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Closes an Assessment",
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/closure"],
+  )
+  fun assessmentsAssessmentIdClosurePost(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
     val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)
     extractEntityFromCasResult(assessmentAuthResult)
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun assessmentsAssessmentIdNotesPost(
-    assessmentId: UUID,
-    newClarificationNote: NewClarificationNote,
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Adds a clarification note to an assessment",
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/notes"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun assessmentsAssessmentIdNotesPost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody newClarificationNote: NewClarificationNote,
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
 
@@ -230,10 +314,20 @@ class AssessmentController(
     )
   }
 
-  override fun assessmentsAssessmentIdNotesNoteIdPut(
-    assessmentId: UUID,
-    noteId: UUID,
-    updatedClarificationNote: UpdatedClarificationNote,
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Updates an assessment's clarification note",
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/assessments/{assessmentId}/notes/{noteId}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun assessmentsAssessmentIdNotesNoteIdPut(
+    @PathVariable assessmentId: UUID,
+    @PathVariable noteId: UUID,
+    @RequestBody updatedClarificationNote: UpdatedClarificationNote,
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
     val clarificationNoteResult = assessmentService.updateAssessmentClarificationNote(
@@ -249,9 +343,19 @@ class AssessmentController(
     )
   }
 
-  override fun assessmentsAssessmentIdReferralHistoryNotesPost(
-    assessmentId: UUID,
-    newReferralHistoryUserNote: NewReferralHistoryUserNote,
+  @Operation(
+    tags = ["Assessment data"],
+    summary = "Adds a user-written note to an assessment",
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/referral-history-notes"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun assessmentsAssessmentIdReferralHistoryNotesPost(
+    @PathVariable assessmentId: UUID,
+    @RequestBody newReferralHistoryUserNote: NewReferralHistoryUserNote,
   ): ResponseEntity<ReferralHistoryNote> {
     val user = userService.getUserForRequest()
 
