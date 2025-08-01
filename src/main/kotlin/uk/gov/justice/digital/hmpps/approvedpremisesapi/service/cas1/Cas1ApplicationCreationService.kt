@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
@@ -29,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Offe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -161,6 +159,7 @@ class Cas1ApplicationCreationService(
     placementRequests = mutableListOf(),
     releaseType = null,
     arrivalDate = null,
+    duration = null,
     isInapplicable = null,
     isWithdrawn = false,
     withdrawalReason = null,
@@ -191,44 +190,19 @@ class Cas1ApplicationCreationService(
     submitApplication: SubmitApprovedPremisesApplication,
     user: UserEntity,
     apAreaId: UUID,
-  ): CasResult<ApplicationEntity> {
+  ): CasResult<ApprovedPremisesApplicationEntity> {
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = applicationRepository.findByIdOrNull(
       applicationId,
     ) ?: return CasResult.NotFound("ApprovedPremisesApplicationEntity", applicationId.toString())
 
-    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
-
-    if (application.createdByUser != user) {
-      return CasResult.Unauthorised()
-    }
-
     if (application !is ApprovedPremisesApplicationEntity) {
       return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
-    if (application.status != ApprovedPremisesApplicationStatus.STARTED) {
-      return CasResult.GeneralValidationError("Only an application with the 'STARTED' status can be submitted")
-    }
-
-    if (application.submittedAt != null) {
-      return CasResult.GeneralValidationError("This application has already been submitted")
-    }
-
-    if (submitApplication.caseManagerIsNotApplicant == true && submitApplication.caseManagerUserDetails == null) {
-      return CasResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
-    }
-
-    val validationErrors = ValidationErrors()
-    val applicationData = application.data
-
-    if (applicationData == null) {
-      validationErrors["$.data"] = "empty"
-    }
-
-    if (validationErrors.any()) {
-      return CasResult.FieldValidationError(validationErrors)
+    validateApplicationSubmission(application, user, submitApplication)?.let {
+      return it
     }
 
     val inmateDetails = application.nomsNumber?.let { nomsNumber ->
@@ -239,6 +213,7 @@ class Cas1ApplicationCreationService(
     }
 
     val now = OffsetDateTime.now(clock)
+    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
     val apArea = apAreaRepository.findByIdOrNull(apAreaId)!!
     application.apply {
@@ -249,6 +224,7 @@ class Cas1ApplicationCreationService(
       releaseType = submitApplication.releaseType.toString()
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
+      duration = submitApplication.duration
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
@@ -292,6 +268,35 @@ class Cas1ApplicationCreationService(
     }
 
     return CasResult.Success(application)
+  }
+
+  @SuppressWarnings("ReturnCount")
+  private fun validateApplicationSubmission(
+    application: ApprovedPremisesApplicationEntity,
+    user: UserEntity,
+    submitApplication: SubmitApprovedPremisesApplication,
+  ): CasResult<ApprovedPremisesApplicationEntity>? {
+    if (application.createdByUser != user) {
+      return CasResult.Unauthorised()
+    }
+
+    if (application.status != ApprovedPremisesApplicationStatus.STARTED) {
+      return CasResult.GeneralValidationError("Only an application with the 'STARTED' status can be submitted")
+    }
+
+    if (application.submittedAt != null) {
+      return CasResult.GeneralValidationError("This application has already been submitted")
+    }
+
+    if (submitApplication.caseManagerIsNotApplicant == true && submitApplication.caseManagerUserDetails == null) {
+      return CasResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
+    }
+
+    if (application.data == null) {
+      return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
+    }
+
+    return null
   }
 
   @SuppressWarnings("ReturnCount", "UnusedParameter")
