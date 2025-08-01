@@ -34,7 +34,7 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var service: Yielded<String> = { ServiceName.temporaryAccommodation.value }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
-  private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(30) }
+  private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(180) }
   private var endDate: Yielded<LocalDate?> = { null }
   private var turnaroundWorkingDays: Yielded<Int> = { 2 }
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }

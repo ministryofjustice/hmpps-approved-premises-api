@@ -17,12 +17,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithRoomsAndBeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithUserScheduledForArchive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationRooms
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
@@ -63,6 +65,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlin.text.get
 
 class Cas3PremisesTest : Cas3IntegrationTestBase() {
   @Autowired
@@ -585,7 +588,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedPremises { expectedPremises }
         }
 
-        bedEntityFactory.produceAndPersistMultiple(5) {
+        bedEntityFactory.produceAndPersist {
           withYieldedRoom { room }
         }
 
@@ -603,7 +606,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$[0].status").isEqualTo("active")
           .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
           .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedPremises.localAuthorityArea!!.name)
-          .jsonPath("$[0].bedspaceCount").isEqualTo(5)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(1)
           .jsonPath("$.length()").isEqualTo(1)
       }
     }
@@ -742,11 +745,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedPremises { expectedPremises }
         }
 
-        bedEntityFactory.produceAndPersistMultiple(3) {
+        bedEntityFactory.produceAndPersist {
           withYieldedRoom { room }
         }
 
-        bedEntityFactory.produceAndPersistMultiple(1) {
+        bedEntityFactory.produceAndPersist {
           withYieldedRoom { room }
           withEndDate { LocalDate.now().minusWeeks(1) }
         }
@@ -764,7 +767,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
           .jsonPath("$[0].status").isEqualTo("active")
           .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
-          .jsonPath("$[0].bedspaceCount").isEqualTo(3)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(1)
           .jsonPath("$.length()").isEqualTo(1)
       }
     }
@@ -778,11 +781,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedPremises { expectedPremises }
         }
 
-        bedEntityFactory.produceAndPersistMultiple(3) {
+        bedEntityFactory.produceAndPersist {
           withYieldedRoom { room }
         }
 
-        bedEntityFactory.produceAndPersistMultiple(1) {
+        bedEntityFactory.produceAndPersist {
           withYieldedRoom { room }
           withEndDate { LocalDate.now().plusWeeks(1) }
         }
@@ -800,7 +803,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
           .jsonPath("$[0].status").isEqualTo("active")
           .jsonPath("$[0].pdu").isEqualTo(expectedPremises.probationDeliveryUnit!!.name)
-          .jsonPath("$[0].bedspaceCount").isEqualTo(4)
+          .jsonPath("$[0].bedspaceCount").isEqualTo(2)
           .jsonPath("$.length()").isEqualTo(1)
       }
     }
@@ -2289,6 +2292,192 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   }
 
   @Nested
+  inner class ArchivePremises {
+    @Test
+    fun `Given archive a premises when successfully passed all validations then returns 200 OK`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = user.probationRegion,
+          bedStartDates = listOf(
+            LocalDate.now().minusDays(100),
+            LocalDate.now().minusDays(75),
+            LocalDate.now().minusDays(30),
+          ),
+          roomCount = 3,
+        ) { premises, rooms, bedspaces ->
+          val archivePremises = Cas3ArchivePremises(LocalDate.now())
+
+          webTestClient.post()
+            .uri("/cas3/premises/${premises.id}/archive")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(archivePremises)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("id").isEqualTo(premises.id.toString())
+            .jsonPath("status").isEqualTo("archived")
+
+          val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+          assertThat(updatedPremises.status).isEqualTo(PropertyStatus.archived)
+          assertThat(updatedPremises.endDate).isEqualTo(LocalDate.now())
+
+          val updatedBedspaces = bedRepository.findByRoomPremisesId(updatedPremises.id)
+          assertThat(updatedBedspaces).hasSize(3)
+          updatedBedspaces.forEach { bedspace ->
+            assertThat(bedspace.endDate).isEqualTo(LocalDate.now())
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Given archive a premises when archive date is more than 7 days in the past then returns 400 Bad Request`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = user.probationRegion,
+          roomCount = 2,
+        ) { premises, rooms, bedspaces ->
+
+          val archivePremises = Cas3ArchivePremises(LocalDate.now().minusDays(8))
+
+          webTestClient.post()
+            .uri("/cas3/premises/${premises.id}/archive")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(archivePremises)
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("Bad Request")
+            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+            .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidEndDateInThePast")
+        }
+      }
+    }
+
+    @Test
+    fun `Given archive a premises when archive date is more than 3 months in then future then returns 400 Bad Request`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = user.probationRegion,
+          roomCount = 2,
+        ) { premises, rooms, bedspaces ->
+
+          val archivePremises = Cas3ArchivePremises(LocalDate.now().plusMonths(3).plusDays(1))
+
+          webTestClient.post()
+            .uri("/cas3/premises/${premises.id}/archive")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(archivePremises)
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("Bad Request")
+            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+            .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidEndDateInTheFuture")
+        }
+      }
+    }
+
+    @Test
+    fun `Given archive a premises when there is upcoming bedspace then returns 400 Bad Request`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = user.probationRegion,
+          roomCount = 2,
+          bedStartDates = listOf(LocalDate.now().minusDays(100), LocalDate.now().plusDays(5)),
+        ) { premises, rooms, bedspaces ->
+
+          val upcomingBedspace = bedspaces.drop(1).first()
+          val archivePremises = Cas3ArchivePremises(LocalDate.now().plusDays(1))
+
+          webTestClient.post()
+            .uri("/cas3/premises/${premises.id}/archive")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(archivePremises)
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("Bad Request")
+            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+            .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingUpcomingBedspace")
+            .jsonPath("$.invalid-params[0].entityId").isEqualTo(upcomingBedspace.id.toString())
+            .jsonPath("$.invalid-params[0].value").isEqualTo(upcomingBedspace.startDate?.plusDays(1).toString())
+        }
+      }
+    }
+
+    @Test
+    fun `Given archive a premises when bedspaces have active booking and void after the premises archive date then returns 400 Bad Request with correct details`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = user.probationRegion,
+          bedStartDates = listOf(
+            LocalDate.now().minusDays(100),
+            LocalDate.now().minusDays(75),
+            LocalDate.now().minusDays(30),
+          ),
+          roomCount = 3,
+        ) { premises, rooms, bedspaces ->
+          val premisesArchiveDate = LocalDate.now().plusDays(5)
+
+          val bedspaceOne = bedspaces.first()
+          val bookingDepartureDate = premisesArchiveDate.plusDays(10)
+          bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBed(bedspaceOne)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(randomStringMultiCaseWithNumbers(8))
+            withStatus(BookingStatus.provisional)
+            withArrivalDate(premisesArchiveDate.minusDays(2))
+            withDepartureDate(bookingDepartureDate)
+          }
+
+          val bedspaceTwo = bedspaces.drop(1).first()
+          val voidEndDate = premisesArchiveDate.plusDays(5)
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBed(bedspaceTwo)
+            withPremises(premises)
+            withStartDate(premisesArchiveDate.minusDays(2))
+            withEndDate(voidEndDate)
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          val bedspaceThree = bedspaces.drop(2).first()
+          bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBed(bedspaceThree)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(randomStringMultiCaseWithNumbers(8))
+            withStatus(BookingStatus.arrived)
+            withArrivalDate(premisesArchiveDate.minusDays(35))
+            withDepartureDate(premisesArchiveDate.plusDays(3))
+          }
+
+          val archivePremises = Cas3ArchivePremises(premisesArchiveDate)
+
+          webTestClient.post()
+            .uri("/cas3/premises/${premises.id}/archive")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(archivePremises)
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("Bad Request")
+            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+            .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingBookings")
+            .jsonPath("$.invalid-params[0].entityId").isEqualTo(bedspaceOne.id.toString())
+            .jsonPath("$.invalid-params[0].value").isEqualTo(bookingDepartureDate.plusDays(1).toString())
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class UnarchivePremises {
     @Test
     fun `Unarchive premises returns 200 OK when successful`() {
@@ -2314,11 +2503,13 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         rooms.forEach { room ->
           bedspaces.addAll(
-            bedEntityFactory.produceAndPersistMultiple(2) {
-              withRoom(room)
-              withStartDate(LocalDate.now().minusDays(30))
-              withEndDate(LocalDate.now().minusDays(1))
-            },
+            listOf(
+              bedEntityFactory.produceAndPersist {
+                withRoom(room)
+                withStartDate(LocalDate.now().minusDays(30))
+                withEndDate(LocalDate.now().minusDays(1))
+              },
+            ),
           )
         }
 
@@ -2342,7 +2533,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         assertThat(updatedPremises.endDate).isNull()
 
         val updatedBedspaces = bedRepository.findAll()
-        assertThat(updatedBedspaces).hasSize(4)
+        assertThat(updatedBedspaces).hasSize(2)
         updatedBedspaces.forEach { bedspace ->
           assertThat(bedspace.startDate).isEqualTo(restartDate)
           assertThat(bedspace.endDate).isNull()
@@ -3041,13 +3232,13 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenATemporaryAccommodationPremises(region = userEntity.probationRegion) { premises ->
 
-          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
+          val rooms = roomEntityFactory.produceAndPersistMultiple(10) {
             withPremises(premises)
           }
 
           // Online
-          rooms.forEach { room ->
-            bedEntityFactory.produceAndPersistMultiple(1) {
+          rooms.take(3).forEach { room ->
+            bedEntityFactory.produceAndPersist {
               withRoom(room)
               withStartDate(LocalDate.now().minusDays(10))
               withEndDate(null)
@@ -3055,8 +3246,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           }
 
           // Upcoming
-          rooms.forEach { room ->
-            bedEntityFactory.produceAndPersistMultiple(2) {
+          rooms.drop(3).take(4).forEach { room ->
+            bedEntityFactory.produceAndPersist {
               withRoom(room)
               withStartDate(LocalDate.now().plusDays(5))
               withEndDate(null)
@@ -3064,8 +3255,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           }
 
           // Archived
-          rooms.forEach { room ->
-            bedEntityFactory.produceAndPersistMultiple(3) {
+          rooms.drop(7).forEach { room ->
+            bedEntityFactory.produceAndPersist {
               withRoom(room)
               withStartDate(LocalDate.now().minusDays(30))
               withEndDate(LocalDate.now().minusDays(5))
@@ -3081,9 +3272,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .expectBody()
             .jsonPath("$.id").isEqualTo(premises.id.toString())
             .jsonPath("$.status").isEqualTo("online")
-            .jsonPath("$.totalOnlineBedspaces").isEqualTo(2)
+            .jsonPath("$.totalOnlineBedspaces").isEqualTo(3)
             .jsonPath("$.totalUpcomingBedspaces").isEqualTo(4)
-            .jsonPath("$.totalArchivedBedspaces").isEqualTo(6)
+            .jsonPath("$.totalArchivedBedspaces").isEqualTo(3)
         }
       }
     }

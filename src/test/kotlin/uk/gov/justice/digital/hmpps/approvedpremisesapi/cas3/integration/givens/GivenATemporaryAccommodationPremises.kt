@@ -88,7 +88,6 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRooms(
 fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRoomsAndBeds(
   region: ProbationRegionEntity = givenAProbationRegion(),
   roomCount: Int = 1,
-  bedsPerRoom: Int = 1,
   bedStartDates: List<LocalDate> = emptyList(),
   bedEndDates: List<LocalDate?> = emptyList(),
   roomNames: List<String> = emptyList(),
@@ -104,18 +103,15 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRoomsAndBeds(
     val allBeds = mutableListOf<BedEntity>()
 
     rooms.forEachIndexed { roomIndex, room ->
-      repeat(bedsPerRoom) { bedIndex ->
-        val bedIndexInList = roomIndex * bedsPerRoom + bedIndex
-        val startDate = if (bedStartDates.size > bedIndexInList) bedStartDates[bedIndexInList] else LocalDate.now().minusDays(30)
-        val endDate = if (bedEndDates.size > bedIndexInList) bedEndDates[bedIndexInList] else null
+      val startDate = if (bedStartDates.size > roomIndex) bedStartDates[roomIndex] else LocalDate.now().minusDays(30)
+      val endDate = if (bedEndDates.size > roomIndex) bedEndDates[roomIndex] else null
 
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withStartDate(startDate)
-          withEndDate(endDate)
-        }
-        allBeds.add(bed)
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+        withStartDate(startDate)
+        withEndDate(endDate)
       }
+      allBeds.add(bed)
     }
 
     block(premises, rooms, allBeds)
@@ -125,7 +121,6 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRoomsAndBeds(
 fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
   roles: List<UserRole> = emptyList(),
   roomCount: Int = 1,
-  bedsPerRoom: Int = 1,
   premisesStatus: PropertyStatus = PropertyStatus.active,
   premisesEndDate: LocalDate? = null,
   bedStartDates: List<LocalDate> = emptyList(),
@@ -140,7 +135,6 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
     givenATemporaryAccommodationPremisesWithRoomsAndBeds(
       region = user.probationRegion,
       roomCount = roomCount,
-      bedsPerRoom = bedsPerRoom,
       bedStartDates = bedStartDates,
       bedEndDates = bedEndDates,
       roomNames = roomNames,
@@ -168,7 +162,6 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithUserScheduledFor
     roles = roles,
     premisesEndDate = archiveDate,
     premisesStatus = premisesStatus,
-
   ) { user, jwt, premises ->
     block(user, jwt, premises)
   }
