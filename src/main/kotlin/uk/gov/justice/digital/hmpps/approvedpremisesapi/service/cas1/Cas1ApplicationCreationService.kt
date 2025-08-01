@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Offe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -291,15 +290,8 @@ class Cas1ApplicationCreationService(
       return CasResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
 
-    val validationErrors = ValidationErrors()
-    val applicationData = application.data
-
-    if (applicationData == null) {
-      validationErrors["$.data"] = "empty"
-    }
-
-    if (validationErrors.any()) {
-      return CasResult.FieldValidationError(validationErrors)
+    if (application.data == null) {
+      return CasResult.FieldValidationError(mapOf("$.data" to "empty"))
     }
 
     return null
