@@ -385,11 +385,17 @@ class ApprovedPremisesApplicationEntity(
   var sentenceType: String?,
   var situation: String?,
   /**
-   * The arrival date at midnight in UTC (See ApplicationService.getArrivalDate)
+   * If a request for placement was made in the original application, this provides
+   * the arrival date at midnight in UTC (See ApplicationService.getArrivalDate)
    *
    * Ideally we'd persist this as a date only (as is provided by the UI)
    */
   var arrivalDate: OffsetDateTime?,
+  /**
+   * If a request for placement was made in the original application, this provides
+   * the duration of the stay in days
+   */
+  var duration: Int?,
   /**
    * The offender name. This should only be used for search purposes (i.e. SQL)
    * If returning the offender name to the user, use the [OffenderService], which
