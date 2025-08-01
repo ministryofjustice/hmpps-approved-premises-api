@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
@@ -37,7 +36,6 @@ class Cas1PremisesService(
   val outOfServiceBedService: Cas1OutOfServiceBedService,
   val spacePlanningService: SpacePlanningService,
   val spaceBookingRepository: Cas1SpaceBookingRepository,
-  val featureFlagService: FeatureFlagService,
   val cas1OccupancyReportRepository: Cas1OccupancyReportRepository,
   val cas1PremisesLocalRestrictionRepository: Cas1PremisesLocalRestrictionRepository,
   private val clock: Clock,
@@ -67,7 +65,7 @@ class Cas1PremisesService(
 
     val bedCount = premisesService.getBedCount(premise)
     val outOfServiceBedsCount = outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
-    val spaceBookingCount = spaceBookingRepository.countActiveSpaceBookings(premisesId).toInt()
+    val activeSpaceBookingCount = spaceBookingRepository.countActiveSpaceBookings(premisesId).toInt()
     val localRestrictions = cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(premisesId)
       .map { restriction ->
         Cas1PremisesLocalRestrictionSummary(
@@ -82,7 +80,7 @@ class Cas1PremisesService(
       Cas1PremisesInfo(
         entity = premise,
         bedCount = bedCount,
-        availableBeds = bedCount - outOfServiceBedsCount - spaceBookingCount,
+        availableBeds = bedCount - outOfServiceBedsCount - activeSpaceBookingCount,
         outOfServiceBeds = outOfServiceBedsCount,
         localRestrictions = localRestrictions,
         characteristicPropertyNames = characteristicPropertyNames,
@@ -90,28 +88,20 @@ class Cas1PremisesService(
     )
   }
 
-  fun getPremises(gender: ApprovedPremisesGender?, apAreaId: UUID?, cruManagementAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId, cruManagementAreaId)
+  fun getPremisesBasicInfo(gender: ApprovedPremisesGender?, apAreaId: UUID?, cruManagementAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId, cruManagementAreaId)
 
-  fun getAllPremisesIds() = premisesRepository.findAllIds()
+  fun findPremisesById(id: UUID) = premisesRepository.findByIdOrNull(id)
 
-  fun findPremiseById(id: UUID) = premisesRepository.findByIdOrNull(id)
-
-  fun premiseExistsById(id: UUID) = premisesRepository.existsById(id)
-
-  data class PremisesCapacities(
-    val startDate: LocalDate,
-    val endDate: LocalDate,
-    val results: List<PremiseCapacity>,
-  )
+  fun premisesExistsById(id: UUID) = premisesRepository.existsById(id)
 
   fun getPremisesCapacities(
     premisesIds: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
     excludeSpaceBookingId: UUID? = null,
-  ): CasResult<PremisesCapacities> {
+  ): CasResult<Cas1PremisesCapacities> {
     if (premisesIds.isEmpty()) {
-      return CasResult.Success(PremisesCapacities(startDate, endDate, emptyList()))
+      return CasResult.Success(Cas1PremisesCapacities(startDate, endDate, emptyList()))
     }
 
     val premises = premisesRepository.findAllById(premisesIds)
@@ -137,7 +127,7 @@ class Cas1PremisesService(
     }
 
     return CasResult.Success(
-      PremisesCapacities(
+      Cas1PremisesCapacities(
         startDate = startDate,
         endDate = endDate,
         spacePlanningService.capacity(
@@ -192,5 +182,11 @@ class Cas1PremisesService(
     val outOfServiceBeds: Int,
     val localRestrictions: List<Cas1PremisesLocalRestrictionSummary> = emptyList(),
     val characteristicPropertyNames: List<String>,
+  )
+
+  data class Cas1PremisesCapacities(
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val results: List<PremiseCapacity>,
   )
 }

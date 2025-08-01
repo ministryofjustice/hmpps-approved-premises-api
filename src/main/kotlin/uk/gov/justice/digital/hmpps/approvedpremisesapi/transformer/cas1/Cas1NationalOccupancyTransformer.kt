@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Sp
 class Cas1NationalOccupancyTransformer(val searchResultsTransformer: Cas1SpaceSearchResultsTransformer) {
 
   fun toCapacitySummary(
-    capacities: Cas1PremisesService.PremisesCapacities,
+    capacities: Cas1PremisesService.Cas1PremisesCapacities,
     requestedRoomCharacteristics: Set<Cas1SpaceCharacteristic>,
     premisesSummaries: List<CandidatePremises>,
   ): Cas1NationalOccupancy = Cas1NationalOccupancy(
@@ -30,7 +30,7 @@ class Cas1NationalOccupancyTransformer(val searchResultsTransformer: Cas1SpaceSe
 
   private fun toPremisesCapacity(
     premisesSummary: CandidatePremises,
-    capacities: Cas1PremisesService.PremisesCapacities,
+    capacities: Cas1PremisesService.Cas1PremisesCapacities,
     requestedRoomCharacteristics: Set<Cas1SpaceCharacteristic>,
   ): Cas1NationalOccupancyPremises {
     val capacity = capacities.results.first { it.premisesId == premisesSummary.premisesId }

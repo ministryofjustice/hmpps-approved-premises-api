@@ -121,7 +121,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no premises with the given premisesId exists`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.findPremisesById(any()) } returns null
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -144,7 +144,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no space booking with the given bookingId exists`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -173,7 +173,7 @@ class Cas1BookingManagementServiceTest {
         actualArrivalTime = existingArrivalTime,
       )
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -201,7 +201,7 @@ class Cas1BookingManagementServiceTest {
         canonicalArrivalDate = existingArrivalDate,
       )
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -227,7 +227,7 @@ class Cas1BookingManagementServiceTest {
         cancellationOccurredAt = LocalDate.now().minusDays(10),
       )
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
 
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
@@ -253,7 +253,7 @@ class Cas1BookingManagementServiceTest {
     fun `Returns error if CRN already resident elsewhere`() {
       val user = UserEntityFactory().withDefaults().produce()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -298,7 +298,7 @@ class Cas1BookingManagementServiceTest {
         canonicalArrivalDate = existingArrivalDate,
       )
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -325,7 +325,7 @@ class Cas1BookingManagementServiceTest {
     fun `Updates space booking with arrival information, raises domain event and email`() {
       val user = UserEntityFactory().withDefaults().produce()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -391,7 +391,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no premises with the given premisesId exists`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.findPremisesById(any()) } returns null
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -415,7 +415,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no booking with the given bookingId exists`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -439,7 +439,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no non arrival reason with the given reasonId exists`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -470,7 +470,7 @@ class Cas1BookingManagementServiceTest {
           nonArrivalNotes = "new non arrival notes",
         )
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -498,7 +498,7 @@ class Cas1BookingManagementServiceTest {
 
         )
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -529,7 +529,7 @@ class Cas1BookingManagementServiceTest {
           nonArrivalNotes = cas1NonArrival.notes,
         )
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -550,7 +550,7 @@ class Cas1BookingManagementServiceTest {
     fun `Updates existing space booking with non arrival information and raises domain event`() {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -642,7 +642,7 @@ class Cas1BookingManagementServiceTest {
 
     @BeforeEach
     fun setup() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { departureReasonRepository.findByIdOrNull(any()) } returns departureReason
       every { moveOnCategoryRepository.findByIdOrNull(any()) } returns departureMoveOnCategory
@@ -650,7 +650,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no premises exist with the given premisesId`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.findPremisesById(any()) } returns null
 
       val result = service.recordDepartureForBooking(
         premisesId = UUID.randomUUID(),
@@ -1094,7 +1094,7 @@ class Cas1BookingManagementServiceTest {
 
     @BeforeEach
     fun setup() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every {
         staffMemberService.getStaffMemberByCodeForPremise(
@@ -1106,7 +1106,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no premises exist with the given premisesId`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.findPremisesById(any()) } returns null
 
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),

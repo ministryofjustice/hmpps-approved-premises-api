@@ -83,7 +83,7 @@ class Cas1SpaceBookingUpdateService(
   fun validate(
     updateBookingDetails: UpdateBookingDetails,
   ): CasResult<Unit> = validatedCasResult {
-    val premises = cas1PremisesService.findPremiseById(updateBookingDetails.premisesId)
+    val premises = cas1PremisesService.findPremisesById(updateBookingDetails.premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
       return errors()

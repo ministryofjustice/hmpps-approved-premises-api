@@ -49,7 +49,7 @@ class Cas1BookingManagementService(
     arrivalDate: LocalDate,
     arrivalTime: LocalTime,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    if (cas1PremisesService.findPremiseById(premisesId) == null) {
+    if (cas1PremisesService.findPremisesById(premisesId) == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
@@ -111,7 +111,7 @@ class Cas1BookingManagementService(
     cas1NonArrival: Cas1NonArrival,
     recordedBy: UserEntity,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    if (cas1PremisesService.findPremiseById(premisesId) == null) {
+    if (cas1PremisesService.findPremisesById(premisesId) == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
@@ -169,7 +169,7 @@ class Cas1BookingManagementService(
     bookingId: UUID,
     keyWorker: Cas1AssignKeyWorker,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    val premises = cas1PremisesService.findPremisesById(premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
@@ -225,7 +225,7 @@ class Cas1BookingManagementService(
     bookingId: UUID,
     departureInfo: DepartureInfo,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    if (cas1PremisesService.findPremiseById(premisesId) == null) {
+    if (cas1PremisesService.findPremisesById(premisesId) == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
 

@@ -122,7 +122,7 @@ class Cas1SpaceBookingService(
     filterCriteria: SpaceBookingFilterCriteria,
     pageCriteria: PageCriteria<Cas1SpaceBookingSummarySortField>,
   ): CasResult<SearchResultContainer> {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    val premises = cas1PremisesService.findPremisesById(premisesId)
       ?: return CasResult.NotFound("premises", premisesId.toString())
 
     val page = cas1SpaceBookingRepository.search(
@@ -151,7 +151,7 @@ class Cas1SpaceBookingService(
   }
 
   fun getBookingForPremisesAndId(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
-    if (!cas1PremisesService.premiseExistsById(premisesId)) return CasResult.NotFound("premises", premisesId.toString())
+    if (!cas1PremisesService.premisesExistsById(premisesId)) return CasResult.NotFound("premises", premisesId.toString())
 
     return getBooking(bookingId)
   }

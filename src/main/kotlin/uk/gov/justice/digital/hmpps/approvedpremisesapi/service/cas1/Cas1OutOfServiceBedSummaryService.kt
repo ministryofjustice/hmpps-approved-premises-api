@@ -21,7 +21,7 @@ class Cas1OutOfServiceBedSummaryService(
     apAreaId: UUID,
     date: LocalDate,
   ): CasResult<List<Cas1OutOfServiceBedEntity>> {
-    if (cas1PremisesService.findPremiseById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
+    if (cas1PremisesService.findPremisesById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
 
     val (outOfServiceBeds) = cas1OutOfServiceBedService.getOutOfServiceBedsForDate(
       temporality = setOf(Temporality.current),
