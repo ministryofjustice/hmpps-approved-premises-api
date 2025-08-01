@@ -50,13 +50,11 @@ interface PlacementRequestsApiDelegate {
    */
   fun placementRequestsDashboardGet(
     status: PlacementRequestStatus?,
-    crn: kotlin.String?,
     crnOrName: kotlin.String?,
     tier: RiskTierLevel?,
     arrivalDateStart: java.time.LocalDate?,
     arrivalDateEnd: java.time.LocalDate?,
     requestType: PlacementRequestRequestType?,
-    apAreaId: java.util.UUID?,
     cruManagementAreaId: java.util.UUID?,
     page: kotlin.Int?,
     sortBy: PlacementRequestSortField?,

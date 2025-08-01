@@ -55,13 +55,11 @@ class PlacementRequestsController(
   @Deprecated("Use Cas1PlacementRequestsController.search instead")
   override fun placementRequestsDashboardGet(
     status: PlacementRequestStatus?,
-    crn: String?,
     crnOrName: String?,
     tier: RiskTierLevel?,
     arrivalDateStart: LocalDate?,
     arrivalDateEnd: LocalDate?,
     requestType: PlacementRequestRequestType?,
-    apAreaId: UUID?,
     cruManagementAreaId: UUID?,
     page: Int?,
     sortBy: PlacementRequestSortField?,
@@ -74,13 +72,11 @@ class PlacementRequestsController(
     val (requests, metadata) = placementRequestService.getAllActive(
       Cas1PlacementRequestService.AllActiveSearchCriteria(
         status = status,
-        crn = crn,
         crnOrName = crnOrName,
         tier = tier?.value,
         arrivalDateStart = arrivalDateStart,
         arrivalDateEnd = arrivalDateEnd,
         requestType = requestType,
-        apAreaId = apAreaId,
         cruManagementAreaId = cruManagementAreaId,
       ),
       PageCriteria(

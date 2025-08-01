@@ -73,13 +73,11 @@ class Cas1PlacementRequestService(
 
     val response = placementRequestRepository.allForDashboard(
       status = searchCriteria.status?.name,
-      crn = searchCriteria.crn,
       crnOrName = searchCriteria.crnOrName,
       tier = searchCriteria.tier,
       arrivalDateFrom = searchCriteria.arrivalDateStart,
       arrivalDateTo = searchCriteria.arrivalDateEnd,
       requestType = searchCriteria.requestType?.name,
-      apAreaId = searchCriteria.apAreaId,
       cruManagementAreaId = searchCriteria.cruManagementAreaId,
       pageable = pageable,
     )
@@ -105,13 +103,11 @@ class Cas1PlacementRequestService(
 
     val response = placementRequestRepository.allForCas1Dashboard(
       status = searchCriteria.status?.name,
-      crn = searchCriteria.crn,
       crnOrName = searchCriteria.crnOrName,
       tier = searchCriteria.tier,
       arrivalDateFrom = searchCriteria.arrivalDateStart,
       arrivalDateTo = searchCriteria.arrivalDateEnd,
       requestType = searchCriteria.requestType?.name,
-      apAreaId = searchCriteria.apAreaId,
       cruManagementAreaId = searchCriteria.cruManagementAreaId,
       pageable = pageable,
     )
@@ -326,13 +322,11 @@ class Cas1PlacementRequestService(
 
   data class AllActiveSearchCriteria(
     val status: PlacementRequestStatus? = null,
-    val crn: String? = null,
     val crnOrName: String? = null,
     val tier: String? = null,
     val arrivalDateStart: LocalDate? = null,
     val arrivalDateEnd: LocalDate? = null,
     val requestType: PlacementRequestRequestType? = null,
-    val apAreaId: UUID? = null,
     val cruManagementAreaId: UUID? = null,
   )
 

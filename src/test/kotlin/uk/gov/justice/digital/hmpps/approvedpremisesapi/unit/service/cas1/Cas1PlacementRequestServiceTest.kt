@@ -776,36 +776,6 @@ class Cas1PlacementRequestServiceTest {
     }
 
     @Test
-    fun `getAllActive returns only results for CRN when provided`() {
-      val crn = "CRN456"
-      val placementRequests = createPlacementRequests(2, crn)
-      val page = mockk<Page<PlacementRequestEntity>>()
-      val pageRequest = mockk<PageRequest>()
-
-      mockkStatic(PageRequest::class)
-
-      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-      every { page.content } returns placementRequests
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      every { placementRequestRepository.allForDashboard(crn = crn, pageable = pageRequest) } returns page
-
-      val (requests, metadata) = placementRequestService.getAllActive(
-        Cas1PlacementRequestService.AllActiveSearchCriteria(
-          crn = crn,
-        ),
-        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-      )
-
-      assertThat(requests).isEqualTo(placementRequests)
-      assertThat(metadata?.currentPage).isEqualTo(1)
-      assertThat(metadata?.pageSize).isEqualTo(10)
-      assertThat(metadata?.totalPages).isEqualTo(10)
-      assertThat(metadata?.totalResults).isEqualTo(100)
-    }
-
-    @Test
     fun `getAllActive returns only results for tier when provided`() {
       val tier = "A2"
 

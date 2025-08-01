@@ -171,10 +171,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR requestedPlacementArrivalDate >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS DATE) IS NULL OR requestedPlacementArrivalDate <= :arrivalDateTo)
       AND (:requestType IS NULL OR requestType = :requestType)
-      AND (:apAreaId IS NULL OR apAreaId = :apAreaId)
       AND (:cruManagementAreaId IS NULL OR cruManagementAreaId = :cruManagementAreaId)
       AND (:crnOrName IS NULL OR (personCrn = UPPER(:crnOrName)) OR (personName LIKE UPPER('%' || :crnOrName || '%')))
-      AND (:crn IS NULL OR (personCrn = UPPER(:crnOrName)))
     )
     SELECT * FROM EXC_STATUS
     WHERE
@@ -185,13 +183,11 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   )
   fun allForCas1Dashboard(
     status: String? = null,
-    crn: String? = null,
     crnOrName: String? = null,
     tier: String? = null,
     arrivalDateFrom: LocalDate? = null,
     arrivalDateTo: LocalDate? = null,
     requestType: String? = null,
-    apAreaId: UUID? = null,
     cruManagementAreaId: UUID? = null,
     pageable: Pageable? = null,
   ): Page<Cas1PlacementRequestSummary>

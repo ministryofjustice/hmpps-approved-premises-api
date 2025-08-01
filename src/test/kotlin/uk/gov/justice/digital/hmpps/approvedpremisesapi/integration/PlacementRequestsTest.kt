@@ -546,39 +546,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It searches by AP Area ID where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-
-          val apArea1 = givenAnApArea()
-          val apArea2 = givenAnApArea()
-
-          createPlacementRequest(offenderDetails, user, apArea = apArea1)
-          val placementRequestA1 = createPlacementRequest(offenderDetails, user, apArea = apArea2)
-          createPlacementRequest(offenderDetails, user, apArea = apArea1)
-
-          webTestClient.get()
-            .uri("/placement-requests/dashboard?apAreaId=${apArea2.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  placementRequestTransformer.transformJpaToApi(
-                    placementRequestA1,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              ),
-            )
-        }
-      }
-    }
-
-    @Test
     fun `It searches by CRU Management Area ID where user is manager`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
@@ -663,47 +630,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 ),
               ),
             )
-        }
-      }
-    }
-
-    @Deprecated("Can be removed when apAreaId is removed from search filter in the front end.")
-    @Test
-    fun `It searches using multiple criteria where user is manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { offender1Details, inmate1Details ->
-          givenAnOffender { offender2Details, _ ->
-
-            val apArea1 = givenAnApArea()
-            val apArea2 = givenAnApArea()
-
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
-            val placementOffender1On5thJanTierA2Parole =
-              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea1)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = false)
-            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
-            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
-
-            webTestClient.get()
-              .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}&tier=A2&requestType=parole&apAreaId=${apArea1.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    placementRequestTransformer.transformJpaToApi(
-                      placementOffender1On5thJanTierA2Parole,
-                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
-                    ),
-                  ),
-                ),
-              )
-          }
         }
       }
     }
