@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
@@ -51,7 +50,7 @@ import java.util.UUID
 class Cas1ApplicationCreationService(
   private val applicationRepository: ApplicationRepository,
   private val offenderRisksService: OffenderRisksService,
-  private val assessmentService: AssessmentService,
+  private val cas1AssessmentService: Cas1AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
@@ -275,7 +274,7 @@ class Cas1ApplicationCreationService(
     }
 
     cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, user.deliusUsername)
-    assessmentService.createApprovedPremisesAssessment(application)
+    cas1AssessmentService.createAssessment(application)
 
     application = applicationRepository.save(application)
 

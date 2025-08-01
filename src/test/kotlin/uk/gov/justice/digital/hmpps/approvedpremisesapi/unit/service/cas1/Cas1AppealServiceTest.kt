@@ -27,10 +27,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
@@ -39,13 +39,13 @@ import java.util.UUID
 
 class Cas1AppealServiceTest {
   private val appealRepository = mockk<AppealRepository>()
-  private val assessmentService = mockk<AssessmentService>()
+  private val cas1AssessmentService = mockk<Cas1AssessmentService>()
   private val cas1AppealEmailService = mockk<Cas1AppealEmailService>()
   private val cas1AppealDomainEventService = mockk<Cas1AppealDomainEventService>()
 
   private val cas1AppealService = Cas1AppealService(
     appealRepository,
-    assessmentService,
+    cas1AssessmentService,
     cas1AppealEmailService,
     cas1AppealDomainEventService,
   )
@@ -231,7 +231,7 @@ class Cas1AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
-      every { assessmentService.createApprovedPremisesAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { cas1AssessmentService.createAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { cas1AppealDomainEventService.appealRecordCreated(any()) } just Runs
       every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
 
@@ -266,7 +266,7 @@ class Cas1AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
-      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { cas1AssessmentService.createAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { cas1AppealDomainEventService.appealRecordCreated(any()) } just Runs
       every { cas1AppealEmailService.appealFailed(any()) } returns Unit
 
@@ -285,7 +285,7 @@ class Cas1AppealServiceTest {
 
         assertThatCasResult(result).isSuccess()
 
-        verify { assessmentService wasNot Called }
+        verify { cas1AssessmentService wasNot Called }
         verify(exactly = 0) { cas1AppealEmailService.appealSuccess(any(), any()) }
         verify { cas1AppealDomainEventService.appealRecordCreated(any()) }
       }
@@ -298,7 +298,7 @@ class Cas1AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
-      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { cas1AssessmentService.createAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { cas1AppealDomainEventService.appealRecordCreated(any()) } just Runs
       every { cas1AppealEmailService.appealFailed(any()) } returns Unit
 
@@ -330,7 +330,7 @@ class Cas1AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
-      every { assessmentService.createApprovedPremisesAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { cas1AssessmentService.createAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { cas1AppealDomainEventService.appealRecordCreated(any()) } just Runs
       every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
 
@@ -350,7 +350,7 @@ class Cas1AppealServiceTest {
         assertThatCasResult(result).isSuccess()
 
         verify(exactly = 1) {
-          assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal = true)
+          cas1AssessmentService.createAssessment(application, createdFromAppeal = true)
         }
 
         verify(exactly = 1) {
