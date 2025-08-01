@@ -1083,6 +1083,8 @@ class ApplicationTest : IntegrationTestBase() {
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
             licenseExpiryDate = LocalDate.of(2026, 12, 1),
+            arrivalDate = LocalDate.of(2031, 5, 6),
+            duration = 52,
           ),
         )
         .exchange()

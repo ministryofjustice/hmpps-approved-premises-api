@@ -159,6 +159,7 @@ class Cas1ApplicationCreationService(
     placementRequests = mutableListOf(),
     releaseType = null,
     arrivalDate = null,
+    duration = null,
     isInapplicable = null,
     isWithdrawn = false,
     withdrawalReason = null,
@@ -223,6 +224,7 @@ class Cas1ApplicationCreationService(
       releaseType = submitApplication.releaseType.toString()
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
+      duration = submitApplication.duration
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
