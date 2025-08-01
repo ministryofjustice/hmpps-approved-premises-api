@@ -1,7 +1,7 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.migration
 
 import com.ninjasquad.springmockk.SpykBean
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -209,9 +210,9 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     serviceName: ServiceName,
   ) {
     val booking = realBookingRepository.findById(givenBooking.id)
-    assertThat(booking).isNotNull()
-    assertThat(booking.get().status).isEqualTo(expectedStatus)
-    assertThat(booking.get().service).isEqualTo(serviceName.value)
+    Assertions.assertThat(booking).isNotNull()
+    Assertions.assertThat(booking.get().status).isEqualTo(expectedStatus)
+    Assertions.assertThat(booking.get().service).isEqualTo(serviceName.value)
   }
 
   private fun assertBookingStatusIsNull(
@@ -219,9 +220,9 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     serviceName: ServiceName,
   ) {
     val updatedBooking = realBookingRepository.findById(booking.id)
-    assertThat(updatedBooking).isNotNull()
-    assertThat(updatedBooking.get().status).isNull()
-    assertThat(updatedBooking.get().service).isEqualTo(serviceName.value)
+    Assertions.assertThat(updatedBooking).isNotNull()
+    Assertions.assertThat(updatedBooking.get().status).isNull()
+    Assertions.assertThat(updatedBooking.get().service).isEqualTo(serviceName.value)
   }
 
   private fun createCAS3DepartedBooking(userEntity: UserEntity): BookingEntity {
