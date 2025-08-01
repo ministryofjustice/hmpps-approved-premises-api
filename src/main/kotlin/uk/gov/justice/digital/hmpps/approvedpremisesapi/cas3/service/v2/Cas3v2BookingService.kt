@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
+import io.sentry.Sentry
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
@@ -9,26 +10,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Arri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingAndPersons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -38,6 +42,8 @@ import java.util.UUID
 class Cas3v2BookingService(
   private val cas3BookingRepository: Cas3v2BookingRepository,
   private val cas3BedspaceRepository: Cas3BedspacesRepository,
+  private val cas3CancellationRepository: Cas3CancellationRepository,
+  private val cancellationReasonRepository: CancellationReasonRepository,
   private val cas3ArrivalRepository: Cas3ArrivalRepository,
   private val cas3v2TurnaroundRepository: Cas3v2TurnaroundRepository,
   private val assessmentRepository: AssessmentRepository,
@@ -46,31 +52,19 @@ class Cas3v2BookingService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
-  private val userService: UserService,
-  private val offenderDetailService: OffenderDetailService,
+  private val assessmentService: AssessmentService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getBooking(bookingId: UUID, premisesId: UUID?): CasResult<Cas3BookingAndPersons> {
+  fun getBooking(bookingId: UUID, premisesId: UUID?, user: UserEntity): CasResult<Cas3BookingEntity> {
     val booking = cas3BookingRepository.findByIdOrNull(bookingId)
       ?: return CasResult.NotFound("Booking", bookingId.toString())
-
-    val user = userService.getUserForRequest()
     if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       return CasResult.Unauthorised()
     } else if (premisesId != null && premisesId != booking.premises.id) {
       return CasResult.GeneralValidationError("The supplied premisesId does not match the booking's premises")
     }
-
-    val personInfo = offenderDetailService.getPersonInfoResult(
-      booking.crn,
-      user.deliusUsername,
-      user.hasQualification(
-        UserQualification.LAO,
-      ),
-    )
-
-    return CasResult.Success(Cas3BookingAndPersons(booking, personInfo))
+    return CasResult.Success(booking)
   }
 
   @Transactional
@@ -218,6 +212,80 @@ class Cas3v2BookingService(
     }
 
     success(arrivalEntity)
+  }
+
+  @Transactional
+  fun createCancellation(
+    booking: Cas3BookingEntity,
+    cancelledAt: LocalDate,
+    reasonId: UUID,
+    notes: String?,
+    user: UserEntity,
+  ): CasResult<Cas3CancellationEntity> = validatedCasResult {
+    val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      "$.reason" hasValidationError "doesNotExist"
+      return@validatedCasResult fieldValidationError
+    } else if (!reason.serviceScopeMatches(booking.service)) {
+      "$.reason" hasValidationError "incorrectCancellationReasonServiceScope"
+      return@validatedCasResult fieldValidationError
+    }
+
+    val isFirstCancellations = booking.cancellations.isEmpty()
+    val cancellationEntity = cas3CancellationRepository.save(
+      Cas3CancellationEntity(
+        id = UUID.randomUUID(),
+        date = cancelledAt,
+        reason = reason,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+        otherReason = null,
+      ),
+    )
+    booking.status = Cas3BookingStatus.cancelled
+    updateBooking(booking)
+    booking.cancellations += cancellationEntity
+
+    when (isFirstCancellations) {
+      true -> cas3DomainEventService.saveBookingCancelledEvent(booking, user)
+      else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking, user)
+    }
+
+    booking.application?.getLatestAssessment()?.let { assessmentEntity ->
+      moveAssessmentToReadyToPlace(user, assessmentEntity, booking.id)
+    }
+
+    return success(cancellationEntity)
+  }
+
+  @SuppressWarnings("TooGenericExceptionCaught")
+  private fun moveAssessmentToReadyToPlace(
+    user: UserEntity,
+    assessmentEntity: AssessmentEntity,
+    bookingId: UUID,
+  ) {
+    try {
+      extractEntityFromCasResult(
+        assessmentService.acceptAssessment(
+          user,
+          assessmentEntity.id,
+          assessmentEntity.document,
+          null,
+          null,
+          null,
+          "Automatically moved to ready-to-place after booking is cancelled",
+        ),
+      )
+    } catch (exception: Exception) {
+      log.error("Unable to move CAS3 assessment ${assessmentEntity.id} to ready-to-place queue for $bookingId ")
+      Sentry.captureException(
+        RuntimeException(
+          "Unable to move CAS3 assessment ${assessmentEntity.id} for ready-to-place queue for $bookingId ",
+          exception,
+        ),
+      )
+    }
   }
 
   private fun updateBooking(bookingEntity: Cas3BookingEntity) = cas3BookingRepository.save(bookingEntity)

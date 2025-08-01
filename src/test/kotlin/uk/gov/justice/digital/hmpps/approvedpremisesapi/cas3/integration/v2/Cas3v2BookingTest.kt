@@ -6,10 +6,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenCas3PremisesAndBedspaceAndApplicationAndAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
@@ -18,11 +19,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3ApplicationAndAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremiseBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -542,7 +547,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails, startDate = arrivalDate.minusDays(1))
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = arrivalDate.minusDays(1))
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/bookings")
@@ -593,16 +599,12 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           },
         )
-        val (_, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
-          user,
-          offenderDetails,
-          premises = cas3Premises,
-          bedspace = cas3BedspaceEntityFactory.produceAndPersist {
-            withReference("test-bed")
-            withPremises(cas3Premises)
-            withEndDate(arrivalDate.minusDays(1))
-          },
-        )
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          withReference("test-bed")
+          withPremises(cas3Premises)
+          withEndDate(arrivalDate.minusDays(1))
+        }
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         webTestClient.post()
           .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -640,16 +642,12 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           },
         )
-        val (_, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
-          user,
-          offenderDetails,
-          premises = cas3Premises,
-          bedspace = cas3BedspaceEntityFactory.produceAndPersist {
-            withReference("test-bed")
-            withPremises(cas3Premises)
-            withEndDate(arrivalDate)
-          },
-        )
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          withReference("test-bed")
+          withPremises(cas3Premises)
+          withEndDate(arrivalDate)
+        }
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         webTestClient.post()
           .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -687,16 +685,12 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           },
         )
-        val (_, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
-          user,
-          offenderDetails,
-          premises = cas3Premises,
-          bedspace = cas3BedspaceEntityFactory.produceAndPersist {
-            withReference("test-bed")
-            withPremises(cas3Premises)
-            withEndDate(departureDate.minusDays(1))
-          },
-        )
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          withReference("test-bed")
+          withPremises(cas3Premises)
+          withEndDate(departureDate.minusDays(1))
+        }
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         webTestClient.post()
           .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -734,17 +728,13 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           },
         )
-        val (_, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
-          user,
-          offenderDetails,
-          premises = cas3Premises,
-          bedspace = cas3BedspaceEntityFactory.produceAndPersist {
-            withReference("test-bed")
-            withPremises(cas3Premises)
-            withStartDate(arrivalDate.minusDays(1))
-            withEndDate(departureDate)
-          },
-        )
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          withReference("test-bed")
+          withPremises(cas3Premises)
+          withStartDate(arrivalDate.minusDays(1))
+          withEndDate(departureDate)
+        }
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         webTestClient.post()
           .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -794,17 +784,13 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           },
         )
-        val (_, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
-          user,
-          offenderDetails,
-          premises = cas3Premises,
-          bedspace = cas3BedspaceEntityFactory.produceAndPersist {
-            withReference("test-bed")
-            withPremises(cas3Premises)
-            withStartDate(arrivalDate.minusDays(1))
-            withEndDate(departureDate.plusDays(1))
-          },
-        )
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          withReference("test-bed")
+          withPremises(cas3Premises)
+          withStartDate(arrivalDate.minusDays(1))
+          withEndDate(departureDate.plusDays(1))
+        }
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         webTestClient.post()
           .uri("/cas3/v2/premises/${cas3Premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -848,11 +834,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-07-15")
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
-          user,
-          offenderDetails,
-          startDate = arrivalDate.minusDays(1),
-        )
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = arrivalDate.minusDays(1))
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         val conflictingBooking = cas3BookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -913,7 +896,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails, startDate = arrivalDate.minusDays(1))
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = arrivalDate.minusDays(1))
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/bookings")
@@ -962,7 +946,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         },
       ) { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails, startDate = arrivalDate.minusDays(1))
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = arrivalDate.minusDays(1))
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/bookings")
@@ -1041,7 +1026,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-09-30")
         val departureDate = LocalDate.parse("2022-08-30")
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails, startDate = arrivalDate.minusDays(1))
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = arrivalDate.minusDays(1))
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/bookings")
@@ -1071,7 +1057,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
   fun `Create Booking returns 409 Conflict when another booking for the same bedspace overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails)
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         val existingBooking = cas3BookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1112,7 +1099,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
   fun `Create Booking returns 409 Conflict when another booking for the same bedspace has a turnaround that overlaps with the desired dates`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails)
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         val existingBooking = cas3BookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1164,7 +1152,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-07-15")
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails, startDate = arrivalDate.minusDays(1))
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = arrivalDate.minusDays(1))
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
 
         val existingBooking = cas3BookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1224,7 +1213,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
   fun `Create Booking returns 409 Conflict when a void bedspace for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails)
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBedspace(bedspace)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -1265,7 +1255,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-07-15")
-        val (premises, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(user, offenderDetails, startDate = arrivalDate.minusDays(1))
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = arrivalDate.minusDays(1))
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBedspace(bedspace)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -1319,12 +1310,12 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val premises = givenACas3Premises()
-        val (_, bedspace, assessment) = givenCas3PremisesAndBedspaceAndApplicationAndAssessment(
-          user,
-          offenderDetails,
-          startDate = arrivalDate.minusDays(1),
-          premises,
-        )
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+          withReference("test-bed")
+          withPremises(premises)
+          withStartDate(arrivalDate.minusDays(1))
+        }
+        val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/bookings")
           .header("Authorization", "Bearer $jwt")
@@ -1718,21 +1709,308 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         }
       }
     }
+  }
 
-    private fun assertPublishedSnsEvent(
-      booking: Cas3BookingEntity,
-      eventType: DomainEventType,
-      eventDescription: String,
-      detailUrl: String,
-    ) {
-      val emittedMessage = snsDomainEventListener.blockForMessage(eventType)
+  @Nested
+  inner class CreateCancellation {
 
-      assertThat(emittedMessage.description).isEqualTo(eventDescription)
-      assertThat(emittedMessage.detailUrl).matches("$detailUrl/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-      assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-        SnsEventPersonReference("CRN", booking.crn),
-        SnsEventPersonReference("NOMS", booking.nomsNumber!!),
-      )
+    @Test
+    fun `Create Cancellation on CAS3 Booking on a premises that is not in the user's region returns 403 Forbidden`() {
+      givenAUser { userEntity, jwt ->
+        val premises = givenACas3Premises()
+        val bedspace = givenCas3PremiseBedspace(premises)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+          withServiceScope("*")
+        }
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewCancellation(
+              date = LocalDate.parse("2022-08-17"),
+              reason = cancellationReason.id,
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
     }
+
+    @Test
+    fun `Create Cancellation on CAS3 Booking for a premises that does not exist returns 404 Not Found`() {
+      givenAUser { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+          withServiceScope("*")
+        }
+
+        val notFoundPremisesId = UUID.randomUUID()
+        webTestClient.post()
+          .uri("/cas3/v2/premises/$notFoundPremisesId/bookings/${booking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewCancellation(
+              date = LocalDate.parse("2022-08-17"),
+              reason = cancellationReason.id,
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $notFoundPremisesId could be found")
+      }
+    }
+
+    @Test
+    fun `Create Cancellation on CAS3 Booking when a cancellation already exists returns OK with correct body and send cancelled-updated event`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+          withServiceScope("*")
+        }
+        val cancellation = cas3CancellationEntityFactory.produceAndPersist {
+          withBooking(booking)
+          withReason(cancellationReason)
+        }
+        booking.cancellations = mutableListOf(cancellation)
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewCancellation(
+              date = LocalDate.parse("2022-08-18"),
+              reason = cancellationReason.id,
+              notes = "Corrected date",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+          .jsonPath(".date").isEqualTo("2022-08-18")
+          .jsonPath(".notes").isEqualTo("Corrected date")
+          .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
+
+        assertPublishedSnsEvent(
+          booking,
+          DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED,
+          "A cancelled booking for a Transitional Accommodation premises has been updated",
+          "http://api/events/cas3/booking-cancelled-updated",
+        )
+      }
+    }
+
+    @Test
+    fun `Create Cancellation on CAS3 Booking when no cancellation exists against the booking already returns OK with correct body and sends cancelled event`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+          withServiceScope("*")
+        }
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewCancellation(
+              date = LocalDate.parse("2022-08-18"),
+              reason = cancellationReason.id,
+              notes = "Corrected date",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+          .jsonPath(".date").isEqualTo("2022-08-18")
+          .jsonPath(".notes").isEqualTo("Corrected date")
+          .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
+
+        assertPublishedSnsEvent(
+          booking,
+          DomainEventType.CAS3_BOOKING_CANCELLED,
+          "A booking for a Transitional Accommodation premises has been cancelled",
+          "http://api/events/cas3/booking-cancelled",
+        )
+      }
+    }
+
+    @Test
+    fun `Create Cancellation on CAS3 Booking when a cancellation already exists returns OK with correct body and move assessment to ready-to-place state`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+          val (application, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+          }
+          val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+            withServiceScope("*")
+          }
+          val cancellation = cas3CancellationEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withReason(cancellationReason)
+          }
+          booking.cancellations = mutableListOf(cancellation)
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/cancellations")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewCancellation(
+                date = LocalDate.parse("2022-08-18"),
+                reason = cancellationReason.id,
+                notes = "Corrected date",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+            .jsonPath(".date").isEqualTo("2022-08-18")
+            .jsonPath(".notes").isEqualTo("Corrected date")
+            .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+            .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+            .jsonPath(".reason.isActive").isEqualTo(true)
+            .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
+
+          assertPublishedSnsEvent(
+            booking,
+            DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED,
+            "A cancelled booking for a Transitional Accommodation premises has been updated",
+            "http://api/events/cas3/booking-cancelled-updated",
+          )
+
+          assertCAS3AssessmentIsReadyToPlace(assessmentId = assessment.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Create Cancellation on CAS3 Booking returns OK and make move assessment to ready-to-place state when accept assessment fail with forbidden exception`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+          val (application, assessment) = givenCas3ApplicationAndAssessment(
+            user,
+            offenderDetails,
+            assessmentRelocatedAt = OffsetDateTime.now(),
+          )
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+          }
+          val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+            withServiceScope("*")
+          }
+          val cancellation = cas3CancellationEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withReason(cancellationReason)
+          }
+          booking.cancellations = mutableListOf(cancellation)
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewCancellation(
+                date = LocalDate.parse("2022-08-18"),
+                reason = cancellationReason.id,
+                notes = "Corrected date",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+            .jsonPath(".date").isEqualTo("2022-08-18")
+            .jsonPath(".notes").isEqualTo("Corrected date")
+            .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+            .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+            .jsonPath(".reason.isActive").isEqualTo(true)
+            .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
+
+          assertPublishedSnsEvent(
+            booking,
+            DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED,
+            "A cancelled booking for a Transitional Accommodation premises has been updated",
+            "http://api/events/cas3/booking-cancelled-updated",
+          )
+
+          assertCAS3AssessmentIsClosed(assessment)
+        }
+      }
+    }
+  }
+
+  private fun assertPublishedSnsEvent(
+    booking: Cas3BookingEntity,
+    eventType: DomainEventType,
+    eventDescription: String,
+    detailUrl: String,
+  ) {
+    val emittedMessage = snsDomainEventListener.blockForMessage(eventType)
+
+    assertThat(emittedMessage.description).isEqualTo(eventDescription)
+    assertThat(emittedMessage.detailUrl).matches("$detailUrl/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+    assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+      SnsEventPersonReference("CRN", booking.crn),
+      SnsEventPersonReference("NOMS", booking.nomsNumber!!),
+    )
+  }
+
+  private fun assertCAS3AssessmentIsReadyToPlace(assessmentId: UUID) {
+    val temporaryAccommodationAssessmentEntity = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId)
+    assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNull()
+    assertThat(temporaryAccommodationAssessmentEntity.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+    assertThat(temporaryAccommodationAssessmentEntity.submittedAt).isNotNull()
+  }
+
+  private fun assertCAS3AssessmentIsClosed(assessment: TemporaryAccommodationAssessmentEntity) {
+    val temporaryAccommodationAssessmentEntity =
+      temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)
+
+    assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNotNull()
   }
 }

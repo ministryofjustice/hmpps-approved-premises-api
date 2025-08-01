@@ -46,7 +46,7 @@ data class Cas3BookingEntity(
   var cancellations: MutableList<Cas3CancellationEntity>,
   @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
   var confirmation: Cas3v2ConfirmationEntity?,
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
