@@ -158,8 +158,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         LIMIT 1
       ) spaceBookings ON TRUE
       LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
-      WHERE
-      (:crn IS NULL OR (SELECT EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn))) IS TRUE)
     ),
     EXC_STATUS AS (
       SELECT *,
@@ -175,6 +173,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND (:apAreaId IS NULL OR apAreaId = :apAreaId)
       AND (:cruManagementAreaId IS NULL OR cruManagementAreaId = :cruManagementAreaId)
       AND (:crnOrName IS NULL OR (personCrn = UPPER(:crnOrName)) OR (personName LIKE UPPER('%' || :crnOrName || '%')))
+      AND (:crn IS NULL OR (personCrn = UPPER(:crnOrName)))
     )
     SELECT * FROM EXC_STATUS
     WHERE
