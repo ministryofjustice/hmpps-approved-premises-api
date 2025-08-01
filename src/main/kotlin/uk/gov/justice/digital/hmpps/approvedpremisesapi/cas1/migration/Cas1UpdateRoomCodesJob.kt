@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.migration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
@@ -6,15 +6,16 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.UpdateLicenceExpiryDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.UpdateLicenceExpiryDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import kotlin.collections.get
 
 class Cas1UpdateApplicationLicenceExpiryDateJobTest : IntegrationTestBase() {
   @Autowired

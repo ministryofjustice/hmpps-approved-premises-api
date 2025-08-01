@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration
 
 import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory

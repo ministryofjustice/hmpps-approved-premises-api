@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.migration
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test

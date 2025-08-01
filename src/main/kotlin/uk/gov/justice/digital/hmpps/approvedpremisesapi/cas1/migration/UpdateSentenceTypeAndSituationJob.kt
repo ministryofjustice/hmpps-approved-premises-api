@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.jpa.repository.JpaRepository
@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import java.util.UUID
 
 @Component
