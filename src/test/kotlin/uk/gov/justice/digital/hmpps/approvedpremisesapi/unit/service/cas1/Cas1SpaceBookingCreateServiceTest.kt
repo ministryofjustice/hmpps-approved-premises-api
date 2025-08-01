@@ -68,7 +68,7 @@ class Cas1SpaceBookingCreateServiceTest {
 
     @Test
     fun `Error if no premises with the given ID exists`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.findPremisesById(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       LockablePlacementRequestEntity(placementRequest.id)
 
@@ -99,7 +99,7 @@ class Cas1SpaceBookingCreateServiceTest {
         .withDefaults()
         .produce()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premisesDoesntSupportSpaceBookings
+      every { cas1PremisesService.findPremisesById(any()) } returns premisesDoesntSupportSpaceBookings
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       LockablePlacementRequestEntity(placementRequest.id)
 
@@ -125,7 +125,7 @@ class Cas1SpaceBookingCreateServiceTest {
 
     @Test
     fun `Error if no placement request with the given ID exists`() {
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1PremisesService.findPremisesById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
       LockablePlacementRequestEntity(placementRequest.id)
 
@@ -151,7 +151,7 @@ class Cas1SpaceBookingCreateServiceTest {
 
     @Test
     fun `Error if the departure date is before the arrival date`() {
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1PremisesService.findPremisesById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       LockablePlacementRequestEntity(placementRequest.id)
 
@@ -207,7 +207,7 @@ class Cas1SpaceBookingCreateServiceTest {
         changeRequestId = UUID.randomUUID(),
       )
 
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1PremisesService.findPremisesById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val result = service.validate(

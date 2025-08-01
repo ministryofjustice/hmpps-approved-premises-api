@@ -157,7 +157,7 @@ class Cas1PremisesController(
   fun getBeds(
     @PathVariable premisesId: UUID,
   ): ResponseEntity<List<Cas1PremisesBedSummary>> {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    val premises = cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     return ResponseEntity.ok(
@@ -171,7 +171,7 @@ class Cas1PremisesController(
     @PathVariable premisesId: UUID,
     @PathVariable bedId: UUID,
   ): ResponseEntity<Cas1BedDetail> {
-    cas1PremisesService.findPremiseById(premisesId)
+    cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     return ResponseEntity.ok(
@@ -210,7 +210,7 @@ class Cas1PremisesController(
   ): ResponseEntity<List<Cas1PremisesBasicSummary>> = ResponseEntity
     .ok()
     .body(
-      cas1PremisesService.getPremises(
+      cas1PremisesService.getPremisesBasicInfo(
         gender = when (gender) {
           Cas1ApprovedPremisesGender.man -> ApprovedPremisesGender.MAN
           Cas1ApprovedPremisesGender.woman -> ApprovedPremisesGender.WOMAN
@@ -233,7 +233,7 @@ class Cas1PremisesController(
   ): ResponseEntity<Cas1PremiseCapacity> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
-    cas1PremisesService.findPremiseById(premisesId)
+    cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId.toString(), "premises")
 
     val premiseCapacity = cas1PremisesService.getPremisesCapacities(
@@ -261,7 +261,7 @@ class Cas1PremisesController(
     @RequestParam excludeSpaceBookingId: UUID?,
   ): ResponseEntity<Cas1PremisesDaySummary> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    val premises = cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId.toString(), "premises")
 
     return ResponseEntity.ok().body(
@@ -295,7 +295,7 @@ class Cas1PremisesController(
   ): ResponseEntity<List<StaffMember>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    val premises = cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
@@ -342,7 +342,7 @@ class Cas1PremisesController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
-    cas1PremisesService.findPremiseById(premisesId)
+    cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     val user = userService.getUserForRequest()
@@ -376,7 +376,7 @@ class Cas1PremisesController(
   ): ResponseEntity<List<Cas1PremisesLocalRestrictionSummary>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)
 
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    val premises = cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     val restrictionsSummary = cas1PremisesService.getLocalRestrictions(premises.id)
@@ -417,7 +417,7 @@ class Cas1PremisesController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE)
 
-    val premises = cas1PremisesService.findPremiseById(premisesId)
+    val premises = cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     cas1PremisesService.deleteLocalRestriction(premises.id, restrictionId)

@@ -354,7 +354,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `approved premises not found return error`() {
-      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns null
+      every { cas1PremisesService.findPremisesById(PREMISES_ID) } returns null
 
       val result = service.search(
         PREMISES_ID,
@@ -382,7 +382,7 @@ class Cas1SpaceBookingServiceTest {
       inputSortField: Cas1SpaceBookingSummarySortField,
       sqlSortField: String,
     ) {
-      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults()
+      every { cas1PremisesService.findPremisesById(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults()
         .produce()
 
       val results = PageImpl(
@@ -427,7 +427,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns not found error if premises with the given ID doesn't exist`() {
-      every { cas1PremisesService.premiseExistsById(any()) } returns false
+      every { cas1PremisesService.premisesExistsById(any()) } returns false
 
       val result = service.getBookingForPremisesAndId(UUID.randomUUID(), UUID.randomUUID())
 
@@ -441,7 +441,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { cas1PremisesService.premiseExistsById(premises.id) } returns true
+      every { cas1PremisesService.premisesExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.getBookingForPremisesAndId(premises.id, UUID.randomUUID())
@@ -459,7 +459,7 @@ class Cas1SpaceBookingServiceTest {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .produce()
 
-      every { cas1PremisesService.premiseExistsById(premises.id) } returns true
+      every { cas1PremisesService.premisesExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(spaceBooking.id) } returns spaceBooking
 
       val result = service.getBookingForPremisesAndId(premises.id, spaceBooking.id)
@@ -797,7 +797,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return validation error when new departure date is before today`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.shortenBooking(
@@ -817,7 +817,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return validation error if new departure date is after expected departure date`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.shortenBooking(
@@ -837,7 +837,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return validation error if new departure date is equal to expected departure date`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.shortenBooking(
@@ -859,7 +859,7 @@ class Cas1SpaceBookingServiceTest {
     fun `should return validation error if common update validation fails`() {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every {
@@ -896,7 +896,7 @@ class Cas1SpaceBookingServiceTest {
     fun `should return a general validation error when action not allowed for shorten`() {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every {
@@ -1009,8 +1009,8 @@ class Cas1SpaceBookingServiceTest {
 
     @BeforeEach
     fun commonMocks() {
-      every { cas1PremisesService.findPremiseById(DESTINATION_PREMISES_ID) } returns destinationPremises
-      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns currentPremises
+      every { cas1PremisesService.findPremisesById(DESTINATION_PREMISES_ID) } returns destinationPremises
+      every { cas1PremisesService.findPremisesById(PREMISES_ID) } returns currentPremises
     }
 
     @Test
@@ -1290,7 +1290,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return validation error if arrivalDate is not in the future`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { cas1PremisesService.findPremisesById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1316,7 +1316,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return validation error if booking does not exist`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { cas1PremisesService.findPremisesById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1343,7 +1343,7 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `Should return validation error when given change request does not belongs to the booking`() {
       val anotherChangeRequest = Cas1ChangeRequestEntityFactory().produce()
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { cas1PremisesService.findPremisesById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1387,7 +1387,7 @@ class Cas1SpaceBookingServiceTest {
         .withResolved(true)
         .produce()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { cas1PremisesService.findPremisesById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1419,7 +1419,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return an error if raised by common create booking validation`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { cas1PremisesService.findPremisesById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )
@@ -1461,7 +1461,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return an error if raised by common update booking validation`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { cas1PremisesService.findPremisesById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
       )

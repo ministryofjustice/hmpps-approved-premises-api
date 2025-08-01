@@ -37,7 +37,7 @@ class Cas1OutOfServiceBedSummaryServiceTest {
 
     @Test
     fun `returns not found error if premises with the given Id does not exist`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.findPremisesById(any()) } returns null
 
       val result = service.getOutOfServiceBedSummaries(
         UUID.randomUUID(),
@@ -75,7 +75,7 @@ class Cas1OutOfServiceBedSummaryServiceTest {
       }
       .produce()
 
-    every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+    every { cas1PremisesService.findPremisesById(premises.id) } returns premises
     every { cas1OutOfServiceBedService.getOutOfServiceBedsForDate(any(), premises.id, apArea.id, date, any()) } returns
       Pair(listOf(outOfServiceBed1), PaginationMetadata(0, 0, 0, 0))
 

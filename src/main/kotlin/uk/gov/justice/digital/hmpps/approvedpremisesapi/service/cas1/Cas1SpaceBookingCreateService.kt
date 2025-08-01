@@ -53,7 +53,7 @@ class Cas1SpaceBookingCreateService(
   fun validate(
     details: CreateBookingDetails,
   ): CasResult<ValidatedCreateBooking> = validatedCasResult {
-    val premises = cas1PremisesService.findPremiseById(details.premisesId)
+    val premises = cas1PremisesService.findPremisesById(details.premisesId)
     if (premises == null) {
       "$.premisesId" hasValidationError "doesNotExist"
       return errors()
@@ -87,7 +87,7 @@ class Cas1SpaceBookingCreateService(
 
   private fun toSpaceBooking(details: CreateBookingDetails): Cas1SpaceBookingEntity {
     val placementRequest = placementRequestService.getPlacementRequestOrNull(details.placementRequestId)!!
-    val premises = cas1PremisesService.findPremiseById(details.premisesId)!!
+    val premises = cas1PremisesService.findPremisesById(details.premisesId)!!
     val createdBy = details.createdBy
 
     val application = placementRequest.application

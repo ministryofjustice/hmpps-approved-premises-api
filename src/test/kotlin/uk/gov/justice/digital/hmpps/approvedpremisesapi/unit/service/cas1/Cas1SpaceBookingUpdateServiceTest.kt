@@ -69,7 +69,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
     @Test
     fun `should return validation error if no premises exist with the given premisesId`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.findPremisesById(any()) } returns null
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -94,7 +94,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
     @Test
     fun `should return validation error if no space booking exist with the given bookingId`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.validate(
@@ -119,7 +119,7 @@ class Cas1SpaceBookingUpdateServiceTest {
         .withPremises(premises)
         .produce()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -144,7 +144,7 @@ class Cas1SpaceBookingUpdateServiceTest {
         .withPremises(premises)
         .produce()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -169,7 +169,7 @@ class Cas1SpaceBookingUpdateServiceTest {
         .withPremises(premises)
         .produce()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -189,7 +189,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
     @Test
     fun `should return validation error when premisesId does not match the existing booking`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -212,7 +212,7 @@ class Cas1SpaceBookingUpdateServiceTest {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 5)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 15)
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -237,7 +237,7 @@ class Cas1SpaceBookingUpdateServiceTest {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 5)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 15)
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -262,7 +262,7 @@ class Cas1SpaceBookingUpdateServiceTest {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 5)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 15)
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -288,7 +288,7 @@ class Cas1SpaceBookingUpdateServiceTest {
       existingSpaceBooking.actualArrivalDate = LocalDate.of(2025, 6, 20)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 25)
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(
@@ -333,7 +333,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
       existingSpaceBooking.actualArrivalDate = null
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.validate(updateBookingDetails)
@@ -377,7 +377,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
@@ -439,7 +439,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
@@ -496,7 +496,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
@@ -550,7 +550,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs
@@ -600,7 +600,7 @@ class Cas1SpaceBookingUpdateServiceTest {
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
-      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any()) } just Runs

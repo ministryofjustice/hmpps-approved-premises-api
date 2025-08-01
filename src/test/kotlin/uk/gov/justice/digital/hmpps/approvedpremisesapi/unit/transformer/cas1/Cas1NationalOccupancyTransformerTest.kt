@@ -53,7 +53,7 @@ class Cas1NationalOccupancyTransformerTest {
       val result = transformer.toCapacitySummary(
         requestedRoomCharacteristics = emptySet(),
         premisesSummaries = listOf(candidatePremises),
-        capacities = Cas1PremisesService.PremisesCapacities(
+        capacities = Cas1PremisesService.Cas1PremisesCapacities(
           startDate = startDate,
           endDate = endDate,
           results = listOf(
@@ -118,7 +118,7 @@ class Cas1NationalOccupancyTransformerTest {
         Cas1SpaceCharacteristic.isSingle,
       ),
       premisesSummaries = listOf(candidatePremises),
-      capacities = Cas1PremisesService.PremisesCapacities(
+      capacities = Cas1PremisesService.Cas1PremisesCapacities(
         startDate = startDate,
         endDate = endDate,
         results = listOf(
