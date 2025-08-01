@@ -1103,7 +1103,7 @@ class Cas3PremisesServiceTest {
 
       every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
 
-      val result = premisesService.archiveBedspace(bedspace.id, LocalDate.now().minusDays(2))
+      val result = premisesService.archiveBedspace(bedspace.id, LocalDate.now().minusDays(8))
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.endDate", "invalidEndDateInThePast")
     }
