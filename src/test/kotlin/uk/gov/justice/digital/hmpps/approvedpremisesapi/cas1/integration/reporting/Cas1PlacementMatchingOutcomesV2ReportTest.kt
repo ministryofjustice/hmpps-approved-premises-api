@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.reporting
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting
 
 import com.opencsv.CSVReaderBuilder
 import org.assertj.core.api.Assertions.assertThat
@@ -35,14 +35,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_MONTH
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_YEAR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_MONTH
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_YEAR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea

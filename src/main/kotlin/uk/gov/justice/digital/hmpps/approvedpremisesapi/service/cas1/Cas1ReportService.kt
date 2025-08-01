@@ -1,15 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DailyMetricsReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OutOfServiceBedsReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OverduePlacementsReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvJdbcResultSetConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.ExcelJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1ApplicationV2ReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1DailyMetricsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1OutOfServiceBedsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1OverduePlacementsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1PlacementMatchingOutcomesV2ReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1PlacementReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1RequestForPlacementReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvJdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.ExcelJdbcResultSetConsumer
 import java.io.OutputStream
 import java.time.Clock
 import java.time.LocalDate

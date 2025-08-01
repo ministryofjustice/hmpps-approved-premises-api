@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.JdbcResultSetConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.ReportJdbcTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.JdbcResultSetConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.ReportJdbcTemplate
 import java.time.LocalDate
 
 val GAP_RANGES_QUERY = """

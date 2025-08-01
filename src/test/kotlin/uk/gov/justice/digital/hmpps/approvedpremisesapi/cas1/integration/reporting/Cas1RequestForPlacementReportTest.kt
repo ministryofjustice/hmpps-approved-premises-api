@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.reporting
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting
 
 import com.opencsv.CSVReaderBuilder
 import org.assertj.core.api.Assertions.assertThat

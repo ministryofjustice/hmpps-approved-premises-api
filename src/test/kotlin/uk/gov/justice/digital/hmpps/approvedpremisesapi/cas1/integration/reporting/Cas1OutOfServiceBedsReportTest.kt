@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.reporting
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting
 
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame

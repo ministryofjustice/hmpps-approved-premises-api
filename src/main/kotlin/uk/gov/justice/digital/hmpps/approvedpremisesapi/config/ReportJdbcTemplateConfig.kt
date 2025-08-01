@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.ReportJdbcTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.ReportJdbcTemplate
 import javax.sql.DataSource
 
 @Configuration

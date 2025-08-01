@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generato
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.FutureBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.FutureBookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.FutureBookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.getPersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.toYesNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 

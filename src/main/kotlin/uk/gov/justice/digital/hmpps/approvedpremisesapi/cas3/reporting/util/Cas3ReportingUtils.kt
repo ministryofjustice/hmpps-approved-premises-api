@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails

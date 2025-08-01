@@ -1,8 +1,6 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting
 
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.JdbcResultSetConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.ReportJdbcTemplate
 import java.time.LocalDateTime
 
 @Repository
