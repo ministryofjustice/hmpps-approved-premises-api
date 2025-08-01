@@ -160,9 +160,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
       WHERE
       (:crn IS NULL OR (SELECT EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn))) IS TRUE)
-      AND (:crnOrName IS NULL OR (
-       (SELECT EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName))) IS TRUE OR 
-       (SELECT EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%'))) IS TRUE))
     ),
     EXC_STATUS AS (
       SELECT *,
@@ -177,6 +174,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND (:requestType IS NULL OR requestType = :requestType)
       AND (:apAreaId IS NULL OR apAreaId = :apAreaId)
       AND (:cruManagementAreaId IS NULL OR cruManagementAreaId = :cruManagementAreaId)
+      AND (:crnOrName IS NULL OR (personCrn = UPPER(:crnOrName)) OR (personName LIKE UPPER('%' || :crnOrName || '%')))
     )
     SELECT * FROM EXC_STATUS
     WHERE
