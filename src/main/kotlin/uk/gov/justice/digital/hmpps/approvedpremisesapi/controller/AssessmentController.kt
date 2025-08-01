@@ -31,20 +31,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortByName
 import java.util.UUID
 
 @Suppress("LongParameterList", "ThrowsCount")
@@ -70,49 +67,25 @@ class AssessmentController(
     method = [RequestMethod.GET],
     value = ["/assessments"],
     produces = ["application/json"],
+    headers = ["X-Service-Name=approved-premises"],
   )
   fun assessmentsGet(
-    @RequestHeader(name = "X-Service-Name") xServiceName: ServiceName,
     @RequestParam(defaultValue = "asc") sortDirection: SortDirection,
     @RequestParam(defaultValue = "arrivalDate") sortBy: AssessmentSortField,
     @RequestParam statuses: List<AssessmentStatus>?,
-    @RequestParam crnOrName: String?,
     @RequestParam page: Int?,
     @RequestParam perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
     val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
 
-    val (summaries, metadata) = when (xServiceName) {
-      ServiceName.cas2v2 -> throw UnsupportedOperationException("CAS2v2 not supported")
-      ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
-      ServiceName.temporaryAccommodation -> {
-        val (summaries, metadata) = assessmentService.getAssessmentSummariesForUserCAS3(
-          user,
-          crnOrName,
-          xServiceName,
-          domainSummaryStatuses,
-          PageCriteria(sortBy, sortDirection, page, perPage),
-        )
-        val transformSummaries = when (sortBy) {
-          AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
-          AssessmentSortField.personName -> transformDomainToApi(summaries, user.cas3LaoStrategy()).sortByName(
-            sortDirection,
-          )
-          else -> transformDomainToApi(summaries, user.cas3LaoStrategy())
-        }
-        Pair(transformSummaries, metadata)
-      }
+    val (domainSummaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(
+      user,
+      domainSummaryStatuses,
+      PageCriteria(sortBy, sortDirection, page, perPage),
+    )
 
-      else -> {
-        val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(
-          user,
-          domainSummaryStatuses,
-          PageCriteria(sortBy, sortDirection, page, perPage),
-        )
-        Pair(transformDomainToApi(summaries, user.cas1LaoStrategy()), metadata)
-      }
-    }
+    val summaries = transformDomainToApi(domainSummaries, user.cas1LaoStrategy())
 
     return ResponseEntity.ok()
       .headers(metadata?.toHeaders())
