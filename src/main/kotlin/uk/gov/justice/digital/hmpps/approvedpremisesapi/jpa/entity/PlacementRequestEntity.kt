@@ -140,7 +140,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       pq.created_at as created_at,
       apa.cas1_cru_management_area_id as cruManagementAreaId,
       CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,      
-      (SELECT EXISTS (SELECT 1 FROM cas1_space_bookings sb WHERE sb.placement_request_id = pq.id AND sb.cancellation_occurred_at IS NULL)) AS hasSpaceBooking,   
+      spaceBookings.id IS NOT NULL AS hasSpaceBooking,   
       (SELECT EXISTS (SELECT 1 FROM booking_not_mades bnm WHERE bnm.placement_request_id = pq.id)) AS hasBookingNotMade,
       application.submitted_at::date AS applicationSubmittedDate,
       spaceBookingPremises.name AS spaceBookingPremisesName,
