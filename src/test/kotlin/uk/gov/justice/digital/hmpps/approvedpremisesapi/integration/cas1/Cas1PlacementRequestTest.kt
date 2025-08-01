@@ -11,7 +11,6 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
@@ -32,14 +31,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -77,20 +74,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
   @Nested
   @SuppressWarnings("LargeClass")
   inner class Search {
-
-    private fun createBooking(
-      placementRequest: PlacementRequestEntity,
-      premises: ApprovedPremisesEntity? = givenAnApprovedPremises(),
-      arrivalDate: LocalDate? = LocalDate.now(),
-    ): BookingEntity {
-      placementRequest.booking = bookingEntityFactory.produceAndPersist {
-        withPremises(premises as PremisesEntity)
-        withArrivalDate(arrivalDate!!)
-      }
-      realPlacementRequestRepository.save(placementRequest)
-
-      return placementRequest.booking!!
-    }
 
     private fun createSpaceBooking(placementRequest: PlacementRequestEntity, premises: ApprovedPremisesEntity? = null, canonicalArrivalDate: LocalDate? = LocalDate.now()): Cas1SpaceBookingEntity = givenACas1SpaceBooking(
       premises = premises,
@@ -182,14 +165,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             crn = unmatchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
 
-            // create a cancelled booking
-            val booking = createBooking(placementRequest)
-
-            cancellationEntityFactory.produceAndPersist {
-              withBooking(booking)
-              withReason(cancellationReasonEntityFactory.produceAndPersist())
-            }
-
             // create a cancelled space booking
             createBookingNotMadeRecord(placementRequest)
             val spaceBooking = createSpaceBooking(placementRequest)
@@ -239,14 +214,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             createdByUser = user,
             crn = unmatchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
-
-            // create a cancelled booking
-            val booking = createBooking(placementRequest)
-
-            cancellationEntityFactory.produceAndPersist {
-              withBooking(booking)
-              withReason(cancellationReasonEntityFactory.produceAndPersist())
-            }
 
             // create a cancelled space booking
             createBookingNotMadeRecord(placementRequest)
@@ -1341,22 +1308,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
               val premises = givenAnApprovedPremises()
-
-              val room = roomEntityFactory.produceAndPersist {
-                withPremises(premises)
-              }
-
-              val bed = bedEntityFactory.produceAndPersist {
-                withRoom(room)
-              }
-
-              val booking = bookingEntityFactory.produceAndPersist {
-                withPremises(premises)
-                withCrn(offenderDetails.otherIds.crn)
-                withBed(bed)
-                withServiceName(ServiceName.approvedPremises)
-                withApplication(placementRequest.application)
-              }
 
               webTestClient.get()
                 .uri("/cas1/placement-requests/${placementRequest.id}")
