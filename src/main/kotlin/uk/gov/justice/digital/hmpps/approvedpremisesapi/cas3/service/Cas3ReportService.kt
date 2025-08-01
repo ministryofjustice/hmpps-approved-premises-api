@@ -27,14 +27,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.propertie
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsageRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.repository.CsvObjectListConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService

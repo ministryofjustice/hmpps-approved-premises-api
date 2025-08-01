@@ -11,6 +11,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Futu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsageRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ReportService
@@ -18,10 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUsageRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService

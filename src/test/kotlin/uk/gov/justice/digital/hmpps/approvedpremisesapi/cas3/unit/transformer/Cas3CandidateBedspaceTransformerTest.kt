@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CandidateBedspaceFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BedspaceSearchResultsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
 import java.util.UUID
 
 class Cas3CandidateBedspaceTransformerTest {
