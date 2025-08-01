@@ -920,6 +920,8 @@ class Cas3PremisesService(
       return@validatedCasResult errors()
     }
 
+    val originalStartDate = premises.startDate
+
     premises.startDate = restartDate
     premises.endDate = null
     premises.status = PropertyStatus.active
@@ -931,6 +933,8 @@ class Cas3PremisesService(
         return result.reviseType()
       }
     }
+
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, originalStartDate, restartDate)
 
     success(updatedPremises)
   }

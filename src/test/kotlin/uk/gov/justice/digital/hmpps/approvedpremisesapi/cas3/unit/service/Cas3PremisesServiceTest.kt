@@ -2040,6 +2040,7 @@ class Cas3PremisesServiceTest {
       every { premisesRepositoryMock.save(any()) } returns updatedPremises
       every { bedRepositoryMock.save(any()) } returns updatedBedspace
       every { mockCas3DomainEventService.saveBedspaceUnarchiveEvent(any(), any(), any()) } returns Unit
+      every { mockCas3DomainEventService.savePremisesUnarchiveEvent(any(), any(), any()) } returns Unit
 
       val result = premisesService.unarchivePremises(archivedPremises, restartDate)
 
@@ -2069,6 +2070,24 @@ class Cas3PremisesServiceTest {
           match<BedEntity> {
             it.id == archivedBedspace.id
           },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePremisesUnarchiveEvent(
+          match<TemporaryAccommodationPremisesEntity> {
+            it.id == archivedPremises.id
+          },
+          any(),
+          any(),
+        )
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBedspaceUnarchiveEvent(
+          any(),
+          any(),
+          any(),
         )
       }
     }
@@ -2161,10 +2180,25 @@ class Cas3PremisesServiceTest {
 
       every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
       every { premisesRepositoryMock.save(any()) } returns updatedPremises
+      every { mockCas3DomainEventService.savePremisesUnarchiveEvent(any(), any(), any()) } returns Unit
 
       val result = premisesService.unarchivePremises(archivedPremises, restartDate)
 
       assertThatCasResult(result).isSuccess()
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePremisesUnarchiveEvent(
+          match<TemporaryAccommodationPremisesEntity> {
+            it.id == archivedPremises.id
+          },
+          any(),
+          any(),
+        )
+      }
+
+      verify(exactly = 1) {
+        premisesRepositoryMock.save(any())
+      }
     }
 
     @Test
@@ -2185,10 +2219,25 @@ class Cas3PremisesServiceTest {
 
       every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
       every { premisesRepositoryMock.save(any()) } returns updatedPremises
+      every { mockCas3DomainEventService.savePremisesUnarchiveEvent(any(), any(), any()) } returns Unit
 
       val result = premisesService.unarchivePremises(archivedPremises, restartDate)
 
       assertThatCasResult(result).isSuccess()
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePremisesUnarchiveEvent(
+          match<TemporaryAccommodationPremisesEntity> {
+            it.id == archivedPremises.id
+          },
+          any(),
+          any(),
+        )
+      }
+
+      verify(exactly = 1) {
+        premisesRepositoryMock.save(any())
+      }
     }
   }
 
@@ -2243,6 +2292,16 @@ class Cas3PremisesServiceTest {
           match<BedEntity> {
             it.startDate == restartDate && it.endDate == null
           },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBedspaceUnarchiveEvent(
+          match<BedEntity> {
+            it.id == updatedBedspace.id
+          },
+          currentStartDate,
+          currentEndDate,
         )
       }
     }
