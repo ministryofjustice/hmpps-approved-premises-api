@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
@@ -257,7 +256,7 @@ class Cas1ApplicationCreationServiceTest {
     fun `returns NotFound when application doesn't exist`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(
+      assertThatCasResult(
         applicationService.updateApplication(
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
@@ -271,8 +270,8 @@ class Cas1ApplicationCreationServiceTest {
             noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
           userForRequest = user,
-        ) is CasResult.NotFound,
-      ).isTrue
+        ),
+      ).isNotFound(expectedEntityType = "Application", expectedId = applicationId)
     }
 
     @Test
@@ -287,7 +286,7 @@ class Cas1ApplicationCreationServiceTest {
             .produce()
         }.produce()
 
-      assertThat(
+      assertThatCasResult(
         applicationService.updateApplication(
           applicationId = applicationId,
           Cas1ApplicationUpdateFields(
@@ -301,8 +300,8 @@ class Cas1ApplicationCreationServiceTest {
             noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
           userForRequest = otherUser,
-        ) is CasResult.Unauthorised,
-      ).isTrue
+        ),
+      ).isUnauthorised()
     }
 
     @Test
@@ -326,10 +325,7 @@ class Cas1ApplicationCreationServiceTest {
         userForRequest = user,
       )
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      result as CasResult.GeneralValidationError
-
-      assertThat(result.message).isEqualTo("This application has already been submitted")
+      assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
     }
 
     @EnumSource(
@@ -395,24 +391,22 @@ class Cas1ApplicationCreationServiceTest {
         userForRequest = user,
       )
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-      val approvedPremisesApplication = result.value
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.data).isEqualTo(updatedData)
+        assertThat(it.isWomensApplication).isEqualTo(false)
+        assertThat(it.isPipeApplication).isEqualTo(apType == ApType.pipe)
+        assertThat(it.isEsapApplication).isEqualTo(apType == ApType.esap)
+        assertThat(it.apType).isEqualTo(apType.asApprovedPremisesType())
+        assertThat(it.releaseType).isEqualTo("rotl")
+        assertThat(it.isInapplicable).isEqualTo(false)
+        assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+        assertThat(it.applicantUserDetails).isNull()
+        assertThat(it.caseManagerIsNotApplicant).isNull()
+        assertThat(it.caseManagerUserDetails).isNull()
+        assertThat(it.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
 
-      assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
-      assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
-      assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(apType == ApType.pipe)
-      assertThat(approvedPremisesApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
-      assertThat(approvedPremisesApplication.apType).isEqualTo(apType.asApprovedPremisesType())
-      assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
-      assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
-      assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
-      assertThat(approvedPremisesApplication.applicantUserDetails).isNull()
-      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
-      assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
-      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
-
-      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
+        verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(it) }
+      }
     }
 
     @ParameterizedTest
@@ -453,14 +447,11 @@ class Cas1ApplicationCreationServiceTest {
         userForRequest = user,
       )
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.noticeType).isEqualTo(noticeType)
 
-      val approvedPremisesApplication = result.value
-
-      assertThat(approvedPremisesApplication.noticeType).isEqualTo(noticeType)
-
-      verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(approvedPremisesApplication) }
+        verify { mockCas1ApplicationStatusService.unsubmittedApplicationUpdated(it) }
+      }
     }
 
     private fun setupMocksForSuccess() {
@@ -504,14 +495,14 @@ class Cas1ApplicationCreationServiceTest {
     fun `Returns NotFound when application doesn't exist`() {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(
+      assertThatCasResult(
         applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
           apAreaId = UUID.randomUUID(),
-        ) is CasResult.NotFound,
-      ).isTrue
+        ),
+      ).isNotFound(expectedEntityType = "ApprovedPremisesApplicationEntity", expectedId = applicationId)
     }
 
     @Test
@@ -523,14 +514,14 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
 
-      assertThat(
+      assertThatCasResult(
         applicationService.submitApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
           user,
           apAreaId = UUID.randomUUID(),
-        ) is CasResult.Unauthorised,
-      ).isTrue
+        ),
+      ).isUnauthorised()
     }
 
     @Test
@@ -550,10 +541,7 @@ class Cas1ApplicationCreationServiceTest {
         apAreaId = UUID.randomUUID(),
       )
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+      assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
     }
 
     @EnumSource(
@@ -613,10 +601,7 @@ class Cas1ApplicationCreationServiceTest {
         apAreaId = UUID.randomUUID(),
       )
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
+      assertThatCasResult(result).isGeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
 
     @ParameterizedTest
@@ -672,26 +657,25 @@ class Cas1ApplicationCreationServiceTest {
           apAreaId = apArea.id,
         )
 
-      assertThat(result is CasResult.Success).isTrue
-      val validatableActionResult = result as CasResult.Success
-      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
-      assertThat(persistedApplication.isPipeApplication).isTrue
-      assertThat(persistedApplication.isWomensApplication).isFalse
-      assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
-      if (situation == null) {
-        assertThat(persistedApplication.situation).isNull()
-      } else {
-        assertThat(persistedApplication.situation).isEqualTo(situation.toString())
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.isPipeApplication).isTrue
+        assertThat(it.isWomensApplication).isFalse
+        assertThat(it.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
+        if (situation == null) {
+          assertThat(it.situation).isNull()
+        } else {
+          assertThat(it.situation).isEqualTo(situation.toString())
+        }
+        assertThat(it.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
+        assertThat(it.inmateInOutStatusOnSubmission).isEqualTo("OUT")
+        assertThat(it.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+        assertThat(it.caseManagerIsNotApplicant).isEqualTo(true)
+        assertThat(it.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+        assertThat(it.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+        assertThat(it.apArea).isEqualTo(apArea)
+        assertThat(it.cruManagementArea).isEqualTo(apArea.defaultCruManagementArea)
+        assertThat(it.licenceExpiryDate).isNull()
       }
-      assertThat(persistedApplication.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
-      assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
-      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
-      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
-      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
-      assertThat(persistedApplication.apArea).isEqualTo(apArea)
-      assertThat(persistedApplication.cruManagementArea).isEqualTo(apArea.defaultCruManagementArea)
-      assertThat(persistedApplication.licenceExpiryDate).isNull()
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockCas1AssessmentService.createAssessment(application) }
@@ -762,18 +746,17 @@ class Cas1ApplicationCreationServiceTest {
           apAreaId = apArea.id,
         )
 
-      assertThat(result is CasResult.Success).isTrue
-      val validatableActionResult = result as CasResult.Success
-      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
-      assertThat(persistedApplication.isPipeApplication).isTrue
-      assertThat(persistedApplication.isWomensApplication).isFalse
-      assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
-      assertThat(persistedApplication.noticeType).isEqualTo(noticeType)
-      assertThat(persistedApplication.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
-      assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
-      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
-      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
-      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.isPipeApplication).isTrue
+        assertThat(it.isWomensApplication).isFalse
+        assertThat(it.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
+        assertThat(it.noticeType).isEqualTo(noticeType)
+        assertThat(it.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
+        assertThat(it.inmateInOutStatusOnSubmission).isEqualTo("OUT")
+        assertThat(it.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+        assertThat(it.caseManagerIsNotApplicant).isEqualTo(true)
+        assertThat(it.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+      }
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockCas1AssessmentService.createAssessment(application) }
@@ -840,20 +823,19 @@ class Cas1ApplicationCreationServiceTest {
           apAreaId = apArea.id,
         )
 
-      assertThat(result is CasResult.Success).isTrue
-      val validatableActionResult = result as CasResult.Success
-      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
-      assertThat(persistedApplication.isPipeApplication).isEqualTo(apType == ApType.pipe)
-      assertThat(persistedApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
-      assertThat(persistedApplication.apType).isEqualTo(apType.asApprovedPremisesType())
-      assertThat(persistedApplication.isWomensApplication).isFalse
-      assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
-      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
-      assertThat(persistedApplication.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
-      assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
-      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
-      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
-      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.isPipeApplication).isEqualTo(apType == ApType.pipe)
+        assertThat(it.isEsapApplication).isEqualTo(apType == ApType.esap)
+        assertThat(it.apType).isEqualTo(apType.asApprovedPremisesType())
+        assertThat(it.isWomensApplication).isFalse
+        assertThat(it.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
+        assertThat(it.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+        assertThat(it.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
+        assertThat(it.inmateInOutStatusOnSubmission).isEqualTo("OUT")
+        assertThat(it.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+        assertThat(it.caseManagerIsNotApplicant).isEqualTo(true)
+        assertThat(it.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+      }
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockCas1AssessmentService.createAssessment(application) }
@@ -942,12 +924,11 @@ class Cas1ApplicationCreationServiceTest {
           apAreaId = apArea.id,
         )
 
-      val validatableActionResult = result as CasResult.Success
-      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
-
-      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theUpdatedApplicantUserDetailsEntity)
-      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
-      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theUpdatedCaseManagerUserDetailsEntity)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.applicantUserDetails).isEqualTo(theUpdatedApplicantUserDetailsEntity)
+        assertThat(it.caseManagerIsNotApplicant).isEqualTo(true)
+        assertThat(it.caseManagerUserDetails).isEqualTo(theUpdatedCaseManagerUserDetailsEntity)
+      }
     }
 
     @Test
@@ -993,7 +974,7 @@ class Cas1ApplicationCreationServiceTest {
         apAreaId = apArea.id,
       )
 
-      assertThat(result is CasResult.Success).isTrue
+      assertThatCasResult(result).isSuccess()
 
       verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
     }

@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
@@ -191,7 +190,7 @@ class Cas1ApplicationCreationService(
     submitApplication: SubmitApprovedPremisesApplication,
     user: UserEntity,
     apAreaId: UUID,
-  ): CasResult<ApplicationEntity> {
+  ): CasResult<ApprovedPremisesApplicationEntity> {
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = applicationRepository.findByIdOrNull(
