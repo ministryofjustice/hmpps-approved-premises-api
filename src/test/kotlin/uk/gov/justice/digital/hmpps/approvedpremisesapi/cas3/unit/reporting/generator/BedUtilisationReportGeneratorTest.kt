@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedUtilisationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.reporting.util.convertToCas3BedUtilisationBedspaceReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.reporting.util.convertToCas3BedUtilisationBookingReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.reporting.util.convertToCas3BedUtilisationBookingTurnaroundReportData
@@ -30,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 import java.time.OffsetDateTime

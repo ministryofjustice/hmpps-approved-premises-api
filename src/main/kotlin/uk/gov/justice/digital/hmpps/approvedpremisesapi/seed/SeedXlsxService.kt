@@ -4,9 +4,9 @@ import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1SeedPremisesFromSiteSurveyXlsxJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1SeedRoomsFromSiteSurveyXlsxJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromSiteSurveyXlsxJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedRoomsFromSiteSurveyXlsxJob
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths

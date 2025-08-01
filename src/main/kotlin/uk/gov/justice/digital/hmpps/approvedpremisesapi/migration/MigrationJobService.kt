@@ -6,6 +6,17 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1ArsonSuitableToArsonOffencesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillOfflineApplicationName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillUserApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1CapacityPerformanceTestJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1IsArsonSuitableBackfillJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1TaskDueMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateApplicationLicenceExpiryDateJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateApprovedPremisesApplicationWithOffenderJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateAssessmentReportPropertiesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateRoomCodesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2StatusUpdateMigrationJob
@@ -17,16 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3Updat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdatePremisesStartDateJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3VoidBedspaceJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ArsonSuitableToArsonOffencesJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillOfflineApplicationName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1CapacityPerformanceTestJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1IsArsonSuitableBackfillJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApplicationLicenceExpiryDateJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApprovedPremisesApplicationWithOffenderJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateAssessmentReportPropertiesJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateRoomCodesJob
 import kotlin.reflect.KClass
 
 @Service
