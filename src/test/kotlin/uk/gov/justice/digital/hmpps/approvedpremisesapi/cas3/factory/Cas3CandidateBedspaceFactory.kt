@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspaceOverlap
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CandidateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CandidateBedspaceOverlap
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase

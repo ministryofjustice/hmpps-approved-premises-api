@@ -7,6 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedSearchRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CandidateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CandidateBedspaceOverlap
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BedspaceSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -19,10 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspaceOverlap
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService

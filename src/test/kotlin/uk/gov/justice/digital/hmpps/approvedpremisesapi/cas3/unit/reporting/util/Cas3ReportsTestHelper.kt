@@ -1,14 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.reporting.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationBedspaceReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationBookingCancellationReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationBookingReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationBookingTurnaroundReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationVoidBedspaceReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBedspaceReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingCancellationReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingTurnaroundReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationVoidBedspaceReportData
 import java.time.Instant
 import java.time.LocalDate
 

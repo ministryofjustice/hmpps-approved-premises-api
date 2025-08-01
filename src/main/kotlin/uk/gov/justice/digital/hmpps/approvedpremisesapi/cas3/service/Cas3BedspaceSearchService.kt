@@ -3,6 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedSearchRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CandidateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CandidateBedspaceOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_MEN_ONLY
@@ -12,9 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspaceOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService

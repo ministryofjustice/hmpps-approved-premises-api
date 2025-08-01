@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchResults
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CandidateBedspace
 
 @Component
 class Cas3BedspaceSearchResultsTransformer {
