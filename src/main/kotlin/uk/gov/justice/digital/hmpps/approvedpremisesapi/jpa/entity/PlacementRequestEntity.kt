@@ -124,7 +124,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   @Query(
     """
-    WITH UNFILTERED AS (
       SELECT
       pq.duration AS requestedPlacementDuration,
       pq.expected_arrival AS requestedPlacementArrivalDate,
@@ -133,22 +132,16 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS personTier,
       pq.application_id AS applicationId,
       apa.name as personName,
-      pq.is_withdrawn as isWithdrawn,
-      pq.booking_id as bookingId,
       pq.is_parole as isParole,
-      area.id as apAreaId,
       pq.created_at as created_at,
-      apa.cas1_cru_management_area_id as cruManagementAreaId,
-      CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,      
-      spaceBookings.id IS NOT NULL AS hasSpaceBooking,   
-      bnm.id IS NOT NULL AS hasBookingNotMade,
+      CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,
       application.submitted_at::date AS applicationSubmittedDate,
-      spaceBookingPremises.name AS spaceBookingPremisesName,
-      spaceBookings.canonical_arrival_date AS spaceBookingArrivalDate
+      spaceBookingPremises.name AS bookingPremisesName,
+      spaceBooking.canonical_arrival_date AS bookingArrivalDate,
+      CASE WHEN spaceBooking.id IS NOT NULL THEN 'matched' WHEN bnm.id IS NOT NULL THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
       FROM
       placement_requests pq
       LEFT JOIN approved_premises_applications apa ON apa.id = pq.application_id
-      LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
       LEFT JOIN applications application ON application.id = pq.application_id
       LEFT OUTER JOIN LATERAL (
         SELECT id, premises_id, canonical_arrival_date
@@ -156,28 +149,28 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
         WHERE b.placement_request_id = pq.id AND b.cancellation_occurred_at IS NULL
         ORDER BY b.canonical_arrival_date ASC
         LIMIT 1
-      ) spaceBookings ON TRUE
-      LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
+      ) spaceBooking ON TRUE
+      LEFT JOIN premises spaceBookingPremises ON spaceBooking.premises_id = spaceBookingPremises.id
       LEFT JOIN booking_not_mades bnm ON bnm.placement_request_id = pq.id
-    ),
-    EXC_STATUS AS (
-      SELECT *,
-      spaceBookingPremisesName AS bookingPremisesName,
-      spaceBookingArrivalDate AS bookingArrivalDate,
-      CASE WHEN hasSpaceBooking THEN 'matched' WHEN hasBookingNotMade THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
-      FROM UNFILTERED
       WHERE
-      (:tier IS NULL OR personTier = :tier)
-      AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR requestedPlacementArrivalDate >= :arrivalDateFrom) 
-      AND (CAST(:arrivalDateTo AS DATE) IS NULL OR requestedPlacementArrivalDate <= :arrivalDateTo)
-      AND (:requestType IS NULL OR requestType = :requestType)
-      AND (:cruManagementAreaId IS NULL OR cruManagementAreaId = :cruManagementAreaId)
-      AND (:crnOrName IS NULL OR (personCrn = UPPER(:crnOrName)) OR (personName LIKE UPPER('%' || :crnOrName || '%')))
-    )
-    SELECT * FROM EXC_STATUS
-    WHERE
-    (:status IS NULL OR isWithdrawn IS FALSE)
-    AND (:status IS NULL OR placementRequestStatus = :status)    
+      (:tier IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier)      
+      AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
+      AND (CAST(:arrivalDateTo AS DATE) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
+      AND (
+        :requestType IS NULL OR 
+        (
+            (:requestType = 'parole' AND pq.is_parole IS TRUE)
+            OR
+            (:requestType = 'standardRelease' AND pq.is_parole IS FALSE)
+        )
+      )
+      AND (:cruManagementAreaId IS NULL OR apa.cas1_cru_management_area_id = :cruManagementAreaId)
+      AND (:crnOrName IS NULL OR (application.crn = UPPER(:crnOrName)) OR (apa.name LIKE UPPER('%' || :crnOrName || '%')))
+      AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
+      AND (:status IS NULL OR 
+        CASE WHEN spaceBooking.id IS NOT NULL THEN 'matched'
+            WHEN bnm.id IS NOT NULL THEN 'unableToMatch'
+            ELSE 'notMatched' END = :status)    
     """,
     nativeQuery = true,
   )
