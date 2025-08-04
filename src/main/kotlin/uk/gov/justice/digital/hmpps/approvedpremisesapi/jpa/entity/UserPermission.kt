@@ -101,7 +101,7 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
   CAS1_PLACEMENT_APPEAL_CREATE(ApprovedPremisesUserPermission.placementAppealCreate, experimental = true),
   CAS1_PLACEMENT_APPEAL_ASSESS(ApprovedPremisesUserPermission.placementAppealAssess, experimental = true),
 
-  CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE(ApprovedPremisesUserPermission.premisesLocalRestrictionsManage, experimental = true),
+  CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE(ApprovedPremisesUserPermission.premisesLocalRestrictionsManage),
 
   CAS1_TEST_EXPERIMENTAL_PERMISSION(ApprovedPremisesUserPermission.cas1TestExperimentalPermission, experimental = true),
   ;
