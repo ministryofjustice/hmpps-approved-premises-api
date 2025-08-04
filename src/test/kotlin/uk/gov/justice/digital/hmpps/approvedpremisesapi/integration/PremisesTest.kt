@@ -67,7 +67,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
@@ -93,7 +93,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             probationDeliveryUnitId = probationDeliveryUnit.id,
             turnaroundWorkingDayCount = 5,
           ),
@@ -111,7 +111,7 @@ class PremisesTest {
         .jsonPath("name").isEqualTo("new premises")
         .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
-        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("status").isEqualTo("active")
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
         .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
         .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
@@ -135,7 +135,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             pdu = probationDeliveryUnit.name,
           ),
         )
@@ -152,7 +152,7 @@ class PremisesTest {
         .jsonPath("name").isEqualTo("legacy pdu name")
         .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
-        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("status").isEqualTo("active")
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
         .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
         .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
@@ -203,7 +203,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             probationDeliveryUnitId = probationDeliveryUnit.id,
           ),
         )
@@ -220,7 +220,7 @@ class PremisesTest {
         .jsonPath("name").isEqualTo("premises with no turnaround working day count")
         .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
         .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
-        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("status").isEqualTo("active")
         .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
         .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
         .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
@@ -251,7 +251,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             probationDeliveryUnitId = probationDeliveryUnit.id,
             turnaroundWorkingDayCount = turnaroundWorkingDayCount,
           ),
@@ -481,7 +481,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             pdu = null,
             probationDeliveryUnitId = null,
           ),
@@ -512,7 +512,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             pdu = null,
             probationDeliveryUnitId = UUID.randomUUID(),
           ),
@@ -543,7 +543,7 @@ class PremisesTest {
             localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
             probationRegionId = user.probationRegion.id,
             characteristicIds = mutableListOf(),
-            status = PropertyStatus.pending,
+            status = PropertyStatus.active,
             pdu = "Non-existent PDU",
             probationDeliveryUnitId = null,
           ),

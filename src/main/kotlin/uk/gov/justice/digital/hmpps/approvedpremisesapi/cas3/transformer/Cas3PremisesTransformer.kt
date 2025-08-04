@@ -41,7 +41,6 @@ class Cas3PremisesTransformer(
   private fun PropertyStatus.transformStatus() = when (this) {
     PropertyStatus.active -> Cas3PremisesStatus.online
     PropertyStatus.archived -> Cas3PremisesStatus.archived
-    PropertyStatus.pending -> throw RuntimeException("Pending status is not supported in CAS3")
   }
 
   private fun TemporaryAccommodationPremisesEntity.getTotalOnlineBedspaces() = this.rooms.sumOf { room ->
