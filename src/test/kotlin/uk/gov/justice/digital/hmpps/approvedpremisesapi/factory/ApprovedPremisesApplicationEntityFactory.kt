@@ -52,6 +52,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var sentenceType: Yielded<String?> = { null }
   private var situation: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
+  private var duration: Yielded<Int?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var withdrawalReason: Yielded<String?> = { null }
@@ -252,6 +253,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     releaseType = this.releaseType(),
     sentenceType = this.sentenceType(),
     arrivalDate = this.arrivalDate(),
+    duration = this.duration(),
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),
     withdrawalReason = this.withdrawalReason(),
