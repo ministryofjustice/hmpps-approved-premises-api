@@ -75,16 +75,16 @@ SELECT
   )
   fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<TemporaryAccommodationPremisesSummary>
 
-  @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
-  fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
+  @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE p.name = :name AND TYPE(p) = :type AND (p.id != :id OR :id is null)")
+  fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>, id: UUID? = null): Boolean
 
-  @Query("SELECT p FROM TemporaryAccommodationPremisesEntity p WHERE id = :id")
+  @Query("SELECT p FROM TemporaryAccommodationPremisesEntity p WHERE p.id = :id")
   fun findTemporaryAccommodationPremisesByIdOrNull(id: UUID): TemporaryAccommodationPremisesEntity?
 
-  @Query("SELECT p FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
+  @Query("SELECT p FROM PremisesEntity p WHERE p.name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByName(name: String, type: Class<T>): PremisesEntity?
 
-  @Query("SELECT p FROM ApprovedPremisesEntity p WHERE apCode = :apCode")
+  @Query("SELECT p FROM ApprovedPremisesEntity p WHERE p.apCode = :apCode")
   fun findByApCode(apCode: String): ApprovedPremisesEntity?
 
   @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
