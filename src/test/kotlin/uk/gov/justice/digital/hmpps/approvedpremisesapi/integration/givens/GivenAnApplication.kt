@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
@@ -44,6 +45,9 @@ fun IntegrationTestBase.givenACas1Application(
   tier: String? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   applicant: Cas1ApplicationUserDetailsEntity? = null,
+  arrivalDate: OffsetDateTime? = null,
+  data: String? = "{}",
+  apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
   block: (application: ApplicationEntity) -> Unit = {},
 ) = givenAnApplication(
   createdByUser,
@@ -56,6 +60,9 @@ fun IntegrationTestBase.givenACas1Application(
   tier,
   caseManager,
   applicant,
+  arrivalDate,
+  data,
+  apType,
   block,
 )
 
@@ -71,6 +78,9 @@ fun IntegrationTestBase.givenAnApplication(
   tier: String? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   applicant: Cas1ApplicationUserDetailsEntity? = null,
+  arrivalDate: OffsetDateTime? = null,
+  data: String? = "{}",
+  apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val riskRatings = tier?.let {
@@ -89,6 +99,9 @@ fun IntegrationTestBase.givenAnApplication(
     withCaseManagerUserDetails(caseManager)
     withCaseManagerIsNotApplicant(caseManager != null)
     withApplicantUserDetails(applicant)
+    withArrivalDate(arrivalDate)
+    withData(data)
+    withApType(apType)
   }
 
   block(application)
