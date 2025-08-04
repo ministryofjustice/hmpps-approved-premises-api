@@ -17,7 +17,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -32,6 +32,18 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
   fun findByRoomPremisesId(premisesId: UUID): List<BedEntity>
 
   fun findByRoomPremisesIdAndEndDateIsNull(premisesId: UUID): List<BedEntity>
+
+  @Query(
+    """
+    SELECT
+      b.*
+    FROM beds b
+    JOIN rooms r on b.room_id = r.id
+    WHERE r.premises_Id = :premisesId AND b.id = :bedspaceId
+  """,
+    nativeQuery = true,
+  )
+  fun findCas3Bedspace(premisesId: UUID, bedspaceId: UUID): BedEntity?
 
   @Query(nativeQuery = true)
   fun getDetailById(id: UUID): DomainBedSummary?

@@ -25,7 +25,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -33,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSummaryForAvailabilityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -40,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -52,9 +60,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.Optional
 import java.util.UUID
 import java.util.stream.Stream
@@ -72,6 +83,7 @@ class Cas3PremisesServiceTest {
   private val bedRepositoryMock = mockk<BedRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
   private val workingDayServiceMock = mockk<WorkingDayService>()
+  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
   private val cas3DomainEventServiceMock = mockk<Cas3DomainEventService>()
 
   private val temporaryAccommodationPremisesFactory = TemporaryAccommodationPremisesEntityFactory()
@@ -96,6 +108,7 @@ class Cas3PremisesServiceTest {
     characteristicServiceMock,
     workingDayServiceMock,
     cas3DomainEventServiceMock,
+    objectMapper,
   )
 
   @Nested
@@ -711,6 +724,193 @@ class Cas3PremisesServiceTest {
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit
     }
+  }
+
+  @Nested
+  inner class GetBedspace {
+    @Test
+    fun `When get a bedspace returns Success with correct result when validation passed`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+
+      val room = RoomEntityFactory()
+        .withName(randomStringMultiCaseWithNumbers(10))
+        .withPremises(premises)
+        .produce()
+
+      val bedspace = BedEntityFactory()
+        .withRoom(room)
+        .withStartDate(LocalDate.now().minusDays(5))
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+
+      val result = premisesService.getBedspace(premises.id, bedspace.id)
+
+      assertThatCasResult(result).isSuccess().with { bed ->
+        assertThat(bed.name).isEqualTo(bedspace.name)
+        assertThat(bed.startDate).isEqualTo(bedspace.startDate)
+        assertThat(bed.room).isEqualTo(room)
+        assertThat(bed.room.premises).isEqualTo(premises)
+      }
+    }
+
+    @Test
+    fun `When get a bedspace returns not found as bedspace does not exist`() {
+      val nonExistingBedspaceId = UUID.randomUUID()
+
+      val premises = temporaryAccommodationPremisesFactory.produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, nonExistingBedspaceId) } returns null
+
+      val result = premisesService.getBedspace(premises.id, nonExistingBedspaceId)
+
+      assertThatCasResult(result).isNotFound("Bedspace", nonExistingBedspaceId)
+    }
+  }
+
+  @Nested
+  inner class GetArchiveHistory {
+    @Test
+    fun `When getArchiveHistory returns Success with empty list of histories`() {
+      val bedspaceId = UUID.randomUUID()
+
+      every { cas3DomainEventServiceMock.getBedspaceDomainEvents(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+
+      val result = premisesService.getArchiveHistory(bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { archiveHistory ->
+        assertThat(archiveHistory).isEqualTo(emptyList<Cas3BedspaceArchiveAction>())
+      }
+    }
+
+    @Test
+    fun `When getArchiveHistory returns Success with list of events`() {
+      val bedspaceId = UUID.randomUUID()
+      val premisesId = UUID.randomUUID()
+      val userId = UUID.randomUUID()
+
+      // Archive event scheduled for tomorrow
+      val endDateTomorrowArchive = LocalDate.now().plusDays(1)
+      val dataTomorrowArchive = createCAS3BedspaceArchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, endDate = endDateTomorrowArchive)
+      val domainEventTomorrow = createArchiveDomainEvent(dataTomorrowArchive)
+
+      // Archive event scheduled for today
+      val endDateTodayArchive = LocalDate.now()
+      val dataTodayArchive = createCAS3BedspaceArchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, endDate = endDateTodayArchive)
+      val domainEventToday = createArchiveDomainEvent(dataTodayArchive)
+
+      // Archive event scheduled for yesterday
+      val endDateYesterdayArchive = LocalDate.now().minusDays(1)
+      val dataYesterdayArchive = createCAS3BedspaceArchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, endDate = endDateYesterdayArchive)
+      val domainEventYesterday = createArchiveDomainEvent(dataYesterdayArchive)
+
+      // Unarchive event scheduled for in 2 days
+      val newStartDateIn2DaysUnarchive = LocalDate.now().plusDays(2)
+      val dataIn2DaysUnarchive = createCAS3BedspaceUnarchiveEvent(bedspaceId = bedspaceId, userId = userId, newStartDate = newStartDateIn2DaysUnarchive)
+      val domainEventIn2Days = createUnarchiveDomainEvent(dataIn2DaysUnarchive)
+
+      // Unarchive event scheduled for 2 days ago
+      val newStartDate2DaysAgoUnarchive = LocalDate.now().minusDays(2)
+      val data2DaysAgoUnarchive = createCAS3BedspaceUnarchiveEvent(bedspaceId = bedspaceId, userId = userId, newStartDate = newStartDate2DaysAgoUnarchive)
+      val domainEvent2DaysAgo = createUnarchiveDomainEvent(data2DaysAgoUnarchive)
+
+      // Unarchive event scheduled for 3 days ago
+      val newStartDate3DaysAgoUnarchive = LocalDate.now().minusDays(3)
+      val data3DaysAgoUnarchive = createCAS3BedspaceUnarchiveEvent(bedspaceId = bedspaceId, userId = userId, newStartDate = newStartDate3DaysAgoUnarchive)
+      val domainEvent3DaysAgo = createUnarchiveDomainEvent(data3DaysAgoUnarchive)
+
+      every { cas3DomainEventServiceMock.getBedspaceDomainEvents(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns
+        listOf(
+          domainEventTomorrow,
+          domainEventToday,
+          domainEventYesterday,
+          domainEventIn2Days,
+          domainEvent2DaysAgo,
+          domainEvent3DaysAgo,
+        )
+
+      val result = premisesService.getArchiveHistory(bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { archiveHistory ->
+        assertThat(archiveHistory).isEqualTo(
+          listOf(
+            Cas3BedspaceArchiveAction(
+              Cas3BedspaceStatus.online,
+              data3DaysAgoUnarchive.eventDetails.newStartDate,
+            ),
+            Cas3BedspaceArchiveAction(
+              Cas3BedspaceStatus.online,
+              data2DaysAgoUnarchive.eventDetails.newStartDate,
+            ),
+            Cas3BedspaceArchiveAction(
+              Cas3BedspaceStatus.archived,
+              dataYesterdayArchive.eventDetails.endDate,
+            ),
+            Cas3BedspaceArchiveAction(
+              Cas3BedspaceStatus.archived,
+              dataTodayArchive.eventDetails.endDate,
+            ),
+          ),
+        )
+      }
+    }
+
+    private fun createArchiveDomainEvent(data: CAS3BedspaceArchiveEvent) = createDomainEvent(
+      data.id,
+      data.eventDetails.bedspaceId,
+      data.timestamp.atOffset(ZoneOffset.UTC),
+      objectMapper.writeValueAsString(data),
+      DomainEventType.CAS3_BEDSPACE_ARCHIVED,
+    )
+
+    private fun createCAS3BedspaceArchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, endDate: LocalDate): CAS3BedspaceArchiveEvent {
+      val eventId = UUID.randomUUID()
+      val occurredAt = OffsetDateTime.now()
+      return CAS3BedspaceArchiveEvent(
+        id = eventId,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bedspaceArchived,
+        eventDetails = CAS3BedspaceArchiveEventDetails(
+          bedspaceId = bedspaceId,
+          userId = userId,
+          premisesId = premisesId,
+          endDate = endDate,
+        ),
+      )
+    }
+
+    private fun createUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
+      data.id,
+      data.eventDetails.bedspaceId,
+      data.timestamp.atOffset(ZoneOffset.UTC),
+      objectMapper.writeValueAsString(data),
+      DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
+    )
+
+    private fun createCAS3BedspaceUnarchiveEvent(bedspaceId: UUID, userId: UUID, newStartDate: LocalDate): CAS3BedspaceUnarchiveEvent {
+      val eventId = UUID.randomUUID()
+      val occurredAt = OffsetDateTime.now()
+      return CAS3BedspaceUnarchiveEvent(
+        id = eventId,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bedspaceUnarchived,
+        eventDetails = CAS3BedspaceUnarchiveEventDetails(
+          bedspaceId = bedspaceId,
+          userId = userId,
+          currentStartDate = LocalDate.now(),
+          currentEndDate = LocalDate.now(),
+          newStartDate = newStartDate,
+        ),
+      )
+    }
+
+    private fun createDomainEvent(id: UUID, bedspaceId: UUID, occurredAt: OffsetDateTime, data: String, type: DomainEventType) = DomainEventEntityFactory()
+      .withId(id)
+      .withCas3BedspaceId(bedspaceId)
+      .withType(type)
+      .withData(data)
+      .withOccurredAt(occurredAt)
+      .produce()
   }
 
   @Nested
