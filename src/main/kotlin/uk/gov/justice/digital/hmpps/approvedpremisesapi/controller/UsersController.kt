@@ -109,12 +109,14 @@ class UsersController(
     )
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     val getUserResponse = userService.getExistingUserOrCreate(name)
     return when (getUserResponse) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(name, "user", "username")
+      is UserService.GetUserResponse.StaffProbationRegionNotSupported -> throw RuntimeException("Probation region ${getUserResponse.unsupportedRegionId} not supported for user $name")
       is UserService.GetUserResponse.Success -> ResponseEntity.ok(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName))
     }
   }

@@ -21,6 +21,7 @@ class UpdateAllUsersFromDeliusJob(
       try {
         when (userService.updateUserFromDelius(it, ServiceName.approvedPremises)) {
           UserService.GetUserResponse.StaffRecordNotFound -> log.error("Unable to update ${it.id}, no staff record")
+          is UserService.GetUserResponse.StaffProbationRegionNotSupported -> log.error("Unable to update ${it.id}, probation region not supported")
           is UserService.GetUserResponse.Success -> {}
         }
       } catch (exception: Exception) {

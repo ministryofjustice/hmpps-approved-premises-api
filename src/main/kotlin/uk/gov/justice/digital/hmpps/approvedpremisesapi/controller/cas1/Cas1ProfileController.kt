@@ -42,6 +42,8 @@ class Cas1ProfileController(
           log.info("On call to /cas1/profile user record for $username already exists")
         }
       }
+
+      is UserService.GetUserResponse.StaffProbationRegionNotSupported -> Cas1ProfileResponse.LoadError.unsupportedProbationRegion
     }
 
     val responseToReturn =
@@ -60,6 +62,7 @@ class Cas1ProfileController(
 
   private fun transformCas1ProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse): Cas1ProfileResponse = when (userResponse) {
     UserService.GetUserResponse.StaffRecordNotFound -> Cas1ProfileResponse(userName, Cas1ProfileResponse.LoadError.staffRecordNotFound)
+    is UserService.GetUserResponse.StaffProbationRegionNotSupported -> Cas1ProfileResponse(userName, Cas1ProfileResponse.LoadError.unsupportedProbationRegion)
     is UserService.GetUserResponse.Success -> Cas1ProfileResponse(userName, user = userTransformer.transformCas1JpaToApi(userResponse.user))
   }
 }

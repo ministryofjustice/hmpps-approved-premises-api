@@ -67,6 +67,7 @@ class UserService(
     val username = getDeliusUserNameForRequest()
     val user = when (val result = getExistingUserOrCreate(username)) {
       GetUserResponse.StaffRecordNotFound -> throw InternalServerErrorProblem("Could not find staff record for user $username")
+      is GetUserResponse.StaffProbationRegionNotSupported -> throw InternalServerErrorProblem("Probation region '${result.unsupportedRegionId}' not supported for user '$username'")
       is GetUserResponse.Success -> result.user
     }
     ensureCas3UserHasCas3ReferrerRole(user)
@@ -284,10 +285,11 @@ class UserService(
   fun updateUserPduById(id: UUID): AuthorisableActionResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
 
-    val deliusUser = when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
-      is ClientResult.Success -> staffUserDetailsResponse.body
-      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
-    }
+    val deliusUser =
+      when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+        is ClientResult.Success -> staffUserDetailsResponse.body
+        is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+      }
 
     when (val pduResult = findDeliusUserLastPdu(deliusUser)) {
       is CasSimpleResult.Failure -> {
@@ -365,7 +367,7 @@ class UserService(
     val staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea.code)
 
     if (staffProbationRegion == null) {
-      throw RuntimeException("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername'")
+      return GetUserResponse.StaffProbationRegionNotSupported(staffUserDetails.probationArea.code)
     }
 
     val pduResult = findDeliusUserLastPdu(staffUserDetails)
@@ -474,6 +476,13 @@ class UserService(
 
   sealed interface GetUserResponse {
     data object StaffRecordNotFound : GetUserResponse
+
+    /**
+     * Note that this response type is only returned when creating a User.
+     * We should consider introducing an UpdateUserResponse type that doesn't include this error
+     * (or, actually returning this error on updates if a probation region can't be resolved)
+     */
+    data class StaffProbationRegionNotSupported(val unsupportedRegionId: String) : GetUserResponse
     data class Success(val user: UserEntity, val createdOnGet: Boolean = false) : GetUserResponse
   }
 }

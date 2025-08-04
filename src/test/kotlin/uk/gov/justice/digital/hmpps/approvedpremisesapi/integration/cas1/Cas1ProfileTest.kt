@@ -363,6 +363,40 @@ class Cas1ProfileTest : IntegrationTestBase() {
           ),
         )
     }
+
+    @Test
+    fun `Getting new profile with unsupported probation region returns load error`() {
+      val deliusUsername = "JIMJIMMERSON"
+
+      apDeliusContextAddStaffDetailResponse(staffDetail.copy(name = PersonName("Up", "Dated", "")))
+
+      mockClientCredentialsJwtRequest(deliusUsername, listOf("ROLE_PROBATION"), authSource = "delius")
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region1 = createProbationRegion(deliusCode)
+
+      probationAreaProbationRegionMappingFactory.produceAndPersist {
+        withProbationRegion(region1)
+        withProbationAreaDeliusCode("ANOTHERDELIUSCODE")
+      }
+
+      val response = webTestClient.get()
+        .uri(cas1UserProfileEndpoint)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(Cas1ProfileResponse::class.java)
+        .returnResult()
+        .responseBody!!
+
+      assertThat(response.loadError).isEqualTo(Cas1ProfileResponse.LoadError.unsupportedProbationRegion)
+    }
   }
 
   fun IntegrationTestBase.createProbationRegion(deliusCode: String? = null) = probationRegionEntityFactory.produceAndPersist {

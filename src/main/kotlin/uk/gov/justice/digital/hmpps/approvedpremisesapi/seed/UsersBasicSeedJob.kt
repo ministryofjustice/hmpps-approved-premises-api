@@ -32,6 +32,7 @@ class UsersBasicSeedJob(
     val result = try {
       when (val result = userService.getExistingUserOrCreate(username)) {
         GetUserResponse.StaffRecordNotFound -> throw RuntimeException("Could not find staff record for user $username")
+        is GetUserResponse.StaffProbationRegionNotSupported -> throw kotlin.RuntimeException("Probation region ${result.unsupportedRegionId} not supported for user $username")
         is GetUserResponse.Success -> result
       }
     } catch (exception: Exception) {

@@ -556,6 +556,44 @@ class ProfileTest : IntegrationTestBase() {
           ),
         )
     }
+
+    @Test
+    fun `Getting new profile with unsupported probation region returns load error`() {
+      val deliusUsername = "JIMJIMMERSON"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val deliusCode = "DeliusCode"
+      val region = createProbationRegion(deliusCode)
+
+      probationAreaProbationRegionMappingFactory.produceAndPersist {
+        withProbationRegion(region)
+        withProbationAreaDeliusCode("ANOTHERCODE")
+      }
+
+      apDeliusContextAddStaffDetailResponse(
+        StaffDetailFactory.staffDetail(
+          deliusUsername = deliusUsername,
+          email = email,
+          telephoneNumber = telephoneNumber,
+          probationArea = ProbationArea(code = region.deliusCode, description = randomStringMultiCaseWithNumbers(10)),
+        ),
+      )
+
+      webTestClient.get()
+        .uri(profileV2Endpoint)
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isEqualTo(500)
+    }
   }
 
   fun IntegrationTestBase.createProbationRegion(deliusCode: String? = null) = probationRegionEntityFactory.produceAndPersist {

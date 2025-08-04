@@ -99,8 +99,10 @@ class UserTransformer(
 
   fun Cas1CruManagementAreaEntity.toNamedId() = NamedId(id, name)
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   fun transformProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse, xServiceName: ServiceName): ProfileResponse = when (userResponse) {
     UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(userName, ProfileResponse.LoadError.staffRecordNotFound)
+    is UserService.GetUserResponse.StaffProbationRegionNotSupported -> throw RuntimeException("Probation region '${userResponse.unsupportedRegionId}' not supported for user '$userResponse'")
     is UserService.GetUserResponse.Success -> ProfileResponse(userName, user = transformJpaToApi(userResponse.user, xServiceName))
   }
   private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? = when (userRole.role.service) {

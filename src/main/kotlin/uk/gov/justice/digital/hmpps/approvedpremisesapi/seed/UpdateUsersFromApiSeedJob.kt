@@ -30,11 +30,13 @@ class UpdateUsersFromApiSeedJob(
     log.info("Updating user with username $username for service $service")
     val user = when (val result = userService.getExistingUserOrCreate(username)) {
       GetUserResponse.StaffRecordNotFound -> error("Could not find staff record for user $username")
+      is GetUserResponse.StaffProbationRegionNotSupported -> error("Probation region ${result.unsupportedRegionId} not supported for user $username")
       is GetUserResponse.Success -> result.user
     }
 
-    when (userService.updateUserFromDelius(user, service)) {
+    when (val result = userService.updateUserFromDelius(user, service)) {
       GetUserResponse.StaffRecordNotFound -> error("Could not find staff record for user $username")
+      is GetUserResponse.StaffProbationRegionNotSupported -> error("Probation region ${result.unsupportedRegionId} not supported for user $username")
       is GetUserResponse.Success -> { }
     }
   }
