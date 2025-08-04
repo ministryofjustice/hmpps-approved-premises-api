@@ -1015,7 +1015,7 @@ class ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Application::class.java)
+            val result = objectMapper.readValue(resultBody, ApprovedPremisesApplication::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
