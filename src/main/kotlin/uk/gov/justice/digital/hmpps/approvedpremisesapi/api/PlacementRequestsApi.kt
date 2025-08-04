@@ -23,14 +23,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
 @RestController
@@ -88,38 +85,4 @@ interface PlacementRequestsApi {
     consumes = ["application/json"],
   )
   fun placementRequestsIdBookingNotMadePost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Details about the failure to match", required = true) @RequestBody newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> = getDelegate().placementRequestsIdBookingNotMadePost(id, newBookingNotMade)
-
-  @Operation(
-    tags = ["Placement requests"],
-    summary = "Gets placement requests for a given user",
-    operationId = "placementRequestsIdGet",
-    description = """Use cas specific endpoint""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(schema = Schema(implementation = PlacementRequestDetail::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/placement-requests/{id}"],
-    produces = ["application/json"],
-  )
-  fun placementRequestsIdGet(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID): ResponseEntity<PlacementRequestDetail> = getDelegate().placementRequestsIdGet(id)
-
-  @Operation(
-    tags = ["Placement requests"],
-    summary = "Withdraws a placement request",
-    operationId = "placementRequestsIdWithdrawalPost",
-    description = """Use cas specific endpoint""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = PlacementRequestDetail::class))]),
-      ApiResponse(responseCode = "404", description = "invalid applicationId", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/placement-requests/{id}/withdrawal"],
-    produces = ["application/json"],
-    consumes = ["application/json"],
-  )
-  fun placementRequestsIdWithdrawalPost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Withdrawal details") @RequestBody(required = false) body: WithdrawPlacementRequest?): ResponseEntity<PlacementRequestDetail> = getDelegate().placementRequestsIdWithdrawalPost(id, body)
 }

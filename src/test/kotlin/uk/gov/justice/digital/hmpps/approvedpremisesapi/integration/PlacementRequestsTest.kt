@@ -7,43 +7,32 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
@@ -1002,216 +991,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetPlacementRequest {
-
-    @Autowired
-    lateinit var placementRequestDetailTransformer: PlacementRequestDetailTransformer
-
-    @Test
-    fun `Without a JWT returns 401`() {
-      webTestClient.get()
-        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Offender not LAO, returns 200`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
-                      placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      listOf(),
-                    ),
-                  ),
-                )
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Offender is LAO, user doesn't have LAO access or LAO qualification, returns 403`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentExclusion(true)
-            },
-          ) { offenderDetails, _ ->
-            givenAPlacementRequest(
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isForbidden
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Offender is LAO, user has LAO access, returns 200 and FullPerson`() {
-      givenAUser { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentExclusion(true)
-            },
-          ) { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              apDeliusContextAddResponseToUserAccessCall(
-                listOf(
-                  CaseAccessFactory()
-                    .withCrn(offenderDetails.otherIds.crn)
-                    .produce(),
-                ),
-                user.deliusUsername,
-              )
-
-              webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
-                      placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      listOf(),
-                    ),
-                  ),
-                )
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Offender is LAO, user doesn't have LAO access but has LAO qualification, returns 200 and FullPerson`() {
-      givenAUser(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentExclusion(true)
-            },
-          ) { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
-                      placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      listOf(),
-                    ),
-                  ),
-                )
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Offender not LAO, returns 200 with cancellations when they exist`() {
-      givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
-            givenAPlacementRequest(
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              val premises = givenAnApprovedPremises()
-
-              val room = roomEntityFactory.produceAndPersist {
-                withPremises(premises)
-              }
-
-              val bed = bedEntityFactory.produceAndPersist {
-                withRoom(room)
-              }
-
-              val booking = bookingEntityFactory.produceAndPersist {
-                withPremises(premises)
-                withCrn(offenderDetails.otherIds.crn)
-                withBed(bed)
-                withServiceName(ServiceName.approvedPremises)
-                withApplication(placementRequest.application)
-              }
-
-              val cancellations = cancellationEntityFactory.produceAndPersistMultiple(2) {
-                withBooking(booking)
-                withReason(cancellationReasonEntityFactory.produceAndPersist())
-              }
-
-              webTestClient.get()
-                .uri("/placement-requests/${placementRequest.id}")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToApi(
-                      placementRequestRepository.findByIdOrNull(placementRequest.id)!!,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      cancellations,
-                    ),
-                  ),
-                )
-            }
-          }
-        }
-      }
-    }
-  }
-
-  @Nested
   inner class CreateBookingNotMadeFromPlacementRequest {
     @Test
     fun `Create a Booking Not Made from a Placement Request without a JWT returns 401`() {
@@ -1260,97 +1039,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 )
               }
             }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Note - Withdrawal cascading is tested in [WithdrawalTest]
-   */
-  @Nested
-  inner class WithdrawPlacementRequest {
-    @Test
-    fun `Withdraw Placement Request without a JWT returns 401`() {
-      webTestClient.post()
-        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Withdraw Placement Request without CAS1_CRU_MEMBER returns 403`() {
-      givenAUser { creator, _ ->
-        givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_JANITOR)) { user, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = user) {
-              givenAPlacementRequest(
-                assessmentAllocatedTo = user,
-                createdByUser = creator,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/withdrawal")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    WithdrawPlacementRequest(
-                      reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isForbidden
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @SuppressWarnings("MaxLineLength")
-    @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, raises domain event, sends email to CRU and Applicant if it represents dates included on application on submission`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
-            apArea = givenAnApArea(),
-            cruManagementArea = givenACas1CruManagementArea(),
-          ) { placementRequest, _ ->
-
-            webTestClient.post()
-              .uri("/placement-requests/${placementRequest.id}/withdrawal")
-              .bodyValue(
-                WithdrawPlacementRequest(
-                  reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
-                ),
-              )
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonPath("$.person.crn").isEqualTo(placementRequest.application.crn)
-
-            val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-            assertThat(persistedPlacementRequest.isWithdrawn).isTrue
-            assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-
-            snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN)
-
-            emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(
-              placementRequest.application.cruManagementArea!!.emailAddress!!,
-              Cas1NotifyTemplates.MATCH_REQUEST_WITHDRAWN_V2,
-            )
-            emailAsserter.assertEmailRequested(
-              placementRequest.application.createdByUser.email!!,
-              Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-            )
           }
         }
       }

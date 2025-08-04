@@ -1242,7 +1242,7 @@ class WithdrawalTest : IntegrationTestBase() {
     jwt: String,
   ) {
     webTestClient.post()
-      .uri("/placement-requests/${placementRequest.id}/withdrawal")
+      .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
       .bodyValue(WithdrawPlacementRequest(reason))
       .header("Authorization", "Bearer $jwt")
       .exchange()
