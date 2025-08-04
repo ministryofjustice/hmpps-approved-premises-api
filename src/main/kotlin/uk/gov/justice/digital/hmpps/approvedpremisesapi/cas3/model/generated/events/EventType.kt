@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class EventType(@get:JsonValue val value: String) {
 
+  premisesArchived("accommodation.cas3.premises.archived"),
   premisesUnarchived("accommodation.cas3.premises.unarchived"),
   bedspaceArchived("accommodation.cas3.bedspace.archived"),
   bedspaceUnarchived("accommodation.cas3.bedspace.unarchived"),

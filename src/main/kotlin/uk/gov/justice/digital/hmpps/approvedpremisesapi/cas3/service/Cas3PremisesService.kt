@@ -515,6 +515,8 @@ class Cas3PremisesService(
       archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
     }
 
+    cas3DomainEventService.savePremisesArchiveEvent(premises, endDate)
+
     return success(updatedPremises)
   }
 

@@ -524,6 +524,11 @@ enum class DomainEventType(
     Cas3EventType.draftReferralDeleted.value,
     "A draft referral has been deleted",
   ),
+  CAS3_PREMISES_ARCHIVED(
+    DomainEventCas.CAS3,
+    Cas3EventType.premisesArchived.value,
+    "A premises for a Transitional Accommodation has been archived",
+  ),
   CAS3_PREMISES_UNARCHIVED(
     DomainEventCas.CAS3,
     Cas3EventType.premisesUnarchived.value,
