@@ -182,6 +182,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               val responseBody = webTestClient.get()
                 .uri("/cas3/applications")
                 .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -616,6 +617,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
     private fun callCas3Api(jwt: String, applicationId: UUID) = webTestClient.get()
       .uri("/cas3/applications/$applicationId")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .header("Authorization", "Bearer $jwt")
       .exchange()
 
@@ -835,6 +837,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     private fun callCas3Api(jwt: String, crn: String, offenceId: String) = webTestClient.post()
       .uri("/cas3/applications")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         Cas3NewApplication(
           crn = crn,
@@ -937,6 +940,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     private fun callCasApi(jwt: String, applicationId: UUID) = webTestClient.put()
       .uri("/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         UpdateTemporaryAccommodationApplication(
           data = mapOf("thingId" to 345),
@@ -966,6 +970,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     private fun callCas3Api(jwt: String, applicationId: UUID) = webTestClient.put()
       .uri("/cas3/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
         Cas3UpdateApplication(
           data = mapOf("thingId" to 345),
@@ -1246,6 +1251,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           webTestClient.delete()
             .uri("/cas3/applications/${application.id}")
             .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .exchange()
             .expectStatus()
             .isOk
