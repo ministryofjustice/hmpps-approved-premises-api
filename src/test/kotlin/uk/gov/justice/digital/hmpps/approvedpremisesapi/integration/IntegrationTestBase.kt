@@ -992,3 +992,16 @@ abstract class InitialiseDatabasePerClassTestBase : IntegrationTestBase() {
     this.teardownTests()
   }
 }
+
+fun WebTestClient.ResponseSpec.withNotFoundMessage(message: String): WebTestClient.BodyContentSpec = this.expectStatus()
+  .isNotFound.expectBody()
+  .jsonPath("title").isEqualTo("Not Found")
+  .jsonPath("status").isEqualTo(404)
+  .jsonPath("detail").isEqualTo(message)
+
+fun WebTestClient.ResponseSpec.withConflictMessage(message: String): WebTestClient.BodyContentSpec = this.expectStatus()
+  .is4xxClientError
+  .expectBody()
+  .jsonPath("title").isEqualTo("Conflict")
+  .jsonPath("status").isEqualTo(409)
+  .jsonPath("detail").isEqualTo(message)

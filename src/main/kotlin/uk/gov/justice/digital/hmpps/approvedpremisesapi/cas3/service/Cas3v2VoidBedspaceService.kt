@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -19,6 +20,7 @@ class Cas3v2VoidBedspaceService(
   fun findVoidBedspaces(premisesId: UUID): List<Cas3VoidBedspaceEntity> = cas3VoidBedspacesRepository.findActiveVoidBedspacesByPremisesId(premisesId)
 
   fun findVoidBedspace(premisesId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity? = cas3VoidBedspacesRepository.findVoidBedspace(premisesId, voidBedspaceId)
+  fun findVoidBedspace(premisesId: UUID, bedspaceId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity? = cas3VoidBedspacesRepository.findVoidBedspace(premisesId, bedspaceId, voidBedspaceId)
 
   fun createVoidBedspace(
     startDate: LocalDate,
@@ -70,5 +72,23 @@ class Cas3v2VoidBedspaceService(
     )
 
     return success(voidBedspacesEntity)
+  }
+
+  fun cancelVoidBedspace(
+    voidBedspace: Cas3VoidBedspaceEntity,
+    notes: String?,
+  ) = validatedCasResult<Cas3VoidBedspaceEntity> {
+    if (voidBedspace.cancellationDate != null) {
+      return generalError("This Void Bedspace already has a cancellation set")
+    }
+
+    voidBedspace.cancellationDate = OffsetDateTime.now()
+    voidBedspace.cancellationNotes = notes
+
+    val cancellationEntity = cas3VoidBedspacesRepository.save(
+      voidBedspace,
+    )
+
+    return success(cancellationEntity)
   }
 }
