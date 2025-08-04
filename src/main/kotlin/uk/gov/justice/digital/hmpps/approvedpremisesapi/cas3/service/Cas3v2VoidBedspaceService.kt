@@ -18,6 +18,8 @@ class Cas3v2VoidBedspaceService(
 ) {
   fun findVoidBedspaces(premisesId: UUID): List<Cas3VoidBedspaceEntity> = cas3VoidBedspacesRepository.findActiveVoidBedspacesByPremisesId(premisesId)
 
+  fun findVoidBedspace(premisesId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity? = cas3VoidBedspacesRepository.findVoidBedspace(premisesId, voidBedspaceId)
+
   fun createVoidBedspace(
     startDate: LocalDate,
     endDate: LocalDate,

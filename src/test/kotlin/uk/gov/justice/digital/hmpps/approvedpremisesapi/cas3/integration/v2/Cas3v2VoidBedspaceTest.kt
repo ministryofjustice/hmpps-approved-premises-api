@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewVoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
@@ -22,7 +23,77 @@ import java.util.UUID
 class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
 
   @Nested
+  inner class GetVoidBedspace {
+
+    fun doGetRequest(jwt: String, premisesId: UUID, voidBedspaceId: UUID) = webTestClient.get()
+      .uri("/cas3/v2/premises/$premisesId/void-bedspaces/$voidBedspaceId")
+      .headers(buildTemporaryAccommodationHeaders(jwt))
+      .exchange()
+
+    @Test
+    fun `Get Void Bedspace for non-existent premises returns 404`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        doGetRequest(jwt, UUID.randomUUID(), UUID.randomUUID())
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Get Void Bedspace for non-existent void bedspace returns 404`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        doGetRequest(jwt, premises.id, UUID.randomUUID())
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Get Void Bedspace on Temporary Accommodation premises returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        val voidBedspace = createVoidBedspaces(premises).first()
+
+        val result = doGetRequest(jwt, premises.id, voidBedspace.id)
+          .expectStatus().isOk
+          .expectBody(Cas3VoidBedspace::class.java)
+          .returnResult().responseBody!!
+
+        assertAll({
+          assertThat(result.id).isEqualTo(voidBedspace.id)
+          assertThat(result.bedspaceId).isEqualTo(voidBedspace.bedspace!!.id)
+          assertThat(result.bedspaceName).isEqualTo(voidBedspace.bedspace!!.reference)
+          assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
+          assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
+          assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
+          assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
+          assertThat(result.notes).isEqualTo(voidBedspace.notes)
+          assertThat(result.cancellationDate).isNull()
+          assertThat(result.cancellationNotes).isNull()
+        })
+      }
+    }
+
+    @Test
+    fun `Get Void Bedspace on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser { user, jwt ->
+        val otherRegion = givenAProbationRegion()
+        val otherPremises = givenACas3Premises(otherRegion)
+
+        val voidBedspace = createVoidBedspaces(otherPremises).first()
+        doGetRequest(jwt, otherPremises.id, voidBedspace.id)
+          .expectStatus().isForbidden
+      }
+    }
+  }
+
+  @Nested
   inner class GetVoidBedspaces {
+    fun doGetRequest(jwt: String, premisesId: UUID) = webTestClient.get()
+      .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
+      .headers(buildTemporaryAccommodationHeaders(jwt))
+      .exchange()
 
     @Test
     fun `user without CAS_ASSESSOR role is forbidden`() {
@@ -61,15 +132,15 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         })
       }
     }
-
-    fun doGetRequest(jwt: String, premisesId: UUID) = webTestClient.get()
-      .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
-      .headers(buildTemporaryAccommodationHeaders(jwt))
-      .exchange()
   }
 
   @Nested
   inner class CreateVoidBedspace {
+    fun doPostRequest(jwt: String, premisesId: UUID, voidBedspace: Cas3NewVoidBedspace) = webTestClient.post()
+      .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
+      .headers(buildTemporaryAccommodationHeaders(jwt))
+      .bodyValue(voidBedspace)
+      .exchange()
 
     private fun buildVoidBedspace(
       reasonId: UUID,
@@ -84,12 +155,6 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
       referenceNumber = "Reference",
       notes = "Notes",
     )
-
-    private fun doPostRequest(jwt: String, premisesId: UUID, voidBedspace: Cas3NewVoidBedspace) = webTestClient.post()
-      .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
-      .headers(buildTemporaryAccommodationHeaders(jwt))
-      .bodyValue(voidBedspace)
-      .exchange()
 
     @Test
     fun `returns 201 when void bedspace is successfully created`() {
