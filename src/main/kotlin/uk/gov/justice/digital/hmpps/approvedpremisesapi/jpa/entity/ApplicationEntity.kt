@@ -392,8 +392,12 @@ class ApprovedPremisesApplicationEntity(
    */
   var arrivalDate: OffsetDateTime?,
   /**
-   * If a request for placement was made in the original application, this provides
-   * the duration of the stay in days
+   * The duration agreed by the applicant. This is typically the default duration
+   * for the corresponding apType, but the applicant will have the option to
+   * modify this.
+   *
+   * Note that this will be populated even if the applicant didn't make a request
+   * for a placement as part of the original application (i.e. arrivalDate isn't null)
    */
   var duration: Int?,
   /**

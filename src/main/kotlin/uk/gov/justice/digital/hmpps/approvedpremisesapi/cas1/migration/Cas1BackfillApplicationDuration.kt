@@ -45,8 +45,7 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
               apa.id as id,
               (a.data -> 'move-on' -> 'placement-duration' ->> 'duration')::integer as duration
           from approved_premises_applications apa inner join applications a on a.id = apa.id
-          where 
-          apa.arrival_date IS NOT NULL AND 
+          where  
           apa.duration IS NULL AND 
           a.data -> 'move-on' -> 'placement-duration' ->> 'differentDuration' = 'yes'
       )
@@ -64,10 +63,7 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
     value = """
       UPDATE approved_premises_applications
       SET duration = (26 * 7)
-      WHERE 
-      arrival_date IS NOT NULL AND 
-      duration IS NULL AND 
-      ap_type = 'PIPE'
+      WHERE duration IS NULL AND ap_type = 'PIPE'
   """,
     nativeQuery = true,
   )
@@ -78,10 +74,7 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
     value = """
       UPDATE approved_premises_applications
       SET duration = (52 * 7)
-      WHERE 
-      arrival_date IS NOT NULL AND 
-      duration IS NULL AND 
-      ap_type = 'ESAP'
+      WHERE duration IS NULL AND ap_type = 'ESAP'
   """,
     nativeQuery = true,
   )
@@ -91,10 +84,8 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
   @Query(
     value = """
       UPDATE approved_premises_applications
-      SET duration = (12 * 7)
-      WHERE 
-      arrival_date IS NOT NULL AND 
-      duration IS NULL
+      SET duration = (12 * 7) 
+      WHERE duration IS NULL
   """,
     nativeQuery = true,
   )
