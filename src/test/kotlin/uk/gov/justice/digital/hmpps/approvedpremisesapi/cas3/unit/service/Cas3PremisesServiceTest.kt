@@ -388,7 +388,7 @@ class Cas3PremisesServiceTest {
       val localAuthorityArea = premises.localAuthorityArea!!
       val probationDeliveryUnit = premises.probationDeliveryUnit!!
 
-      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java, premises.id) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(nonExistProbationRegionId) } returns null
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
@@ -418,7 +418,7 @@ class Cas3PremisesServiceTest {
       val probationDeliveryUnit = premises.probationDeliveryUnit!!
       val nonExistLocalAuthorityId = UUID.randomUUID()
 
-      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java, premises.id) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(nonExistLocalAuthorityId) } returns null
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, any()) } returns probationDeliveryUnit
@@ -448,7 +448,7 @@ class Cas3PremisesServiceTest {
       val localAuthorityArea = premises.localAuthorityArea!!
       val nonExistPduId = UUID.randomUUID()
 
-      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java, premises.id) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(nonExistPduId, probationRegion.id) } returns null
@@ -499,7 +499,7 @@ class Cas3PremisesServiceTest {
       val premises = updatePremisesEntity()
 
       mockCommonPremisesDependencies(premises)
-      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns false
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java, premises.id) } returns false
 
       val result = premisesService.updatePremises(
         premises = premises,
@@ -706,7 +706,7 @@ class Cas3PremisesServiceTest {
       val probationRegion = premises.probationRegion
       val localAuthorityArea = premises.localAuthorityArea!!
       val probationDeliveryUnit = premises.probationDeliveryUnit!!
-      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java) } returns true
+      every { premisesRepositoryMock.nameIsUniqueForType(premises.name, TemporaryAccommodationPremisesEntity::class.java, premises.id) } returns true
       every { probationRegionRepositoryMock.findByIdOrNull(probationRegion.id) } returns probationRegion
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(localAuthorityArea.id) } returns localAuthorityArea
       every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit

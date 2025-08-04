@@ -250,6 +250,54 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Update premises returns 200 OK with correct body when the reference hasn't been changed`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+      ) { user, jwt, premises ->
+
+        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+        }
+
+        val updatedPremises = Cas3UpdatePremises(
+          reference = premises.name,
+          addressLine1 = randomStringMultiCaseWithNumbers(25),
+          addressLine2 = randomStringMultiCaseWithNumbers(10),
+          postcode = randomPostCode(),
+          town = randomNumberChars(10),
+          notes = randomStringMultiCaseWithNumbers(100),
+          probationRegionId = premises.probationRegion.id,
+          probationDeliveryUnitId = probationDeliveryUnit.id,
+          localAuthorityAreaId = premises.localAuthorityArea?.id!!,
+          characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
+            characteristic.id
+          },
+          turnaroundWorkingDayCount = 3,
+        )
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(updatedPremises)
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("reference").isEqualTo(updatedPremises.reference)
+          .jsonPath("addressLine1").isEqualTo(updatedPremises.addressLine1)
+          .jsonPath("addressLine2").isEqualTo(updatedPremises.addressLine2!!)
+          .jsonPath("town").isEqualTo(updatedPremises.town!!)
+          .jsonPath("postcode").isEqualTo(updatedPremises.postcode)
+          .jsonPath("localAuthorityArea.id").isEqualTo(updatedPremises.localAuthorityAreaId.toString())
+          .jsonPath("probationRegion.id").isEqualTo(updatedPremises.probationRegionId.toString())
+          .jsonPath("probationDeliveryUnit.id").isEqualTo(updatedPremises.probationDeliveryUnitId.toString())
+          .jsonPath("notes").isEqualTo(updatedPremises.notes!!)
+          .jsonPath("turnaroundWorkingDays").isEqualTo(3)
+          .jsonPath("characteristics[*].id").isEqualTo(updatedPremises.characteristicIds.map { it.toString() })
+      }
+    }
+
+    @Test
     fun `Update premises returns 403 Forbidden when user access is not allowed as they are out of region`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()

@@ -402,7 +402,7 @@ class Cas3PremisesService(
 
     if (reference.isEmpty()) {
       "$.reference" hasValidationError "empty"
-    } else if (!premisesRepository.nameIsUniqueForType(reference, TemporaryAccommodationPremisesEntity::class.java)) {
+    } else if (!premisesRepository.nameIsUniqueForType(reference, TemporaryAccommodationPremisesEntity::class.java, premises.id)) {
       "$.reference" hasValidationError "notUnique"
     }
 
