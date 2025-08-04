@@ -79,6 +79,10 @@ class OffenderService(
     laoStrategy: LaoStrategy,
   ) = getPersonSummaryInfoResults(setOf(crn), laoStrategy).first()
 
+  /**
+   * Returns a list of [PersonSummaryInfoResult] for the given set of CRNs.
+   * If the CRN is not found, it will return a [PersonSummaryInfoResult.NotFound] for that CRN so there will always be a result for each CRN.
+   */
   fun getPersonSummaryInfoResults(
     crns: Set<String>,
     laoStrategy: LaoStrategy,
