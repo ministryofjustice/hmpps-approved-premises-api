@@ -249,6 +249,8 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp.duration).isEqualTo(5)
+      assertThat(updatedPlacementApp.requestedDurationDays).isEqualTo(5)
+      assertThat(updatedPlacementApp.authorisedDurationDays).isNull()
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
@@ -288,6 +290,8 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp1 = updatedPlacementApplications[0]
       assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp1.duration).isEqualTo(5)
+      assertThat(updatedPlacementApp1.requestedDurationDays).isEqualTo(5)
+      assertThat(updatedPlacementApp1.authorisedDurationDays).isNull()
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
@@ -297,6 +301,8 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp2 = updatedPlacementApplications[1]
       assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
       assertThat(updatedPlacementApp2.duration).isEqualTo(10)
+      assertThat(updatedPlacementApp2.requestedDurationDays).isEqualTo(10)
+      assertThat(updatedPlacementApp2.authorisedDurationDays).isNull()
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
@@ -306,6 +312,8 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp3 = updatedPlacementApplications[2]
       assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
       assertThat(updatedPlacementApp3.duration).isEqualTo(15)
+      assertThat(updatedPlacementApp3.requestedDurationDays).isEqualTo(15)
+      assertThat(updatedPlacementApp3.authorisedDurationDays).isNull()
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
@@ -333,7 +341,7 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an accepted application decision sends a notification and returns successfully`() {
+    fun `Accepting sends a notification and returns successfully`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .produce()
@@ -343,6 +351,7 @@ class Cas1PlacementApplicationServiceTest {
         .withAllocatedToUser(user)
         .withDecision(null)
         .withCreatedByUser(createdByUser)
+        .withDuration(29)
         .produce()
 
       val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
@@ -370,6 +379,7 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
+      assertThat(updatedApplication.authorisedDurationDays).isEqualTo(29)
 
       verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
@@ -388,7 +398,7 @@ class Cas1PlacementApplicationServiceTest {
       names = ["accepted"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `Submitting rejected decisions sends a notification and returns successfully`(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) {
+    fun `Rejecting sends a notification and returns successfully`(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .produce()

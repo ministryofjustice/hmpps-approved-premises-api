@@ -135,7 +135,12 @@ data class PlacementApplicationEntity(
   /**
    * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
    */
+  @Deprecated("We should look at using requestedDuration and/or authorisedDuration")
   var duration: Int? = null,
+
+  var requestedDurationDays: Int? = null,
+
+  var authorisedDurationDays: Int? = null,
 
   @Version
   var version: Long = 1,
