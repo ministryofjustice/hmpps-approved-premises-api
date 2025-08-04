@@ -227,11 +227,9 @@ class UserServiceTest {
 
       every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns null
 
-      assertThatThrownBy {
-        userService.getExistingUserOrCreate(username)
-      }
-        .hasMessage("Unknown probation region code 'AREACODE' for user 'SOMEPERSON'")
-        .isInstanceOf(RuntimeException::class.java)
+      val result = userService.getExistingUserOrCreate(username)
+
+      assertThat(result).isInstanceOf(GetUserResponse.StaffProbationRegionNotSupported::class.java)
     }
   }
 

@@ -17,6 +17,7 @@ class ProfileController(
 ) : ProfileApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun profileV2Get(
     xServiceName: ServiceName,
     readOnly: Boolean?,
@@ -28,6 +29,11 @@ class ProfileController(
       UserService.GetUserResponse.StaffRecordNotFound -> {
         log.info("On call to /profile/v2 staff record for $username not found")
       }
+
+      is UserService.GetUserResponse.StaffProbationRegionNotSupported -> {
+        throw RuntimeException("Probation region '${getUserResponse.unsupportedRegionId}' not supported for user '${username.uppercase()}'")
+      }
+
       is UserService.GetUserResponse.Success -> {
         if (getUserResponse.createdOnGet) {
           log.info("On call to /profile/v2 user record for $username created")

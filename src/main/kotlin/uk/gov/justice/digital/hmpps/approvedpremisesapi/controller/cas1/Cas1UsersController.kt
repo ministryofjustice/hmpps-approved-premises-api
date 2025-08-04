@@ -22,17 +22,29 @@ class Cas1UsersController(
   private val userAccessService: Cas1UserAccessService,
 ) : UsersCas1Delegate {
 
-  override fun getUser(id: UUID): ResponseEntity<ApprovedPremisesUser> = when (
+  @SuppressWarnings("TooGenericExceptionThrown")
+  override fun getUser(id: UUID): ResponseEntity<ApprovedPremisesUser> {
     val getUserResponse = extractEntityFromCasResult(
       userService.updateUserFromDelius(id, ServiceName.approvedPremises),
     )
-  ) {
-    is UserService.GetUserResponse.Success -> ResponseEntity.ok(
-      userTransformer.transformCas1JpaToApi(getUserResponse.user),
-    )
-    UserService.GetUserResponse.StaffRecordNotFound -> userService.findByIdOrNull(id)
-      ?.let { ResponseEntity.ok(userTransformer.transformCas1JpaToApi(it)) }
-      ?: ResponseEntity.notFound().build()
+
+    return when (getUserResponse) {
+      is UserService.GetUserResponse.Success -> {
+        val user = userTransformer.transformCas1JpaToApi(getUserResponse.user)
+        ResponseEntity.ok(user)
+      }
+      UserService.GetUserResponse.StaffRecordNotFound -> {
+        val user = userService.findByIdOrNull(id)
+        if (user != null) {
+          val transformedUser = userTransformer.transformCas1JpaToApi(user)
+          ResponseEntity.ok(transformedUser)
+        } else {
+          ResponseEntity.notFound().build()
+        }
+      }
+
+      is UserService.GetUserResponse.StaffProbationRegionNotSupported -> throw RuntimeException("Probation region ${getUserResponse.unsupportedRegionId} not supported for user $id")
+    }
   }
 
   override fun deleteUser(id: UUID): ResponseEntity<Unit> {

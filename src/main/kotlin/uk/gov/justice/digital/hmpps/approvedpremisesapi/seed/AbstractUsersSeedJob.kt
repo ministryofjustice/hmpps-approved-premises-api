@@ -50,6 +50,7 @@ abstract class AbstractUsersSeedJob(
     val user = try {
       when (val result = userService.getExistingUserOrCreate(username)) {
         GetUserResponse.StaffRecordNotFound -> throw RuntimeException("Could not find staff record for user $username")
+        is GetUserResponse.StaffProbationRegionNotSupported -> throw RuntimeException("Probation region ${result.unsupportedRegionId} not supported for user $username")
         is GetUserResponse.Success -> result.user
       }
     } catch (exception: Exception) {
