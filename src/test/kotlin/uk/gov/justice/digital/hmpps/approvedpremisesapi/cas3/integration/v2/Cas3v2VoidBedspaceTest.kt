@@ -4,13 +4,18 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewVoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -27,6 +32,12 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
           .expectStatus()
           .isForbidden
       }
+    }
+
+    @Test
+    fun `List Void Bedspaces on non existent Premises returns 404`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+      doGetRequest(jwt, UUID.randomUUID()).expectStatus().isNotFound
     }
 
     @Test
@@ -53,51 +64,280 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
 
     fun doGetRequest(jwt: String, premisesId: UUID) = webTestClient.get()
       .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", "temporary-accommodation")
+      .headers(buildTemporaryAccommodationHeaders(jwt))
+      .exchange()
+  }
+
+  @Nested
+  inner class CreateVoidBedspace {
+
+    private fun buildVoidBedspace(
+      reasonId: UUID,
+      bedspaceId: UUID,
+      startDate: LocalDate = LocalDate.now().plusDays(1),
+      endDate: LocalDate = LocalDate.now().plusDays(2),
+    ) = Cas3NewVoidBedspace(
+      startDate = startDate,
+      endDate = endDate,
+      reasonId = reasonId,
+      bedspaceId = bedspaceId,
+      referenceNumber = "Reference",
+      notes = "Notes",
+    )
+
+    private fun doPostRequest(jwt: String, premisesId: UUID, voidBedspace: Cas3NewVoidBedspace) = webTestClient.post()
+      .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
+      .headers(buildTemporaryAccommodationHeaders(jwt))
+      .bodyValue(voidBedspace)
       .exchange()
 
-    fun createVoidBedspaces(premises: Cas3PremisesEntity): List<Cas3VoidBedspaceEntity> {
-      val bedspaces = cas3BedspaceEntityFactory.produceAndPersistMultiple(5) {
-        withPremises(premises)
-      }
+    @Test
+    fun `returns 201 when void bedspace is successfully created`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR))
+      val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
       val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
-      val voidBedspace1 = cas3VoidBedspaceEntityFactory.produceAndPersist {
-        withBedspace(bedspaces.get(0))
-        withYieldedReason { reason }
-      }
-      val voidBedspace2 = cas3VoidBedspaceEntityFactory.produceAndPersist {
-        withBedspace(bedspaces.get(3))
-        withYieldedReason { reason }
-      }
-      val voidBedspace3 = cas3VoidBedspaceEntityFactory.produceAndPersist {
-        withBedspace(bedspaces.get(4))
-        withYieldedReason { reason }
-      }
+      val voidBedspace = buildVoidBedspace(reason.id, bedspace.id)
+      val result = doPostRequest(jwt, premises.id, voidBedspace)
+        .expectStatus()
+        .isCreated
+        .expectBody(Cas3VoidBedspace::class.java)
+        .returnResult().responseBody!!
 
-      return listOf(voidBedspace1, voidBedspace2, voidBedspace3)
+      assertAll({
+        assertThat(result.id).isNotNull
+        assertThat(result.bedspaceId).isEqualTo(bedspace.id)
+        assertThat(result.bedspaceName).isEqualTo(bedspace.reference)
+        assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
+        assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
+        assertThat(result.reason.id).isEqualTo(voidBedspace.reasonId)
+        assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
+        assertThat(result.notes).isEqualTo(voidBedspace.notes)
+        assertThat(result.cancellationDate).isNull()
+        assertThat(result.cancellationNotes).isNull()
+      })
     }
 
-    fun createCancelledVoidBedspaces(premises: Cas3PremisesEntity): List<Cas3VoidBedspaceEntity> {
-      val bedspaces = cas3BedspaceEntityFactory.produceAndPersistMultiple(2) {
-        withPremises(premises)
+    @Test
+    fun `Create Void Bedspaces returns 404 Bad Request if the bedspace ID does not reference a bedspace on the premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+        val invalidBedspaceId = UUID.randomUUID()
+        val voidBedspace = buildVoidBedspace(reason.id, invalidBedspaceId)
+        doPostRequest(jwt, premises.id, voidBedspace)
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("title").isEqualTo("Not Found")
+          .jsonPath("status").isEqualTo(404)
+          .jsonPath("detail").isEqualTo("No Cas3Bedspace with an ID of $invalidBedspaceId could be found")
       }
-
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
-      val voidBedspace1 = cas3VoidBedspaceEntityFactory.produceAndPersist {
-        withBedspace(bedspaces.get(0))
-        withYieldedReason { reason }
-        withCancellationDate(OffsetDateTime.now())
-      }
-
-      val voidBedspace2 = cas3VoidBedspaceEntityFactory.produceAndPersist {
-        withBedspace(bedspaces.get(1))
-        withYieldedReason { reason }
-        withCancellationDate(OffsetDateTime.now())
-        withCancellationNotes("Cancelled")
-      }
-
-      return listOf(voidBedspace1, voidBedspace2)
     }
+
+    @Test
+    fun `Create Void Bedspaces that's not in the user's region returns 403 Forbidden`() {
+      givenAUser { user, jwt ->
+        val otherRegionPremises = givenACas3Premises()
+        val (_, bedspace) = givenCas3PremisesAndBedspace(user, premises = otherRegionPremises)
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+
+        val voidBedspace = buildVoidBedspace(reason.id, bedspace.id)
+
+        doPostRequest(jwt, otherRegionPremises.id, voidBedspace)
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Create Void Bedspace returns 409 Conflict when a booking for the same bedspace overlaps`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+
+        val arrivalDate = LocalDate.now().plusDays(5)
+        val startDate = LocalDate.now().plusDays(10)
+        val departureDate = LocalDate.now().plusDays(15)
+        val endDate = LocalDate.now().plusDays(20)
+
+        val existingBooking = cas3BookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn("CRN123")
+          withYieldedPremises { premises }
+          withBedspace(bedspace)
+          withArrivalDate(arrivalDate)
+          withDepartureDate(departureDate)
+        }
+
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        val voidBedspace = buildVoidBedspace(reason.id, bedspace.id, startDate = startDate, endDate = endDate)
+
+        doPostRequest(jwt, premises.id, voidBedspace)
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail")
+          .isEqualTo("A Booking already exists for dates from $arrivalDate to $departureDate which overlaps with the desired dates: ${existingBooking.id}")
+      }
+    }
+
+    @Test
+    fun `Create Void Bedspace returns OK with correct body when only cancelled bookings for the same bedspace overlap`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+
+        val arrivalDate = LocalDate.now().plusDays(5)
+        val departureDate = LocalDate.now().plusDays(15)
+
+        val existingBooking = cas3BookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn("CRN123")
+          withYieldedPremises { premises }
+          withBedspace(bedspace)
+          withArrivalDate(arrivalDate)
+          withDepartureDate(departureDate)
+        }
+
+        existingBooking.cancellations.add(
+          cas3CancellationEntityFactory.produceAndPersist {
+            withYieldedBooking { existingBooking }
+            withDate(LocalDate.parse("2022-07-01"))
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          },
+        )
+
+        val voidBedspace = buildVoidBedspace(reason.id, bedspace.id)
+        val result = doPostRequest(jwt, premises.id, voidBedspace)
+          .expectStatus()
+          .isCreated
+          .expectBody(Cas3VoidBedspace::class.java)
+          .returnResult().responseBody!!
+
+        assertAll({
+          assertThat(result.id).isNotNull
+          assertThat(result.bedspaceId).isEqualTo(bedspace.id)
+          assertThat(result.bedspaceName).isEqualTo(bedspace.reference)
+          assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
+          assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
+          assertThat(result.reason.id).isEqualTo(voidBedspace.reasonId)
+          assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
+          assertThat(result.notes).isEqualTo(voidBedspace.notes)
+          assertThat(result.cancellationDate).isNull()
+          assertThat(result.cancellationNotes).isNull()
+        })
+      }
+    }
+
+    @Test
+    fun `Create Void Bedspace returns 409 Conflict when a void bedspace for the same bedspace overlaps`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+
+        val startDate = LocalDate.now().plusDays(5)
+        val newStartDate = LocalDate.now().plusDays(10)
+        val endDate = LocalDate.now().plusDays(15)
+        val newEndDate = LocalDate.now().plusDays(20)
+
+        val existingVoidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          withBedspace(bedspace)
+          withStartDate(startDate)
+          withEndDate(endDate)
+          withYieldedReason { reason }
+        }
+
+        val voidBedspace = buildVoidBedspace(reason.id, bedspace.id, newStartDate, newEndDate)
+        doPostRequest(jwt, premises.id, voidBedspace)
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail")
+          .isEqualTo("A Void Bedspace already exists for dates from $startDate to $endDate which overlaps with the desired dates: ${existingVoidBedspace.id}")
+      }
+    }
+
+    @Test
+    fun `Create Void Bedspace returns OK with correct body when only cancelled void bedspaces for the same bedspace overlap`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        val bedspaceWithCancelledVoidBedspace = createCancelledVoidBedspaces(premises).first().bedspace
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+
+        val voidBedspace = buildVoidBedspace(
+          reason.id,
+          bedspaceWithCancelledVoidBedspace!!.id,
+          startDate = bedspaceWithCancelledVoidBedspace.startDate!!.plusDays(1),
+          endDate = bedspaceWithCancelledVoidBedspace.endDate!!.minusDays(1),
+        )
+        val result = doPostRequest(jwt, premises.id, voidBedspace)
+          .expectStatus()
+          .isCreated
+          .expectBody(Cas3VoidBedspace::class.java)
+          .returnResult().responseBody!!
+
+        assertAll({
+          assertThat(result.id).isNotNull
+          assertThat(result.bedspaceId).isEqualTo(bedspaceWithCancelledVoidBedspace.id)
+          assertThat(result.bedspaceName).isEqualTo(bedspaceWithCancelledVoidBedspace.reference)
+          assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
+          assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
+          assertThat(result.reason.id).isEqualTo(voidBedspace.reasonId)
+          assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
+          assertThat(result.notes).isEqualTo(voidBedspace.notes)
+          assertThat(result.cancellationDate).isNull()
+          assertThat(result.cancellationNotes).isNull()
+        })
+      }
+    }
+  }
+
+  private fun createVoidBedspaces(premises: Cas3PremisesEntity): List<Cas3VoidBedspaceEntity> {
+    val bedspaces = cas3BedspaceEntityFactory.produceAndPersistMultiple(5) {
+      withPremises(premises)
+    }
+    val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+    val voidBedspace1 = cas3VoidBedspaceEntityFactory.produceAndPersist {
+      withBedspace(bedspaces.get(0))
+      withYieldedReason { reason }
+    }
+    val voidBedspace2 = cas3VoidBedspaceEntityFactory.produceAndPersist {
+      withBedspace(bedspaces.get(3))
+      withYieldedReason { reason }
+    }
+    val voidBedspace3 = cas3VoidBedspaceEntityFactory.produceAndPersist {
+      withBedspace(bedspaces.get(4))
+      withYieldedReason { reason }
+    }
+
+    return listOf(voidBedspace1, voidBedspace2, voidBedspace3)
+  }
+
+  private fun createCancelledVoidBedspaces(premises: Cas3PremisesEntity): List<Cas3VoidBedspaceEntity> {
+    val bedspaces = cas3BedspaceEntityFactory.produceAndPersistMultiple(2) {
+      withPremises(premises)
+      withStartDate(LocalDate.now().minusDays(10))
+    }
+
+    val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+    val voidBedspace1 = cas3VoidBedspaceEntityFactory.produceAndPersist {
+      withBedspace(bedspaces.get(0))
+      withYieldedReason { reason }
+      withCancellationDate(OffsetDateTime.now())
+    }
+
+    val voidBedspace2 = cas3VoidBedspaceEntityFactory.produceAndPersist {
+      withBedspace(bedspaces.get(1))
+      withYieldedReason { reason }
+      withCancellationDate(OffsetDateTime.now())
+      withCancellationNotes("Cancelled")
+    }
+
+    return listOf(voidBedspace1, voidBedspace2)
   }
 }

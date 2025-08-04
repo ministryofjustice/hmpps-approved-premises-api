@@ -47,6 +47,12 @@ data class Cas3BedspacesEntity(
 interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID> {
 
   @Query(
+    """select bedspace from Cas3BedspacesEntity bedspace 
+          where bedspace.id = :bedspaceId and bedspace.premises.id = :premisesId""",
+  )
+  fun findCas3Bedspace(premisesId: UUID, bedspaceId: UUID): Cas3BedspacesEntity?
+
+  @Query(
     """
     SELECT b 
     FROM Cas3BedspacesEntity b 
