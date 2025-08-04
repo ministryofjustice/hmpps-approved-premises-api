@@ -296,8 +296,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.get()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .exchange()
           .expectStatus()
           .isOk
@@ -369,8 +368,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.get()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .exchange()
           .expectStatus()
           .isOk
@@ -382,7 +380,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Get all Bookings on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val premises = givenATemporaryAccommodationPremises(region = givenAProbationRegion { })
 
@@ -419,8 +417,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.get()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .exchange()
           .expectStatus()
           .isForbidden
@@ -451,7 +448,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -483,8 +480,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -524,7 +520,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is before the arrival date`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -560,8 +556,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -587,7 +582,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is exactly on the arrival date`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -623,8 +618,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -650,7 +644,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is before departure date`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -686,8 +680,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -713,7 +706,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns OK response when bed archived date is exactly on departure date`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -749,8 +742,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -790,7 +782,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns OK response when bed archived date is in future compare the departure date`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-08-12")
         val departureDate = LocalDate.parse("2022-08-30")
 
@@ -826,8 +818,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -867,7 +858,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when overlapping booking is a non-arrival`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -916,8 +907,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -957,7 +947,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when assessment ID is null`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -979,8 +969,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1046,8 +1035,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1085,7 +1073,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 400 when bed does not exist on the premises`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1097,8 +1085,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1121,7 +1108,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Booking returns 400 when the departure date is before the arrival date`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1143,8 +1130,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1167,7 +1153,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1198,8 +1184,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1224,7 +1209,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when another booking for the same bed has a turnaround that overlaps with the desired dates`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1263,8 +1248,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1289,7 +1273,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled bookings for the same bed overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1326,8 +1310,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1365,7 +1348,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when a void bedspace for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1395,8 +1378,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1421,7 +1403,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns 409 Conflict when a void bedspace for the same bed overlaps with the turnaround time`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1452,8 +1434,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1479,7 +1460,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled void bedspaces for the same bed overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1516,8 +1497,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1555,7 +1535,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Booking on a premises that's not in the user's region returns 403 Forbidden`() {
     givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { userEntity.probationRegion }
@@ -1573,8 +1553,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewBooking(
               crn = offenderDetails.otherIds.crn,
@@ -1612,7 +1591,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Arrival returns 409 Conflict when another booking for the same bed overlaps with the arrival and expected departure dates`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1652,8 +1631,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -1678,7 +1656,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Temporary Accommodation Arrival returns 409 Conflict when a void bedspace for the same bed overlaps with the arrival and expected departure dates`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -1715,8 +1693,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/arrivals")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -1765,15 +1742,17 @@ class BookingTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
 
+        val arrivalDate = LocalDate.now().minusDays(1)
+        val expectedDepartureDate = arrivalDate.plusDays(2)
+
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
-              arrivalDate = LocalDate.parse("2022-08-12"),
-              expectedDepartureDate = LocalDate.parse("2022-08-14"),
+              arrivalDate = arrivalDate,
+              expectedDepartureDate = expectedDepartureDate,
               notes = "Hello",
               keyWorkerStaffCode = null,
             ),
@@ -1789,8 +1768,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
-          .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+          .jsonPath("$.arrivalDate").isEqualTo(arrivalDate)
+          .jsonPath("$.departureDate").isEqualTo(expectedDepartureDate)
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1822,15 +1801,17 @@ class BookingTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
 
+        val arrivalDate = LocalDate.now().minusDays(1)
+        val expectedDepartureDate = arrivalDate.plusDays(2)
+
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
-              arrivalDate = LocalDate.parse("2022-08-12"),
-              expectedDepartureDate = LocalDate.parse("2022-08-14"),
+              arrivalDate = arrivalDate,
+              expectedDepartureDate = expectedDepartureDate,
               notes = "Hello",
               keyWorkerStaffCode = null,
             ),
@@ -1846,8 +1827,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
-          .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+          .jsonPath("$.arrivalDate").isEqualTo(arrivalDate)
+          .jsonPath("$.departureDate").isEqualTo(expectedDepartureDate)
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1858,6 +1839,56 @@ class BookingTest : IntegrationTestBase() {
           "Someone has arrived at a Transitional Accommodation premises for their booking",
           "http://api/events/cas3/person-arrived",
         )
+      }
+    }
+  }
+
+  @Test
+  fun `Create Arrival returns field validation error when the arrival date is more than 14 days in the past CAS3`() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val premises = givenATemporaryAccommodationPremises(region = userEntity.probationRegion)
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-10"))
+          withDepartureDate(LocalDate.parse("2022-08-30"))
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        val arrivalDate = LocalDate.now().minusDays(15)
+        val expectedDepartureDate = arrivalDate.plusDays(2)
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            NewCas3Arrival(
+              type = "CAS3",
+              arrivalDate = arrivalDate,
+              expectedDepartureDate = expectedDepartureDate,
+              notes = "Hello",
+              keyWorkerStaffCode = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.arrivalDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("arrivalAfterLatestDate")
       }
     }
   }
@@ -1891,15 +1922,17 @@ class BookingTest : IntegrationTestBase() {
           it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(2) { withBooking(it) }.toMutableList()
         }
 
+        val arrivalDate = LocalDate.now().minusDays(1)
+        val expectedDepartureDate = arrivalDate.plusDays(2)
+
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
-              arrivalDate = LocalDate.parse("2022-08-12"),
-              expectedDepartureDate = LocalDate.parse("2022-08-14"),
+              arrivalDate = arrivalDate,
+              expectedDepartureDate = expectedDepartureDate,
               notes = "Hello",
               keyWorkerStaffCode = null,
             ),
@@ -1915,8 +1948,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
-          .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+          .jsonPath("$.arrivalDate").isEqualTo(arrivalDate)
+          .jsonPath("$.departureDate").isEqualTo(expectedDepartureDate)
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1934,7 +1967,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Arrival for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`() {
     givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { userEntity.probationRegion }
@@ -1960,8 +1993,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -1981,7 +2013,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Arrival for a Temporary Accommodation booking on a premises that does not exist returns 404 Not Found`() {
     givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { userEntity.probationRegion }
@@ -2009,8 +2041,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/$premisesId/bookings/${booking.id}/arrivals")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCas3Arrival(
               type = "CAS3",
@@ -2035,7 +2066,7 @@ class BookingTest : IntegrationTestBase() {
     @CsvSource("/premises", "cas3/premises")
     fun `Create Departure updates the departure date for a Temporary Accommodation booking`(baseUrl: String) {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
           val booking = bookingEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withPremises(givenATemporaryAccommodationPremises(region = userEntity.probationRegion))
@@ -2088,7 +2119,7 @@ class BookingTest : IntegrationTestBase() {
     @Test
     fun `Create Departure on Temporary Accommodation Booking when a departure already exists returns OK with correct body`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
           val booking = bookingEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withYieldedPremises {
@@ -2148,7 +2179,7 @@ class BookingTest : IntegrationTestBase() {
     @CsvSource("/premises", "cas3/premises")
     fun `Create Departure for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`(baseUrl: String) {
       givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
           val booking = bookingEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withYieldedPremises {
@@ -2194,7 +2225,7 @@ class BookingTest : IntegrationTestBase() {
     @CsvSource("/premises", "cas3/premises")
     fun `Create Departure for a Temporary Accommodation booking on a premises that does not exist returns 404 Not Found`(baseUrl: String) {
       givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+        givenAnOffender { offenderDetails, _ ->
           val booking = bookingEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withYieldedPremises {
@@ -2243,7 +2274,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Cancellation on CAS3 Booking on a premises that's not in the user's region returns 403 Forbidden`() {
-    givenAUser { userEntity, jwt ->
+    givenAUser { _, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2416,7 +2447,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body and move assessment to ready-to-place state`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withProbationRegion(userEntity.probationRegion)
@@ -2450,8 +2481,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCancellation(
               date = LocalDate.parse("2022-08-18"),
@@ -2486,7 +2516,7 @@ class BookingTest : IntegrationTestBase() {
   @Test
   fun `Create Cancellation on Temporary Accommodation Booking returns OK and make move assessment to ready-to-place state when accept assessment fail with forbidden exception`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+      givenAnOffender { offenderDetails, _ ->
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
           withProbationRegion(userEntity.probationRegion)
@@ -2521,8 +2551,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewCancellation(
               date = LocalDate.parse("2022-08-18"),
@@ -2883,8 +2912,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewExtension(
               newDepartureDate = LocalDate.parse("2022-08-22"),
@@ -2978,8 +3006,7 @@ class BookingTest : IntegrationTestBase() {
 
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .headers(buildTemporaryAccommodationHeaders(jwt))
           .bodyValue(
             NewConfirmation(
               notes = null,
@@ -3001,7 +3028,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking for a premises that's not in the user's region returns 403 Forbidden`() {
-    givenAUser { userEntity, jwt ->
+    givenAUser { _, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3029,7 +3056,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Confirmation on Temporary Accommodation Booking for a premises that does not exist returns 404 Not Found`() {
-    givenAUser { userEntity, jwt ->
+    givenAUser { _, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3250,9 +3277,9 @@ class BookingTest : IntegrationTestBase() {
     val temporaryAccommodationAssessmentEntity =
       temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)
 
-    assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNull()
-    assertThat(temporaryAccommodationAssessmentEntity!!.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-    assertThat(temporaryAccommodationAssessmentEntity!!.submittedAt).isNotNull()
+    assertThat(temporaryAccommodationAssessmentEntity?.completedAt).isNull()
+    assertThat(temporaryAccommodationAssessmentEntity?.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+    assertThat(temporaryAccommodationAssessmentEntity?.submittedAt).isNotNull()
   }
 
   private fun assertCAS3AssessmentIsClosed(assessment: TemporaryAccommodationAssessmentEntity) {

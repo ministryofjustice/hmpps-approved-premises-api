@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
@@ -36,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
@@ -391,7 +389,7 @@ class PremisesController(
   override fun premisesPremisesIdBookingsBookingIdArrivalsPost(
     premisesId: UUID,
     bookingId: UUID,
-    body: NewArrival,
+    body: NewCas3Arrival,
   ): ResponseEntity<Arrival> {
     requestContextService.ensureCas3Request()
 
@@ -403,42 +401,19 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val result = when (body) {
-      is NewCas2Arrival -> {
-        val bedId = booking.bed?.id
-          ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
+    val bedId = booking.bed?.id
+      ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
-        throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
-        throwIfVoidBedspaceDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
+    throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
+    throwIfVoidBedspaceDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
-        bookingService.createArrival(
-          booking = booking,
-          arrivalDate = body.arrivalDate,
-          expectedDepartureDate = body.expectedDepartureDate,
-          notes = body.notes,
-          keyWorkerStaffCode = body.keyWorkerStaffCode,
-          user = user,
-        )
-      }
-
-      is NewCas3Arrival -> {
-        val bedId = booking.bed?.id
-          ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
-
-        throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
-        throwIfVoidBedspaceDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
-
-        cas3BookingService.createArrival(
-          booking = booking,
-          arrivalDate = body.arrivalDate,
-          expectedDepartureDate = body.expectedDepartureDate,
-          notes = body.notes,
-          user = user,
-        )
-      }
-
-      else -> throw RuntimeException("Unsupported NewArrival type: ${body::class.qualifiedName}")
-    }
+    val result = cas3BookingService.createArrival(
+      booking = booking,
+      arrivalDate = body.arrivalDate,
+      expectedDepartureDate = body.expectedDepartureDate,
+      notes = body.notes,
+      user = user,
+    )
 
     val arrival = extractResultEntityOrThrow(result)
 

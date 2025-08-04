@@ -1,27 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
-
-/**
- *
- * @param arrivalDate
- */
 data class NewCas3Arrival(
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: java.time.LocalDate,
+  val arrivalDate: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  val type: String,
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("expectedDepartureDate", required = true) override val expectedDepartureDate: java.time.LocalDate,
+  val expectedDepartureDate: java.time.LocalDate,
 
-  @Schema(example = "null", description = "")
-  @get:JsonProperty("notes") override val notes: kotlin.String? = null,
+  val notes: String? = null,
 
-  @Schema(example = "null", description = "")
-  @get:JsonProperty("keyWorkerStaffCode") override val keyWorkerStaffCode: kotlin.String? = null,
-) : NewArrival
+  val keyWorkerStaffCode: String? = null,
+)

@@ -74,7 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
-import java.time.Instant
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -1140,11 +1140,12 @@ class Cas3v2BookingServiceTest {
     }
 
     @Test
-    fun `createArrival returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    fun `createArrival returns FieldValidationError with correct param to message map when arrival date is before expected departure date`() {
+      val arrivalDate = LocalDate.now()
       val result = cas3BookingService.createArrival(
         booking = cas3BookingEntity,
-        arrivalDate = LocalDate.parse("2022-08-27"),
-        expectedDepartureDate = LocalDate.parse("2022-08-26"),
+        arrivalDate = LocalDate.now(),
+        expectedDepartureDate = arrivalDate.minusDays(1),
         notes = "notes",
         user = UserEntityFactory()
           .withUnitTestControlProbationRegion()
@@ -1152,6 +1153,26 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.expectedDepartureDate", "beforeBookingArrivalDate")
+
+      verify(exactly = 0) { mockArrivalRepository.save(any()) }
+      verify(exactly = 0) { mockBookingRepository.save(any()) }
+      verify(exactly = 0) { mockCas3DomainEventService.savePersonArrivedEvent(cas3BookingEntity, user) }
+    }
+
+    @Test
+    fun `createArrival returns FieldValidationError with correct param to message map when arrival date is more than 2 weeks in the past`() {
+      val arrivalDate = LocalDate.now().minusDays(15)
+      val result = cas3BookingService.createArrival(
+        booking = cas3BookingEntity,
+        arrivalDate = arrivalDate,
+        expectedDepartureDate = arrivalDate.plusDays(10),
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.arrivalDate", "arrivalAfterLatestDate")
 
       verify(exactly = 0) { mockArrivalRepository.save(any()) }
       verify(exactly = 0) { mockBookingRepository.save(any()) }
@@ -1170,10 +1191,13 @@ class Cas3v2BookingServiceTest {
 
       every { mockCas3DomainEventService.savePersonArrivedUpdatedEvent(any(Cas3BookingEntity::class), any(UserEntity::class)) } just Runs
 
+      val arrivalDate = LocalDate.now().minusDays(3)
+      val expectedDepartureDate = arrivalDate.plusDays(1)
+
       val result = cas3BookingService.createArrival(
         booking = cas3BookingEntity,
-        arrivalDate = LocalDate.parse("2022-08-25"),
-        expectedDepartureDate = LocalDate.parse("2022-08-26"),
+        arrivalDate = arrivalDate,
+        expectedDepartureDate = expectedDepartureDate,
         notes = "notes",
         user = userEntity,
       )
@@ -1182,9 +1206,9 @@ class Cas3v2BookingServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         result as CasResult.Success
-        assertThat(result.value.arrivalDate).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.arrivalDateTime).isEqualTo(Instant.parse("2022-08-25T00:00:00Z"))
-        assertThat(result.value.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+        assertThat(result.value.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(result.value.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(result.value.expectedDepartureDate).isEqualTo(expectedDepartureDate)
         assertThat(result.value.notes).isEqualTo("notes")
         assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
       }
@@ -1204,19 +1228,23 @@ class Cas3v2BookingServiceTest {
       val userEntity = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
+
+      val arrivalDate = LocalDate.now().minusDays(3)
+      val expectedDepartureDate = arrivalDate.plusDays(1)
+
       val result = cas3BookingService.createArrival(
         booking = cas3BookingEntity,
-        arrivalDate = LocalDate.parse("2022-08-27"),
-        expectedDepartureDate = LocalDate.parse("2022-08-29"),
+        arrivalDate = arrivalDate,
+        expectedDepartureDate = expectedDepartureDate,
         notes = "notes",
         user = userEntity,
       )
 
       assertThatCasResult(result).isSuccess().with {
         result as CasResult.Success
-        assertThat(result.value.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
-        assertThat(result.value.arrivalDateTime).isEqualTo(Instant.parse("2022-08-27T00:00:00Z"))
-        assertThat(result.value.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+        assertThat(result.value.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(result.value.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(result.value.expectedDepartureDate).isEqualTo(expectedDepartureDate)
         assertThat(result.value.notes).isEqualTo("notes")
         assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
       }
@@ -1230,19 +1258,22 @@ class Cas3v2BookingServiceTest {
     fun `createArrival returns Success with correct result when validation passed and saves domain event without staff detail`() {
       every { mockCas3DomainEventService.savePersonArrivedEvent(any(Cas3BookingEntity::class), user) } just Runs
 
+      val arrivalDate = LocalDate.now().minusDays(3)
+      val expectedDepartureDate = arrivalDate.plusDays(1)
+
       val result = cas3BookingService.createArrival(
         booking = cas3BookingEntity,
-        arrivalDate = LocalDate.parse("2022-08-27"),
-        expectedDepartureDate = LocalDate.parse("2022-08-29"),
+        arrivalDate = arrivalDate,
+        expectedDepartureDate = expectedDepartureDate,
         notes = "notes",
         user = user,
       )
 
       assertThatCasResult(result).isSuccess().with {
         result as CasResult.Success
-        assertThat(result.value.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
-        assertThat(result.value.arrivalDateTime).isEqualTo(Instant.parse("2022-08-27T00:00:00Z"))
-        assertThat(result.value.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+        assertThat(result.value.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(result.value.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(result.value.expectedDepartureDate).isEqualTo(expectedDepartureDate)
         assertThat(result.value.notes).isEqualTo("notes")
         assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
       }

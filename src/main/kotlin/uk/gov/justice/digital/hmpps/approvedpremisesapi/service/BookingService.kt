@@ -8,14 +8,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -23,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -33,7 +29,6 @@ class BookingService(
   private val offenderDetailService: OffenderDetailService,
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
-  private val arrivalRepository: ArrivalRepository,
   private val cas3ConfirmationRepository: Cas3ConfirmationRepository,
   private val dateChangeRepository: DateChangeRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
@@ -62,50 +57,6 @@ class BookingService(
     val booking: BookingEntity,
     val personInfo: PersonInfoResult,
   )
-
-  @SuppressWarnings("UnusedParameter")
-  @Transactional
-  fun createArrival(
-    user: UserEntity,
-    booking: BookingEntity,
-    arrivalDate: LocalDate,
-    expectedDepartureDate: LocalDate,
-    notes: String?,
-    keyWorkerStaffCode: String?,
-  ) = validated<ArrivalEntity> {
-    if (booking.premises is TemporaryAccommodationPremisesEntity) {
-      return generalError("CAS3 booking arrival not supported here, preferred method is createArrival in Cas3BookingService")
-    }
-
-    if (booking.arrival != null) {
-      return generalError("This Booking already has an Arrival set")
-    }
-
-    if (expectedDepartureDate.isBefore(arrivalDate)) {
-      return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
-    }
-
-    val arrivalEntity = arrivalRepository.save(
-      ArrivalEntity(
-        id = UUID.randomUUID(),
-        arrivalDate = arrivalDate,
-        arrivalDateTime = arrivalDate.toLocalDateTime().toInstant(),
-        expectedDepartureDate = expectedDepartureDate,
-        notes = notes,
-        booking = booking,
-        createdAt = OffsetDateTime.now(),
-      ),
-    )
-
-    booking.arrivalDate = arrivalDate
-    booking.departureDate = expectedDepartureDate
-    booking.status = BookingStatus.arrived
-    updateBooking(booking)
-
-    booking.arrivals += arrivalEntity
-
-    return success(arrivalEntity)
-  }
 
   @Transactional
   fun createConfirmation(

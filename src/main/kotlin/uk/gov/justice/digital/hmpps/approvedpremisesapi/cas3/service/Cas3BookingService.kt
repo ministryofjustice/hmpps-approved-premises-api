@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Turn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -289,6 +290,9 @@ class Cas3BookingService(
   ) = validated<ArrivalEntity> {
     if (expectedDepartureDate.isBefore(arrivalDate)) {
       return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+    }
+    if (arrivalDate.isBefore(LocalDate.now().minusDays(Cas3v2BookingService.ARRIVAL_AFTER_LATEST_DATE_LIMIT_DAYS))) {
+      return "$.arrivalDate" hasSingleValidationError "arrivalAfterLatestDate"
     }
     val isFirstArrival = booking.arrivals.isNullOrEmpty()
     val arrivalEntity = arrivalRepository.save(

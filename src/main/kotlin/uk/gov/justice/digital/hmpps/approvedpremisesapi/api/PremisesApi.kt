@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
@@ -49,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 
 @RestController
 interface PremisesApi {
@@ -90,7 +90,7 @@ interface PremisesApi {
     produces = ["application/json", "application/problem+json"],
     consumes = ["application/json"],
   )
-  fun premisesPremisesIdBookingsBookingIdArrivalsPost(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the arrival", required = true) @RequestBody body: NewArrival): ResponseEntity<Arrival> = getDelegate().premisesPremisesIdBookingsBookingIdArrivalsPost(premisesId, bookingId, body)
+  fun premisesPremisesIdBookingsBookingIdArrivalsPost(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the arrival", required = true) @RequestBody body: NewCas3Arrival): ResponseEntity<Arrival> = getDelegate().premisesPremisesIdBookingsBookingIdArrivalsPost(premisesId, bookingId, body)
 
   @Operation(
     tags = ["Operations on bookings"],

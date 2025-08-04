@@ -64,6 +64,10 @@ class Cas3v2BookingService(
   private val assessmentService: AssessmentService,
   private val featureFlagService: FeatureFlagService,
 ) {
+  companion object {
+    const val ARRIVAL_AFTER_LATEST_DATE_LIMIT_DAYS: Long = 14
+  }
+
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun getBooking(bookingId: UUID, premisesId: UUID?, user: UserEntity): CasResult<Cas3BookingEntity> {
@@ -196,6 +200,12 @@ class Cas3v2BookingService(
       "$.expectedDepartureDate" hasValidationError "beforeBookingArrivalDate"
       return@validatedCasResult fieldValidationError
     }
+
+    if (arrivalDate.isBefore(LocalDate.now().minusDays(ARRIVAL_AFTER_LATEST_DATE_LIMIT_DAYS))) {
+      "$.arrivalDate" hasValidationError "arrivalAfterLatestDate"
+      return@validatedCasResult fieldValidationError
+    }
+
     val isFirstArrival = booking.arrivals.isEmpty()
     val arrivalEntity = cas3ArrivalRepository.save(
       Cas3ArrivalEntity(
