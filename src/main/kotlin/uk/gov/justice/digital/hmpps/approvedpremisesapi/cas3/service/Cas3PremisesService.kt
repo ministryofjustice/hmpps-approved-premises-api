@@ -71,8 +71,10 @@ class Cas3PremisesService(
     const val MAX_DAYS_UNARCHIVE_PREMISES: Long = 7
     const val MAX_DAYS_ARCHIVE_PREMISES_IN_PAST: Long = 7
     const val MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE: Long = 3
+    const val MAX_DAYS_CREATE_BEDSPACE: Long = 7
     const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 7
-    const val MAX_MONTHS_ARCHIVE_BEDSPACE: Long = 3
+    const val MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST: Long = 7
+    const val MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE: Long = 3
   }
 
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
@@ -469,8 +471,6 @@ class Cas3PremisesService(
     premises: TemporaryAccommodationPremisesEntity,
     endDate: LocalDate,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
-    val bedspaceValidationErrors = mutableListOf<Cas3FieldValidationError<BedEntity>>()
-
     if (endDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
     }
@@ -501,14 +501,8 @@ class Cas3PremisesService(
       )
     }
 
-    canArchiveBedspace(premisesId = premises.id, bedspaceId = null, endDate = endDate)?.let { bedspaceValidationErrors.add(it) }
-
-    if (bedspaceValidationErrors.any()) {
-      return Cas3FieldValidationError(
-        bedspaceValidationErrors
-          .flatMap { it.validationMessages.entries }
-          .associate { entry -> entry.key to entry.value },
-      )
+    canArchiveBedspace(premisesId = premises.id, bedspaceId = null, endDate = endDate)?.let {
+      return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
     }
 
     // archive premises
@@ -578,11 +572,11 @@ class Cas3PremisesService(
       "$.reference" hasValidationError "bedspaceReferenceExists"
     }
 
-    if (startDate.isBefore(LocalDate.now().minusDays(7))) {
+    if (startDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_CREATE_BEDSPACE))) {
       "$.startDate" hasValidationError "invalidStartDateInThePast"
     }
 
-    if (startDate.isAfter(LocalDate.now().plusDays(7))) {
+    if (startDate.isAfter(LocalDate.now().plusDays(MAX_DAYS_CREATE_BEDSPACE))) {
       "$.startDate" hasValidationError "invalidStartDateInTheFuture"
     }
 
@@ -693,11 +687,11 @@ class Cas3PremisesService(
     val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
       ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
 
-    if (endDate.isBefore(LocalDate.now())) {
+    if (endDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
     }
 
-    if (endDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_BEDSPACE))) {
+    if (endDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
     }
 
