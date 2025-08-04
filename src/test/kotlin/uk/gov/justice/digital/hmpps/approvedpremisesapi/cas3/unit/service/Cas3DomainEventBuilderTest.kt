@@ -93,7 +93,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -135,7 +135,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -178,7 +178,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -222,7 +222,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -270,7 +270,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -398,7 +398,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -450,7 +450,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -519,7 +519,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -554,7 +554,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -596,7 +596,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -637,7 +637,7 @@ class Cas3DomainEventBuilderTest {
     val currentStartDate = LocalDate.now().minusDays(20)
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
-    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
     val user = userEntity(probationRegion)
     val room = RoomEntityFactory().withPremises(premises).produce()
     val bedspace = BedEntityFactory()
@@ -664,11 +664,35 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
+  fun `getPremisesArchiveEvent transforms the premises information correctly to a domain event`() {
+    val endDate = LocalDate.now()
+    val probationRegion = probationRegionEntity()
+    val premises = createCas3PremisesEntity(probationRegion)
+    val user = userEntity(probationRegion)
+
+    val event = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user)
+
+    assertAll({
+      assertThat(event.applicationId).isNull()
+      assertThat(event.bookingId).isNull()
+      assertThat(event.crn).isNull()
+      assertThat(event.nomsNumber).isNull()
+      assertThat(event.data.eventType).isEqualTo(EventType.premisesArchived)
+      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+      assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+      assertThat(event.occurredAt).isWithinTheLastMinute()
+      assertThat(event.data.timestamp).isWithinTheLastMinute()
+      assertThat(event.id).isEqualTo(event.data.id)
+    })
+  }
+
+  @Test
   fun `getPremisesUnarchiveEvent transforms the premises information correctly to a domain event`() {
     val currentStartDate = LocalDate.now().minusDays(20)
     val newStartDate = LocalDate.now().plusDays(5)
     val probationRegion = probationRegionEntity()
-    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
     val user = userEntity(probationRegion)
 
     val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, user)
@@ -695,7 +719,7 @@ class Cas3DomainEventBuilderTest {
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
     val user = userEntity(probationRegion)
-    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
     val room = RoomEntityFactory()
       .withPremises(premises)
       .produce()
@@ -727,7 +751,7 @@ class Cas3DomainEventBuilderTest {
     val bedspaceId = UUID.randomUUID()
     val probationRegion = probationRegionEntity()
     val user = userEntity(probationRegion)
-    val premises = createCas3PremisesEntityWithDependencies(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
     val room = RoomEntityFactory()
       .withPremises(premises)
       .produce()
@@ -752,7 +776,7 @@ class Cas3DomainEventBuilderTest {
 
     val probationRegion = probationRegionEntity()
 
-    val premises = temporaryAccommodationPremisesEntity(probationRegion)
+    val premises = createCas3PremisesEntity(probationRegion)
 
     val user = userEntity(probationRegion)
 
@@ -868,12 +892,6 @@ class Cas3DomainEventBuilderTest {
     .withProbationRegion(probationRegion)
     .produce()
 
-  private fun temporaryAccommodationPremisesEntity(probationRegion: ProbationRegionEntity) = TemporaryAccommodationPremisesEntityFactory()
-    .withProbationRegion(probationRegion)
-    .withLocalAuthorityArea(
-      LocalAuthorityEntityFactory().produce(),
-    ).produce()
-
   private fun cas3PremisesEntity(probationRegion: ProbationRegionEntity) = Cas3PremisesEntityFactory()
     .withProbationDeliveryUnit(
       ProbationDeliveryUnitEntityFactory()
@@ -883,7 +901,7 @@ class Cas3DomainEventBuilderTest {
     .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
     .produce()
 
-  private fun createCas3PremisesEntityWithDependencies(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity {
+  private fun createCas3PremisesEntity(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity {
     val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
       .withProbationRegion(probationRegion).produce()
     val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()

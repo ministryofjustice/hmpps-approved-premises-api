@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedEvent
@@ -289,6 +291,29 @@ class Cas3DomainEventBuilder(
     )
   }
 
+  fun getPremisesArchiveEvent(
+    premises: TemporaryAccommodationPremisesEntity,
+    endDate: LocalDate,
+    user: UserEntity,
+  ): DomainEvent<CAS3PremisesArchiveEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3PremisesArchiveEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.premisesArchived,
+        eventDetails = buildCAS3PremisesArchiveEventDetails(premises, endDate, user),
+      ),
+    )
+  }
+
   fun getPremisesUnarchiveEvent(
     premises: TemporaryAccommodationPremisesEntity,
     currentStartDate: LocalDate,
@@ -533,6 +558,16 @@ class Cas3DomainEventBuilder(
     applicationUrl = application.toUrl(),
     reasonDetail = null,
     recordedBy = user?.let { populateStaffMember(it) },
+  )
+
+  private fun buildCAS3PremisesArchiveEventDetails(
+    premises: PremisesEntity,
+    endDate: LocalDate,
+    user: UserEntity,
+  ) = CAS3PremisesArchiveEventDetails(
+    premisesId = premises.id,
+    userId = user.id,
+    endDate = endDate,
   )
 
   private fun buildCAS3PremisesUnarchiveEventDetails(

@@ -35,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
@@ -63,10 +65,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
@@ -1953,35 +1959,18 @@ class Cas3DomainEventServiceTest {
   @Test
   fun `saveBedspaceUnarchiveEvent saves event but does not emit it`() {
     val occuredAt = Instant.now()
-    val bedspaceId = UUID.randomUUID()
     val newStartDate = LocalDate.now().plusDays(5)
     val currentStartDate = LocalDate.now().minusDays(20)
     val currentEndDate = LocalDate.now().minusDays(2)
-    val id = UUID.randomUUID()
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      ).produce()
-    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
-      .withProbationRegion(probationRegion).produce()
-    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withLocalAuthorityArea(localAuthorityArea)
-      .withProbationDeliveryUnit(probationDeliveryUnit)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val probationRegion = ProbationRegionEntityFactory().produce()
+    val premises = createPremisesEntity(probationRegion)
+    val bedspace = createBedspaceEntity(premises)
     val user = UserEntityFactory()
       .withProbationRegion(probationRegion)
       .produce()
-    val room = RoomEntityFactory().withPremises(premises).produce()
-    val bedspace = BedEntityFactory()
-      .withId(bedspaceId)
-      .withEndDate(null)
-      .withStartDate(newStartDate)
-      .withRoom(room)
-      .produce()
+
     val eventDetails = CAS3BedspaceUnarchiveEventDetails(
-      bedspaceId = bedspaceId,
+      bedspaceId = bedspace.id,
       userId = user.id,
       newStartDate = newStartDate,
       currentStartDate = currentStartDate,
@@ -1989,7 +1978,7 @@ class Cas3DomainEventServiceTest {
     )
     val data = CAS3BedspaceUnarchiveEvent(
       eventDetails = eventDetails,
-      id = id,
+      id = UUID.randomUUID(),
       timestamp = occuredAt,
       eventType = EventType.bedspaceUnarchived,
     )
@@ -2018,13 +2007,13 @@ class Cas3DomainEventServiceTest {
           it.id == domainEvent.id &&
             it.type == DomainEventType.CAS3_BEDSPACE_UNARCHIVED &&
             it.crn == domainEvent.crn &&
-            it.cas3PremisesId == premises.id &&
-            it.cas3BedspaceId == bedspaceId &&
+            it.cas3PremisesId == null &&
+            it.cas3BedspaceId == bedspace.id &&
             it.applicationId == null &&
             it.cas1SpaceBookingId == null &&
             it.assessmentId == null &&
-            it.service == "CAS3"
-          it.bookingId == null &&
+            it.service == "CAS3" &&
+            it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEvent.data) &&
@@ -2038,41 +2027,23 @@ class Cas3DomainEventServiceTest {
   @Test
   fun `saveBedspaceArchiveEvent saves event but does not emit it`() {
     val occuredAt = Instant.now()
-    val bedspaceId = UUID.randomUUID()
     val endDate = LocalDate.parse("2021-01-01")
-    val id = UUID.randomUUID()
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      ).produce()
-    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
-      .withProbationRegion(probationRegion).produce()
-    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withLocalAuthorityArea(localAuthorityArea)
-      .withProbationDeliveryUnit(probationDeliveryUnit)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val probationRegion = ProbationRegionEntityFactory().produce()
+    val premises = createPremisesEntity(probationRegion)
+    val bedspace = createBedspaceEntity(premises)
     val user = UserEntityFactory()
       .withProbationRegion(probationRegion)
       .produce()
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-    val bedspace = BedEntityFactory()
-      .withId(bedspaceId)
-      .withEndDate(null)
-      .withRoom(room)
-      .produce()
+
     val eventDetails = CAS3BedspaceArchiveEventDetails(
-      bedspaceId = bedspaceId,
+      bedspaceId = bedspace.id,
       premisesId = premises.id,
       userId = user.id,
       endDate = endDate,
     )
     val data = CAS3BedspaceArchiveEvent(
       eventDetails = eventDetails,
-      id = id,
+      id = UUID.randomUUID(),
       timestamp = occuredAt,
       eventType = EventType.bedspaceArchived,
     )
@@ -2101,13 +2072,77 @@ class Cas3DomainEventServiceTest {
           it.id == domainEvent.id &&
             it.type == DomainEventType.CAS3_BEDSPACE_ARCHIVED &&
             it.crn == domainEvent.crn &&
-            it.cas3PremisesId == premises.id &&
-            it.cas3BedspaceId == bedspaceId &&
+            it.cas3PremisesId == null &&
+            it.cas3BedspaceId == bedspace.id &&
             it.applicationId == null &&
             it.cas1SpaceBookingId == null &&
             it.assessmentId == null &&
-            it.service == "CAS3"
-          it.bookingId == null &&
+            it.service == "CAS3" &&
+            it.bookingId == null &&
+            it.nomsNumber == null &&
+            it.occurredAt.toInstant() == domainEvent.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `savePremisesArchiveEvent saves event but does not emit it`() {
+    val occurredAt = Instant.now()
+    val premisesEndDate = LocalDate.now().plusDays(3)
+    val probationRegion = ProbationRegionEntityFactory().produce()
+    val premises = createPremisesEntity(probationRegion)
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val eventDetails = CAS3PremisesArchiveEventDetails(
+      premisesId = premises.id,
+      userId = user.id,
+      endDate = premisesEndDate,
+    )
+
+    val data = CAS3PremisesArchiveEvent(
+      eventDetails = eventDetails,
+      id = UUID.randomUUID(),
+      timestamp = occurredAt,
+      eventType = EventType.premisesArchived,
+    )
+    val domainEventId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getPremisesArchiveEvent(eq(premises), eq(premisesEndDate), eq(user)) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+    every { userService.getUserForRequest() } returns user
+    every { userService.getUserForRequestOrNull() } returns user
+
+    cas3DomainEventService.savePremisesArchiveEvent(premises, premisesEndDate)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEvent.id &&
+            it.type == DomainEventType.CAS3_PREMISES_ARCHIVED &&
+            it.crn == domainEvent.crn &&
+            it.cas3PremisesId == premises.id &&
+            it.cas3BedspaceId == null &&
+            it.applicationId == null &&
+            it.cas1SpaceBookingId == null &&
+            it.assessmentId == null &&
+            it.service == "CAS3" &&
+            it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEvent.data) &&
@@ -2123,22 +2158,12 @@ class Cas3DomainEventServiceTest {
     val occurredAt = Instant.now()
     val currentStartDate = LocalDate.now().minusDays(20)
     val newStartDate = LocalDate.now().plusDays(5)
-    val id = UUID.randomUUID()
-    val probationRegion = ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      ).produce()
-    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
-      .withProbationRegion(probationRegion).produce()
-    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withLocalAuthorityArea(localAuthorityArea)
-      .withProbationDeliveryUnit(probationDeliveryUnit)
-      .withProbationRegion(probationRegion)
-      .produce()
+    val probationRegion = ProbationRegionEntityFactory().produce()
+    val premises = createPremisesEntity(probationRegion)
     val user = UserEntityFactory()
       .withProbationRegion(probationRegion)
       .produce()
+
     val eventDetails = CAS3PremisesUnarchiveEventDetails(
       premisesId = premises.id,
       userId = user.id,
@@ -2147,7 +2172,7 @@ class Cas3DomainEventServiceTest {
     )
     val data = CAS3PremisesUnarchiveEvent(
       eventDetails = eventDetails,
-      id = id,
+      id = UUID.randomUUID(),
       timestamp = occurredAt,
       eventType = EventType.premisesUnarchived,
     )
@@ -3143,6 +3168,27 @@ class Cas3DomainEventServiceTest {
       eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
     ),
   )
+
+  private fun createPremisesEntity(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity {
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion).produce()
+    val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
+    return TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withProbationRegion(probationRegion)
+      .produce()
+  }
+
+  private fun createBedspaceEntity(premises: PremisesEntity): BedEntity {
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+    return BedEntityFactory()
+      .withEndDate(null)
+      .withRoom(room)
+      .produce()
+  }
 
   private fun createTemporaryAccommodationPremisesBookingEntity(): BookingEntity {
     val probationRegion = ProbationRegionEntityFactory()

@@ -1986,6 +1986,7 @@ class Cas3PremisesServiceTest {
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
       every { premisesRepositoryMock.save(any()) } returns premises
+      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(premises, archiveDate) } returns Unit
       every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(any()) } returns Unit
 
       val result = premisesService.archivePremises(premises, archiveDate)
@@ -2006,6 +2007,21 @@ class Cas3PremisesServiceTest {
           }
         }
       }
+
+      verify(exactly = 1) {
+        cas3DomainEventServiceMock.savePremisesArchiveEvent(
+          match<TemporaryAccommodationPremisesEntity> {
+            it.id == premises.id
+          },
+          archiveDate,
+        )
+      }
+
+      verify(exactly = 2) {
+        cas3DomainEventServiceMock.saveBedspaceArchiveEvent(
+          any(),
+        )
+      }
     }
 
     @Test
@@ -2021,6 +2037,8 @@ class Cas3PremisesServiceTest {
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
       every { premisesRepositoryMock.save(any()) } returns premises
+      every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(any()) } returns Unit
+      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(premises, archiveDate) } returns Unit
       every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(any()) } returns Unit
 
       val result = premisesService.archivePremises(premises, archiveDate)

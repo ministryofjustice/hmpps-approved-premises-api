@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Book
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
@@ -253,6 +254,20 @@ class Cas3DomainEventService(
   }
 
   @Transactional
+  fun savePremisesArchiveEvent(premises: TemporaryAccommodationPremisesEntity, endDate: LocalDate) {
+    val user = userService.getUserForRequest()
+    val domainEvent = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.crn,
+      nomsNumber = domainEvent.nomsNumber,
+      triggerSourceType = TriggerSourceType.USER,
+      false,
+    )
+  }
+
+  @Transactional
   fun savePremisesUnarchiveEvent(premises: TemporaryAccommodationPremisesEntity, currentStartDate: LocalDate, newStartDate: LocalDate) {
     val user = userService.getUserForRequest()
     val domainEvent = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, user)
@@ -308,7 +323,14 @@ class Cas3DomainEventService(
     val user = userService.getUserForRequestOrNull()
 
     val cas3PremisesId = when (domainEvent.data) {
+      is CAS3PremisesArchiveEvent -> domainEvent.data.eventDetails.premisesId
       is CAS3PremisesUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
+      else -> null
+    }
+
+    val cas3BedspaceId = when (domainEvent.data) {
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.eventDetails.bedspaceId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.eventDetails.bedspaceId
       else -> null
     }
 
@@ -330,7 +352,7 @@ class Cas3DomainEventService(
         schemaVersion = domainEvent.schemaVersion,
         cas1SpaceBookingId = null,
         cas3PremisesId = cas3PremisesId,
-        cas3BedspaceId = null,
+        cas3BedspaceId = cas3BedspaceId,
       ),
     )
 
@@ -394,9 +416,10 @@ class Cas3DomainEventService(
     CAS3PersonDepartureUpdatedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED
     CAS3AssessmentUpdatedEvent::class -> DomainEventType.CAS3_ASSESSMENT_UPDATED
     CAS3DraftReferralDeletedEvent::class -> DomainEventType.CAS3_DRAFT_REFERRAL_DELETED
-    CAS3BedspaceUnarchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_UNARCHIVED
-    CAS3BedspaceArchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_ARCHIVED
+    CAS3PremisesArchiveEvent::class -> DomainEventType.CAS3_PREMISES_ARCHIVED
     CAS3PremisesUnarchiveEvent::class -> DomainEventType.CAS3_PREMISES_UNARCHIVED
+    CAS3BedspaceArchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_ARCHIVED
+    CAS3BedspaceUnarchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_UNARCHIVED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 
