@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
@@ -271,7 +272,32 @@ class Cas3DomainEventBuilder(
   fun getPersonDepartedDomainEvent(
     booking: BookingEntity,
     user: UserEntity?,
-  ): DomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonDepartedEvent> {
+  ): DomainEvent<CAS3PersonDepartedEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    val departure = booking.departure!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = departure.dateTime.toInstant(),
+      data = CAS3PersonDepartedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.personDeparted,
+        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure, user),
+      ),
+    )
+  }
+
+  fun getPersonDepartedDomainEvent(
+    booking: Cas3BookingEntity,
+    user: UserEntity?,
+  ): DomainEvent<CAS3PersonDepartedEvent> {
     val domainEventId = UUID.randomUUID()
 
     val departure = booking.departure!!
@@ -440,7 +466,32 @@ class Cas3DomainEventBuilder(
   fun buildDepartureUpdatedDomainEvent(
     booking: BookingEntity,
     user: UserEntity?,
-  ): DomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonDepartureUpdatedEvent> {
+  ): DomainEvent<CAS3PersonDepartureUpdatedEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    val departure = booking.departure!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = departure.dateTime.toInstant(),
+      data = CAS3PersonDepartureUpdatedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.personDepartureUpdated,
+        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure, user),
+      ),
+    )
+  }
+
+  fun buildDepartureUpdatedDomainEvent(
+    booking: Cas3BookingEntity,
+    user: UserEntity?,
+  ): DomainEvent<CAS3PersonDepartureUpdatedEvent> {
     val domainEventId = UUID.randomUUID()
 
     val departure = booking.departure!!
@@ -507,7 +558,7 @@ class Cas3DomainEventBuilder(
   fun buildPersonArrivedUpdatedDomainEvent(
     booking: BookingEntity,
     user: UserEntity?,
-  ): DomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonArrivedUpdatedEvent> {
+  ): DomainEvent<CAS3PersonArrivedUpdatedEvent> {
     val domainEventId = UUID.randomUUID()
     val arrival = booking.arrival!!
     val application = booking.application as? TemporaryAccommodationApplicationEntity
@@ -597,6 +648,35 @@ class Cas3DomainEventBuilder(
       postcode = booking.premises.postcode,
       town = booking.premises.town,
       region = booking.premises.probationRegion.name,
+    ),
+    departedAt = departure.dateTime.toInstant(),
+    reason = departure.reason.name,
+    notes = departure.notes ?: "",
+    applicationId = application?.id,
+    applicationUrl = application.toUrl(),
+    reasonDetail = null,
+    recordedBy = user?.let { populateStaffMember(it) },
+  )
+
+  private fun buildCAS3PersonDepartedEventDetail(
+    booking: Cas3BookingEntity,
+    application: TemporaryAccommodationApplicationEntity?,
+    departure: Cas3DepartureEntity,
+    user: UserEntity?,
+  ) = CAS3PersonDepartedEventDetails(
+    personReference = PersonReference(
+      crn = booking.crn,
+      noms = booking.nomsNumber,
+    ),
+    deliusEventNumber = application?.eventNumber ?: "",
+    bookingId = booking.id,
+    bookingUrl = booking.toUrl(),
+    premises = Premises(
+      addressLine1 = booking.premises.addressLine1,
+      addressLine2 = booking.premises.addressLine2,
+      postcode = booking.premises.postcode,
+      town = booking.premises.town,
+      region = booking.premises.probationDeliveryUnit.probationRegion.name,
     ),
     departedAt = departure.dateTime.toInstant(),
     reason = departure.reason.name,

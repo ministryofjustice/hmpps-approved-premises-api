@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -32,10 +33,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @SuppressWarnings("LargeClass")
@@ -1979,6 +1982,220 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           )
 
           assertCAS3AssessmentIsClosed(assessment)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateDeparture {
+
+    @Test
+    fun `Create Departure updates the departure date for a booking`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.parse("2022-08-10"))
+            withDepartureDate(LocalDate.parse("2022-08-30"))
+            withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+          }
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              Cas3NewDeparture(
+                dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                notes = "Hello",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
+            .jsonPath("$.departureDate").isEqualTo("2022-09-01")
+            .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+            .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+            .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
+
+          assertPublishedSnsEvent(
+            booking,
+            DomainEventType.CAS3_PERSON_DEPARTED,
+            "Someone has left a Transitional Accommodation premises",
+            "http://api/events/cas3/person-departed",
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Create Departure on Booking when a departure already exists returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.parse("2022-08-10"))
+            withDepartureDate(LocalDate.parse("2022-08-30"))
+            withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+          }
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val departure = cas3DepartureEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withReason(reason)
+            withMoveOnCategory(moveOnCategory)
+          }
+          booking.departures = mutableListOf(departure)
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              Cas3NewDeparture(
+                dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                notes = "Corrected date",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.dateTime").isEqualTo("2022-09-01T12:34:56.789Z")
+            .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
+            .jsonPath("$.notes").isEqualTo("Corrected date")
+            .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
+
+          assertPublishedSnsEvent(
+            booking,
+            DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED,
+            "Person has updated departure date of Transitional Accommodation premises",
+            "http://api/events/cas3/person-departure-updated",
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Create Departure for a booking on a premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = givenACas3Premises()
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(
+              cas3BedspaceEntityFactory.produceAndPersist {
+                withPremises(premises)
+              },
+            )
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.parse("2022-08-10"))
+            withDepartureDate(LocalDate.parse("2022-08-30"))
+            withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+          }
+
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              Cas3NewDeparture(
+                dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                notes = "Hello",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @Test
+    fun `Create Departure for a booking on a premises that does not exist returns 404 Not Found`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.now().plusDays(5))
+            withDepartureDate(LocalDate.now().plusDays(63))
+            withCreatedAt(OffsetDateTime.now())
+          }
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+
+          val notFoundPremisesId = UUID.randomUUID()
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/$notFoundPremisesId/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              Cas3NewDeparture(
+                dateTime = Instant.now().plus(10, ChronoUnit.DAYS),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                notes = "Some notes",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isNotFound
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("No Premises with an ID of $notFoundPremisesId could be found")
         }
       }
     }

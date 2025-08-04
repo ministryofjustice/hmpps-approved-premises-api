@@ -33,7 +33,7 @@ class Cas3v2BookingController(
 ) {
 
   @GetMapping("/bookings/{bookingId}")
-  fun bookingsBookingIdGet(@PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> {
+  fun getBookingById(@PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> {
     val user = userService.getUserForRequest()
     val bookingResult = bookingService.getBooking(bookingId, premisesId = null, user)
     val booking = extractEntityFromCasResult(bookingResult)
@@ -55,7 +55,7 @@ class Cas3v2BookingController(
 
   @PaginationHeaders
   @GetMapping("/bookings/search")
-  fun bookingsSearch(
+  fun searchBookings(
     @RequestParam status: Cas3BookingStatus?,
     @RequestParam(defaultValue = "asc") sortDirection: SortDirection,
     @RequestParam(defaultValue = "createdAt") sortField: Cas3BookingSearchSortField,

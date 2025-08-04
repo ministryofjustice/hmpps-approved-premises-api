@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedsp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Cancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Departure
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3CancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -36,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.time.ZoneOffset
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -53,10 +57,11 @@ class Cas3v2PremisesController(
   private val cas3UserAccessService: Cas3UserAccessService,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
   private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
+  private val cas3DepartureTransformer: Cas3DepartureTransformer,
 ) {
 
   @GetMapping("/premises/{premisesId}/bookings")
-  fun getPremises(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3Booking>> = runBlocking {
+  fun getPremisesBookings(@PathVariable premisesId: UUID): ResponseEntity<List<Cas3Booking>> = runBlocking {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -84,7 +89,7 @@ class Cas3v2PremisesController(
   }
 
   @GetMapping("/premises/{premisesId}/bookings/{bookingId}")
-  fun premisesPremisesIdBookingsBookingIdGet(@PathVariable premisesId: UUID, @PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> = runBlocking {
+  fun getPremisesBookingByBookingId(@PathVariable premisesId: UUID, @PathVariable bookingId: UUID): ResponseEntity<Cas3Booking> = runBlocking {
     val user = usersService.getUserForRequest()
     val bookingResult = cas3BookingService.getBooking(bookingId, premisesId, user)
     val booking = extractEntityFromCasResult(bookingResult)
@@ -105,7 +110,7 @@ class Cas3v2PremisesController(
   @PostMapping("/premises/{premisesId}/bookings")
   @Transactional
   @SuppressWarnings("ThrowsCount")
-  fun premisesPremisesIdBookingsPost(
+  fun postPremisesBooking(
     @PathVariable premisesId: UUID,
     @RequestBody newBooking: Cas3NewBooking,
   ): ResponseEntity<Cas3Booking> {
@@ -155,7 +160,7 @@ class Cas3v2PremisesController(
   }
 
   @PostMapping("/premises/{premisesId}/bookings/{bookingId}/arrivals")
-  fun premisesPremisesIdBookingsBookingIdArrivalsPost(
+  fun postPremisesBookingArrival(
     @PathVariable premisesId: UUID,
     @PathVariable bookingId: UUID,
     @RequestBody newArrival: NewCas3Arrival,
@@ -181,7 +186,7 @@ class Cas3v2PremisesController(
   }
 
   @PostMapping("/premises/{premisesId}/bookings/{bookingId}/cancellations")
-  fun premisesPremisesIdBookingsBookingIdCancellationsPost(
+  fun postPremisesBookingCancellation(
     @PathVariable premisesId: UUID,
     @PathVariable bookingId: UUID,
     @RequestBody body: NewCancellation,
@@ -201,6 +206,32 @@ class Cas3v2PremisesController(
     )
     val cancellation = extractEntityFromCasResult(result)
     return ResponseEntity.ok(cas3CancellationTransformer.transformJpaToApi(cancellation))
+  }
+
+  @PostMapping("/premises/{premisesId}/bookings/{bookingId}/departures")
+  fun postPremisesBookingDeparture(
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+    @RequestBody body: Cas3NewDeparture,
+  ): ResponseEntity<Cas3Departure> {
+    val user = usersService.getUserForRequest()
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId, user)
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = cas3BookingService.createDeparture(
+      user = user,
+      booking = booking,
+      dateTime = body.dateTime.atOffset(ZoneOffset.UTC),
+      reasonId = body.reasonId,
+      moveOnCategoryId = body.moveOnCategoryId,
+      notes = body.notes,
+    )
+
+    val departure = extractEntityFromCasResult(result)
+
+    return ResponseEntity.ok(cas3DepartureTransformer.transformJpaToApi(departure))
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID, user: UserEntity): Cas3BookingEntity {

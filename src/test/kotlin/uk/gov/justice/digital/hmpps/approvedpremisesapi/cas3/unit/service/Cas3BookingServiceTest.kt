@@ -98,7 +98,6 @@ class Cas3BookingServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
-
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
   private val mockCancellationRepository = mockk<CancellationRepository>()
@@ -563,7 +562,7 @@ class Cas3BookingServiceTest {
 
       every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
 
-      every { mockCas3DomainEventService.savePersonDepartedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.savePersonDepartedEvent(any(BookingEntity::class), user) } just Runs
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -589,10 +588,10 @@ class Cas3BookingServiceTest {
         mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity, user)
       }
       verify(exactly = 1) {
-        mockCas3DomainEventService.savePersonDepartedEvent(any(), user)
+        mockCas3DomainEventService.savePersonDepartedEvent(any(BookingEntity::class), user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user)
+        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(BookingEntity::class), user)
       }
     }
 
@@ -638,7 +637,7 @@ class Cas3BookingServiceTest {
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-      every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(BookingEntity::class), user) } just Runs
       every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
@@ -662,10 +661,10 @@ class Cas3BookingServiceTest {
       assertThat(result.value.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user)
+        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(BookingEntity::class), user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.savePersonDepartedEvent(any(), user)
+        mockCas3DomainEventService.savePersonDepartedEvent(any(BookingEntity::class), user)
       }
     }
   }
