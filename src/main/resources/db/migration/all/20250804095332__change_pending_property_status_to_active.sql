@@ -1,0 +1,1 @@
+UPDATE premises SET status = 'active' WHERE status = 'pending';
