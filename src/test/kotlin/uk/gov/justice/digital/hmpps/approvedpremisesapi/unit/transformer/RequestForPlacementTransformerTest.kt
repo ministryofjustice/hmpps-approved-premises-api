@@ -61,6 +61,8 @@ class RequestForPlacementTransformerTest {
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
         .withExpectedArrival(LocalDate.of(2012, 9, 9))
         .withDuration(47)
+        .withRequestedDuration(48)
+        .withAuthorisedDuration(49)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -74,8 +76,12 @@ class RequestForPlacementTransformerTest {
       assertThat(result.requestReviewedAt).isEqualTo(placementApplication.decisionMadeAt?.toInstant())
       assertThat(result.document).isNotNull
       assertThat(result.withdrawalReason).isEqualTo(placementApplication.withdrawalReason?.apiValue)
-      assertThat(result.dates.expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
-      assertThat(result.dates.duration).isEqualTo(47)
+      assertThat(result.requestedPlacementPeriod.arrival).isEqualTo(LocalDate.of(2012, 9, 9))
+      assertThat(result.requestedPlacementPeriod.arrivalFlexible).isNull()
+      assertThat(result.requestedPlacementPeriod.duration).isEqualTo(48)
+      assertThat(result.authorisedPlacementPeriod!!.arrival).isEqualTo(LocalDate.of(2012, 9, 9))
+      assertThat(result.authorisedPlacementPeriod.arrivalFlexible).isNull()
+      assertThat(result.authorisedPlacementPeriod.duration).isEqualTo(49)
       assertThat(result.placementDates).hasSize(1)
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
       assertThat(result.placementDates[0].duration).isEqualTo(47)
@@ -98,6 +104,8 @@ class RequestForPlacementTransformerTest {
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
         .withExpectedArrival(LocalDate.of(2012, 9, 9))
         .withDuration(47)
+        .withRequestedDuration(6)
+        .withAuthorisedDuration(7)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -119,6 +127,8 @@ class RequestForPlacementTransformerTest {
         .withDecision(PlacementApplicationDecision.ACCEPTED)
         .withExpectedArrival(LocalDate.of(2012, 9, 9))
         .withDuration(47)
+        .withRequestedDuration(6)
+        .withAuthorisedDuration(7)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -172,6 +182,8 @@ class RequestForPlacementTransformerTest {
         .withDecision(PlacementApplicationDecision.REJECTED)
         .withExpectedArrival(LocalDate.of(2012, 9, 9))
         .withDuration(47)
+        .withRequestedDuration(6)
+        .withAuthorisedDuration(7)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -193,6 +205,8 @@ class RequestForPlacementTransformerTest {
         .withDecision(PlacementApplicationDecision.ACCEPTED)
         .withExpectedArrival(LocalDate.of(2012, 9, 9))
         .withDuration(47)
+        .withRequestedDuration(6)
+        .withAuthorisedDuration(7)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -212,6 +226,8 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withExpectedArrival(LocalDate.of(2012, 9, 9))
         .withDuration(47)
+        .withRequestedDuration(6)
+        .withAuthorisedDuration(7)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -232,6 +248,8 @@ class RequestForPlacementTransformerTest {
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.now())
         .withDuration(5)
+        .withRequestedDuration(6)
+        .withAuthorisedDuration(7)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
@@ -275,6 +293,12 @@ class RequestForPlacementTransformerTest {
       assertThat(result.createdAt).isEqualTo(placementRequest.createdAt.toInstant())
       assertThat(result.isWithdrawn).isEqualTo(placementRequest.isWithdrawn)
       assertThat(result.type).isEqualTo(RequestForPlacementType.automatic)
+      assertThat(result.requestedPlacementPeriod.arrival).isEqualTo(placementRequest.expectedArrival)
+      assertThat(result.requestedPlacementPeriod.arrivalFlexible).isNull()
+      assertThat(result.requestedPlacementPeriod.duration).isEqualTo(placementRequest.duration)
+      assertThat(result.authorisedPlacementPeriod!!.arrival).isEqualTo(placementRequest.expectedArrival)
+      assertThat(result.authorisedPlacementPeriod.arrivalFlexible).isNull()
+      assertThat(result.authorisedPlacementPeriod.duration).isEqualTo(placementRequest.duration)
       assertThat(result.placementDates).hasSize(1)
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.placementDates[0].duration).isEqualTo(placementRequest.duration)

@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
@@ -11,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
@@ -19,8 +17,6 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class RequestsForPlacementTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var requestForPlacementTransformer: RequestForPlacementTransformer
 
   @Nested
   inner class AllRequestsForPlacementForApplication {
@@ -64,6 +60,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withExpectedArrival(LocalDate.now())
             withDuration(1)
+            withRequestedDuration(2)
           }
 
           val submittedButReallocatedPlacementApplication = placementApplicationFactory.produceAndPersist {
@@ -73,6 +70,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withReallocatedAt(OffsetDateTime.now())
             withExpectedArrival(LocalDate.now())
             withDuration(1)
+            withRequestedDuration(2)
           }
 
           val withdrawnPlacementApplication = placementApplicationFactory.produceAndPersist {
@@ -83,6 +81,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
             withExpectedArrival(LocalDate.now())
             withDuration(1)
+            withRequestedDuration(2)
           }
 
           val placementRequirements = placementRequirementsFactory.produceAndPersist {
