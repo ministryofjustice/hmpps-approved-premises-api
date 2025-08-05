@@ -59,7 +59,6 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withExpectedArrival(LocalDate.now())
-            withDuration(1)
             withRequestedDuration(2)
           }
 
@@ -69,7 +68,6 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.now())
             withReallocatedAt(OffsetDateTime.now())
             withExpectedArrival(LocalDate.now())
-            withDuration(1)
             withRequestedDuration(2)
           }
 
@@ -80,7 +78,6 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withIsWithdrawn(true)
             withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
             withExpectedArrival(LocalDate.now())
-            withDuration(1)
             withRequestedDuration(2)
           }
 

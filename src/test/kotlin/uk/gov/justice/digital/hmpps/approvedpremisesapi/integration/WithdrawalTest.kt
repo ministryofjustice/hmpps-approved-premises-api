@@ -1399,7 +1399,7 @@ class WithdrawalTest : IntegrationTestBase() {
     withAllocatedToUser(allocatedTo)
     withIsWithdrawn(isWithdrawn)
     withExpectedArrival(if (isSubmitted) dateSpan?.start else null)
-    withDuration(if (isSubmitted) dateSpan?.duration else null)
+    withRequestedDuration(if (isSubmitted) dateSpan?.duration else null)
   }
 
   private fun createPlacementRequest(

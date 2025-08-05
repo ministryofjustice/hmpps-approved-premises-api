@@ -72,7 +72,7 @@ class PlacementApplicationTransformerTest {
       .withDocument(null)
       .withSubmittedAt(OffsetDateTime.now())
       .withExpectedArrival(LocalDate.of(2023, 12, 11))
-      .withDuration(30)
+      .withRequestedDuration(30)
       .produce()
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
@@ -110,7 +110,7 @@ class PlacementApplicationTransformerTest {
       .withDocument(document)
       .withSubmittedAt(OffsetDateTime.now())
       .withExpectedArrival(LocalDate.of(2023, 12, 11))
-      .withDuration(30)
+      .withRequestedDuration(30)
       .produce()
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
@@ -135,7 +135,7 @@ class PlacementApplicationTransformerTest {
       .withDocument(null)
       .withSubmittedAt(null)
       .withExpectedArrival(null)
-      .withDuration(null)
+      .withRequestedDuration(null)
       .produce()
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
@@ -175,7 +175,7 @@ class PlacementApplicationTransformerTest {
       .withDecision(PlacementApplicationDecision.ACCEPTED)
       .withSubmittedAt(OffsetDateTime.now())
       .withExpectedArrival(LocalDate.of(2023, 12, 11))
-      .withDuration(30)
+      .withRequestedDuration(30)
       .produce()
 
     val result = placementApplicationTransformer.transformToWithdrawable(jpa)

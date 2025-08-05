@@ -84,7 +84,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     withDueAt(dueAt)
     withIsWithdrawn(isWithdrawn)
     withExpectedArrival(expectedArrival)
-    withDuration(duration)
+    withRequestedDuration(duration)
     withAutomatic(automatic)
   }
 

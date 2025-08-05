@@ -33,7 +33,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var submissionGroupId: Yielded<UUID> = { UUID.randomUUID() }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var expectedArrival: Yielded<LocalDate?> = { null }
-  private var duration: Yielded<Int?> = { null }
   private var requestedDuration: Yielded<Int?> = { null }
   private var authorisedDuration: Yielded<Int?> = { null }
 
@@ -110,10 +109,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.expectedArrival = { expectedArrival }
   }
 
-  fun withDuration(duration: Int?) = apply {
-    this.duration = { duration }
-  }
-
   fun withRequestedDuration(requestedDuration: Int?) = apply {
     this.requestedDuration = { requestedDuration }
   }
@@ -143,7 +138,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     submissionGroupId = this.submissionGroupId(),
     isWithdrawn = this.isWithdrawn(),
     expectedArrival = this.expectedArrival(),
-    duration = this.duration(),
     requestedDuration = this.requestedDuration(),
     authorisedDuration = this.authorisedDuration(),
   )
