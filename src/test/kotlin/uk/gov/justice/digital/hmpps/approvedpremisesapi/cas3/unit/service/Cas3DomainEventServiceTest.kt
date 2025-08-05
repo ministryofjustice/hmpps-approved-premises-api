@@ -380,7 +380,7 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
@@ -451,7 +451,7 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
@@ -506,7 +506,7 @@ class Cas3DomainEventServiceTest {
       ),
     )
 
-    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
@@ -529,6 +529,205 @@ class Cas3DomainEventServiceTest {
         },
       )
     }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledEvent with cas3 booking persists event, emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+    val nomsNumber = "theNomsNumber"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      nomsNumber = nomsNumber,
+      occurredAt = Instant.now(),
+      data = CAS3BookingCancelledEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(Cas3BookingEntity::class), user) } returns domainEventToSave
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
+
+    val bookingEntity = createCas3PremisesBookingEntity()
+
+    cas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEventToSave.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+    )
+
+    val publishRequestSlot = slot<PublishRequest>()
+    verify(exactly = 1) {
+      mockHmppsTopic.snsClient.publish(capture(publishRequestSlot))
+    }
+
+    val capturedRequest = publishRequestSlot.captured
+    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+
+    assertAll(
+      { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.cancelled") },
+      { assertThat(deserializedMessage.version).isEqualTo(1) },
+      { assertThat(deserializedMessage.description).isEqualTo("A booking for a Transitional Accommodation premises has been cancelled") },
+      { assertThat(deserializedMessage.detailUrl).isEqualTo(detailUrl) },
+      { assertThat(deserializedMessage.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(deserializedMessage.additionalInformation.applicationId).isEqualTo(applicationId) },
+      {
+        assertThat(deserializedMessage.personReference.identifiers).anySatisfy {
+          assertThat(it.type).isEqualTo("CRN")
+          assertThat(it.value).isEqualTo(domainEventToSave.data.eventDetails.personReference.crn)
+        }
+      },
+      {
+        assertThat(deserializedMessage.personReference.identifiers).anySatisfy {
+          assertThat(it.type).isEqualTo("NOMS")
+          assertThat(it.value).isEqualTo(domainEventToSave.data.eventDetails.personReference.noms)
+        }
+      },
+    )
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_CANCELLED, domainEventToSave.id)
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledEvent with cas3 booking persists event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+    val nomsNumber = "theNomsNumber"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      nomsNumber = nomsNumber,
+      occurredAt = Instant.now(),
+      data = CAS3BookingCancelledEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(Cas3BookingEntity::class), user) } returns domainEventToSave
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
+
+    val bookingEntity = createCas3PremisesBookingEntity()
+
+    every { cas3DomainEventServiceConfig.emitForEvent(any()) } returns false
+    cas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEventToSave.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+    )
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledEvent with cs3 booking does not emit event to SNS if event fails to persist to database`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+    val nomsNumber = "theNomsNumber"
+
+    every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domain-events") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      nomsNumber = nomsNumber,
+      occurredAt = Instant.now(),
+      data = CAS3BookingCancelledEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { cas3DomainEventBuilderMock.getBookingCancelledDomainEvent(any(Cas3BookingEntity::class), user) } returns domainEventToSave
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
+
+    val bookingEntity = createCas3PremisesBookingEntity()
+
+    assertThatExceptionOfType(RuntimeException::class.java)
+      .isThrownBy { cas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user) }
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEventToSave.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+      { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
+    )
 
     verify(exactly = 0) {
       mockHmppsTopic.snsClient.publish(any<PublishRequest>())
@@ -2778,7 +2977,7 @@ class Cas3DomainEventServiceTest {
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
     cas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
@@ -2833,7 +3032,7 @@ class Cas3DomainEventServiceTest {
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), any()) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(BookingEntity::class), any()) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(
       PublishResponse.builder().build(),
@@ -2890,7 +3089,7 @@ class Cas3DomainEventServiceTest {
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     every { cas3DomainEventServiceConfig.emitForEvent(any()) } returns false
     cas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
@@ -2928,7 +3127,7 @@ class Cas3DomainEventServiceTest {
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(BookingEntity::class), user) } returns domainEventToSave
 
     assertThatExceptionOfType(RuntimeException::class.java)
       .isThrownBy { cas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user) }
@@ -2946,6 +3145,237 @@ class Cas3DomainEventServiceTest {
         },
       )
     }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledUpdatedEvent with cas3 booking persists event, emits event to SNS`() {
+    val domainEventToSave = createCancelledUpdatedEventEntity(
+      id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981"),
+      applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b"),
+      crn = "CRN",
+      nomsNumber = "theNomsNumber",
+      occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00"),
+      staffMember = StaffMemberFactory().produce(),
+    )
+    val bookingEntity = createCas3PremisesBookingEntity()
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(Cas3BookingEntity::class), user) } returns domainEventToSave
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(PublishResponse.builder().build())
+    cas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEventToSave.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
+      { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+      { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
+    )
+
+    val publishRequestSlot = slot<PublishRequest>()
+    verify(exactly = 1) {
+      mockHmppsTopic.snsClient.publish(capture(publishRequestSlot))
+    }
+
+    val capturedRequest = publishRequestSlot.captured
+    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+
+    assertAll(
+      { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.cancelled.updated") },
+      { assertThat(deserializedMessage.version).isEqualTo(1) },
+      { assertThat(deserializedMessage.description).isEqualTo("A cancelled booking for a Transitional Accommodation premises has been updated") },
+      { assertThat(deserializedMessage.detailUrl).isEqualTo(detailUrl) },
+      { assertThat(deserializedMessage.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(deserializedMessage.additionalInformation.applicationId).isEqualTo(domainEventToSave.applicationId) },
+      {
+        assertThat(deserializedMessage.personReference.identifiers)
+          .anySatisfy {
+            assertThat(it.type).isEqualTo("CRN")
+            assertThat(it.value).isEqualTo(domainEventToSave.data.eventDetails.personReference.crn)
+          }
+      },
+      {
+        assertThat(deserializedMessage.personReference.identifiers)
+          .anySatisfy {
+            assertThat(it.type).isEqualTo("NOMS")
+            assertThat(it.value).isEqualTo(domainEventToSave.data.eventDetails.personReference.noms)
+          }
+      },
+    )
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED, domainEventToSave.id)
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledUpdatedEvent with cas3 booking persists event without user entity, emits event to SNS`() {
+    val domainEventToSave = createCancelledUpdatedEventEntity(
+      id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981"),
+      applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b"),
+      crn = "CRN",
+      nomsNumber = "theNomsNumber",
+      occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00"),
+      staffMember = null,
+    )
+    val bookingEntity = createCas3PremisesBookingEntity()
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(Cas3BookingEntity::class), any()) } returns domainEventToSave
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture.completedFuture(
+      PublishResponse.builder().build(),
+    )
+
+    cas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEventToSave.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
+      { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+    )
+
+    val publishRequestSlot = slot<PublishRequest>()
+    verify(exactly = 1) {
+      mockHmppsTopic.snsClient.publish(capture(publishRequestSlot))
+    }
+
+    val capturedRequest = publishRequestSlot.captured
+    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+
+    assertAll(
+      { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.cancelled.updated") },
+      { assertThat(deserializedMessage.version).isEqualTo(1) },
+      { assertThat(deserializedMessage.description).isEqualTo("A cancelled booking for a Transitional Accommodation premises has been updated") },
+      { assertThat(deserializedMessage.detailUrl).isEqualTo(detailUrl) },
+      { assertThat(deserializedMessage.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(deserializedMessage.additionalInformation.applicationId).isEqualTo(domainEventToSave.applicationId) },
+      {
+        assertThat(deserializedMessage.personReference.identifiers)
+          .anySatisfy {
+            assertThat(it.type).isEqualTo("CRN")
+            assertThat(it.value).isEqualTo(domainEventToSave.data.eventDetails.personReference.crn)
+          }
+      },
+      {
+        assertThat(deserializedMessage.personReference.identifiers)
+          .anySatisfy {
+            assertThat(it.type).isEqualTo("NOMS")
+            assertThat(it.value).isEqualTo(domainEventToSave.data.eventDetails.personReference.noms)
+          }
+      },
+    )
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED, domainEventToSave.id)
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledUpdatedEvent with cas3 booking persists event, but does not emit event to SNS when event is disabled`() {
+    val domainEventToSave = createCancelledUpdatedEventEntity(
+      id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981"),
+      applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b"),
+      crn = "CRN",
+      nomsNumber = "theNomsNumber",
+      occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00"),
+      staffMember = StaffMemberFactory().produce(),
+    )
+    val bookingEntity = createCas3PremisesBookingEntity()
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(Cas3BookingEntity::class), user) } returns domainEventToSave
+
+    every { cas3DomainEventServiceConfig.emitForEvent(any()) } returns false
+    cas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEventToSave.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
+      { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+      { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
+    )
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any<PublishRequest>())
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledUpdatedEvent with cas3 booking does not emit event to SNS if event fails to persist to database`() {
+    val domainEventToSave = createCancelledUpdatedEventEntity(
+      id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981"),
+      applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b"),
+      crn = "CRN",
+      nomsNumber = "theNomsNumber",
+      occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00"),
+      staffMember = StaffMemberFactory().produce(),
+    )
+    val bookingEntity = createCas3PremisesBookingEntity()
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { cas3DomainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(Cas3BookingEntity::class), user) } returns domainEventToSave
+
+    assertThatExceptionOfType(RuntimeException::class.java)
+      .isThrownBy { cas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user) }
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEventToSave.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+      { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
+    )
 
     verify(exactly = 0) {
       mockHmppsTopic.snsClient.publish(any<PublishRequest>())
