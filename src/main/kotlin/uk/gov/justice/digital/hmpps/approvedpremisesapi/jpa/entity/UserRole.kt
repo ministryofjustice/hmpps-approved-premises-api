@@ -144,6 +144,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     listOf(
       UserPermission.CAS1_VIEW_MANAGE_TASKS,
       UserPermission.CAS1_TASKS_LIST,
+      UserPermission.CAS1_USER_LIST,
     ),
   ),
 
