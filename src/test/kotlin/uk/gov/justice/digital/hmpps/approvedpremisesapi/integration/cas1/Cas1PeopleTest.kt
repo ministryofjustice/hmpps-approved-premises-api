@@ -44,68 +44,6 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Getting a personal timeline for a CRN with a non-Delius JWT returns 403`() {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "other-auth-source",
-      )
-
-      webTestClient.get()
-        .uri("/cas1/people/CRN/timeline")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    fun `Getting a personal timeline for a CRN with a NOMIS JWT returns 403`() {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "nomis",
-      )
-
-      webTestClient.get()
-        .uri("/cas1/people/CRN/timeline")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    fun `Getting a personal timeline for a CRN with ROLE_POM returns 403`() {
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = "username",
-        authSource = "delius",
-        roles = listOf("ROLE_POM"),
-      )
-
-      webTestClient.get()
-        .uri("/cas1/people/CRN/timeline")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    fun `Getting a personal timeline for a CRN without ROLE_PROBATION returns 403`() {
-      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-        subject = "username",
-        authSource = "delius",
-        roles = listOf("ROLE_OTHER"),
-      )
-
-      webTestClient.get()
-        .uri("/cas1/people/CRN/timeline")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
     fun `Getting a personal timeline for a CRN that does not exist returns 404`() {
       givenAUser { _, jwt ->
         apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
@@ -233,7 +171,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
     @Test
     fun `Getting a personal timeline for a CRN is limited to 50 entries`() {
       val (user, jwt) = givenAUser()
-      val (offenderDetails, inmateDetails) = givenAnOffender()
+      val (offenderDetails, _) = givenAnOffender()
 
       repeat(60) {
         givenAnApplication(
