@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -2102,23 +2103,97 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { user.probationRegion }
         }
-        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        val bedspaceOne = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(180), endDate = null)
+        // upcoming bedspace
+        createBedspaceInPremises(premises, startDate = LocalDate.now().plusDays(4), endDate = null)
         val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
 
         webTestClient.post()
-          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspaceOne.id}/archive")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(archiveBedspace)
           .exchange()
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("id").isEqualTo(bedspace.id)
+          .jsonPath("id").isEqualTo(bedspaceOne.id)
           .jsonPath("endDate").isEqualTo(archiveBedspace.endDate)
 
         val allEvents = domainEventRepository.findAll()
         assertThat(allEvents).hasSize(1)
         assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+      }
+    }
+
+    @Test
+    fun `When archive the last online bedspace returns OK and archives the premises when given valid data`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+        val bedspaceOne = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(180), endDate = LocalDate.now().minusDays(2))
+
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspaceOne.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(bedspaceOne.id)
+          .jsonPath("endDate").isEqualTo(archiveBedspace.endDate)
+
+        val allEvents = domainEventRepository.findAll()
+        assertThat(allEvents).hasSize(2)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+        assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_ARCHIVED)
+
+        val archivedPremises = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
+        assertThat(archivedPremises).isNotNull()
+        assertThat(archivedPremises?.endDate).isEqualTo(archiveBedspace.endDate)
+        assertThat(archivedPremises?.status).isEqualTo(PropertyStatus.archived)
+      }
+    }
+
+    @Test
+    fun `When archive the last online bedspace returns OK and archives the premises with the latest bedspae end date when given valid data`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+        val latestBedspaceArchiveDate = LocalDate.now().plusDays(35)
+        val bedspaceOne = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(180), endDate = latestBedspaceArchiveDate)
+
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspaceOne.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(bedspaceOne.id)
+          .jsonPath("endDate").isEqualTo(archiveBedspace.endDate)
+
+        val allEvents = domainEventRepository.findAll()
+        assertThat(allEvents).hasSize(2)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+        assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_ARCHIVED)
+
+        val archivedPremises = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
+        assertThat(archivedPremises).isNotNull()
+        assertThat(archivedPremises?.endDate).isEqualTo(latestBedspaceArchiveDate)
+        assertThat(archivedPremises?.status).isEqualTo(PropertyStatus.archived)
       }
     }
 
