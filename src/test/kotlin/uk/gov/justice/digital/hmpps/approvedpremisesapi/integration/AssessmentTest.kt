@@ -1577,6 +1577,83 @@ class AssessmentTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class DeallocateAssessmentTest : IntegrationTestBase() {
+    @Test
+    fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
+      webTestClient.delete()
+        .uri("/cas3/assessments/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Deallocate Temporary Accommodation assessment without CAS3_ASSESSOR role returns 403 Forbidden`() {
+      givenAUser { _, jwt ->
+        webTestClient.delete()
+          .uri("/cas3/assessments/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Deallocate Approved Premises assessment returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          givenAUser { _, _ ->
+            givenAnAssessmentForApprovedPremises(
+              allocatedToUser = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            ) { assessment, _ ->
+              webTestClient.delete()
+                .uri("/cas3/assessments/${assessment.id}/allocations")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Deallocate Temporary Accommodation assessment returns 200 and unassigns the allocated user`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          givenAnAssessmentForTemporaryAccommodation(
+            allocatedToUser = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn,
+          ) { existingAssessment, _ ->
+
+            webTestClient.delete()
+              .uri("/cas3/assessments/${existingAssessment.id}/allocations")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isNoContent
+
+            val assessment =
+              temporaryAccommodationAssessmentRepository.findAll().first { it.id == existingAssessment.id }
+
+            assertThat(assessment.allocatedToUser).isNull()
+            assertThat(assessment.allocatedAt).isNull()
+          }
+        }
+      }
+    }
+  }
+
   sealed interface ExpectedResponse {
     data class OK(val expectedAssessmentSummaries: List<AssessmentSummary>) : ExpectedResponse
     data class Error(val status: HttpStatus, val errorDetail: String) : ExpectedResponse
