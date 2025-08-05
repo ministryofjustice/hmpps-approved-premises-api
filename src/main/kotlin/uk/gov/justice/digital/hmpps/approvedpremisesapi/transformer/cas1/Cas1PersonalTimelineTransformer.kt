@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import java.time.OffsetDateTime
 
 @Component
 class Cas1PersonalTimelineTransformer(
@@ -65,6 +66,8 @@ data class Cas1ApplicationTimelineModel(
 sealed interface BoxedApplication {
   val value: Any
 
+  fun createdAt(): OffsetDateTime
+
   fun <T> map(
     regularApplicationFunc: (ApprovedPremisesApplicationEntity) -> T,
     offlineApplicationFunc: (OfflineApplicationEntity) -> T,
@@ -73,8 +76,13 @@ sealed interface BoxedApplication {
     is Offline -> offlineApplicationFunc(this.value)
   }
 
-  data class Regular(override val value: ApprovedPremisesApplicationEntity) : BoxedApplication
-  data class Offline(override val value: OfflineApplicationEntity) : BoxedApplication
+  data class Regular(override val value: ApprovedPremisesApplicationEntity) : BoxedApplication {
+    override fun createdAt() = value.createdAt
+  }
+
+  data class Offline(override val value: OfflineApplicationEntity) : BoxedApplication {
+    override fun createdAt() = value.createdAt
+  }
 
   companion object {
     fun of(value: ApprovedPremisesApplicationEntity) = Regular(value)

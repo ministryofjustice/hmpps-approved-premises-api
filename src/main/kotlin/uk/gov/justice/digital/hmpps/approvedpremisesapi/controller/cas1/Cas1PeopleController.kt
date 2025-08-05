@@ -71,7 +71,7 @@ class Cas1PeopleController(
       )
       val cas1timelineEvents = cas1TimelineService.getApplicationTimelineEvents(applicationId)
       Cas1ApplicationTimelineModel(application, cas1timelineEvents)
-    }
+    }.sortedByDescending { it.application.createdAt() }
 
     return cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, applicationTimelineModels)
   }

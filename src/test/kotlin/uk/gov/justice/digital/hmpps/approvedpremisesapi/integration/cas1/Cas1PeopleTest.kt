@@ -16,9 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -166,6 +168,55 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           }
         }
       }
+    }
+
+    @Test
+    fun `Applications are returned in created at order, descending`() {
+      val (user, jwt) = givenAUser()
+      val (offenderDetails, _) = givenAnOffender()
+
+      val crn = offenderDetails.otherIds.crn
+
+      val appA = givenACas1Application(
+        createdByUser = user,
+        crn = crn,
+        createdAt = OffsetDateTime.now().minusDays(5),
+        submittedAt = OffsetDateTime.now(),
+      )
+
+      val appB = givenACas1Application(
+        createdByUser = user,
+        crn = crn,
+        createdAt = OffsetDateTime.now().minusDays(3),
+        submittedAt = OffsetDateTime.now(),
+      )
+
+      val appC = givenACas1Application(
+        createdByUser = user,
+        crn = crn,
+        createdAt = OffsetDateTime.now().minusDays(7),
+        submittedAt = OffsetDateTime.now(),
+      )
+
+      val appD = givenAnOfflineApplication(
+        crn = offenderDetails.otherIds.crn,
+        createdAt = OffsetDateTime.now().minusDays(4),
+      )
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/${offenderDetails.otherIds.crn}/timeline")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1PersonalTimeline>()
+
+      assertThat(result.applications.map { it.id }).containsExactly(
+        appB.id,
+        appD.id,
+        appA.id,
+        appC.id,
+      )
     }
 
     @Test
