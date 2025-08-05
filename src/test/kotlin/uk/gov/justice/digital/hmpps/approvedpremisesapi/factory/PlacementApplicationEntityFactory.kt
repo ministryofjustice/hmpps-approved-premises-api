@@ -34,6 +34,8 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var expectedArrival: Yielded<LocalDate?> = { null }
   private var duration: Yielded<Int?> = { null }
+  private var requestedDuration: Yielded<Int?> = { null }
+  private var authorisedDuration: Yielded<Int?> = { null }
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -112,6 +114,14 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.duration = { duration }
   }
 
+  fun withRequestedDuration(requestedDuration: Int?) = apply {
+    this.requestedDuration = { requestedDuration }
+  }
+
+  fun withAuthorisedDuration(authorisedDuration: Int?) = apply {
+    this.authorisedDuration = { authorisedDuration }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
@@ -134,5 +144,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     isWithdrawn = this.isWithdrawn(),
     expectedArrival = this.expectedArrival(),
     duration = this.duration(),
+    requestedDuration = this.requestedDuration(),
+    authorisedDuration = this.authorisedDuration(),
   )
 }

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
@@ -23,8 +24,19 @@ class RequestForPlacementTransformer(
     createdAt = placementApplicationEntity.createdAt.toInstant(),
     isWithdrawn = placementApplicationEntity.isWithdrawn,
     type = RequestForPlacementType.manual,
-    dates = placementApplicationEntity.placementDates()!!.toApiType(),
     placementDates = listOf(placementApplicationEntity.placementDates()!!.toApiType()),
+    requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+      arrival = placementApplicationEntity.expectedArrival!!,
+      arrivalFlexible = null,
+      duration = placementApplicationEntity.requestedDuration!!,
+    ),
+    authorisedPlacementPeriod = placementApplicationEntity.authorisedDuration?.let {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementApplicationEntity.expectedArrival!!,
+        arrivalFlexible = null,
+        duration = it,
+      )
+    },
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
     document = placementApplicationEntity.document?.let(objectMapper::readTree),
@@ -55,8 +67,14 @@ class RequestForPlacementTransformer(
       createdAt = placementRequestEntity.createdAt.toInstant(),
       isWithdrawn = placementRequestEntity.isWithdrawn,
       type = RequestForPlacementType.automatic,
-      dates = PlacementDates(
-        expectedArrival = placementRequestEntity.expectedArrival,
+      requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+        arrival = placementRequestEntity.expectedArrival,
+        arrivalFlexible = null,
+        duration = placementRequestEntity.duration,
+      ),
+      authorisedPlacementPeriod = Cas1RequestedPlacementPeriod(
+        arrival = placementRequestEntity.expectedArrival,
+        arrivalFlexible = null,
         duration = placementRequestEntity.duration,
       ),
       placementDates = listOf(
