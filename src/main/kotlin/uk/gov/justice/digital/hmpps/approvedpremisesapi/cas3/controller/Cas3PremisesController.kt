@@ -132,7 +132,9 @@ class Cas3PremisesController(
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises))
+    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises))
+
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory))
   }
 
   @GetMapping("/premises/{premisesId}/bedspace-totals")

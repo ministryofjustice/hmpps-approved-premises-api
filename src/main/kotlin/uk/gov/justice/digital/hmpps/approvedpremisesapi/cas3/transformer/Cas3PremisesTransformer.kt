@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -16,7 +17,7 @@ class Cas3PremisesTransformer(
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
   private val characteristicTransformer: CharacteristicTransformer,
 ) {
-  fun transformDomainToApi(premisesEntity: TemporaryAccommodationPremisesEntity) = Cas3Premises(
+  fun transformDomainToApi(premisesEntity: TemporaryAccommodationPremisesEntity, archiveHistory: List<Cas3PremisesArchiveAction> = emptyList()) = Cas3Premises(
     id = premisesEntity.id,
     reference = premisesEntity.name,
     addressLine1 = premisesEntity.addressLine1,
@@ -34,6 +35,7 @@ class Cas3PremisesTransformer(
     totalOnlineBedspaces = premisesEntity.getTotalOnlineBedspaces(),
     totalUpcomingBedspaces = premisesEntity.getTotalUpcomingBedspaces(),
     totalArchivedBedspaces = premisesEntity.getTotalArchivedBedspaces(),
+    archiveHistory = archiveHistory,
   )
 
   private fun getPremisesStatus(premises: TemporaryAccommodationPremisesEntity) = if (premises.isPremisesArchived()) {

@@ -15,9 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveActions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -27,6 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -55,10 +60,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusi
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import kotlin.collections.maxByOrNull
 
 @Service
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class Cas3PremisesService(
   private val premisesRepository: PremisesRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
@@ -123,6 +127,44 @@ class Cas3PremisesService(
       val actions = extractEntityFromCasResult(getBedspaceArchiveActions(bedspaceDomainEvents))
       Cas3BedspaceArchiveActions(bedspaceId, actions)
     }
+  }
+
+  fun getPremisesArchiveHistory(premisesEntity: TemporaryAccommodationPremisesEntity): CasResult<List<Cas3PremisesArchiveAction>> = validatedCasResult {
+    return CasResult.Success(
+      cas3DomainEventService.getPremisesDomainEvents(
+        premisesEntity.id,
+        listOf(CAS3_PREMISES_ARCHIVED, CAS3_PREMISES_UNARCHIVED),
+      )
+        .mapNotNull { domainEventEntity ->
+          when (domainEventEntity.type) {
+            CAS3_PREMISES_UNARCHIVED -> {
+              val newStartDate = objectMapper.readValue(domainEventEntity.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails.newStartDate
+              if (newStartDate <= LocalDate.now()) {
+                Cas3PremisesArchiveAction(
+                  status = Cas3PremisesStatus.online,
+                  date = newStartDate,
+                )
+              } else {
+                null
+              }
+            }
+
+            CAS3_PREMISES_ARCHIVED -> {
+              val endDate = objectMapper.readValue(domainEventEntity.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate
+              if (endDate <= LocalDate.now()) {
+                Cas3PremisesArchiveAction(
+                  status = Cas3PremisesStatus.archived,
+                  date = endDate,
+                )
+              } else {
+                null
+              }
+            }
+            else -> return CasResult.GeneralValidationError("Incorrect domain event type for archive history: ${domainEventEntity.type}, ${domainEventEntity.id}")
+          }
+        }
+        .sortedBy { it.date },
+    )
   }
 
   @Deprecated("This function is replaced by createNewPremises in the same class")

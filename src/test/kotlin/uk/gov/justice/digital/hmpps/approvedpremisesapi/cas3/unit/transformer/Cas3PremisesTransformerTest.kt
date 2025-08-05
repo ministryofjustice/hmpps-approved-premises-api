@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
@@ -88,7 +89,14 @@ class Cas3PremisesTransformerTest {
     )
     every { characteristicTransformer.transformJpaToApi(characteristics[0]) } returns characteristic
 
-    val result = cas3PremisesTransformer.transformDomainToApi(premises)
+    val archiveHistory = listOf(
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.online,
+        date = premises.startDate,
+      ),
+    )
+
+    val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
     assertThat(result).isEqualTo(
       Cas3Premises(
@@ -109,6 +117,12 @@ class Cas3PremisesTransformerTest {
         totalOnlineBedspaces = 2,
         totalUpcomingBedspaces = 2,
         totalArchivedBedspaces = 1,
+        archiveHistory = listOf(
+          Cas3PremisesArchiveAction(
+            status = Cas3PremisesStatus.online,
+            date = premises.startDate,
+          ),
+        ),
       ),
     )
   }
@@ -140,7 +154,14 @@ class Cas3PremisesTransformerTest {
     val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
     every { probationDeliveryUnitTransformer.transformJpaToApi(probationDeliveryUnitEntity) } returns probationDeliveryUnit
 
-    val result = cas3PremisesTransformer.transformDomainToApi(premises)
+    val archiveHistory = listOf(
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.online,
+        date = premises.startDate,
+      ),
+    )
+
+    val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
     assertThat(result).isEqualTo(
       Cas3Premises(
@@ -161,8 +182,61 @@ class Cas3PremisesTransformerTest {
         totalOnlineBedspaces = 2,
         totalUpcomingBedspaces = 1,
         totalArchivedBedspaces = 0,
+        archiveHistory = archiveHistory,
       ),
     )
+  }
+
+  @Test
+  fun `transformDomainToApi includes archive history for archived premises`() {
+    val probationRegionEntity = ProbationRegionEntityFactory()
+      .withDefaults()
+      .produce()
+    val probationDeliveryUnitEntity = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegionEntity)
+      .produce()
+    val startDate = LocalDate.of(2024, 1, 1)
+    val endDate = LocalDate.of(2024, 6, 1)
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(probationRegionEntity)
+      .withProbationDeliveryUnit(probationDeliveryUnitEntity)
+      .withStatus(PropertyStatus.archived)
+      .withStartDate(startDate)
+      .withEndDate(endDate)
+      .produce()
+
+    val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+    every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
+
+    val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
+    every { probationDeliveryUnitTransformer.transformJpaToApi(probationDeliveryUnitEntity) } returns probationDeliveryUnit
+
+    val archiveHistory = listOf(
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.online,
+        date = startDate,
+      ),
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.archived,
+        date = endDate,
+      ),
+    )
+
+    val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
+
+    assertThat(result.archiveHistory).isEqualTo(
+      listOf(
+        Cas3PremisesArchiveAction(
+          status = Cas3PremisesStatus.online,
+          date = startDate,
+        ),
+        Cas3PremisesArchiveAction(
+          status = Cas3PremisesStatus.archived,
+          date = endDate,
+        ),
+      ),
+    )
+    assertThat(result.status).isEqualTo(Cas3PremisesStatus.archived)
   }
 
   private fun createRoomWithOneBedspace(premises: PremisesEntity, startDate: LocalDate, endDate: LocalDate?): RoomEntity {

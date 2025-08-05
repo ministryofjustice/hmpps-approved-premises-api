@@ -113,6 +113,11 @@ class Cas3DomainEventService(
     bedspaceDomainEventTypes.map { it.toString() },
   )
 
+  fun getPremisesDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesDomainEventsByType(
+    id,
+    premisesDomainEventTypes.map { it.toString() },
+  )
+
   private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 
