@@ -292,7 +292,7 @@ class TaskTransformerTest {
     fun `Placement application is correctly transformed`() {
       placementApplication.submittedAt = OffsetDateTime.now()
       placementApplication.expectedArrival = LocalDate.of(2024, 3, 23)
-      placementApplication.duration = 12
+      placementApplication.requestedDuration = 12
       val result = taskTransformer.transformPlacementApplicationToTask(
         placementApplication,
         getOffenderSummariesWithDiscriminator(placementApplication.application.crn, PersonSummaryDiscriminator.fullPersonSummary),
@@ -328,7 +328,7 @@ class TaskTransformerTest {
         .withPlacementType(placementType)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.now())
-        .withDuration(1)
+        .withRequestedDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(
@@ -352,7 +352,7 @@ class TaskTransformerTest {
         .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.now())
-        .withDuration(1)
+        .withRequestedDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(
@@ -375,7 +375,7 @@ class TaskTransformerTest {
         .withDecisionMadeAt(decisionMadeAt)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.now())
-        .withDuration(1)
+        .withRequestedDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(
@@ -396,7 +396,7 @@ class TaskTransformerTest {
         .withApplication(application)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.now())
-        .withDuration(1)
+        .withRequestedDuration(1)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(

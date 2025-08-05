@@ -132,12 +132,6 @@ data class PlacementApplicationEntity(
    */
   var expectedArrival: LocalDate? = null,
 
-  /**
-   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
-   */
-  @Deprecated("We should look at using requestedDuration and/or authorisedDuration")
-  var duration: Int? = null,
-
   var requestedDuration: Int? = null,
 
   var authorisedDuration: Int? = null,
@@ -158,7 +152,7 @@ data class PlacementApplicationEntity(
   fun placementDates() = if (isSubmitted()) {
     Cas1PlacementDates(
       expectedArrival = expectedArrival!!,
-      duration = duration!!,
+      duration = authorisedDuration ?: requestedDuration!!,
     )
   } else {
     null

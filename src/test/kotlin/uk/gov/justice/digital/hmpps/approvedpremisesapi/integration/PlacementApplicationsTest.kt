@@ -733,7 +733,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
-            assertThat(updatedPlacementApplication.duration).isEqualTo(placementDates[0].duration)
+            assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(placementDates[0].duration)
             assertThat(updatedPlacementApplication.expectedArrival).isEqualTo(placementDates[0].expectedArrival)
 
             domainEventAsserter.assertDomainEventOfTypeStored(
@@ -808,21 +808,21 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val createdApp1Id = body[0].id
             val updatedEntity1 = placementApplicationRepository.findByIdOrNull(createdApp1Id)!!
             assertThat(updatedEntity1.expectedArrival).isEqualTo(arrival1)
-            assertThat(updatedEntity1.duration).isEqualTo(duration1)
+            assertThat(updatedEntity1.requestedDuration).isEqualTo(duration1)
             assertThat(updatedEntity1.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
 
             val createdApp2Id = body[1].id
             val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!
             assertThat(updatedEntity2.expectedArrival).isEqualTo(arrival2)
-            assertThat(updatedEntity2.duration).isEqualTo(duration2)
+            assertThat(updatedEntity2.requestedDuration).isEqualTo(duration2)
             assertThat(updatedEntity2.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
 
             val createdApp3Id = body[2].id
             val updatedEntity3 = placementApplicationRepository.findByIdOrNull(createdApp3Id)!!
             assertThat(updatedEntity3.expectedArrival).isEqualTo(arrival3)
-            assertThat(updatedEntity3.duration).isEqualTo(duration3)
+            assertThat(updatedEntity3.requestedDuration).isEqualTo(duration3)
             assertThat(updatedEntity3.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
 

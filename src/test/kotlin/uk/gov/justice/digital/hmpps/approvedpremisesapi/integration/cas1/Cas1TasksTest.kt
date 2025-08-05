@@ -2559,7 +2559,7 @@ class Cas1TasksTest {
                 assertThat(allocatedPlacementApplication).isNotNull
 
                 assertThat(allocatedPlacementApplication!!.expectedArrival).isEqualTo(LocalDate.of(2012, 1, 1))
-                assertThat(allocatedPlacementApplication.duration).isEqualTo(15)
+                assertThat(allocatedPlacementApplication.requestedDuration).isEqualTo(15)
               }
             }
           }

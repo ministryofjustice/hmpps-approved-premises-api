@@ -92,7 +92,7 @@ UNION ALL
       ELSE ''
     END AS request_for_placement_type, 
     to_char(pa.expected_arrival, 'YYYY-MM-DD') AS requested_arrival_date,
-    pa.duration AS requested_duration_days,
+    pa.requested_duration AS requested_duration_days,
     to_char(CAST(pa.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     to_char(CAST(pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as timestamp), 'YYYY-MM-DD') AS parole_decision_date,
     to_char(CAST(pa.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,

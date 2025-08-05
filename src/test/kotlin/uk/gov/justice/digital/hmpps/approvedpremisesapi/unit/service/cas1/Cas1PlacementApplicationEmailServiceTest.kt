@@ -88,7 +88,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationSubmitted(placementApplication)
@@ -161,7 +161,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationAllocated(placementApplication)
@@ -234,7 +234,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationAccepted(placementApplication)
@@ -307,7 +307,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationRejected(placementApplication)
@@ -367,7 +367,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withCreatedByUser(creator)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationWithdrawn(
@@ -408,7 +408,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withCreatedByUser(creator)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationWithdrawn(
@@ -448,7 +448,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withCreatedByUser(creator)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationWithdrawn(
@@ -498,7 +498,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationWithdrawn(
@@ -539,7 +539,7 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withCreatedByUser(creator)
         .withSubmittedAt(OffsetDateTime.now())
         .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
+        .withRequestedDuration(10)
         .produce()
 
       service.placementApplicationWithdrawn(

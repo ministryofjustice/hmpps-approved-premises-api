@@ -248,7 +248,6 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
 
       assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApp.duration).isEqualTo(5)
       assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
       assertThat(updatedPlacementApp.authorisedDuration).isNull()
 
@@ -289,7 +288,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val updatedPlacementApp1 = updatedPlacementApplications[0]
       assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApp1.duration).isEqualTo(5)
       assertThat(updatedPlacementApp1.requestedDuration).isEqualTo(5)
       assertThat(updatedPlacementApp1.authorisedDuration).isNull()
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -300,7 +298,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val updatedPlacementApp2 = updatedPlacementApplications[1]
       assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
-      assertThat(updatedPlacementApp2.duration).isEqualTo(10)
       assertThat(updatedPlacementApp2.requestedDuration).isEqualTo(10)
       assertThat(updatedPlacementApp2.authorisedDuration).isNull()
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -311,7 +308,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val updatedPlacementApp3 = updatedPlacementApplications[2]
       assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
-      assertThat(updatedPlacementApp3.duration).isEqualTo(15)
       assertThat(updatedPlacementApp3.requestedDuration).isEqualTo(15)
       assertThat(updatedPlacementApp3.authorisedDuration).isNull()
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
@@ -351,7 +347,7 @@ class Cas1PlacementApplicationServiceTest {
         .withAllocatedToUser(user)
         .withDecision(null)
         .withCreatedByUser(createdByUser)
-        .withDuration(29)
+        .withRequestedDuration(7)
         .produce()
 
       val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
@@ -379,7 +375,7 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
-      assertThat(updatedApplication.authorisedDuration).isEqualTo(29)
+      assertThat(updatedApplication.authorisedDuration).isEqualTo(7)
 
       verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
@@ -475,7 +471,7 @@ class Cas1PlacementApplicationServiceTest {
       )
       .withSubmittedAt(OffsetDateTime.now())
       .withExpectedArrival(LocalDate.now())
-      .withDuration(12)
+      .withRequestedDuration(12)
       .produce()
 
     @Test
@@ -520,7 +516,7 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
         assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
         assertThat(newPlacementApplication.expectedArrival).isEqualTo(LocalDate.now())
-        assertThat(newPlacementApplication.duration).isEqualTo(12)
+        assertThat(newPlacementApplication.requestedDuration).isEqualTo(12)
       }
     }
 
@@ -570,7 +566,7 @@ class Cas1PlacementApplicationServiceTest {
         assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
         assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
         assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
-        assertThat(newPlacementApplication.duration).isEqualTo(12)
+        assertThat(newPlacementApplication.requestedDuration).isEqualTo(12)
         assertThat(newPlacementApplication.expectedArrival).isEqualTo(LocalDate.now())
 
         verify(exactly = 1) {

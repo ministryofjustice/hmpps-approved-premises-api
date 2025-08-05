@@ -318,7 +318,6 @@ class Cas1PlacementApplicationService(
 
     allPlacementApps.zip(apiPlacementDates) { placementApp, apiDate ->
       placementApp.expectedArrival = apiDate.expectedArrival
-      placementApp.duration = apiDate.duration
       placementApp.requestedDuration = apiDate.duration
     }
 
@@ -356,7 +355,7 @@ class Cas1PlacementApplicationService(
         return placementRequestResult.reviseType()
       }
 
-      placementApplicationEntity.authorisedDuration = placementApplicationEntity.duration
+      placementApplicationEntity.authorisedDuration = placementApplicationEntity.requestedDuration
     }
 
     placementApplicationEntity.apply {

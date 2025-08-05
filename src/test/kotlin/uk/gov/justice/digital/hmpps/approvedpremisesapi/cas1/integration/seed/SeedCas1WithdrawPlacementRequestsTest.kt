@@ -200,7 +200,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
     withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
     configuration?.invoke(this)
     withExpectedArrival(if (isSubmitted) LocalDate.now() else null)
-    withDuration(if (isSubmitted) 2 else null)
+    withRequestedDuration(if (isSubmitted) 2 else null)
   }
 
   private fun createPlacementRequest(
