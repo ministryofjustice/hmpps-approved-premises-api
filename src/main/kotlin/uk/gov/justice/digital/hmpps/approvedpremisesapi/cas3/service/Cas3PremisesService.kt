@@ -877,11 +877,11 @@ class Cas3PremisesService(
   }
 
   fun unarchiveBedspace(
-    premises: PremisesEntity,
+    premises: TemporaryAccommodationPremisesEntity,
     bedspaceId: UUID,
     restartDate: LocalDate,
   ): CasResult<BedEntity> = validatedCasResult {
-    val bedspace = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedspaceId }
+    val bedspace = bedspaceRepository.findCas3Bedspace(premises.id, bedspaceId)
       ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
 
     if (!bedspace.isCas3BedspaceArchived()) {
@@ -906,20 +906,13 @@ class Cas3PremisesService(
       return@validatedCasResult errors()
     }
 
-    val originalStartDate = bedspace.startDate!!
-    val originalEndDate = bedspace.endDate!!
+    val unarchivedBedspace = unarchiveBedspaceAndSaveDomainEvent(bedspace, restartDate)
 
-    // Update the bedspace to unarchive it
-    val updatedBedspace = bedspaceRepository.save(
-      bedspace.copy(
-        startDate = restartDate,
-        endDate = null,
-      ),
-    )
+    if (premises.status == PropertyStatus.archived) {
+      unarchivePremisesAndSaveDomainEvent(premises, restartDate)
+    }
 
-    cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, originalStartDate, originalEndDate)
-
-    success(updatedBedspace)
+    success(unarchivedBedspace)
   }
 
   fun cancelUnarchiveBedspace(
@@ -998,23 +991,14 @@ class Cas3PremisesService(
       return@validatedCasResult errors()
     }
 
-    val originalStartDate = premises.startDate
+    val unarchivePremises = unarchivePremisesAndSaveDomainEvent(premises, restartDate)
 
-    premises.startDate = restartDate
-    premises.endDate = null
-    premises.status = PropertyStatus.active
-    val updatedPremises = premisesRepository.save(premises)
-
-    premises.rooms.flatMap { it.beds }.forEach { bedspace ->
-      val result = unarchiveBedspace(premises, bedspace.id, restartDate)
-      if (result is CasResult.Error) {
-        return result.reviseType()
-      }
+    val bedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
+    bedspaces.forEach { bedspace ->
+      unarchiveBedspaceAndSaveDomainEvent(bedspace, restartDate)
     }
 
-    cas3DomainEventService.savePremisesUnarchiveEvent(premises, originalStartDate, restartDate)
-
-    success(updatedPremises)
+    success(unarchivePremises)
   }
 
   fun getBedspaceTotals(premises: TemporaryAccommodationPremisesEntity): CasResult.Success<TemporaryAccommodationPremisesTotalBedspacesByStatus> {
@@ -1182,10 +1166,35 @@ class Cas3PremisesService(
     return updatedPremises
   }
 
+  private fun unarchivePremisesAndSaveDomainEvent(premises: TemporaryAccommodationPremisesEntity, restartDate: LocalDate): TemporaryAccommodationPremisesEntity {
+    val currentStartDate = premises.startDate
+    premises.startDate = restartDate
+    premises.endDate = null
+    premises.status = PropertyStatus.active
+    val updatedPremises = premisesRepository.save(premises)
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, restartDate)
+    return updatedPremises
+  }
+
   private fun archiveBedspaceAndSaveDomainEvent(bedspace: BedEntity, endDate: LocalDate): BedEntity {
     bedspace.endDate = endDate
     val updatedBedspace = bedspaceRepository.save(bedspace)
     cas3DomainEventService.saveBedspaceArchiveEvent(updatedBedspace)
+    return updatedBedspace
+  }
+
+  private fun unarchiveBedspaceAndSaveDomainEvent(bedspace: BedEntity, restartDate: LocalDate): BedEntity {
+    val originalStartDate = bedspace.startDate!!
+    val originalEndDate = bedspace.endDate!!
+
+    val updatedBedspace = bedspaceRepository.save(
+      bedspace.copy(
+        startDate = restartDate,
+        endDate = null,
+      ),
+    )
+
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, originalStartDate, originalEndDate)
     return updatedBedspace
   }
 
