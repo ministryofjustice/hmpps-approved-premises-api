@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.assertNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -24,21 +26,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
-    assertJsonEquals(
-      """ 
-     {
-         "Applications": [ ],
-         "Assessments": [ ],
-         "AssessmentReferralHistoryNotes" : [ ],
-         "Bookings": [ ],
-         "BookingExtensions": [ ],
-         "Cancellations": [ ],
-         "DomainEvents": [ ],
-         "DomainEventsMetadata": [ ]
-      }
-      """.trimIndent(),
-      result,
-    )
+
+    assertNull(result)
   }
 
   @Test
@@ -46,21 +35,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
-    assertJsonEquals(
-      """ 
-     {
-         "Applications": [ ],
-         "Assessments": [ ],
-         "AssessmentReferralHistoryNotes" : [ ],
-         "Bookings": [ ],
-         "BookingExtensions": [ ],
-         "Cancellations": [ ],
-         "DomainEvents": [ ],
-         "DomainEventsMetadata": [ ]
-      }
-      """.trimIndent(),
-      result,
-    )
+
+    assertNull(result)
   }
 
   @Test
@@ -69,17 +45,18 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val user = userEntity()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
+    assertNotNull(result)
 
     val expectedJson = """
       {
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
-        "Assessments"  : [ ],
-        "AssessmentReferralHistoryNotes" : [ ],
-        "Bookings": [ ],
-        "BookingExtensions": [ ],
-        "Cancellations": [ ],
-        "DomainEvents": [ ],
-        "DomainEventsMetadata": [ ]
+        "Assessments"  : [],
+        "AssessmentReferralHistoryNotes" : [],
+        "Bookings": [],
+        "BookingExtensions": [],
+        "Cancellations": [],
+        "DomainEvents": [],
+        "DomainEventsMetadata": []
       }
     """.trimIndent()
 
@@ -94,16 +71,18 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
+    assertNotNull(result)
+
     val expectedJson = """
       {
         "Applications" : [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
         "Assessments"  : [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
-        "AssessmentReferralHistoryNotes" : [ ],
-        "Bookings": [ ],
-        "BookingExtensions": [ ],
-        "Cancellations": [ ],
-        "DomainEvents": [ ],
-        "DomainEventsMetadata": [ ]
+        "AssessmentReferralHistoryNotes" : [],
+        "Bookings": [],
+        "BookingExtensions": [],
+        "Cancellations": [],
+        "DomainEvents": [],
+        "DomainEventsMetadata": []
       }
     """.trimIndent()
 
@@ -121,16 +100,18 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val assessmentReferralHistoryNoteUser = assessmentReferralHistoryUserNoteEntity(temporaryAccomodationAssessment, user)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
+    assertNotNull(result)
+
     val expectedJson = """
       {
         "Applications": [${temporaryAccommodationApplicationJson(temporaryAccommodationApplication)}],
         "Assessments": [${temporaryAccommodationAssessmentJson(temporaryAccomodationAssessment)}],
         "AssessmentReferralHistoryNotes": [${assessmentReferralHistoryNotesJson(assessmentReferralHistoryNoteSystem, assessmentReferralHistoryNoteUser)} ],
-        "Bookings": [ ],
-        "BookingExtensions": [ ],
-        "Cancellations": [ ],
-        "DomainEvents": [ ],
-        "DomainEventsMetadata": [ ]
+        "Bookings": [],
+        "BookingExtensions": [],
+        "Cancellations": [],
+        "DomainEvents": [],
+        "DomainEventsMetadata": []
       }
     """.trimIndent()
 
@@ -148,16 +129,18 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
+    assertNotNull(result)
+
     val expectedJson = """
     {        
         "Applications" : [${temporaryAccommodationApplicationJson(application)}],
-        "Assessments"  : [ ],
-        "AssessmentReferralHistoryNotes" : [ ],
+        "Assessments"  : [],
+        "AssessmentReferralHistoryNotes" : [],
         "Bookings": [${bookingsJson(booking)}],
-        "BookingExtensions": [ ],
-        "Cancellations": [ ],
-        "DomainEvents": [ ],
-        "DomainEventsMetadata": [ ]
+        "BookingExtensions": [],
+        "Cancellations": [],
+        "DomainEvents": [],
+        "DomainEventsMetadata": []
     }
     """.trimIndent()
 
@@ -176,16 +159,18 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
+    assertNotNull(result)
+
     val expectedJson = """
     {
         "Applications" : [${temporaryAccommodationApplicationJson(application)}],
-        "Assessments"  : [ ],
-        "AssessmentReferralHistoryNotes" : [ ],
+        "Assessments"  : [],
+        "AssessmentReferralHistoryNotes" : [],
         "Bookings": [${bookingsJson(booking)}],
         "BookingExtensions": [${bookingExtensionJson(bookingExtension)}],
-        "Cancellations": [ ],
-        "DomainEvents": [ ],
-        "DomainEventsMetadata": [ ]
+        "Cancellations": [],
+        "DomainEvents": [],
+        "DomainEventsMetadata": []
     }
     """.trimIndent()
 
@@ -203,16 +188,18 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
+    assertNotNull(result)
+
     val expectedJson = """
     {      
       "Applications" : [${temporaryAccommodationApplicationJson(application)}],
-      "Assessments"  : [ ],
-      "AssessmentReferralHistoryNotes" : [ ], 
+      "Assessments"  : [],
+      "AssessmentReferralHistoryNotes" : [], 
       "Bookings": [${bookingsJson(booking)}],
-      "BookingExtensions": [ ],
+      "BookingExtensions": [],
       "Cancellations": [${cancellationJson(cancellation)}],
-      "DomainEvents": [ ],
-      "DomainEventsMetadata": [ ]
+      "DomainEvents": [],
+      "DomainEventsMetadata": []
     }
     """.trimIndent()
 
@@ -229,14 +216,16 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, ServiceName.temporaryAccommodation)
     val result = sarService.getCAS3Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
+    assertNotNull(result)
+
     val expectedJson = """
       {
         "Applications" : [${temporaryAccommodationApplicationJson(application)}],
         "Assessments"  : [${temporaryAccommodationAssessmentJson(assessment)}],
-        "AssessmentReferralHistoryNotes" : [ ],
-        "Bookings": [ ],
-        "BookingExtensions": [ ],
-        "Cancellations": [ ],
+        "AssessmentReferralHistoryNotes" : [],
+        "Bookings": [],
+        "BookingExtensions": [],
+        "Cancellations": [],
         "DomainEvents": [${domainEventJson(domainEvent,user)}],
         "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
       }

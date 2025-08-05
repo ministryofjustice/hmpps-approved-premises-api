@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.assertNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
@@ -33,20 +35,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
         START_DATE,
         END_DATE,
       )
-    assertJsonEquals(
-      """ 
-      {
-          "Applications": [ ],
-          "ApplicationNotes": [ ],
-          "Assessments": [ ],
-          "StatusUpdates": [ ],
-          "StatusUpdateDetails": [ ],
-          "DomainEvents":  [ ],
-          "DomainEventsMetadata": [ ]
-      }
-      """.trimIndent(),
-      result,
-    )
+
+    assertNull(result)
   }
 
   @Test
@@ -54,20 +44,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
-    assertJsonEquals(
-      """ 
-      {
-          "Applications": [ ],
-          "ApplicationNotes": [ ],
-          "Assessments": [ ],
-          "StatusUpdates": [ ],
-          "StatusUpdateDetails": [ ],
-          "DomainEvents":  [ ],
-          "DomainEventsMetadata": [ ]
-      }
-      """.trimIndent(),
-      result,
-    )
+
+    assertNull(result)
   }
 
   @Test
@@ -84,15 +62,17 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
+    assertNotNull(result)
+
     val expectedJson = """
    {
       "Applications": [${cas2v2ApplicationsJson(application)}],
-      "ApplicationNotes": [ ],
-      "Assessments": [ ],
-      "StatusUpdates": [ ],
-      "StatusUpdateDetails": [ ],
-      "DomainEvents":  [ ],
-      "DomainEventsMetadata": [ ]
+      "ApplicationNotes": [],
+      "Assessments": [],
+      "StatusUpdates": [],
+      "StatusUpdateDetails": [],
+      "DomainEvents":  [],
+      "DomainEventsMetadata": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -113,15 +93,17 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
+    assertNotNull(result)
+
     val expectedJson = """
    {
       "Applications": [${cas2v2ApplicationsJson(application)}],
-      "ApplicationNotes": [ ],
+      "ApplicationNotes": [],
       "Assessments": [${cas2v2AssessmentsJson(assessment)}],
-      "StatusUpdates": [ ],
-      "StatusUpdateDetails": [ ],
-      "DomainEvents":  [ ],
-      "DomainEventsMetadata": [ ]
+      "StatusUpdates": [],
+      "StatusUpdateDetails": [],
+      "DomainEvents":  [],
+      "DomainEventsMetadata": []
    }
     """.trimIndent()
     assertJsonEquals(expectedJson, result)
@@ -144,15 +126,17 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
+    assertNotNull(result)
+
     val expectedJson = """
    {
       "Applications": [${cas2v2ApplicationsJson(application)}],
       "ApplicationNotes": [${cas2v2ApplicationNotesJson(applicationNotes)}],
       "Assessments": [${cas2v2AssessmentsJson(assessment)}],
-      "StatusUpdates": [ ],
-      "StatusUpdateDetails": [ ],
-      "DomainEvents":  [ ],
-      "DomainEventsMetadata": [ ]
+      "StatusUpdates": [],
+      "StatusUpdateDetails": [],
+      "DomainEvents":  [],
+      "DomainEventsMetadata": []
 
    }
     """.trimIndent()
@@ -178,6 +162,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
+    assertNotNull(result)
+
     val expectedJson = """
    {
       "Applications": [${cas2v2ApplicationsJson(application)}],
@@ -185,8 +171,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "Assessments": [${cas2v2AssessmentsJson(assessment)}],
       "StatusUpdates": [${cas2v2StatusUpdatesJson(statusUpdate)}],
       "StatusUpdateDetails": [${cas2v2StatusUpdateDetails(statusUpdateDetail)}],
-      "DomainEvents":  [ ],
-      "DomainEventsMetadata": [ ]
+      "DomainEvents":  [],
+      "DomainEventsMetadata": []
       
    }
     """.trimIndent()
@@ -211,6 +197,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       START_DATE,
       END_DATE,
     )
+
+    assertNotNull(result)
 
     val expectedJson = """
    {

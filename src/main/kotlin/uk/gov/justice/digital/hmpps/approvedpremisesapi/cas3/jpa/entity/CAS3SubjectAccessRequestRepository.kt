@@ -11,7 +11,7 @@ class CAS3SubjectAccessRequestRepository(
   jdbcTemplate: NamedParameterJdbcTemplate,
 ) : SubjectAccessRequestRepositoryBase(jdbcTemplate) {
 
-  fun temporaryAccommodationApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun temporaryAccommodationApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
      select json_agg(applications) as json from ( 
@@ -65,7 +65,7 @@ class CAS3SubjectAccessRequestRepository(
 
     return toJsonString(result)
   }
-  fun temporaryAccommodationAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun temporaryAccommodationAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
         select json_agg(assessments) as json 
@@ -117,7 +117,7 @@ class CAS3SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun assessmentReferralHistoryNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun assessmentReferralHistoryNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(referral_notes) as json 

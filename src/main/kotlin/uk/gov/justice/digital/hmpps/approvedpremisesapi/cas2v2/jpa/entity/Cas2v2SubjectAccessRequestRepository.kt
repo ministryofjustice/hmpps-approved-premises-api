@@ -16,7 +16,7 @@ class Cas2v2SubjectAccessRequestRepository(
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(applications) as json
@@ -55,7 +55,7 @@ class Cas2v2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(assessments) as json
@@ -86,7 +86,7 @@ class Cas2v2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getApplicationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getApplicationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(cas_2_v2_application_notes) as json 
@@ -117,7 +117,7 @@ class Cas2v2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getStatusUpdates(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getStatusUpdates(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(cas_2_v2_application_status_updates) as json 
@@ -150,7 +150,7 @@ class Cas2v2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getStatusUpdateDetails(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getStatusUpdateDetails(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(cas_2_v2_application_status_update_details) as json 
@@ -190,7 +190,7 @@ class Cas2v2SubjectAccessRequestRepository(
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
     serviceName: String,
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
            select json_agg(domain_events) as json from ( 

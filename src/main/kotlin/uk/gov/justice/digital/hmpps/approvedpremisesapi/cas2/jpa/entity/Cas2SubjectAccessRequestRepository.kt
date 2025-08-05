@@ -16,7 +16,7 @@ class Cas2SubjectAccessRequestRepository(
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(applications) as json
@@ -55,7 +55,7 @@ class Cas2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(assessments) as json
@@ -86,7 +86,7 @@ class Cas2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getApplicationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getApplicationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(application_notes) as json 
@@ -126,7 +126,7 @@ class Cas2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getStatusUpdates(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getStatusUpdates(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(application_status_updates) as json 
@@ -160,7 +160,7 @@ class Cas2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
-  fun getStatusUpdateDetails(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getStatusUpdateDetails(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(application_status_update_details) as json 
