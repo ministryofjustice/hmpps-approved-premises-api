@@ -14,6 +14,7 @@ import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Bedspac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Book
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
@@ -48,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -1736,5 +1740,56 @@ class Cas3v2BookingServiceTest {
       .produce()
 
     return assessment
+  }
+
+  @Nested
+  inner class ValidationTests {
+    private val id = UUID.randomUUID()
+    private val arrivalDate = LocalDate.now().plusDays(1)
+    private val departureDate = LocalDate.now().plusDays(20)
+
+    @Test
+    fun `throws Conflict problem when booking dates conflict`() {
+      val booking = Cas3BookingEntityFactory().withId(id)
+        .withArrivalDate(LocalDate.now().plusDays(14))
+        .withDepartureDate(departureDate)
+        .withPremises(mockk<Cas3PremisesEntity>())
+        .withBedspace(mockk<Cas3BedspacesEntity>())
+        .produce()
+
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf(booking)
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } returns departureDate
+      assertThrows<ConflictProblem> {
+        cas3BookingService.throwIfBookingDatesConflict(
+          arrivalDate = arrivalDate,
+          departureDate = departureDate,
+          thisEntityId = null,
+          bedspaceId = id,
+        )
+      }
+    }
+
+    @Test
+    fun `throws Conflict problem when void bedspace dates conflict`() {
+      val voidBedspace =
+        Cas3VoidBedspaceEntityFactory().withYieldedReason { mockk<Cas3VoidBedspaceReasonEntity>() }.produce()
+      every {
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+          any(),
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(voidBedspace)
+
+      assertThrows<ConflictProblem> {
+        cas3BookingService.throwIfVoidBedspaceDatesConflict(
+          startDate = arrivalDate,
+          endDate = departureDate,
+          bookingId = null,
+          bedspaceId = id,
+        )
+      }
+    }
   }
 }

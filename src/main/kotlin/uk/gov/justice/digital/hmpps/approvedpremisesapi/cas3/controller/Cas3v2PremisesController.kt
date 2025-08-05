@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Voi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -37,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import java.time.LocalDate
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -168,8 +166,8 @@ class Cas3v2PremisesController(
       throw ForbiddenProblem()
     }
 
-    throwIfBookingDatesConflict(newArrival.arrivalDate, newArrival.expectedDepartureDate, bookingId, bedspaceId = booking.bedspace.id)
-    throwIfVoidBedspaceDatesConflict(newArrival.arrivalDate, newArrival.expectedDepartureDate, bookingId = null, bedspaceId = booking.bedspace.id)
+    cas3BookingService.throwIfBookingDatesConflict(newArrival.arrivalDate, newArrival.expectedDepartureDate, bookingId, bedspaceId = booking.bedspace.id)
+    cas3BookingService.throwIfVoidBedspaceDatesConflict(newArrival.arrivalDate, newArrival.expectedDepartureDate, bookingId = null, bedspaceId = booking.bedspace.id)
 
     val result = cas3BookingService.createArrival(
       booking = booking,
@@ -210,33 +208,5 @@ class Cas3v2PremisesController(
       ?: throw NotFoundProblem(premisesId, "Premises")
     val bookingResult = cas3BookingService.getBooking(bookingId, premises.id, user)
     return extractEntityFromCasResult(bookingResult)
-  }
-
-  private fun throwIfBookingDatesConflict(
-    arrivalDate: LocalDate,
-    departureDate: LocalDate,
-    thisEntityId: UUID?,
-    bedspaceId: UUID,
-  ) {
-    cas3BookingService.getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedspaceId)?.let {
-      throw ConflictProblem(
-        it.id,
-        "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates",
-      )
-    }
-  }
-
-  private fun throwIfVoidBedspaceDatesConflict(
-    startDate: LocalDate,
-    endDate: LocalDate,
-    bookingId: UUID?,
-    bedspaceId: UUID,
-  ) {
-    cas3BookingService.getVoidBedspaceWithConflictingDates(startDate, endDate, bookingId, bedspaceId)?.let {
-      throw ConflictProblem(
-        it.id,
-        "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
-      )
-    }
   }
 }
