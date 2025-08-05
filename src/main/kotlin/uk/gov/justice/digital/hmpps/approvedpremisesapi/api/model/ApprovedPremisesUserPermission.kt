@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
-
   applicationWithdrawOthers("cas1_application_withdraw_others"),
   assessAppealedApplication("cas1_assess_appealed_application"),
   assessApplication("cas1_assess_application"),
@@ -13,6 +12,7 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   bookingWithdraw("cas1_booking_withdraw"),
   changeRequestList("cas1_change_request_list"),
   changeRequestView("cas1_change_request_view"),
+  experimentalNewRequestForPlacementFlow("cas1_experimental_new_request_for_placement_flow"),
   nationalOccupancyView("cas1_national_occupancy_view"),
   offlineApplicationView("cas1_offline_application_view"),
   outOfServiceBedCreate("cas1_out_of_service_bed_create"),
