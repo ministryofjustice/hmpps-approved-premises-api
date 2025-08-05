@@ -10,9 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
@@ -25,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 @Service
 class Cas1ApplicationsController(
   private val cas1TimelineService: Cas1TimelineService,
-  private val applicationService: ApplicationService,
   private val cas1ApplicationService: Cas1ApplicationService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
@@ -93,19 +90,6 @@ class Cas1ApplicationsController(
       getPersonDetailAndTransformToSummary(
         applications = applications,
         laoStrategy = user.cas1LaoStrategy(),
-      ),
-    )
-  }
-
-  override fun getApplicationsForUser(): ResponseEntity<List<Cas1ApplicationSummary>> {
-    val user = userService.getUserForRequest()
-
-    val applications = applicationService.getAllApprovedPremisesApplicationsForUser(user)
-
-    return ResponseEntity.ok(
-      getPersonDetailAndTransformToSummary(
-        applications = applications,
-        laoStrategy = CheckUserAccess(user.deliusUsername),
       ),
     )
   }

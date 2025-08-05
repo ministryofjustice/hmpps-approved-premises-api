@@ -68,22 +68,6 @@ interface ApplicationsCas1 {
   @Operation(
     tags = ["Applications"],
     summary = "Lists all applications that the user has created",
-    operationId = "getApplicationsForUser",
-    description = """Deprecated, use GET /cas1/applications/me instead.""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1ApplicationSummary::class)))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/applications"],
-    produces = ["application/json"],
-  )
-  fun getApplicationsForUser(): ResponseEntity<List<Cas1ApplicationSummary>> = getDelegate().getApplicationsForUser()
-
-  @Operation(
-    tags = ["Applications"],
-    summary = "Lists all applications that the user has created",
     operationId = "getApplicationsMe",
     description = """""",
     responses = [
