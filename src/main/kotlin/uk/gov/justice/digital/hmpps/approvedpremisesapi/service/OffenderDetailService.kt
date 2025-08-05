@@ -46,6 +46,10 @@ class OffenderDetailService(
     ).first()
   }
 
+  /**
+   * Returns a list of [PersonInfoResult] for the given set of CRNs.
+   * If the CRN is not found, it will return a [PersonInfoResult.NotFound] for that CRN so there will always be a result for each CRN.
+   */
   fun getPersonInfoResults(
     crns: Set<String>,
     laoStrategy: LaoStrategy,

@@ -87,11 +87,18 @@ class Cas1PlacementRequestsController(
   private fun mapPersonDetailOntoPlacementRequests(
     placementRequests: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary>,
     user: UserEntity,
-  ): List<Cas1PlacementRequestSummary> = placementRequests.map {
-    cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
-      it,
-      offenderDetailService.getPersonInfoResult(it.getPersonCrn(), user.cas1LaoStrategy()),
+  ): List<Cas1PlacementRequestSummary> {
+    val offenderDetails = offenderDetailService.getPersonInfoResults(
+      placementRequests.map { it.getPersonCrn() }.toSet(),
+      user.cas1LaoStrategy(),
     )
+    return placementRequests.map { placementRequest ->
+      val crn = placementRequest.getPersonCrn()
+      cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
+        placementRequest,
+        offenderDetails.find { it.crn == crn }!!,
+      )
+    }
   }
 
   override fun getPlacementRequest(id: UUID): ResponseEntity<Cas1PlacementRequestDetail> {
