@@ -249,8 +249,8 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp.duration).isEqualTo(5)
-      assertThat(updatedPlacementApp.requestedDurationDays).isEqualTo(5)
-      assertThat(updatedPlacementApp.authorisedDurationDays).isNull()
+      assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
+      assertThat(updatedPlacementApp.authorisedDuration).isNull()
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
@@ -290,8 +290,8 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp1 = updatedPlacementApplications[0]
       assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp1.duration).isEqualTo(5)
-      assertThat(updatedPlacementApp1.requestedDurationDays).isEqualTo(5)
-      assertThat(updatedPlacementApp1.authorisedDurationDays).isNull()
+      assertThat(updatedPlacementApp1.requestedDuration).isEqualTo(5)
+      assertThat(updatedPlacementApp1.authorisedDuration).isNull()
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
@@ -301,8 +301,8 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp2 = updatedPlacementApplications[1]
       assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
       assertThat(updatedPlacementApp2.duration).isEqualTo(10)
-      assertThat(updatedPlacementApp2.requestedDurationDays).isEqualTo(10)
-      assertThat(updatedPlacementApp2.authorisedDurationDays).isNull()
+      assertThat(updatedPlacementApp2.requestedDuration).isEqualTo(10)
+      assertThat(updatedPlacementApp2.authorisedDuration).isNull()
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
@@ -312,8 +312,8 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp3 = updatedPlacementApplications[2]
       assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
       assertThat(updatedPlacementApp3.duration).isEqualTo(15)
-      assertThat(updatedPlacementApp3.requestedDurationDays).isEqualTo(15)
-      assertThat(updatedPlacementApp3.authorisedDurationDays).isNull()
+      assertThat(updatedPlacementApp3.requestedDuration).isEqualTo(15)
+      assertThat(updatedPlacementApp3.authorisedDuration).isNull()
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
@@ -379,7 +379,7 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
-      assertThat(updatedApplication.authorisedDurationDays).isEqualTo(29)
+      assertThat(updatedApplication.authorisedDuration).isEqualTo(29)
 
       verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }

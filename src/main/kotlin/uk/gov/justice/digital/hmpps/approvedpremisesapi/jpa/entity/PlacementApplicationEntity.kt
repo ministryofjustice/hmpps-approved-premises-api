@@ -138,9 +138,9 @@ data class PlacementApplicationEntity(
   @Deprecated("We should look at using requestedDuration and/or authorisedDuration")
   var duration: Int? = null,
 
-  var requestedDurationDays: Int? = null,
+  var requestedDuration: Int? = null,
 
-  var authorisedDurationDays: Int? = null,
+  var authorisedDuration: Int? = null,
 
   @Version
   var version: Long = 1,
