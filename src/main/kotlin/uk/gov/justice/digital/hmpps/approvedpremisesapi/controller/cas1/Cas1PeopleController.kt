@@ -1,9 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PeopleCas1Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PersonalTimeline
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -17,7 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.BoxedAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PersonalTimelineTransformer
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 People")
 class Cas1PeopleController(
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
@@ -25,13 +29,15 @@ class Cas1PeopleController(
   private val cas1PersonalTimelineTransformer: Cas1PersonalTimelineTransformer,
   private val cas1TimelineService: Cas1TimelineService,
   private val sentryService: SentryService,
-) : PeopleCas1Delegate {
+) {
 
   companion object {
     const val TIMELINE_APPLICATION_LIMIT = 50
   }
 
-  override fun getPeopleApplicationsTimeline(crn: String): ResponseEntity<Cas1PersonalTimeline> {
+  @Operation(summary = "Returns a timeline of all applications for a Person.")
+  @GetMapping("/people/{crn}/timeline")
+  fun getTimelineForCrn(@PathVariable crn: String): ResponseEntity<Cas1PersonalTimeline> {
     val user = userService.getUserForRequest()
 
     val timeline = when (val personInfoResult = offenderDetailService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
@@ -78,3 +84,8 @@ class Cas1PeopleController(
     .getOfflineApplicationsForCrn(crn, limit = TIMELINE_APPLICATION_LIMIT)
     .map { BoxedApplication.of(it) }
 }
+
+data class Cas1PersonalTimeline(
+  val person: Person,
+  val applications: List<Cas1ApplicationTimeline>,
+)
