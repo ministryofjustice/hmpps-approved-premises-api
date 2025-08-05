@@ -32,6 +32,7 @@ class Cas1OutOfServiceBedsReportRepository(
           latest_revisions.reference_number AS "workOrderId",
           probation_regions.name AS region,
           premises.name AS ap,
+          ap.q_code AS "apQCode",
           latest_revisions.reason AS reason,
           latest_revisions.start_date AS "startDate",
           latest_revisions.end_date AS "endDate",
@@ -55,6 +56,7 @@ class Cas1OutOfServiceBedsReportRepository(
             JOIN beds ON oos_bed.bed_id = beds.id
             JOIN rooms ON beds.room_id = rooms.id
             JOIN premises ON rooms.premises_id = premises.id
+            JOIN approved_premises ap ON premises.id = ap.premises_id
             JOIN probation_regions ON premises.probation_region_id = probation_regions.id
             LEFT JOIN latest_revisions
                 ON oos_bed.id = latest_revisions.out_of_service_bed_id
@@ -74,6 +76,7 @@ class Cas1OutOfServiceBedsReportRepository(
             rooms.name,
             beds.name,
             premises.name,
+            ap.q_code,
             probation_regions.name,
             latest_revisions.start_date,
             latest_revisions.end_date,

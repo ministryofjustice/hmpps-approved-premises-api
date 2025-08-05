@@ -34,6 +34,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
       givenAnOffender { _, _ ->
         val premises = givenAnApprovedPremises(
           name = "ap name",
+          qCode = "Q001",
           region = givenAProbationRegion(name = "the region"),
         )
 
@@ -200,6 +201,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(actualRows[0].workOrderId).isEqualTo("ref1")
         assertThat(actualRows[0].region).isEqualTo("the region")
         assertThat(actualRows[0].ap).isEqualTo("ap name")
+        assertThat(actualRows[0].apQCode).isEqualTo("Q001")
         assertThat(actualRows[0].reason).isEqualTo("Reason1")
         assertThat(actualRows[0].startDate).isEqualTo(LocalDate.of(2023, 4, 5))
         assertThat(actualRows[0].endDate).isEqualTo(LocalDate.of(2023, 7, 8))
@@ -210,6 +212,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(actualRows[1].id).isEqualTo(oosbRecordBed2.id.toString())
         assertThat(actualRows[1].workOrderId).isEqualTo("ref2")
         assertThat(actualRows[1].ap).isEqualTo("ap name")
+        assertThat(actualRows[1].apQCode).isEqualTo("Q001")
         assertThat(actualRows[1].reason).isEqualTo("Reason2")
         assertThat(actualRows[1].startDate).isEqualTo(LocalDate.of(2023, 4, 12))
         assertThat(actualRows[1].endDate).isEqualTo(LocalDate.of(2023, 7, 5))
@@ -277,6 +280,7 @@ data class Cas1OutOfServiceBedReportRowWithoutPii(
   val workOrderId: String?,
   val region: String,
   val ap: String,
+  val apQCode: String,
   val reason: String,
   val startDate: LocalDate,
   val endDate: LocalDate,
@@ -290,6 +294,7 @@ data class Cas1OutOfServiceBedReportRowWithPii(
   val workOrderId: String?,
   val region: String,
   val ap: String,
+  val apQCode: String,
   val reason: String,
   val startDate: LocalDate,
   val endDate: LocalDate,
