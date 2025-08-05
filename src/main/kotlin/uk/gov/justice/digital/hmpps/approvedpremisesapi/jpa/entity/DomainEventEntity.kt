@@ -109,6 +109,15 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
 
+  @Query(
+    """
+    SELECT d
+    FROM DomainEventEntity d
+    WHERE d.cas3PremisesId = :cas3PremisesId and d.type in :premisesDomainEventTypes
+    """,
+  )
+  fun findPremisesDomainEventsByType(cas3PremisesId: UUID, premisesDomainEventTypes: List<String>): List<DomainEventEntity>
+
   @Modifying
   @Query(
     """

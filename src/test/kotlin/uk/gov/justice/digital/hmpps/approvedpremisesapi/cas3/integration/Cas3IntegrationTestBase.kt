@@ -7,6 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
@@ -20,8 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -120,6 +126,62 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     }
 
     return bedspace
+  }
+
+  fun getUnarchivePremisesEvent(
+    premises: TemporaryAccommodationPremisesEntity,
+    userEntity: UserEntity,
+    currentStartDate: LocalDate,
+    newStartDate: LocalDate,
+  ) {
+    domainEventFactory.produceAndPersist {
+      withService(ServiceName.temporaryAccommodation)
+      withCas3PremisesId(premises.id)
+      withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+      withData(
+        objectMapper.writeValueAsString(
+          CAS3PremisesUnarchiveEvent(
+            id = UUID.randomUUID(),
+            timestamp = Instant.now(),
+            eventType = EventType.premisesUnarchived,
+            eventDetails =
+            CAS3PremisesUnarchiveEventDetails(
+              premisesId = premises.id,
+              userId = userEntity.id,
+              currentStartDate = currentStartDate,
+              newStartDate = newStartDate,
+            ),
+          ),
+        ),
+      )
+    }
+  }
+
+  fun getArchivePremisesEvent(
+    premises: TemporaryAccommodationPremisesEntity,
+    userEntity: UserEntity,
+    date: LocalDate,
+  ) {
+    domainEventFactory.produceAndPersist {
+      withService(ServiceName.temporaryAccommodation)
+      withCas3PremisesId(premises.id)
+      withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
+      withData(
+        objectMapper.writeValueAsString(
+          CAS3PremisesArchiveEvent(
+            id = UUID.randomUUID(),
+            timestamp = Instant.now(),
+            eventType = EventType.premisesArchived,
+            eventDetails =
+            CAS3PremisesArchiveEventDetails(
+              premisesId = premises.id,
+              userId = userEntity.id,
+              endDate = date,
+            ),
+          ),
+        ),
+      )
+    }
   }
 
   protected fun createCas3Bedspace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(

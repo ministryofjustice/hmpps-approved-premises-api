@@ -64,6 +64,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.cas3BedspaceId = { cas3BedspaceId }
   }
 
+  fun withCas3PremisesId(cas3PremisesId: UUID?) = apply {
+    this.cas3PremisesId = { cas3PremisesId }
+  }
+
   fun withType(type: DomainEventType) = apply {
     this.type = { type }
   }
