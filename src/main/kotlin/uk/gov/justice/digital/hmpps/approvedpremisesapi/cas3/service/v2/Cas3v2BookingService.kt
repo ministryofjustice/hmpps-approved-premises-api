@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -297,6 +298,34 @@ class Cas3v2BookingService(
     bedspaceId: UUID,
   ): Cas3BookingEntity? = cas3BookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspaceId, closedDate, excludeBookingId = bookingId)
     .firstOrNull { it.lastUnavailableDate() >= arrivalDate }
+
+  fun throwIfBookingDatesConflict(
+    arrivalDate: LocalDate,
+    departureDate: LocalDate,
+    thisEntityId: UUID?,
+    bedspaceId: UUID,
+  ) {
+    getBookingWithConflictingDates(arrivalDate, departureDate, thisEntityId, bedspaceId)?.let {
+      throw ConflictProblem(
+        it.id,
+        "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates",
+      )
+    }
+  }
+
+  fun throwIfVoidBedspaceDatesConflict(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    bookingId: UUID?,
+    bedspaceId: UUID,
+  ) {
+    getVoidBedspaceWithConflictingDates(startDate, endDate, bookingId, bedspaceId)?.let {
+      throw ConflictProblem(
+        it.id,
+        "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
+      )
+    }
+  }
 
   fun getVoidBedspaceWithConflictingDates(
     startDate: LocalDate,
