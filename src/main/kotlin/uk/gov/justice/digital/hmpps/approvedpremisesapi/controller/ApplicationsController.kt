@@ -1,11 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.swagger.v3.oas.annotations.Operation
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
@@ -62,7 +70,8 @@ import java.net.URI
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as JPAApplicationSummary
 
-@Service
+@RestController
+@RequestMapping("\${openapi.approvedPremises.base-path:}")
 @Suppress("LongParameterList", "TooManyFunctions")
 class ApplicationsController(
   private val httpAuthService: HttpAuthService,
@@ -82,9 +91,16 @@ class ApplicationsController(
   private val documentService: DocumentService,
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
   private val offenderDetailService: OffenderDetailService,
-) : ApplicationsApiDelegate {
+) {
 
-  override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
+  @Operation(
+    summary = "Lists all applications that the user has created",
+    description = """deprecated, for cas1 use /cas1/applications and for cas3 use /cas3/applications""",
+  )
+  @GetMapping("/applications")
+  fun applicationsGet(
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
+  ): ResponseEntity<List<ApplicationSummary>> {
     val serviceName = xServiceName ?: ServiceName.approvedPremises
 
     val user = userService.getUserForRequest()
@@ -99,7 +115,14 @@ class ApplicationsController(
     )
   }
 
-  override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
+  @Operation(
+    summary = "Gets a single application by its ID",
+    description = """deprecated for cas3, use /cas3/applications/{applicationId}""",
+  )
+  @GetMapping("/applications/{applicationId}")
+  fun applicationsApplicationIdGet(
+    @PathVariable applicationId: UUID,
+  ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
@@ -131,8 +154,17 @@ class ApplicationsController(
     }
   }
 
+  @Operation(
+    summary = "Creates an application",
+    description = """deprecated for cas3, use /cas3/applications""",
+  )
+  @PostMapping("/applications")
   @Transactional
-  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?): ResponseEntity<Application> {
+  fun applicationsPost(
+    @RequestBody body: NewApplication,
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
+    @RequestParam(value = "createWithRisks", required = false) createWithRisks: Boolean?,
+  ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val personInfo =
@@ -202,8 +234,13 @@ class ApplicationsController(
     )
   }
 
+  @Operation(summary = "Updates an application")
+  @PutMapping("/applications/{applicationId}")
   @Transactional
-  override fun applicationsApplicationIdPut(applicationId: UUID, body: UpdateApplication): ResponseEntity<Application> {
+  fun applicationsApplicationIdPut(
+    @PathVariable applicationId: UUID,
+    @RequestBody body: UpdateApplication,
+  ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
@@ -237,9 +274,11 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
-  override fun applicationsApplicationIdNotesPost(
-    applicationId: UUID,
-    body: NewApplicationTimelineNote,
+  @Operation(summary = "Add a note on applications")
+  @PostMapping("/applications/{applicationId}/notes")
+  fun applicationsApplicationIdNotesPost(
+    @PathVariable applicationId: UUID,
+    @RequestBody body: NewApplicationTimelineNote,
   ): ResponseEntity<ApplicationTimelineNote> {
     val user = userService.getUserForRequest()
     val savedNote = cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(applicationId, body.note, user)
@@ -247,7 +286,12 @@ class ApplicationsController(
     return ResponseEntity.ok(applicationTimelineNoteTransformer.transformJpaToApi(savedNote))
   }
 
-  override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID, body: NewWithdrawal): ResponseEntity<Unit> {
+  @Operation(summary = "Withdraws an application with a reason")
+  @PostMapping("/applications/{applicationId}/withdrawal")
+  fun applicationsApplicationIdWithdrawalPost(
+    @PathVariable applicationId: UUID,
+    @RequestBody body: NewWithdrawal,
+  ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     return ResponseEntity.ok(
@@ -262,13 +306,19 @@ class ApplicationsController(
     )
   }
 
-  override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
+  @Operation(summary = "Returns a list of Requests for Placement for the given application.")
+  @GetMapping("/applications/{applicationId}/requests-for-placement")
+  fun applicationsApplicationIdRequestsForPlacementGet(
+    @PathVariable applicationId: UUID,
+  ): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
     extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
   )
 
-  override fun applicationsApplicationIdSubmissionPost(
-    applicationId: UUID,
-    submitApplication: SubmitApplication,
+  @Operation(summary = "Submits an Application")
+  @PostMapping("/applications/{applicationId}/submission")
+  fun applicationsApplicationIdSubmissionPost(
+    @PathVariable applicationId: UUID,
+    @RequestBody submitApplication: SubmitApplication,
   ): ResponseEntity<Unit> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
@@ -301,7 +351,11 @@ class ApplicationsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun applicationsApplicationIdDocumentsGet(applicationId: UUID): ResponseEntity<List<Document>> {
+  @Operation(summary = "Returns meta info on documents at the person level or at the Conviction level for the index Offence of this application.")
+  @GetMapping("/applications/{applicationId}/documents")
+  fun applicationsApplicationIdDocumentsGet(
+    @PathVariable applicationId: UUID,
+  ): ResponseEntity<List<Document>> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
     val application = extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, username))
@@ -316,9 +370,11 @@ class ApplicationsController(
     documentService.getDocumentsFromApDeliusApi(crn),
   )
 
-  override fun applicationsApplicationIdAppealsAppealIdGet(
-    applicationId: UUID,
-    appealId: UUID,
+  @Operation(summary = "Get an appeal on an application")
+  @GetMapping("/applications/{applicationId}/appeals/{appealId}")
+  fun applicationsApplicationIdAppealsAppealIdGet(
+    @PathVariable applicationId: UUID,
+    @PathVariable appealId: UUID,
   ): ResponseEntity<Appeal> {
     val user = userService.getUserForRequest()
     val application =
@@ -332,7 +388,12 @@ class ApplicationsController(
     return ResponseEntity.ok(appealTransformer.transformJpaToApi(appeal))
   }
 
-  override fun applicationsApplicationIdAppealsPost(applicationId: UUID, body: NewAppeal): ResponseEntity<Appeal> {
+  @Operation(summary = "Add an appeal to an application")
+  @PostMapping("/applications/{applicationId}/appeals")
+  fun applicationsApplicationIdAppealsPost(
+    @PathVariable applicationId: UUID,
+    @RequestBody body: NewAppeal,
+  ): ResponseEntity<Appeal> {
     val user = userService.getUserForRequest()
     val application =
       extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
@@ -364,9 +425,11 @@ class ApplicationsController(
       .body(appealTransformer.transformJpaToApi(appeal))
   }
 
-  override fun applicationsApplicationIdWithdrawablesWithNotesGet(
-    applicationId: UUID,
-    xServiceName: ServiceName,
+  @Operation(summary = "Returns a list of withdrawable items associated with this application, including the application itself, if withdrawable")
+  @GetMapping("/applications/{applicationId}/withdrawablesWithNotes")
+  fun applicationsApplicationIdWithdrawablesWithNotesGet(
+    @PathVariable applicationId: UUID,
+    @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName,
   ): ResponseEntity<Withdrawables> {
     val result = getWithdrawables(applicationId, xServiceName)
 
