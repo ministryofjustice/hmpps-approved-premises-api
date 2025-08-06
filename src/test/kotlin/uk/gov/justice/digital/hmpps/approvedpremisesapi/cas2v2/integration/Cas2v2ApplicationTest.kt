@@ -1617,6 +1617,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         )
       }
 
+      // no @Test decorator on this test
       fun `View detail all submitted prisonBail applications`() {
         submittedPrisonBailApplications.forEach { application ->
           val rawResponseBody = webTestClient.get()
@@ -1645,6 +1646,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         }
       }
 
+      // no @Test decorator on this test
       fun `Add a note to any application that is of origin prisonBail`() {
         submittedPrisonBailApplications.forEach { application ->
           val rawResponseBody = webTestClient.put()
