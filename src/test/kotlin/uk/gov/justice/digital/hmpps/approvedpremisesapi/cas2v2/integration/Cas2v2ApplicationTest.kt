@@ -45,6 +45,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.math.sign
 
+// Tests groups are poorly named and are not grouped by function in the controller
 class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
   @SpykBean

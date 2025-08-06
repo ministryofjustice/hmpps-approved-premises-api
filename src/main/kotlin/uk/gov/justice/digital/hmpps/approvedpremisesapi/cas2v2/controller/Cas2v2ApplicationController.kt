@@ -37,6 +37,8 @@ import java.net.URI
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary as ModelCas2v2ApplicationSummary
 
+
+
 @Cas2v2Controller
 class Cas2v2ApplicationController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,

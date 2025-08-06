@@ -306,6 +306,7 @@ class Cas2v2ApplicationService(
 
     application = cas2v2ApplicationRepository.save(application)
 
+    // not quite sure why we are adding to a cas2 domain events table, i thought cas2v2 was meant to have separate tables
     createCas2ApplicationSubmittedEvent(application)
 
     createAssessment(application)

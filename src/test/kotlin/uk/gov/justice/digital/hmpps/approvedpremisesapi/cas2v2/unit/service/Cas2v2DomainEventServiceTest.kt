@@ -51,6 +51,8 @@ class Cas2v2DomainEventServiceTest {
 
   @Nested
   inner class GetCas2ApplicationSubmittedDomainEvent {
+
+    // this is testing cas 2 code not cas 2v2
     @Test
     fun `persists event with cas2v, emits event to SNS`() {
       val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
