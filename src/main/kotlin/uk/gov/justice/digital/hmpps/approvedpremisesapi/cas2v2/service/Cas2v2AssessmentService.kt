@@ -42,6 +42,7 @@ class Cas2v2AssessmentService(
     return CasResult.Success(savedAssessment)
   }
 
+  // NOT UNIT TESTED
   fun getAssessment(assessmentId: UUID): CasResult<Cas2v2AssessmentEntity> {
     val assessmentEntity = cas2AssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("Cas2v2AssessmentEntity", assessmentId.toString())

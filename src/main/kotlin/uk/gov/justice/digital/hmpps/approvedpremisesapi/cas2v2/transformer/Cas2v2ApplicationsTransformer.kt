@@ -26,6 +26,7 @@ class Cas2v2ApplicationsTransformer(
 
   fun transformJpaToApi(jpa: Cas2v2ApplicationEntity, personInfo: PersonInfoResult): Cas2v2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
 
+  // NOT UNIT TESTED
   fun transformJpaAndFullPersonToApi(jpa: Cas2v2ApplicationEntity, fullPerson: Person): Cas2v2Application = Cas2v2Application(
     id = jpa.id,
     person = fullPerson,
@@ -42,6 +43,7 @@ class Cas2v2ApplicationsTransformer(
     applicationOrigin = jpa.applicationOrigin,
   )
 
+  // NOT UNIT TESTED
   fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2v2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
     id = jpa.id,
     person = fullPerson,
@@ -79,6 +81,7 @@ class Cas2v2ApplicationsTransformer(
     },
   )
 
+  // NOT UNIT TESTED
   fun applicationOriginFromText(applicationOrigin: String): ApplicationOrigin = when (applicationOrigin) {
     "courtBail" -> ApplicationOrigin.courtBail
     "prisonBail" -> ApplicationOrigin.prisonBail
