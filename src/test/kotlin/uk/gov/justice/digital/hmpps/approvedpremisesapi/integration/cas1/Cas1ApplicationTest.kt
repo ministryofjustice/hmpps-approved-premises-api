@@ -2,39 +2,36 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.DomainEventSummaryImpl
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -42,6 +39,12 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
 class Cas1ApplicationTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var cas1applicationTimelineTransformer: Cas1ApplicationTimelineTransformer
+
+  @Autowired
+  lateinit var applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer
 
   @Nested
   inner class GetAllApplications {
@@ -873,267 +876,142 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetApplications {
+  inner class GetApplicationTimeline : InitialiseDatabasePerClassTestBase() {
+
+    lateinit var user: UserEntity
+    lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var assessment: ApprovedPremisesAssessmentEntity
+    lateinit var domainEvents: List<DomainEventEntity>
+    lateinit var notes: List<ApplicationTimelineNoteEntity>
+
+    @BeforeAll
+    fun setup() {
+      val userArgs = givenAUser()
+
+      user = userArgs.first
+
+      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(user)
+      }
+
+      val otherApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(user)
+      }
+
+      assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+        withApplication(application)
+        withAllocatedToUser(user)
+      }
+
+      val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+        withApplication(otherApplication)
+        withAllocatedToUser(user)
+      }
+
+      domainEvents = DomainEventType.entries
+        .filter { it.cas == DomainEventCas.CAS1 }
+        .filter { it != DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED }.map {
+          createDomainEvent(it, otherApplication, otherAssessment, user)
+          return@map createDomainEvent(it, application, assessment, user)
+        }
+
+      notes = createTimelineNotes(application, 5, isDeleted = false)
+      createTimelineNotes(application, 2, isDeleted = true)
+      createTimelineNotes(otherApplication, 3, isDeleted = false)
+    }
 
     @Test
-    fun `Get all applications without JWT returns 401`() {
+    fun `Get application timeline without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/applications")
+        .uri("/cas1/applications/${application.id}/timeline")
         .exchange()
         .expectStatus()
         .isUnauthorized
     }
 
     @Test
-    fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnOffender { otherOffenderDetails, _ ->
-
-              val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(userEntity)
-                withData(
-                  """
-                {
-                   "thingId": 123
-                }
-              """,
-                )
-              }
-
-              upToDateApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
-                ApplicationTeamCodeEntity(
-                  id = UUID.randomUUID(),
-                  application = upToDateApplicationEntityManagedByTeam,
-                  teamCode = "TEAM1",
-                ),
-              )
-
-              val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(userEntity)
-                withCrn(offenderDetails.otherIds.crn)
-                withData("{}")
-              }
-
-              outdatedApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
-                ApplicationTeamCodeEntity(
-                  id = UUID.randomUUID(),
-                  application = outdatedApplicationEntityManagedByTeam,
-                  teamCode = "TEAM1",
-                ),
-              )
-
-              val outdatedApplicationEntityNotManagedByTeam =
-                approvedPremisesApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(otherUser)
-                  withCrn(otherOffenderDetails.otherIds.crn)
-                  withData("{}")
-                }
-
-              apDeliusContextAddResponseToUserAccessCall(
-                listOf(
-                  CaseAccessFactory()
-                    .withCrn(offenderDetails.otherIds.crn)
-                    .produce(),
-                ),
-                userEntity.deliusUsername,
-              )
-
-              val responseBody = webTestClient.get()
-                .uri("/cas1/applications")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .bodyAsListOfObjects<Cas1ApplicationSummary>()
-
-              assertThat(responseBody).anyMatch {
-                outdatedApplicationEntityManagedByTeam.id == it.id &&
-                  outdatedApplicationEntityManagedByTeam.crn == it.person.crn &&
-                  outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
-                  outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                  outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
-              }
-
-              assertThat(responseBody).anyMatch {
-                upToDateApplicationEntityManagedByTeam.id == it.id &&
-                  upToDateApplicationEntityManagedByTeam.crn == it.person.crn &&
-                  upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
-                  upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                  upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
-              }
-
-              assertThat(responseBody).noneMatch {
-                outdatedApplicationEntityNotManagedByTeam.id == it.id
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all applications returns limited information when a person cannot be found`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        val crn = "X1234"
-
-        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-
-        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
-
-        webTestClient.get()
-          .uri("/cas1/applications")
+    fun `Get application timeline returns all expected items`() {
+      givenAUser { _, jwt ->
+        val rawResponseBody = webTestClient.get()
+          .uri("/cas1/applications/${application.id}/timeline")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(
-                Cas1ApplicationSummary(
-                  createdByUserId = userEntity.id,
-                  status = ApiApprovedPremisesApplicationStatus.started,
-                  id = application.id,
-                  person = UnknownPerson(
-                    crn = crn,
-                    type = PersonType.unknownPerson,
-                  ),
-                  createdAt = application.createdAt.toInstant(),
-                  isWomensApplication = null,
-                  isPipeApplication = false,
-                  isEmergencyApplication = null,
-                  isEsapApplication = null,
-                  arrivalDate = null,
-                  risks = PersonRisks(
-                    crn = crn,
-                    roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.notFound),
-                    tier = RiskTierEnvelope(RiskEnvelopeStatus.notFound),
-                    flags = FlagsEnvelope(RiskEnvelopeStatus.notFound),
-                    mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
-                  ),
-                  submittedAt = null,
-                  isWithdrawn = false,
-                  hasRequestsForPlacement = false,
-                ),
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody =
+          objectMapper.readValue(
+            rawResponseBody,
+            object : TypeReference<List<Cas1TimelineEvent>>() {},
+          )
+
+        val expectedItems = mutableListOf<Cas1TimelineEvent>()
+
+        expectedItems.addAll(
+          domainEvents.map {
+            cas1applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(
+              DomainEventSummaryImpl(
+                it.id.toString(),
+                it.type,
+                it.occurredAt,
+                it.applicationId,
+                it.assessmentId,
+                null,
+                null,
+                null,
+                null,
+                it.triggerSource,
+                user,
               ),
-            ),
-          )
-      }
-    }
-
-    @Test
-    fun `Get all applications returns successfully when a person has no NOMS number`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = { withoutNomsNumber() },
-        ) { offenderDetails, _ ->
-          val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
-
-          apDeliusContextAddResponseToUserAccessCall(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
-            ),
-            userEntity.deliusUsername,
-          )
-
-          val responseBody = webTestClient.get()
-            .uri("/cas1/applications")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .bodyAsListOfObjects<Cas1ApplicationSummary>()
-
-          assertThat(responseBody).matches {
-            val person = it[0].person as FullPerson
-
-            application.id == it[0].id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all applications returns successfully when the person cannot be fetched from the prisons API`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        val crn = "X1234"
-
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withCrn(crn)
-            withNomsNumber("ABC123")
+            )
           },
-        ) { _, _ ->
-          val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+        )
+        expectedItems.addAll(notes.map { applicationTimelineNoteTransformer.transformToCas1TimelineEvents(it) })
 
-          val responseBody = webTestClient.get()
-            .uri("/cas1/applications")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .bodyAsListOfObjects<Cas1ApplicationSummary>()
-
-          assertThat(responseBody).matches {
-            val person = it[0].person as FullPerson
-
-            application.id == it[0].id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
-          }
-        }
+        assertThat(responseBody.count()).isEqualTo(expectedItems.count())
+        assertThat(responseBody).hasSameElementsAs(expectedItems)
       }
     }
-  }
 
-  private fun produceAndPersistBasicApplication(
-    crn: String,
-    userEntity: UserEntity,
-    managingTeamCode: String,
-    submittedAt: OffsetDateTime? = null,
-  ): ApplicationEntity {
-    val application =
-      approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withCrn(crn)
-        withCreatedByUser(userEntity)
-        withData(
-          """
-          {
-             "thingId": 123
-          }
-          """,
-        )
-        withSubmittedAt(submittedAt)
+    private fun createDomainEvent(
+      type: DomainEventType,
+      applicationEntity: ApprovedPremisesApplicationEntity,
+      assessmentEntity: ApprovedPremisesAssessmentEntity,
+      userEntity: UserEntity,
+    ): DomainEventEntity {
+      val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+
+      val data = if (type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) {
+        val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
+          withAssessment(assessmentEntity)
+          withCreatedBy(userEntity)
+        }
+
+        domainEventsFactory.createEnvelopeForLatestSchemaVersion(type = type, requestId = clarificationNote.id)
+      } else {
+        domainEventsFactory.createEnvelopeForLatestSchemaVersion(type = type)
       }
 
-    application.teamCodes += applicationTeamCodeRepository.save(
-      ApplicationTeamCodeEntity(
-        id = UUID.randomUUID(),
-        application = application,
-        teamCode = managingTeamCode,
-      ),
-    )
+      return domainEventFactory.produceAndPersist {
+        withType(type)
+        withApplicationId(applicationEntity.id)
+        withData(data)
+        withTriggeredByUserId(userEntity.id)
+        withTriggerSourceSystem()
+      }
+    }
 
-    return application
+    private fun createTimelineNotes(
+      applicationEntity: ApprovedPremisesApplicationEntity,
+      count: Int,
+      isDeleted: Boolean,
+    ) = applicationTimelineNoteEntityFactory.produceAndPersistMultiple(count) {
+      withApplicationId(applicationEntity.id)
+      if (isDeleted) withDeletedAt(OffsetDateTime.now())
+    }.toMutableList()
   }
 
   private fun createTwelveApplications(crn: String, user: UserEntity): List<ApprovedPremisesApplicationEntity> = approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {

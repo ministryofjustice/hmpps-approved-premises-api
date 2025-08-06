@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ApplicationsCas1Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
@@ -10,43 +13,47 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.Companion as DomainApprovedPremisesApplicationStatus
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 Applications")
 class Cas1ApplicationsController(
   private val cas1TimelineService: Cas1TimelineService,
-  private val applicationService: ApplicationService,
   private val cas1ApplicationService: Cas1ApplicationService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
   private val applicationsTransformer: ApplicationsTransformer,
-) : ApplicationsCas1Delegate {
+) {
 
-  override fun getApplicationTimeLine(
-    applicationId: UUID,
+  @Operation(summary = "Returns domain event summary")
+  @GetMapping("/applications/{applicationId}/timeline")
+  fun getApplicationTimeline(
+    @PathVariable applicationId: UUID,
   ): ResponseEntity<List<Cas1TimelineEvent>> {
     val cas1timelineEvents = cas1TimelineService.getApplicationTimelineEvents(applicationId)
     return ResponseEntity.ok(cas1timelineEvents)
   }
 
-  override fun getAllApplications(
-    page: Int?,
-    crnOrName: String?,
-    sortDirection: SortDirection?,
-    status: List<ApprovedPremisesApplicationStatus>?,
-    sortBy: ApplicationSortField?,
-    apAreaId: UUID?,
-    releaseType: ReleaseTypeOption?,
+  @PaginationHeaders
+  @Operation(summary = "Lists all applications that any user has created")
+  @GetMapping("/applications/all")
+  fun getAllApplications(
+    @RequestParam page: Int?,
+    @RequestParam crnOrName: String?,
+    @RequestParam sortDirection: SortDirection?,
+    @RequestParam status: List<ApprovedPremisesApplicationStatus>?,
+    @RequestParam sortBy: ApplicationSortField?,
+    @RequestParam apAreaId: UUID?,
+    @RequestParam releaseType: ReleaseTypeOption?,
   ): ResponseEntity<List<Cas1ApplicationSummary>> {
     val user = userService.getUserForRequest()
     val statusTransformed = status?.map { DomainApprovedPremisesApplicationStatus.valueOf(it) } ?: emptyList()
@@ -72,7 +79,9 @@ class Cas1ApplicationsController(
     )
   }
 
-  override fun getApplicationsMe(): ResponseEntity<List<Cas1ApplicationSummary>> {
+  @Operation(summary = "Lists all applications that the user has created")
+  @GetMapping("/applications/me")
+  fun getMyApplications(): ResponseEntity<List<Cas1ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
     val (applications, metadata) =
@@ -97,19 +106,6 @@ class Cas1ApplicationsController(
     )
   }
 
-  override fun getApplicationsForUser(): ResponseEntity<List<Cas1ApplicationSummary>> {
-    val user = userService.getUserForRequest()
-
-    val applications = applicationService.getAllApprovedPremisesApplicationsForUser(user)
-
-    return ResponseEntity.ok(
-      getPersonDetailAndTransformToSummary(
-        applications = applications,
-        laoStrategy = CheckUserAccess(user.deliusUsername),
-      ),
-    )
-  }
-
   private fun getPersonDetailAndTransformToSummary(
     applications: List<DomainApprovedPremisesApplicationSummary>,
     laoStrategy: LaoStrategy,
@@ -124,7 +120,5 @@ class Cas1ApplicationsController(
         personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
       )
     }
-
-    return emptyList()
   }
 }
