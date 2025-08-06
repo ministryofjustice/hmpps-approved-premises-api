@@ -12,6 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Book
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Repository
+interface Cas3v2TurnaroundRepository : JpaRepository<Cas3v2TurnaroundEntity, UUID>
+
 @Entity
 @Table(name = "cas3_turnarounds")
 data class Cas3v2TurnaroundEntity(
@@ -25,6 +28,3 @@ data class Cas3v2TurnaroundEntity(
 ) {
   override fun toString() = "Cas3v2TurnaroundEntity: $id"
 }
-
-@Repository
-interface Cas3v2TurnaroundRepository : JpaRepository<Cas3v2TurnaroundEntity, UUID>
