@@ -231,6 +231,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.cas1OffenderEntity = { cas1OffenderEntity }
   }
 
+  fun withDuration(duration: Int) = apply {
+    this.duration = { duration }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),

@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import java.time.Clock
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
@@ -94,6 +97,71 @@ class Cas1PlacementApplicationService(
     val createdApplication = placementApplicationRepository.save(placementApplication)
 
     return success(createdApplication)
+  }
+
+  /**
+   * Create a placement application that represents the request for placement implicitly
+   * made in an application.
+   *
+   * This is created when a decision has been made on an application's assessment.
+   *
+   * Before the application has been assessed, an entry in `placement_applications_placeholder`
+   * is created to represent the implicit request for placement for reporting purposes (see
+   * [Cas1RequestForPlacementReportRepository]). When this function is called, the corresponding
+   * `placement_applications_placeholder` entry will be archived, and its ID used for this
+   * placement application's ID, ensuring consistency in reporting (i.e. the change from
+   * a `placement_applications_placeholder` entry to a `placement_applications` entry is
+   * transparent to the reporting user).
+   *
+   * Currently, we only create these if an application's assessment has been accepted, as the
+   * initial purpose of this entity is to provide us with a way to capture attributes specific
+   * to each individual request for placement in a single data model.
+   *
+   * The ultimate goal is to create a `placement_application` on application submission (when an
+   * implicit request for placement is made), dropping the `placement_applications_placeholder` table
+   * completely. At this point we will also track rejected implicit requests for placements via
+   * `placement_applications`. This is complicated though because we need to consider the
+   * assessment lifecycle and how that impacts the request for placement, including appeals.
+   *
+   * Note that the caller of this function triggers emails related to the request for placement
+   * being accepted and creation of the placement request. Logically this should probably be
+   * moved into this function (or at least under the ownership of this service), similar
+   * to the `recordDecision` function
+   */
+  fun createAutomaticPlacementApplication(
+    id: UUID,
+    assessment: ApprovedPremisesAssessmentEntity,
+    authorisedExpectedArrival: LocalDate,
+    authorisedDurationDays: Int,
+  ): PlacementApplicationEntity {
+    val application = assessment.cas1Application()
+    return placementApplicationRepository.save(
+      placementApplicationRepository.save(
+        PlacementApplicationEntity(
+          id = id,
+          application = application,
+          createdByUser = application.createdByUser,
+          createdAt = application.createdAt,
+          expectedArrival = authorisedExpectedArrival,
+          requestedDuration = application.duration,
+          authorisedDuration = authorisedDurationDays,
+          submittedAt = application.submittedAt!!,
+          decision = JpaPlacementApplicationDecision.ACCEPTED,
+          decisionMadeAt = assessment.decisionMadeAt(),
+          placementType = PlacementType.AUTOMATIC,
+          automatic = true,
+          placementRequest = null,
+          submissionGroupId = UUID.randomUUID(),
+          withdrawalReason = null,
+          data = null,
+          document = null,
+          allocatedToUser = assessment.allocatedToUser,
+          allocatedAt = assessment.allocatedAt,
+          reallocatedAt = null,
+          dueAt = null,
+        ),
+      ),
+    )
   }
 
   fun getApplication(id: UUID): CasResult<PlacementApplicationEntity> {
