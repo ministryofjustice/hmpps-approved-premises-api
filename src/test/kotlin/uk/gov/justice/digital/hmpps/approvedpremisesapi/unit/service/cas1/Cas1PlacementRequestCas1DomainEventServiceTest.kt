@@ -4,13 +4,11 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -19,10 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
@@ -30,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestCas1DomainEventServiceTest.TestConstants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -77,66 +72,6 @@ class Cas1PlacementRequestCas1DomainEventServiceTest {
     .withExpectedArrival(LocalDate.of(2024, 5, 3))
     .withDuration(7)
     .produce()
-
-  @Nested
-  inner class PlacementRequestCreated {
-
-    @Test
-    fun `if source is appeal, don't create a domain event`() {
-      service.placementRequestCreated(
-        placementRequest = placementRequest,
-        source = PlacementRequestSource.APPEAL,
-      )
-
-      verify { domainEventService wasNot Called }
-    }
-
-    @Test
-    fun `if source is assessment of placement application, don't create a domain event`() {
-      service.placementRequestCreated(
-        placementRequest = placementRequest,
-        source = PlacementRequestSource.ASSESSMENT_OF_PLACEMENT_APPLICATION,
-      )
-
-      verify { domainEventService wasNot Called }
-    }
-
-    @Test
-    fun `if source is application assessment, create a domain event`() {
-      every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
-
-      service.placementRequestCreated(
-        placementRequest = placementRequest,
-        source = PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
-      )
-
-      verify {
-        domainEventService.saveRequestForPlacementCreatedEvent(
-          withArg {
-            assertThat(it.id).isNotNull()
-            assertThat(it.applicationId).isEqualTo(application.id)
-            assertThat(it.crn).isEqualTo(CRN)
-            assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
-            assertThat(it.occurredAt).isWithinTheLastMinute()
-            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
-
-            val eventDetails = it.data.eventDetails
-            assertThat(eventDetails.applicationId).isEqualTo(application.id)
-            assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
-            assertThat(eventDetails.requestForPlacementId).isEqualTo(placementRequest.id)
-            assertThat(eventDetails.personReference.crn).isEqualTo(CRN)
-            assertThat(eventDetails.personReference.noms).isEqualTo(application.nomsNumber)
-            assertThat(eventDetails.deliusEventNumber).isEqualTo(application.eventNumber)
-            assertThat(eventDetails.createdAt).isWithinTheLastMinute()
-            assertThat(eventDetails.createdBy).isNull()
-            assertThat(eventDetails.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 3))
-            assertThat(eventDetails.duration).isEqualTo(7)
-            assertThat(eventDetails.requestForPlacementType).isEqualTo(RequestForPlacementType.initial)
-          },
-        )
-      }
-    }
-  }
 
   @Nested
   inner class PlacementRequestWithdrawn {

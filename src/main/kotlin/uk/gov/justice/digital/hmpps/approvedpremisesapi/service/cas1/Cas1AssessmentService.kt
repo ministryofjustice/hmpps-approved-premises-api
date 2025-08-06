@@ -328,6 +328,10 @@ class Cas1AssessmentService(
     cas1AssessmentEmailService.assessmentAccepted(application)
 
     if (includesRequestForPlacement) {
+      // it may be worth moving this logic into cas1PlacementApplicationService.createAutomaticPlacementApplication
+      // so all emails related to requests for placements are managed in cas1PlacementApplicationService
+      // before doing this carefully review which emails are sent for this path and the
+      // cas1PlacementApplicationService.recordDecision (accepted) path
       cas1PlacementRequestEmailService.placementRequestSubmitted(application)
     }
 
@@ -354,8 +358,13 @@ class Cas1AssessmentService(
       authorisedDurationDays = placementDates.duration,
     )
 
+    // This logic should probably be moved into
+    // cas1PlacementApplicationService.createAutomaticPlacementApplication,
+    // (called above)
+    //
+    // That ensures that the Cas1PlacementApplicationService manages all
+    // creations of placement requests from placement applications
     placementRequestService.createPlacementRequest(
-      PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
       placementRequirements,
       placementDates,
       notes,

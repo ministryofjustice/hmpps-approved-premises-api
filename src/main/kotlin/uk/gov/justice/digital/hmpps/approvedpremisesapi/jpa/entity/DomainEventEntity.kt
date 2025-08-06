@@ -435,6 +435,18 @@ enum class DomainEventType(
       emittable = false,
       payloadType = RequestForPlacementCreated::class,
       apiType = Cas1EventType.requestForPlacementCreated,
+      schemaVersions = listOf(
+        DomainEventSchemaVersion(
+          null,
+          "If type = 'initial', requestForPlacementId refers to placement request id, otherwise, it's placement application id. " +
+            "If type = 'initial', created by is null. Otherwise, createdAt is current date and created by is user",
+        ),
+        DomainEventSchemaVersion(
+          2,
+          "requestForPlacementId always refers to placement application id. createdAt/createdBy now always populated. " +
+            "createdAt/createdBy match the placementApplication values",
+        ),
+      ),
     ),
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED(

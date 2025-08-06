@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -39,9 +40,10 @@ class Cas1PlacementApplicationDomainEventService(
 
   fun placementApplicationSubmitted(
     placementApplication: PlacementApplicationEntity,
-    username: String,
+    createdByUserName: String?,
   ) {
     checkNotNull(placementApplication.placementType)
+    check(placementApplication.automatic || createdByUserName != null)
 
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = Instant.now()
@@ -52,12 +54,14 @@ class Cas1PlacementApplicationDomainEventService(
       PlacementType.ROTL -> RequestForPlacementType.rotl
       PlacementType.RELEASE_FOLLOWING_DECISION -> RequestForPlacementType.releaseFollowingDecisions
       PlacementType.ADDITIONAL_PLACEMENT -> RequestForPlacementType.additionalPlacement
-      PlacementType.AUTOMATIC -> error("Automatic applications are not submitted")
+      PlacementType.AUTOMATIC -> RequestForPlacementType.initial
     }
 
-    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(username)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
+    val staffDetails = createdByUserName?.let {
+      when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(createdByUserName)) {
+        is ClientResult.Success -> staffDetailsResult.body
+        is ClientResult.Failure -> staffDetailsResult.throwException()
+      }
     }
 
     val eventDetails = RequestForPlacementCreated(
@@ -70,7 +74,7 @@ class Cas1PlacementApplicationDomainEventService(
       ),
       deliusEventNumber = application.eventNumber,
       createdAt = eventOccurredAt,
-      createdBy = staffDetails.toStaffMember(),
+      createdBy = staffDetails?.toStaffMember(),
       expectedArrival = dates.expectedArrival,
       duration = dates.duration,
       requestForPlacementType = placementType,
@@ -89,6 +93,12 @@ class Cas1PlacementApplicationDomainEventService(
           eventType = EventType.requestForPlacementCreated,
           eventDetails = eventDetails,
         ),
+        triggerSource = if (placementApplication.automatic) {
+          TriggerSourceType.SYSTEM
+        } else {
+          TriggerSourceType.USER
+        },
+        schemaVersion = 2,
       ),
     )
   }
