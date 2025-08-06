@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -29,7 +28,7 @@ class Cas3PremisesTransformer(
     probationDeliveryUnit = premisesEntity.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) }!!,
     characteristics = premisesEntity.characteristics.map(characteristicTransformer::transformJpaToApi).sortedBy { it.id },
     startDate = premisesEntity.startDate,
-    status = premisesEntity.status.transformStatus(),
+    status = getPremisesStatus(premisesEntity),
     notes = premisesEntity.notes,
     turnaroundWorkingDays = premisesEntity.turnaroundWorkingDays,
     totalOnlineBedspaces = premisesEntity.getTotalOnlineBedspaces(),
@@ -37,10 +36,10 @@ class Cas3PremisesTransformer(
     totalArchivedBedspaces = premisesEntity.getTotalArchivedBedspaces(),
   )
 
-  @SuppressWarnings("TooGenericExceptionThrown")
-  private fun PropertyStatus.transformStatus() = when (this) {
-    PropertyStatus.active -> Cas3PremisesStatus.online
-    PropertyStatus.archived -> Cas3PremisesStatus.archived
+  private fun getPremisesStatus(premises: TemporaryAccommodationPremisesEntity) = if (premises.isPremisesArchived()) {
+    Cas3PremisesStatus.archived
+  } else {
+    Cas3PremisesStatus.online
   }
 
   private fun TemporaryAccommodationPremisesEntity.getTotalOnlineBedspaces() = this.rooms.sumOf { room ->
