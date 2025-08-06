@@ -45,6 +45,8 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+// not grouped by function so makes it difficult to ensure all paths are tested
+
 class Cas2v2SubmissionTest(
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
