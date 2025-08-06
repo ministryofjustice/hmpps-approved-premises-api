@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 import jakarta.transaction.Transactional
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -10,11 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Cancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
@@ -23,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3CancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -35,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -51,6 +56,7 @@ class Cas3v2PremisesController(
   private val offenderDetailService: OffenderDetailService,
   private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
   private val cas3DepartureTransformer: Cas3DepartureTransformer,
+  private val cas3ConfirmationTransformer: Cas3ConfirmationTransformer,
 ) {
 
   @GetMapping("/premises/{premisesId}/bookings")
@@ -135,8 +141,12 @@ class Cas3v2PremisesController(
       bedspaceId = newBooking.bedspaceId,
       assessmentId = newBooking.assessmentId,
     )
-
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(extractEntityFromCasResult(createdBookingResult), personInfo))
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+      bookingTransformer.transformJpaToApi(
+        jpa = extractEntityFromCasResult(createdBookingResult),
+        personInfo,
+      ),
+    )
   }
 
   @PostMapping("/premises/{premisesId}/bookings/{bookingId}/arrivals")
@@ -162,7 +172,11 @@ class Cas3v2PremisesController(
       user = user,
     )
 
-    return ResponseEntity.ok(cas3ArrivalTransformer.transformJpaToApi(extractEntityFromCasResult(result)))
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+      cas3ArrivalTransformer.transformJpaToApi(
+        jpa = extractEntityFromCasResult(result),
+      ),
+    )
   }
 
   @PostMapping("/premises/{premisesId}/bookings/{bookingId}/cancellations")
@@ -184,8 +198,12 @@ class Cas3v2PremisesController(
       notes = body.notes,
       user = user,
     )
-    val cancellation = extractEntityFromCasResult(result)
-    return ResponseEntity.ok(cas3CancellationTransformer.transformJpaToApi(cancellation))
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+      cas3CancellationTransformer.transformJpaToApi(
+        jpa = extractEntityFromCasResult(result),
+      ),
+    )
   }
 
   @PostMapping("/premises/{premisesId}/bookings/{bookingId}/departures")
@@ -209,9 +227,37 @@ class Cas3v2PremisesController(
       notes = body.notes,
     )
 
-    val departure = extractEntityFromCasResult(result)
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+      cas3DepartureTransformer.transformJpaToApi(
+        jpa = extractEntityFromCasResult(result),
+      ),
+    )
+  }
 
-    return ResponseEntity.ok(cas3DepartureTransformer.transformJpaToApi(departure))
+  @PostMapping("/premises/{premisesId}/bookings/{bookingId}/confirmations")
+  fun postPremisesBookingDepartureConfirmation(
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+    @RequestBody newConfirmation: NewConfirmation,
+  ): ResponseEntity<Cas3Confirmation> {
+    val user = usersService.getUserForRequest()
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId, user)
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = cas3BookingService.createConfirmation(
+      user = user,
+      booking = booking,
+      dateTime = OffsetDateTime.now(),
+      notes = newConfirmation.notes,
+    )
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+      cas3ConfirmationTransformer.transformJpaToApi(
+        jpa = extractEntityFromCasResult(result),
+      ),
+    )
   }
 
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID, user: UserEntity): Cas3BookingEntity {

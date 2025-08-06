@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Depa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
@@ -59,6 +61,7 @@ class Cas3v2BookingService(
   private val offenderService: OffenderService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
+  private val cas3v2ConfirmationRepository: Cas3v2ConfirmationRepository,
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
@@ -367,6 +370,60 @@ class Cas3v2BookingService(
     }
 
     return CasResult.Success(departureEntity)
+  }
+
+  @Transactional
+  fun createConfirmation(
+    booking: Cas3BookingEntity,
+    dateTime: OffsetDateTime,
+    notes: String?,
+    user: UserEntity,
+  ) = validatedCasResult<Cas3v2ConfirmationEntity> {
+    if (booking.confirmation != null) {
+      return CasResult.GeneralValidationError<Cas3v2ConfirmationEntity>("This Booking already has a Confirmation set")
+    }
+
+    val cas3ConfirmationEntity = cas3v2ConfirmationRepository.save(
+      Cas3v2ConfirmationEntity(
+        id = UUID.randomUUID(),
+        dateTime = dateTime,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+    booking.status = Cas3BookingStatus.confirmed
+    updateBooking(booking)
+    booking.confirmation = cas3ConfirmationEntity
+
+    cas3DomainEventService.saveBookingConfirmedEvent(booking, user)
+    findAndCloseAssessment(booking, user)
+
+    return CasResult.Success(cas3ConfirmationEntity)
+  }
+
+  private fun findAndCloseAssessment(booking: Cas3BookingEntity, user: UserEntity) {
+    booking.application?.let {
+      val assessment =
+        assessmentRepository.findByApplicationIdAndReallocatedAtNull(booking.application!!.id)
+      if (assessment != null) {
+        closeAssessment(assessment.id, user, booking)
+      }
+    }
+  }
+
+  @SuppressWarnings("TooGenericExceptionCaught")
+  private fun closeAssessment(
+    assessmentId: UUID,
+    user: UserEntity,
+    booking: Cas3BookingEntity,
+  ) {
+    try {
+      extractEntityFromCasResult(assessmentService.closeAssessment(user, assessmentId))
+    } catch (exception: Exception) {
+      log.error("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception)
+      Sentry.captureException(RuntimeException("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception))
+    }
   }
 
   private fun updateBooking(bookingEntity: Cas3BookingEntity) = cas3BookingRepository.save(bookingEntity)

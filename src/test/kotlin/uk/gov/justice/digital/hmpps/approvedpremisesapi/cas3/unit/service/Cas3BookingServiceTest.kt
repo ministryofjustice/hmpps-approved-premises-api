@@ -1389,7 +1389,7 @@ class Cas3BookingServiceTest {
       every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
 
       val result = cas3BookingService.createConfirmation(
         booking = bookingEntity,
@@ -1420,7 +1420,7 @@ class Cas3BookingServiceTest {
       every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
 
       val result = cas3BookingService.createConfirmation(
         booking = bookingEntity,
@@ -1466,7 +1466,7 @@ class Cas3BookingServiceTest {
       every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
       every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
       every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Success(assessment)
       mockkStatic(Sentry::class)
@@ -1512,7 +1512,7 @@ class Cas3BookingServiceTest {
 
       every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
       every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
 
       val result = cas3BookingService.createConfirmation(
@@ -1558,7 +1558,7 @@ class Cas3BookingServiceTest {
 
       every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
       every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
       every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Unauthorised()
       mockkStatic(Sentry::class)

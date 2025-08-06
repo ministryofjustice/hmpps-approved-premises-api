@@ -147,6 +147,42 @@ class Cas3DomainEventBuilder(
     )
   }
 
+  fun getBookingConfirmedDomainEvent(
+    booking: Cas3BookingEntity,
+    user: UserEntity,
+  ): DomainEvent<CAS3BookingConfirmedEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
+      occurredAt = booking.createdAt.toInstant(),
+      data = CAS3BookingConfirmedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.bookingConfirmed,
+        eventDetails = CAS3BookingConfirmedEventDetails(
+          applicationId = application?.id,
+          applicationUrl = application.toUrl(),
+          bookingId = booking.id,
+          bookingUrl = booking.toUrl(),
+          personReference = PersonReference(
+            crn = booking.crn,
+            noms = booking.nomsNumber,
+          ),
+          expectedArrivedAt = booking.arrivalDate.atStartOfDay().toInstant(ZoneOffset.UTC),
+          notes = "",
+          confirmedBy = populateStaffMember(user),
+        ),
+      ),
+    )
+  }
+
   fun getBookingProvisionallyMadeDomainEvent(
     booking: BookingEntity,
     user: UserEntity,

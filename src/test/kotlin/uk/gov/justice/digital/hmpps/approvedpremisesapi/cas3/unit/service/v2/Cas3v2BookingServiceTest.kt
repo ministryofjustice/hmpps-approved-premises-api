@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
@@ -39,6 +40,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
@@ -57,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -88,6 +92,7 @@ class Cas3v2BookingServiceTest {
   private val mockCancellationRepository = mockk<Cas3CancellationRepository>()
   private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val mockCas3v2TurnaroundRepository = mockk<Cas3v2TurnaroundRepository>()
+  private val mockCas3v2ConfirmationRepository = mockk<Cas3v2ConfirmationRepository>()
   private val mockCas3VoidBedspacesRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
@@ -106,8 +111,9 @@ class Cas3v2BookingServiceTest {
     cas3ArrivalRepository = mockArrivalRepository,
     cas3DepartureRepository = mockDepartureRepository,
     departureReasonRepository = mockDepartureReasonRepository,
+    cas3v2ConfirmationRepository = mockCas3v2ConfirmationRepository,
     moveOnCategoryRepository = mockMoveOnCategoryRepository,
-    cas3v2TurnaroundRepository = this.mockCas3v2TurnaroundRepository,
+    cas3v2TurnaroundRepository = mockCas3v2TurnaroundRepository,
     assessmentRepository = mockAssessmentRepository,
     cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
     offenderService = mockOffenderService,
@@ -2021,7 +2027,246 @@ class Cas3v2BookingServiceTest {
     }
   }
 
-  private fun createCas3Booking(arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14)): Cas3BookingEntity {
+  @Nested
+  inner class CreateConfirmation {
+    private val bookingEntity = createCas3Booking()
+
+    @Test
+    fun `createConfirmation returns GeneralValidationError with correct message when Booking already has a Confirmation`() {
+      val confirmationEntity = Cas3v2ConfirmationEntityFactory()
+        .withBooking(bookingEntity)
+        .produce()
+
+      bookingEntity.confirmation = confirmationEntity
+
+      val result = cas3BookingService.createConfirmation(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+        notes = "notes",
+        user = user,
+      )
+      assertThatCasResult(result).isGeneralValidationError("This Booking already has a Confirmation set")
+    }
+
+    @Test
+    fun `createConfirmation returns Success with correct result when validation passes and emits domain event`() {
+      every { mockCas3v2ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2ConfirmationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(Cas3BookingEntity::class), user) } just Runs
+
+      val result = cas3BookingService.createConfirmation(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+        notes = "notes",
+        user = user,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+    }
+
+    @Test
+    fun `createConfirmation returns Success with correct result and does not close the referral when booking is done without application`() {
+      every { mockCas3v2ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2ConfirmationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(Cas3BookingEntity::class), user) } just Runs
+
+      val result = cas3BookingService.createConfirmation(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+        notes = "notes",
+        user = user,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockAssessmentService.closeAssessment(user, any())
+      }
+      verify(exactly = 0) {
+        mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(any())
+      }
+    }
+
+    @Test
+    fun `createConfirmation returns Success with correct result when validation passes and emits domain event and closes referral`() {
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val bookingEntity = createCas3Booking(application = application)
+
+      every { mockCas3v2ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2ConfirmationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(Cas3BookingEntity::class), user) } just Runs
+      every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+      every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Success(assessment)
+
+      mockkStatic(Sentry::class)
+
+      val result = cas3BookingService.createConfirmation(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+        notes = "notes",
+        user = user,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.closeAssessment(user, assessment.id)
+      }
+      verify(exactly = 1) {
+        mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
+      }
+      verify(exactly = 0) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createConfirmation returns Success with correct result and does not close the referral when assessment is not found`() {
+      val bookingEntity = createCas3Booking(
+        application = TemporaryAccommodationApplicationEntityFactory()
+          .withProbationRegion(user.probationRegion)
+          .withCreatedByUser(user)
+          .produce(),
+      )
+
+      every { mockCas3v2ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2ConfirmationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(Cas3BookingEntity::class), user) } just Runs
+      every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
+
+      val result = cas3BookingService.createConfirmation(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+        notes = "notes",
+        user = user,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
+      }
+      verify(exactly = 0) {
+        mockAssessmentService.closeAssessment(user, any())
+      }
+    }
+
+    @Test
+    fun `createConfirmation returns Success with correct result when closing referral fails`() {
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val bookingEntity = createCas3Booking(application = application)
+
+      every { mockCas3v2ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2ConfirmationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(Cas3BookingEntity::class), user) } just Runs
+      every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+      every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Unauthorised()
+
+      mockkStatic(Sentry::class)
+      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+      val result = cas3BookingService.createConfirmation(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+        notes = "notes",
+        user = user,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        result as CasResult.Success
+        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(result.value.notes).isEqualTo("notes")
+        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
+        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.closeAssessment(user, assessment.id)
+      }
+      verify(exactly = 1) {
+        mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
+      }
+      verify(exactly = 1) {
+        Sentry.captureException(any())
+      }
+    }
+  }
+
+  private fun createCas3Booking(
+    arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
+    application: TemporaryAccommodationApplicationEntity? = null,
+  ): Cas3BookingEntity {
     val premises = Cas3PremisesEntityFactory()
       .withDefaults()
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
@@ -2034,6 +2279,7 @@ class Cas3v2BookingServiceTest {
       .withBedspace(bedspace)
       .withServiceName(ServiceName.temporaryAccommodation)
       .withArrivalDate(arrivalDate)
+      .withApplication(application)
       .produce()
   }
 
