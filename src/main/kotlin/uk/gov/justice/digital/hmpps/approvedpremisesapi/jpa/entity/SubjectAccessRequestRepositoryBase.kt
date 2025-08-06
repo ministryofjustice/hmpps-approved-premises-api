@@ -16,7 +16,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
     serviceName: ServiceName = ServiceName.approvedPremises,
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
     select json_agg(booking) as json 
@@ -65,7 +65,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
     select json_agg(spaceBooking) as json 
@@ -149,7 +149,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
     serviceName: ServiceName = ServiceName.approvedPremises,
-  ): String {
+  ): String? {
     var result = jdbcTemplate.queryForMap(
       """
         select json_agg(booking_ext) as json 
@@ -195,7 +195,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
     serviceName: ServiceName = ServiceName.approvedPremises,
-  ): String {
+  ): String? {
     var result = jdbcTemplate.queryForMap(
       """
           select json_agg(cancellation) as json
@@ -238,7 +238,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
     serviceName: String = "CAS1",
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
            select json_agg(domain_events) as json from ( 
@@ -281,7 +281,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
     serviceName: String = "CAS1",
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
              select json_agg(domain_events_metadata) as json
@@ -312,7 +312,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     return toJsonString(result)
   }
 
-  protected fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value ?: "[]"
+  protected fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value
   protected fun MapSqlParameterSource.addSarParameters(
     crn: String?,
     nomsNumber: String?,

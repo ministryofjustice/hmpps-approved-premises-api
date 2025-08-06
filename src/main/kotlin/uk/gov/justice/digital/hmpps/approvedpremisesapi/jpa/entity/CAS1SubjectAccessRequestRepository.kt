@@ -15,7 +15,7 @@ class CAS1SubjectAccessRequestRepository(
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
 select 
@@ -89,7 +89,7 @@ from
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     val result = jdbcTemplate.queryForMap(
       """
   
@@ -127,7 +127,7 @@ from
     return toJsonString(result)
   }
 
-  fun getApprovedPremisesAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getApprovedPremisesAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
        select json_agg(assess) as json from (
@@ -181,7 +181,7 @@ from
     return toJsonString(result)
   }
 
-  fun getApprovedPremisesAssessmentClarificationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun getApprovedPremisesAssessmentClarificationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
     select json_agg(assess) as json 
@@ -231,7 +231,7 @@ from
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     var result = jdbcTemplate.queryForMap(
       """
        select json_agg(placement_applications) 
@@ -284,7 +284,7 @@ from
     return toJsonString(result)
   }
 
-  fun placementRequests(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun placementRequests(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     var result = jdbcTemplate.queryForMap(
       """
         select json_agg(placement_requests) 
@@ -321,7 +321,7 @@ from
     return toJsonString(result)
   }
 
-  fun placementRequirements(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun placementRequirements(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     var result = jdbcTemplate.queryForMap(
       """
      select json_agg(placement_requirements) 
@@ -365,7 +365,7 @@ from
     return toJsonString(result)
   }
 
-  fun placementRequirementsCriteria(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun placementRequirementsCriteria(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     var result = jdbcTemplate.queryForMap(
       """
        select json_agg(placement_requirements_criteria) as json 
@@ -429,7 +429,7 @@ from
     return toJsonString(result)
   }
 
-  fun offlineApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun offlineApplications(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     var result = jdbcTemplate.queryForMap(
       """
         select json_agg(offline_applications) as json
@@ -481,7 +481,7 @@ from
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     var result = jdbcTemplate.queryForMap(
       """
          select json_agg(booking_not_mades) as json from ( 
@@ -518,7 +518,7 @@ from
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-  ): String {
+  ): String? {
     var result = jdbcTemplate.queryForMap(
       """
        select json_agg(bed_moves) as json
@@ -558,7 +558,7 @@ from
     return toJsonString(result)
   }
 
-  fun appeals(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+  fun appeals(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     var result = jdbcTemplate.queryForMap(
       """
       select json_agg(appeals) as json
