@@ -164,7 +164,6 @@ class Cas1PlacementRequestService(
     val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
 
     this.createPlacementRequest(
-      source = PlacementRequestSource.ASSESSMENT_OF_PLACEMENT_APPLICATION,
       placementRequirements = placementRequirements,
       placementDates = placementDates,
       notes = notes,
@@ -175,8 +174,14 @@ class Cas1PlacementRequestService(
     return CasResult.Success(Unit)
   }
 
+  @Deprecated(
+    """
+    Because all create placement requests are now linked to a placement application, we should 
+    really be using the createPlacementRequestsFromPlacementApplication function as the entry point for all requests. 
+    At that point this function will become private
+    """,
+  )
   fun createPlacementRequest(
-    source: PlacementRequestSource,
     placementRequirements: PlacementRequirementsEntity,
     placementDates: PlacementDates,
     notes: String?,
@@ -202,8 +207,6 @@ class Cas1PlacementRequestService(
     )
 
     val updatedPlacementRequest = placementRequestRepository.save(placementRequest)
-
-    cas1PlacementRequestDomainEventService.placementRequestCreated(updatedPlacementRequest, source)
 
     return updatedPlacementRequest
   }
@@ -335,10 +338,4 @@ class Cas1PlacementRequestService(
     @Deprecated("This is not currently used by the UI and does not cater for SpaceBooking cancellations")
     val cancellations: List<CancellationEntity>,
   )
-}
-
-enum class PlacementRequestSource {
-  ASSESSMENT_OF_APPLICATION,
-  ASSESSMENT_OF_PLACEMENT_APPLICATION,
-  APPEAL,
 }

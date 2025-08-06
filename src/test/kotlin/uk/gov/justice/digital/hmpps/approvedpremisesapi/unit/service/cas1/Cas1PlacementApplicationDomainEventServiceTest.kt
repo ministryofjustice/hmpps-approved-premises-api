@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -34,8 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationCas1DomainEventServiceTest.TestConstants.CRN
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationCas1DomainEventServiceTest.TestConstants.USERNAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationDomainEventServiceTest.TestConstants.CRN
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationDomainEventServiceTest.TestConstants.USERNAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
@@ -43,7 +44,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiDecision
 
-class Cas1PlacementApplicationCas1DomainEventServiceTest {
+class Cas1PlacementApplicationDomainEventServiceTest {
 
   private object TestConstants {
     const val CRN = "CRN123"
@@ -81,7 +82,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
       "RELEASE_FOLLOWING_DECISION,releaseFollowingDecisions",
       "ADDITIONAL_PLACEMENT,additionalPlacement",
     )
-    fun `it creates a domain event`(placementType: PlacementType, expectedRequestForPlacementType: RequestForPlacementType) {
+    fun `create a domain event for directly created placement app`(placementType: PlacementType, expectedRequestForPlacementType: RequestForPlacementType) {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
@@ -91,6 +92,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
         .withRequestedDuration(7)
         .withCreatedByUser(user)
         .withPlacementType(placementType)
+        .withAutomatic(false)
         .produce()
 
       val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername = USERNAME)
@@ -102,7 +104,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
       val staffMember = staffUserDetails.toStaffMember()
       every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
 
-      service.placementApplicationSubmitted(placementApplication, USERNAME)
+      service.placementApplicationSubmitted(placementApplication, createdByUserName = USERNAME)
 
       verify {
         domainEventService.saveRequestForPlacementCreatedEvent(
@@ -112,6 +114,8 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
             assertThat(it.crn).isEqualTo(CRN)
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
+            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
+            assertThat(it.schemaVersion).isEqualTo(2)
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
@@ -125,6 +129,52 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
             assertThat(eventDetails.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 3))
             assertThat(eventDetails.duration).isEqualTo(7)
             assertThat(eventDetails.requestForPlacementType).isEqualTo(expectedRequestForPlacementType)
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `create a domain event for automatically created placement app`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(null)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withExpectedArrival(LocalDate.of(2024, 5, 3))
+        .withRequestedDuration(7)
+        .withAuthorisedDuration(8)
+        .withCreatedByUser(user)
+        .withPlacementType(PlacementType.AUTOMATIC)
+        .withAutomatic(true)
+        .produce()
+
+      every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
+
+      service.placementApplicationSubmitted(placementApplication, createdByUserName = null)
+
+      verify {
+        domainEventService.saveRequestForPlacementCreatedEvent(
+          withArg {
+            assertThat(it.id).isNotNull()
+            assertThat(it.applicationId).isEqualTo(application.id)
+            assertThat(it.crn).isEqualTo(CRN)
+            assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
+            assertThat(it.occurredAt).isWithinTheLastMinute()
+            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
+
+            val eventDetails = it.data.eventDetails
+            assertThat(eventDetails.applicationId).isEqualTo(application.id)
+            assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+            assertThat(eventDetails.requestForPlacementId).isEqualTo(placementApplication.id)
+            assertThat(eventDetails.personReference.crn).isEqualTo(CRN)
+            assertThat(eventDetails.personReference.noms).isEqualTo(application.nomsNumber)
+            assertThat(eventDetails.deliusEventNumber).isEqualTo(application.eventNumber)
+            assertThat(eventDetails.createdAt).isWithinTheLastMinute()
+            assertThat(eventDetails.createdBy).isNull()
+            assertThat(eventDetails.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 3))
+            assertThat(eventDetails.duration).isEqualTo(8)
+            assertThat(eventDetails.requestForPlacementType).isEqualTo(RequestForPlacementType.initial)
           },
         )
       }
