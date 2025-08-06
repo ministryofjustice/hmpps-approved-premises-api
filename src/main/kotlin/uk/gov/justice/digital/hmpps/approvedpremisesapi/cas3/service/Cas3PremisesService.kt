@@ -969,7 +969,7 @@ class Cas3PremisesService(
     premises: TemporaryAccommodationPremisesEntity,
     restartDate: LocalDate,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
-    if (!premises.isCas3PremisesArchived()) {
+    if (!premises.isPremisesArchived()) {
       return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotArchived"
     }
 

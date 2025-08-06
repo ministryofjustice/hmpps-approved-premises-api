@@ -365,7 +365,7 @@ class TemporaryAccommodationPremisesEntity(
   characteristics,
   status,
 ) {
-  fun isCas3PremisesArchived(): Boolean = endDate != null && endDate!! <= LocalDate.now()
+  fun isPremisesArchived(): Boolean = endDate != null && endDate!! <= LocalDate.now()
 }
 
 interface TemporaryAccommodationPremisesSummary {

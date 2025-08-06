@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -53,6 +54,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -1130,33 +1133,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         val premisesToGet = premises.drop(1).first()
 
-        val expectedPremises = Cas3Premises(
-          id = premisesToGet.id,
-          reference = premisesToGet.name,
-          addressLine1 = premisesToGet.addressLine1,
-          addressLine2 = premisesToGet.addressLine2,
-          postcode = premisesToGet.postcode,
-          town = premisesToGet.town,
-          probationRegion = ProbationRegion(user.probationRegion.id, user.probationRegion.name),
-          probationDeliveryUnit = ProbationDeliveryUnit(probationDeliveryUnit.id, probationDeliveryUnit.name),
-          localAuthorityArea = LocalAuthorityArea(
-            localAuthorityArea.id,
-            localAuthorityArea.identifier,
-            localAuthorityArea.name,
-          ),
-          startDate = premisesToGet.startDate,
-          status = Cas3PremisesStatus.online,
-          characteristics = premisesToGet.characteristics.sortedBy { it.id }.map { characteristic ->
-            Characteristic(
-              id = characteristic.id,
-              name = characteristic.name,
-              propertyName = characteristic.propertyName,
-              serviceScope = Characteristic.ServiceScope.temporaryMinusAccommodation,
-              modelScope = Characteristic.ModelScope.forValue(characteristic.modelScope),
-            )
-          },
-          notes = premisesToGet.notes,
-          turnaroundWorkingDays = premisesToGet.turnaroundWorkingDays,
+        val expectedPremises = createCas3Premises(
+          premisesToGet,
+          user.probationRegion,
+          probationDeliveryUnit,
+          localAuthorityArea,
+          Cas3PremisesStatus.online,
           totalOnlineBedspaces = 2,
           totalUpcomingBedspaces = 1,
           totalArchivedBedspaces = 1,
@@ -1164,6 +1146,36 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         val responseBody = webTestClient.get()
           .uri("/cas3/premises/${premisesToGet.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremises))
+      }
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3PremisesTest#getArchivedPremisesByIdCases")
+    fun `Get Premises by ID returns OK with correct body when a premises is archived with future end date`(args: Pair<LocalDate, Cas3PremisesStatus>) {
+      val (endDate, status) = args
+      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR), premisesStatus = PropertyStatus.archived, premisesEndDate = endDate) { user, jwt, premises ->
+        val expectedPremises = createCas3Premises(
+          premises,
+          user.probationRegion,
+          premises.probationDeliveryUnit!!,
+          premises.localAuthorityArea!!,
+          status,
+          totalOnlineBedspaces = 0,
+          totalUpcomingBedspaces = 0,
+          totalArchivedBedspaces = 0,
+        )
+
+        val responseBody = webTestClient.get()
+          .uri("/cas3/premises/${premises.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -1211,6 +1223,48 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isForbidden
       }
     }
+
+    @SuppressWarnings("LongParameterList")
+    private fun createCas3Premises(
+      premises: TemporaryAccommodationPremisesEntity,
+      probationRegion: ProbationRegionEntity,
+      probationDeliveryUnit: ProbationDeliveryUnitEntity,
+      localAuthorityArea: LocalAuthorityAreaEntity,
+      status: Cas3PremisesStatus,
+      totalOnlineBedspaces: Int,
+      totalUpcomingBedspaces: Int,
+      totalArchivedBedspaces: Int,
+    ) = Cas3Premises(
+      id = premises.id,
+      reference = premises.name,
+      addressLine1 = premises.addressLine1,
+      addressLine2 = premises.addressLine2,
+      postcode = premises.postcode,
+      town = premises.town,
+      probationRegion = ProbationRegion(probationRegion.id, probationRegion.name),
+      probationDeliveryUnit = ProbationDeliveryUnit(probationDeliveryUnit.id, probationDeliveryUnit.name),
+      localAuthorityArea = LocalAuthorityArea(
+        localAuthorityArea.id,
+        localAuthorityArea.identifier,
+        localAuthorityArea.name,
+      ),
+      startDate = premises.startDate,
+      status = status,
+      characteristics = premises.characteristics.sortedBy { it.id }.map { characteristic ->
+        Characteristic(
+          id = characteristic.id,
+          name = characteristic.name,
+          propertyName = characteristic.propertyName,
+          serviceScope = Characteristic.ServiceScope.temporaryMinusAccommodation,
+          modelScope = Characteristic.ModelScope.forValue(characteristic.modelScope),
+        )
+      },
+      notes = premises.notes,
+      turnaroundWorkingDays = premises.turnaroundWorkingDays,
+      totalOnlineBedspaces = totalOnlineBedspaces,
+      totalUpcomingBedspaces = totalUpcomingBedspaces,
+      totalArchivedBedspaces = totalArchivedBedspaces,
+    )
   }
 
   @Nested
@@ -3583,5 +3637,13 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         }
       }
     }
+  }
+
+  private companion object {
+    @JvmStatic
+    fun getArchivedPremisesByIdCases() = listOf(
+      Pair(LocalDate.now().minusDays(1), Cas3PremisesStatus.archived),
+      Pair(LocalDate.now().plusDays(5), Cas3PremisesStatus.online),
+    )
   }
 }

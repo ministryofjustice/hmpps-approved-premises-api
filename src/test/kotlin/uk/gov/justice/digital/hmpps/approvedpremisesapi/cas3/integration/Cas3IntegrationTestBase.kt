@@ -15,12 +15,14 @@ import java.time.LocalDate
 
 abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
 
+  @SuppressWarnings("LongParameterList")
   protected fun getListPremisesByStatus(
     probationRegion: ProbationRegionEntity,
     probationDeliveryUnit: ProbationDeliveryUnitEntity,
     localAuthorityArea: LocalAuthorityAreaEntity,
     numberOfPremises: Int,
     propertyStatus: PropertyStatus,
+    endDate: LocalDate? = null,
   ): List<TemporaryAccommodationPremisesEntity> {
     val premisesCharacteristics = getPremisesCharacteristics().toMutableList()
 
@@ -29,6 +31,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
       withProbationDeliveryUnit(probationDeliveryUnit)
       withLocalAuthorityArea(localAuthorityArea)
       withStatus(propertyStatus)
+      withEndDate(endDate)
       withAddressLine2(randomStringUpperCase(10))
       withCharacteristics(
         mutableListOf(
