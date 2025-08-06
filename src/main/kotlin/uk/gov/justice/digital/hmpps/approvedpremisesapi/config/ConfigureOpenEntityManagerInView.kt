@@ -17,10 +17,12 @@ class ConfigureOpenEntityManagerInView {
          * Ideally all endpoints would be excluded from this interceptor, but
          * this requires updates to ensure they stop relying on lazy loading
          * before this can be done
+         *
+         * Note that care needs to be taken as integration tests currently
+         * won't capture all lazy loading issues, see
+         * https://dsdmoj.atlassian.net/browse/APS-1127?focusedCommentId=563114
          */
-        .excludePathPatterns(
-          "/cas1/premises/*/space-bookings",
-        )
+        .excludePathPatterns()
     }
   }
 }
