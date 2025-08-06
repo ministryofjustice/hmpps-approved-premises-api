@@ -19,9 +19,8 @@ interface PlacementApplicationPlaceholderRepository : JpaRepository<PlacementApp
  * Used to capture requests for placements implicit in the original applications
  * i.e. where an arrival date is defined in the original application
  *
- * This is a stop-gap solution to support reporting until we fix the
- * bifurcated request for placement model, at which point these will
- * be represented by [PlacementApplicationEntity] instead
+ * These entries are archived on application submission, because we then
+ * have a corresponding entry into placement_applications[automatic=true]
  *
  * See [PlacementRequestEntity.isForApplicationsArrivalDate] for more information
  */
