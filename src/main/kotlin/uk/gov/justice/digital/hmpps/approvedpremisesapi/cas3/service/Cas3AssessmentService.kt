@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -27,6 +28,7 @@ class Cas3AssessmentService(
   private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
   private val userService: UserService,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
+  private val lockableAssessmentRepository: LockableAssessmentRepository,
 ) {
   @Suppress("ReturnCount")
   fun updateAssessment(
@@ -124,6 +126,33 @@ class Cas3AssessmentService(
         type = type,
       ),
     )
+  }
+
+  fun reallocateAssessment(requestUser: UserEntity, assessmentId: UUID): CasResult<AssessmentEntity?> {
+    if (!userAccessService.userCanReallocateTask(requestUser)) {
+      return CasResult.Unauthorised()
+    }
+
+    lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
+
+    val currentAssessment = assessmentRepository.findByIdOrNull(assessmentId)
+      ?: return CasResult.NotFound("assessment", assessmentId.toString())
+
+    if (currentAssessment.reallocatedAt != null) {
+      return CasResult.ConflictError(
+        currentAssessment.id,
+        "This assessment has already been reallocated",
+      )
+    }
+
+    currentAssessment.allocatedToUser = requestUser
+    currentAssessment.allocatedAt = OffsetDateTime.now()
+    currentAssessment.decision = null
+
+    val savedAssessment = assessmentRepository.save(currentAssessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.IN_REVIEW)
+
+    return CasResult.Success(savedAssessment)
   }
 
   private fun notBeforeValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
