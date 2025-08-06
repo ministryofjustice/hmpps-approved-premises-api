@@ -2289,15 +2289,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedProbationRegion { userEntity.probationRegion }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val archivedBedspace = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withStartDate(LocalDate.now().minusDays(30))
-          withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
-        }
+        val archivedBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(30), endDate = LocalDate.now().minusDays(1))
 
         val restartDate = LocalDate.now().plusDays(1)
 
@@ -2319,6 +2311,48 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Unarchive bedspace when premises is archived returns 200 OK and unarchive premises and bedspace successfully`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withEndDate(LocalDate.now().minusDays(30))
+          withStatus(PropertyStatus.archived)
+        }
+
+        val archivedBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(180), endDate = LocalDate.now().minusDays(40))
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        // Verify the bedspace was updated
+        val updatedBedspace = bedRepository.findById(archivedBedspace.id).get()
+        assertThat(updatedBedspace.startDate).isEqualTo(restartDate)
+        assertThat(updatedBedspace.endDate).isNull()
+
+        // Verify the premises was updated
+        val updatedPremises = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
+        assertThat(updatedPremises).isNotNull()
+        assertThat(updatedPremises?.startDate).isEqualTo(restartDate)
+        assertThat(updatedPremises?.endDate).isNull()
+
+        val allEvents = domainEventRepository.findAll()
+        assertThat(allEvents).hasSize(2)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+        assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+      }
+    }
+
+    @Test
     fun `Unarchive bedspace returns 400 when restart date is too far in the past`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2326,15 +2360,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedProbationRegion { userEntity.probationRegion }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val archivedBedspace = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withStartDate(LocalDate.now().minusDays(30))
-          withEndDate(LocalDate.now().minusDays(10))
-        }
+        val archivedBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(30), endDate = LocalDate.now().minusDays(10))
 
         val restartDate = LocalDate.now().minusDays(8) // More than 7 days in the past
 
@@ -2362,15 +2388,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedProbationRegion { userEntity.probationRegion }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val archivedBedspace = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withStartDate(LocalDate.now().minusDays(30))
-          withEndDate(LocalDate.now().minusDays(1))
-        }
+        val archivedBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(30), endDate = LocalDate.now().minusDays(1))
 
         val restartDate = LocalDate.now().plusDays(8) // More than 7 days in the future
 
@@ -2398,16 +2416,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedProbationRegion { userEntity.probationRegion }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
         val lastArchiveEndDate = LocalDate.now().minusDays(5)
-        val archivedBedspace = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withStartDate(LocalDate.now().minusDays(30))
-          withEndDate(lastArchiveEndDate)
-        }
+
+        val archivedBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(30), endDate = lastArchiveEndDate)
 
         val restartDate = lastArchiveEndDate.minusDays(1) // Before the last archive end date
 
@@ -2462,15 +2473,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedProbationRegion { userEntity.probationRegion }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val onlineBedspace = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withStartDate(LocalDate.now().minusDays(10))
-          withEndDate(null)
-        }
+        val onlineBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(10), endDate = null)
 
         val restartDate = LocalDate.now().plusDays(1)
 
@@ -2498,15 +2501,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withYieldedProbationRegion { givenAProbationRegion() }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val archivedBedspace = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-          withStartDate(LocalDate.now().minusDays(30))
-          withEndDate(LocalDate.now().minusDays(1))
-        }
+        val archivedBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(30), endDate = LocalDate.now().minusDays(1))
 
         val restartDate = LocalDate.now().plusDays(1)
 
