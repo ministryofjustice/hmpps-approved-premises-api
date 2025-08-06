@@ -24,6 +24,7 @@ import java.util.UUID
 
 class TasksTest {
 
+  @Deprecated("Superseded by AssessmentTest.ReallocateAssessmentTest")
   @Nested
   inner class ReallocateTaskTest : IntegrationTestBase() {
     @Autowired
@@ -77,6 +78,7 @@ class TasksTest {
     }
   }
 
+  @Deprecated("Superseded by AssessmentTest.DeallocateAssessmentTest")
   @Nested
   inner class DeallocateTaskTest : IntegrationTestBase() {
     @Test
