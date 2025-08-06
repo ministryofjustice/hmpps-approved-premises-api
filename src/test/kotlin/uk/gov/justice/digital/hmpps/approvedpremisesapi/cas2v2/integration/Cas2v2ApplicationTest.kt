@@ -955,67 +955,67 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `get application by crn`() {
-      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&crn=${primaryPrisonBailSubmitted.crn}")
+      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
-    fun `get application by offender nomis number`() {
-      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&nomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+    fun `get application by offender noms number`() {
+      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
-    fun `fail to get application by offender nomis number when created by other user and limit by user`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?nomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+    fun `fail to get application by offender noms number when created by other user and limit by user`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
 
-      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&nomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids2.size).isEqualTo(0)
     }
 
     @Test
-    fun `fail to get application by offender nomis number when app origin is other source`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&nomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+    fun `fail to get application by offender noms number when app origin is other source`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
-    fun `fail to get application by offender nomis number when app is submitted and isSubmitted is false`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&nomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+    fun `fail to get application by offender noms number when app is submitted and isSubmitted is false`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
-    fun `fail to get application by offender nomis number when app is unsubmitted and isSubmitted is true`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&nomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+    fun `fail to get application by offender noms number when app is unsubmitted and isSubmitted is true`() {
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when created by other user and limit by user`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?crn=${secondaryPrisonBailSubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2v2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
 
-      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&crn=${secondaryPrisonBailSubmitted.crn}")
+      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids2.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app origin is other source`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&crn=${primaryPrisonBailUnsubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app is submitted and isSubmitted is false`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&crn=${primaryPrisonBailSubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app is unsubmitted and isSubmitted is true`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&crn=${primaryPrisonBailUnsubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
@@ -1319,7 +1319,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `court referrer cannot see another users prison bail application`() {
-          givenACas2v2DeliusUser { userEntity, jwt ->
+          givenACas2v2DeliusUser { _, jwt ->
             givenAnOffender { offenderDetails, _ ->
 
               val otherUser = cas2v2UserEntityFactory.produceAndPersist()
@@ -1528,10 +1528,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
   inner class PrisonBailVisibility {
 
     val submittedPrisonBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
-    val unsubmittedPrisonBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
-
-    val submittedCourtBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
-    val unsubmittedCourtBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
+    private val unsubmittedPrisonBailApplications = mutableListOf<Cas2v2ApplicationEntity>()
 
     var jwtForNorwichUser = ""
 

@@ -55,8 +55,7 @@ class Cas2v2ApplicationController(
     @RequestParam prisonCode: String?,
     @RequestParam applicationOrigin: ApplicationOrigin?,
     @RequestParam limitByUser: Boolean?,
-    @RequestParam crn: String?,
-    @RequestParam nomsNumber: String?,
+    @RequestParam crnOrNomsNumber: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
@@ -72,8 +71,7 @@ class Cas2v2ApplicationController(
       isSubmitted,
       applicationOrigin,
       effectiveLimitByUser,
-      crn,
-      nomsNumber,
+      crnOrNomsNumber,
       user,
       pageCriteria,
     )
