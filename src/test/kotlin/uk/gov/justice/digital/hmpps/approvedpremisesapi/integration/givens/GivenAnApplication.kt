@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -23,6 +24,7 @@ fun IntegrationTestBase.givenASubmittedCas1Application(
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   tier: String? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
+  createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
 ) = givenACas1Application(
   createdByUser = createdByUser,
   crn = offender.crn,
@@ -31,6 +33,7 @@ fun IntegrationTestBase.givenASubmittedCas1Application(
   tier = tier,
   caseManager = caseManager,
   submittedAt = OffsetDateTime.now(),
+  createdAt = createdAt,
 )
 
 @Suppress("LongParameterList")
@@ -48,6 +51,7 @@ fun IntegrationTestBase.givenACas1Application(
   arrivalDate: OffsetDateTime? = null,
   data: String? = "{}",
   apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
+  createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   block: (application: ApplicationEntity) -> Unit = {},
 ) = givenAnApplication(
   createdByUser,
@@ -63,6 +67,7 @@ fun IntegrationTestBase.givenACas1Application(
   arrivalDate,
   data,
   apType,
+  createdAt,
   block,
 )
 
@@ -81,6 +86,7 @@ fun IntegrationTestBase.givenAnApplication(
   arrivalDate: OffsetDateTime? = null,
   data: String? = "{}",
   apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
+  createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val riskRatings = tier?.let {
@@ -89,6 +95,7 @@ fun IntegrationTestBase.givenAnApplication(
 
   val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
     withCrn(crn)
+    withCreatedAt(createdAt)
     withCreatedByUser(createdByUser)
     withSubmittedAt(submittedAt)
     withEventNumber(eventNumber)

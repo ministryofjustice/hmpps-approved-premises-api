@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.OffsetDateTime
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenAnOfflineApplication(
@@ -9,6 +10,7 @@ fun IntegrationTestBase.givenAnOfflineApplication(
   eventNumber: String? = randomStringMultiCaseWithNumbers(6),
   eventNumberSet: Boolean = true,
   name: String? = null,
+  createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) = offlineApplicationEntityFactory.produceAndPersist {
   withCrn(crn)
   withEventNumber(
@@ -19,4 +21,5 @@ fun IntegrationTestBase.givenAnOfflineApplication(
     },
   )
   withName(name)
+  withCreatedAt(createdAt)
 }
