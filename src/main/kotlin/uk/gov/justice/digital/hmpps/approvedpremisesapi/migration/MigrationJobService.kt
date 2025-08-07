@@ -6,14 +6,10 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1ArsonSuitableToArsonOffencesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillApplicationDuration
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillOfflineApplicationName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1CapacityPerformanceTestJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1IsArsonSuitableBackfillJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1TaskDueMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateApplicationLicenceExpiryDateJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateApprovedPremisesApplicationWithOffenderJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateAssessmentReportPropertiesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateRoomCodesJob
@@ -60,10 +56,6 @@ class MigrationJobService(
         MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedSpaceStartDateJob::class)
         MigrationJobType.updateCas3PremisesStartDate -> getBean(Cas3UpdatePremisesStartDateJob::class)
         MigrationJobType.updateCas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
-        MigrationJobType.updateCas1ApplicationsLicenceExpiryDate -> getBean(Cas1UpdateApplicationLicenceExpiryDateJob::class)
-        MigrationJobType.updateCas1BackfillOfflineApplicationName -> getBean(Cas1BackfillOfflineApplicationName::class)
-        MigrationJobType.updateCas1ArsonSuitableToArsonOffences -> getBean(Cas1ArsonSuitableToArsonOffencesJob::class)
-        MigrationJobType.updateCas1BackfillArsonSuitable -> getBean(Cas1IsArsonSuitableBackfillJob::class)
         MigrationJobType.updateCas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
         MigrationJobType.cas1UpdateRoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
         MigrationJobType.updateCas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
