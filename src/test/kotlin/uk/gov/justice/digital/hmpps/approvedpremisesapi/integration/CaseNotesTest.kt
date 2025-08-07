@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.caseNotesAPIMockSuccessfulCaseNotesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
@@ -59,6 +60,7 @@ class CaseNotesTest : IntegrationTestBase() {
   fun `Getting case notes for a CRN that does not exist returns 404`() {
     givenAUser { userEntity, jwt ->
       val crn = "CRN345"
+      apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
       wiremockServer.stubFor(
         WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn"))

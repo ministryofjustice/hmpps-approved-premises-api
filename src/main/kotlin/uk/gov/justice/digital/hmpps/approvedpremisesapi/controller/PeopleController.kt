@@ -13,13 +13,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CaseNotesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -32,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonerAlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
+@SuppressWarnings("ThrowsCount")
 @Service
 class PeopleController(
   private val offenderService: OffenderService,
@@ -65,13 +67,7 @@ class PeopleController(
     crn: String,
     xServiceName: ServiceName,
   ): ResponseEntity<List<PrisonCaseNote>> {
-    val offenderDetails = getOffenderDetails(crn)
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw NotFoundProblem(crn, "Case Notes")
-    }
-
-    val nomsNumber = offenderDetails.otherIds.nomsNumber
+    val nomsNumber = getNomsNumber(crn)
 
     val prisonCaseNotesResult = caseNotesService.getFilteredPrisonCaseNotesByNomsNumber(
       nomsNumber,
@@ -82,13 +78,7 @@ class PeopleController(
   }
 
   override fun peopleCrnAdjudicationsGet(crn: String, xServiceName: ServiceName): ResponseEntity<List<Adjudication>> {
-    val offenderDetails = getOffenderDetails(crn)
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw NotFoundProblem(crn, "Adjudications")
-    }
-
-    val nomsNumber = offenderDetails.otherIds.nomsNumber
+    val nomsNumber = getNomsNumber(crn)
 
     val adjudicationsResult = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
     val adjudications = when (adjudicationsResult) {
@@ -106,13 +96,7 @@ class PeopleController(
   }
 
   override fun peopleCrnAcctAlertsGet(crn: String): ResponseEntity<List<PersonAcctAlert>> {
-    val offenderDetails = getOffenderDetails(crn)
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw NotFoundProblem(crn, "ACCT Alerts")
-    }
-
-    val nomsNumber = offenderDetails.otherIds.nomsNumber
+    val nomsNumber = getNomsNumber(crn)
 
     val acctAlertsResult = offenderService.getAcctPrisonerAlertsByNomsNumber(nomsNumber)
 
@@ -166,24 +150,32 @@ class PeopleController(
   }
 
   private fun ensureUserCanAccessOffenderInfo(crn: String) {
-    getOffenderDetails(crn)
-  }
-
-  private fun getOffenderDetails(crn: String): OffenderDetailSummary {
-    val user = userService.getUserForRequest()
-
-    val offenderDetails = when (
-      val offenderDetailsResult = offenderService.getOffenderByCrn(
-        crn = crn,
-        userDistinguishedName = user.deliusUsername,
-        ignoreLaoRestrictions = false,
+    if (!offenderService.canAccessOffender(
+        crn,
+        laoStrategy = LaoStrategy.CheckUserAccess(userService.getDeliusUserNameForRequest()),
       )
     ) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      throw ForbiddenProblem()
+    }
+  }
+
+  private fun getNomsNumber(crn: String): String {
+    val nomsNumber = when (
+      val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(
+        crn = crn,
+        laoStrategy = LaoStrategy.CheckUserAccess(userService.getDeliusUserNameForRequest()),
+      )
+    ) {
+      is PersonSummaryInfoResult.Success.Full -> personSummaryInfoResult.summary.nomsId
+      is PersonSummaryInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonSummaryInfoResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is PersonSummaryInfoResult.Unknown -> throw NotFoundProblem(crn, "Person")
     }
 
-    return offenderDetails
+    if (nomsNumber == null) {
+      throw NotFoundProblem(crn, "Noms Number")
+    }
+
+    return nomsNumber
   }
 }
