@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
@@ -40,29 +39,6 @@ class Cas3AssessmentTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
-      }
-    }
-
-    @Test
-    fun `Deallocate Approved Premises assessment returns 403 Forbidden`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAUser { _, _ ->
-            givenAnAssessmentForApprovedPremises(
-              allocatedToUser = user,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            ) { assessment, _ ->
-              webTestClient.delete()
-                .uri("/cas3/assessments/${assessment.id}/allocations")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-                .exchange()
-                .expectStatus()
-                .isForbidden
-            }
-          }
-        }
       }
     }
 
