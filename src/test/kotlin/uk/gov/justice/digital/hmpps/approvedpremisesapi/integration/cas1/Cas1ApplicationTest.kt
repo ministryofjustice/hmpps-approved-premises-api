@@ -1091,7 +1091,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class Cas1GetApplication {
+  inner class GetApplication {
 
     @Test
     fun `Get single non LAO application returns 200 with correct body`() {
@@ -1482,7 +1482,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class Cas1CreateApplication {
+  inner class CreateApplication {
 
     @Test
     fun `Create new application without JWT returns 401`() {
@@ -1726,7 +1726,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class Cas1UpdateApplicationCas {
+  inner class UpdateApplication {
     @Test
     fun `Update existing AP application returns 200 with correct body`() {
       givenAUser { submittingUser, jwt ->
@@ -1771,7 +1771,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class Cas1SubmitApplication {
+  inner class SubmitApplication {
 
     @Test
     fun `Submit standard application does not auto allocate the assessment, sends emails and raises domain events`() {
@@ -2342,7 +2342,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class PostTimelineNotesForApplication {
+  inner class CreateApplicationNote {
     @Test
     fun `post ApplicationTimelineNote without JWT returns 401`() {
       webTestClient.post()
@@ -2483,7 +2483,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class AllRequestsForPlacementForApplication {
+  inner class GetRequestsForPlacements {
     @Test
     fun `Get all Requests for Placement for an application without a JWT returns a 401 response`() {
       webTestClient.get()

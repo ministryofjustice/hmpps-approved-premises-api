@@ -179,7 +179,7 @@ class Cas1ApplicationsController(
     description = """deprecated for cas3, use /cas3/applications/{applicationId}""",
   )
   @GetMapping("/applications/{applicationId}")
-  fun applicationsApplicationIdGet(
+  fun getApplication(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
@@ -219,7 +219,7 @@ class Cas1ApplicationsController(
   )
   @PostMapping("/applications")
   @Transactional
-  fun applicationsPost(
+  fun createApplication(
     @RequestBody body: NewApplication,
     @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
     @RequestParam(value = "createWithRisks", required = false) createWithRisks: Boolean?,
@@ -296,7 +296,7 @@ class Cas1ApplicationsController(
   @Operation(summary = "Updates an application")
   @PutMapping("/applications/{applicationId}")
   @Transactional
-  fun applicationsApplicationIdPut(
+  fun updateApplication(
     @PathVariable applicationId: UUID,
     @RequestBody body: UpdateApplication,
   ): ResponseEntity<Application> {
@@ -335,7 +335,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Add a note on applications")
   @PostMapping("/applications/{applicationId}/notes")
-  fun applicationsApplicationIdNotesPost(
+  fun createApplicationNote(
     @PathVariable applicationId: UUID,
     @RequestBody body: NewApplicationTimelineNote,
   ): ResponseEntity<ApplicationTimelineNote> {
@@ -347,7 +347,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Withdraws an application with a reason")
   @PostMapping("/applications/{applicationId}/withdrawal")
-  fun applicationsApplicationIdWithdrawalPost(
+  fun withdrawApplication(
     @PathVariable applicationId: UUID,
     @RequestBody body: NewWithdrawal,
   ): ResponseEntity<Unit> {
@@ -367,7 +367,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Returns a list of Requests for Placement for the given application.")
   @GetMapping("/applications/{applicationId}/requests-for-placement")
-  fun applicationsApplicationIdRequestsForPlacementGet(
+  fun getRequestForPlacements(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
     extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
@@ -375,7 +375,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Submits an Application")
   @PostMapping("/applications/{applicationId}/submission")
-  fun applicationsApplicationIdSubmissionPost(
+  fun submitApplication(
     @PathVariable applicationId: UUID,
     @RequestBody submitApplication: SubmitApplication,
   ): ResponseEntity<Unit> {
@@ -412,7 +412,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Returns meta info on documents at the person level or at the Conviction level for the index Offence of this application.")
   @GetMapping("/applications/{applicationId}/documents")
-  fun applicationsApplicationIdDocumentsGet(
+  fun getDocuments(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<List<Document>> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
@@ -431,7 +431,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Get an appeal on an application")
   @GetMapping("/applications/{applicationId}/appeals/{appealId}")
-  fun applicationsApplicationIdAppealsAppealIdGet(
+  fun getAppeal(
     @PathVariable applicationId: UUID,
     @PathVariable appealId: UUID,
   ): ResponseEntity<Appeal> {
@@ -449,7 +449,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Add an appeal to an application")
   @PostMapping("/applications/{applicationId}/appeals")
-  fun applicationsApplicationIdAppealsPost(
+  fun createAppeal(
     @PathVariable applicationId: UUID,
     @RequestBody body: NewAppeal,
   ): ResponseEntity<Appeal> {
@@ -486,7 +486,7 @@ class Cas1ApplicationsController(
 
   @Operation(summary = "Returns a list of withdrawable items associated with this application, including the application itself, if withdrawable")
   @GetMapping("/applications/{applicationId}/withdrawablesWithNotes")
-  fun applicationsApplicationIdWithdrawablesWithNotesGet(
+  fun getWithdrawablesWithNotes(
     @PathVariable applicationId: UUID,
     @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName,
   ): ResponseEntity<Withdrawables> {
