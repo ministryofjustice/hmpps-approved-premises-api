@@ -100,14 +100,12 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   @Query(
     """
-SELECT
-    d.*
-    FROM domain_events d
-WHERE d.cas3_bedspace_id = :cas3BedspaceId and d.type in :bedspaceDomainEventTypes
+    SELECT d
+    FROM DomainEventEntity d
+    WHERE d.cas3BedspaceId in :cas3BedspaceIds and d.type in :bedspaceDomainEventTypes
     """,
-    nativeQuery = true,
   )
-  fun findBedspaceDomainEventsByType(cas3BedspaceId: UUID, bedspaceDomainEventTypes: List<String>): List<DomainEventEntity>
+  fun findBedspacesDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<String>): List<DomainEventEntity>
 
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
 

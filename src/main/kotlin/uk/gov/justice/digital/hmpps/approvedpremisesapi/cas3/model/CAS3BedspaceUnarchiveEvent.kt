@@ -17,6 +17,8 @@ data class CAS3BedspaceUnarchiveEventDetails(
 
   val bedspaceId: java.util.UUID,
 
+  val premisesId: java.util.UUID,
+
   val userId: java.util.UUID,
 
   val currentStartDate: java.time.LocalDate,

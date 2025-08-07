@@ -23,8 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithUserScheduledForArchive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationRooms
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
@@ -57,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -72,7 +69,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas3PremisesTest : Cas3IntegrationTestBase() {
@@ -1270,134 +1266,130 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   @Nested
   inner class GetPremisesBedspaces {
     @Test
-    fun `Get all Bedspaces returns OK with correct bedspaces sorted`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premisesId = UUID.randomUUID()
-
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withId(premisesId)
-          withProbationRegion(user.probationRegion)
-          withProbationDeliveryUnit(probationDeliveryUnit)
-          withLocalAuthorityArea(localAuthorityArea)
-        }
-
-        roomEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedPremises { premises }
-        }.apply { premises.rooms.addAll(this) }
-
+    fun `Given a premises with bedspaces when get premises bedspaces then returns OK with correct bedspaces sorted`() {
+      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
         val expectedBedspaces = mutableListOf<Cas3Bedspace>()
 
-        premises.rooms.forEachIndexed { index, room ->
-          val startDate = LocalDate.now().minusDays(index.toLong())
-          val bedspace = bedEntityFactory.produceAndPersist {
-            withRoom(room)
-            withStartDate(startDate)
-            withEndDate(startDate.plusDays(2))
-          }.apply { room.beds.add(this) }
+        // online bedspaces
+        val bedspaceOne = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(6), endDate = null)
+        expectedBedspaces.add(createCas3Bedspace(bedspaceOne, bedspaceOne.room, Cas3BedspaceStatus.online))
 
-          if (bedspace.endDate!! > LocalDate.now()) {
-            expectedBedspaces.add(createCas3Bedspace(bedspace, room, Cas3BedspaceStatus.online))
-          } else {
-            expectedBedspaces.add(createCas3Bedspace(bedspace, room, Cas3BedspaceStatus.archived))
-          }
-        }
+        val bedspaceTwo = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(5), endDate = LocalDate.now().plusDays(5))
+        expectedBedspaces.add(createCas3Bedspace(bedspaceTwo, bedspaceTwo.room, Cas3BedspaceStatus.online))
 
-        val roomWithoutEndDate = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withBeds()
-        }.apply { premises.rooms.add(this) }
+        // upcoming bedspaces
+        val bedspaceThree = createBedspaceInPremises(premises, startDate = LocalDate.now().randomDateAfter(30), endDate = null)
+        expectedBedspaces.add(createCas3Bedspace(bedspaceThree, bedspaceThree.room, Cas3BedspaceStatus.upcoming))
 
-        val bedspaceWithoutEndDate = bedEntityFactory.produceAndPersist {
-          withRoom(roomWithoutEndDate)
-          withStartDate(LocalDate.now().randomDateBefore(180))
-        }.apply { roomWithoutEndDate.beds.add(this) }
-        expectedBedspaces.add(createCas3Bedspace(bedspaceWithoutEndDate, roomWithoutEndDate, Cas3BedspaceStatus.online))
+        // archived bedspaces
+        val bedspaceFour = createBedspaceInPremises(
+          premises,
+          startDate = LocalDate.now().minusMonths(4),
+          endDate = LocalDate.now().minusDays(1),
+        )
+        expectedBedspaces.add(createCas3Bedspace(bedspaceFour, bedspaceFour.room, Cas3BedspaceStatus.archived))
 
-        val roomWithUpcomingBedspace = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withBeds()
-        }.apply { premises.rooms.add(this) }
-
-        val upcomingBedspace = bedEntityFactory.produceAndPersist {
-          withRoom(roomWithUpcomingBedspace)
-          withStartDate(LocalDate.now().plusDays(10))
-        }.apply { roomWithUpcomingBedspace.beds.add(this) }
-        expectedBedspaces.add(createCas3Bedspace(upcomingBedspace, roomWithUpcomingBedspace, Cas3BedspaceStatus.upcoming))
+        val bedspaceFive = createBedspaceInPremises(
+          premises,
+          startDate = LocalDate.now().minusMonths(9),
+          endDate = LocalDate.now().minusWeeks(1),
+        )
+        expectedBedspaces.add(createCas3Bedspace(bedspaceFive, bedspaceFive.room, Cas3BedspaceStatus.archived))
 
         val expectedCas3Bedspaces = Cas3Bedspaces(
           bedspaces = expectedBedspaces,
-          totalOnlineBedspaces = 3,
+          totalOnlineBedspaces = 2,
           totalUpcomingBedspaces = 1,
-          totalArchivedBedspaces = 3,
+          totalArchivedBedspaces = 2,
         )
 
         assertUrlReturnsBedspaces(
           jwt,
-          "/cas3/premises/$premisesId/bedspaces",
+          "/cas3/premises/${premises.id}/bedspaces",
           expectedCas3Bedspaces,
         )
       }
     }
 
     @Test
-    fun `Get all Bedspaces returns OK with rooms with no beds filtered out`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premisesId = UUID.randomUUID()
+    fun `Given a premises with bedspaces when get premises bedspaces then returns OK with correct bedspaces and archive history events in chronological order`() {
+      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
+        val expectedBedspaces = mutableListOf<Cas3Bedspace>()
 
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withId(premisesId)
-          withProbationRegion(user.probationRegion)
-          withProbationDeliveryUnit(probationDeliveryUnit)
-          withLocalAuthorityArea(localAuthorityArea)
-        }
-
-        val room1 = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withBeds()
-        }.apply { premises.rooms.add(this) }
-
-        roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withBeds()
-        }.apply { premises.rooms.add(this) }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room1)
-          withStartDate(LocalDate.now().randomDateBefore(320))
-          withEndDate(LocalDate.now())
-        }.apply { premises.rooms.first().beds.add(this) }
-
-        val expectedBedspaces = Cas3Bedspaces(
-          bedspaces = listOf(
-            Cas3Bedspace(
-              id = bed.id,
-              reference = room1.name,
-              startDate = bed.startDate!!,
-              endDate = bed.endDate,
-              status = Cas3BedspaceStatus.archived,
-              characteristics = emptyList(),
-              notes = room1.notes,
+        // online bedspaces
+        val bedspaceOne = createBedspaceInPremises(premises, startDate = LocalDate.now().minusWeeks(1), endDate = null)
+        expectedBedspaces.add(
+          getExpectedBedspaceWithArchiveHistory(
+            bedspaceOne,
+            premises.id,
+            user.id,
+            Cas3BedspaceStatus.online,
+            listOf(
+              Cas3BedspaceStatus.archived to LocalDate.now().minusMonths(1),
+              Cas3BedspaceStatus.online to LocalDate.now().minusWeeks(1),
             ),
           ),
-          totalOnlineBedspaces = 0,
-          totalUpcomingBedspaces = 0,
-          totalArchivedBedspaces = 1,
+        )
+
+        val bedspaceTwo = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(5), endDate = LocalDate.now().plusDays(5))
+        val archiveBedspaceInFiveDays = LocalDate.now().plusDays(5)
+        createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, archiveBedspaceInFiveDays)
+        expectedBedspaces.add(
+          getExpectedBedspaceWithArchiveHistory(
+            bedspaceTwo,
+            premises.id,
+            user.id,
+            Cas3BedspaceStatus.online,
+            listOf(
+              Cas3BedspaceStatus.archived to LocalDate.now().minusMonths(2),
+              Cas3BedspaceStatus.online to LocalDate.now().minusMonths(1),
+            ),
+          ),
+        )
+
+        // upcoming bedspaces
+        val bedspaceThree = createBedspaceInPremises(premises, startDate = LocalDate.now().randomDateAfter(30), endDate = null)
+        expectedBedspaces.add(createCas3Bedspace(bedspaceThree, bedspaceThree.room, Cas3BedspaceStatus.upcoming))
+
+        // archived bedspaces
+        val bedspaceFour = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(4), endDate = LocalDate.now().minusDays(1))
+        expectedBedspaces.add(
+          getExpectedBedspaceWithArchiveHistory(
+            bedspaceFour,
+            premises.id,
+            user.id,
+            Cas3BedspaceStatus.archived,
+            listOf(
+              Cas3BedspaceStatus.online to LocalDate.now().minusWeeks(2),
+              Cas3BedspaceStatus.archived to LocalDate.now().minusDays(1),
+            ),
+          ),
+        )
+
+        val bedspaceFive = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(9), endDate = LocalDate.now())
+        expectedBedspaces.add(
+          getExpectedBedspaceWithArchiveHistory(
+            bedspaceFive,
+            premises.id,
+            user.id,
+            Cas3BedspaceStatus.archived,
+            listOf(
+              Cas3BedspaceStatus.archived to LocalDate.now(),
+            ),
+          ),
+        )
+
+        val expectedCas3Bedspaces = Cas3Bedspaces(
+          bedspaces = expectedBedspaces,
+          totalOnlineBedspaces = 2,
+          totalUpcomingBedspaces = 1,
+          totalArchivedBedspaces = 2,
         )
 
         assertUrlReturnsBedspaces(
           jwt,
-          "/cas3/premises/$premisesId/bedspaces",
-          expectedBedspaces,
+          "/cas3/premises/${premises.id}/bedspaces",
+          expectedCas3Bedspaces,
         )
       }
     }
@@ -1478,77 +1470,37 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       return response
     }
 
-    private fun createCas3Bedspace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus) = Cas3Bedspace(
-      id = bed.id,
-      reference = room.name,
-      startDate = bed.startDate!!,
-      characteristics = emptyList(),
-      endDate = bed.endDate,
-      status = bedspaceStatus,
-      notes = room.notes,
-    )
+    private fun getExpectedBedspaceWithArchiveHistory(
+      bedspace: BedEntity,
+      premisesId: UUID,
+      userId: UUID,
+      status: Cas3BedspaceStatus,
+      history: List<Pair<Cas3BedspaceStatus, LocalDate>>,
+    ): Cas3Bedspace {
+      history.forEach { (eventStatus, date) ->
+        when (eventStatus) {
+          Cas3BedspaceStatus.archived -> createBedspaceArchiveDomainEvent(bedspace.id, premisesId, userId, date)
+          Cas3BedspaceStatus.online -> createBedspaceUnarchiveDomainEvent(
+            bedspace.copy(endDate = date),
+            premisesId,
+            userId,
+            date,
+          )
+          Cas3BedspaceStatus.upcoming -> null
+        }
+      }
+
+      return createCas3Bedspace(
+        bedspace,
+        bedspace.room,
+        status,
+        archiveHistory = history.map { Cas3BedspaceArchiveAction(it.first, it.second) },
+      )
+    }
   }
 
   @Nested
   inner class GetBedspace {
-
-    private fun createCAS3BedspaceArchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, endDate: LocalDate): CAS3BedspaceArchiveEvent {
-      val eventId = UUID.randomUUID()
-      val occurredAt = OffsetDateTime.now()
-      return CAS3BedspaceArchiveEvent(
-        id = eventId,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bedspaceArchived,
-        eventDetails = CAS3BedspaceArchiveEventDetails(
-          bedspaceId = bedspaceId,
-          userId = userId,
-          premisesId = premisesId,
-          endDate = endDate,
-        ),
-      )
-    }
-
-    private fun createUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
-      data.id,
-      data.eventDetails.bedspaceId,
-      data.timestamp.atOffset(ZoneOffset.UTC),
-      objectMapper.writeValueAsString(data),
-      DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
-    )
-
-    private fun createCAS3BedspaceUnarchiveEvent(bedspaceId: UUID, userId: UUID, newStartDate: LocalDate): CAS3BedspaceUnarchiveEvent {
-      val eventId = UUID.randomUUID()
-      val occurredAt = OffsetDateTime.now()
-      return CAS3BedspaceUnarchiveEvent(
-        id = eventId,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bedspaceUnarchived,
-        eventDetails = CAS3BedspaceUnarchiveEventDetails(
-          bedspaceId = bedspaceId,
-          userId = userId,
-          currentStartDate = LocalDate.now(),
-          currentEndDate = LocalDate.now(),
-          newStartDate = newStartDate,
-        ),
-      )
-    }
-
-    private fun createDomainEvent(id: UUID, bedspaceId: UUID, occurredAt: OffsetDateTime, data: String, type: DomainEventType) = domainEventFactory.produceAndPersist {
-      withId(id)
-      withCreatedAt(occurredAt)
-      withCas3BedspaceId(bedspaceId)
-      withType(type)
-      withData(data)
-    }
-
-    private fun createArchiveDomainEvent(data: CAS3BedspaceArchiveEvent) = createDomainEvent(
-      data.id,
-      data.eventDetails.bedspaceId,
-      data.timestamp.atOffset(ZoneOffset.UTC),
-      objectMapper.writeValueAsString(data),
-      DomainEventType.CAS3_BEDSPACE_ARCHIVED,
-    )
-
     @Test
     fun `Get Bedspace by ID returns OK with correct body`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
@@ -1561,51 +1513,27 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           listOf(roomCharacteristicOne, roomCharacteristicTwo),
         )
 
-        // Archived Yesterday
-        val envelopedDataYesterday = createCAS3BedspaceArchiveEvent(
-          premisesId = premises.id,
-          bedspaceId = bedspace.id,
-          userId = user.id,
-          endDate = LocalDate.now().minusDays(1),
+        val archiveBedspaceYesterday = LocalDate.now().minusDays(1)
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, archiveBedspaceYesterday)
+
+        val archiveBedspace3DaysAgo = LocalDate.now().minusDays(3)
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, archiveBedspace3DaysAgo)
+
+        val archiveBedspaceDayAfterTomorrow = LocalDate.now().plusDays(2)
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, archiveBedspaceDayAfterTomorrow)
+
+        val archivedBedspace = bedspace.copy(
+          endDate = LocalDate.now().minusDays(7),
         )
-        createArchiveDomainEvent(envelopedDataYesterday)
-        // Archived 3 days ago
-        val envelopedData3DaysAgo = createCAS3BedspaceArchiveEvent(
-          premisesId = premises.id,
-          bedspaceId = bedspace.id,
-          userId = user.id,
-          endDate = LocalDate.now().minusDays(3),
-        )
-        createArchiveDomainEvent(envelopedData3DaysAgo)
-        // Archived day after tomorrow
-        val envelopedDataDayAfterTomorrow = createCAS3BedspaceArchiveEvent(
-          premisesId = premises.id,
-          bedspaceId = bedspace.id,
-          userId = user.id,
-          endDate = LocalDate.now().plusDays(2),
-        )
-        createArchiveDomainEvent(envelopedDataDayAfterTomorrow)
-        // Unarchived Today
-        val envelopedDataToday = createCAS3BedspaceUnarchiveEvent(
-          bedspaceId = bedspace.id,
-          userId = user.id,
-          newStartDate = LocalDate.now(),
-        )
-        createUnarchiveDomainEvent(envelopedDataToday)
-        // Unarchived 4 days ago
-        val envelopedData4DaysAgo = createCAS3BedspaceUnarchiveEvent(
-          bedspaceId = bedspace.id,
-          userId = user.id,
-          newStartDate = LocalDate.now().minusDays(4),
-        )
-        createUnarchiveDomainEvent(envelopedData4DaysAgo)
-        // Unarchived tomorrow
-        val envelopedDataTomorrow = createCAS3BedspaceUnarchiveEvent(
-          bedspaceId = bedspace.id,
-          userId = user.id,
-          newStartDate = LocalDate.now().plusDays(1),
-        )
-        createUnarchiveDomainEvent(envelopedDataTomorrow)
+
+        val unarchiveBedspaceToday = LocalDate.now()
+        createBedspaceUnarchiveDomainEvent(archivedBedspace, premises.id, user.id, unarchiveBedspaceToday)
+
+        val unarchiveBedspace4DaysAgo = LocalDate.now().minusDays(4)
+        createBedspaceUnarchiveDomainEvent(archivedBedspace, premises.id, user.id, unarchiveBedspace4DaysAgo)
+
+        val unarchiveBedspaceTomorrow = LocalDate.now().plusDays(1)
+        createBedspaceUnarchiveDomainEvent(archivedBedspace, premises.id, user.id, unarchiveBedspaceTomorrow)
 
         val expectedBedspace = Cas3Bedspace(
           id = bedspace.id,
@@ -1616,19 +1544,19 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           archiveHistory = listOf(
             Cas3BedspaceArchiveAction(
               status = Cas3BedspaceStatus.online,
-              date = envelopedData4DaysAgo.eventDetails.newStartDate,
+              date = unarchiveBedspace4DaysAgo,
             ),
             Cas3BedspaceArchiveAction(
               status = Cas3BedspaceStatus.archived,
-              date = envelopedData3DaysAgo.eventDetails.endDate,
+              date = archiveBedspace3DaysAgo,
             ),
             Cas3BedspaceArchiveAction(
               status = Cas3BedspaceStatus.archived,
-              date = envelopedDataYesterday.eventDetails.endDate,
+              date = archiveBedspaceYesterday,
             ),
             Cas3BedspaceArchiveAction(
               status = Cas3BedspaceStatus.online,
-              date = envelopedDataToday.eventDetails.newStartDate,
+              date = unarchiveBedspaceToday,
             ),
           ),
           characteristics = listOf(
@@ -3221,6 +3149,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             timestamp = Instant.now(),
             eventType = EventType.bedspaceUnarchived,
             eventDetails = CAS3BedspaceUnarchiveEventDetails(
+              premisesId = premises.id,
               bedspaceId = scheduledToUnarchivedBedspace.id,
               userId = userEntity.id,
               currentStartDate = originalStartDate,
@@ -3244,6 +3173,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             timestamp = Instant.now(),
             eventType = EventType.bedspaceUnarchived,
             eventDetails = CAS3BedspaceUnarchiveEventDetails(
+              premisesId = premises.id,
               bedspaceId = scheduledToUnarchivedBedspace.id,
               userId = userEntity.id,
               currentStartDate = originalStartDate.minusDays(20),

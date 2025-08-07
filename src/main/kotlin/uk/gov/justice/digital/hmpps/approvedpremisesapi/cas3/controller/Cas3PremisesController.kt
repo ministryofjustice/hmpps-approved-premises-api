@@ -165,10 +165,16 @@ class Cas3PremisesController(
       throw ForbiddenProblem()
     }
 
-    val bedspaces = premises.rooms.flatMap { it.beds }
+    val bedspaces = cas3PremisesService.getPremisesBedspaces(premises.id)
+    val bedspacesArchiveHistory = cas3PremisesService.getBedspacesArchiveHistory(bedspaces.map { it.id })
 
     val result = Cas3Bedspaces(
-      bedspaces = bedspaces.map(cas3BedspaceTransformer::transformJpaToApi),
+      bedspaces = bedspaces.map { bedspace ->
+        val archiveHistory = bedspacesArchiveHistory
+          .firstOrNull { bedspaceArchiveHistory -> bedspaceArchiveHistory.bedspaceId == bedspace.id }
+          ?.actions ?: emptyList()
+        cas3BedspaceTransformer.transformJpaToApi(bedspace, archiveHistory)
+      },
       totalOnlineBedspaces = bedspaces.count { it.isCas3BedspaceOnline() },
       totalUpcomingBedspaces = bedspaces.count { it.isCas3BedspaceUpcoming() },
       totalArchivedBedspaces = bedspaces.count { it.isCas3BedspaceArchived() },
@@ -228,7 +234,7 @@ class Cas3PremisesController(
     }
 
     val bedspace = extractEntityFromCasResult(cas3PremisesService.getBedspace(premises.id, bedspaceId))
-    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getArchiveHistory(bedspaceId))
+    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getBedspaceArchiveHistory(bedspaceId))
 
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, archiveHistory))
   }
