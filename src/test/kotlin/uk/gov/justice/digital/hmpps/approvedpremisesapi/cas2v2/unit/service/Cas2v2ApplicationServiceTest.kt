@@ -173,7 +173,6 @@ class Cas2v2ApplicationServiceTest {
         null,
         false,
         null,
-        null,
         user,
         pageCriteria,
       )
