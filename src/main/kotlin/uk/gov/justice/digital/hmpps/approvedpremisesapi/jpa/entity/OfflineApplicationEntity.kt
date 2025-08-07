@@ -5,7 +5,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.domain.Limit
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.time.OffsetDateTime
@@ -14,9 +13,6 @@ import java.util.UUID
 @Repository
 interface OfflineApplicationRepository : JpaRepository<OfflineApplicationEntity, UUID> {
   fun findAllByCrn(crn: String, limit: Limit): List<OfflineApplicationEntity>
-
-  @Query("SELECT a FROM OfflineApplicationEntity a where a.name is null")
-  fun findByNameIsNull(): List<OfflineApplicationEntity>
 }
 
 /**
