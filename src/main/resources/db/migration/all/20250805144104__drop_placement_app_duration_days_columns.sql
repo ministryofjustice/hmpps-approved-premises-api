@@ -1,0 +1,2 @@
+ALTER TABLE placement_applications DROP COLUMN requested_duration_days;
+ALTER TABLE placement_applications DROP COLUMN authorised_duration_days;
