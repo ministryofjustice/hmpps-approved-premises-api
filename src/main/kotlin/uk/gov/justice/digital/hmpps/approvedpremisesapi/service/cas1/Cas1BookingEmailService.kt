@@ -22,11 +22,9 @@ class Cas1BookingEmailService(
   fun spaceBookingMade(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
-  ) = bookingMade(
-    spaceBooking.toEmailBookingInfo(application),
-  )
+  ) {
+    val emailBookingInfo = spaceBooking.toEmailBookingInfo(application)
 
-  private fun bookingMade(emailBookingInfo: EmailBookingInfo) {
     val application = emailBookingInfo.application
     val placementApplication = emailBookingInfo.placementApplication
 
@@ -58,15 +56,9 @@ class Cas1BookingEmailService(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
-  ) = bookingWithdrawn(
-    spaceBooking.toEmailBookingInfo(application),
-    withdrawalTriggeredBy,
-  )
-
-  private fun bookingWithdrawn(
-    emailBookingInfo: EmailBookingInfo,
-    withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) {
+    val emailBookingInfo = spaceBooking.toEmailBookingInfo(application)
+
     val application = emailBookingInfo.application
 
     val allPersonalisation =
@@ -95,15 +87,10 @@ class Cas1BookingEmailService(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
     updateType: Cas1SpaceBookingService.UpdateType,
-  ) = bookingAmended(
-    spaceBooking.toEmailBookingInfo(application),
-    shortened = updateType == Cas1SpaceBookingService.UpdateType.SHORTENING,
-  )
-
-  private fun bookingAmended(
-    emailBookingInfo: EmailBookingInfo,
-    shortened: Boolean,
   ) {
+    val emailBookingInfo = spaceBooking.toEmailBookingInfo(application)
+    val shortened = updateType == Cas1SpaceBookingService.UpdateType.SHORTENING
+
     val application = emailBookingInfo.application
     val emailPersonalisation = buildCommonPersonalisation(emailBookingInfo)
 
