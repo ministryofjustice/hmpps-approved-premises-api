@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Borough
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Ldu
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase

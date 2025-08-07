@@ -2,16 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Manager
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Offence
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Registration
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Manager
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Offence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Profile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Registration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers

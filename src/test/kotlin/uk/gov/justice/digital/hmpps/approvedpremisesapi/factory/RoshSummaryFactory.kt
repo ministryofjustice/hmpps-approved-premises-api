@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummaryInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummaryInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 class RoshSummaryFactory : AssessmentInfoFactory<RoshSummary>() {

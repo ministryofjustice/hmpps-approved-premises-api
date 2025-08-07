@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.AlertCodeSummary
 
 class AlertCodeSummaryFactory {
   fun produce(

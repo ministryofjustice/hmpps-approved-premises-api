@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNote
 import java.time.ZoneOffset
 
 @Component

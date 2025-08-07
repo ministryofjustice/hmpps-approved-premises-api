@@ -1,18 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderLanguages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Ldu
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Manager
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Profile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Manager
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserOffenderAccess
 
 fun getNameFromPersonSummaryInfoResult(result: PersonSummaryInfoResult): String = when (result) {
   is PersonSummaryInfoResult.Success.Full -> {

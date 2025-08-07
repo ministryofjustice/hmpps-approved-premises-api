@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.Alert
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.Alert
 
 @Component
 class PrisonerAlertTransformer {
