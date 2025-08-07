@@ -14,11 +14,11 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 
 class OffenderServiceTest {
-  private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
+  private val mockAdjudicationsApiClient = mockk<AdjudicationsApiClient>()
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
@@ -51,7 +51,7 @@ class OffenderServiceTest {
   }
 
   private val offenderService = OffenderService(
-    mockPrisonsApiClient,
+    mockAdjudicationsApiClient,
     mockPrisonerAlertsApiClient,
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
@@ -429,7 +429,7 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 0,
@@ -444,7 +444,7 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 0,
@@ -487,7 +487,7 @@ class OffenderServiceTest {
       .produce()
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 0,
@@ -498,7 +498,7 @@ class OffenderServiceTest {
     )
 
     every {
-      mockPrisonsApiClient.getAdjudicationsPage(
+      mockAdjudicationsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
         pageSize = 2,
         offset = 2,
