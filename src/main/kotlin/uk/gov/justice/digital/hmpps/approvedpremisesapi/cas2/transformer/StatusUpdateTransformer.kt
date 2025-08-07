@@ -11,7 +11,7 @@ import java.util.UUID
 
 @Component("Cas2StatusUpdateTransformer")
 class StatusUpdateTransformer(
-  private val externalUserTransformer: ExternalUserTransformer,
+  private val cas2UserTransformer: Cas2UserTransformer,
 ) {
 
   fun transformJpaToApi(
@@ -21,7 +21,7 @@ class StatusUpdateTransformer(
     name = jpa.status().name,
     label = jpa.label,
     description = jpa.description,
-    updatedBy = externalUserTransformer.transformJpaToApi(jpa.assessor),
+    updatedBy = cas2UserTransformer.transformJpaToApi(jpa.assessor),
     updatedAt = jpa.createdAt?.toInstant(),
     statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
   )

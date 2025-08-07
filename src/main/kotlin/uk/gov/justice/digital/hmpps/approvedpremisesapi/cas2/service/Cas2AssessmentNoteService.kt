@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.UnifiedUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -27,7 +27,6 @@ class Cas2AssessmentNoteService(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
   private val userService: Cas2UserService,
-  private val externalUserService: ExternalUserService,
   private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,
   private val userAccessService: Cas2UserAccessService,
@@ -45,7 +44,7 @@ class Cas2AssessmentNoteService(
       ?: return AuthorisableActionResult.NotFound()
 
     if (httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()) {
-      val savedNote = saveNote(assessment, note.note, externalUserService.getUserForRequest())
+      val savedNote = saveNote(assessment, note.note, userService.getCas2UserForRequest())
       sendEmailToReferrer(savedNote)
 
       return AuthorisableActionResult.Success(
@@ -132,7 +131,7 @@ class Cas2AssessmentNoteService(
       "The assessor has not added their name to the application yet."
   }
 
-  private fun saveNote(assessment: Cas2AssessmentEntity, body: String, user: Cas2User): Cas2ApplicationNoteEntity {
+  private fun saveNote(assessment: Cas2AssessmentEntity, body: String, user: UnifiedUser): Cas2ApplicationNoteEntity {
     val newNote = Cas2ApplicationNoteEntity(
       id = UUID.randomUUID(),
       application = assessment.application,

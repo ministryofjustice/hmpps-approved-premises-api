@@ -5,7 +5,6 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
@@ -13,8 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ExternalUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.StatusUpdateTransformer
 import java.time.OffsetDateTime
 
@@ -34,13 +34,13 @@ class StatusUpdateTransformerTest {
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 
-  private val mockExternalUserApi = mockk<ExternalUser>()
-  private val mockExternalUserTransformer = mockk<ExternalUserTransformer>()
-  private val statusUpdateTransformer = StatusUpdateTransformer(mockExternalUserTransformer)
+  private val mockCas2UserApi = mockk<Cas2User>()
+  private val mockCas2UserTransformer = mockk<Cas2UserTransformer>()
+  private val statusUpdateTransformer = StatusUpdateTransformer(mockCas2UserTransformer)
 
   @BeforeEach
   fun setup() {
-    every { mockExternalUserTransformer.transformJpaToApi(any()) } returns mockExternalUserApi
+    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns mockCas2UserApi
   }
 
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by NomisUser`() {
@@ -56,7 +56,7 @@ class StatusUpdateTransformerTest {
       name = status.name,
       label = jpaEntity.label,
       description = jpaEntity.description,
-      updatedBy = mockExternalUserApi,
+      updatedBy = mockCas2UserApi,
       updatedAt = jpaEntity.createdAt.toInstant(),
       statusUpdateDetails = null,
     )
@@ -80,7 +80,7 @@ class StatusUpdateTransformerTest {
       name = status.name,
       label = jpaEntity.label,
       description = jpaEntity.description,
-      updatedBy = mockExternalUserApi,
+      updatedBy = mockCas2UserApi,
       updatedAt = jpaEntity.createdAt.toInstant(),
       statusUpdateDetails = null,
     )

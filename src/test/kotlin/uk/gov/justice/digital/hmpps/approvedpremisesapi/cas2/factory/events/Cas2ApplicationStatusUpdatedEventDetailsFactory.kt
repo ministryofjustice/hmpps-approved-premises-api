@@ -4,8 +4,8 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
@@ -18,7 +18,7 @@ class Cas2ApplicationStatusUpdatedEventDetailsFactory : Factory<Cas2ApplicationS
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var newStatus: Yielded<Cas2Status> = { Cas2StatusFactory().produce() }
   private var updatedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
-  private var updatedBy: Yielded<ExternalUser> = { ExternalUserFactory().produce() }
+  private var updatedBy: Yielded<Cas2User> = { Cas2UserFactory().produce() }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -40,8 +40,8 @@ class Cas2ApplicationStatusUpdatedEventDetailsFactory : Factory<Cas2ApplicationS
     this.newStatus = { newStatus }
   }
 
-  fun withUpdatedBy(externalUser: ExternalUser) = apply {
-    this.updatedBy = { externalUser }
+  fun withUpdatedBy(cas2User: Cas2User) = apply {
+    this.updatedBy = { cas2User }
   }
 
   override fun produce(): Cas2ApplicationStatusUpdatedEventDetails = Cas2ApplicationStatusUpdatedEventDetails(
