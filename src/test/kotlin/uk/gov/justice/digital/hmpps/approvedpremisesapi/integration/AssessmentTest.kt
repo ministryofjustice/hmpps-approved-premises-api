@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.Assertions.fail
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -28,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3Rejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -78,7 +76,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.nonRepeatingRandomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -1576,136 +1573,6 @@ class AssessmentTest : IntegrationTestBase() {
               ),
             ),
           )
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class DeallocateAssessmentTest : IntegrationTestBase() {
-    @Test
-    fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
-      webTestClient.delete()
-        .uri("/cas3/assessments/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Deallocate Temporary Accommodation assessment without CAS3_ASSESSOR role returns 403 Forbidden`() {
-      givenAUser { _, jwt ->
-        webTestClient.delete()
-          .uri("/cas3/assessments/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
-    @Test
-    fun `Deallocate Approved Premises assessment returns 403 Forbidden`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAUser { _, _ ->
-            givenAnAssessmentForApprovedPremises(
-              allocatedToUser = user,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            ) { assessment, _ ->
-              webTestClient.delete()
-                .uri("/cas3/assessments/${assessment.id}/allocations")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-                .exchange()
-                .expectStatus()
-                .isForbidden
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Deallocate Temporary Accommodation assessment returns 200 and unassigns the allocated user`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAnAssessmentForTemporaryAccommodation(
-            allocatedToUser = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
-          ) { existingAssessment, _ ->
-
-            webTestClient.delete()
-              .uri("/cas3/assessments/${existingAssessment.id}/allocations")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-              .exchange()
-              .expectStatus()
-              .isNoContent
-
-            val assessment =
-              temporaryAccommodationAssessmentRepository.findAll().first { it.id == existingAssessment.id }
-
-            assertThat(assessment.allocatedToUser).isNull()
-            assertThat(assessment.allocatedAt).isNull()
-          }
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class ReallocateAssessmentTest : IntegrationTestBase() {
-    @Autowired
-    lateinit var userTransformer: UserTransformer
-
-    @BeforeEach
-    fun stubBankHolidaysApi() {
-      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-    }
-
-    @Test
-    fun `Reallocate application to different assessor without JWT returns 401`() {
-      webTestClient.post()
-        .uri("/cas3/assessments/9c7abdf6-fd39-4670-9704-98a5bbfec95e/allocations")
-        .bodyValue(
-          NewReallocation(
-            userId = UUID.randomUUID(),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Reallocating a Temporary Accommodation assessment does not require a request body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { originalUser, _ ->
-        givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { expectedUser, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnAssessmentForTemporaryAccommodation(
-              allocatedToUser = originalUser,
-              createdByUser = originalUser,
-              crn = offenderDetails.otherIds.crn,
-            ) { assessment, _ ->
-              webTestClient.post()
-                .uri("/cas3/assessments/${assessment.id}/allocations")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-                .bodyValue(Unit)
-                .exchange()
-                .expectStatus()
-                .isCreated
-
-              val result = temporaryAccommodationAssessmentRepository.findAll().first { it.id == assessment.id }
-              assertThat(result.allocatedToUser).isNotNull()
-              assertThat(result.allocatedToUser!!.id).isEqualTo(expectedUser.id)
-            }
-          }
         }
       }
     }

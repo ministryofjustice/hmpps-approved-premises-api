@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -39,6 +40,9 @@ import java.util.UUID
 class Cas3AssessmentServiceTest {
   @MockK
   lateinit var assessmentRepository: AssessmentRepository
+
+  @MockK
+  lateinit var temporaryAccommodationAssessmentRepository: TemporaryAccommodationAssessmentRepository
 
   @MockK
   lateinit var lockableAssessmentRepository: LockableAssessmentRepository
@@ -225,7 +229,7 @@ class Cas3AssessmentServiceTest {
     assertThat(assessment.submittedAt).isNotNull()
 
     every { userAccessService.userCanDeallocateTask(user) } returns true
-    every { assessmentRepository.findById(assessment.id) } returns Optional.of(assessment)
+    every { temporaryAccommodationAssessmentRepository.findById(assessment.id) } returns Optional.of(assessment)
     every { assessmentRepository.save(any()) } returnsArgument 0
     every { userService.getUserForRequest() } returns user
     every { assessmentReferralHistoryNoteRepository.save(any()) } returnsArgument 0
@@ -267,7 +271,7 @@ class Cas3AssessmentServiceTest {
 
     every { userAccessService.userCanReallocateTask(user) } returns true
     every { lockableAssessmentRepository.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-    every { assessmentRepository.findById(assessment.id) } returns Optional.of(assessment)
+    every { temporaryAccommodationAssessmentRepository.findById(assessment.id) } returns Optional.of(assessment)
     every { assessmentRepository.save(any()) } returnsArgument 0
     every { userService.getUserForRequest() } returns user
     every { assessmentReferralHistoryNoteRepository.save(any()) } returnsArgument 0

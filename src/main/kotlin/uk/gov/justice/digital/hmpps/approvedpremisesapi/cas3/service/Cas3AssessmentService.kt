@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.findAssessmentById
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -23,6 +24,7 @@ import java.util.UUID
 @Service
 class Cas3AssessmentService(
   private val assessmentRepository: AssessmentRepository,
+  private val temporaryAccommodationAssessmentRepository: TemporaryAccommodationAssessmentRepository,
   private val userAccessService: UserAccessService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
@@ -101,7 +103,7 @@ class Cas3AssessmentService(
       return CasResult.Unauthorised()
     }
 
-    val currentAssessment = assessmentRepository.findByIdOrNull(assessmentId)
+    val currentAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("assessment", assessmentId.toString())
 
     currentAssessment.allocatedToUser = null
@@ -135,7 +137,7 @@ class Cas3AssessmentService(
 
     lockableAssessmentRepository.acquirePessimisticLock(assessmentId)
 
-    val currentAssessment = assessmentRepository.findByIdOrNull(assessmentId)
+    val currentAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("assessment", assessmentId.toString())
 
     if (currentAssessment.reallocatedAt != null) {

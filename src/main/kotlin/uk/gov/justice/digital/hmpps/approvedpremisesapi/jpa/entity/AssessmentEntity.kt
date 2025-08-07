@@ -311,6 +311,9 @@ class ApprovedPremisesAssessmentEntity(
   fun cas1Application() = this.application as ApprovedPremisesApplicationEntity
 }
 
+@Repository
+interface TemporaryAccommodationAssessmentRepository : JpaRepository<TemporaryAccommodationAssessmentEntity, UUID>
+
 @Entity
 @DiscriminatorValue("temporary-accommodation")
 @Table(name = "temporary_accommodation_assessments")
