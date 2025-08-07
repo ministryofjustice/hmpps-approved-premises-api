@@ -45,6 +45,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.math.sign
 
+// Tests groups are poorly named and are not grouped by function in the controller
 class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
   @SpykBean
@@ -1613,6 +1614,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         )
       }
 
+      // no @Test decorator on this test
       fun `View detail all submitted prisonBail applications`() {
         submittedPrisonBailApplications.forEach { application ->
           val rawResponseBody = webTestClient.get()
@@ -1641,6 +1643,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         }
       }
 
+      // no @Test decorator on this test
       fun `Add a note to any application that is of origin prisonBail`() {
         submittedPrisonBailApplications.forEach { application ->
           val rawResponseBody = webTestClient.put()

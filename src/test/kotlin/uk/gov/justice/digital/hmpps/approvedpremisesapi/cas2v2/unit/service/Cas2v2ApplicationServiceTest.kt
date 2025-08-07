@@ -142,6 +142,10 @@ class Cas2v2ApplicationServiceTest {
     }
   }
 
+  // these tests don't actually test the mechanics of the spec in the getCas2v2Applications
+  // as it always returns the same thing and there is no verification that the mock within
+  // it is called with the correct parameters
+  // deleting if clauses in getCas2v2Applications still allows the tests to pass
   @Nested
   inner class GetCas2v2ApplicationsWithPrisonCode {
     private val cas2v2ApplicationSummary = Cas2v2ApplicationSummaryEntity(
