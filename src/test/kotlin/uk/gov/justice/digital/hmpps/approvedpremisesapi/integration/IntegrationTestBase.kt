@@ -24,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.cache.CacheManager
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.http.HttpHeaders
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
@@ -961,6 +962,11 @@ abstract class IntegrationTestBase {
     }
 
     block()
+  }
+
+  fun buildTemporaryAccommodationHeaders(jwt: String): (HttpHeaders) -> Unit = {
+    it.setBearerAuth(jwt)
+    it.add("X-Service-Name", "temporary-accommodation")
   }
 
   fun loadPreemptiveCacheForInmateDetails(nomsNumber: String) = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)

@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
@@ -32,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import java.util.Optional
 
 /**
@@ -71,7 +71,7 @@ interface PremisesApiDelegate {
   fun premisesPremisesIdBookingsBookingIdArrivalsPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
-    body: NewArrival,
+    body: NewCas3Arrival,
   ): ResponseEntity<Arrival> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

@@ -323,7 +323,6 @@ pagination:
   cas3:
     booking-search-page-size: 10
 
-
 reports:
   jdbc-fetch-size: 200
 

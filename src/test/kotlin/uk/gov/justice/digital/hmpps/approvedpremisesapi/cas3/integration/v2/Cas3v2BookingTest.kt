@@ -1474,6 +1474,9 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
           }
 
+          val newArrivalDate = LocalDate.now().minusDays(10)
+          val newExpectedDepartureDate = newArrivalDate.plusDays(2)
+
           webTestClient.post()
             .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
             .header("Authorization", "Bearer $jwt")
@@ -1481,8 +1484,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .bodyValue(
               NewCas3Arrival(
                 type = "CAS3",
-                arrivalDate = LocalDate.parse("2022-08-12"),
-                expectedDepartureDate = LocalDate.parse("2022-08-14"),
+                arrivalDate = newArrivalDate,
+                expectedDepartureDate = newExpectedDepartureDate,
                 notes = "Hello",
                 keyWorkerStaffCode = null,
               ),
@@ -1499,8 +1502,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
-            .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+            .jsonPath("$.arrivalDate").isEqualTo(newArrivalDate)
+            .jsonPath("$.departureDate").isEqualTo(newExpectedDepartureDate)
             .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
             .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
             .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1531,6 +1534,9 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
           }
 
+          val newArrivalDate = LocalDate.now().minusDays(10)
+          val newExpectedDepartureDate = newArrivalDate.plusDays(2)
+
           webTestClient.post()
             .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
             .header("Authorization", "Bearer $jwt")
@@ -1538,8 +1544,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .bodyValue(
               NewCas3Arrival(
                 type = "CAS3",
-                arrivalDate = LocalDate.parse("2022-08-12"),
-                expectedDepartureDate = LocalDate.parse("2022-08-14"),
+                arrivalDate = newArrivalDate,
+                expectedDepartureDate = newExpectedDepartureDate,
                 notes = "Hello",
                 keyWorkerStaffCode = null,
               ),
@@ -1556,8 +1562,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
-            .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+            .jsonPath("$.arrivalDate").isEqualTo(newArrivalDate)
+            .jsonPath("$.departureDate").isEqualTo(newExpectedDepartureDate)
             .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
             .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
             .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1593,6 +1599,9 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             }.toMutableList()
           }
 
+          val newArrivalDate = LocalDate.now().minusDays(14)
+          val newExpectedDepartureDate = newArrivalDate.plusDays(2)
+
           webTestClient.post()
             .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
             .header("Authorization", "Bearer $jwt")
@@ -1600,8 +1609,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .bodyValue(
               NewCas3Arrival(
                 type = "CAS3",
-                arrivalDate = LocalDate.parse("2022-08-12"),
-                expectedDepartureDate = LocalDate.parse("2022-08-14"),
+                arrivalDate = newArrivalDate,
+                expectedDepartureDate = newExpectedDepartureDate,
                 notes = "Hello",
                 keyWorkerStaffCode = null,
               ),
@@ -1618,8 +1627,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
-            .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+            .jsonPath("$.arrivalDate").isEqualTo(newArrivalDate)
+            .jsonPath("$.departureDate").isEqualTo(newExpectedDepartureDate)
             .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
             .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
             .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
@@ -1709,6 +1718,54 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .isNotFound
             .expectBody()
             .jsonPath("$.detail").isEqualTo("No Premises with an ID of $notFoundPremises could be found")
+        }
+      }
+    }
+
+    @Test
+    fun `Create Arrival returns field validation error when the arrival date is more than 14 days in the past`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.parse("2022-08-10"))
+            withDepartureDate(LocalDate.parse("2022-08-30"))
+            withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+          }
+          booking.let {
+            it.arrivals = cas3ArrivalEntityFactory.produceAndPersistMultiple(2) {
+              withBooking(it)
+            }.toMutableList()
+          }
+
+          val newArrivalDate = LocalDate.now().minusDays(15)
+          val newExpectedDepartureDate = newArrivalDate.plusDays(2)
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewCas3Arrival(
+                type = "CAS3",
+                arrivalDate = newArrivalDate,
+                expectedDepartureDate = newExpectedDepartureDate,
+                notes = "Hello",
+                keyWorkerStaffCode = null,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("Bad Request")
+            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.arrivalDate")
+            .jsonPath("$.invalid-params[0].errorType").isEqualTo("arrivalAfterLatestDate")
         }
       }
     }
