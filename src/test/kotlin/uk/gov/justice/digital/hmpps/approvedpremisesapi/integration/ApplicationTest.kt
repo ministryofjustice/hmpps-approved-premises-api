@@ -237,9 +237,7 @@ class ApplicationTest : IntegrationTestBase() {
                   ),
                   createdAt = application.createdAt.toInstant(),
                   isWomensApplication = null,
-                  isPipeApplication = false,
                   isEmergencyApplication = null,
-                  isEsapApplication = null,
                   arrivalDate = null,
                   risks = PersonRisks(
                     crn = crn,
