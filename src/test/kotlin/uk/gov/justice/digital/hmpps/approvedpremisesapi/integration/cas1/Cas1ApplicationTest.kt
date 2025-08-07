@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -85,7 +86,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineTransformer
@@ -1569,51 +1569,6 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
           val result = webTestClient.post()
             .uri("/cas1/applications")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              NewApplication(
-                crn = offenderDetails.otherIds.crn,
-                convictionId = 123,
-                deliusEventNumber = "1",
-                offenceId = "789",
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isCreated
-            .returnResult(ApprovedPremisesApplication::class.java)
-
-          assertThat(result.responseHeaders["Location"]).anyMatch {
-            it.matches(Regex("/cas1/applications/.+"))
-          }
-
-          assertThat(result.responseBody.blockFirst()).matches {
-            it.person.crn == offenderDetails.otherIds.crn &&
-              cas1OffenderRepository.findByCrn(it.person.crn) != null
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Create new application without risks returns 201 with correct body and Location header`() {
-      givenAUser { _, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-
-          apDeliusContextMockSuccessfulTeamsManagingCaseCall(
-            offenderDetails.otherIds.crn,
-            ManagingTeamsResponse(
-              teamCodes = listOf("TEAM1"),
-            ),
-          )
-
-          apOASysContextMockSuccessfulNeedsDetailsCall(
-            offenderDetails.otherIds.crn,
-            NeedsDetailsFactory().produce(),
-          )
-
-          val result = webTestClient.post()
-            .uri("/cas1/applications?createWithRisks=false")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewApplication(

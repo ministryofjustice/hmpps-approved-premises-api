@@ -203,7 +203,6 @@ class Cas1ApplicationsController(
   @Transactional
   fun createApplication(
     @RequestBody body: NewApplication,
-    @RequestParam(value = "createWithRisks", required = false) createWithRisks: Boolean?,
   ): ResponseEntity<ApprovedPremisesApplication> {
     val user = userService.getUserForRequest()
 
@@ -224,7 +223,6 @@ class Cas1ApplicationsController(
       body.convictionId,
       body.deliusEventNumber,
       body.offenceId,
-      createWithRisks,
     )
 
     val application = extractEntityFromCasResult(applicationResult)
