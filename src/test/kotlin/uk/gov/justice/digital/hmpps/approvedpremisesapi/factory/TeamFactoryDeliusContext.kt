@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Borough
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Borough
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Ldu
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate

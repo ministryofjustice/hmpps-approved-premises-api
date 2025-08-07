@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.model.oasyscontext
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatingsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshRatingsInner
 
 class RoshRatingsTest {
   @Test

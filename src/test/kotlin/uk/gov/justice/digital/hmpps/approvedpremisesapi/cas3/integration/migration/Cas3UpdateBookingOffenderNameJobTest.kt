@@ -8,13 +8,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
 
 class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
 

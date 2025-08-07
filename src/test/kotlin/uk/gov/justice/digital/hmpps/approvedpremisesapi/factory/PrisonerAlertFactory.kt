@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.Alert
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.AlertCodeSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.Alert
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.AlertCodeSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
