@@ -247,6 +247,18 @@ class Cas3DomainEventService(
   }
 
   @Transactional
+  fun savePersonDepartedEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, user)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
+    )
+  }
+
+  @Transactional
   fun saveReferralSubmittedEvent(application: TemporaryAccommodationApplicationEntity) {
     val domainEvent = cas3DomainEventBuilder.getReferralSubmittedDomainEvent(application)
 
@@ -260,6 +272,18 @@ class Cas3DomainEventService(
 
   @Transactional
   fun savePersonDepartureUpdatedEvent(booking: BookingEntity, user: UserEntity) {
+    val domainEvent = cas3DomainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      triggerSourceType = TriggerSourceType.USER,
+    )
+  }
+
+  @Transactional
+  fun savePersonDepartureUpdatedEvent(booking: Cas3BookingEntity, user: UserEntity) {
     val domainEvent = cas3DomainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     saveAndEmit(

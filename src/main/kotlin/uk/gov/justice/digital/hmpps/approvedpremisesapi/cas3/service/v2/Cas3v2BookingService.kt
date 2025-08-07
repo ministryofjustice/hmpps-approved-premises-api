@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Beds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
@@ -23,12 +25,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -46,6 +51,9 @@ class Cas3v2BookingService(
   private val cas3CancellationRepository: Cas3CancellationRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val cas3ArrivalRepository: Cas3ArrivalRepository,
+  private val cas3DepartureRepository: Cas3DepartureRepository,
+  private val departureReasonRepository: DepartureReasonRepository,
+  private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val cas3v2TurnaroundRepository: Cas3v2TurnaroundRepository,
   private val assessmentRepository: AssessmentRepository,
   private val offenderService: OffenderService,
@@ -54,6 +62,7 @@ class Cas3v2BookingService(
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
+  private val featureFlagService: FeatureFlagService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -102,7 +111,7 @@ class Cas3v2BookingService(
 
     val bedspace = cas3BedspaceRepository.findByIdOrNull(bedspaceId)
     if (bedspace == null) {
-      "$.bedId" hasValidationError "doesNotExist"
+      "$.bedspaceId" hasValidationError "doesNotExist"
     } else if (bedspace.startDate != null && bedspace.startDate!!.isAfter(arrivalDate)) {
       "$.arrivalDate" hasValidationError "bookingArrivalDateBeforeBedspaceStartDate"
     }
@@ -287,6 +296,67 @@ class Cas3v2BookingService(
         ),
       )
     }
+  }
+
+  fun createDeparture(
+    booking: Cas3BookingEntity,
+    dateTime: OffsetDateTime,
+    reasonId: UUID,
+    moveOnCategoryId: UUID,
+    notes: String?,
+    user: UserEntity,
+  ) = validatedCasResult<Cas3DepartureEntity> {
+    if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
+      "$.dateTime" hasValidationError "beforeBookingArrivalDate"
+    }
+
+    if (featureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") && dateTime.isAfter(OffsetDateTime.now())) {
+      validationErrors["$.dateTime"] = "departureDateInFuture"
+    }
+
+    val reason = departureReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      "$.reasonId" hasValidationError "doesNotExist"
+    } else if (!reason.serviceScopeMatches(booking.service)) {
+      "$.reasonId" hasValidationError "incorrectDepartureReasonServiceScope"
+    }
+
+    val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
+    if (moveOnCategory == null) {
+      "$.moveOnCategoryId" hasValidationError "doesNotExist"
+    } else if (!moveOnCategory.serviceScopeMatches(booking.service)) {
+      "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val isFirstDeparture = booking.departures.isEmpty()
+
+    val departureEntity = cas3DepartureRepository.save(
+      Cas3DepartureEntity(
+        id = UUID.randomUUID(),
+        dateTime = dateTime,
+        reason = reason!!,
+        moveOnCategory = moveOnCategory!!,
+        destinationProvider = null,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+    booking.status = Cas3BookingStatus.departed
+    booking.departureDate = dateTime.toLocalDate()
+    updateBooking(booking)
+    booking.departures += departureEntity
+
+    when (isFirstDeparture) {
+      true -> cas3DomainEventService.savePersonDepartedEvent(booking, user)
+      else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking, user)
+    }
+
+    return CasResult.Success(departureEntity)
   }
 
   private fun updateBooking(bookingEntity: Cas3BookingEntity) = cas3BookingRepository.save(bookingEntity)
