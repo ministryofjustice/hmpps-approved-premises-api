@@ -13,13 +13,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.util.UUID
 
+@SuppressWarnings("TooGenericExceptionThrown")
 @Service
 class Cas1ApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
@@ -29,9 +32,30 @@ class Cas1ApplicationService(
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val cas1AssessmentService: Cas1AssessmentService,
-  private val userAccessService: Cas1UserAccessService,
+  private val cas1UserAccessService: Cas1UserAccessService,
+  private val userAccessService: UserAccessService,
+  private val userRepository: UserRepository,
 ) {
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+
+  fun getApplicationForUsername(
+    applicationId: UUID,
+    userDistinguishedName: String,
+  ): CasResult<ApprovedPremisesApplicationEntity> {
+    val applicationEntity = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+      ?: return CasResult.NotFound("Application", applicationId.toString())
+
+    val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
+      ?: throw RuntimeException("Could not get user")
+
+    val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
+
+    return if (canAccess) {
+      CasResult.Success(applicationEntity)
+    } else {
+      CasResult.Unauthorised()
+    }
+  }
 
   fun getSubmittedApplicationsForCrn(crn: String, limit: Int) = approvedPremisesApplicationRepository.findByCrnAndSubmittedAtIsNotNull(crn, Limit.of(limit))
 
@@ -120,6 +144,6 @@ class Cas1ApplicationService(
   fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState = WithdrawableState(
     withdrawable = !application.isWithdrawn,
     withdrawn = application.isWithdrawn,
-    userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
+    userMayDirectlyWithdraw = cas1UserAccessService.userMayWithdrawApplication(user, application),
   )
 }

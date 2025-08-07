@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
@@ -27,24 +27,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -62,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
@@ -88,7 +78,6 @@ class Cas1ApplicationsController(
   private val applicationsTransformer: ApplicationsTransformer,
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val cas3ApplicationService: Cas3ApplicationService,
   private val objectMapper: ObjectMapper,
   private val documentTransformer: DocumentTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
@@ -174,17 +163,13 @@ class Cas1ApplicationsController(
     )
   }
 
-  @Operation(
-    summary = "Gets a single application by its ID",
-    description = """deprecated for cas3, use /cas3/applications/{applicationId}""",
-  )
   @GetMapping("/applications/{applicationId}")
   fun getApplication(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
-    val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
+    val applicationResult = cas1ApplicationService.getApplicationForUsername(applicationId, user.deliusUsername)
     // check for offlineApplication if not found
     if (applicationResult !is CasResult.NotFound) {
       val application = extractEntityFromCasResult(applicationResult)
@@ -192,10 +177,7 @@ class Cas1ApplicationsController(
         getPersonDetailAndTransform(
           application = application,
           user = user,
-          ignoreLaoRestrictions = application is ApprovedPremisesApplicationEntity &&
-            user.hasQualification(
-              UserQualification.LAO,
-            ),
+          ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
         ),
       )
     } else {
@@ -221,9 +203,8 @@ class Cas1ApplicationsController(
   @Transactional
   fun createApplication(
     @RequestBody body: NewApplication,
-    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
     @RequestParam(value = "createWithRisks", required = false) createWithRisks: Boolean?,
-  ): ResponseEntity<Application> {
+  ): ResponseEntity<ApprovedPremisesApplication> {
     val user = userService.getUserForRequest()
 
     val personInfo =
@@ -237,11 +218,12 @@ class Cas1ApplicationsController(
         is PersonInfoResult.Success.Full -> personInfoResult
       }
 
-    val applicationResult = createApplication(
-      xServiceName ?: ServiceName.approvedPremises,
-      personInfo,
+    val applicationResult = cas1ApplicationCreationService.createApprovedPremisesApplication(
+      personInfo.offenderDetailSummary,
       user,
-      body,
+      body.convictionId,
+      body.deliusEventNumber,
+      body.offenceId,
       createWithRisks,
     )
 
@@ -249,48 +231,7 @@ class Cas1ApplicationsController(
 
     return ResponseEntity
       .created(URI.create("/cas1/applications/${application.id}"))
-      .body(applicationsTransformer.transformJpaToApi(application, personInfo))
-  }
-
-  @Suppress("TooGenericExceptionThrown")
-  private fun createApplication(
-    serviceName: ServiceName,
-    personInfo: PersonInfoResult.Success.Full,
-    user: UserEntity,
-    body: NewApplication,
-    createWithRisks: Boolean?,
-  ): CasResult<out ApplicationEntity> = when (serviceName) {
-    ServiceName.approvedPremises ->
-      cas1ApplicationCreationService.createApprovedPremisesApplication(
-        personInfo.offenderDetailSummary,
-        user,
-        body.convictionId,
-        body.deliusEventNumber,
-        body.offenceId,
-        createWithRisks,
-      )
-
-    ServiceName.temporaryAccommodation -> {
-      applicationService.createTemporaryAccommodationApplication(
-        body.crn,
-        user,
-        body.convictionId,
-        body.deliusEventNumber,
-        body.offenceId,
-        createWithRisks,
-        personInfo,
-      )
-    }
-
-    ServiceName.cas2 -> throw RuntimeException(
-      "CAS2 now has its own " +
-        "Cas2ApplicationsController",
-    )
-
-    ServiceName.cas2v2 -> throw RuntimeException(
-      "CAS2v2 now has its own " +
-        "Cas2v2ApplicationsController",
-    )
+      .body(applicationsTransformer.transformCas1JpaToApi(application, personInfo))
   }
 
   @Operation(summary = "Updates an application")
@@ -298,35 +239,26 @@ class Cas1ApplicationsController(
   @Transactional
   fun updateApplication(
     @PathVariable applicationId: UUID,
-    @RequestBody body: UpdateApplication,
-  ): ResponseEntity<Application> {
+    @RequestBody body: UpdateApprovedPremisesApplication,
+  ): ResponseEntity<ApprovedPremisesApplication> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = when (body) {
-      is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApplication(
-        applicationId = applicationId,
-        Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
-          data = serializedData,
-          isWomensApplication = body.isWomensApplication,
-          isEmergencyApplication = body.isEmergencyApplication,
-          apType = body.apType,
-          releaseType = body.releaseType?.name,
-          arrivalDate = body.arrivalDate,
-          isInapplicable = body.isInapplicable,
-          noticeType = body.noticeType,
-        ),
-        userForRequest = user,
-      )
-
-      is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
-        applicationId = applicationId,
+    val applicationResult = cas1ApplicationCreationService.updateApplication(
+      applicationId = applicationId,
+      Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
         data = serializedData,
-      )
-
-      else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
-    }
+        isWomensApplication = body.isWomensApplication,
+        isEmergencyApplication = body.isEmergencyApplication,
+        apType = body.apType,
+        releaseType = body.releaseType?.name,
+        arrivalDate = body.arrivalDate,
+        isInapplicable = body.isInapplicable,
+        noticeType = body.noticeType,
+      ),
+      userForRequest = user,
+    )
 
     val updatedApplication = extractEntityFromCasResult(applicationResult)
 
@@ -377,33 +309,20 @@ class Cas1ApplicationsController(
   @PostMapping("/applications/{applicationId}/submission")
   fun submitApplication(
     @PathVariable applicationId: UUID,
-    @RequestBody submitApplication: SubmitApplication,
+    @RequestBody submitApplication: SubmitApprovedPremisesApplication,
   ): ResponseEntity<Unit> {
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = deliusPrincipal.name
+    var apAreaId = submitApplication.apAreaId
 
-    val submitResult = when (submitApplication) {
-      is SubmitApprovedPremisesApplication -> {
-        var apAreaId = submitApplication.apAreaId
-
-        if (apAreaId == null) {
-          val user = userService.getUserForRequest()
-          apAreaId = user.apArea!!.id
-        }
-        cas1ApplicationCreationService.submitApplication(
-          applicationId,
-          submitApplication,
-          userService.getUserForRequest(),
-          apAreaId,
-        )
-      }
-
-      is SubmitTemporaryAccommodationApplication -> {
-        val cas3SubmitApplication = transformToCas3SubmitApplication(submitApplication)
-        cas3ApplicationService.submitApplication(applicationId, cas3SubmitApplication)
-      }
-      else -> throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")
+    if (apAreaId == null) {
+      val user = userService.getUserForRequest()
+      apAreaId = user.apArea!!.id
     }
+    val submitResult = cas1ApplicationCreationService.submitApplication(
+      applicationId,
+      submitApplication,
+      userService.getUserForRequest(),
+      apAreaId,
+    )
 
     ensureEntityFromCasResultIsSuccess(submitResult)
 
@@ -419,15 +338,13 @@ class Cas1ApplicationsController(
     val username = deliusPrincipal.name
     val application = extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, username))
 
-    val documentsResult = getDocuments(application.crn)
+    val documentsResult = extractEntityFromCasResult(
+      documentService.getDocumentsFromApDeliusApi(application.crn),
+    )
     val apiDocuments = documentTransformer.transformToApi(documentsResult)
 
     return ResponseEntity(apiDocuments, HttpStatus.OK)
   }
-
-  private fun getDocuments(crn: String): List<APDeliusDocument> = extractEntityFromCasResult(
-    documentService.getDocumentsFromApDeliusApi(crn),
-  )
 
   @Operation(summary = "Get an appeal on an application")
   @GetMapping("/applications/{applicationId}/appeals/{appealId}")
@@ -488,9 +405,16 @@ class Cas1ApplicationsController(
   @GetMapping("/applications/{applicationId}/withdrawablesWithNotes")
   fun getWithdrawablesWithNotes(
     @PathVariable applicationId: UUID,
-    @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName,
   ): ResponseEntity<Withdrawables> {
-    val result = getWithdrawables(applicationId, xServiceName)
+    val user = userService.getUserForRequest()
+    val application =
+      extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
+
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
+    }
+
+    val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 
     return ResponseEntity.ok(
       Withdrawables(
@@ -500,31 +424,14 @@ class Cas1ApplicationsController(
     )
   }
 
-  @SuppressWarnings("ThrowsCount")
-  private fun getWithdrawables(applicationId: UUID, xServiceName: ServiceName): WithdrawableEntitiesWithNotes {
-    if (xServiceName != ServiceName.approvedPremises) {
-      throw ForbiddenProblem()
-    }
-
-    val user = userService.getUserForRequest()
-    val application =
-      extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
-    }
-
-    return cas1WithdrawableService.allDirectlyWithdrawables(application, user)
-  }
-
   private fun getPersonDetailAndTransform(
-    application: ApplicationEntity,
+    application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
-  ): Application {
+  ): ApprovedPremisesApplication {
     val personInfo = offenderDetailService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
-    return applicationsTransformer.transformJpaToApi(application, personInfo)
+    return applicationsTransformer.transformCas1JpaToApi(application, personInfo)
   }
 
   private fun getPersonDetailAndTransformToSummary(
@@ -551,25 +458,4 @@ class Cas1ApplicationsController(
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }
-
-  private fun transformToCas3SubmitApplication(submitApplication: SubmitTemporaryAccommodationApplication) = Cas3SubmitApplication(
-    arrivalDate = submitApplication.arrivalDate,
-    summaryData = submitApplication.summaryData,
-    isRegisteredSexOffender = submitApplication.isRegisteredSexOffender,
-    needsAccessibleProperty = submitApplication.needsAccessibleProperty,
-    hasHistoryOfArson = submitApplication.hasHistoryOfArson,
-    isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted,
-    dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate,
-    dutyToReferOutcome = submitApplication.dutyToReferOutcome,
-    isApplicationEligible = submitApplication.isApplicationEligible,
-    eligibilityReason = submitApplication.eligibilityReason,
-    dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName,
-    personReleaseDate = submitApplication.personReleaseDate,
-    probationDeliveryUnitId = submitApplication.probationDeliveryUnitId,
-    isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence,
-    isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour,
-    isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour,
-    prisonReleaseTypes = submitApplication.prisonReleaseTypes,
-    translatedDocument = submitApplication.translatedDocument,
-  )
 }
