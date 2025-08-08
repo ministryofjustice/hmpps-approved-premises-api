@@ -14,20 +14,25 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.util.UUID
 
 @SuppressWarnings("UnusedPrivateProperty")
@@ -56,10 +61,87 @@ class Cas1ApplicationServiceTest {
   private lateinit var cas1AssessmentService: Cas1AssessmentService
 
   @MockK
-  private lateinit var userAccessService: Cas1UserAccessService
+  private lateinit var cas1UserAccessService: Cas1UserAccessService
+
+  @MockK
+  private lateinit var userAccessService: UserAccessService
+
+  @MockK
+  private lateinit var userRepository: UserRepository
 
   @InjectMockKs
   private lateinit var service: Cas1ApplicationService
+
+  @Nested
+  inner class GetApplicationForUsername {
+
+    @Test
+    fun `getApplicationForUsername where user cannot access the application returns Unauthorised result`() {
+      val distinguishedName = "SOMEPERSON"
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      every { userRepository.findByDeliusUsername(any()) } returns UserEntityFactory()
+        .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByIdOrNull(any()) } returns ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .produce()
+
+      every { userAccessService.userCanViewApplication(any(), any()) } returns false
+
+      assertThat(
+        service.getApplicationForUsername(
+          applicationId,
+          distinguishedName,
+        ) is CasResult.Unauthorised,
+      ).isTrue
+    }
+
+    @Test
+    fun `getApplicationForUsername where user can access the application returns Success result with entity from db`() {
+      val distinguishedName = "SOMEPERSON"
+      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      val userEntity = UserEntityFactory()
+        .withId(userId)
+        .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val applicationEntity = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(userEntity)
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
+      every { userRepository.findByDeliusUsername(any()) } returns userEntity
+      every { userAccessService.userCanViewApplication(any(), any()) } returns true
+
+      val result = service.getApplicationForUsername(applicationId, distinguishedName)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(applicationEntity)
+      }
+    }
+  }
 
   @Nested
   inner class WithdrawApprovedPremisesApplication {
@@ -96,7 +178,7 @@ class Cas1ApplicationServiceTest {
         .produce()
 
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { userAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { cas1UserAccessService.userMayWithdrawApplication(user, application) } returns true
 
       val result = service.withdrawApprovedPremisesApplication(application.id, user, "other", null)
 
@@ -120,7 +202,7 @@ class Cas1ApplicationServiceTest {
       application.assessments.add(assessment)
 
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { userAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { cas1UserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
       every { cas1ApplicationStatusService.applicationWithdrawn(any()) } just Runs
       every { cas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
@@ -164,7 +246,7 @@ class Cas1ApplicationServiceTest {
         .produce()
 
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { userAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { cas1UserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
       every { cas1ApplicationStatusService.applicationWithdrawn(any()) } just Runs
       every { cas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
@@ -202,7 +284,7 @@ class Cas1ApplicationServiceTest {
         .produce()
 
       every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { userAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { cas1UserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
       every { cas1ApplicationStatusService.applicationWithdrawn(any()) } just Runs
       every { cas1ApplicationEmailService.applicationWithdrawn(any(), any()) } returns Unit
@@ -246,7 +328,7 @@ class Cas1ApplicationServiceTest {
         .withIsWithdrawn(false)
         .produce()
 
-      every { userAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { cas1UserAccessService.userMayWithdrawApplication(user, application) } returns true
 
       val result = service.getWithdrawableState(application, user)
 
@@ -261,7 +343,7 @@ class Cas1ApplicationServiceTest {
         .withIsWithdrawn(true)
         .produce()
 
-      every { userAccessService.userMayWithdrawApplication(user, application) } returns true
+      every { cas1UserAccessService.userMayWithdrawApplication(user, application) } returns true
 
       val result = service.getWithdrawableState(application, user)
 
@@ -277,7 +359,7 @@ class Cas1ApplicationServiceTest {
         .withIsWithdrawn(false)
         .produce()
 
-      every { userAccessService.userMayWithdrawApplication(user, application) } returns canWithdraw
+      every { cas1UserAccessService.userMayWithdrawApplication(user, application) } returns canWithdraw
 
       val result = service.getWithdrawableState(application, user)
 

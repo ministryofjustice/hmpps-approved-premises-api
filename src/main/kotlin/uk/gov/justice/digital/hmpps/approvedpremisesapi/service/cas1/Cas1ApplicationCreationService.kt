@@ -72,7 +72,6 @@ class Cas1ApplicationCreationService(
     convictionId: Long?,
     deliusEventNumber: String?,
     offenceId: String?,
-    createWithRisks: Boolean? = true,
   ) = validatedCasResult<ApprovedPremisesApplicationEntity> {
     val crn = offenderDetails.otherIds.crn
 
@@ -97,11 +96,7 @@ class Cas1ApplicationCreationService(
       return fieldValidationError
     }
 
-    val riskRatings = if (createWithRisks == true) {
-      offenderRisksService.getPersonRisks(crn)
-    } else {
-      null
-    }
+    val riskRatings = offenderRisksService.getPersonRisks(crn)
 
     val createdApplication = applicationRepository.saveAndFlush(
       createApprovedPremisesApplicationEntity(
@@ -135,7 +130,7 @@ class Cas1ApplicationCreationService(
     convictionId: Long?,
     deliusEventNumber: String?,
     offenceId: String?,
-    riskRatings: PersonRisks?,
+    riskRatings: PersonRisks,
     cas1OffenderEntity: Cas1OffenderEntity,
     offenderDetails: OffenderDetailSummary,
   ): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(

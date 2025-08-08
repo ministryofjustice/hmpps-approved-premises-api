@@ -208,7 +208,6 @@ class ApplicationsController(
         body.convictionId,
         body.deliusEventNumber,
         body.offenceId,
-        createWithRisks,
       )
 
     ServiceName.temporaryAccommodation -> {

@@ -87,7 +87,6 @@ class Cas1DuplicateApplicationSeedJob(
         convictionId = sourceApplication.convictionId,
         deliusEventNumber = sourceApplication.eventNumber,
         offenceId = sourceApplication.offenceId,
-        createWithRisks = true,
       ),
     )
 

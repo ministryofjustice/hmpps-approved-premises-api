@@ -43,46 +43,14 @@ class ApplicationsTransformer(
   private val cas1ApplicationUserDetailsTransformer: Cas1ApplicationUserDetailsTransformer,
   private val cas1CruManagementAreaTransformer: Cas1CruManagementAreaTransformer,
 ) {
+
   @SuppressWarnings("TooGenericExceptionThrown")
   @Deprecated("This will be removed shortly. Please use the CAS-specific version instead.")
   fun transformJpaToApi(applicationEntity: ApplicationEntity, personInfo: PersonInfoResult): Application {
     val latestAssessment = applicationEntity.getLatestAssessment()
 
     return when (applicationEntity) {
-      is ApprovedPremisesApplicationEntity -> ApprovedPremisesApplication(
-        id = applicationEntity.id,
-        person = personTransformer.transformModelToPersonApi(personInfo),
-        createdByUserId = applicationEntity.createdByUser.id,
-        createdAt = applicationEntity.createdAt.toInstant(),
-        submittedAt = applicationEntity.submittedAt?.toInstant(),
-        isWomensApplication = applicationEntity.isWomensApplication,
-        arrivalDate = applicationEntity.arrivalDate?.toInstant(),
-        data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
-        document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
-        risks = if (applicationEntity.riskRatings != null) {
-          risksTransformer.transformDomainToApi(
-            applicationEntity.riskRatings!!,
-            applicationEntity.crn,
-          )
-        } else {
-          null
-        },
-        status = applicationEntity.status.apiValue,
-        assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
-        assessmentId = latestAssessment?.id,
-        assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
-        personStatusOnSubmission = personTransformer.inmateStatusToPersonInfoApiStatus(
-          InmateStatus.entries.firstOrNull { it.name == applicationEntity.inmateInOutStatusOnSubmission },
-        ),
-        type = "CAS1",
-        apArea = applicationEntity.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
-        cruManagementArea = applicationEntity.cruManagementArea?. let { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
-        applicantUserDetails = applicationEntity.applicantUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
-        caseManagerIsNotApplicant = applicationEntity.caseManagerIsNotApplicant,
-        caseManagerUserDetails = applicationEntity.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
-        apType = applicationEntity.apType.asApiType(),
-        licenceExpiryDate = applicationEntity.licenceExpiryDate,
-      )
+      is ApprovedPremisesApplicationEntity -> transformCas1JpaToApi(applicationEntity, personInfo)
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
         id = applicationEntity.id,
@@ -109,6 +77,60 @@ class ApplicationsTransformer(
 
       else -> throw RuntimeException("Unrecognised application type when transforming: ${applicationEntity::class.qualifiedName}")
     }
+  }
+
+  fun transformCas1JpaToApi(
+    applicationEntity: ApprovedPremisesApplicationEntity,
+    personInfo: PersonInfoResult,
+  ): ApprovedPremisesApplication {
+    val latestAssessment = applicationEntity.getLatestAssessment()
+
+    return ApprovedPremisesApplication(
+      id = applicationEntity.id,
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      createdByUserId = applicationEntity.createdByUser.id,
+      createdAt = applicationEntity.createdAt.toInstant(),
+      submittedAt = applicationEntity.submittedAt?.toInstant(),
+      isWomensApplication = applicationEntity.isWomensApplication,
+      arrivalDate = applicationEntity.arrivalDate?.toInstant(),
+      data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
+      document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
+      risks = if (applicationEntity.riskRatings != null) {
+        risksTransformer.transformDomainToApi(
+          applicationEntity.riskRatings!!,
+          applicationEntity.crn,
+        )
+      } else {
+        null
+      },
+      status = applicationEntity.status.apiValue,
+      assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
+      assessmentId = latestAssessment?.id,
+      assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
+      personStatusOnSubmission = personTransformer.inmateStatusToPersonInfoApiStatus(
+        InmateStatus.entries.firstOrNull { it.name == applicationEntity.inmateInOutStatusOnSubmission },
+      ),
+      type = "CAS1",
+      apArea = applicationEntity.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
+      cruManagementArea = applicationEntity.cruManagementArea?.let {
+        cas1CruManagementAreaTransformer.transformJpaToApi(
+          it,
+        )
+      },
+      applicantUserDetails = applicationEntity.applicantUserDetails?.let {
+        cas1ApplicationUserDetailsTransformer.transformJpaToApi(
+          it,
+        )
+      },
+      caseManagerIsNotApplicant = applicationEntity.caseManagerIsNotApplicant,
+      caseManagerUserDetails = applicationEntity.caseManagerUserDetails?.let {
+        cas1ApplicationUserDetailsTransformer.transformJpaToApi(
+          it,
+        )
+      },
+      apType = applicationEntity.apType.asApiType(),
+      licenceExpiryDate = applicationEntity.licenceExpiryDate,
+    )
   }
 
   fun transformDomainToApiSummary(
