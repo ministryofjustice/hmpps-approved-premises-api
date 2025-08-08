@@ -22,7 +22,7 @@ data class ApplicationSubmitted(
   @Schema(example = "43")
   val age: Int,
 
-  val gender: Gender,
+  val gender: Gender?,
 
   @Schema(example = "LS2")
   val targetLocation: String,

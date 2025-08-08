@@ -15,13 +15,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Te
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
@@ -54,19 +55,13 @@ class Cas1ApplicationDomainEventService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
 
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, username, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        is AuthorisableActionResult.Unauthorised ->
+    val personSummary =
+      when (val offenderDetailsResult = offenderService.getPersonSummaryInfoResult(application.crn, LaoStrategy.NeverRestricted)) {
+        is PersonSummaryInfoResult.Success.Full -> offenderDetailsResult.summary
+        else ->
           throw RuntimeException(
             "Unable to get Offender Details when creating Application" +
-              "Submitted Domain Event: Unauthorised",
-          )
-
-        is AuthorisableActionResult.NotFound ->
-          throw RuntimeException(
-            "Unable to get Offender Details when creating Application" +
-              " Submitted Domain Event: Not Found",
+              " ${offenderDetailsResult.javaClass}",
           )
       }
 
@@ -89,7 +84,7 @@ class Cas1ApplicationDomainEventService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        nomsNumber = personSummary.nomsId,
         occurredAt = eventOccurredAt.toInstant(),
         data = ApplicationSubmittedEnvelope(
           id = domainEventId,
@@ -97,7 +92,7 @@ class Cas1ApplicationDomainEventService(
           eventType = EventType.applicationSubmitted,
           eventDetails = getApplicationSubmittedForDomainEvent(
             application,
-            offenderDetails,
+            personSummary,
             mappaLevel,
             submitApplication,
             staffDetails,
@@ -159,7 +154,7 @@ class Cas1ApplicationDomainEventService(
   @SuppressWarnings("TooGenericExceptionThrown")
   private fun getApplicationSubmittedForDomainEvent(
     application: ApprovedPremisesApplicationEntity,
-    offenderDetails: OffenderDetailSummary,
+    personSummary: CaseSummary,
     mappaLevel: String?,
     submitApplication: SubmitApprovedPremisesApplication,
     staffDetails: StaffDetail,
@@ -169,17 +164,18 @@ class Cas1ApplicationDomainEventService(
     applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
     personReference = PersonReference(
       crn = application.crn,
-      noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+      noms = personSummary.nomsId ?: "Unknown NOMS Number",
     ),
     deliusEventNumber = application.eventNumber,
     mappa = mappaLevel,
     offenceId = application.offenceId,
     releaseType = submitApplication.releaseType.toString(),
-    age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
-    gender = when (offenderDetails.gender.lowercase()) {
+    age = Period.between(personSummary.dateOfBirth, LocalDate.now()).years,
+    gender = when (personSummary.gender?.lowercase()) {
       "male" -> ApplicationSubmitted.Gender.male
       "female" -> ApplicationSubmitted.Gender.female
-      else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
+      null -> null
+      else -> throw RuntimeException("Unknown gender: ${personSummary.gender}")
     },
     targetLocation = submitApplication.targetLocation,
     submittedAt = Instant.now(clock),
