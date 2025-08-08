@@ -103,8 +103,13 @@ class Cas3DomainEventService(
 
   fun getAssessmentUpdatedEvents(assessmentId: UUID) = domainEventRepository.findByAssessmentIdAndType(assessmentId, DomainEventType.CAS3_ASSESSMENT_UPDATED)
 
-  fun getBedspaceDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspaceDomainEventsByType(
-    id,
+  fun getBedspaceDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesDomainEventsByType(
+    listOf(id),
+    bedspaceDomainEventTypes.map { it.toString() },
+  )
+
+  fun getBedspacesDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesDomainEventsByType(
+    ids,
     bedspaceDomainEventTypes.map { it.toString() },
   )
 

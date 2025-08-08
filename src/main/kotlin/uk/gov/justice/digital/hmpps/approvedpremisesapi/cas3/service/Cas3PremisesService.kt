@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveActions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -48,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Cas3Fi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -97,45 +100,29 @@ class Cas3PremisesService(
     return success(bedspace)
   }
 
-  fun getArchiveHistory(bedspaceId: UUID): CasResult<List<Cas3BedspaceArchiveAction>> = validatedCasResult {
-    return success(
-      cas3DomainEventService.getBedspaceDomainEvents(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED)).mapNotNull { domainEventEntity ->
-        when (domainEventEntity.type) {
-          DomainEventType.CAS3_BEDSPACE_UNARCHIVED -> {
-            val newStartDate = objectMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails.newStartDate
-            // filtering out events that haven't happened yet
-            if (newStartDate <= LocalDate.now()) {
-              Cas3BedspaceArchiveAction(
-                status = Cas3BedspaceStatus.online,
-                date = newStartDate,
-              )
-            } else {
-              null
-            }
-          }
-          DomainEventType.CAS3_BEDSPACE_ARCHIVED -> {
-            val endDate = objectMapper.readValue(domainEventEntity.data, CAS3BedspaceArchiveEvent::class.java).eventDetails.endDate
-            // filtering out events that haven't happened yet
-            if (endDate <= LocalDate.now()) {
-              Cas3BedspaceArchiveAction(
-                status = Cas3BedspaceStatus.archived,
-                date = endDate,
-              )
-            } else {
-              null
-            }
-          }
-          else -> throw error("Incorrect domain event type for archive history: ${domainEventEntity.type}, ${domainEventEntity.id}")
-        }
-      }
-        // earliest event first
-        .sortedBy { it.date },
+  fun getPremisesBedspaces(premisesId: UUID): List<BedEntity> = bedspaceRepository.findByRoomPremisesId(premisesId)
+
+  fun getBedspaceArchiveHistory(bedspaceId: UUID): CasResult<List<Cas3BedspaceArchiveAction>> = validatedCasResult {
+    val domainEvents = cas3DomainEventService.getBedspaceDomainEvents(
+      bedspaceId,
+      listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
     )
+    return when {
+      domainEvents.any() -> getBedspaceArchiveActions(domainEvents)
+      else -> success(emptyList())
+    }
   }
 
-  private fun Cas3PremisesStatus.transformStatus() = when (this) {
-    Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
-    Cas3PremisesStatus.online -> PropertyStatus.active.toString()
+  fun getBedspacesArchiveHistory(bedspaceIds: List<UUID>): List<Cas3BedspaceArchiveActions> {
+    val domainEvents = cas3DomainEventService.getBedspacesDomainEvents(
+      bedspaceIds,
+      listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
+    )
+    return bedspaceIds.map { bedspaceId ->
+      val bedspaceDomainEvents = domainEvents.filter { it.cas3BedspaceId == bedspaceId }
+      val actions = extractEntityFromCasResult(getBedspaceArchiveActions(bedspaceDomainEvents))
+      Cas3BedspaceArchiveActions(bedspaceId, actions)
+    }
   }
 
   @Deprecated("This function is replaced by createNewPremises in the same class")
@@ -1207,5 +1194,49 @@ class Cas3PremisesService(
     val lastOverlapBookingId = lastBookingsTurnaroundDate.filterValues { it == lastTurnaroundDate }.keys.firstOrNull()
     val lastOverlapBooking = overlapBookings.firstOrNull { it.id == lastOverlapBookingId }
     return lastOverlapBooking
+  }
+
+  private fun getBedspaceArchiveActions(domainEvents: List<DomainEventEntity>): CasResult<List<Cas3BedspaceArchiveAction>> {
+    val today = LocalDate.now()
+    return CasResult.Success(
+      domainEvents.mapNotNull { domainEventEntity ->
+        when (domainEventEntity.type) {
+          DomainEventType.CAS3_BEDSPACE_UNARCHIVED -> {
+            val eventDetails =
+              objectMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
+            val restartDate = eventDetails.newStartDate
+            if (restartDate <= today) {
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.online,
+                date = restartDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          DomainEventType.CAS3_BEDSPACE_ARCHIVED -> {
+            val eventDetails =
+              objectMapper.readValue(domainEventEntity.data, CAS3BedspaceArchiveEvent::class.java).eventDetails
+            val endDate = eventDetails.endDate
+            if (endDate <= today) {
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.archived,
+                date = endDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          else -> return CasResult.GeneralValidationError("Incorrect domain event type for archive history: ${domainEventEntity.type}, ${domainEventEntity.id}")
+        }
+      }.sortedBy { it.date },
+    )
+  }
+
+  private fun Cas3PremisesStatus.transformStatus() = when (this) {
+    Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
+    Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }
 }

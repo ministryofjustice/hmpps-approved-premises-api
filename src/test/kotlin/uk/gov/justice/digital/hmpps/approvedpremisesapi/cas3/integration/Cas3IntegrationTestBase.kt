@@ -1,17 +1,30 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
 
 abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
 
@@ -109,16 +122,79 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     return bedspace
   }
 
+  protected fun createCas3Bedspace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
+    id = bed.id,
+    reference = room.name,
+    startDate = bed.startDate!!,
+    characteristics = room.characteristics.map { characteristic ->
+      Characteristic(
+        id = characteristic.id,
+        name = characteristic.name,
+        propertyName = characteristic.propertyName,
+        serviceScope = Characteristic.ServiceScope.temporaryMinusAccommodation,
+        modelScope = Characteristic.ModelScope.forValue(characteristic.modelScope),
+      )
+    },
+    endDate = bed.endDate,
+    status = bedspaceStatus,
+    notes = room.notes,
+    archiveHistory = archiveHistory,
+  )
+
   protected fun pickRandomCharacteristicAndRemoveFromList(characteristics: MutableList<CharacteristicEntity>): CharacteristicEntity {
     val randomCharacteristic = randomOf(characteristics)
     characteristics.remove(randomCharacteristic)
     return randomCharacteristic
   }
 
-  fun getPremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
+  protected fun getPremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
     modelScope = "premises",
     serviceScope = ServiceName.temporaryAccommodation.value,
   )
+
+  protected fun createBedspaceArchiveDomainEvent(bedspaceId: UUID, premisesId: UUID, userId: UUID, endDate: LocalDate) = domainEventFactory.produceAndPersist {
+    withService(ServiceName.temporaryAccommodation)
+    withCas3BedspaceId(bedspaceId)
+    withType(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+    withData(
+      objectMapper.writeValueAsString(
+        CAS3BedspaceArchiveEvent(
+          id = UUID.randomUUID(),
+          timestamp = OffsetDateTime.now().toInstant(),
+          eventType = EventType.bedspaceArchived,
+          eventDetails = CAS3BedspaceArchiveEventDetails(
+            bedspaceId = bedspaceId,
+            userId = userId,
+            premisesId = premisesId,
+            endDate = endDate,
+          ),
+        ),
+      ),
+    )
+  }
+
+  protected fun createBedspaceUnarchiveDomainEvent(bedspace: BedEntity, premisesId: UUID, userId: UUID, newStartDate: LocalDate) = domainEventFactory.produceAndPersist {
+    withService(ServiceName.temporaryAccommodation)
+    withCas3BedspaceId(bedspace.id)
+    withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+    withData(
+      objectMapper.writeValueAsString(
+        CAS3BedspaceUnarchiveEvent(
+          id = UUID.randomUUID(),
+          timestamp = OffsetDateTime.now().toInstant(),
+          eventType = EventType.bedspaceUnarchived,
+          eventDetails = CAS3BedspaceUnarchiveEventDetails(
+            bedspaceId = bedspace.id,
+            premisesId = premisesId,
+            userId = userId,
+            currentStartDate = bedspace.startDate!!,
+            currentEndDate = bedspace.endDate!!,
+            newStartDate = newStartDate,
+          ),
+        ),
+      ),
+    )
+  }
 
   private fun getRoomCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
     modelScope = "room",

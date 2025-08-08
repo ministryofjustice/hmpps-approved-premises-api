@@ -730,6 +730,7 @@ class Cas3DomainEventBuilder(
     currentStartDate = currentStartDate,
     currentEndDate = currentEndDate,
     newStartDate = bedspace.startDate!!,
+    premisesId = bedspace.room.premises.id,
   )
 
   private fun buildCAS3BookingCancelledEventDetails(
