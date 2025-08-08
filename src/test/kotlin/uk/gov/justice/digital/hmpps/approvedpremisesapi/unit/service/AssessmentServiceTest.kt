@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -46,8 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
@@ -61,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -92,7 +88,6 @@ class AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val userAccessServiceMock = mockk<UserAccessService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
-  private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
   private val referralRejectionReasonRepositoryMock = mockk<ReferralRejectionReasonRepository>()
   private val offenderServiceMock = mockk<OffenderService>()
@@ -104,14 +99,12 @@ class AssessmentServiceTest {
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val assessmentListener = mockk<AssessmentListener>()
-  private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
   private val lockableAssessmentRepository = mockk<LockableAssessmentRepository>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
     userAccessServiceMock,
     assessmentRepositoryMock,
-    assessmentClarificationNoteRepositoryMock,
     assessmentReferralHistoryNoteRepositoryMock,
     referralRejectionReasonRepositoryMock,
     offenderServiceMock,
@@ -123,7 +116,6 @@ class AssessmentServiceTest {
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
     assessmentListener,
-    assessmentClarificationNoteListener,
     Clock.systemDefaultZone(),
     lockableAssessmentRepository,
   )
@@ -484,230 +476,6 @@ class AssessmentServiceTest {
 
     assertThat(result.id).isEqualTo(assessmentId.toString())
     assertThat(result.entityType).isEqualTo("AssessmentEntity")
-  }
-
-  @Nested
-  inner class AddAssessmentClarificationNote {
-    @Test
-    fun `addAssessmentClarificationNote returns not found for non-existent Assessment`() {
-      val assessmentId = UUID.randomUUID()
-
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-
-      val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
-
-      assertThat(result is CasResult.NotFound).isTrue
-    }
-
-    @Test
-    fun `addAssessmentClarificationNote returns unauthorised when the user does not have permission to access the assessment`() {
-      val assessmentId = UUID.randomUUID()
-
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns ApprovedPremisesAssessmentEntityFactory()
-        .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
-        .withAllocatedToUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
-
-      val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
-
-      assertThat(result is CasResult.Unauthorised).isTrue
-    }
-
-    @Test
-    fun `addAssessmentClarificationNote adds note to assessment allocated to different user`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
-        .withAllocatedToUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
-      every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
-        it.invocation.args[0] as AssessmentClarificationNoteEntity
-      }
-
-      every {
-        offenderServiceMock.getOffenderByCrn(
-          assessment.application.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
-
-      val text = "clarification note"
-      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
-
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
-      verify(exactly = 1) {
-        assessmentClarificationNoteRepositoryMock.save(
-          match {
-            it.assessment == assessment &&
-              it.createdByUser == user &&
-              it.query == text
-          },
-        )
-      }
-
-      verify(exactly = 1) {
-        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.value)
-      }
-    }
-
-    @Test
-    fun `addAssessmentClarificationNote adds note to assessment allocated to calling user`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
-        .withAllocatedToUser(user)
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
-      every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
-        it.invocation.args[0] as AssessmentClarificationNoteEntity
-      }
-
-      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
-
-      val text = "clarification note"
-      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
-
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
-      verify(exactly = 1) {
-        assessmentClarificationNoteRepositoryMock.save(
-          match {
-            it.assessment == assessment &&
-              it.createdByUser == user &&
-              it.query == text
-          },
-        )
-      }
-
-      verify(exactly = 1) {
-        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.value)
-      }
-    }
   }
 
   @Test
@@ -2008,222 +1776,6 @@ class AssessmentServiceTest {
             it.submittedAt == null
         },
       )
-    }
-  }
-
-  @Nested
-  inner class UpdateAssessmentClarificationNote {
-    private val userServiceMock = mockk<UserService>()
-    private val userAccessServiceMock = mockk<UserAccessService>()
-    private val assessmentRepositoryMock = mockk<AssessmentRepository>()
-    private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
-    private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
-    private val offenderServiceMock = mockk<OffenderService>()
-    private val placementRequestServiceMock = mockk<Cas1PlacementRequestService>()
-    private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
-    private val objectMapperMock = spyk<ObjectMapper>()
-    private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
-
-    private val assessmentService = AssessmentService(
-      userServiceMock,
-      userAccessServiceMock,
-      assessmentRepositoryMock,
-      assessmentClarificationNoteRepositoryMock,
-      assessmentReferralHistoryNoteRepositoryMock,
-      referralRejectionReasonRepositoryMock,
-      offenderServiceMock,
-      placementRequestServiceMock,
-      cas1PlacementRequirementsServiceMock,
-      objectMapperMock,
-      cas1TaskDeadlineServiceMock,
-      cas1AssessmentEmailServiceMock,
-      cas1AssessmentDomainEventService,
-      cas1PlacementRequestEmailService,
-      assessmentListener,
-      assessmentClarificationNoteListener,
-      Clock.systemDefaultZone(),
-      lockableAssessmentRepository,
-    )
-
-    private val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    private val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-      .withAllocatedToUser(user)
-      .withData("{\"test\": \"data\"}")
-      .produce()
-
-    private val assessmentClarificationNoteEntity = AssessmentClarificationNoteEntityFactory()
-      .withAssessment(assessment)
-      .withCreatedBy(user)
-      .produce()
-
-    @Test
-    fun `updateAssessmentClarificationNote returns updated clarification note`() {
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-
-      every {
-        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
-          assessment.id,
-          assessmentClarificationNoteEntity.id,
-        )
-      } returns assessmentClarificationNoteEntity
-
-      every { assessmentClarificationNoteListener.preUpdate(any()) } returns Unit
-      every { assessmentClarificationNoteRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentClarificationNoteEntity }
-
-      every { assessmentListener.preUpdate(any()) } returns Unit
-      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      val result = assessmentService.updateAssessmentClarificationNote(
-        user,
-        assessment.id,
-        assessmentClarificationNoteEntity.id,
-        "Some response",
-        LocalDate.parse("2022-03-03"),
-      )
-
-      assertThat(result is CasResult.Success).isTrue
-      val entity = (result as CasResult.Success).value
-      assertThat(entity.response contentEquals "Some response")
-    }
-
-    @Test
-    fun `updateAssessmentClarificationNote returns not found if the note is not found`() {
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every {
-        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
-          assessment.id,
-          assessmentClarificationNoteEntity.id,
-        )
-      } returns null
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(
-          assessment.application.crn,
-          CaseSummaryFactory().produce(),
-        )
-
-      val result = assessmentService.updateAssessmentClarificationNote(
-        user,
-        assessment.id,
-        assessmentClarificationNoteEntity.id,
-        "Some response",
-        LocalDate.parse("2022-03-03"),
-      )
-
-      assertThat(result is CasResult.NotFound).isTrue
-    }
-
-    @Test
-    fun `updateAssessmentClarificationNote returns an error if the note already has a response`() {
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every {
-        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
-          assessment.id,
-          assessmentClarificationNoteEntity.id,
-        )
-      } returns AssessmentClarificationNoteEntityFactory()
-        .withAssessment(assessment)
-        .withCreatedBy(user)
-        .withResponse("I already have a response!")
-        .produce()
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      val result = assessmentService.updateAssessmentClarificationNote(
-        user,
-        assessment.id,
-        assessmentClarificationNoteEntity.id,
-        "Some response",
-        LocalDate.parse("2022-03-03"),
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-
-      val message = (result as CasResult.GeneralValidationError).message
-      assertThat(message).isEqualTo("A response has already been added to this note")
-    }
-
-    @Test
-    fun `updateAssessmentClarificationNote returns unauthorised if the note is not owned by the requesting user`() {
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every {
-        assessmentClarificationNoteRepositoryMock.findByAssessmentIdAndId(
-          assessment.id,
-          assessmentClarificationNoteEntity.id,
-        )
-      } returns AssessmentClarificationNoteEntityFactory()
-        .withAssessment(assessment)
-        .withCreatedBy(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .produce()
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      val result = assessmentService.updateAssessmentClarificationNote(
-        user,
-        assessment.id,
-        assessmentClarificationNoteEntity.id,
-        "Some response",
-        LocalDate.parse("2022-03-03"),
-      )
-
-      assertThat(result is CasResult.Unauthorised).isTrue
     }
   }
 

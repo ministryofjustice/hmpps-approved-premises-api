@@ -18,14 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -39,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -55,7 +51,6 @@ class AssessmentController(
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
   private val assessmentTransformer: AssessmentTransformer,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
 ) {
@@ -289,58 +284,6 @@ class AssessmentController(
     val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)
     extractEntityFromCasResult(assessmentAuthResult)
     return ResponseEntity(HttpStatus.OK)
-  }
-
-  @Operation(
-    tags = ["Assessment data"],
-    summary = "Adds a clarification note to an assessment",
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/assessments/{assessmentId}/notes"],
-    produces = ["application/json"],
-    consumes = ["application/json"],
-  )
-  fun assessmentsAssessmentIdNotesPost(
-    @PathVariable assessmentId: UUID,
-    @RequestBody newClarificationNote: NewClarificationNote,
-  ): ResponseEntity<ClarificationNote> {
-    val user = userService.getUserForRequest()
-
-    val clarificationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
-
-    return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(extractEntityFromCasResult(clarificationNoteResult)),
-    )
-  }
-
-  @Operation(
-    tags = ["Assessment data"],
-    summary = "Updates an assessment's clarification note",
-  )
-  @RequestMapping(
-    method = [RequestMethod.PUT],
-    value = ["/assessments/{assessmentId}/notes/{noteId}"],
-    produces = ["application/json"],
-    consumes = ["application/json"],
-  )
-  fun assessmentsAssessmentIdNotesNoteIdPut(
-    @PathVariable assessmentId: UUID,
-    @PathVariable noteId: UUID,
-    @RequestBody updatedClarificationNote: UpdatedClarificationNote,
-  ): ResponseEntity<ClarificationNote> {
-    val user = userService.getUserForRequest()
-    val clarificationNoteResult = assessmentService.updateAssessmentClarificationNote(
-      user,
-      assessmentId,
-      noteId,
-      updatedClarificationNote.response,
-      updatedClarificationNote.responseReceivedOn,
-    )
-
-    return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToApi(extractEntityFromCasResult(clarificationNoteResult)),
-    )
   }
 
   @Operation(

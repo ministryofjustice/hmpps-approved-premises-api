@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Reallocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3Rejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -34,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeyResolver
@@ -2612,93 +2610,6 @@ class AssessmentTest : IntegrationTestBase() {
         val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
         assertThat(persistedAssessment.completedAt).isNotNull
-      }
-    }
-  }
-
-  @Test
-  fun `Create clarification note returns 200 with correct body and creates and emits a domain event`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withNomsNumber(offenderDetails.otherIds.nomsNumber)
-          withCreatedByUser(userEntity)
-        }
-
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-        }
-
-        webTestClient.post()
-          .uri("/assessments/${assessment.id}/notes")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewClarificationNote(
-              query = "some text",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.query").isEqualTo("some text")
-
-        val emittedMessage =
-          domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
-
-        assertThat(emittedMessage.description).isEqualTo(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeDescription)
-        assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
-        assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-          SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
-        )
-
-        domainEventAsserter.assertDomainEventOfTypeStored(
-          application.id,
-          DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-        )
-      }
-    }
-  }
-
-  @Test
-  fun `Update clarification note returns 201 with correct body`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-        }
-
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-        }
-
-        val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
-          withAssessment(assessment)
-          withCreatedBy(userEntity)
-        }
-
-        webTestClient.put()
-          .uri("/assessments/${assessment.id}/notes/${clarificationNote.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdatedClarificationNote(
-              response = "some text",
-              responseReceivedOn = LocalDate.parse("2022-03-04"),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.response").isEqualTo("some text")
-          .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
       }
     }
   }
