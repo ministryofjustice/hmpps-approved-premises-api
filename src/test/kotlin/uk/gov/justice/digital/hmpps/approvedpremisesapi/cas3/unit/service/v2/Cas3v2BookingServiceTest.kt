@@ -51,7 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -62,7 +61,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -1917,12 +1915,6 @@ class Cas3v2BookingServiceTest {
         .withProbationRegion(probationRegion)
         .produce()
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(bookingEntity.crn)
-        .produce()
-
-      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-
       every { mockCas3DomainEventService.savePersonDepartedEvent(any(Cas3BookingEntity::class), user) } just Runs
 
       val result = cas3BookingService.createDeparture(
@@ -1982,10 +1974,6 @@ class Cas3v2BookingServiceTest {
         .withProbationRegion(probationRegion)
         .produce()
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(bookingEntity.crn)
-        .produce()
-
       val departureEntity = Cas3DepartureEntityFactory()
         .withBooking(bookingEntity)
         .withDateTime(departureDateTime)
@@ -2000,7 +1988,6 @@ class Cas3v2BookingServiceTest {
       every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as Cas3DepartureEntity }
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as Cas3ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(Cas3BookingEntity::class), user) } just Runs
       every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
