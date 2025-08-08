@@ -30,8 +30,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
@@ -1013,6 +1019,173 @@ class Cas3PremisesServiceTest {
     private fun createBedspaceDomainEvent(id: UUID, bedspaceId: UUID, occurredAt: OffsetDateTime, data: String, type: DomainEventType) = DomainEventEntityFactory()
       .withId(id)
       .withCas3BedspaceId(bedspaceId)
+      .withType(type)
+      .withData(data)
+      .withOccurredAt(occurredAt)
+      .produce()
+  }
+
+  @Nested
+  inner class GetPremisesArchiveHistory {
+    @Test
+    fun `When getArchiveHistory for premises returns Success with empty list of histories`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(DomainEventType.CAS3_PREMISES_ARCHIVED, DomainEventType.CAS3_PREMISES_UNARCHIVED)) } returns emptyList()
+
+      val result = premisesService.getPremisesArchiveHistory(premises)
+
+      assertThatCasResult(result).isSuccess().with { archiveHistory ->
+        assertThat(archiveHistory).isEqualTo(emptyList<Cas3PremisesArchiveAction>())
+      }
+    }
+
+    @Test
+    fun `When getArchiveHistory for premises returns Success with list of events`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+      val userId = UUID.randomUUID()
+
+      // Archive event scheduled for tomorrow (should be filtered out)
+      val endDateTomorrowArchive = LocalDate.now().plusDays(1)
+      val dataTomorrowArchive = createPremisesArchiveEvent(premisesId = premises.id, userId = userId, endDate = endDateTomorrowArchive)
+      val domainEventTomorrow = createPremisesArchiveDomainEvent(dataTomorrowArchive)
+
+      // Archive event scheduled for today (should be included)
+      val endDateTodayArchive = LocalDate.now()
+      val dataTodayArchive = createPremisesArchiveEvent(premisesId = premises.id, userId = userId, endDate = endDateTodayArchive)
+      val domainEventToday = createPremisesArchiveDomainEvent(dataTodayArchive)
+
+      // Archive event scheduled for yesterday (should be included)
+      val endDateYesterdayArchive = LocalDate.now().minusDays(1)
+      val dataYesterdayArchive = createPremisesArchiveEvent(premisesId = premises.id, userId = userId, endDate = endDateYesterdayArchive)
+      val domainEventYesterday = createPremisesArchiveDomainEvent(dataYesterdayArchive)
+
+      // Unarchive event scheduled for in 2 days (should be filtered out)
+      val newStartDateIn2DaysUnarchive = LocalDate.now().plusDays(2)
+      val dataIn2DaysUnarchive = createPremisesUnarchiveEvent(premisesId = premises.id, userId = userId, newStartDate = newStartDateIn2DaysUnarchive)
+      val domainEventIn2Days = createPremisesUnarchiveDomainEvent(dataIn2DaysUnarchive)
+
+      // Unarchive event scheduled for 2 days ago (should be included)
+      val newStartDate2DaysAgoUnarchive = LocalDate.now().minusDays(2)
+      val data2DaysAgoUnarchive = createPremisesUnarchiveEvent(premisesId = premises.id, userId = userId, newStartDate = newStartDate2DaysAgoUnarchive)
+      val domainEvent2DaysAgo = createPremisesUnarchiveDomainEvent(data2DaysAgoUnarchive)
+
+      // Unarchive event scheduled for 3 days ago (should be included)
+      val newStartDate3DaysAgoUnarchive = LocalDate.now().minusDays(3)
+      val data3DaysAgoUnarchive = createPremisesUnarchiveEvent(premisesId = premises.id, userId = userId, newStartDate = newStartDate3DaysAgoUnarchive)
+      val domainEvent3DaysAgo = createPremisesUnarchiveDomainEvent(data3DaysAgoUnarchive)
+
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(DomainEventType.CAS3_PREMISES_ARCHIVED, DomainEventType.CAS3_PREMISES_UNARCHIVED)) } returns
+        listOf(
+          domainEventTomorrow,
+          domainEventToday,
+          domainEventYesterday,
+          domainEventIn2Days,
+          domainEvent2DaysAgo,
+          domainEvent3DaysAgo,
+        )
+
+      val result = premisesService.getPremisesArchiveHistory(premises)
+
+      assertThatCasResult(result).isSuccess().with { archiveHistory ->
+        assertThat(archiveHistory).isEqualTo(
+          listOf(
+            Cas3PremisesArchiveAction(
+              Cas3PremisesStatus.online,
+              data3DaysAgoUnarchive.eventDetails.newStartDate,
+            ),
+            Cas3PremisesArchiveAction(
+              Cas3PremisesStatus.online,
+              data2DaysAgoUnarchive.eventDetails.newStartDate,
+            ),
+            Cas3PremisesArchiveAction(
+              Cas3PremisesStatus.archived,
+              dataYesterdayArchive.eventDetails.endDate,
+            ),
+            Cas3PremisesArchiveAction(
+              Cas3PremisesStatus.archived,
+              dataTodayArchive.eventDetails.endDate,
+            ),
+          ),
+        )
+      }
+    }
+
+    @Test
+    fun `When getArchiveHistory for premises filters out future events correctly`() {
+      val premises = temporaryAccommodationPremisesFactory.produce()
+      val userId = UUID.randomUUID()
+
+      // Archive event scheduled for tomorrow (should be filtered out)
+      val endDateTomorrowArchive = LocalDate.now().plusDays(1)
+      val dataTomorrowArchive = createPremisesArchiveEvent(premisesId = premises.id, userId = userId, endDate = endDateTomorrowArchive)
+      val domainEventTomorrow = createPremisesArchiveDomainEvent(dataTomorrowArchive)
+
+      // Unarchive event scheduled for in 2 days (should be filtered out)
+      val newStartDateIn2DaysUnarchive = LocalDate.now().plusDays(2)
+      val dataIn2DaysUnarchive = createPremisesUnarchiveEvent(premisesId = premises.id, userId = userId, newStartDate = newStartDateIn2DaysUnarchive)
+      val domainEventIn2Days = createPremisesUnarchiveDomainEvent(dataIn2DaysUnarchive)
+
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(DomainEventType.CAS3_PREMISES_ARCHIVED, DomainEventType.CAS3_PREMISES_UNARCHIVED)) } returns
+        listOf(domainEventTomorrow, domainEventIn2Days)
+
+      val result = premisesService.getPremisesArchiveHistory(premises)
+
+      assertThatCasResult(result).isSuccess().with { archiveHistory ->
+        assertThat(archiveHistory).isEqualTo(emptyList<Cas3PremisesArchiveAction>())
+      }
+    }
+
+    private fun createPremisesArchiveDomainEvent(data: CAS3PremisesArchiveEvent) = createPremisesDomainEvent(
+      data.id,
+      data.eventDetails.premisesId,
+      data.timestamp.atOffset(ZoneOffset.UTC),
+      objectMapper.writeValueAsString(data),
+      DomainEventType.CAS3_PREMISES_ARCHIVED,
+    )
+
+    private fun createPremisesArchiveEvent(premisesId: UUID, userId: UUID, endDate: LocalDate): CAS3PremisesArchiveEvent {
+      val eventId = UUID.randomUUID()
+      val occurredAt = OffsetDateTime.now()
+      return CAS3PremisesArchiveEvent(
+        id = eventId,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.premisesArchived,
+        eventDetails = CAS3PremisesArchiveEventDetails(
+          premisesId = premisesId,
+          userId = userId,
+          endDate = endDate,
+        ),
+      )
+    }
+
+    private fun createPremisesUnarchiveDomainEvent(data: CAS3PremisesUnarchiveEvent) = createPremisesDomainEvent(
+      data.id,
+      data.eventDetails.premisesId,
+      data.timestamp.atOffset(ZoneOffset.UTC),
+      objectMapper.writeValueAsString(data),
+      DomainEventType.CAS3_PREMISES_UNARCHIVED,
+    )
+
+    private fun createPremisesUnarchiveEvent(premisesId: UUID, userId: UUID, newStartDate: LocalDate): CAS3PremisesUnarchiveEvent {
+      val eventId = UUID.randomUUID()
+      val occurredAt = OffsetDateTime.now()
+      return CAS3PremisesUnarchiveEvent(
+        id = eventId,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.premisesUnarchived,
+        eventDetails = CAS3PremisesUnarchiveEventDetails(
+          premisesId = premisesId,
+          userId = userId,
+          currentStartDate = LocalDate.now(),
+          newStartDate = newStartDate,
+        ),
+      )
+    }
+
+    private fun createPremisesDomainEvent(id: UUID, premisesId: UUID, occurredAt: OffsetDateTime, data: String, type: DomainEventType) = DomainEventEntityFactory()
+      .withId(id)
+      .withCas3PremisesId(premisesId)
       .withType(type)
       .withData(data)
       .withOccurredAt(occurredAt)
