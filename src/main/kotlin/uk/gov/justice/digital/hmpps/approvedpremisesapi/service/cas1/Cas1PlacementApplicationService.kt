@@ -6,6 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -30,7 +31,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates as ApiPlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
@@ -317,16 +317,16 @@ class Cas1PlacementApplicationService(
     id: UUID,
     translatedDocument: String,
     apiPlacementType: ApiPlacementType,
-    apiPlacementDates: List<ApiPlacementDates>,
+    apiPlacementDates: List<Cas1RequestedPlacementPeriod>,
   ): CasResult<List<PlacementApplicationEntity>> {
+    if (apiPlacementDates.isEmpty()) {
+      return CasResult.GeneralValidationError("At least one placement date is required")
+    }
+
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
 
     if (placementApplicationAuthorisationResult is Either.Left) {
       return placementApplicationAuthorisationResult.value
-    }
-
-    if (apiPlacementDates.isEmpty()) {
-      return CasResult.GeneralValidationError("At least one placement date is required")
     }
 
     val submittedPlacementApplication = (placementApplicationAuthorisationResult as Either.Right).value
@@ -374,9 +374,9 @@ class Cas1PlacementApplicationService(
 
   private fun saveDatesOnSubmissionToAnAppPerDate(
     baselinePlacementApplication: PlacementApplicationEntity,
-    apiPlacementDates: List<ApiPlacementDates>,
+    requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>,
   ): List<PlacementApplicationEntity> {
-    val additionalPlacementApps = List(apiPlacementDates.size - 1) {
+    val additionalPlacementApps = List(requestedPlacementPeriods.size - 1) {
       placementApplicationRepository.save(
         baselinePlacementApplication.copy(id = UUID.randomUUID()),
       )
@@ -384,9 +384,10 @@ class Cas1PlacementApplicationService(
 
     val allPlacementApps = listOf(baselinePlacementApplication) + additionalPlacementApps
 
-    allPlacementApps.zip(apiPlacementDates) { placementApp, apiDate ->
-      placementApp.expectedArrival = apiDate.expectedArrival
+    allPlacementApps.zip(requestedPlacementPeriods) { placementApp, apiDate ->
+      placementApp.expectedArrival = apiDate.arrival
       placementApp.requestedDuration = apiDate.duration
+      placementApp.expectedArrivalFlexible = apiDate.arrivalFlexible
     }
 
     return allPlacementApps
