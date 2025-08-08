@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -39,6 +40,32 @@ class Cas1ApplicationStatusService(
       (assessment.application as ApprovedPremisesApplicationEntity).status =
         ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT
     }
+  }
+
+  fun assessmentUpdated(assessment: ApprovedPremisesAssessmentEntity) {
+    val application = assessment.application as ApprovedPremisesApplicationEntity
+
+    if (application.status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION && assessment.decision == null) {
+      return
+    } else if (assessment.isWithdrawn) {
+      return
+    } else if (assessment.decision == null && assessment.data != null) {
+      application.status = ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
+    } else if (assessment.decision == AssessmentDecision.ACCEPTED) {
+      application.status = applicationGetStatusFromArrivalDate(application)
+    } else if (assessment.decision == AssessmentDecision.REJECTED) {
+      application.status = ApprovedPremisesApplicationStatus.REJECTED
+    }
+  }
+
+  private fun applicationGetStatusFromArrivalDate(
+    application: ApprovedPremisesApplicationEntity,
+  ): ApprovedPremisesApplicationStatus {
+    val releaseDate = application.arrivalDate
+    if (releaseDate == null) {
+      return ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
+    }
+    return ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
   }
 
   fun spaceBookingMade(spaceBooking: Cas1SpaceBookingEntity) {
