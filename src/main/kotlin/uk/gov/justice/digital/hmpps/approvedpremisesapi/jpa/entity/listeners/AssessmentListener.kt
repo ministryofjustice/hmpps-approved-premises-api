@@ -8,16 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 
 @Component
 class AssessmentListener {
-  fun prePersist(assessment: ApprovedPremisesAssessmentEntity) {
-    if (assessment.allocatedToUser == null) {
-      (assessment.application as ApprovedPremisesApplicationEntity).status =
-        ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT
-    } else {
-      (assessment.application as ApprovedPremisesApplicationEntity).status =
-        ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT
-    }
-  }
-
   fun preUpdate(assessment: ApprovedPremisesAssessmentEntity) {
     val application = assessment.application as ApprovedPremisesApplicationEntity
 

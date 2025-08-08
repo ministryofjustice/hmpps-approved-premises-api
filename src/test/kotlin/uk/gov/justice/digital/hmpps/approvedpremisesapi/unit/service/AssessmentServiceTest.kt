@@ -67,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
@@ -99,6 +100,7 @@ class AssessmentServiceTest {
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val assessmentListener = mockk<AssessmentListener>()
+  private val cas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val lockableAssessmentRepository = mockk<LockableAssessmentRepository>()
 
   private val assessmentService = AssessmentService(
@@ -116,6 +118,7 @@ class AssessmentServiceTest {
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
     assessmentListener,
+    cas1ApplicationStatusService,
     Clock.systemDefaultZone(),
     lockableAssessmentRepository,
   )
@@ -1447,7 +1450,7 @@ class AssessmentServiceTest {
       )
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-      every { assessmentListener.prePersist(any()) } returns Unit
+      every { cas1ApplicationStatusService.assessmentCreated(any()) } returns Unit
       every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
@@ -1523,7 +1526,7 @@ class AssessmentServiceTest {
       )
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-      every { assessmentListener.prePersist(any()) } returns Unit
+      every { cas1ApplicationStatusService.assessmentCreated(any()) } returns Unit
       every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 

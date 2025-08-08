@@ -51,6 +51,7 @@ class Cas1AssessmentService(
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val assessmentListener: AssessmentListener,
+  private val applicationStatusService: Cas1ApplicationStatusService,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
@@ -86,7 +87,7 @@ class Cas1AssessmentService(
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
     assessment.allocatedToUser = allocatedUser
 
-    assessmentListener.prePersist(assessment)
+    applicationStatusService.assessmentCreated(assessment)
     assessment = assessmentRepository.save(assessment)
 
     if (allocatedUser != null) {
