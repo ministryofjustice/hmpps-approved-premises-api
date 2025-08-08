@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
@@ -545,6 +546,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 duration = 12,
               ),
             ),
+            requestedPlacementPeriods = emptyList(),
           ),
         )
         .exchange()
@@ -572,6 +574,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     duration = 12,
                   ),
                 ),
+                requestedPlacementPeriods = emptyList(),
               ),
             )
             .exchange()
@@ -605,6 +608,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     duration = 12,
                   ),
                 ),
+                requestedPlacementPeriods = emptyList(),
               ),
             )
             .exchange()
@@ -638,6 +642,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     duration = 12,
                   ),
                 ),
+                requestedPlacementPeriods = emptyList(),
               ),
             )
             .exchange()
@@ -667,11 +672,41 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     duration = 12,
                   ),
                 ),
+                requestedPlacementPeriods = emptyList(),
               ),
             )
             .exchange()
             .expectStatus()
             .isBadRequest
+        }
+      }
+    }
+
+    @Test
+    fun `submitting a placement request application without dates returns an error`() {
+      givenAUser { _, jwt ->
+        givenAPlacementApplication(
+          createdByUser = userEntityFactory.produceAndPersist {
+            withYieldedProbationRegion { givenAProbationRegion() }
+          },
+          submittedAt = OffsetDateTime.now(),
+        ) { placementApplicationEntity ->
+          webTestClient.post()
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              SubmitPlacementApplication(
+                translatedDocument = mapOf("thingId" to 123),
+                placementType = PlacementType.additionalPlacement,
+                placementDates = emptyList(),
+                requestedPlacementPeriods = emptyList(),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Please provide at least one of placement dates or requested placement periods.")
         }
       }
     }
@@ -689,10 +724,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           ) { _, _ ->
             govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-            val placementDates = listOf(
-              PlacementDates(
-                expectedArrival = LocalDate.of(2025, 3, 10),
+            val cas1RequestedPlacementPeriod = listOf(
+              Cas1RequestedPlacementPeriod(
+                arrival = LocalDate.of(2025, 3, 10),
                 duration = 12,
+                arrivalFlexible = true,
               ),
             )
             val rawResult = webTestClient.post()
@@ -702,7 +738,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
                   placementType = PlacementType.additionalPlacement,
-                  placementDates = placementDates,
+                  placementDates = emptyList(),
+                  requestedPlacementPeriods = cas1RequestedPlacementPeriod,
                 ),
               )
               .exchange()
@@ -733,8 +770,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
-            assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(placementDates[0].duration)
-            assertThat(updatedPlacementApplication.expectedArrival).isEqualTo(placementDates[0].expectedArrival)
+            assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(cas1RequestedPlacementPeriod[0].duration)
+            assertThat(updatedPlacementApplication.expectedArrival).isEqualTo(cas1RequestedPlacementPeriod[0].arrival)
+            assertThat(updatedPlacementApplication.expectedArrivalFlexible).isTrue
 
             domainEventAsserter.assertDomainEventOfTypeStored(
               placementApplicationEntity.application.id,
@@ -793,6 +831,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   translatedDocument = mapOf("thingId" to 123),
                   placementType = PlacementType.additionalPlacement,
                   placementDates = placementDates,
+                  requestedPlacementPeriods = emptyList(),
                 ),
               )
               .exchange()

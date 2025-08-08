@@ -625,6 +625,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         translatedDocument = mapOf("key" to "value"),
         placementType = placementType,
         placementDates = placementDates,
+        requestedPlacementPeriods = emptyList(),
       ),
     )
 
