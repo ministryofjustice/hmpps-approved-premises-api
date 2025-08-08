@@ -2246,9 +2246,12 @@ class Cas1SpaceBookingTest {
           createdByUser = applicant,
         )
 
+        val (offenderDetails, _) = givenAnOffender()
+
         val reason = cas1ChangeRequestReasonEntityFactory.produceAndPersist()
 
         val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
           withPremises(premises)
           withPlacementRequest(placementRequest)
           withCreatedBy(applicant)
@@ -2409,6 +2412,8 @@ class Cas1SpaceBookingTest {
 
       val (user) = givenAUser()
 
+      val (offenderDetails, _) = givenAnOffender()
+
       val (placementRequest) = givenAPlacementRequest(
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -2444,6 +2449,7 @@ class Cas1SpaceBookingTest {
       )
 
       val spaceBookingBeforeUpdate = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
         withPremises(premises)
         withPlacementRequest(placementRequest)
         withApplication(placementRequest.application)
@@ -2496,6 +2502,8 @@ class Cas1SpaceBookingTest {
 
       val (user) = givenAUser()
 
+      val (offenderDetails, _) = givenAnOffender()
+
       val (placementRequest) = givenAPlacementRequest(
         assessmentAllocatedTo = user,
         createdByUser = user,
@@ -2522,6 +2530,7 @@ class Cas1SpaceBookingTest {
       )
 
       val spaceBookingBeforeUpdate = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
         withPremises(premises)
         withPlacementRequest(placementRequest)
         withApplication(placementRequest.application)
@@ -2568,7 +2577,10 @@ class Cas1SpaceBookingTest {
 
     @BeforeAll
     fun setupTestData() {
+      val (offenderDetails, _) = givenAnOffender()
+
       spaceBooking = givenACas1SpaceBooking(
+        crn = offenderDetails.otherIds.crn,
         expectedArrivalDate = LocalDate.now().minusDays(7),
         actualArrivalDate = LocalDate.now().minusDays(7),
         expectedDepartureDate = LocalDate.now().plusDays(7),

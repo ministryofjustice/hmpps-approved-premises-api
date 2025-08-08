@@ -29,16 +29,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
@@ -126,20 +127,7 @@ class Cas1BookingDomainEventServiceTest {
         assigneeUserStaffDetails,
       )
 
-      every {
-        offenderService.getOffenderByCrn(
-          "THEBOOKINGCRN",
-          "THEDELIUSUSERNAME",
-          true,
-        )
-      } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory()
-          .withGender("male")
-          .withCrn("THECRN")
-          .withNomsNumber("THENOMS")
-          .withDateOfBirth(LocalDate.of(1982, 3, 11))
-          .produce(),
-      )
+      setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
     }
 
     @Test
@@ -257,20 +245,7 @@ class Cas1BookingDomainEventServiceTest {
         assigneeUserStaffDetails,
       )
 
-      every {
-        offenderService.getOffenderByCrn(
-          "THEBOOKINGCRN",
-          "THEDELIUSUSERNAME",
-          true,
-        )
-      } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory()
-          .withGender("male")
-          .withCrn("THECRN")
-          .withNomsNumber("THENOMS")
-          .withDateOfBirth(LocalDate.of(1982, 3, 11))
-          .produce(),
-      )
+      setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
     }
 
     @Test
@@ -355,12 +330,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingChangedEvent(any()) } just Runs
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn("THEBOOKINGCRN")
-        .withNomsNumber("THENOMS")
-        .produce()
-
-      every { offenderService.getOffenderByCrn(booking.crn, changedBy.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
 
       val staffUserDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername) } returns ClientResult.Success(
@@ -440,12 +410,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingChangedEvent(any()) } just Runs
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn("THEBOOKINGCRN")
-        .withNomsNumber("THENOMS")
-        .produce()
-
-      every { offenderService.getOffenderByCrn(booking.crn, changedBy.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
 
       val staffUserDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername) } returns ClientResult.Success(
@@ -543,20 +508,7 @@ class Cas1BookingDomainEventServiceTest {
         assigneeUserStaffDetails,
       )
 
-      every {
-        offenderService.getOffenderByCrn(
-          "Application CRN",
-          "THEDELIUSUSERNAME",
-          false,
-        )
-      } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory()
-          .withGender("male")
-          .withCrn("THECRN")
-          .withNomsNumber("THENOMS")
-          .withDateOfBirth(LocalDate.of(1982, 3, 11))
-          .produce(),
-      )
+      setupOffenderServiceMockForNomsNumber("Application CRN", "THENOMS")
 
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
@@ -629,11 +581,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(bookingEntity.crn)
-        .produce()
-
-      every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber(bookingEntity.crn, "nomsId123")
 
       val staffUserDetails = StaffDetailFactory.staffDetail()
 
@@ -667,7 +615,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.bookingId).isEqualTo(bookingEntity.id)
       assertThat(domainEvent.crn).isEqualTo(application.crn)
-      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.nomsNumber).isEqualTo("nomsId123")
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 
@@ -675,8 +623,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(bookingEntity.id)
-      assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
-      assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(data.personReference.crn).isEqualTo(application.crn)
+      assertThat(data.personReference.noms).isEqualTo("nomsId123")
       assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
 
       assertThat(data.premises.id).isEqualTo(premises.id)
@@ -719,11 +667,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(bookingEntity.crn)
-        .produce()
-
-      every { offenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber(bookingEntity.crn, "nomsId123")
 
       val staffUserDetails = StaffDetailFactory.staffDetail()
 
@@ -757,7 +701,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
       assertThat(domainEvent.bookingId).isEqualTo(bookingEntity.id)
       assertThat(domainEvent.crn).isEqualTo(offlineApplication.crn)
-      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.nomsNumber).isEqualTo("nomsId123")
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 
@@ -765,8 +709,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.applicationId).isEqualTo(offlineApplication.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
       assertThat(data.bookingId).isEqualTo(bookingEntity.id)
-      assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
-      assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(data.personReference.crn).isEqualTo(bookingEntity.crn)
+      assertThat(data.personReference.noms).isEqualTo("nomsId123")
       assertThat(data.deliusEventNumber).isEqualTo(offlineApplication.eventNumber)
 
       assertThat(data.premises.id).isEqualTo(premises.id)
@@ -815,15 +759,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(spaceBooking.crn)
-        .produce()
-      every {
-        offenderService.getOffenderByCrn(
-          spaceBooking.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber(spaceBooking.crn, "THENOMS")
 
       val staffUserDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
@@ -857,7 +793,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(application.crn)
-      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.nomsNumber).isEqualTo("THENOMS")
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 
@@ -865,8 +801,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
       assertThat(data.bookingId).isEqualTo(spaceBooking.id)
-      assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
-      assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(data.personReference.crn).isEqualTo(spaceBooking.crn)
+      assertThat(data.personReference.noms).isEqualTo("THENOMS")
       assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
 
       assertThat(data.premises.id).isEqualTo(premises.id)
@@ -911,15 +847,7 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingCancelledEvent(any()) } just Runs
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(spaceBooking.crn)
-        .produce()
-      every {
-        offenderService.getOffenderByCrn(
-          spaceBooking.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber(spaceBooking.crn, "THENOMS")
 
       val staffUserDetails = StaffDetailFactory.staffDetail()
       every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
@@ -950,7 +878,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(offlineApplication.crn)
-      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.nomsNumber).isEqualTo("THENOMS")
       assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 
@@ -958,8 +886,8 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.applicationId).isEqualTo(offlineApplication.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
       assertThat(data.bookingId).isEqualTo(spaceBooking.id)
-      assertThat(data.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
-      assertThat(data.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(data.personReference.crn).isEqualTo(spaceBooking.crn)
+      assertThat(data.personReference.noms).isEqualTo("THENOMS")
       assertThat(data.deliusEventNumber).isEqualTo(offlineApplication.eventNumber)
 
       assertThat(data.premises.id).isEqualTo(premises.id)
@@ -998,11 +926,6 @@ class Cas1BookingDomainEventServiceTest {
       .withEventNumber("online app event number")
       .produce()
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn("THEBOOKINGCRN")
-      .withNomsNumber("THENOMS")
-      .produce()
-
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
     val domainEventArgument = slot<SaveCas1DomainEvent<BookingChangedEnvelope>>()
@@ -1025,7 +948,8 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingChangedEvent(any()) } just Runs
 
-      every { offenderService.getOffenderByCrn(booking.crn, changedBy.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
+
       every { apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         staffUserDetails,
@@ -1112,7 +1036,8 @@ class Cas1BookingDomainEventServiceTest {
 
       every { domainEventService.saveBookingChangedEvent(any()) } just Runs
 
-      every { offenderService.getOffenderByCrn(booking.crn, changedBy.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      setupOffenderServiceMockForNomsNumber("THEBOOKINGCRN", "THENOMS")
+
       every { apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         staffUserDetails,
@@ -1173,5 +1098,14 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.characteristics).isEqualTo(listOf(SpaceCharacteristic.isArsonSuitable))
       assertThat(data.previousCharacteristics).isEqualTo(listOf(SpaceCharacteristic.hasEnSuite))
     }
+  }
+
+  private fun setupOffenderServiceMockForNomsNumber(crn: String, nomsNumber: String) {
+    every {
+      offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)
+    } returns PersonSummaryInfoResult.Success.Full(
+      crn = crn,
+      summary = CaseSummaryFactory().withNomsId(nomsNumber).produce(),
+    )
   }
 }
