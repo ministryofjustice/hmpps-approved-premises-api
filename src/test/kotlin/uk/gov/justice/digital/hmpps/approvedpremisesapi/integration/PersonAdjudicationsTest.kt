@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulAdjudicationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import java.time.LocalDateTime
@@ -59,6 +60,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
   fun `Getting adjudications for a CRN that does not exist returns 404`() {
     givenAUser { userEntity, jwt ->
       val crn = "CRN123"
+      apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
       webTestClient.get()
         .uri("/people/$crn/adjudications")

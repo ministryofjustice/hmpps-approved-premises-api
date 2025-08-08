@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
@@ -9,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
@@ -61,16 +63,23 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Getting oasys sections for a CRN that does not exist returns 404`() {
+  fun `Getting oasys sections for a CRN for which access isn't allowed returns forbidden`() {
     givenAUser { userEntity, jwt ->
       val crn = "CRN123"
+
+      apDeliusContextAddSingleResponseToUserAccessCall(
+        CaseAccessFactory()
+          .withUserRestricted(true)
+          .withCrn(crn)
+          .produce(),
+      )
 
       webTestClient.get()
         .uri("/people/$crn/oasys/sections")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
-        .isNotFound
+        .isForbidden
     }
   }
 

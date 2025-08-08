@@ -2,11 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailOffenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
@@ -56,16 +58,23 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Getting offences for a CRN that does not exist returns 404`() {
+  fun `Getting offences for for which access isn't allowed returns forbidden`() {
     givenAUser { userEntity, jwt ->
       val crn = "CRN123"
+
+      apDeliusContextAddSingleResponseToUserAccessCall(
+        CaseAccessFactory()
+          .withUserRestricted(true)
+          .withCrn(crn)
+          .produce(),
+      )
 
       webTestClient.get()
         .uri("/people/$crn/offences")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
-        .isNotFound
+        .isForbidden
     }
   }
 
