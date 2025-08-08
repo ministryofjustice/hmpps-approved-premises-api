@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulAdjudicationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.adjudicationsAPIMockSuccessfulAdjudicationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import java.time.LocalDateTime
 
@@ -108,7 +108,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        prisonAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        adjudicationsAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")
@@ -147,7 +147,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        prisonAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        adjudicationsAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")
@@ -191,7 +191,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        prisonAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
+        adjudicationsAPIMockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, adjudicationsResponse)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/adjudications")
