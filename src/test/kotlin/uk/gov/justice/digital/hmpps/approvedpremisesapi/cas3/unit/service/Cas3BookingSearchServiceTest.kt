@@ -19,12 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.TestBookingSearchResult
@@ -163,12 +161,6 @@ class Cas3BookingSearchServiceTest {
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
         PersonSummaryInfoResult.NotFound("crn3"),
       )
-
-    every { mockOffenderService.getOffenderByCrn(any(), any()) } returnsMany listOf(
-      AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce()),
-      AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce()),
-      AuthorisableActionResult.NotFound(),
-    )
 
     val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
@@ -398,7 +390,7 @@ class Cas3BookingSearchServiceTest {
   }
 
   @Test
-  fun `throw exception when DB exception happend`() {
+  fun `throw exception when DB exception happened`() {
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -425,9 +417,6 @@ class Cas3BookingSearchServiceTest {
     }
     verify(exactly = 1) {
       mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any())
-    }
-    verify(exactly = 0) {
-      mockOffenderService.getOffenderByCrn(any(), any())
     }
   }
 }

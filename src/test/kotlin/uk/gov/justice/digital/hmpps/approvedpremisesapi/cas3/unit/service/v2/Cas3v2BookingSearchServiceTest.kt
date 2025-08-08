@@ -21,11 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.TestCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -163,12 +161,6 @@ class Cas3v2BookingSearchServiceTest {
         PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
         PersonSummaryInfoResult.NotFound("crn3"),
       )
-
-    every { mockOffenderService.getOffenderByCrn(any(), any()) } returnsMany listOf(
-      AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce()),
-      AuthorisableActionResult.Success(OffenderDetailsSummaryFactory().produce()),
-      AuthorisableActionResult.NotFound(),
-    )
 
     val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
@@ -425,9 +417,6 @@ class Cas3v2BookingSearchServiceTest {
     }
     verify(exactly = 1) {
       mockCas3v2BookingRepository.findBookings(any(), any(), any(), any())
-    }
-    verify(exactly = 0) {
-      mockOffenderService.getOffenderByCrn(any(), any())
     }
   }
 }
