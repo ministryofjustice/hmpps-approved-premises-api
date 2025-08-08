@@ -2541,6 +2541,28 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Given archive a premises without bedspaces when successfully passed all validations then returns 200 OK`() {
+      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt, premises ->
+        val archivePremises = Cas3ArchivePremises(LocalDate.now())
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archivePremises)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+          .jsonPath("status").isEqualTo("archived")
+
+        val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.archived)
+        assertThat(updatedPremises.endDate).isEqualTo(LocalDate.now())
+      }
+    }
+
+    @Test
     fun `Given archive a premises when archive date is more than 7 days in the past then returns 400 Bad Request`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         givenATemporaryAccommodationPremisesWithRoomsAndBeds(
