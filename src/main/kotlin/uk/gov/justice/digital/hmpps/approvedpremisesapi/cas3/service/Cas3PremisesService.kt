@@ -523,31 +523,33 @@ class Cas3PremisesService(
       .flatMap { it.beds.asSequence() }
       .filter { it.isCas3BedspaceOnline() || it.isCas3BedspaceUpcoming() }
 
-    val lastUpcomingBedspace = activeBedspaces.maxByOrNull { it.startDate!! }
+    if (activeBedspaces.any()) {
+      val lastUpcomingBedspace = activeBedspaces.maxByOrNull { it.startDate!! }
 
-    if (lastUpcomingBedspace?.startDate!! > endDate) {
-      return Cas3FieldValidationError(
-        mapOf(
-          "$.endDate" to Cas3ValidationMessage(
-            entityId = lastUpcomingBedspace.id.toString(),
-            message = "existingUpcomingBedspace",
-            value = lastUpcomingBedspace.startDate!!.plusDays(1).toString(),
+      if (lastUpcomingBedspace != null && lastUpcomingBedspace?.startDate!! > endDate) {
+        return Cas3FieldValidationError(
+          mapOf(
+            "$.endDate" to Cas3ValidationMessage(
+              entityId = lastUpcomingBedspace.id.toString(),
+              message = "existingUpcomingBedspace",
+              value = lastUpcomingBedspace.startDate!!.plusDays(1).toString(),
+            ),
           ),
-        ),
-      )
-    }
+        )
+      }
 
-    canArchiveBedspace(premisesId = premises.id, bedspaceId = null, endDate = endDate)?.let {
-      return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
+      canArchiveBedspace(premisesId = premises.id, bedspaceId = null, endDate = endDate)?.let {
+        return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
+      }
+
+      // archive all online bedspaces
+      activeBedspaces.forEach { bedspace ->
+        archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
+      }
     }
 
     // archive premises
     val archivedPremises = archivePremisesAndSaveDomainEvent(premises, endDate)
-
-    // archive all online bedspaces
-    activeBedspaces.forEach { bedspace ->
-      archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
-    }
 
     return success(archivedPremises)
   }
