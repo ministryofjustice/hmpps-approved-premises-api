@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
@@ -28,7 +28,7 @@ import java.util.UUID
 class Cas2ApplicationsSeedJob(
   private val repository: Cas2ApplicationRepository,
   private val userRepository: NomisUserRepository,
-  private val externalUserRepository: ExternalUserRepository,
+  private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
@@ -102,7 +102,7 @@ class Cas2ApplicationsSeedJob(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     log.info("Seeding status update $idx for application ${application.id}")
-    val assessor = externalUserRepository.findAll().random()
+    val assessor = cas2UserRepository.findAll().random()
     val status = findStatusAtPosition(idx)
     statusUpdateRepository.save(
       Cas2StatusUpdateEntity(

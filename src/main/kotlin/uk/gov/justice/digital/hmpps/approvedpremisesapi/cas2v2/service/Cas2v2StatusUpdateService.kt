@@ -10,10 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
@@ -148,11 +149,16 @@ class Cas2v2StatusUpdateService(
               label = newStatus.label,
               statusDetails = statusDetails?.let { statusTransformer.transformStatusDetailListToDetailItemList(it) },
             ),
-            updatedBy = ExternalUser(
+            updatedBy = Cas2User(
               username = assessor.username,
               name = assessor.name,
               email = assessor.email!!,
-              origin = "assessor.origin",
+              id = assessor.id,
+              userType = Cas2UserType.EXTERNAL,
+              deliusTeamCodes = assessor.deliusTeamCodes,
+              deliusStaffCode = assessor.deliusStaffCode,
+              isEnabled = assessor.isEnabled,
+              isActive = assessor.isActive,
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),

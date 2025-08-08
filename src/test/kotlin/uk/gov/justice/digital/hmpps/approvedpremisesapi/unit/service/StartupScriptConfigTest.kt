@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
@@ -37,8 +37,8 @@ class StartupScriptConfigTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockApplicationEntity = mockk<Cas2ApplicationEntity>(relaxed = true)
 
-  private val mockExternalUserRepository = mockk<ExternalUserRepository>()
-  private val mockExternalUserEntity = mockk<ExternalUserEntity>()
+  private val mockCas2UserRepository = mockk<Cas2UserRepository>()
+  private val mockCas2UserEntity = mockk<Cas2UserEntity>()
 
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val mockStatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
@@ -57,7 +57,7 @@ class StartupScriptConfigTest {
     seedConfig,
     mockNomisUserRepository,
     mockApplicationRepository,
-    mockExternalUserRepository,
+    mockCas2UserRepository,
     mockStatusUpdateRepository,
     mockAssessmentRepository,
     mockApplicationService,
@@ -77,7 +77,7 @@ class StartupScriptConfigTest {
     every { mockNomisUserRepository.findAll() } answers { listOf(mockNomisUserEntity) }
     every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
 
-    every { mockExternalUserRepository.findAll() } answers { listOf(mockExternalUserEntity) }
+    every { mockCas2UserRepository.findAll() } answers { listOf(mockCas2UserEntity) }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }
     every { mockApplicationRepository.saveAndFlush(any()) } answers { mockApplicationEntity }

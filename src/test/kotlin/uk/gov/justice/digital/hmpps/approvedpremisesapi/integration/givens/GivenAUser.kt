@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
@@ -286,9 +286,9 @@ fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
 
 fun IntegrationTestBase.givenACas2Assessor(
   id: UUID = UUID.randomUUID(),
-  block: (externalUserEntity: ExternalUserEntity, jwt: String) -> Unit,
+  block: (cas2UserEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
-  val user = externalUserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
     withUsername("CAS2_ASSESSOR_USER")
   }
