@@ -43,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -55,9 +54,6 @@ import java.util.UUID
 class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
-
-  @Autowired
-  lateinit var realBookingRepository: BookingRepository
 
   @Autowired
   lateinit var realSpaceBookingRepository: Cas1SpaceBookingRepository
@@ -275,7 +271,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val assessment = application.getLatestAssessment()!!
 
     webTestClient.post()
-      .uri("/assessments/${assessment.id}/notes")
+      .uri("/cas1/assessments/${assessment.id}/notes")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewClarificationNote(
@@ -294,7 +290,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val clarificationNote = assessment.clarificationNotes[0]
 
     webTestClient.put()
-      .uri("/assessments/${assessment.id}/notes/${clarificationNote.id}")
+      .uri("/cas1/assessments/${assessment.id}/notes/${clarificationNote.id}")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdatedClarificationNote(

@@ -13,8 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
@@ -31,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -50,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.Clock
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -60,7 +56,6 @@ class AssessmentService(
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val assessmentRepository: AssessmentRepository,
-  private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
   private val offenderService: OffenderService,
@@ -72,7 +67,6 @@ class AssessmentService(
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val assessmentListener: AssessmentListener,
-  private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val clock: Clock,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
 ) {
@@ -584,73 +578,6 @@ class AssessmentService(
     return CasResult.Success(savedAssessment)
   }
 
-  fun addAssessmentClarificationNote(
-    user: UserEntity,
-    assessmentId: UUID,
-    text: String,
-  ): CasResult<AssessmentClarificationNoteEntity> {
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
-      is CasResult.Success -> assessmentResult.value
-      is CasResult.Error -> return assessmentResult.reviseType()
-    }
-
-    val clarificationNoteToSave = AssessmentClarificationNoteEntity(
-      id = UUID.randomUUID(),
-      assessment = assessment,
-      createdByUser = user,
-      createdAt = OffsetDateTime.now(clock),
-      query = text,
-      response = null,
-      responseReceivedOn = null,
-    )
-    prePersistClarificationNote(clarificationNoteToSave)
-    val clarificationNoteEntity = assessmentClarificationNoteRepository.save(clarificationNoteToSave)
-
-    cas1AssessmentDomainEventService.furtherInformationRequested(assessment, clarificationNoteEntity)
-
-    return CasResult.Success(clarificationNoteEntity)
-  }
-
-  fun updateAssessmentClarificationNote(
-    user: UserEntity,
-    assessmentId: UUID,
-    id: UUID,
-    response: String,
-    responseReceivedOn: LocalDate,
-  ): CasResult<AssessmentClarificationNoteEntity> {
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
-      is CasResult.Success -> assessmentResult.value
-      is CasResult.Error -> return assessmentResult.reviseType()
-    }
-
-    val clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
-
-    if (clarificationNoteEntity === null) {
-      return CasResult.NotFound(entityType = "ClarificationNote", id = id.toString())
-    }
-
-    if (clarificationNoteEntity.createdByUser.id !== user.id) {
-      return CasResult.Unauthorised()
-    }
-
-    if (clarificationNoteEntity.response !== null) {
-      return CasResult.GeneralValidationError("A response has already been added to this note")
-    }
-
-    clarificationNoteEntity.response = response
-    clarificationNoteEntity.responseReceivedOn = responseReceivedOn
-
-    preUpdateClarificationNote(clarificationNoteEntity)
-    val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
-    // We need to save the assessment here to update the Application's status
-
-    val assessmentToUpdate = clarificationNoteEntity.assessment
-    preUpdateAssessment(assessmentToUpdate)
-    assessmentRepository.save(assessmentToUpdate)
-
-    return CasResult.Success(savedNote)
-  }
-
   fun addAssessmentReferralHistoryUserNote(
     user: UserEntity,
     assessmentId: UUID,
@@ -685,14 +612,6 @@ class AssessmentService(
         type = type,
       ),
     )
-  }
-
-  private fun prePersistClarificationNote(note: AssessmentClarificationNoteEntity) {
-    assessmentClarificationNoteListener.prePersist(note)
-  }
-
-  private fun preUpdateClarificationNote(note: AssessmentClarificationNoteEntity) {
-    assessmentClarificationNoteListener.preUpdate(note)
   }
 
   private fun prePersistAssessment(assessment: AssessmentEntity) {
