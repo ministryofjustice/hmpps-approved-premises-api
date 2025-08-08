@@ -537,6 +537,7 @@ class AssessmentService(
       )
   }
 
+  @Deprecated("Superseded by Cas3AssessmentService.reallocateAssessment()")
   private fun reallocateTemporaryAccommodationAssessment(
     assigneeUser: UserEntity,
     currentAssessment: TemporaryAccommodationAssessmentEntity,

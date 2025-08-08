@@ -175,6 +175,7 @@ class Cas1TaskService(
     }
   }
 
+  @Deprecated("Not used by CAS1.  For CAS3, superseded by Cas3AssessmentService.deallocateAssessment()")
   fun deallocateTask(
     requestUser: UserEntity,
     taskType: TaskType,
