@@ -749,6 +749,7 @@ class WithdrawalTest : IntegrationTestBase() {
             val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
             val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
             val bookingNoArrival = givenACas1SpaceBooking(
+              crn = application.crn,
               application = application,
               placementRequest = placementRequest1,
               actualArrivalDate = null,
@@ -943,6 +944,7 @@ class WithdrawalTest : IntegrationTestBase() {
             val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = placementAppCreator)
             val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
             val booking1PendingArrival = givenACas1SpaceBooking(
+              crn = application.crn,
               application = application,
               placementRequest = placementRequest1,
               actualArrivalDate = null,
@@ -952,6 +954,7 @@ class WithdrawalTest : IntegrationTestBase() {
             val placementApplication2 = createPlacementApplication(application, DateSpan(now(), duration = 2))
             val placementRequest2 = createPlacementRequest(application, placementApplication = placementApplication2)
             val booking2PendingArrival = givenACas1SpaceBooking(
+              crn = application.crn,
               application = application,
               placementRequest = placementRequest2,
               actualArrivalDate = null,
@@ -1073,6 +1076,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           val placementRequest = createPlacementRequest(application)
           val bookingPendingArrival = givenACas1SpaceBooking(
+            crn = application.crn,
             application = application,
             placementRequest = placementRequest,
             actualArrivalDate = null,

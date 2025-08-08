@@ -31,9 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.Cas1BookingCancelledEvent
@@ -104,11 +104,7 @@ class Cas1BookingDomainEventService(
 
     val application = placementRequest.application
 
-    val offenderDetails = getOffenderDetails(
-      application.crn,
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
+    val nomsNumber = getNomsNumber(application.crn)
 
     val staffDetails = getStaffDetails(user.deliusUsername)
 
@@ -117,7 +113,7 @@ class Cas1BookingDomainEventService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        nomsNumber = nomsNumber,
         occurredAt = bookingNotCreatedAt.toInstant(),
         data = BookingNotMadeEnvelope(
           id = domainEventId,
@@ -128,7 +124,7 @@ class Cas1BookingDomainEventService(
             applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
             personReference = PersonReference(
               crn = application.crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+              noms = nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = application.eventNumber,
             attemptedAt = bookingNotCreatedAt.toInstant(),
@@ -203,11 +199,7 @@ class Cas1BookingDomainEventService(
     val changedAt = bookingChangedInfo.changedAt
     val bookingId = bookingChangedInfo.bookingId
 
-    val offenderDetails = getOffenderDetails(
-      crn,
-      changedBy.deliusUsername,
-      ignoreLaoRestrictions = true,
-    )
+    val nomsNumber = getNomsNumber(crn)
 
     val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername)) {
       is ClientResult.Success -> staffDetailsResult.body
@@ -221,7 +213,7 @@ class Cas1BookingDomainEventService(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        nomsNumber = nomsNumber,
         occurredAt = changedAt.toInstant(),
         schemaVersion = 2,
         bookingId = if (bookingChangedInfo.isSpaceBooking) {
@@ -244,7 +236,7 @@ class Cas1BookingDomainEventService(
             bookingId = bookingId,
             personReference = PersonReference(
               crn = crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+              noms = nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = eventNumber,
             changedAt = changedAt.toInstant(),
@@ -319,11 +311,7 @@ class Cas1BookingDomainEventService(
     val domainEventId = UUID.randomUUID()
     val crn = bookingInfo.crn
 
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        else -> null
-      }
+    val nomsNumber = getNomsNumber(crn)
 
     val staffDetails = getStaffDetails(user.deliusUsername)
 
@@ -336,7 +324,7 @@ class Cas1BookingDomainEventService(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        nomsNumber = nomsNumber,
         occurredAt = bookingCreatedAt.toInstant(),
         bookingId = if (isSpaceBooking) {
           null
@@ -359,7 +347,7 @@ class Cas1BookingDomainEventService(
             bookingId = bookingInfo.id,
             personReference = PersonReference(
               crn = crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+              noms = nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = eventNumber,
             createdAt = bookingCreatedAt.toInstant(),
@@ -414,11 +402,7 @@ class Cas1BookingDomainEventService(
 
     val domainEventId = UUID.randomUUID()
 
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        else -> null
-      }
+    val nomsNumber = getNomsNumber(crn)
 
     val staffDetails = getStaffDetails(user.deliusUsername)
 
@@ -430,7 +414,7 @@ class Cas1BookingDomainEventService(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        nomsNumber = nomsNumber,
         occurredAt = now.toInstant(),
         bookingId = if (isSpaceBooking) {
           null
@@ -453,7 +437,7 @@ class Cas1BookingDomainEventService(
             bookingId = bookingId,
             personReference = PersonReference(
               crn = crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+              noms = nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = eventNumber,
             premises = Premises(
@@ -476,15 +460,6 @@ class Cas1BookingDomainEventService(
         ),
       ),
     )
-  }
-
-  private fun getOffenderDetails(
-    crn: String,
-    deliusUsername: String,
-    ignoreLaoRestrictions: Boolean,
-  ) = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLaoRestrictions)) {
-    is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    else -> null
   }
 
   private fun getStaffDetails(deliusUsername: String) = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
@@ -523,6 +498,11 @@ class Cas1BookingDomainEventService(
     isSpaceBooking = true,
     characteristics = criteria.toSpaceCharacteristics(),
   )
+
+  private fun getNomsNumber(crn: String) = when (val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)) {
+    is PersonSummaryInfoResult.Success.Full -> personSummaryInfoResult.summary.nomsId
+    else -> null
+  }
 
   private data class CancellationInfo(
     val bookingId: UUID,
