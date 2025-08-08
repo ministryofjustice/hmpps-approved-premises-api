@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -35,18 +34,6 @@ fun Cas1SpaceBookingEntity.toEmailBookingInfo(
   premises = premises,
   application = application,
   placementApplication = placementRequest?.placementApplication,
-)
-
-fun BookingEntity.toEmailBookingInfo(
-  application: ApprovedPremisesApplicationEntity,
-  placementApplication: PlacementApplicationEntity?,
-) = EmailBookingInfo(
-  bookingId = id,
-  arrivalDate = arrivalDate,
-  departureDate = departureDate,
-  premises = premises as ApprovedPremisesEntity,
-  application = application,
-  placementApplication = placementApplication,
 )
 
 data class EmailBookingInfo(

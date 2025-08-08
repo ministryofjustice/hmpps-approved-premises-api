@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 object Constants {
@@ -24,20 +22,9 @@ class Cas1BookingEmailService(
   fun spaceBookingMade(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
-  ) = bookingMade(
-    spaceBooking.toEmailBookingInfo(application),
-  )
+  ) {
+    val emailBookingInfo = spaceBooking.toEmailBookingInfo(application)
 
-  // before removing this, create unit tests for space booking by recycling this functions unit tests
-  fun bookingMade(
-    application: ApprovedPremisesApplicationEntity,
-    booking: BookingEntity,
-    placementApplication: PlacementApplicationEntity?,
-  ) = bookingMade(
-    booking.toEmailBookingInfo(application, placementApplication),
-  )
-
-  private fun bookingMade(emailBookingInfo: EmailBookingInfo) {
     val application = emailBookingInfo.application
     val placementApplication = emailBookingInfo.placementApplication
 
@@ -65,30 +52,13 @@ class Cas1BookingEmailService(
     }
   }
 
-  @Deprecated("This can be removed")
-  fun bookingWithdrawn(
-    application: ApprovedPremisesApplicationEntity,
-    booking: BookingEntity,
-    placementApplication: PlacementApplicationEntity?,
-    withdrawalTriggeredBy: WithdrawalTriggeredBy,
-  ) = bookingWithdrawn(
-    booking.toEmailBookingInfo(application, placementApplication),
-    withdrawalTriggeredBy,
-  )
-
   fun spaceBookingWithdrawn(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
     withdrawalTriggeredBy: WithdrawalTriggeredBy,
-  ) = bookingWithdrawn(
-    spaceBooking.toEmailBookingInfo(application),
-    withdrawalTriggeredBy,
-  )
-
-  private fun bookingWithdrawn(
-    emailBookingInfo: EmailBookingInfo,
-    withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) {
+    val emailBookingInfo = spaceBooking.toEmailBookingInfo(application)
+
     val application = emailBookingInfo.application
 
     val allPersonalisation =
@@ -117,24 +87,10 @@ class Cas1BookingEmailService(
     spaceBooking: Cas1SpaceBookingEntity,
     application: ApprovedPremisesApplicationEntity,
     updateType: Cas1SpaceBookingService.UpdateType,
-  ) = bookingAmended(
-    spaceBooking.toEmailBookingInfo(application),
-    shortened = updateType == Cas1SpaceBookingService.UpdateType.SHORTENING,
-  )
-
-  fun bookingAmended(
-    application: ApprovedPremisesApplicationEntity,
-    booking: BookingEntity,
-    placementApplication: PlacementApplicationEntity?,
-  ) = bookingAmended(
-    booking.toEmailBookingInfo(application, placementApplication),
-    shortened = false,
-  )
-
-  private fun bookingAmended(
-    emailBookingInfo: EmailBookingInfo,
-    shortened: Boolean,
   ) {
+    val emailBookingInfo = spaceBooking.toEmailBookingInfo(application)
+    val shortened = updateType == Cas1SpaceBookingService.UpdateType.SHORTENING
+
     val application = emailBookingInfo.application
     val emailPersonalisation = buildCommonPersonalisation(emailBookingInfo)
 
