@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
@@ -85,6 +86,7 @@ class Cas1AssessmentServiceTest {
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val assessmentListener = mockk<AssessmentListener>()
+  private val applicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
   private val approvedPremisesAssessmentRepositoryMock = mockk<ApprovedPremisesAssessmentRepository>()
   private val lockableAssessmentRepositoryMock = mockk<LockableAssessmentRepository>()
@@ -102,6 +104,7 @@ class Cas1AssessmentServiceTest {
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
     assessmentListener,
+    applicationStatusService,
     assessmentClarificationNoteListener,
     approvedPremisesAssessmentRepositoryMock,
     lockableAssessmentRepositoryMock,
@@ -336,7 +339,7 @@ class Cas1AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
-      every { assessmentListener.prePersist(any()) } returns Unit
+      every { applicationStatusService.assessmentCreated(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
@@ -375,6 +378,8 @@ class Cas1AssessmentServiceTest {
             timelinessCategory == Cas1ApplicationTimelinessCategory.emergency,
           )
         }
+
+        verify { applicationStatusService.assessmentCreated(assessment) }
       }
 
       verify {
@@ -404,7 +409,7 @@ class Cas1AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
-      every { assessmentListener.prePersist(any()) } returns Unit
+      every { applicationStatusService.assessmentCreated(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns null

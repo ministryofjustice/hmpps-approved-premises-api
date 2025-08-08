@@ -14,9 +14,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -93,6 +95,40 @@ class Cas1ApplicationStatusServiceTest {
       verify { applicationRepository.save(application) }
 
       assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
+    }
+  }
+
+  @Nested
+  inner class AssessmentCreated {
+
+    @Test
+    fun `If not allocated to user, set application status to UNALLOCATED_ASSESSMENT`() {
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withAllocatedToUser(null)
+        .produce()
+
+      service.assessmentCreated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+    }
+
+    @Test
+    fun `If allocated to user, set application status to AWAITING_ASSESSMENT`() {
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaults().produce())
+        .produce()
+
+      service.assessmentCreated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
     }
   }
 

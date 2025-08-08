@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -28,6 +29,16 @@ class Cas1ApplicationStatusService(
   fun applicationWithdrawn(application: ApprovedPremisesApplicationEntity) {
     application.status = ApprovedPremisesApplicationStatus.WITHDRAWN
     applicationRepository.save(application)
+  }
+
+  fun assessmentCreated(assessment: ApprovedPremisesAssessmentEntity) {
+    if (assessment.allocatedToUser == null) {
+      (assessment.application as ApprovedPremisesApplicationEntity).status =
+        ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT
+    } else {
+      (assessment.application as ApprovedPremisesApplicationEntity).status =
+        ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT
+    }
   }
 
   fun spaceBookingMade(spaceBooking: Cas1SpaceBookingEntity) {
