@@ -47,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -85,7 +84,6 @@ class Cas1AssessmentServiceTest {
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
-  private val assessmentListener = mockk<AssessmentListener>()
   private val applicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
   private val approvedPremisesAssessmentRepositoryMock = mockk<ApprovedPremisesAssessmentRepository>()
@@ -103,7 +101,6 @@ class Cas1AssessmentServiceTest {
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
-    assessmentListener,
     applicationStatusService,
     assessmentClarificationNoteListener,
     approvedPremisesAssessmentRepositoryMock,
@@ -842,7 +839,7 @@ class Cas1AssessmentServiceTest {
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { approvedPremisesAssessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every {
@@ -1105,7 +1102,7 @@ class Cas1AssessmentServiceTest {
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { approvedPremisesAssessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every {
@@ -1194,7 +1191,7 @@ class Cas1AssessmentServiceTest {
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { approvedPremisesAssessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every {
@@ -1506,7 +1503,7 @@ class Cas1AssessmentServiceTest {
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { approvedPremisesAssessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { cas1AssessmentDomainEventService.assessmentRejected(any(), any(), any(), any()) } just Runs
@@ -1593,7 +1590,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
@@ -1626,7 +1623,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
@@ -1659,7 +1656,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
@@ -1692,7 +1689,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-      every { assessmentListener.preUpdate(any()) } returns Unit
+      every { applicationStatusService.assessmentUpdated(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
       every { cas1AssessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any(), any()) } just Runs
 
