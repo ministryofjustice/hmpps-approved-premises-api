@@ -197,6 +197,7 @@ class Cas1TaskServiceTest {
     assertThatCasResult(result).isUnauthorised()
   }
 
+  @Deprecated("Superseded by Cas3AssessmentServiceTest.`deallocateAssessment deallocates an assessment`")
   @Test
   fun `deallocateTask deallocates an assessment`() {
     every { userAccessServiceMock.userCanDeallocateTask(any()) } returns true
