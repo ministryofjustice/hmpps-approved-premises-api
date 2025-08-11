@@ -26,6 +26,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
   CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList, experimental = true),
   CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView, experimental = true),
 
+  CAS1_EXPERIMENTAL_NEW_ASSIGN_KEYWORKER_FLOW(ApprovedPremisesUserPermission.experimentalNewAssignKeyworkerFlow, experimental = true),
+
   CAS1_EXPERIMENTAL_NEW_REQUEST_FOR_PLACEMENT_FLOW(ApprovedPremisesUserPermission.experimentalNewRequestForPlacementFlow, experimental = true),
 
   CAS1_OFFLINE_APPLICATION_VIEW(ApprovedPremisesUserPermission.offlineApplicationView),
