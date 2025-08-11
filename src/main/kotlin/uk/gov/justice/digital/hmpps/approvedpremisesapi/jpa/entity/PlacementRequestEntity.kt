@@ -30,6 +30,61 @@ import java.util.UUID
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
+
+  companion object {
+    private const val DASHBOARD_SELECT = """
+      SELECT
+      pq.duration AS requestedPlacementDuration,
+      pq.expected_arrival AS requestedPlacementArrivalDate,
+      pq.id AS id,
+      application.crn AS personCrn,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS personTier,
+      pq.application_id AS applicationId,
+      apa.name as personName,
+      pq.is_parole as isParole,
+      pq.created_at as created_at,
+      CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,
+      application.submitted_at::date AS applicationSubmittedDate,
+      spaceBookingPremises.name AS bookingPremisesName,
+      spaceBooking.canonical_arrival_date AS bookingArrivalDate,
+      CASE WHEN spaceBooking.id IS NOT NULL THEN 'matched' WHEN bnm.id IS NOT NULL THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
+    """
+
+    private const val DASHBOARD_FROM_CLAUSE = """
+      FROM
+      placement_requests pq
+      LEFT JOIN approved_premises_applications apa ON apa.id = pq.application_id
+      LEFT JOIN applications application ON application.id = pq.application_id
+      LEFT OUTER JOIN LATERAL (
+        SELECT id, premises_id, canonical_arrival_date
+        FROM cas1_space_bookings b
+        WHERE b.placement_request_id = pq.id AND b.cancellation_occurred_at IS NULL
+        ORDER BY b.canonical_arrival_date ASC
+        LIMIT 1
+      ) spaceBooking ON TRUE
+      LEFT JOIN premises spaceBookingPremises ON spaceBooking.premises_id = spaceBookingPremises.id
+      LEFT JOIN booking_not_mades bnm ON bnm.placement_request_id = pq.id
+      WHERE
+      (:tier IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier)      
+      AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
+      AND (CAST(:arrivalDateTo AS DATE) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
+      AND (
+        :requestType IS NULL OR 
+        (
+            (:requestType = 'parole' AND pq.is_parole IS TRUE)
+            OR
+            (:requestType = 'standardRelease' AND pq.is_parole IS FALSE)
+        )
+      )
+      AND (:cruManagementAreaId IS NULL OR apa.cas1_cru_management_area_id = :cruManagementAreaId)
+      AND (:crnOrName IS NULL OR (application.crn = UPPER(:crnOrName)) OR (apa.name LIKE UPPER('%' || :crnOrName || '%')))
+      AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
+      AND (:status IS NULL OR 
+        CASE WHEN spaceBooking.id IS NOT NULL THEN 'matched'
+            WHEN bnm.id IS NOT NULL THEN 'unableToMatch'
+            ELSE 'notMatched' END = :status)    
+    """
+  }
   fun findByApplicationId(applicationId: UUID): List<PlacementRequestEntity>
 
   fun findByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementRequestEntity>
@@ -123,55 +178,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   ): Page<PlacementRequestEntity>
 
   @Query(
-    """
-      SELECT
-      pq.duration AS requestedPlacementDuration,
-      pq.expected_arrival AS requestedPlacementArrivalDate,
-      pq.id AS id,
-      application.crn AS personCrn,
-      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS personTier,
-      pq.application_id AS applicationId,
-      apa.name as personName,
-      pq.is_parole as isParole,
-      pq.created_at as created_at,
-      CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,
-      application.submitted_at::date AS applicationSubmittedDate,
-      spaceBookingPremises.name AS bookingPremisesName,
-      spaceBooking.canonical_arrival_date AS bookingArrivalDate,
-      CASE WHEN spaceBooking.id IS NOT NULL THEN 'matched' WHEN bnm.id IS NOT NULL THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
-      FROM
-      placement_requests pq
-      LEFT JOIN approved_premises_applications apa ON apa.id = pq.application_id
-      LEFT JOIN applications application ON application.id = pq.application_id
-      LEFT OUTER JOIN LATERAL (
-        SELECT id, premises_id, canonical_arrival_date
-        FROM cas1_space_bookings b
-        WHERE b.placement_request_id = pq.id AND b.cancellation_occurred_at IS NULL
-        ORDER BY b.canonical_arrival_date ASC
-        LIMIT 1
-      ) spaceBooking ON TRUE
-      LEFT JOIN premises spaceBookingPremises ON spaceBooking.premises_id = spaceBookingPremises.id
-      LEFT JOIN booking_not_mades bnm ON bnm.placement_request_id = pq.id
-      WHERE
-      (:tier IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier)      
-      AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
-      AND (CAST(:arrivalDateTo AS DATE) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
-      AND (
-        :requestType IS NULL OR 
-        (
-            (:requestType = 'parole' AND pq.is_parole IS TRUE)
-            OR
-            (:requestType = 'standardRelease' AND pq.is_parole IS FALSE)
-        )
-      )
-      AND (:cruManagementAreaId IS NULL OR apa.cas1_cru_management_area_id = :cruManagementAreaId)
-      AND (:crnOrName IS NULL OR (application.crn = UPPER(:crnOrName)) OR (apa.name LIKE UPPER('%' || :crnOrName || '%')))
-      AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
-      AND (:status IS NULL OR 
-        CASE WHEN spaceBooking.id IS NOT NULL THEN 'matched'
-            WHEN bnm.id IS NOT NULL THEN 'unableToMatch'
-            ELSE 'notMatched' END = :status)    
-    """,
+    DASHBOARD_SELECT + DASHBOARD_FROM_CLAUSE,
+    countQuery = "SELECT COUNT(*) $DASHBOARD_FROM_CLAUSE",
     nativeQuery = true,
   )
   fun allForCas1Dashboard(

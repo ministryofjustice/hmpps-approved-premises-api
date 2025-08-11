@@ -439,29 +439,21 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     fun `Returns paginated placement requests`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
-          val placementRequest = createPlacementRequest(offenderDetails, user)
+          repeat(11) { createPlacementRequest(offenderDetails, user) }
 
-          webTestClient.get()
+          val response = webTestClient.get()
             .uri("/cas1/placement-requests?page=1")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
             .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
-            .expectHeader().valueEquals("X-Pagination-TotalResults", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 11)
             .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
-                    placementRequest,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                  ),
-                ),
-              ),
-            )
+            .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+          assertThat(response).hasSize(10)
         }
       }
     }
