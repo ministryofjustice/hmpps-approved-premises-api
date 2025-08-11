@@ -33,6 +33,7 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
   CAS1_OUT_OF_SERVICE_BED_CREATE(ApprovedPremisesUserPermission.outOfServiceBedCreate),
   CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD(ApprovedPremisesUserPermission.outOfServiceBedCreateBedOnHold),
   CAS1_OUT_OF_SERVICE_BED_CANCEL(ApprovedPremisesUserPermission.outOfServiceBedCancel),
+  CAS1_OUT_OF_SERVICE_BED_NO_DATE_LIMIT(ApprovedPremisesUserPermission.outOfServiceNoDateLimit),
 
   CAS1_PLACEMENT_REQUEST_RECORD_UNABLE_TO_MATCH(ApprovedPremisesUserPermission.placementRequestRecordUnableToMatch),
 
