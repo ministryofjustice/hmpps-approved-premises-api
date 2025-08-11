@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -51,7 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffDetailByCodeCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -1770,15 +1769,16 @@ class Cas1SpaceBookingTest {
     fun `Recording key worker returns OK and emits domain event`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      val keyWorker = ContextStaffMemberFactory().produce()
-      apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
+      val keyWorkerStaffDetail = StaffDetailFactory.staffDetail(code = "CodeXYZ")
+
+      apDeliusContextMockSuccessfulStaffDetailByCodeCall(keyWorkerStaffDetail)
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1AssignKeyWorker(
-            keyWorker.code,
+            staffCode = "CodeXYZ",
           ),
         )
         .exchange()
@@ -1791,8 +1791,8 @@ class Cas1SpaceBookingTest {
       )
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
-      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorker.name.forename} ${keyWorker.name.surname}")
-      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo(keyWorker.code)
+      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorkerStaffDetail.name.forenames()} ${keyWorkerStaffDetail.name.surname}")
+      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("CodeXYZ")
       assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
     }
   }

@@ -18,12 +18,13 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -1080,7 +1081,6 @@ class Cas1BookingManagementServiceTest {
 
   @Nested
   inner class RecordKeyWorker {
-
     private val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
       .withActualArrivalDate(LocalDate.now().minusDays(1))
       .withActualArrivalTime(LocalTime.now())
@@ -1090,18 +1090,10 @@ class Cas1BookingManagementServiceTest {
       .withDefaults()
       .produce()
 
-    val keyWorker = ContextStaffMemberFactory().produce()
-
     @BeforeEach
     fun setup() {
       every { cas1PremisesService.findPremisesById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-      every {
-        staffMemberService.getStaffMemberByCodeForPremise(
-          keyWorker.code,
-          premises.qCode,
-        )
-      } returns CasResult.Success(keyWorker)
     }
 
     @Test
@@ -1111,7 +1103,7 @@ class Cas1BookingManagementServiceTest {
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+        keyWorker = Cas1AssignKeyWorker("StaffCode1"),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -1129,7 +1121,7 @@ class Cas1BookingManagementServiceTest {
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+        keyWorker = Cas1AssignKeyWorker("StaffCode1"),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -1143,16 +1135,13 @@ class Cas1BookingManagementServiceTest {
     @Test
     fun `Returns validation error if no staff record exists with the given staff code`() {
       every {
-        staffMemberService.getStaffMemberByCodeForPremise(
-          keyWorker.code,
-          premises.qCode,
-        )
+        staffMemberService.getStaffMemberByCode("StaffCode1")
       } returns CasResult.NotFound("staff", "qcode")
 
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+        keyWorker = Cas1AssignKeyWorker("StaffCode1"),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -1170,10 +1159,22 @@ class Cas1BookingManagementServiceTest {
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(any(), any(), any(), any()) } returns Unit
 
+      val staffDetail = StaffDetailFactory.staffDetail(
+        code = "StaffCode1",
+        name = PersonName(
+          forename = "Jeff Jeffity",
+          surname = "Jefferson",
+        ),
+      )
+
+      every {
+        staffMemberService.getStaffMemberByCode("StaffCode1")
+      } returns CasResult.Success(staffDetail)
+
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(keyWorker.code),
+        keyWorker = Cas1AssignKeyWorker("StaffCode1"),
       )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
@@ -1187,8 +1188,8 @@ class Cas1BookingManagementServiceTest {
       assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
       assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
 
-      assertThat(keyWorker.code).isEqualTo(updatedSpaceBooking.keyWorkerStaffCode)
-      assertThat("${keyWorker.name.forename} ${keyWorker.name.surname}").isEqualTo(updatedSpaceBooking.keyWorkerName)
+      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("StaffCode1")
+      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("Jeff Jeffity Jefferson")
       assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
     }
   }

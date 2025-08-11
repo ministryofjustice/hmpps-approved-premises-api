@@ -189,7 +189,7 @@ class Cas1BookingManagementService(
       return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
     }
 
-    val staffMemberResponse = staffMemberService.getStaffMemberByCodeForPremise(keyWorker.staffCode, premises!!.qCode)
+    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorker.staffCode)
     if (staffMemberResponse !is CasResult.Success) {
       return "$.keyWorker.staffCode" hasSingleValidationError "notFound"
     }
