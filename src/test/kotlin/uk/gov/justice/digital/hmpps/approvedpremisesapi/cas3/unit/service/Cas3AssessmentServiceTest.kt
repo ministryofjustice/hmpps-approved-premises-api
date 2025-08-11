@@ -21,12 +21,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.Optional
 import java.util.UUID
 
@@ -36,7 +42,19 @@ class Cas3AssessmentServiceTest {
   lateinit var assessmentRepository: AssessmentRepository
 
   @MockK
+  lateinit var temporaryAccommodationAssessmentRepository: TemporaryAccommodationAssessmentRepository
+
+  @MockK
+  lateinit var lockableAssessmentRepository: LockableAssessmentRepository
+
+  @MockK
+  lateinit var assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository
+
+  @MockK
   lateinit var userAccessService: UserAccessService
+
+  @MockK
+  lateinit var userService: UserService
 
   @MockK
   lateinit var cas3DomainEventService: Cas3DomainEventService
@@ -188,6 +206,85 @@ class Cas3AssessmentServiceTest {
     assertThat(entity).isNotNull()
     assertThat(entity.releaseDate).isBefore(entity.accommodationRequiredFromDate)
     verify(exactly = 1) { cas3DomainEventService.saveAssessmentUpdatedEvent(any()) }
+  }
+
+  @Test
+  fun `deallocateAssessment deallocates an assessment`() {
+    val user = UserEntityFactory().withDefaultProbationRegion().produce()
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(user.probationRegion)
+      .withCreatedByUser(user)
+      .produce()
+
+    val assigneeUser = UserEntityFactory().withDefaultProbationRegion().produce()
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(assessment.allocatedToUser).isNotNull()
+    assertThat(assessment.allocatedAt).isNotNull()
+    assertThat(assessment.decision).isNotNull()
+    assertThat(assessment.submittedAt).isNotNull()
+
+    every { userAccessService.userCanDeallocateTask(user) } returns true
+    every { temporaryAccommodationAssessmentRepository.findById(assessment.id) } returns Optional.of(assessment)
+    every { assessmentRepository.save(any()) } returnsArgument 0
+    every { userService.getUserForRequest() } returns user
+    every { assessmentReferralHistoryNoteRepository.save(any()) } returnsArgument 0
+
+    val result = assessmentService.deallocateAssessment(user, assessment.id)
+
+    assertThat(assessment.allocatedToUser).isNull()
+    assertThat(assessment.allocatedAt).isNull()
+    assertThat(assessment.decision).isNull()
+    assertThat(assessment.submittedAt).isNull()
+    assertThat(assessment.referralHistoryNotes).hasSize(1)
+
+    assertThat(result is CasResult.Success).isTrue
+    assertThat((result as CasResult.Success).value).isNotNull()
+  }
+
+  @Test
+  fun `reallocateAssessment reallocates an assessment`() {
+    val otherUser = UserEntityFactory().withDefaultProbationRegion().produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(otherUser.probationRegion)
+      .withCreatedByUser(otherUser)
+      .produce()
+
+    val originalAllocationTime = OffsetDateTime.now()
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(otherUser)
+      .withAllocatedAt(originalAllocationTime)
+      .produce()
+
+    assertThat(assessment.allocatedToUser).isEqualTo(otherUser)
+    assertThat(assessment.allocatedAt).isEqualTo(originalAllocationTime)
+    assertThat(assessment.decision).isNotNull()
+    assertThat(assessment.referralHistoryNotes).hasSize(0)
+
+    val user = UserEntityFactory().withDefaultProbationRegion().produce()
+
+    every { userAccessService.userCanReallocateTask(user) } returns true
+    every { lockableAssessmentRepository.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
+    every { temporaryAccommodationAssessmentRepository.findById(assessment.id) } returns Optional.of(assessment)
+    every { assessmentRepository.save(any()) } returnsArgument 0
+    every { userService.getUserForRequest() } returns user
+    every { assessmentReferralHistoryNoteRepository.save(any()) } returnsArgument 0
+
+    val result = assessmentService.reallocateAssessmentToMe(user, assessment.id)
+
+    assertThat(assessment.allocatedToUser).isEqualTo(user)
+    assertThat(assessment.allocatedAt).isAfter(originalAllocationTime)
+    assertThat(assessment.decision).isNull()
+    assertThat(assessment.referralHistoryNotes).hasSize(1)
+
+    assertThat(result is CasResult.Success).isTrue
+    assertThat((result as CasResult.Success).value).isNotNull()
   }
 
   private fun updateAssessmentEntity(
