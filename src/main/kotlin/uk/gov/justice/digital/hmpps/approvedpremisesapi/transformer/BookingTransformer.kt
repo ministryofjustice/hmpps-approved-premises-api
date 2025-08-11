@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
@@ -17,7 +18,7 @@ import java.time.LocalDate
 @Component
 class BookingTransformer(
   private val personTransformer: PersonTransformer,
-  private val arrivalTransformer: ArrivalTransformer,
+  private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
   private val departureTransformer: DepartureTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
@@ -41,7 +42,7 @@ class BookingTransformer(
       // key worker is a legacy CAS1 only field that is no longer populated. This will be removed once migration to space bookings is complete
       keyWorker = null,
       status = determineStatus(jpa),
-      arrival = arrivalTransformer.transformJpaToApi(jpa.arrival),
+      arrival = cas3ArrivalTransformer.transformJpaToArrival(jpa.arrival),
       departure = departureTransformer.transformJpaToApi(jpa.departure),
       departures = jpa.departures.map { departureTransformer.transformJpaToApi(it)!! },
       nonArrival = nonArrivalTransformer.transformJpaToApi(jpa.nonArrival),

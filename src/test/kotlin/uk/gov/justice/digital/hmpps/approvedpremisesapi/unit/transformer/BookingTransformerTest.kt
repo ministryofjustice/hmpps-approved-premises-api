@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
@@ -53,7 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
@@ -68,7 +68,7 @@ import java.util.UUID
 
 class BookingTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
-  private val mockArrivalTransformer = mockk<ArrivalTransformer>()
+  private val mockCas3ArrivalTransformer = mockk<Cas3ArrivalTransformer>()
   private val mockNonArrivalTransformer = mockk<NonArrivalTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
   private val mockCas3ConfirmationTransformer = mockk<Cas3ConfirmationTransformer>()
@@ -81,7 +81,7 @@ class BookingTransformerTest {
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
-    mockArrivalTransformer,
+    mockCas3ArrivalTransformer,
     mockDepartureTransformer,
     mockNonArrivalTransformer,
     mockCancellationTransformer,
@@ -169,7 +169,7 @@ class BookingTransformerTest {
   private val nullConfirmationEntity: Cas3ConfirmationEntity? = null
 
   init {
-    every { mockArrivalTransformer.transformJpaToApi(null) } returns null
+    every { mockCas3ArrivalTransformer.transformJpaToArrival(null) } returns null
     every { mockNonArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockCancellationTransformer.transformJpaToApi(null) } returns null
     every { mockCas3ConfirmationTransformer.transformJpaToApi(nullConfirmationEntity) } returns null
@@ -445,7 +445,7 @@ class BookingTransformerTest {
       )
     }
 
-    every { mockArrivalTransformer.transformJpaToApi(arrivalBooking.arrival) } returns Arrival(
+    every { mockCas3ArrivalTransformer.transformJpaToArrival(arrivalBooking.arrival) } returns Arrival(
       bookingId = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3"),
       arrivalDate = LocalDate.parse("2022-08-10"),
       arrivalTime = "00:00:00",
@@ -752,7 +752,7 @@ class BookingTransformerTest {
       )
     }
 
-    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+    every { mockCas3ArrivalTransformer.transformJpaToArrival(departedBooking.arrival) } returns Arrival(
       bookingId = bookingId,
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
@@ -933,7 +933,7 @@ class BookingTransformerTest {
       )
     }
 
-    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+    every { mockCas3ArrivalTransformer.transformJpaToArrival(departedBooking.arrival) } returns Arrival(
       bookingId = bookingId,
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
@@ -1144,7 +1144,7 @@ class BookingTransformerTest {
       )
     }
 
-    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+    every { mockCas3ArrivalTransformer.transformJpaToArrival(departedBooking.arrival) } returns Arrival(
       bookingId = bookingId,
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
@@ -1359,7 +1359,7 @@ class BookingTransformerTest {
       )
     }
 
-    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+    every { mockCas3ArrivalTransformer.transformJpaToArrival(departedBooking.arrival) } returns Arrival(
       bookingId = bookingId,
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),
@@ -1585,7 +1585,7 @@ class BookingTransformerTest {
       )
     }
 
-    every { mockArrivalTransformer.transformJpaToApi(departedBooking.arrival) } returns Arrival(
+    every { mockCas3ArrivalTransformer.transformJpaToArrival(departedBooking.arrival) } returns Arrival(
       bookingId = bookingId,
       arrivalDate = LocalDate.parse("2022-08-10"),
       expectedDepartureDate = LocalDate.parse("2022-08-16"),

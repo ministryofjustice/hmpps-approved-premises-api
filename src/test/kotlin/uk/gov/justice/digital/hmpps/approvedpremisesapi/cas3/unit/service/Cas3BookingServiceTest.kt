@@ -682,10 +682,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.expectedDepartureDate", "beforeBookingArrivalDate"),
-      )
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.expectedDepartureDate", "beforeBookingArrivalDate")
+
       verify(exactly = 0) { mockArrivalRepository.save(any()) }
       verify(exactly = 0) { mockBookingRepository.save(any()) }
       verify(exactly = 0) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, user) }
@@ -714,13 +712,13 @@ class Cas3BookingServiceTest {
         user = userEntity,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.arrivalDate).isEqualTo(arrivalDate)
-      assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
-      assertThat(result.entity.expectedDepartureDate).isEqualTo(expectedDepartureDate)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
+      assertThatCasResult(result).isSuccess().with { arrival ->
+        assertThat(arrival.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(arrival.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(arrival.expectedDepartureDate).isEqualTo(expectedDepartureDate)
+        assertThat(arrival.notes).isEqualTo("notes")
+        assertThat(arrival.booking.status).isEqualTo(BookingStatus.arrived)
+      }
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }
@@ -749,13 +747,13 @@ class Cas3BookingServiceTest {
         user = userEntity,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.arrivalDate).isEqualTo(arrivalDate)
-      assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
-      assertThat(result.entity.expectedDepartureDate).isEqualTo(expectedDepartureDate)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
+      assertThatCasResult(result).isSuccess().with { arrival ->
+        assertThat(arrival.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(arrival.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(arrival.expectedDepartureDate).isEqualTo(expectedDepartureDate)
+        assertThat(arrival.notes).isEqualTo("notes")
+        assertThat(arrival.booking.status).isEqualTo(BookingStatus.arrived)
+      }
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }
@@ -777,13 +775,13 @@ class Cas3BookingServiceTest {
         user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.arrivalDate).isEqualTo(arrivalDate)
-      assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
-      assertThat(result.entity.expectedDepartureDate).isEqualTo(expectedDepartureDate)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
+      assertThatCasResult(result).isSuccess().with { arrival ->
+        assertThat(arrival.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(arrival.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(arrival.expectedDepartureDate).isEqualTo(expectedDepartureDate)
+        assertThat(arrival.notes).isEqualTo("notes")
+        assertThat(arrival.booking.status).isEqualTo(BookingStatus.arrived)
+      }
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }

@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.New
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3VoidBedspaceService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspaceCancellationTransformer
@@ -66,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTransformer
@@ -94,7 +94,7 @@ class PremisesController(
   private val premisesTransformer: PremisesTransformer,
   private val bookingTransformer: BookingTransformer,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
-  private val arrivalTransformer: ArrivalTransformer,
+  private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
   private val cas3ConfirmationTransformer: Cas3ConfirmationTransformer,
   private val departureTransformer: DepartureTransformer,
@@ -415,9 +415,9 @@ class PremisesController(
       user = user,
     )
 
-    val arrival = extractResultEntityOrThrow(result)
+    val arrival = extractEntityFromCasResult(result)
 
-    return ResponseEntity.ok(arrivalTransformer.transformJpaToApi(arrival))
+    return ResponseEntity.ok(cas3ArrivalTransformer.transformJpaToArrival(arrival))
   }
 
   override fun premisesPremisesIdBookingsBookingIdCancellationsPost(
