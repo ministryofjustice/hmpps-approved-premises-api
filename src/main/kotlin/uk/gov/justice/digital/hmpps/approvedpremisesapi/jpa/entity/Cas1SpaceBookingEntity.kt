@@ -450,6 +450,13 @@ data class Cas1SpaceBookingEntity(
   var canonicalArrivalDate: LocalDate,
   var canonicalDepartureDate: LocalDate,
   val crn: String,
+  /**
+   * We are in the process of capturing keyworkers as keyWorkerUser instead of keyWorkerStaffCode/Name
+   *
+   * Until this is done, both fields will be populated
+   */
+  @ManyToOne(fetch = FetchType.LAZY)
+  var keyWorkerUser: UserEntity? = null,
   var keyWorkerStaffCode: String?,
   var keyWorkerName: String?,
   /**

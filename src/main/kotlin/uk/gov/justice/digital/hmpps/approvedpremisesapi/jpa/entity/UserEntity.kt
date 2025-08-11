@@ -39,6 +39,8 @@ interface UserRepository :
 
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
 
+  fun findByDeliusStaffCode(staffCode: String): UserEntity?
+
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role and u.isActive = true")
   fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
 

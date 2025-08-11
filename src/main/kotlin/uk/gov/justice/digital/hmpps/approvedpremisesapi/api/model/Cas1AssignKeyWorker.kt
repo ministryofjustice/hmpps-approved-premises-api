@@ -1,14 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import java.util.UUID
 
 /**
- *
- * @param staffCode
+ * Whilst transitioning to using users to represent key workers,
+ * either the staff code or user id can be provided
  */
 data class Cas1AssignKeyWorker(
-
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("staffCode", required = true) val staffCode: kotlin.String,
+  val staffCode: String?,
+  val userId: UUID?,
 )
