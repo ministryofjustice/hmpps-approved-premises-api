@@ -1,8 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
+import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.UsersApiDelegate
+import org.springframework.stereotype.Controller
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -15,26 +19,30 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
 
-@Service
+@Controller
+@RequestMapping("\${openapi.approvedPremises.base-path:}")
 class UsersController(
   private val userService: UserService,
   private val userTransformer: UserTransformer,
   private val userAccessService: Cas1UserAccessService,
-) : UsersApiDelegate {
+) {
 
-  override fun usersGet(
-    xServiceName: ServiceName,
-    roles: List<ApprovedPremisesUserRole>?,
-    qualifications: List<UserQualification>?,
-    probationRegionId: UUID?,
-    apAreaId: UUID?,
-    cruManagementAreaId: UUID?,
-    page: Int?,
-    sortBy: UserSortField?,
-    sortDirection: SortDirection?,
+  @PaginationHeaders
+  @Operation(summary = "Returns a list of users. If only the user's ID and Name are required, use /users/summary")
+  @GetMapping("/users")
+  fun usersGet(
+    @RequestParam roles: List<ApprovedPremisesUserRole>?,
+    @RequestParam qualifications: List<UserQualification>?,
+    @RequestParam probationRegionId: UUID?,
+    @RequestParam apAreaId: UUID?,
+    @RequestParam cruManagementAreaId: UUID?,
+    @RequestParam page: Int?,
+    @RequestParam sortBy: UserSortField?,
+    @RequestParam sortDirection: SortDirection?,
   ) = getUsers(
     roles,
     qualifications,
@@ -48,15 +56,16 @@ class UsersController(
     userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
   }
 
-  override fun usersSummaryGet(
-    xServiceName: ServiceName,
-    roles: List<ApprovedPremisesUserRole>?,
-    qualifications: List<UserQualification>?,
-    probationRegionId: UUID?,
-    apAreaId: UUID?,
-    page: Int?,
-    sortBy: UserSortField?,
-    sortDirection: SortDirection?,
+  @Operation(summary = "Returns a list of user summaries (i.e. id and name only)")
+  @GetMapping("/users/summary")
+  fun usersSummaryGet(
+    @RequestParam roles: List<ApprovedPremisesUserRole>?,
+    @RequestParam qualifications: List<UserQualification>?,
+    @RequestParam probationRegionId: UUID?,
+    @RequestParam apAreaId: UUID?,
+    @RequestParam page: Int?,
+    @RequestParam sortBy: UserSortField?,
+    @RequestParam sortDirection: SortDirection?,
   ) = getUsers(
     roles,
     qualifications,
@@ -100,7 +109,11 @@ class UsersController(
     )
   }
 
-  override fun usersSearchGet(name: String, xServiceName: ServiceName): ResponseEntity<List<User>> {
+  @Operation(summary = "Returns a list of users with partial match on name")
+  @GetMapping("/users/search")
+  fun usersSearchGet(
+    @RequestParam name: String,
+  ): ResponseEntity<List<User>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     return ResponseEntity.ok(
@@ -110,7 +123,12 @@ class UsersController(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
+  @Operation(summary = "Returns a user with match on name")
+  @GetMapping("/users/delius")
+  fun usersDeliusGet(
+    @RequestParam name: String,
+    @RequestHeader(value = "X-Service-Name") xServiceName: ServiceName,
+  ): ResponseEntity<User> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     val getUserResponse = userService.getExistingUserOrCreate(name)
