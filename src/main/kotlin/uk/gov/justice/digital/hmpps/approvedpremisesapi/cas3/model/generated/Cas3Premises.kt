@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import java.time.LocalDate
 import java.util.UUID
 
@@ -28,6 +29,7 @@ import java.util.UUID
  * @param startDate Start date of the property.
  * @param notes
  * @param turnaroundWorkingDays
+ * @param archiveHistory List of archive/unarchive actions for this premises, ordered by date in ascending order
  */
 data class Cas3Premises(
 
@@ -81,4 +83,7 @@ data class Cas3Premises(
 
   @Schema(example = "2", description = "")
   @get:JsonProperty("turnaroundWorkingDays") val turnaroundWorkingDays: Int? = null,
+
+  @Schema(example = "null", description = "List of archive/unarchive actions for this premises, ordered by date in ascending order")
+  @get:JsonProperty("archiveHistory") val archiveHistory: List<Cas3PremisesArchiveAction>? = emptyList(),
 )

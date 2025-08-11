@@ -1260,6 +1260,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       totalOnlineBedspaces = totalOnlineBedspaces,
       totalUpcomingBedspaces = totalUpcomingBedspaces,
       totalArchivedBedspaces = totalArchivedBedspaces,
+      archiveHistory = emptyList(),
     )
   }
 
@@ -3586,6 +3587,64 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.totalOnlineBedspaces").isEqualTo(0)
             .jsonPath("$.totalUpcomingBedspaces").isEqualTo(0)
             .jsonPath("$.totalArchivedBedspaces").isEqualTo(0)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class ArchiveHistory {
+    @Test
+    fun `Get premises by ID returns 200 with empty archive history for premises with no archive events`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremises(region = userEntity.probationRegion) { premises ->
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.archiveHistory").isArray
+            .jsonPath("$.archiveHistory").isEmpty
+        }
+      }
+    }
+
+    @Test
+    fun `Get premises by ID returns 200 with multiple archive history events in chronological order`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremises(region = userEntity.probationRegion) { premises ->
+          val firstArchiveDate = LocalDate.now().minusDays(5)
+          val firstUnarchiveDate = LocalDate.now().minusDays(4)
+          val secondArchiveDate = LocalDate.now().minusDays(3)
+          val secondUnarchiveDate = LocalDate.now().minusDays(2)
+
+          getArchivePremisesEvent(premises, userEntity, firstArchiveDate)
+          getUnarchivePremisesEvent(premises, userEntity, currentStartDate = LocalDate.now(), firstUnarchiveDate)
+          getArchivePremisesEvent(premises, userEntity, secondArchiveDate)
+          getUnarchivePremisesEvent(premises, userEntity, LocalDate.now(), secondUnarchiveDate)
+
+          // Get premises and verify archive history is in chronological order
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.id").isEqualTo(premises.id.toString())
+            .jsonPath("$.archiveHistory").isArray
+            .jsonPath("$.archiveHistory.length()").isEqualTo(4)
+            .jsonPath("$.archiveHistory[0].status").isEqualTo(Cas3PremisesStatus.archived.name)
+            .jsonPath("$.archiveHistory[0].date").isEqualTo(firstArchiveDate.toString())
+            .jsonPath("$.archiveHistory[1].status").isEqualTo(Cas3PremisesStatus.online.name)
+            .jsonPath("$.archiveHistory[1].date").isEqualTo(firstUnarchiveDate.toString())
+            .jsonPath("$.archiveHistory[2].status").isEqualTo(Cas3PremisesStatus.archived.name)
+            .jsonPath("$.archiveHistory[2].date").isEqualTo(secondArchiveDate.toString())
+            .jsonPath("$.archiveHistory[3].status").isEqualTo(Cas3PremisesStatus.online.name)
+            .jsonPath("$.archiveHistory[3].date").isEqualTo(secondUnarchiveDate.toString())
         }
       }
     }
