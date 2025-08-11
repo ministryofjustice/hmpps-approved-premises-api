@@ -287,7 +287,7 @@ class Cas3BookingService(
     arrivalDate: LocalDate,
     expectedDepartureDate: LocalDate,
     notes: String?,
-  ) = validated<ArrivalEntity> {
+  ) = validatedCasResult<ArrivalEntity> {
     if (expectedDepartureDate.isBefore(arrivalDate)) {
       return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
@@ -319,7 +319,7 @@ class Cas3BookingService(
       else -> cas3DomainEventService.savePersonArrivedUpdatedEvent(booking, user)
     }
 
-    return success(arrivalEntity)
+    return CasResult.Success(arrivalEntity)
   }
 
   fun createDeparture(
@@ -557,7 +557,7 @@ class Cas3BookingService(
     }
   }
 
-  private fun getBookingWithConflictingDates(
+  fun getBookingWithConflictingDates(
     arrivalDate: LocalDate,
     closedDate: LocalDate,
     thisEntityId: UUID?,
@@ -568,7 +568,7 @@ class Cas3BookingService(
     return candidateBookings.firstOrNull { it.lastUnavailableDate >= arrivalDate }
   }
 
-  private fun getVoidBedspaceWithConflictingDates(
+  fun getVoidBedspaceWithConflictingDates(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
