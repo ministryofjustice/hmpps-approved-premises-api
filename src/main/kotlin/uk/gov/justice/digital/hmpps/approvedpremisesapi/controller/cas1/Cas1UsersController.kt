@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
@@ -22,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.Companion.valueOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -118,7 +116,7 @@ class Cas1UsersController(
     sortDirection,
     cruManagementAreaId,
   ) { user ->
-    userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
+    userTransformer.transformCas1JpaToApi(user)
   }
 
   @Operation(summary = "Returns a list of user summaries (i.e. id and name only)")
@@ -178,29 +176,26 @@ class Cas1UsersController(
   @GetMapping("/users/search")
   fun usersSearchGet(
     @RequestParam name: String,
-  ): ResponseEntity<List<User>> {
+  ): ResponseEntity<List<ApprovedPremisesUser>> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     return ResponseEntity.ok(
       userService.getUsersByPartialName(name)
-        .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+        .map { userTransformer.transformCas1JpaToApi(it) },
     )
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
   @Operation(summary = "Returns a user with match on name")
   @GetMapping("/users/delius")
-  fun usersDeliusGet(
-    @RequestParam name: String,
-    @RequestHeader(value = "X-Service-Name") xServiceName: ServiceName,
-  ): ResponseEntity<User> {
+  fun usersDeliusGet(@RequestParam name: String): ResponseEntity<ApprovedPremisesUser> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
     val getUserResponse = userService.getExistingUserOrCreate(name)
     return when (getUserResponse) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(name, "user", "username")
       is UserService.GetUserResponse.StaffProbationRegionNotSupported -> throw RuntimeException("Probation region ${getUserResponse.unsupportedRegionId} not supported for user $name")
-      is UserService.GetUserResponse.Success -> ResponseEntity.ok(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName))
+      is UserService.GetUserResponse.Success -> ResponseEntity.ok(userTransformer.transformCas1JpaToApi(getUserResponse.user))
     }
   }
 

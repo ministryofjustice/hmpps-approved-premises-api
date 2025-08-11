@@ -476,7 +476,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isForbidden
@@ -489,7 +488,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isForbidden
@@ -506,7 +504,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -555,7 +552,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users?probationRegionId=${probationRegion.id}")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -606,7 +602,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users?apAreaId=${apArea.id}")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -665,7 +660,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users?cruManagementAreaId=${cruManagementArea.id}")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -697,7 +691,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users?page=1")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -729,7 +722,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users?roles=report_viewer,future_manager")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -757,7 +749,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users?qualifications=emergency")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -794,7 +785,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 webTestClient.get()
                   .uri("/cas1/users?roles=assessor&qualifications=emergency")
                   .header("Authorization", "Bearer $jwt")
-                  .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .exchange()
                   .expectStatus()
                   .isOk
@@ -828,7 +818,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users/summary")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isForbidden
@@ -858,7 +847,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users/summary")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -905,7 +893,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users/summary?probationRegionId=${probationRegion.id}")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -954,7 +941,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users/summary?apAreaId=${apArea.id}")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -986,7 +972,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users/summary?page=1")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -1018,7 +1003,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users/summary?roles=report_viewer,future_manager")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -1046,7 +1030,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               webTestClient.get()
                 .uri("/cas1/users/summary?qualifications=emergency")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -1083,7 +1066,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 webTestClient.get()
                   .uri("/cas1/users/summary?roles=assessor&qualifications=emergency")
                   .header("Authorization", "Bearer $jwt")
-                  .header("X-Service-Name", ServiceName.approvedPremises.value)
                   .exchange()
                   .expectStatus()
                   .isOk
@@ -1117,7 +1099,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users/search?name=some")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isForbidden
@@ -1130,7 +1111,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users/search?name=some")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isForbidden
@@ -1150,7 +1130,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
             webTestClient.get()
               .uri("/cas1/users/search?name=some")
               .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
               .expectStatus()
               .isOk
@@ -1182,7 +1161,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users/delius?name=some")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isForbidden
@@ -1195,7 +1173,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users/delius?name=some")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isForbidden
@@ -1215,7 +1192,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
             webTestClient.get()
               .uri("/cas1/users/delius?name=some")
               .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
               .expectStatus()
               .isOk
@@ -1239,7 +1215,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         webTestClient.get()
           .uri("/cas1/users/delius?name=noone")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectHeader().contentType("application/problem+json")
           .expectStatus()

@@ -1,14 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import io.swagger.v3.oas.annotations.Operation
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1UsersController
@@ -43,7 +43,7 @@ class UsersController(
     page,
     sortBy,
     sortDirection,
-  )
+  ) as ResponseEntity<List<User>>
 
   @Operation(summary = "Returns a list of user summaries (i.e. id and name only). Deprecated, use /cas1/users/summary")
   @GetMapping("/users/summary")
@@ -69,13 +69,12 @@ class UsersController(
   @GetMapping("/users/search")
   fun usersSearchGet(
     @RequestParam name: String,
-  ) = cas1UsersController.usersSearchGet(name)
+  ) = cas1UsersController.usersSearchGet(name) as ResponseEntity<List<User>>
 
   @SuppressWarnings("TooGenericExceptionThrown")
   @Operation(summary = "Returns a user with match on name. Deprecated, use /cas1/users/delius")
   @GetMapping("/users/delius")
   fun usersDeliusGet(
     @RequestParam name: String,
-    @RequestHeader(value = "X-Service-Name") xServiceName: ServiceName,
-  ) = cas1UsersController.usersDeliusGet(name, xServiceName)
+  ) = cas1UsersController.usersDeliusGet(name) as ResponseEntity<User>
 }
