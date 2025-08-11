@@ -18,6 +18,7 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   outOfServiceBedCreate("cas1_out_of_service_bed_create"),
   outOfServiceBedCreateBedOnHold("cas1_out_of_service_bed_create_bed_on_hold"),
   outOfServiceBedCancel("cas1_out_of_service_bed_cancel"),
+  outOfServiceNoDateLimit("cas1_out_of_service_bed_no_date_limit"),
   placementAppealCreate("cas1_placement_appeal_create"),
   placementAppealAssess("cas1_placement_appeal_assess"),
   placementRequestRecordUnableToMatch("cas1_placement_request_record_unable_to_match"),
