@@ -15,6 +15,7 @@ class TasksController(
   private val cas1TasksController: Cas1TasksController,
 ) : TasksApiDelegate {
 
+  @Deprecated("Superseded by Cas3AssessmentController.reallocateAssessment()")
   @Transactional
   override fun tasksTaskTypeIdAllocationsPost(
     id: UUID,
@@ -23,6 +24,7 @@ class TasksController(
     body: NewReallocation?,
   ): ResponseEntity<Reallocation> = cas1TasksController.reallocateTask(id, taskType, xServiceName, body)
 
+  @Deprecated("Superseded by Cas3AssessmentController.deallocateAssessment()")
   @Transactional
   override fun tasksTaskTypeIdAllocationsDelete(id: UUID, taskType: String): ResponseEntity<Unit> = cas1TasksController.unallocateTask(id, taskType)
 }
