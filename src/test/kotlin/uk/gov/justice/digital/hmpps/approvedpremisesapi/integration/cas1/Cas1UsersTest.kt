@@ -729,6 +729,61 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
+    @Test
+    fun `GET to users with an approved role allows filtering by name or email`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Lob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user1WithMatchingName, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user2WithMatchingEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Jim",
+            surname = "Jimmers",
+          ),
+          email = "jim.bob@test.com",
+        ),
+      )
+      val (user3WithMatchingNameAndEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bobby",
+            surname = "Jo",
+          ),
+          email = "bobby.jo@test.com",
+        ),
+      )
+
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      val results = webTestClient.get()
+        .uri("/cas1/users?nameOrEmail=bob")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<ApprovedPremisesUser>()
+
+      assertThat(results).hasSize(3)
+      assertThat(results.map { it.id }).contains(user1WithMatchingName.id)
+      assertThat(results.map { it.id }).contains(user2WithMatchingEmail.id)
+      assertThat(results.map { it.id }).contains(user3WithMatchingNameAndEmail.id)
+    }
+
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by qualifications`(role: UserRole) {
@@ -1016,6 +1071,61 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       assertThat(results).hasSize(2)
       assertThat(results.map { it.id }).contains(user1WithRequiredPermission.id)
       assertThat(results.map { it.id }).contains(user2WithRequiredPermission.id)
+    }
+
+    @Test
+    fun `GET to users with an approved role allows filtering by name or email`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Lob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user1WithMatchingName, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user2WithMatchingEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Jim",
+            surname = "Jimmers",
+          ),
+          email = "jim.bob@test.com",
+        ),
+      )
+      val (user3WithMatchingNameAndEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bobby",
+            surname = "Jo",
+          ),
+          email = "bobby.jo@test.com",
+        ),
+      )
+
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      val results = webTestClient.get()
+        .uri("/cas1/users/summary?nameOrEmail=bob")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<UserSummary>()
+
+      assertThat(results).hasSize(3)
+      assertThat(results.map { it.id }).contains(user1WithMatchingName.id)
+      assertThat(results.map { it.id }).contains(user2WithMatchingEmail.id)
+      assertThat(results.map { it.id }).contains(user3WithMatchingNameAndEmail.id)
     }
 
     @ParameterizedTest

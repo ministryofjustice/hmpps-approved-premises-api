@@ -106,6 +106,7 @@ class Cas1UsersController(
     @RequestParam probationRegionId: UUID?,
     @RequestParam apAreaId: UUID?,
     @RequestParam cruManagementAreaId: UUID?,
+    @RequestParam nameOrEmail: String?,
     @RequestParam page: Int?,
     @RequestParam sortBy: UserSortField?,
     @RequestParam sortDirection: SortDirection?,
@@ -117,6 +118,7 @@ class Cas1UsersController(
       probationRegionId,
       apAreaId,
       permission = null,
+      nameOrEmail,
       page,
       sortBy,
       sortDirection,
@@ -134,6 +136,7 @@ class Cas1UsersController(
     @RequestParam probationRegionId: UUID?,
     @RequestParam apAreaId: UUID?,
     @RequestParam permission: ApprovedPremisesUserPermission?,
+    @RequestParam nameOrEmail: String?,
     @RequestParam page: Int?,
     @RequestParam sortBy: UserSortField?,
     @RequestParam sortDirection: SortDirection?,
@@ -145,6 +148,7 @@ class Cas1UsersController(
       probationRegionId,
       apAreaId,
       permission,
+      nameOrEmail,
       page,
       sortBy,
       sortDirection,
@@ -159,6 +163,7 @@ class Cas1UsersController(
     probationRegionId: UUID?,
     apAreaId: UUID?,
     permission: ApprovedPremisesUserPermission? = null,
+    nameOrEmail: String? = null,
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
@@ -184,6 +189,7 @@ class Cas1UsersController(
       probationRegionId,
       apAreaId,
       cruManagementAreaId,
+      nameOrEmail,
     )
 
     return ResponseEntity.ok().headers(
@@ -193,7 +199,7 @@ class Cas1UsersController(
     )
   }
 
-  @Operation(summary = "Returns a list of users with partial match on name")
+  @Operation(deprecated = true, summary = "Returns a list of users with partial match on name. Deprecated, use /cas1/users instead which supports name (or email) filtering but also supports paging")
   @GetMapping("/users/search")
   fun usersSearchGet(
     @RequestParam name: String,

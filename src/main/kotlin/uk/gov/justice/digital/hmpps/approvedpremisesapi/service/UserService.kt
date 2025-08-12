@@ -126,10 +126,18 @@ class UserService(
     region: UUID?,
     apArea: UUID?,
     cruManagementAreaId: UUID?,
+    nameOrEmail: String?,
   ): Pair<List<UserEntity>, PaginationMetadata?> {
     val pageable = getPageable(sortBy?.value ?: "name", sortDirection, page)
 
-    val userSpecification = buildUserSpecification(qualifications, roles, region, apArea, cruManagementAreaId)
+    val userSpecification = buildUserSpecification(
+      qualifications,
+      roles,
+      region,
+      apArea,
+      cruManagementAreaId,
+      nameOrEmail,
+    )
 
     return if (pageable == null) {
       val users = userRepository.findAll(userSpecification, Sort.by(Sort.Direction.ASC, "name"))

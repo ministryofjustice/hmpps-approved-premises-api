@@ -22,6 +22,7 @@ fun buildUserSpecification(
   region: UUID?,
   apArea: UUID?,
   cruManagementArea: UUID?,
+  nameOrEmail: String?,
 ): Specification<UserEntity> = Specification { root: Root<UserEntity>, query: CriteriaQuery<*>?, criteriaBuilder: CriteriaBuilder ->
   val predicates = mutableListOf<Predicate>()
 
@@ -81,6 +82,18 @@ fun buildUserSpecification(
     predicates.add(
       criteriaBuilder.and(
         criteriaBuilder.equal(cruManagementAreaId, cruManagementArea),
+      ),
+    )
+  }
+
+  if (nameOrEmail != null) {
+    val pattern = "%${nameOrEmail.lowercase()}%"
+    predicates.add(
+      criteriaBuilder.and(
+        criteriaBuilder.or(
+          criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern),
+          criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern),
+        ),
       ),
     )
   }
