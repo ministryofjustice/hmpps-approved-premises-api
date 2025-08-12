@@ -273,7 +273,7 @@ class BookingServiceTest {
 
     every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
 
     val result = bookingService.createConfirmation(
       booking = bookingEntity,
