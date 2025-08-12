@@ -10,6 +10,7 @@ import java.time.LocalDate
 fun IntegrationTestBase.givenCas3PremisesAndBedspace(
   user: UserEntity,
   startDate: LocalDate = LocalDate.now(),
+  endDate: LocalDate? = LocalDate.now().plusDays(100),
   premises: Cas3PremisesEntity = givenACas3Premises(
     probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
       withProbationRegion(user.probationRegion)
@@ -19,5 +20,6 @@ fun IntegrationTestBase.givenCas3PremisesAndBedspace(
     withReference("test-bed")
     withPremises(premises)
     withStartDate(startDate)
+    withEndDate(endDate)
   },
 ) = Pair(premises, bedspace)

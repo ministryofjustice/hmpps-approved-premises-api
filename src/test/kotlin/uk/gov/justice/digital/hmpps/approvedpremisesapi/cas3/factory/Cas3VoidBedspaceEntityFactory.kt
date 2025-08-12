@@ -81,6 +81,7 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     this.cancellationNotes = { cancellationNotes }
   }
 
+  @Deprecated("This will be replaced by produceV2")
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce() = Cas3VoidBedspaceEntity(
     id = this.id(),
@@ -92,6 +93,22 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     premises = this.premises?.let { it() },
     bed = this.bed?.let { it() },
     cancellation = this.voidBedspaceCancellation?.invoke(),
+    bedspace = this.bedspace?.let { it() },
+    cancellationDate = this.cancellationDate?.let { it() },
+    cancellationNotes = this.cancellationNotes?.let { it() },
+  )
+
+  @SuppressWarnings("TooGenericExceptionThrown")
+  fun produceV2() = Cas3VoidBedspaceEntity(
+    id = this.id(),
+    startDate = this.startDate(),
+    endDate = this.endDate(),
+    reason = this.reason!!.invoke(),
+    referenceNumber = this.referenceNumber(),
+    notes = this.notes(),
+    premises = null,
+    bed = null,
+    cancellation = null,
     bedspace = this.bedspace?.let { it() },
     cancellationDate = this.cancellationDate?.let { it() },
     cancellationNotes = this.cancellationNotes?.let { it() },

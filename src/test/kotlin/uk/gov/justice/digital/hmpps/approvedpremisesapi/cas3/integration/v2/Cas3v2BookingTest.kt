@@ -1248,7 +1248,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
           .jsonPath("detail")
-          .isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+          .isEqualTo("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
       }
     }
   }
@@ -1453,7 +1453,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .jsonPath("title").isEqualTo("Conflict")
             .jsonPath("status").isEqualTo(409)
             .jsonPath("detail")
-            .isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+            .isEqualTo("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
         }
       }
     }

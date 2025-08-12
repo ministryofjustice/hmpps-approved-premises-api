@@ -106,7 +106,7 @@ class Cas3v2BookingService(
       startDate = arrivalDate,
       endDate = departureDate,
     ).firstOrNull()?.let {
-      return@validatedCasResult it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+      return@validatedCasResult it.id hasConflictError "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
     }
 
     cas3BedspaceRepository.findArchivedBedspaceByBedspaceIdAndDate(bedspaceId, departureDate)?.let {
@@ -402,7 +402,7 @@ class Cas3v2BookingService(
     getVoidBedspaceWithConflictingDates(startDate, endDate, bookingId, bedspaceId)?.let {
       throw ConflictProblem(
         it.id,
-        "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
+        "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
       )
     }
   }
