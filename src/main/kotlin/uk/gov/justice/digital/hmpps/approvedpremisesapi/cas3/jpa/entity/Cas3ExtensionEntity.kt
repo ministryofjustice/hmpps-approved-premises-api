@@ -6,10 +6,15 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
+
+@Repository
+interface Cas3ExtensionRepository : JpaRepository<Cas3ExtensionEntity, UUID>
 
 @Entity
 @Table(name = "extensions")
