@@ -16,14 +16,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
-fun hasQualificationsAndRoles(
+fun buildUserSpecification(
   qualifications: List<UserQualification>?,
   roles: List<UserRole>?,
   region: UUID?,
   apArea: UUID?,
   cruManagementArea: UUID?,
-  showOnlyActive: Boolean = false,
-): Specification<UserEntity> = Specification { root: Root<UserEntity>, query: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->
+): Specification<UserEntity> = Specification { root: Root<UserEntity>, query: CriteriaQuery<*>?, criteriaBuilder: CriteriaBuilder ->
   val predicates = mutableListOf<Predicate>()
 
   if (qualifications?.isNotEmpty() == true) {
@@ -50,13 +49,11 @@ fun hasQualificationsAndRoles(
     )
   }
 
-  if (showOnlyActive) {
-    predicates.add(
-      criteriaBuilder.and(
-        criteriaBuilder.isTrue(root.get("isActive")),
-      ),
-    )
-  }
+  predicates.add(
+    criteriaBuilder.and(
+      criteriaBuilder.isTrue(root.get("isActive")),
+    ),
+  )
 
   if (region != null) {
     val probationRegionID = root.get<ProbationRegionEntity>("probationRegion").get<UUID>("id")
@@ -88,6 +85,6 @@ fun hasQualificationsAndRoles(
     )
   }
 
-  query.distinct(true)
+  query?.distinct(true)
   criteriaBuilder.and(*predicates.toTypedArray())
 }
