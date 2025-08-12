@@ -17,6 +17,7 @@ import java.time.LocalDate
 fun IntegrationTestBase.givenATemporaryAccommodationPremises(
   region: ProbationRegionEntity = givenAProbationRegion(),
   status: PropertyStatus = PropertyStatus.active,
+  startDate: LocalDate = LocalDate.now().minusDays(180),
   endDate: LocalDate? = null,
   block: ((premises: TemporaryAccommodationPremisesEntity) -> Unit)? = null,
 ): TemporaryAccommodationPremisesEntity {
@@ -29,6 +30,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremises(
       }
     }
     withStatus(status)
+    withStartDate(startDate)
     withEndDate(endDate)
   }
 
@@ -43,6 +45,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithUser(
   roles: List<UserRole> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
   premisesStatus: PropertyStatus = PropertyStatus.active,
+  premisesStartDate: LocalDate = LocalDate.now().minusDays(180),
   premisesEndDate: LocalDate? = null,
   block: (user: UserEntity, jwt: String, premises: TemporaryAccommodationPremisesEntity) -> Unit,
 ) {
@@ -53,6 +56,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithUser(
     val premises = givenATemporaryAccommodationPremises(
       region = user.probationRegion,
       status = premisesStatus,
+      startDate = premisesStartDate,
       endDate = premisesEndDate,
     )
     block(user, jwt, premises)

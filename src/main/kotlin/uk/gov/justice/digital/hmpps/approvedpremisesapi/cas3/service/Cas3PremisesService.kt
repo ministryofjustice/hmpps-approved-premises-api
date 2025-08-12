@@ -557,18 +557,28 @@ class Cas3PremisesService(
       return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
     }
 
+    if (endDate.isBefore(premises.startDate)) {
+      return "$.endDate" hasSingleValidationError "endDateBeforePremisesStartDate"
+    }
+
+    cas3DomainEventService.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED))
+      .asSequence()
+      .map { objectMapper.readValue(it.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate }
+      .firstOrNull { it >= endDate }
+      ?.let { return "$.endDate" hasSingleValidationError "endDateOverlapPreviousPremisesArchiveEndDate" }
+
     if (validationErrors.any()) {
       return fieldValidationError
     }
 
     val activeBedspaces = premises.rooms.asSequence()
       .flatMap { it.beds.asSequence() }
-      .filter { it.isCas3BedspaceOnline() || it.isCas3BedspaceUpcoming() }
+      .filter { (it.isCas3BedspaceOnline() || it.isCas3BedspaceUpcoming()) && (it.endDate == null || it.endDate!! > endDate) }
 
     if (activeBedspaces.any()) {
       val lastUpcomingBedspace = activeBedspaces.maxByOrNull { it.startDate!! }
 
-      if (lastUpcomingBedspace != null && lastUpcomingBedspace?.startDate!! > endDate) {
+      if (lastUpcomingBedspace != null && lastUpcomingBedspace.startDate!! > endDate) {
         return Cas3FieldValidationError(
           mapOf(
             "$.endDate" to Cas3ValidationMessage(
