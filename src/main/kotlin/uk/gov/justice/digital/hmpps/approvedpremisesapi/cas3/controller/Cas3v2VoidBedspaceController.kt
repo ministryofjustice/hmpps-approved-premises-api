@@ -40,6 +40,23 @@ class Cas3v2VoidBedspaceController(
     return ResponseEntity.ok(voidBedspaces)
   }
 
+  @GetMapping("/v2/premises/{premisesId}/void-bedspaces/{voidBedspaceId}")
+  fun getVoidBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable voidBedspaceId: UUID,
+  ): ResponseEntity<Cas3VoidBedspace> {
+    val voidBedspace = voidBedspaceService.findVoidBedspace(premisesId, voidBedspaceId) ?: throw NotFoundProblem(
+      voidBedspaceId,
+      "Cas3VoidBedspace",
+    )
+
+    if (!cas3UserAccessService.canViewVoidBedspaces(voidBedspace.bedspace!!.premises.probationDeliveryUnit.probationRegion.id)) {
+      throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(cas3VoidBedspacesTransformer.toCas3VoidBedspace(voidBedspace))
+  }
+
   @PostMapping("/v2/premises/{premisesId}/void-bedspaces")
   fun createVoidBedspace(
     @PathVariable premisesId: UUID,
