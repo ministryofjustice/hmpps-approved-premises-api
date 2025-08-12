@@ -3434,6 +3434,111 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   }
 
   @Nested
+  inner class CancelUnarchivePremises {
+    @Test
+    fun `Cancel unarchive premises returns 200 OK when successful`() {
+      val currentEndDate = LocalDate.now().minusDays(2)
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesEndDate = currentEndDate,
+        premisesStartDate = LocalDate.now().minusDays(180),
+        premisesStatus = PropertyStatus.archived,
+      ) { userEntity, jwt, premises ->
+
+        val previousStartDate = LocalDate.now().minusDays(30)
+        val newStartDate = LocalDate.now().plusDays(5)
+
+        premises.status = PropertyStatus.archived
+        premises.startDate = newStartDate
+        temporaryAccommodationPremisesRepository.save(premises)
+
+        val room = roomEntityFactory.produceAndPersist { withPremises(premises) }
+        val bedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(newStartDate)
+          withEndDate(null)
+        }
+
+        val premisesEvent = createUnarchivePremisesEvent(
+          premises,
+          userEntity,
+          previousStartDate,
+          newStartDate,
+          currentEndDate,
+        )
+
+        val premisesEvent2 = createUnarchivePremisesEvent(
+          premises,
+          userEntity,
+          previousStartDate.minusDays(30),
+          newStartDate.minusDays(15),
+          previousStartDate.minusDays(20),
+        )
+
+        domainEventFactory.produceAndPersist {
+          withCas3PremisesId(premises.id)
+          withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+          withCreatedAt(OffsetDateTime.now())
+          withData(objectMapper.writeValueAsString(premisesEvent))
+        }
+
+        domainEventFactory.produceAndPersist {
+          withCas3PremisesId(premises.id)
+          withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+          withCreatedAt(OffsetDateTime.now())
+          withData(objectMapper.writeValueAsString(premisesEvent2))
+        }
+
+        val bedspaceEvent = createBedspaceUnarchiveDomainEvent(
+          bedspace,
+          premises.id,
+          userEntity.id,
+          newStartDate,
+        )
+
+        val bedspaceEvent2 = createBedspaceUnarchiveDomainEvent(
+          bedspace,
+          premises.id,
+          userEntity.id,
+          newStartDate.minusDays(15),
+        )
+
+        domainEventFactory.produceAndPersist {
+          withCas3BedspaceId(bedspace.id)
+          withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+          withCreatedAt(OffsetDateTime.now())
+          withData(objectMapper.writeValueAsString(bedspaceEvent))
+        }
+
+        domainEventFactory.produceAndPersist {
+          withCas3BedspaceId(bedspace.id)
+          withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+          withCreatedAt(OffsetDateTime.now())
+          withData(objectMapper.writeValueAsString(bedspaceEvent2))
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+
+        val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.archived)
+        assertThat(updatedPremises.startDate).isEqualTo(previousStartDate)
+        assertThat(updatedPremises.endDate).isEqualTo(currentEndDate)
+
+        val updatedBed = bedRepository.findById(bedspace.id).get()
+        assertThat(updatedBed.startDate).isEqualTo(previousStartDate)
+        assertThat(updatedBed.endDate).isEqualTo(previousStartDate.plusDays(2))
+      }
+    }
+  }
+
+  @Nested
   inner class CancelScheduledArchivePremises {
     @Test
     fun `Cancel scheduled archive premises returns 200 OK when successful`() {
