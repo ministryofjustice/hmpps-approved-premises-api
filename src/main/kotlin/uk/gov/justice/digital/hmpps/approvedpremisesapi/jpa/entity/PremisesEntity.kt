@@ -69,7 +69,11 @@ SELECT
           OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
           )
-        AND (:premisesStatus is null OR p.status = :premisesStatus)
+        AND (
+          (:premisesStatus = 'active' AND (tap.end_date IS NULL OR tap.end_date > CURRENT_DATE))
+          OR (:premisesStatus = 'archived' AND tap.end_date IS NOT NULL AND tap.end_date <= CURRENT_DATE)
+          OR (:premisesStatus IS NULL)
+        )
       """,
     nativeQuery = true,
   )

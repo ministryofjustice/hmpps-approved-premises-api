@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas3PremisesSearch : Cas3IntegrationTestBase() {
+class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
   companion object Constants {
     const val PREMISES_SEARCH_API_URL = "/cas3/premises/search"
   }
@@ -47,11 +47,11 @@ class Cas3PremisesSearch : Cas3IntegrationTestBase() {
   @Test
   fun `Searching for Premises when 'online' premises status is passed in to the query parameter returns only online premises`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-      val (premises, expectedPremisesSearchResults) = getListPremises(user.probationRegion, Cas3PremisesStatus.online)
+      val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, Cas3PremisesStatus.online)
 
       assertUrlReturnsPremises(
         jwt,
-        "$PREMISES_SEARCH_API_URL?propertyStatus=${Cas3PremisesStatus.online}",
+        "$PREMISES_SEARCH_API_URL?premisesStatus=${Cas3PremisesStatus.online}",
         expectedPremisesSearchResults,
       )
     }
@@ -60,11 +60,11 @@ class Cas3PremisesSearch : Cas3IntegrationTestBase() {
   @Test
   fun `Searching for Premises when 'archived' premises status is passed in to the query parameter returns only archived premises`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-      val (premises, expectedPremisesSearchResults) = getListPremises(user.probationRegion, Cas3PremisesStatus.archived)
+      val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, Cas3PremisesStatus.archived)
 
       assertUrlReturnsPremises(
         jwt,
-        "$PREMISES_SEARCH_API_URL?propertyStatus=${Cas3PremisesStatus.archived}",
+        "$PREMISES_SEARCH_API_URL?premisesStatus=${Cas3PremisesStatus.archived}",
         expectedPremisesSearchResults,
       )
     }
@@ -243,6 +243,21 @@ class Cas3PremisesSearch : Cas3IntegrationTestBase() {
       }
 
       allPremises.addAll(onlinePremisesWithBedspaceWithEndDate)
+
+      val archivedPremisesWithEndDateInTheFuture = getListPremisesByStatus(
+        probationRegion = probationRegion,
+        probationDeliveryUnit = probationDeliveryUnit,
+        localAuthorityArea = localAuthorityArea,
+        numberOfPremises = 3,
+        propertyStatus = PropertyStatus.archived,
+        endDate = LocalDate.now().randomDateAfter(30),
+      ).map { premises ->
+        val archivedBedspacesInTheFutureSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online, withEndDateInFuture = true)
+        premisesSearchResult.add(createPremisesSearchResult(premises, (archivedBedspacesInTheFutureSearchResult)))
+        premises
+      }
+
+      allPremises.addAll(archivedPremisesWithEndDateInTheFuture)
     }
 
     if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.archived) {
@@ -252,6 +267,7 @@ class Cas3PremisesSearch : Cas3IntegrationTestBase() {
         localAuthorityArea = localAuthorityArea,
         numberOfPremises = 3,
         propertyStatus = PropertyStatus.archived,
+        endDate = LocalDate.now().randomDateBefore(30),
       ).map { premises ->
         val archivedBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.archived)
         premisesSearchResult.add(createPremisesSearchResult(premises, archivedBedspacesSearchResult))
@@ -271,10 +287,15 @@ class Cas3PremisesSearch : Cas3IntegrationTestBase() {
     return Pair(allPremises.sortedBy { it.id }, premisesSearchResults)
   }
 
-  private fun createBedspacesAndBedspacesSearchResult(premises: TemporaryAccommodationPremisesEntity, status: Cas3BedspaceStatus, withoutEndDate: Boolean = false): List<Cas3BedspacePremisesSearchResult> {
+  private fun createBedspacesAndBedspacesSearchResult(
+    premises: TemporaryAccommodationPremisesEntity,
+    status: Cas3BedspaceStatus,
+    withoutEndDate: Boolean = false,
+    withEndDateInFuture: Boolean = false,
+  ): List<Cas3BedspacePremisesSearchResult> {
     val bedspacesSearchResult = mutableListOf<Cas3BedspacePremisesSearchResult>()
-    var startDate = LocalDate.now().minusDays(30)
-    var endDate: LocalDate? = null
+    var startDate: LocalDate?
+    var endDate: LocalDate?
 
     repeat(randomInt(1, 5)) {
       when (status) {
@@ -293,8 +314,12 @@ class Cas3PremisesSearch : Cas3IntegrationTestBase() {
           }
         }
         Cas3BedspaceStatus.archived -> {
-          endDate = LocalDate.now().minusDays(1).randomDateBefore(360)
-          startDate = endDate!!.randomDateBefore(360)
+          endDate = if (withEndDateInFuture) {
+            LocalDate.now().randomDateAfter(30)
+          } else {
+            LocalDate.now().randomDateBefore(360)
+          }
+          startDate = endDate.randomDateBefore(360)
         }
       }
 

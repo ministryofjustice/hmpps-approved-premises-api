@@ -41,6 +41,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     localAuthorityArea: LocalAuthorityAreaEntity,
     numberOfPremises: Int,
     propertyStatus: PropertyStatus,
+    startDate: LocalDate = LocalDate.now().minusDays(180),
     endDate: LocalDate? = null,
   ): List<TemporaryAccommodationPremisesEntity> {
     val premisesCharacteristics = getPremisesCharacteristics().toMutableList()
@@ -50,6 +51,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
       withProbationDeliveryUnit(probationDeliveryUnit)
       withLocalAuthorityArea(localAuthorityArea)
       withStatus(propertyStatus)
+      withStartDate(startDate)
       withEndDate(endDate)
       withAddressLine2(randomStringUpperCase(10))
       withCharacteristics(
