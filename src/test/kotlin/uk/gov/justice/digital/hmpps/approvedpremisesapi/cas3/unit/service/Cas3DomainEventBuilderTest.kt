@@ -4,17 +4,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertThrows
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonArrivedUpdatedEvent
@@ -31,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -48,15 +39,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-@SuppressWarnings("CyclomaticComplexMethod", "LargeClass")
+@SuppressWarnings("CyclomaticComplexMethod")
 class Cas3DomainEventBuilderTest {
   private val cas3DomainEventBuilder =
     Cas3DomainEventBuilder(
@@ -134,41 +123,6 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `getBookingCancelledDomainEvent transforms the cas3 booking information correctly`() {
-    val cancellationReasonName = "Some cancellation reason"
-    val cancellationNotes = "Some notes about the cancellation"
-    val probationRegion = probationRegionEntity()
-    val premises = cas3PremisesEntity(probationRegion)
-    val user = userEntity(probationRegion)
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-    val booking = cas3BookingEntity(premises, application)
-    val cancellationReason = cancellationReasonEntity(cancellationReasonName)
-    booking.cancellations += cas3CancellationEntity(booking, cancellationReason, cancellationNotes)
-
-    val event = cas3DomainEventBuilder.getBookingCancelledDomainEvent(booking, user)
-    val data = event.data.eventDetails
-    assertAll({
-      assertThat(event.applicationId).isEqualTo(application.id)
-      assertThat(event.bookingId).isEqualTo(booking.id)
-      assertThat(event.crn).isEqualTo(booking.crn)
-      assertThat(event.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.crn).isEqualTo(booking.crn)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
-      assertThat(data.cancellationReason).isEqualTo(cancellationReasonName)
-      assertThat(data.notes).isEqualTo(cancellationNotes)
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
-      assertThat(data.cancelledAt).isEqualTo(booking.cancellation?.date)
-      assertThat(data.cancelledBy!!.staffCode).isEqualTo(user.deliusStaffCode)
-      assertThat(data.cancelledBy!!.username).isEqualTo(user.deliusUsername)
-      assertThat(data.cancelledBy!!.probationRegionCode).isEqualTo(user.probationRegion.deliusCode)
-      assertThat(event.data.eventType).isEqualTo(EventType.bookingCancelled)
-    })
-  }
-
-  @Test
   fun `getBookingConfirmedDomainEvent transforms the booking information correctly`() {
     val expectedArrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
 
@@ -207,42 +161,6 @@ class Cas3DomainEventBuilderTest {
       assertThat(data.confirmedBy!!.staffCode).isEqualTo(user.deliusStaffCode)
       assertThat(data.confirmedBy!!.username).isEqualTo(user.deliusUsername)
       assertThat(data.confirmedBy!!.probationRegionCode).isEqualTo(user.probationRegion.deliusCode)
-      assertThat(event.data.eventType).isEqualTo(EventType.bookingConfirmed)
-    })
-  }
-
-  @Test
-  fun `getBookingConfirmedDomainEvent for cas3 booking transforms the booking information correctly`() {
-    val expectedArrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
-    val probationRegion = probationRegionEntity()
-    val premises = cas3PremisesEntity(probationRegion)
-    val user = userEntity(probationRegion)
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-    val booking = cas3BookingEntity(
-      premises,
-      application,
-      arrivalDate = expectedArrivalDateTime.toLocalDate(),
-    )
-
-    val event = cas3DomainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
-
-    val data = event.data.eventDetails
-    assertAll({
-      assertThat(event.applicationId).isEqualTo(application.id)
-      assertThat(event.bookingId).isEqualTo(booking.id)
-      assertThat(event.crn).isEqualTo(booking.crn)
-      assertThat(event.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.crn).isEqualTo(booking.crn)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
-      assertThat(data.expectedArrivedAt).isEqualTo(expectedArrivalDateTime)
-      assertThat(data.notes).isEqualTo("")
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
-      assertThat(data.confirmedBy?.staffCode).isEqualTo(user.deliusStaffCode)
-      assertThat(data.confirmedBy?.username).isEqualTo(user.deliusUsername)
-      assertThat(data.confirmedBy?.probationRegionCode).isEqualTo(user.probationRegion.deliusCode)
       assertThat(event.data.eventType).isEqualTo(EventType.bookingConfirmed)
     })
   }
@@ -377,93 +295,6 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `getPersonArrivedDomainEvent with Cas3 entities transforms the booking and arrival information correctly`() {
-    val arrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
-    val expectedDepartureDate = LocalDate.parse("2023-10-15")
-    val notes = "Some notes about the arrival"
-
-    val probationRegion = probationRegionEntity()
-
-    val premises = cas3PremisesEntity(probationRegion)
-
-    val user = userEntity(probationRegion)
-
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-
-    val booking = cas3BookingEntity(premises, application)
-
-    booking.arrivals += cas3ArrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
-
-    val event = cas3DomainEventBuilder.getPersonArrivedDomainEvent(booking, user)
-
-    val data = event.data.eventDetails
-    assertAll({
-      assertThat(event.applicationId).isEqualTo(application.id)
-      assertThat(event.bookingId).isEqualTo(booking.id)
-      assertThat(event.crn).isEqualTo(booking.crn)
-      assertThat(event.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.crn).isEqualTo(booking.crn)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
-      assertThat(data.premises.addressLine1).isEqualTo(premises.addressLine1)
-      assertThat(data.premises.addressLine2).isEqualTo(premises.addressLine2)
-      assertThat(data.premises.postcode).isEqualTo(premises.postcode)
-      assertThat(data.premises.town).isEqualTo(premises.town)
-      assertThat(data.premises.region).isEqualTo(premises.probationDeliveryUnit.probationRegion.name)
-      assertThat(data.arrivedAt).isEqualTo(arrivalDateTime)
-      assertThat(data.expectedDepartureOn).isEqualTo(expectedDepartureDate)
-      assertThat(data.notes).isEqualTo(notes)
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
-      assertThat(data.recordedBy!!.staffCode).isEqualTo(user.deliusStaffCode)
-      assertThat(data.recordedBy!!.username).isEqualTo(user.deliusUsername)
-      assertThat(data.recordedBy!!.probationRegionCode).isEqualTo(user.probationRegion.deliusCode)
-      assertThat(event.data.eventType).isEqualTo(EventType.personArrived)
-    })
-  }
-
-  @Test
-  fun `getPersonArrivedDomainEvent with Cas3 entities transforms the booking and arrival information correctly without staff detail`() {
-    val arrivalDateTime = Instant.parse("2023-07-15T00:00:00Z")
-    val expectedDepartureDate = LocalDate.parse("2023-10-15")
-    val notes = "Some notes about the arrival"
-
-    val probationRegion = probationRegionEntity()
-
-    val premises = cas3PremisesEntity(probationRegion)
-
-    val user = userEntity(probationRegion)
-
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-
-    val booking = cas3BookingEntity(premises, application)
-
-    booking.arrivals += cas3ArrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
-
-    val event = cas3DomainEventBuilder.getPersonArrivedDomainEvent(booking, null)
-
-    val data = event.data.eventDetails
-    assertAll({
-      assertThat(event.applicationId).isEqualTo(application.id)
-      assertThat(event.bookingId).isEqualTo(booking.id)
-      assertThat(event.crn).isEqualTo(booking.crn)
-      assertThat(event.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
-      assertThat(data.arrivedAt).isEqualTo(arrivalDateTime)
-      assertThat(data.expectedDepartureOn).isEqualTo(expectedDepartureDate)
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
-      assertThat(data.recordedBy).isNull()
-      assertThat(event.data.eventType).isEqualTo(EventType.personArrived)
-    })
-  }
-
-  @Test
   fun `getPersonDepartedDomainEvent transforms the booking and departure information correctly`() {
     val departureDateTime = OffsetDateTime.parse("2023-07-15T00:00:00Z")
     val reasonName = "Returned to custody"
@@ -561,103 +392,6 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `getPersonDepartedDomainEvent with cas3 booking transforms the booking and departure information correctly`() {
-    val departureDateTime = OffsetDateTime.parse("2023-07-15T00:00:00Z")
-    val reasonName = "Returned to custody"
-    val notes = "Some notes about the departure"
-    val moveOnCategoryDescription = "Returned to custody"
-    val moveOnCategoryLabel = "RTC"
-
-    val probationRegion = probationRegionEntity()
-
-    val premises = cas3PremisesEntity(probationRegion)
-
-    val user = userEntity(probationRegion)
-
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-
-    val booking = cas3BookingEntity(premises, application)
-
-    val reason = departureReasonEntity(reasonName)
-
-    val moveOnCategory = moveOnCategoryEntity(moveOnCategoryDescription, moveOnCategoryLabel)
-
-    booking.departures += cas3DepartureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
-
-    val event = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, user)
-
-    val data = event.data.eventDetails
-    assertAll({
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(event.bookingId).isEqualTo(booking.id)
-      assertThat(event.crn).isEqualTo(booking.crn)
-      assertThat(event.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.crn).isEqualTo(booking.crn)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
-      assertThat(data.premises.addressLine1).isEqualTo(premises.addressLine1)
-      assertThat(data.premises.addressLine2).isEqualTo(premises.addressLine2)
-      assertThat(data.premises.postcode).isEqualTo(premises.postcode)
-      assertThat(data.premises.town).isEqualTo(premises.town)
-      assertThat(data.premises.region).isEqualTo(premises.probationDeliveryUnit.probationRegion.name)
-      assertThat(data.departedAt).isEqualTo(departureDateTime.toInstant())
-      assertThat(data.reason).isEqualTo(reasonName)
-      assertThat(data.notes).isEqualTo(notes)
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
-      assertThat(event.data.eventType).isEqualTo(EventType.personDeparted)
-    })
-    assertStaffDetails(event.data.eventDetails.recordedBy, user)
-  }
-
-  @Test
-  fun `getPersonDepartedDomainEvent with cas3 booking transforms the booking and departure information correctly without staff detail`() {
-    val departureDateTime = OffsetDateTime.parse("2023-07-15T00:00:00Z")
-    val reasonName = "Returned to custody"
-    val notes = "Some notes about the departure"
-    val moveOnCategoryDescription = "Returned to custody"
-    val moveOnCategoryLabel = "RTC"
-
-    val probationRegion = probationRegionEntity()
-
-    val premises = cas3PremisesEntity(probationRegion)
-
-    val user = userEntity(probationRegion)
-
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-
-    val booking = cas3BookingEntity(premises, application)
-
-    val reason = departureReasonEntity(reasonName)
-
-    val moveOnCategory = moveOnCategoryEntity(moveOnCategoryDescription, moveOnCategoryLabel)
-
-    booking.departures += cas3DepartureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
-
-    val event = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, null)
-
-    val data = event.data.eventDetails
-    assertAll({
-      assertThat(event.applicationId).isEqualTo(application.id)
-      assertThat(event.bookingId).isEqualTo(booking.id)
-      assertThat(event.crn).isEqualTo(booking.crn)
-      assertThat(event.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.crn).isEqualTo(booking.crn)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.deliusEventNumber).isEqualTo(application.eventNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
-      assertThat(data.departedAt).isEqualTo(departureDateTime.toInstant())
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
-      assertThat(event.data.eventType).isEqualTo(EventType.personDeparted)
-    })
-    assertThat(event.data.eventDetails.recordedBy).isNull()
-  }
-
-  @Test
   fun `getReferralSubmittedDomainEvent transforms the application correctly`() {
     val probationRegion = probationRegionEntity()
 
@@ -720,44 +454,6 @@ class Cas3DomainEventBuilderTest {
   }
 
   @Test
-  fun `buildDepartureUpdatedDomainEvent for cas3 booking transforms the booking and departure information correctly`() {
-    val departureDateTime = OffsetDateTime.parse("2023-07-15T00:00:00Z")
-    val reasonName = "Returned to custody"
-    val notes = "Some notes about the departure"
-    val moveOnCategoryDescription = "Returned to custody"
-    val moveOnCategoryLabel = "RTC"
-
-    val probationRegion = probationRegionEntity()
-
-    val premises = cas3PremisesEntity(probationRegion)
-
-    val user = userEntity(probationRegion)
-
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-
-    val booking = cas3BookingEntity(premises, application)
-
-    val reason = departureReasonEntity(reasonName)
-
-    val moveOnCategory = moveOnCategoryEntity(moveOnCategoryDescription, moveOnCategoryLabel)
-
-    booking.departures += cas3DepartureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
-
-    val event = cas3DomainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
-
-    val data = event.data.eventDetails
-    assertBookingEventData(event, booking, premises.id)
-    assertPremisesEventData(event, premises)
-    assertTemporaryAccommodationApplicationEventData(event, application)
-    assertAll({
-      assertThat(data.departedAt).isEqualTo(departureDateTime.toInstant())
-      assertThat(data.reason).isEqualTo(reasonName)
-      assertThat(data.notes).isEqualTo(notes)
-      assertThat(event.data.eventType).isEqualTo(EventType.personDepartureUpdated)
-    })
-  }
-
-  @Test
   fun `getBookingCancelledUpdatedsDomainEvent transforms the booking information correctly`() {
     val cancellationReasonName = "Some cancellation reason"
     val cancellationNotes = "Some notes about the cancellation"
@@ -780,38 +476,6 @@ class Cas3DomainEventBuilderTest {
 
     val data = event.data.eventDetails
 
-    assertAll({
-      assertThat(event.applicationId).isEqualTo(application.id)
-      assertThat(event.bookingId).isEqualTo(booking.id)
-      assertThat(event.crn).isEqualTo(booking.crn)
-      assertThat(event.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.crn).isEqualTo(booking.crn)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
-      assertThat(data.cancellationReason).isEqualTo(cancellationReasonName)
-      assertThat(data.notes).isEqualTo(cancellationNotes)
-      assertThat(data.applicationId).isEqualTo(application.id)
-      assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
-      assertThat(data.cancelledAt).isEqualTo(booking.cancellation?.date)
-      assertThat(event.data.eventType).isEqualTo(EventType.bookingCancelledUpdated)
-    })
-  }
-
-  @Test
-  fun `getBookingCancelledUpdatedsDomainEvent transforms the cas3 booking information correctly`() {
-    val cancellationReasonName = "Some cancellation reason"
-    val cancellationNotes = "Some notes about the cancellation"
-    val probationRegion = probationRegionEntity()
-    val premises = cas3PremisesEntity(probationRegion)
-    val user = userEntity(probationRegion)
-    val application = temporaryAccommodationApplicationEntity(user, probationRegion)
-    val booking = cas3BookingEntity(premises, application)
-    val cancellationReason = cancellationReasonEntity(cancellationReasonName)
-    booking.cancellations += cas3CancellationEntity(booking, cancellationReason, cancellationNotes)
-
-    val event = cas3DomainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
-    val data = event.data.eventDetails
     assertAll({
       assertThat(event.applicationId).isEqualTo(application.id)
       assertThat(event.bookingId).isEqualTo(booking.id)
@@ -1051,20 +715,6 @@ class Cas3DomainEventBuilderTest {
     })
   }
 
-  private fun cas3DepartureEntity(
-    booking: Cas3BookingEntity,
-    departureDateTime: OffsetDateTime,
-    reason: DepartureReasonEntity,
-    moveOnCategory: MoveOnCategoryEntity,
-    notes: String,
-  ) = Cas3DepartureEntityFactory()
-    .withBooking(booking)
-    .withDateTime(departureDateTime)
-    .withReason(reason)
-    .withMoveOnCategory(moveOnCategory)
-    .withNotes(notes)
-    .produce()
-
   private fun departureEntity(
     booking: BookingEntity,
     departureDateTime: OffsetDateTime,
@@ -1103,39 +753,12 @@ class Cas3DomainEventBuilderTest {
     .withNotes(notes)
     .produce()
 
-  private fun cas3ArrivalEntity(
-    booking: Cas3BookingEntity,
-    arrivalDateTime: Instant,
-    expectedDepartureDate: LocalDate,
-    notes: String,
-  ) = Cas3ArrivalEntityFactory()
-    .withBooking(booking)
-    .withArrivalDateTime(arrivalDateTime)
-    .withExpectedDepartureDate(expectedDepartureDate)
-    .withNotes(notes)
-    .produce()
-
   private fun bookingEntity(
     premises: TemporaryAccommodationPremisesEntity,
     application: TemporaryAccommodationApplicationEntity,
   ) = BookingEntityFactory()
     .withPremises(premises)
     .withApplication(application)
-    .produce()
-
-  private fun cas3BookingEntity(
-    premises: Cas3PremisesEntity,
-    application: TemporaryAccommodationApplicationEntity,
-    arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
-  ) = Cas3BookingEntityFactory()
-    .withPremises(premises)
-    .withApplication(application)
-    .withArrivalDate(arrivalDate)
-    .withBedspace(
-      Cas3BedspaceEntityFactory()
-        .withPremises(premises)
-        .produce(),
-    )
     .produce()
 
   private fun temporaryAccommodationApplicationEntity(
@@ -1148,15 +771,6 @@ class Cas3DomainEventBuilderTest {
 
   private fun userEntity(probationRegion: ProbationRegionEntity) = UserEntityFactory()
     .withProbationRegion(probationRegion)
-    .produce()
-
-  private fun cas3PremisesEntity(probationRegion: ProbationRegionEntity) = Cas3PremisesEntityFactory()
-    .withProbationDeliveryUnit(
-      ProbationDeliveryUnitEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce(),
-    )
-    .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
     .produce()
 
   private fun createCas3PremisesEntity(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity {
@@ -1184,16 +798,6 @@ class Cas3DomainEventBuilderTest {
     cancellationReason: CancellationReasonEntity,
     cancellationNotes: String,
   ) = CancellationEntityFactory()
-    .withBooking(booking)
-    .withReason(cancellationReason)
-    .withNotes(cancellationNotes)
-    .produce()
-
-  private fun cas3CancellationEntity(
-    booking: Cas3BookingEntity,
-    cancellationReason: CancellationReasonEntity,
-    cancellationNotes: String,
-  ) = Cas3CancellationEntityFactory()
     .withBooking(booking)
     .withReason(cancellationReason)
     .withNotes(cancellationNotes)
@@ -1234,23 +838,6 @@ class Cas3DomainEventBuilderTest {
       data.bookingUrl.toString() == "http://api/premises/$premisesId/bookings/${booking.id}"
   }
 
-  private fun assertBookingEventData(
-    eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,
-    booking: Cas3BookingEntity,
-    premisesId: UUID,
-  ) {
-    val data = eventData.data.eventDetails
-    assertAll({
-      assertThat(eventData.bookingId).isEqualTo(booking.id)
-      assertThat(eventData.crn).isEqualTo(booking.crn)
-      assertThat(eventData.nomsNumber).isEqualTo(booking.nomsNumber)
-      assertThat(data.personReference.crn).isEqualTo(booking.crn)
-      assertThat(data.personReference.noms).isEqualTo(booking.nomsNumber)
-      assertThat(data.bookingId).isEqualTo(booking.id)
-      assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/$premisesId/bookings/${booking.id}")
-    })
-  }
-
   private fun assertPremisesEventData(
     eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,
     premises: PremisesEntity,
@@ -1261,18 +848,6 @@ class Cas3DomainEventBuilderTest {
       data.premises.postcode == premises.postcode &&
       data.premises.town == premises.town &&
       data.premises.region == premises.probationRegion.name
-  }
-
-  private fun assertPremisesEventData(
-    eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,
-    premises: Cas3PremisesEntity,
-  ) {
-    val data = eventData.data.eventDetails
-    assertAll({
-      assertThat(data.premises.addressLine1).isEqualTo(premises.addressLine1)
-      assertThat(data.premises.addressLine2).isEqualTo(premises.addressLine2)
-      assertThat(data.premises.region).isEqualTo(premises.probationDeliveryUnit.probationRegion.name)
-    })
   }
 
   private fun assertTemporaryAccommodationApplicationEventData(

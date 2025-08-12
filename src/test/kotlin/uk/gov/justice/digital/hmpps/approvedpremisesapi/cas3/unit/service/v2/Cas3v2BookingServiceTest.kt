@@ -45,8 +45,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
@@ -83,9 +83,8 @@ import java.util.UUID
 
 class Cas3v2BookingServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
+  private val mockCas3DomainEventService = mockk<Cas3v2DomainEventService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
-
   private val mockBookingRepository = mockk<Cas3v2BookingRepository>()
   private val mockArrivalRepository = mockk<Cas3ArrivalRepository>()
   private val mockBedspaceRepository = mockk<Cas3BedspacesRepository>()

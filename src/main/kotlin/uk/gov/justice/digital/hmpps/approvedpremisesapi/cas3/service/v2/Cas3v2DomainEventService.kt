@@ -1,16 +1,14 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedEvent
@@ -25,16 +23,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.eve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3ReferralSubmittedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventServiceConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -45,25 +38,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingTopicException
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.util.UUID
 import kotlin.reflect.KClass
 
-@Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.DomainEventServiceConfig")
-class Cas3DomainEventServiceConfig(
-  @Value("\${domain-events.cas3.emit-enabled}") val domainEventsWithEmitEnabled: List<EventType>,
-) {
-  fun emitForEvent(eventType: EventType) = domainEventsWithEmitEnabled.contains(eventType)
-}
-
 @SuppressWarnings("TooManyFunctions", "TooGenericExceptionThrown", "")
-@Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.DomainEventService")
-class Cas3DomainEventService(
+@Service
+class Cas3v2DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
-  private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
+  private val cas3v2DomainEventBuilder: Cas3v2DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
   private val cas3DomainEventServiceConfig: Cas3DomainEventServiceConfig,
   private val domainEventUrlConfig: DomainEventUrlConfig,
@@ -76,69 +60,9 @@ class Cas3DomainEventService(
       ?: throw MissingTopicException("domainevents not found")
   }
 
-  fun getLastBedspaceUnarchiveEventDetails(bedspaceId: UUID): CAS3BedspaceUnarchiveEventDetails? {
-    val domainEventEntity = domainEventRepository.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceId, DomainEventType.CAS3_BEDSPACE_UNARCHIVED) ?: return null
-
-    return objectMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
-  }
-
-  fun getBookingCancelledEvent(id: UUID) = get<CAS3BookingCancelledEvent>(id)
-
-  fun getBookingConfirmedEvent(id: UUID) = get<CAS3BookingConfirmedEvent>(id)
-
-  fun getBookingProvisionallyMadeEvent(id: UUID) = get<CAS3BookingProvisionallyMadeEvent>(id)
-
-  fun getPersonArrivedEvent(id: UUID) = get<CAS3PersonArrivedEvent>(id)
-
-  fun getPersonArrivedUpdatedEvent(id: UUID) = get<CAS3PersonArrivedUpdatedEvent>(id)
-
-  fun getPersonDepartedEvent(id: UUID) = get<CAS3PersonDepartedEvent>(id)
-
-  fun getReferralSubmittedEvent(id: UUID) = get<CAS3ReferralSubmittedEvent>(id)
-
-  fun getPersonDepartureUpdatedEvent(id: UUID) = get<CAS3PersonDepartureUpdatedEvent>(id)
-
-  fun getBookingCancelledUpdatedEvent(id: UUID) = get<CAS3BookingCancelledUpdatedEvent>(id)
-
-  fun getAssessmentUpdatedEvents(assessmentId: UUID) = domainEventRepository.findByAssessmentIdAndType(assessmentId, DomainEventType.CAS3_ASSESSMENT_UPDATED)
-
-  fun getBedspaceDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesDomainEventsByType(
-    listOf(id),
-    bedspaceDomainEventTypes.map { it.toString() },
-  )
-
-  fun getBedspacesDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesDomainEventsByType(
-    ids,
-    bedspaceDomainEventTypes.map { it.toString() },
-  )
-
-  fun getPremisesDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesDomainEventsByType(
-    id,
-    premisesDomainEventTypes.map { it.toString() },
-  )
-
-  private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {
-    val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
-
-    val data = when {
-      enumTypeFromDataType(T::class) == domainEventEntity.type ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
-      else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
-    }
-    return DomainEvent(
-      id = domainEventEntity.id,
-      applicationId = domainEventEntity.applicationId,
-      bookingId = domainEventEntity.bookingId,
-      crn = domainEventEntity.crn,
-      nomsNumber = domainEventEntity.nomsNumber,
-      occurredAt = domainEventEntity.occurredAt.toInstant(),
-      data = data,
-    )
-  }
-
   @Transactional
-  fun saveBookingCancelledEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.getBookingCancelledDomainEvent(booking, user)
+  fun saveBookingCancelledEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -149,8 +73,8 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveBookingConfirmedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
+  fun saveBookingConfirmedEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -161,19 +85,8 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveBookingProvisionallyMadeEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
-    saveAndEmit(
-      domainEvent = domainEvent,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      triggerSourceType = TriggerSourceType.USER,
-    )
-  }
-
-  @Transactional
-  fun savePersonArrivedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.getPersonArrivedDomainEvent(booking, user)
+  fun saveCas3BookingProvisionallyMadeEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -184,8 +97,8 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun savePersonArrivedUpdatedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
+  fun savePersonArrivedEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.getPersonArrivedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -196,8 +109,8 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun savePersonDepartedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, user)
+  fun savePersonArrivedUpdatedEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -208,8 +121,8 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveReferralSubmittedEvent(application: TemporaryAccommodationApplicationEntity) {
-    val domainEvent = cas3DomainEventBuilder.getReferralSubmittedDomainEvent(application)
+  fun savePersonDepartedEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -220,8 +133,8 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun savePersonDepartureUpdatedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
+  fun savePersonDepartureUpdatedEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -232,58 +145,14 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun savePremisesArchiveEvent(premises: TemporaryAccommodationPremisesEntity, endDate: LocalDate) {
-    val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user)
+  fun saveBookingCancelledUpdatedEvent(booking: Cas3BookingEntity, user: UserEntity) {
+    val domainEvent = cas3v2DomainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
-      crn = domainEvent.crn,
-      nomsNumber = domainEvent.nomsNumber,
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       triggerSourceType = TriggerSourceType.USER,
-      false,
-    )
-  }
-
-  @Transactional
-  fun savePremisesUnarchiveEvent(premises: TemporaryAccommodationPremisesEntity, currentStartDate: LocalDate, newStartDate: LocalDate) {
-    val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, user)
-
-    saveAndEmit(
-      domainEvent = domainEvent,
-      crn = domainEvent.crn,
-      nomsNumber = domainEvent.nomsNumber,
-      triggerSourceType = TriggerSourceType.USER,
-      false,
-    )
-  }
-
-  @Transactional
-  fun saveBedspaceArchiveEvent(bedspace: BedEntity) {
-    val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
-
-    saveAndEmit(
-      domainEvent = domainEvent,
-      crn = domainEvent.crn,
-      nomsNumber = domainEvent.nomsNumber,
-      triggerSourceType = TriggerSourceType.USER,
-      false,
-    )
-  }
-
-  @Transactional
-  fun saveBedspaceUnarchiveEvent(bedspace: BedEntity, currentStartDate: LocalDate, currentEndDate: LocalDate) {
-    val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
-
-    saveAndEmit(
-      domainEvent = domainEvent,
-      crn = domainEvent.crn,
-      nomsNumber = domainEvent.nomsNumber,
-      triggerSourceType = TriggerSourceType.USER,
-      false,
     )
   }
 
@@ -399,39 +268,5 @@ class Cas3DomainEventService(
     CAS3BedspaceArchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_ARCHIVED
     CAS3BedspaceUnarchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_UNARCHIVED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
-  }
-
-  fun saveBookingCancelledUpdatedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
-
-    saveAndEmit(
-      domainEvent = domainEvent,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      triggerSourceType = TriggerSourceType.USER,
-    )
-  }
-
-  fun saveAssessmentUpdatedEvent(event: DomainEvent<CAS3AssessmentUpdatedEvent>) {
-    saveAndEmit(
-      domainEvent = event,
-      crn = event.crn,
-      nomsNumber = null,
-      triggerSourceType = TriggerSourceType.USER,
-      emit = false,
-    )
-  }
-
-  @Transactional
-  fun saveDraftReferralDeletedEvent(application: ApplicationEntity, user: UserEntity) {
-    val domainEvent = cas3DomainEventBuilder.getDraftReferralDeletedEvent(application, user)
-
-    saveAndEmit(
-      domainEvent = domainEvent,
-      crn = domainEvent.data.eventDetails.crn,
-      nomsNumber = null,
-      triggerSourceType = TriggerSourceType.USER,
-      emit = false,
-    )
   }
 }
