@@ -51,6 +51,7 @@ class UserTransformer(
   fun transformJpaToSummaryApi(jpa: UserEntity) = UserSummary(
     id = jpa.id,
     name = jpa.name,
+    emailAddress = jpa.email,
   )
 
   @Suppress("TooGenericExceptionThrown")
