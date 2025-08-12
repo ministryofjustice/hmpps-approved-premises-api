@@ -16,8 +16,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -270,7 +270,11 @@ class Cas1PlacementApplicationServiceTest {
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
         listOf(
-          PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = null,
+          ),
         ),
       )
 
@@ -298,7 +302,11 @@ class Cas1PlacementApplicationServiceTest {
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
         listOf(
-          PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
         ),
       )
 
@@ -312,6 +320,7 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
+      assertThat(updatedPlacementApp.expectedArrivalFlexible).isTrue
       assertThat(updatedPlacementApp.authorisedDuration).isNull()
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
@@ -336,10 +345,23 @@ class Cas1PlacementApplicationServiceTest {
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
         listOf(
-          PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
-          PlacementDates(expectedArrival = LocalDate.of(2024, 5, 2), duration = 10),
-          PlacementDates(expectedArrival = LocalDate.of(2024, 6, 3), duration = 15),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = false,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 5, 2),
+            duration = 10,
+            arrivalFlexible = null,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 6, 3),
+            duration = 15,
+            arrivalFlexible = true,
+          ),
         ),
+
       )
 
       assertThat(result is CasResult.Success).isTrue
@@ -352,6 +374,7 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp1 = updatedPlacementApplications[0]
       assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp1.requestedDuration).isEqualTo(5)
+      assertThat(updatedPlacementApp1.expectedArrivalFlexible).isFalse
       assertThat(updatedPlacementApp1.authorisedDuration).isNull()
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
@@ -362,6 +385,7 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp2 = updatedPlacementApplications[1]
       assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
       assertThat(updatedPlacementApp2.requestedDuration).isEqualTo(10)
+      assertThat(updatedPlacementApp2.expectedArrivalFlexible).isNull()
       assertThat(updatedPlacementApp2.authorisedDuration).isNull()
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
@@ -372,6 +396,7 @@ class Cas1PlacementApplicationServiceTest {
       val updatedPlacementApp3 = updatedPlacementApplications[2]
       assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
       assertThat(updatedPlacementApp3.requestedDuration).isEqualTo(15)
+      assertThat(updatedPlacementApp3.expectedArrivalFlexible).isTrue
       assertThat(updatedPlacementApp3.authorisedDuration).isNull()
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }

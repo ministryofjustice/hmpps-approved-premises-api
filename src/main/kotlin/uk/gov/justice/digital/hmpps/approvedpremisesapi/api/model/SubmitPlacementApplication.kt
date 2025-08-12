@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 
 /**
  *
@@ -11,12 +11,14 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class SubmitPlacementApplication(
 
-  @Schema(example = "null", required = true, description = "Any object")
-  @get:JsonProperty("translatedDocument", required = true) val translatedDocument: kotlin.Any,
+  @Schema(required = true)
+  val translatedDocument: Any,
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("placementType", required = true) val placementType: PlacementType,
+  @Schema(required = true)
+  val placementType: PlacementType,
 
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("placementDates", required = true) val placementDates: kotlin.collections.List<PlacementDates>,
+  @Schema(deprecated = true, description = "Please use requestedPlacementPeriods instead")
+  val placementDates: List<PlacementDates>?,
+
+  val requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>?,
 )

@@ -1,0 +1,1 @@
+ALTER TABLE placement_applications ADD COLUMN expected_arrival_flexible BOOLEAN;

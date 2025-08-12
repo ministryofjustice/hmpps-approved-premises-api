@@ -136,6 +136,8 @@ data class PlacementApplicationEntity(
 
   var authorisedDuration: Int? = null,
 
+  var expectedArrivalFlexible: Boolean? = null,
+
   @Version
   var version: Long = 1,
 ) {
