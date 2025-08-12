@@ -2513,9 +2513,17 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             LocalDate.now().minusDays(75),
             LocalDate.now().minusDays(30),
           ),
+          bedEndDates = listOf(
+            null,
+            LocalDate.now().minusDays(2),
+            null,
+          ),
           roomCount = 3,
         ) { premises, rooms, bedspaces ->
           val archivePremises = Cas3ArchivePremises(LocalDate.now())
+          val bedspaceOne = bedspaces.first()
+          val bedspaceTwo = bedspaces.drop(1).first()
+          val bedspaceThree = bedspaces.drop(2).first()
 
           webTestClient.post()
             .uri("/cas3/premises/${premises.id}/archive")
@@ -2534,9 +2542,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
           val updatedBedspaces = bedRepository.findByRoomPremisesId(updatedPremises.id)
           assertThat(updatedBedspaces).hasSize(3)
-          updatedBedspaces.forEach { bedspace ->
-            assertThat(bedspace.endDate).isEqualTo(LocalDate.now())
-          }
+          assertThat(updatedBedspaces[0].id).isEqualTo(bedspaceTwo.id)
+          assertThat(updatedBedspaces[0].endDate).isEqualTo(bedspaceTwo.endDate)
+          assertThat(updatedBedspaces[1].id).isEqualTo(bedspaceOne.id)
+          assertThat(updatedBedspaces[1].endDate).isEqualTo(LocalDate.now())
+          assertThat(updatedBedspaces[2].id).isEqualTo(bedspaceThree.id)
+          assertThat(updatedBedspaces[2].endDate).isEqualTo(LocalDate.now())
         }
       }
     }
@@ -2610,6 +2621,52 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
             .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidEndDateInTheFuture")
         }
+      }
+    }
+
+    @Test
+    fun `Given archive a premises when archive date is before premises start date then returns 400 Bad Request`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(3),
+      ) { user, jwt, premises ->
+
+        val archivePremises = Cas3ArchivePremises(premises.startDate.minusDays(2))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archivePremises)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("endDateBeforePremisesStartDate")
+      }
+    }
+
+    @Test
+    fun `Given archive a premises when archive date clashes with an earlier archive premises end date then returns 400 Bad Request`() {
+      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
+        val previousPremisesArchiveDate = LocalDate.now().minusDays(3)
+
+        getArchivePremisesEvent(premises, user, previousPremisesArchiveDate)
+
+        val archivePremises = Cas3ArchivePremises(previousPremisesArchiveDate.minusDays(3))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archivePremises)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("endDateOverlapPreviousPremisesArchiveEndDate")
       }
     }
 

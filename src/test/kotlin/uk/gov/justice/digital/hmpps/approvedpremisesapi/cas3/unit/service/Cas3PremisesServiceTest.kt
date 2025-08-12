@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -2515,6 +2516,7 @@ class Cas3PremisesServiceTest {
 
       val archiveDate = LocalDate.now().plusDays(3)
 
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
@@ -2566,6 +2568,7 @@ class Cas3PremisesServiceTest {
 
       val archiveDate = LocalDate.now().plusDays(3)
 
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
@@ -2622,10 +2625,62 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
+    fun `When archive a premises with an end date before premises start date returns FieldValidationError with the correct message`() {
+      val premises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(5))
+        .produce()
+
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+
+      val result = premisesService.archivePremises(premises, premises.startDate.minusDays(1))
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.endDate", "endDateBeforePremisesStartDate")
+    }
+
+    @Test
+    fun `When archive a premises with an end date that clashes with previous premises archive date returns FieldValidationError with the correct message`() {
+      val premises = temporaryAccommodationPremisesFactory
+        .withStartDate(LocalDate.now().minusDays(5))
+        .produce()
+
+      val previousPremisesArchiveDate = LocalDate.now().minusDays(3)
+
+      every {
+        cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED))
+      } returns listOf(
+        DomainEventEntityFactory()
+          .withId(UUID.randomUUID())
+          .withCas3PremisesId(premises.id)
+          .withType(CAS3_PREMISES_ARCHIVED)
+          .withData(
+            objectMapper.writeValueAsString(
+              CAS3PremisesArchiveEvent(
+                id = UUID.randomUUID(),
+                timestamp = OffsetDateTime.now().toInstant(),
+                eventType = EventType.premisesArchived,
+                eventDetails = CAS3PremisesArchiveEventDetails(
+                  premisesId = premises.id,
+                  userId = UUID.randomUUID(),
+                  endDate = previousPremisesArchiveDate,
+                ),
+              ),
+            ),
+          )
+          .produce(),
+      )
+
+      val result = premisesService.archivePremises(premises, previousPremisesArchiveDate.minusDays(2))
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.endDate", "endDateOverlapPreviousPremisesArchiveEndDate")
+    }
+
+    @Test
     fun `When archive a premises with an upcoming bedspace returns Cas3FieldValidationError with the correct message`() {
       val (premises, _) = createPremisesAndBedspace()
       val archiveDate = LocalDate.now().plusDays(5)
       val bedspaceTwo = createBedspace(premises, archiveDate.plusDays(2))
+
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
 
       val result = premisesService.archivePremises(premises, archiveDate)
 
@@ -2644,6 +2699,7 @@ class Cas3PremisesServiceTest {
         .withYieldedBed { bedspace }
         .produce()
 
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, archiveDate) } returns listOf()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns listOf(voidBedspace)
 
@@ -2672,6 +2728,7 @@ class Cas3PremisesServiceTest {
         .withDepartureDate(archiveDate.plusDays(1))
         .produce()
 
+      every { cas3DomainEventServiceMock.getPremisesDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, archiveDate) } returns listOf(booking)
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns listOf(voidBedspace)
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate
