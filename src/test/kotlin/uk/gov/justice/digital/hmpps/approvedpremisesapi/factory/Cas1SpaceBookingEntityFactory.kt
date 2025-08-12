@@ -42,6 +42,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var keyWorkerName: Yielded<String?> = { null }
   private var keyWorkerAssignedAt: Yielded<Instant?> = { null }
+  private var keyWorkerUser: Yielded<UserEntity?> = { null }
   private var cancellationOccurredAt: Yielded<LocalDate?> = { null }
   private var cancellationRecordedAt: Yielded<Instant?> = { null }
   private var cancellationReason: Yielded<CancellationReasonEntity?> = { null }
@@ -210,6 +211,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.transferType = { transferType }
   }
 
+  fun withKeyWorkerUser(keyWorkerUser: UserEntity?) = apply {
+    this.keyWorkerUser = { keyWorkerUser }
+  }
+
   override fun produce() = Cas1SpaceBookingEntity(
     id = this.id(),
     premises = this.premises(),
@@ -228,6 +233,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     keyWorkerStaffCode = this.keyWorkerStaffCode(),
     keyWorkerName = this.keyWorkerName(),
     keyWorkerAssignedAt = this.keyWorkerAssignedAt(),
+    keyWorkerUser = this.keyWorkerUser(),
     application = this.application(),
     offlineApplication = this.offlineApplication(),
     cancellationOccurredAt = cancellationOccurredAt(),

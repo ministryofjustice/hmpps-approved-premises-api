@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancyParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesController.Cas1CurrentKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesNewLocalRestriction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository.Companion.UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
@@ -74,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.net.URLEncoder
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDate.now
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -150,8 +153,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         givenACas1SpaceBooking(
           crn = "X123",
           premises = premises,
-          expectedArrivalDate = LocalDate.now().minusDays(3),
-          expectedDepartureDate = LocalDate.now().plusWeeks(14),
+          expectedArrivalDate = now().minusDays(3),
+          expectedDepartureDate = now().plusWeeks(14),
         )
       }
 
@@ -159,8 +162,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
       givenACas1SpaceBooking(
         crn = "X123",
         premises = premises,
-        expectedArrivalDate = LocalDate.now().minusDays(3),
-        expectedDepartureDate = LocalDate.now().plusWeeks(14),
+        expectedArrivalDate = now().minusDays(3),
+        expectedDepartureDate = now().plusWeeks(14),
         nonArrivalConfirmedAt = Instant.now(),
       )
 
@@ -168,9 +171,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
       givenACas1SpaceBooking(
         crn = "X123",
         premises = premises,
-        expectedArrivalDate = LocalDate.now().minusDays(3),
-        expectedDepartureDate = LocalDate.now().plusWeeks(14),
-        cancellationOccurredAt = LocalDate.now(),
+        expectedArrivalDate = now().minusDays(3),
+        expectedDepartureDate = now().plusWeeks(14),
+        cancellationOccurredAt = now(),
       )
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
@@ -184,23 +187,23 @@ class Cas1PremisesTest : IntegrationTestBase() {
       // cancelled, ignored
       givenAnOutOfServiceBed(
         bed = beds[0],
-        startDate = LocalDate.now().minusDays(1),
-        endDate = LocalDate.now().plusDays(4),
+        startDate = now().minusDays(1),
+        endDate = now().plusDays(4),
         cancelled = true,
       )
 
       // future, ignored
       givenAnOutOfServiceBed(
         bed = beds[0],
-        startDate = LocalDate.now().plusDays(2),
-        endDate = LocalDate.now().plusDays(4),
+        startDate = now().plusDays(2),
+        endDate = now().plusDays(4),
       )
 
       // current
       givenAnOutOfServiceBed(
         bed = beds[0],
-        startDate = LocalDate.now().minusDays(2),
-        endDate = LocalDate.now().plusDays(2),
+        startDate = now().minusDays(2),
+        endDate = now().plusDays(2),
       )
 
       val restriction1 = cas1PremisesLocalRestrictionEntityFactory.produceAndPersist {
@@ -307,20 +310,20 @@ class Cas1PremisesTest : IntegrationTestBase() {
       // scheduled for removal in the future
       givenAnApprovedPremisesBed(
         premises = premises1ManInArea1,
-        endDate = LocalDate.now().plusDays(5),
+        endDate = now().plusDays(5),
       )
       // removed bed
-      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now().minusDays(5))
+      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = now().minusDays(5))
       // bed scheduled for removal today
-      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = LocalDate.now())
+      givenAnApprovedPremisesBed(premises1ManInArea1, endDate = now())
 
       // premises 2 live beds
       repeat(2) { givenAnApprovedPremisesBed(premises2WomanInArea2) }
       // Bed scheduled for removal in the future
-      givenAnApprovedPremisesBed(premises2WomanInArea2, endDate = LocalDate.now().plusDays(20))
+      givenAnApprovedPremisesBed(premises2WomanInArea2, endDate = now().plusDays(20))
 
       // premises 3 live beds
-      repeat(20) { givenAnApprovedPremisesBed(premises3ManInArea2, endDate = LocalDate.now().minusDays(5)) }
+      repeat(20) { givenAnApprovedPremisesBed(premises3ManInArea2, endDate = now().minusDays(5)) }
     }
 
     @SuppressWarnings("CyclomaticComplexMethod")
@@ -1019,7 +1022,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var isArsonSuitableCharacteristic: CharacteristicEntity
     lateinit var hasEnSuiteCharacteristic: CharacteristicEntity
 
-    val summaryDate: LocalDate = LocalDate.now()
+    val summaryDate: LocalDate = now()
     val tierA = "A2"
     val tierB = "B3"
     val releaseTypeToBeDetermined = "TBD"
@@ -1040,7 +1043,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     fun setupBookings() {
-      val now = LocalDate.now()
+      val now = now()
 
       bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
@@ -1179,7 +1182,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     fun setupOutOfServiceBeds() {
-      val now = LocalDate.now()
+      val now = now()
 
       hasEnSuiteCharacteristic = characteristicRepository.findByPropertyName("hasEnSuite", "approved-premises")!!
       isArsonSuitableCharacteristic = characteristicRepository.findByPropertyName("isArsonSuitable", "approved-premises")!!
@@ -1823,7 +1826,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         premises = premises1,
         canonicalArrivalDate = LocalDate.of(2025, 5, 6),
         canonicalDepartureDate = LocalDate.of(2025, 5, 28),
-        cancellationOccurredAt = LocalDate.now(),
+        cancellationOccurredAt = now(),
       )
     }
 
@@ -1953,7 +1956,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class Cas1PremisesLocalRestrictions : InitialiseDatabasePerClassTestBase() {
+  inner class CreateLocalRestrictions : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Returns 403 Forbidden if user does not have correct role`() {
@@ -2121,5 +2124,68 @@ class Cas1PremisesTest : IntegrationTestBase() {
       cas1PremisesLocalRestrictionRepository.findByIdOrNull(restriction.id)
     assertThat(isRestrictionArchivedAfterDelete).isNotNull()
     assertThat(isRestrictionArchivedAfterDelete?.archived).isTrue()
+  }
+
+  @Nested
+  inner class GetCurrentKeyWorkers {
+    @Test
+    fun `no bookings, return nothing`() {
+      val premises = givenAnApprovedPremises()
+
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val result = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/current-key-workers")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1CurrentKeyWorker>()
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `mix of current and upcoming bookings for multiple keyworkers`() {
+      val (keyWorker1, _) = givenAUser()
+      val (keyWorker2, _) = givenAUser()
+
+      val premises = givenAnApprovedPremises()
+      val otherPremises = givenAnApprovedPremises()
+
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker1, actualArrivalDate = null)
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker1, actualArrivalDate = null)
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker1, actualArrivalDate = now())
+
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker2, actualArrivalDate = now())
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker2, actualArrivalDate = now())
+
+      // ignored as not current or upcoming, or different premises
+      givenACas1SpaceBooking(premises = otherPremises, keyWorkerUser = keyWorker1, actualArrivalDate = null)
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker1, actualArrivalDate = null, expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.minusDays(1))
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker1, actualArrivalDate = null, actualDepartureDate = now())
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker1, actualArrivalDate = null, cancellationOccurredAt = now())
+      givenACas1SpaceBooking(premises = premises, keyWorkerUser = keyWorker1, actualArrivalDate = null, nonArrivalConfirmedAt = Instant.now())
+
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val result = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/current-key-workers")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1CurrentKeyWorker>()
+
+      assertThat(result).hasSize(2)
+
+      val keyWorker1Result = result.first { it.summary.id == keyWorker1.id }
+      assertThat(keyWorker1Result.summary.name).isEqualTo(keyWorker1.name)
+      assertThat(keyWorker1Result.upcomingBookingCount).isEqualTo(2)
+      assertThat(keyWorker1Result.currentBookingCount).isEqualTo(1)
+
+      val keyWorker2Result = result.first { it.summary.id == keyWorker2.id }
+      assertThat(keyWorker2Result.summary.name).isEqualTo(keyWorker2.name)
+      assertThat(keyWorker2Result.upcomingBookingCount).isEqualTo(0)
+      assertThat(keyWorker2Result.currentBookingCount).isEqualTo(2)
+    }
   }
 }

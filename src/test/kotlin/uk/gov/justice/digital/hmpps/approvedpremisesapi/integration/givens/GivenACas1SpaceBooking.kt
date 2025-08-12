@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
 import java.time.LocalDate
@@ -33,6 +34,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   transferredFrom: Cas1SpaceBookingEntity? = null,
+  keyWorkerUser: UserEntity? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -65,5 +67,6 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withNonArrivalConfirmedAt(nonArrivalConfirmedAt)
     withCancellationOccurredAt(cancellationOccurredAt)
     withTransferredFrom(transferredFrom)
+    withKeyWorkerUser(keyWorkerUser)
   }
 }
