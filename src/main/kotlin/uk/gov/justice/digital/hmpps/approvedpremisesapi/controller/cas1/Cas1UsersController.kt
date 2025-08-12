@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -106,17 +107,20 @@ class Cas1UsersController(
     @RequestParam page: Int?,
     @RequestParam sortBy: UserSortField?,
     @RequestParam sortDirection: SortDirection?,
-  ) = getUsers(
-    roles,
-    qualifications,
-    probationRegionId,
-    apAreaId,
-    page,
-    sortBy,
-    sortDirection,
-    cruManagementAreaId,
-  ) { user ->
-    userTransformer.transformCas1JpaToApi(user)
+  ): ResponseEntity<List<ApprovedPremisesUser>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
+    return getUsers(
+      roles,
+      qualifications,
+      probationRegionId,
+      apAreaId,
+      page,
+      sortBy,
+      sortDirection,
+      cruManagementAreaId,
+    ) { user ->
+      userTransformer.transformCas1JpaToApi(user)
+    }
   }
 
   @Operation(summary = "Returns a list of user summaries (i.e. id and name only)")
@@ -129,16 +133,19 @@ class Cas1UsersController(
     @RequestParam page: Int?,
     @RequestParam sortBy: UserSortField?,
     @RequestParam sortDirection: SortDirection?,
-  ) = getUsers(
-    roles,
-    qualifications,
-    probationRegionId,
-    apAreaId,
-    page,
-    sortBy,
-    sortDirection,
-  ) { user ->
-    userTransformer.transformJpaToSummaryApi(user)
+  ): ResponseEntity<List<UserSummary>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_SUMMARY_LIST)
+    return getUsers(
+      roles,
+      qualifications,
+      probationRegionId,
+      apAreaId,
+      page,
+      sortBy,
+      sortDirection,
+    ) { user ->
+      userTransformer.transformJpaToSummaryApi(user)
+    }
   }
 
   private fun <T> getUsers(
@@ -152,8 +159,6 @@ class Cas1UsersController(
     cruManagementAreaId: UUID? = null,
     resultTransformer: (UserEntity) -> T,
   ): ResponseEntity<List<T>> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
-
     val (users, metadata) = userService.getUsers(
       qualifications?.map(::transformApiQualification),
       roles?.map(UserRole::valueOf),

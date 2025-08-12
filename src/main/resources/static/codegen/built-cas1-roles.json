@@ -22,6 +22,7 @@
       "cas1_space_booking_record_keyworker",
       "cas1_space_booking_record_non_arrival",
       "cas1_space_booking_view",
+      "cas1_user_summary_list",
       "cas1_view_out_of_service_beds"
     ]
   },
@@ -48,6 +49,7 @@
       "cas1_tasks_allocate",
       "cas1_tasks_list",
       "cas1_user_list",
+      "cas1_user_summary_list",
       "cas1_view_cru_dashboard",
       "cas1_view_manage_tasks",
       "cas1_view_out_of_service_beds"
@@ -152,6 +154,7 @@
       "cas1_transfer_create",
       "cas1_user_list",
       "cas1_user_management",
+      "cas1_user_summary_list",
       "cas1_view_assigned_assessments",
       "cas1_view_cru_dashboard",
       "cas1_view_manage_tasks",
@@ -162,7 +165,8 @@
     "name" : "user_manager",
     "permissions" : [
       "cas1_user_list",
-      "cas1_user_management"
+      "cas1_user_management",
+      "cas1_user_summary_list"
     ]
   },
   {
@@ -170,6 +174,7 @@
     "permissions" : [
       "cas1_tasks_list",
       "cas1_user_list",
+      "cas1_user_summary_list",
       "cas1_view_manage_tasks"
     ]
   }

@@ -27,6 +27,7 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   transferCreate("cas1_transfer_create"),
   transferAssess("cas1_transfer_assess"),
   userList("cas1_user_list"),
+  userSummaryList("cas1_user_summary_list"),
   userManagement("cas1_user_management"),
   viewAssignedAssessments("cas1_view_assigned_assessments"),
   viewCruDashboard("cas1_view_cru_dashboard"),

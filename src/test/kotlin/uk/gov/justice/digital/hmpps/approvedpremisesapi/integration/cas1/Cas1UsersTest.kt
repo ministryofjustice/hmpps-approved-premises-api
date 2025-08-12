@@ -471,20 +471,8 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `GET users with an unapproved role is forbidden`(role: UserRole) {
+    fun `GET users with a role without permission CAS1_USER_LIST is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
-        webTestClient.get()
-          .uri("/cas1/users")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
-    @Test
-    fun `GET users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/cas1/users")
           .header("Authorization", "Bearer $jwt")
@@ -810,10 +798,10 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER", "CAS1_FUTURE_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `GET user summary with an unapproved role is forbidden`(role: UserRole) {
+    fun `GET user summary with a role without permission CAS1_USER_SUMMARY_LIST is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/cas1/users/summary")
@@ -824,22 +812,9 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    @Test
-    fun `GET user summary with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      givenAUser { _, jwt ->
-        webTestClient.get()
-          .uri("/cas1/users/summary")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET user summary with an approved role returns full list ordered by name`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_FUTURE_MANAGER"])
+    fun `GET user summary with permission CAS1_USER_SUMMARY_LIST returns full list ordered by name`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->

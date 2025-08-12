@@ -13,13 +13,6 @@ import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessAppealedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.assessApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.processAnAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.reportsView
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userList
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.userManagement
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission.viewAssignedAssessments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.cruMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.reportViewer
@@ -192,10 +185,10 @@ class UserTransformerTest {
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
       assertThat(result.permissions).containsExactlyInAnyOrder(
-        assessApplication,
-        assessAppealedApplication,
-        processAnAppeal,
-        viewAssignedAssessments,
+        ApprovedPremisesUserPermission.assessApplication,
+        ApprovedPremisesUserPermission.assessAppealedApplication,
+        ApprovedPremisesUserPermission.processAnAppeal,
+        ApprovedPremisesUserPermission.viewAssignedAssessments,
       )
     }
 
@@ -231,9 +224,10 @@ class UserTransformerTest {
 
       assertThat(result.permissions).hasSameElementsAs(
         listOf(
-          reportsView,
-          userList,
-          userManagement,
+          ApprovedPremisesUserPermission.reportsView,
+          ApprovedPremisesUserPermission.userList,
+          ApprovedPremisesUserPermission.userSummaryList,
+          ApprovedPremisesUserPermission.userManagement,
         ),
       )
     }
@@ -252,7 +246,7 @@ class UserTransformerTest {
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
       assertThat(result.version).isNotNull()
-      assertThat(result.version).isEqualTo(-1893754805)
+      assertThat(result.version).isEqualTo(-1200114849)
     }
 
     @Test

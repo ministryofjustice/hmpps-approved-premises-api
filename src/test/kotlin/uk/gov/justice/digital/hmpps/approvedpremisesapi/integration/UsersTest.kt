@@ -377,10 +377,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER", "CAS1_FUTURE_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `GET user summary with an unapproved role is forbidden`(role: UserRole) {
+    fun `GET users summaries with an unapproved role is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/summary")
