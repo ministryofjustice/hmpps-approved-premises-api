@@ -49,6 +49,13 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulStaffMembersCall(staffMembe
   )
 }
 
+fun IntegrationTestBase.apDeliusContextMockSuccessfulStaffDetailByCodeCall(staffDetail: StaffDetail) {
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/staff?code=${staffDetail.code}",
+    responseBody = staffDetail,
+  )
+}
+
 fun IntegrationTestBase.apDeliusContextMockSuccessfulCaseDetailCall(crn: String, response: CaseDetail, responseStatus: Int = 200) = mockSuccessfulGetCallWithJsonResponse(
   url = "/probation-cases/$crn/details",
   responseBody = response,
