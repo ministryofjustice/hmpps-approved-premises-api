@@ -12,6 +12,7 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   bookingWithdraw("cas1_booking_withdraw"),
   changeRequestList("cas1_change_request_list"),
   changeRequestView("cas1_change_request_view"),
+  keyworkerAssignableAs("cas1_keyworker_assignable_as"),
   experimentalNewAssignKeyworkerFlow("cas1_experimental_new_assign_keyworker_flow"),
   experimentalNewRequestForPlacementFlow("cas1_experimental_new_request_for_placement_flow"),
   nationalOccupancyView("cas1_national_occupancy_view"),

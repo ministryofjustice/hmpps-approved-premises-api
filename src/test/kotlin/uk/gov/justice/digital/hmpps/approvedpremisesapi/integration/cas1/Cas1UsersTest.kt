@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
@@ -993,6 +995,27 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           }
         }
       }
+    }
+
+    @Test
+    fun `GET to users with an approved role allows filtering by permission`() {
+      val (user1WithRequiredPermission, _) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      // user without required permission
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
+      val (user2WithRequiredPermission, _) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      val results = webTestClient.get()
+        .uri("/cas1/users/summary?permission=cas1_keyworker_assignable_as")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<UserSummary>()
+
+      assertThat(results).hasSize(2)
+      assertThat(results.map { it.id }).contains(user1WithRequiredPermission.id)
+      assertThat(results.map { it.id }).contains(user2WithRequiredPermission.id)
     }
 
     @ParameterizedTest

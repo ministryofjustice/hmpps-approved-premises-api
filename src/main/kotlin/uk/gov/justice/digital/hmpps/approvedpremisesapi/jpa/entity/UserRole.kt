@@ -21,6 +21,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.futureManager,
     listOf(
+      UserPermission.CAS1_KEYWORKER_ASSIGNABLE_AS,
       UserPermission.CAS1_OFFLINE_APPLICATION_VIEW,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
       UserPermission.CAS1_PREMISES_VIEW,

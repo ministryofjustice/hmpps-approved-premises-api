@@ -30,6 +30,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
 
   CAS1_EXPERIMENTAL_NEW_REQUEST_FOR_PLACEMENT_FLOW(ApprovedPremisesUserPermission.experimentalNewRequestForPlacementFlow, experimental = true),
 
+  CAS1_KEYWORKER_ASSIGNABLE_AS(ApprovedPremisesUserPermission.keyworkerAssignableAs),
+
   CAS1_OFFLINE_APPLICATION_VIEW(ApprovedPremisesUserPermission.offlineApplicationView),
 
   CAS1_OUT_OF_SERVICE_BED_CREATE(ApprovedPremisesUserPermission.outOfServiceBedCreate),
@@ -113,4 +115,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
   ;
 
   fun isAvailable(environmentService: EnvironmentService): Boolean = !experimental || environmentService.isNotProd()
+
+  companion object {
+    fun forApiPermission(apiPermission: ApprovedPremisesUserPermission) = entries.first { it.cas1ApiValue == apiPermission }
+  }
 }

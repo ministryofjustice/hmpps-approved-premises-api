@@ -60,6 +60,7 @@ class UsersController(
     qualifications,
     probationRegionId,
     apAreaId,
+    permission = null,
     page,
     sortBy,
     sortDirection,

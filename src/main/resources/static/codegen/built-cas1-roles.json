@@ -12,6 +12,7 @@
   {
     "name" : "future_manager",
     "permissions" : [
+      "cas1_keyworker_assignable_as",
       "cas1_offline_application_view",
       "cas1_out_of_service_bed_create",
       "cas1_premises_manage",
@@ -118,6 +119,7 @@
       "cas1_change_request_view",
       "cas1_experimental_new_assign_keyworker_flow",
       "cas1_experimental_new_request_for_placement_flow",
+      "cas1_keyworker_assignable_as",
       "cas1_national_occupancy_view",
       "cas1_offline_application_view",
       "cas1_out_of_service_bed_cancel",
