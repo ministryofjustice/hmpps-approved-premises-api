@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
@@ -59,7 +58,7 @@ class Cas3v2BookingService(
   private val cas3v2TurnaroundRepository: Cas3v2TurnaroundRepository,
   private val assessmentRepository: AssessmentRepository,
   private val offenderService: OffenderService,
-  private val cas3DomainEventService: Cas3DomainEventService,
+  private val cas3DomainEventService: Cas3v2DomainEventService,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas3v2ConfirmationRepository: Cas3v2ConfirmationRepository,
   private val workingDayService: WorkingDayService,
