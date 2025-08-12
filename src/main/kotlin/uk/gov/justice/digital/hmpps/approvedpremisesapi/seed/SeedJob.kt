@@ -35,4 +35,4 @@ interface ExcelSeedJob {
   fun processXlsx(file: File)
 }
 
-class SeedException(message: String) : RuntimeException(message)
+class SeedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed
 
-import io.github.bluegroundltd.kfactory.Factory
-import io.github.bluegroundltd.kfactory.Yielded
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
@@ -9,28 +7,27 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Pro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockNotFoundStaffDetailByStaffCodeCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockNotFoundStaffDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffDetailByCodeCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApStaffUserSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 
 class UsersBasicSeedJobTest : SeedTestBase() {
   @Test
-  fun `Seeding a non existent user logs an error`() {
+  fun `Seeding a non existent user logs an error, using delius username `() {
     apDeliusContextMockNotFoundStaffDetailCall("INVALID-USER")
 
     seed(
       SeedFileType.usersBasic,
       apStaffUserSeedCsvRowsToCsv(
         listOf(
-          ApStaffUserSeedCsvRowFactory()
-            .withDeliusUsername("INVALID-USER")
-            .produce(),
+          ApStaffUserSeedCsvRow(deliusUsername = "INVALID-USER", staffCode = null),
         ),
       ),
     )
@@ -45,7 +42,7 @@ class UsersBasicSeedJobTest : SeedTestBase() {
   }
 
   @Test
-  fun `Seeding a real but currently unknown user succeeds`() {
+  fun `Seeding a real but currently unknown user succeeds, using delius username `() {
     val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
@@ -66,9 +63,7 @@ class UsersBasicSeedJobTest : SeedTestBase() {
       SeedFileType.usersBasic,
       apStaffUserSeedCsvRowsToCsv(
         listOf(
-          ApStaffUserSeedCsvRowFactory()
-            .withDeliusUsername("unknown-user")
-            .produce(),
+          ApStaffUserSeedCsvRow(deliusUsername = "unknown-user", staffCode = null),
         ),
       ),
     )
@@ -83,7 +78,7 @@ class UsersBasicSeedJobTest : SeedTestBase() {
     }
   }
 
-  @Test fun `Seeding an existing user leaves roles and qualifications untouched`() {
+  @Test fun `Seeding an existing user leaves roles and qualifications untouched, using delius username`() {
     val user = userEntityFactory.produceAndPersist {
       withDeliusUsername("PRE-EXISTING-USER")
       withUpdatedAt(OffsetDateTime.now().minusDays(3))
@@ -110,9 +105,7 @@ class UsersBasicSeedJobTest : SeedTestBase() {
       SeedFileType.usersBasic,
       apStaffUserSeedCsvRowsToCsv(
         listOf(
-          ApStaffUserSeedCsvRowFactory()
-            .withDeliusUsername("PRE-EXISTING-USER")
-            .produce(),
+          ApStaffUserSeedCsvRow(deliusUsername = "PRE-EXISTING-USER", staffCode = null),
         ),
       ),
     )
@@ -136,31 +129,113 @@ class UsersBasicSeedJobTest : SeedTestBase() {
     }
   }
 
+  @Test
+  fun `Seeding a non existent staff user logs an error, using staff code`() {
+    apDeliusContextMockNotFoundStaffDetailByStaffCodeCall("INVALID-STAFF-CODE")
+
+    seed(
+      SeedFileType.usersBasic,
+      apStaffUserSeedCsvRowsToCsv(
+        listOf(
+          ApStaffUserSeedCsvRow(deliusUsername = null, staffCode = "INVALID-STAFF-CODE"),
+        ),
+      ),
+    )
+
+    assertError(
+      row = 1,
+      message = "Could not resolve username for staff code INVALID-STAFF-CODE",
+    )
+  }
+
+  @Test
+  fun `Seeding a staff member with no username logs an error, using staff code`() {
+    apDeliusContextMockSuccessfulStaffDetailByCodeCall(
+      StaffDetailFactory.staffDetail(
+        code = "STAFF-CODE-WITHOUT-USERNAME",
+        deliusUsername = null,
+      ),
+    )
+
+    seed(
+      SeedFileType.usersBasic,
+      apStaffUserSeedCsvRowsToCsv(
+        listOf(
+          ApStaffUserSeedCsvRow(deliusUsername = null, staffCode = "STAFF-CODE-WITHOUT-USERNAME"),
+        ),
+      ),
+    )
+
+    assertError(
+      row = 1,
+      message = "Could not resolve username for staff code STAFF-CODE-WITHOUT-USERNAME",
+    )
+  }
+
+  @Test
+  fun `Seeding a real but currently unknown user succeeds, using staff code`() {
+    val probationRegion = givenAProbationRegion()
+
+    val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
+    apDeliusContextMockSuccessfulStaffDetailByCodeCall(
+      StaffDetailFactory.staffDetail(
+        code = "NEW-USER-STAFF-CODE",
+        deliusUsername = "NEW-USER-DELIUS_USERNAME",
+        probationArea = ProbationArea(
+          code = probationRegionDeliusMapping.probationAreaDeliusCode,
+          description = "description",
+        ),
+      ),
+    )
+
+    apDeliusContextAddStaffDetailResponse(
+      StaffDetailFactory.staffDetail(
+        code = "NEW-USER-STAFF-CODE",
+        deliusUsername = "NEW-USER-DELIUS_USERNAME",
+        probationArea = ProbationArea(
+          code = probationRegionDeliusMapping.probationAreaDeliusCode,
+          description = "description",
+        ),
+      ),
+    )
+
+    seed(
+      SeedFileType.usersBasic,
+      apStaffUserSeedCsvRowsToCsv(
+        listOf(
+          ApStaffUserSeedCsvRow(deliusUsername = null, staffCode = "NEW-USER-STAFF-CODE"),
+        ),
+      ),
+    )
+
+    val persistedUser = userRepository.findByDeliusUsername("NEW-USER-DELIUS_USERNAME")
+
+    assertThat(persistedUser).isNotNull
+
+    assertThat(logEntries).anyMatch {
+      it.level == "info" &&
+        it.message.contains("User record for 'NEW-USER-DELIUS_USERNAME' created")
+    }
+  }
+
   private fun apStaffUserSeedCsvRowsToCsv(rows: List<ApStaffUserSeedCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "deliusUsername",
+        "staffCode",
       )
       .newRow()
 
     rows.forEach {
       builder
-        .withQuotedField(it.deliusUsername)
+        .withQuotedField(it.deliusUsername ?: "")
+        .withQuotedField(it.staffCode ?: "")
         .newRow()
     }
 
     return builder.build()
   }
-}
-
-class ApStaffUserSeedCsvRowFactory : Factory<ApStaffUserSeedCsvRow> {
-  private var deliusUsername: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
-
-  fun withDeliusUsername(deliusUsername: String) = apply {
-    this.deliusUsername = { deliusUsername }
-  }
-
-  override fun produce() = ApStaffUserSeedCsvRow(
-    deliusUsername = this.deliusUsername(),
-  )
 }

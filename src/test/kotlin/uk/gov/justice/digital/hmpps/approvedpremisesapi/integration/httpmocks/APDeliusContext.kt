@@ -279,6 +279,11 @@ fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: Staff
   )
 }
 
+fun IntegrationTestBase.apDeliusContextMockNotFoundStaffDetailByStaffCodeCall(staffCode: String) = mockUnsuccessfulGetCall(
+  url = "/staff?code=$staffCode",
+  responseStatus = 404,
+)
+
 fun IntegrationTestBase.apDeliusContextMockNotFoundStaffDetailCall(username: String) = mockUnsuccessfulGetCall(
   url = "/staff/$username",
   responseStatus = 404,
