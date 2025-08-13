@@ -36,6 +36,7 @@ class Cas1OutOfServiceBedsReportRepository(
           latest_revisions.reason AS reason,
           latest_revisions.start_date AS "startDate",
           latest_revisions.end_date AS "endDate",
+          CASE WHEN (c.created_at is NOT NULL) THEN 'YES' ELSE 'NO' END AS "cancelled",
           CASE
             WHEN (
                 DATE_PART('day', LEAST(:endDate, latest_revisions.end_date) - GREATEST(:startDate, latest_revisions.start_date)) + 1 > 0
@@ -69,7 +70,6 @@ class Cas1OutOfServiceBedsReportRepository(
         WHERE
             latest_revisions.start_date <= :endDate
             AND latest_revisions.end_date >= :startDate
-            AND c IS NULL
             AND latest_revisions.reason_id != :bedOnHoldReasonId
         GROUP BY
             oos_bed.id,
@@ -81,7 +81,8 @@ class Cas1OutOfServiceBedsReportRepository(
             latest_revisions.start_date,
             latest_revisions.end_date,
             latest_revisions.reference_number,
-            latest_revisions.reason
+            latest_revisions.reason,
+            c.created_at
         ORDER BY oos_bed.id
     """
   }
