@@ -1,18 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
-
-/**
- *
- * @param keyWorker
- * @param allocatedAt
- */
 data class Cas1KeyWorkerAllocation(
-
-  @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("keyWorker", required = true) val keyWorker: StaffMember,
-
-  @Schema(example = "null", description = "")
-  @get:JsonProperty("allocatedAt") val allocatedAt: java.time.LocalDate? = null,
+  val keyWorker: StaffMember,
+  val keyWorkerUser: UserSummary? = null,
+  val allocatedAt: java.time.LocalDate? = null,
 )
