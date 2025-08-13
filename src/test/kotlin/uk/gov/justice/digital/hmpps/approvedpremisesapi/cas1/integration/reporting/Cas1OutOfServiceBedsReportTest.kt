@@ -27,6 +27,7 @@ import java.time.OffsetDateTime
 class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
   lateinit var oosbRecordBed1: Cas1OutOfServiceBedEntity
   lateinit var oosbRecordBed2: Cas1OutOfServiceBedEntity
+  lateinit var oosbRecordBed3: Cas1OutOfServiceBedEntity
 
   @BeforeAll
   fun setup() {
@@ -118,9 +119,34 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
-        cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        oosbRecordBed3 = cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
           withBed(bed3)
+        }.apply {
+          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2020-12-01T14:36:12+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withCreatedBy(userEntity)
+            withReferenceNumber("ref3")
+            withOutOfServiceBed(this@apply)
+            withStartDate(LocalDate.of(2023, 4, 1))
+            withEndDate(LocalDate.of(2023, 7, 5))
+            withReason(
+              cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
+                withName("Reason3")
+              },
+            )
+            withNotes("Notes on OOSB3 Revision 1")
+          }
+
+          this.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withOutOfServiceBed(this@apply)
+          }
+        }
+
+        cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withBed(bed4)
         }.apply {
           this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
             withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -128,28 +154,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
             withOutOfServiceBed(this@apply)
             withStartDate(LocalDate.of(2023, 4, 1))
             withEndDate(LocalDate.of(2023, 7, 5))
-            withYieldedReason {
-              cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-            }
-          }
-
-          cas1OutOfServiceBedEntityFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            withBed(bed4)
-          }.apply {
-            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-              withCreatedBy(userEntity)
-              withOutOfServiceBed(this@apply)
-              withStartDate(LocalDate.of(2023, 4, 1))
-              withEndDate(LocalDate.of(2023, 7, 5))
-              withReason(cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID))
-            }
-          }
-
-          this.cancellation = cas1OutOfServiceBedCancellationEntityFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            withOutOfServiceBed(this@apply)
+            withReason(cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID))
           }
         }
       }
@@ -194,7 +199,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           .sortBy { row -> row["bedName"] }
 
         val actualRows = actual.toList()
-        assertThat(actualRows).hasSize(2)
+        assertThat(actualRows).hasSize(3)
         assertThat(actualRows[0].roomName).isEqualTo("room1")
         assertThat(actualRows[0].bedName).isEqualTo("bed1")
         assertThat(actualRows[0].id).isEqualTo(oosbRecordBed1.id.toString())
@@ -206,6 +211,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(actualRows[0].startDate).isEqualTo(LocalDate.of(2023, 4, 5))
         assertThat(actualRows[0].endDate).isEqualTo(LocalDate.of(2023, 7, 8))
         assertThat(actualRows[0].lengthDays).isEqualTo(26)
+        assertThat(actualRows[0].cancelled).isEqualTo("NO")
 
         assertThat(actualRows[1].roomName).isEqualTo("room2")
         assertThat(actualRows[1].bedName).isEqualTo("bed2")
@@ -217,6 +223,19 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(actualRows[1].startDate).isEqualTo(LocalDate.of(2023, 4, 12))
         assertThat(actualRows[1].endDate).isEqualTo(LocalDate.of(2023, 7, 5))
         assertThat(actualRows[1].lengthDays).isEqualTo(19)
+        assertThat(actualRows[1].cancelled).isEqualTo("NO")
+
+        assertThat(actualRows[2].roomName).isEqualTo("room3")
+        assertThat(actualRows[2].bedName).isEqualTo("bed3")
+        assertThat(actualRows[2].id).isEqualTo(oosbRecordBed3.id.toString())
+        assertThat(actualRows[2].workOrderId).isEqualTo("ref3")
+        assertThat(actualRows[2].ap).isEqualTo("ap name")
+        assertThat(actualRows[2].apQCode).isEqualTo("Q001")
+        assertThat(actualRows[2].reason).isEqualTo("Reason3")
+        assertThat(actualRows[2].startDate).isEqualTo(LocalDate.of(2023, 4, 1))
+        assertThat(actualRows[2].endDate).isEqualTo(LocalDate.of(2023, 7, 5))
+        assertThat(actualRows[2].lengthDays).isEqualTo(30)
+        assertThat(actualRows[2].cancelled).isEqualTo("YES")
       }
   }
 
@@ -258,7 +277,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           .sortBy { row -> row["bedName"] }
 
         val actualRows = actual.toList()
-        assertThat(actualRows).hasSize(2)
+        assertThat(actualRows).hasSize(3)
         assertThat(actualRows[0].notes).isEqualTo(
           """Date/Time: Friday 3 January 2020
 Reason: Reason1
@@ -268,6 +287,11 @@ Notes: Notes on OOSB1 Revision 1""",
           """Date/Time: Thursday 3 December 2020
 Reason: Reason2
 Notes: Notes on OOSB2 Revision 1""",
+        )
+        assertThat(actualRows[2].notes).isEqualTo(
+          """Date/Time: Tuesday 1 December 2020
+Reason: Reason3
+Notes: Notes on OOSB3 Revision 1""",
         )
       }
   }
@@ -285,6 +309,7 @@ data class Cas1OutOfServiceBedReportRowWithoutPii(
   val startDate: LocalDate,
   val endDate: LocalDate,
   val lengthDays: Int,
+  val cancelled: String,
 )
 
 data class Cas1OutOfServiceBedReportRowWithPii(
@@ -300,4 +325,5 @@ data class Cas1OutOfServiceBedReportRowWithPii(
   val endDate: LocalDate,
   val lengthDays: Int,
   val notes: String,
+  val cancelled: String,
 )
