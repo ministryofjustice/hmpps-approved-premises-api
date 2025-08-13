@@ -60,7 +60,7 @@ class UserService(
 
   fun findByIdOrNull(id: UUID) = userRepository.findByIdOrNull(id)
 
-  fun findByStaffCode(staffCode: String) = userRepository.findByDeliusStaffCode(staffCode)
+  fun findByDeliusStaffCode(staffCode: String) = userRepository.findByDeliusStaffCode(staffCode)
 
   fun getUsersByPartialName(name: String): List<UserEntity> = userRepository.findByNameContainingIgnoreCase(name)
   fun getDeliusUserNameForRequest() = httpAuthService.getDeliusPrincipalOrThrow().name

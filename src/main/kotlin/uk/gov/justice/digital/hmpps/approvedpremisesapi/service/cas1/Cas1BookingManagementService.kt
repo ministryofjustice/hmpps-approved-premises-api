@@ -198,7 +198,7 @@ class Cas1BookingManagementService(
     }
 
     val staffCodeAndUser = if (keyWorker.staffCode != null) {
-      val user = userService.findByStaffCode(keyWorker.staffCode)
+      val user = userService.findByDeliusStaffCode(keyWorker.staffCode)
 
       if (user == null) {
         log.warn("Could not find user for staffCode ${keyWorker.staffCode} when assigning keyworker")
