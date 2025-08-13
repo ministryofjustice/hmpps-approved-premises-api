@@ -12,6 +12,7 @@
   {
     "name" : "future_manager",
     "permissions" : [
+      "cas1_keyworker_assignable_as",
       "cas1_offline_application_view",
       "cas1_out_of_service_bed_create",
       "cas1_premises_manage",
@@ -22,6 +23,7 @@
       "cas1_space_booking_record_keyworker",
       "cas1_space_booking_record_non_arrival",
       "cas1_space_booking_view",
+      "cas1_user_summary_list",
       "cas1_view_out_of_service_beds"
     ]
   },
@@ -48,6 +50,7 @@
       "cas1_tasks_allocate",
       "cas1_tasks_list",
       "cas1_user_list",
+      "cas1_user_summary_list",
       "cas1_view_cru_dashboard",
       "cas1_view_manage_tasks",
       "cas1_view_out_of_service_beds"
@@ -116,6 +119,7 @@
       "cas1_change_request_view",
       "cas1_experimental_new_assign_keyworker_flow",
       "cas1_experimental_new_request_for_placement_flow",
+      "cas1_keyworker_assignable_as",
       "cas1_national_occupancy_view",
       "cas1_offline_application_view",
       "cas1_out_of_service_bed_cancel",
@@ -152,6 +156,7 @@
       "cas1_transfer_create",
       "cas1_user_list",
       "cas1_user_management",
+      "cas1_user_summary_list",
       "cas1_view_assigned_assessments",
       "cas1_view_cru_dashboard",
       "cas1_view_manage_tasks",
@@ -162,7 +167,8 @@
     "name" : "user_manager",
     "permissions" : [
       "cas1_user_list",
-      "cas1_user_management"
+      "cas1_user_management",
+      "cas1_user_summary_list"
     ]
   },
   {
@@ -170,6 +176,7 @@
     "permissions" : [
       "cas1_tasks_list",
       "cas1_user_list",
+      "cas1_user_summary_list",
       "cas1_view_manage_tasks"
     ]
   }

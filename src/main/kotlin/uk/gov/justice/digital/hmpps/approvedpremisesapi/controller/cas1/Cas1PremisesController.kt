@@ -328,6 +328,7 @@ class Cas1PremisesController(
           summary = UserSummary(
             id = it.userId,
             name = it.name,
+            emailAddress = it.email,
           ),
           upcomingBookingCount = it.upcomingBookingCount,
           currentBookingCount = it.currentBookingCount,

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -18,9 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -103,20 +106,26 @@ class Cas1UsersController(
     @RequestParam probationRegionId: UUID?,
     @RequestParam apAreaId: UUID?,
     @RequestParam cruManagementAreaId: UUID?,
+    @RequestParam nameOrEmail: String?,
     @RequestParam page: Int?,
     @RequestParam sortBy: UserSortField?,
     @RequestParam sortDirection: SortDirection?,
-  ) = getUsers(
-    roles,
-    qualifications,
-    probationRegionId,
-    apAreaId,
-    page,
-    sortBy,
-    sortDirection,
-    cruManagementAreaId,
-  ) { user ->
-    userTransformer.transformCas1JpaToApi(user)
+  ): ResponseEntity<List<ApprovedPremisesUser>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
+    return getUsers(
+      roles ?: emptyList(),
+      qualifications,
+      probationRegionId,
+      apAreaId,
+      permission = null,
+      nameOrEmail,
+      page,
+      sortBy,
+      sortDirection,
+      cruManagementAreaId,
+    ) { user ->
+      userTransformer.transformCas1JpaToApi(user)
+    }
   }
 
   @Operation(summary = "Returns a list of user summaries (i.e. id and name only)")
@@ -126,43 +135,61 @@ class Cas1UsersController(
     @RequestParam qualifications: List<UserQualification>?,
     @RequestParam probationRegionId: UUID?,
     @RequestParam apAreaId: UUID?,
+    @RequestParam permission: ApprovedPremisesUserPermission?,
+    @RequestParam nameOrEmail: String?,
     @RequestParam page: Int?,
     @RequestParam sortBy: UserSortField?,
     @RequestParam sortDirection: SortDirection?,
-  ) = getUsers(
-    roles,
-    qualifications,
-    probationRegionId,
-    apAreaId,
-    page,
-    sortBy,
-    sortDirection,
-  ) { user ->
-    userTransformer.transformJpaToSummaryApi(user)
+  ): ResponseEntity<List<UserSummary>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_SUMMARY_LIST)
+    return getUsers(
+      roles ?: emptyList(),
+      qualifications,
+      probationRegionId,
+      apAreaId,
+      permission,
+      nameOrEmail,
+      page,
+      sortBy,
+      sortDirection,
+    ) { user ->
+      userTransformer.transformJpaToSummaryApi(user)
+    }
   }
 
   private fun <T> getUsers(
-    roles: List<ApprovedPremisesUserRole>?,
+    roles: List<ApprovedPremisesUserRole>,
     qualifications: List<UserQualification>?,
     probationRegionId: UUID?,
     apAreaId: UUID?,
+    permission: ApprovedPremisesUserPermission? = null,
+    nameOrEmail: String? = null,
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
     cruManagementAreaId: UUID? = null,
     resultTransformer: (UserEntity) -> T,
   ): ResponseEntity<List<T>> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
+    if (roles.isNotEmpty() && permission != null) {
+      throw BadRequestProblem(errorDetail = "Cannot filter on roles and permissions")
+    }
+
+    val apiRoles = if (permission != null) {
+      UserRole.getAllRolesForPermission(UserPermission.forApiPermission(permission))
+    } else {
+      roles.map(UserRole::valueOf)
+    }
 
     val (users, metadata) = userService.getUsers(
       qualifications?.map(::transformApiQualification),
-      roles?.map(UserRole::valueOf),
+      apiRoles,
       sortBy,
       sortDirection,
       page,
       probationRegionId,
       apAreaId,
       cruManagementAreaId,
+      nameOrEmail,
     )
 
     return ResponseEntity.ok().headers(
@@ -172,7 +199,7 @@ class Cas1UsersController(
     )
   }
 
-  @Operation(summary = "Returns a list of users with partial match on name")
+  @Operation(deprecated = true, summary = "Returns a list of users with partial match on name. Deprecated, use /cas1/users instead which supports name (or email) filtering but also supports paging")
   @GetMapping("/users/search")
   fun usersSearchGet(
     @RequestParam name: String,

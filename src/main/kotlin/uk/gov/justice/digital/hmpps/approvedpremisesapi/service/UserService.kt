@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.buildUserSpecification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -126,28 +126,29 @@ class UserService(
     region: UUID?,
     apArea: UUID?,
     cruManagementAreaId: UUID?,
+    nameOrEmail: String?,
   ): Pair<List<UserEntity>, PaginationMetadata?> {
-    var metadata: PaginationMetadata? = null
-    val users: List<UserEntity>
-
     val pageable = getPageable(sortBy?.value ?: "name", sortDirection, page)
 
-    if (pageable == null) {
-      users = userRepository.findAll(
-        hasQualificationsAndRoles(qualifications, roles, region, apArea, cruManagementAreaId, true),
-        Sort.by(Sort.Direction.ASC, "name"),
-      )
+    val userSpecification = buildUserSpecification(
+      qualifications,
+      roles,
+      region,
+      apArea,
+      cruManagementAreaId,
+      nameOrEmail,
+    )
+
+    return if (pageable == null) {
+      val users = userRepository.findAll(userSpecification, Sort.by(Sort.Direction.ASC, "name"))
+      val metadata = null
+      Pair(users, metadata)
     } else {
-      val response = userRepository.findAll(
-        hasQualificationsAndRoles(qualifications, roles, region, apArea, cruManagementAreaId, true),
-        pageable,
-      )
-
-      users = response.content
-      metadata = getMetadata(response, page)
+      val response = userRepository.findAll(userSpecification, pageable)
+      val users = response.content
+      val metadata = getMetadata(response, page)
+      Pair(users, metadata)
     }
-
-    return Pair(users, metadata)
   }
 
   private fun ensureCas3UserHasCas3ReferrerRole(user: UserEntity) {

@@ -30,6 +30,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
 
   CAS1_EXPERIMENTAL_NEW_REQUEST_FOR_PLACEMENT_FLOW(ApprovedPremisesUserPermission.experimentalNewRequestForPlacementFlow, experimental = true),
 
+  CAS1_KEYWORKER_ASSIGNABLE_AS(ApprovedPremisesUserPermission.keyworkerAssignableAs),
+
   CAS1_OFFLINE_APPLICATION_VIEW(ApprovedPremisesUserPermission.offlineApplicationView),
 
   CAS1_OUT_OF_SERVICE_BED_CREATE(ApprovedPremisesUserPermission.outOfServiceBedCreate),
@@ -44,9 +46,10 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
    */
   CAS1_PROCESS_AN_APPEAL(ApprovedPremisesUserPermission.processAnAppeal),
 
+  CAS1_USER_SUMMARY_LIST(ApprovedPremisesUserPermission.userSummaryList),
+
   /**
-   * Used for both listing user summaries (e.g. for drop-downs) and listing complete
-   * user information (e.g. for user management). Ideally this would be split
+   * Used for both listing complete user information (e.g. for user management)
    */
   CAS1_USER_LIST(ApprovedPremisesUserPermission.userList),
   CAS1_USER_MANAGEMENT(ApprovedPremisesUserPermission.userManagement),
@@ -112,4 +115,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
   ;
 
   fun isAvailable(environmentService: EnvironmentService): Boolean = !experimental || environmentService.isNotProd()
+
+  companion object {
+    fun forApiPermission(apiPermission: ApprovedPremisesUserPermission) = entries.first { it.cas1ApiValue == apiPermission }
+  }
 }

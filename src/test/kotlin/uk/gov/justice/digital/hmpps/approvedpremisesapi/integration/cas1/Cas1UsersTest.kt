@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
@@ -471,20 +473,8 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `GET users with an unapproved role is forbidden`(role: UserRole) {
+    fun `GET users with a role without permission CAS1_USER_LIST is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
-        webTestClient.get()
-          .uri("/cas1/users")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
-    @Test
-    fun `GET users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      givenAUser { _, jwt ->
         webTestClient.get()
           .uri("/cas1/users")
           .header("Authorization", "Bearer $jwt")
@@ -739,6 +729,61 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
+    @Test
+    fun `GET to users with an approved role allows filtering by name or email`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Lob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user1WithMatchingName, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user2WithMatchingEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Jim",
+            surname = "Jimmers",
+          ),
+          email = "jim.bob@test.com",
+        ),
+      )
+      val (user3WithMatchingNameAndEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bobby",
+            surname = "Jo",
+          ),
+          email = "bobby.jo@test.com",
+        ),
+      )
+
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      val results = webTestClient.get()
+        .uri("/cas1/users?nameOrEmail=bob")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<ApprovedPremisesUser>()
+
+      assertThat(results).hasSize(3)
+      assertThat(results.map { it.id }).contains(user1WithMatchingName.id)
+      assertThat(results.map { it.id }).contains(user2WithMatchingEmail.id)
+      assertThat(results.map { it.id }).contains(user3WithMatchingNameAndEmail.id)
+    }
+
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `GET to users with an approved role allows filtering by qualifications`(role: UserRole) {
@@ -810,10 +855,10 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER", "CAS1_FUTURE_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `GET user summary with an unapproved role is forbidden`(role: UserRole) {
+    fun `GET user summary with a role without permission CAS1_USER_SUMMARY_LIST is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/cas1/users/summary")
@@ -824,22 +869,9 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    @Test
-    fun `GET user summary with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      givenAUser { _, jwt ->
-        webTestClient.get()
-          .uri("/cas1/users/summary")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET user summary with an approved role returns full list ordered by name`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_FUTURE_MANAGER"])
+    fun `GET user summary with permission CAS1_USER_SUMMARY_LIST returns full list ordered by name`(role: UserRole) {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
           givenAUser { userWithNoRole, _ ->
@@ -1018,6 +1050,82 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           }
         }
       }
+    }
+
+    @Test
+    fun `GET to users with an approved role allows filtering by permission`() {
+      val (user1WithRequiredPermission, _) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      // user without required permission
+      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
+      val (user2WithRequiredPermission, _) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      val results = webTestClient.get()
+        .uri("/cas1/users/summary?permission=cas1_keyworker_assignable_as")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<UserSummary>()
+
+      assertThat(results).hasSize(2)
+      assertThat(results.map { it.id }).contains(user1WithRequiredPermission.id)
+      assertThat(results.map { it.id }).contains(user2WithRequiredPermission.id)
+    }
+
+    @Test
+    fun `GET to users with an approved role allows filtering by name or email`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Lob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user1WithMatchingName, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bob",
+            surname = "Roberts",
+          ),
+          email = "robert.roberts@test.com",
+        ),
+      )
+      val (user2WithMatchingEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Jim",
+            surname = "Jimmers",
+          ),
+          email = "jim.bob@test.com",
+        ),
+      )
+      val (user3WithMatchingNameAndEmail, _) = givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          name = PersonName(
+            forename = "Bobby",
+            surname = "Jo",
+          ),
+          email = "bobby.jo@test.com",
+        ),
+      )
+
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      val results = webTestClient.get()
+        .uri("/cas1/users/summary?nameOrEmail=bob")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<UserSummary>()
+
+      assertThat(results).hasSize(3)
+      assertThat(results.map { it.id }).contains(user1WithMatchingName.id)
+      assertThat(results.map { it.id }).contains(user2WithMatchingEmail.id)
+      assertThat(results.map { it.id }).contains(user3WithMatchingNameAndEmail.id)
     }
 
     @ParameterizedTest
