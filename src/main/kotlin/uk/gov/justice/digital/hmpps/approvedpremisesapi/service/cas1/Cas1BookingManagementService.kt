@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -41,6 +43,8 @@ class Cas1BookingManagementService(
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val springEventPublisher: SpringEventPublisher,
 ) {
+
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   @Transactional
   fun recordArrivalForBooking(
@@ -183,13 +187,38 @@ class Cas1BookingManagementService(
       return fieldValidationError
     }
 
+    if (keyWorker.staffCode == null && keyWorker.userId == null) {
+      return CasResult.GeneralValidationError("Either staffCode or userId must be provided")
+    }
+
     existingCas1SpaceBooking!!
 
     if (existingCas1SpaceBooking.isCancelled()) {
       return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
     }
 
-    val staffMemberResponse = staffMemberService.getStaffMemberByCode(keyWorker.staffCode)
+    val staffCodeAndUser = if (keyWorker.staffCode != null) {
+      val user = userService.findByDeliusStaffCode(keyWorker.staffCode)
+
+      if (user == null) {
+        log.warn("Could not find user for staffCode ${keyWorker.staffCode} when assigning keyworker")
+      }
+
+      StaffCodeAndUser(
+        staffCode = keyWorker.staffCode,
+        user = user,
+      )
+    } else {
+      val user = userService.findByIdOrNull(keyWorker.userId!!)
+        ?: return CasResult.GeneralValidationError("Cannot find user with id ${keyWorker.userId}")
+
+      StaffCodeAndUser(
+        staffCode = user.deliusStaffCode,
+        user = user,
+      )
+    }
+
+    val staffMemberResponse = staffMemberService.getStaffMemberByCode(staffCodeAndUser.staffCode)
     if (staffMemberResponse !is CasResult.Success) {
       return "$.keyWorker.staffCode" hasSingleValidationError "notFound"
     }
@@ -206,6 +235,7 @@ class Cas1BookingManagementService(
     existingCas1SpaceBooking.keyWorkerStaffCode = assignedKeyWorker.code
     existingCas1SpaceBooking.keyWorkerName = assignedKeyWorkerName
     existingCas1SpaceBooking.keyWorkerAssignedAt = OffsetDateTime.now().toInstant()
+    existingCas1SpaceBooking.keyWorkerUser = staffCodeAndUser.user
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
@@ -218,6 +248,11 @@ class Cas1BookingManagementService(
 
     success(result)
   }
+
+  private data class StaffCodeAndUser(
+    val staffCode: String,
+    val user: UserEntity?,
+  )
 
   @Transactional
   fun recordDepartureForBooking(

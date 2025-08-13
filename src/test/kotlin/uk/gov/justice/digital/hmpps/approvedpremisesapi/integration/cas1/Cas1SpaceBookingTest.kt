@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -35,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -1712,13 +1714,13 @@ class Cas1SpaceBookingTest {
   }
 
   @Nested
-  inner class RecordKeyWorker : InitialiseDatabasePerClassTestBase() {
+  inner class RecordKeyWorker : IntegrationTestBase() {
     lateinit var region: ProbationRegionEntity
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var keyWorker: UserEntity
 
-    @BeforeAll
+    @BeforeEach
     fun setupTestData() {
       region = givenAProbationRegion()
 
@@ -1757,7 +1759,8 @@ class Cas1SpaceBookingTest {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1AssignKeyWorker(
-            keyWorker.deliusStaffCode,
+            staffCode = keyWorker.deliusStaffCode,
+            userId = null,
           ),
         )
         .exchange()
@@ -1766,8 +1769,12 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording key worker returns OK and emits domain event`() {
+    fun `Recording key worker using staff code returns OK and emits domain event`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (keyWorkerUser, _) = givenAUser(
+        roles = listOf(CAS1_FUTURE_MANAGER),
+        staffDetail = StaffDetailFactory.staffDetail(code = "CodeXYZ"),
+      )
 
       val keyWorkerStaffDetail = StaffDetailFactory.staffDetail(code = "CodeXYZ")
 
@@ -1779,6 +1786,7 @@ class Cas1SpaceBookingTest {
         .bodyValue(
           Cas1AssignKeyWorker(
             staffCode = "CodeXYZ",
+            userId = null,
           ),
         )
         .exchange()
@@ -1791,6 +1799,77 @@ class Cas1SpaceBookingTest {
       )
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+      assertThat(updatedSpaceBooking.keyWorkerUser?.id).isEqualTo(keyWorkerUser.id)
+      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorkerStaffDetail.name.forenames()} ${keyWorkerStaffDetail.name.surname}")
+      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("CodeXYZ")
+      assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
+    }
+
+    @Test
+    fun `Recording key worker using staff code returns OK and emits domain event, even if user can't be found`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val keyWorkerStaffDetail = StaffDetailFactory.staffDetail(code = "CodeXYZ")
+
+      apDeliusContextMockSuccessfulStaffDetailByCodeCall(keyWorkerStaffDetail)
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1AssignKeyWorker(
+            staffCode = "CodeXYZ",
+            userId = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
+      )
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+      assertThat(updatedSpaceBooking.keyWorkerUser?.id).isNull()
+      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorkerStaffDetail.name.forenames()} ${keyWorkerStaffDetail.name.surname}")
+      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("CodeXYZ")
+      assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
+    }
+
+    @Test
+    fun `Recording key worker using user id returns OK and emits domain event`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (keyWorkerUser, _) = givenAUser(
+        roles = listOf(CAS1_FUTURE_MANAGER),
+        staffDetail = StaffDetailFactory.staffDetail(code = "CodeXYZ"),
+      )
+
+      val keyWorkerStaffDetail = StaffDetailFactory.staffDetail(code = "CodeXYZ")
+
+      apDeliusContextMockSuccessfulStaffDetailByCodeCall(keyWorkerStaffDetail)
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1AssignKeyWorker(
+            staffCode = null,
+            userId = keyWorkerUser.id,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
+      )
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+      assertThat(updatedSpaceBooking.keyWorkerUser?.id).isEqualTo(keyWorkerUser.id)
       assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorkerStaffDetail.name.forenames()} ${keyWorkerStaffDetail.name.surname}")
       assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("CodeXYZ")
       assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
