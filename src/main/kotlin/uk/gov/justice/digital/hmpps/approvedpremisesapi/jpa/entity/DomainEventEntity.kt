@@ -399,7 +399,7 @@ enum class DomainEventType(
     Cas1EventType.placementApplicationWithdrawn.value,
     "An Approved Premises Request for Placement has been withdrawn",
     cas1Info = Cas1DomainEventTypeInfo(
-      Cas1TimelineEventType.applicationWithdrawn,
+      Cas1TimelineEventType.placementApplicationWithdrawn,
       payloadType = PlacementApplicationWithdrawn::class,
       apiType = Cas1EventType.placementApplicationWithdrawn,
     ),
