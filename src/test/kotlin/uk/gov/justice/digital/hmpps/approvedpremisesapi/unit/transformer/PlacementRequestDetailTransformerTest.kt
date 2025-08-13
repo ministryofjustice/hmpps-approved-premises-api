@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -71,6 +72,7 @@ class PlacementRequestDetailTransformerTest {
   private val mockCas1Application = mockk<Cas1Application>()
   private val mockCas1ChangeRequestEntity = mockk<Cas1ChangeRequestEntity>()
   private val mockCas1SpaceBookingEntity = mockk<Cas1SpaceBookingEntity>()
+  private val mockPlacementApplicationEntity = mockk<PlacementApplicationEntity>()
 
   @BeforeEach
   fun setup() {
@@ -99,10 +101,26 @@ class PlacementRequestDetailTransformerTest {
       ),
     )
 
+    val prExpectedArrival = LocalDate.parse("2024-01-15")
+    val prDuration = 12
+    val paExpectedArrival = LocalDate.parse("2024-02-01")
+    val paRequestedDuration = 10
+    val paAuthorisedDuration = 10
+    val paArrivalFlexible = true
+
     every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf()
     every { mockPlacementRequestEntity.isParole } returns false
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
     every { mockPlacementRequestEntity.isWithdrawn } returns true
+    every { mockPlacementRequestEntity.expectedArrival } returns prExpectedArrival
+    every { mockPlacementRequestEntity.duration } returns prDuration
+    every { mockPlacementRequestEntity.isForLegacyInitialRequestForPlacement() } returns false
+    every { mockPlacementRequestEntity.placementApplication } returns mockPlacementApplicationEntity
+
+    every { mockPlacementApplicationEntity.expectedArrival } returns paExpectedArrival
+    every { mockPlacementApplicationEntity.requestedDuration } returns paRequestedDuration
+    every { mockPlacementApplicationEntity.expectedArrivalFlexible } returns paArrivalFlexible
+    every { mockPlacementApplicationEntity.authorisedDuration } returns paAuthorisedDuration
 
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
     every { mockApplicationsTransformer.transformJpaToCas1Application(mockApplicationEntity, mockPersonInfoResult) } returns mockCas1Application
@@ -119,8 +137,6 @@ class PlacementRequestDetailTransformerTest {
 
     assertThat(result.id).isEqualTo(transformedPlacementRequest.id)
     assertThat(result.type).isEqualTo(transformedPlacementRequest.type)
-    assertThat(result.expectedArrival).isEqualTo(transformedPlacementRequest.expectedArrival)
-    assertThat(result.duration).isEqualTo(transformedPlacementRequest.duration)
     assertThat(result.location).isEqualTo(transformedPlacementRequest.location)
     assertThat(result.radius).isEqualTo(transformedPlacementRequest.radius)
     assertThat(result.essentialCriteria).isEqualTo(transformedPlacementRequest.essentialCriteria)
@@ -144,6 +160,65 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.application).isEqualTo(mockCas1Application)
     assertThat(result.openChangeRequests.size).isEqualTo(1)
     assertThat(result.openChangeRequests[0]).isEqualTo(changeRequests[0])
+
+    assertThat(result.requestedPlacementPeriod.arrival).isEqualTo(paExpectedArrival)
+    assertThat(result.requestedPlacementPeriod.duration).isEqualTo(paRequestedDuration)
+    assertThat(result.requestedPlacementPeriod.arrivalFlexible).isEqualTo(paArrivalFlexible)
+
+    assertThat(result.authorisedPlacementPeriod.arrival).isEqualTo(paExpectedArrival)
+    assertThat(result.authorisedPlacementPeriod.duration).isEqualTo(paAuthorisedDuration)
+    assertThat(result.expectedArrival).isEqualTo(transformedPlacementRequest.expectedArrival)
+    assertThat(result.duration).isEqualTo(transformedPlacementRequest.duration)
+
+    verify(exactly = 1) {
+      mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult)
+    }
+  }
+
+  @Test
+  fun `transforms correctly to Cas1PlacementRequestDetail when legacyInitialRequestForPlacement is true`() {
+    val transformedPlacementRequest = getTransformedPlacementRequest()
+
+    val changeRequests = emptyList<Cas1ChangeRequestEntity>()
+
+    val prExpectedArrival = LocalDate.parse("2024-03-10")
+    val paRequestedDuration = 14
+
+    every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf()
+    every { mockPlacementRequestEntity.isParole } returns false
+    every { mockPlacementRequestEntity.application } returns mockApplicationEntity
+    every { mockPlacementRequestEntity.isWithdrawn } returns false
+    every { mockPlacementRequestEntity.expectedArrival } returns prExpectedArrival
+    every { mockPlacementRequestEntity.duration } returns 99
+
+    every { mockPlacementRequestEntity.isForLegacyInitialRequestForPlacement() } returns true
+    every { mockPlacementRequestEntity.placementApplication } returns mockPlacementApplicationEntity
+
+    every { mockPlacementApplicationEntity.requestedDuration } returns paRequestedDuration
+    every { mockPlacementApplicationEntity.expectedArrival } returns null
+    every { mockPlacementApplicationEntity.expectedArrivalFlexible } returns null
+
+    every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
+    every { mockApplicationsTransformer.transformJpaToCas1Application(mockApplicationEntity, mockPersonInfoResult) } returns mockCas1Application
+    every { mockPersonTransformer.personInfoResultToPersonSummaryInfoResult(mockPersonInfoResult) } returns mockPersonSummaryInfoResult
+    every { mockCas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, mockPersonInfoResult) } returns emptyList()
+
+    val result = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
+      mockPlacementRequestEntity,
+      mockPersonInfoResult,
+      emptyList(),
+    )
+
+    assertThat(result.requestedPlacementPeriod.arrival).isEqualTo(prExpectedArrival)
+    assertThat(result.requestedPlacementPeriod.duration).isEqualTo(99)
+    assertThat(result.requestedPlacementPeriod.arrivalFlexible).isNull()
+
+    assertThat(result.authorisedPlacementPeriod.arrival).isEqualTo(prExpectedArrival)
+    assertThat(result.authorisedPlacementPeriod.duration).isEqualTo(99)
+    assertThat(result.authorisedPlacementPeriod.arrivalFlexible).isNull()
+
+    assertThat(result.expectedArrival).isEqualTo(transformedPlacementRequest.expectedArrival)
+    assertThat(result.duration).isEqualTo(transformedPlacementRequest.duration)
 
     verify(exactly = 1) {
       mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult)

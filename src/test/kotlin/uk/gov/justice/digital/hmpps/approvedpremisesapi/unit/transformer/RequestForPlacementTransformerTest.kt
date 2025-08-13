@@ -59,6 +59,7 @@ class RequestForPlacementTransformerTest {
         .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
         .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
         .withExpectedArrival(LocalDate.of(2012, 9, 9))
+        .withExpectedArrivalFlexible(false)
         .withRequestedDuration(47)
         .withRequestedDuration(48)
         .withAuthorisedDuration(49)
@@ -76,10 +77,10 @@ class RequestForPlacementTransformerTest {
       assertThat(result.document).isNotNull
       assertThat(result.withdrawalReason).isEqualTo(placementApplication.withdrawalReason?.apiValue)
       assertThat(result.requestedPlacementPeriod.arrival).isEqualTo(LocalDate.of(2012, 9, 9))
-      assertThat(result.requestedPlacementPeriod.arrivalFlexible).isNull()
+      assertThat(result.requestedPlacementPeriod.arrivalFlexible).isFalse
       assertThat(result.requestedPlacementPeriod.duration).isEqualTo(48)
       assertThat(result.authorisedPlacementPeriod!!.arrival).isEqualTo(LocalDate.of(2012, 9, 9))
-      assertThat(result.authorisedPlacementPeriod.arrivalFlexible).isNull()
+      assertThat(result.authorisedPlacementPeriod.arrivalFlexible).isFalse
       assertThat(result.authorisedPlacementPeriod.duration).isEqualTo(49)
       assertThat(result.placementDates).hasSize(1)
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))

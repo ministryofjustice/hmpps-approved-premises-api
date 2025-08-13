@@ -35,6 +35,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var expectedArrival: Yielded<LocalDate?> = { null }
   private var requestedDuration: Yielded<Int?> = { null }
   private var authorisedDuration: Yielded<Int?> = { null }
+  private var expectedArrivalFlexible: Yielded<Boolean> = { false }
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -117,6 +118,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.authorisedDuration = { authorisedDuration }
   }
 
+  fun withExpectedArrivalFlexible(expectedArrivalFlexible: Boolean) = apply {
+    this.expectedArrivalFlexible = { expectedArrivalFlexible }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
@@ -140,5 +145,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     expectedArrival = this.expectedArrival(),
     requestedDuration = this.requestedDuration(),
     authorisedDuration = this.authorisedDuration(),
+    expectedArrivalFlexible = this.expectedArrivalFlexible(),
   )
 }
