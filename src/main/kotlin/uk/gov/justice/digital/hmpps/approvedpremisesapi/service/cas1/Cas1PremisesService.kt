@@ -175,6 +175,8 @@ class Cas1PremisesService(
     return CasResult.Success(Unit)
   }
 
+  fun getCurrentKeyWorkers(premises: ApprovedPremisesEntity) = spaceBookingRepository.findUpcomingOrCurrentKeyWorkers(premises.id)
+
   data class Cas1PremisesInfo(
     val entity: ApprovedPremisesEntity,
     val bedCount: Int,

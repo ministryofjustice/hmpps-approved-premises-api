@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1ReportsController.Companion.TIMESTAMP_FORMAT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
@@ -310,6 +311,36 @@ class Cas1PremisesController(
         .map(staffMemberTransformer::transformDomainToApi),
     )
   }
+
+  @Operation(summary = "Returns key-workers currently assigned to upcoming or current space bookings")
+  @GetMapping("/premises/{premisesId}/current-key-workers")
+  fun getCurrentKeyWorkers(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<List<Cas1CurrentKeyWorker>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
+
+    val premises = cas1PremisesService.findPremisesById(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    return ResponseEntity.ok(
+      cas1PremisesService.getCurrentKeyWorkers(premises).map {
+        Cas1CurrentKeyWorker(
+          summary = UserSummary(
+            id = it.userId,
+            name = it.name,
+          ),
+          upcomingBookingCount = it.upcomingBookingCount,
+          currentBookingCount = it.currentBookingCount,
+        )
+      },
+    )
+  }
+
+  data class Cas1CurrentKeyWorker(
+    val summary: UserSummary,
+    val upcomingBookingCount: Int,
+    val currentBookingCount: Int,
+  )
 
   @Operation(
     summary = "Add a local restriction to a premises",

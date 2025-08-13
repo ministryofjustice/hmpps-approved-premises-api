@@ -61,9 +61,10 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
      * * not cancelled
      * * has a departure date after this constant's value
      *
-     * This was introduced because when importing arrival information into CAS1 from
-     * delius as part of the find and book rollout, we had several bookings in the
-     * past for which there was no arrival or non-arrival recorded.
+     * The UPCOMING_EXPECTED_DEPARTURE_THRESHOLD was introduced because when importing
+     * arrival information into CAS1 from delius as part of the find and book rollout,
+     * we had several bookings in the past for which there was no arrival or non-arrival
+     * recorded.
      *
      * Without this date-based threshold the upcoming tab would include many old bookings
      * and require a substantial amount of manual data cleansing. Use of this simple date
@@ -345,6 +346,36 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     """,
   )
   fun findResidentSpaceBookingsForCrn(crn: String, expectedDepartureThreshold: LocalDate): List<Cas1SpaceBookingEntity>
+
+  @Query(
+    value = """
+    select 
+      u.id as userId,
+      u.name as name,
+      u.email as email,
+      count(*) FILTER (WHERE b.actual_arrival_date IS NULL) AS upcomingBookingCount,
+      count(*) FILTER (WHERE b.actual_arrival_date IS NOT NULL) AS currentBookingCount
+    from cas1_space_bookings b
+    inner join users u on b.key_worker_user_id = u.id
+    where
+    b.premises_id = :premisesId AND 
+    b.cancellation_occurred_at IS NULL AND 
+    b.non_arrival_confirmed_at IS NULL AND
+    b.actual_departure_date IS NULL AND
+    b.expected_departure_date >= '$UPCOMING_EXPECTED_DEPARTURE_THRESHOLD'
+    group by u.id
+    """,
+    nativeQuery = true,
+  )
+  fun findUpcomingOrCurrentKeyWorkers(premisesId: UUID): List<UpcomingOrCurrentKeyWorkerResult>
+}
+
+interface UpcomingOrCurrentKeyWorkerResult {
+  val userId: UUID
+  val name: String
+  val email: String
+  val currentBookingCount: Int
+  val upcomingBookingCount: Int
 }
 
 interface Cas1SpaceBookingSearchResult {
