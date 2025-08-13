@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillApplicationDuration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillKeyWorkerUserAssignmentsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1CapacityPerformanceTestJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1TaskDueMigrationJob
@@ -62,6 +63,7 @@ class MigrationJobService(
         MigrationJobType.updateCas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
         MigrationJobType.updateCas3VoidBedspaceData -> getBean(Cas3VoidBedspaceJob::class)
         MigrationJobType.cas1BackfillApplicationDuration -> getBean(Cas1BackfillApplicationDuration::class)
+        MigrationJobType.cas1BackfillKeyWorkerUserAssignments -> getBean(Cas1BackfillKeyWorkerUserAssignmentsJob::class)
         MigrationJobType.cas1CapacityPerformanceTest -> getBean(Cas1CapacityPerformanceTestJob::class)
       }
 

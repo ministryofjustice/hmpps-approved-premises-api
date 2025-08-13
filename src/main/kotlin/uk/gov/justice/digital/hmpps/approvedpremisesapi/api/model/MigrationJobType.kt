@@ -24,5 +24,6 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   updateCas3BedspaceModelData("update_cas3_bedspace_model_data"),
   updateCas3VoidBedspaceData("update_cas3_void_bedspace_data"),
   cas1BackfillApplicationDuration("cas1_backfill_application_duration"),
+  cas1BackfillKeyWorkerUserAssignments("cas1_backfill_key_worker_user_assignments"),
   cas1CapacityPerformanceTest("cas1_capacity_performance_test"),
 }

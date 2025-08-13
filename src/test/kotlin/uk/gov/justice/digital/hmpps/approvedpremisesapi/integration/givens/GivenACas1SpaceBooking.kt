@@ -34,6 +34,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   transferredFrom: Cas1SpaceBookingEntity? = null,
+  keyWorkerStaffCode: String? = null,
   keyWorkerUser: UserEntity? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
@@ -67,6 +68,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withNonArrivalConfirmedAt(nonArrivalConfirmedAt)
     withCancellationOccurredAt(cancellationOccurredAt)
     withTransferredFrom(transferredFrom)
+    withKeyworkerStaffCode(keyWorkerStaffCode)
     withKeyWorkerUser(keyWorkerUser)
   }
 }
