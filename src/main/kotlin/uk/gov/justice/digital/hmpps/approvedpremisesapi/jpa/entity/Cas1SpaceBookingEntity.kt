@@ -157,6 +157,9 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         (
             (b.key_worker_staff_code = :keyWorkerStaffCode)
         ) 
+      ) AND 
+      (
+        (:keyWorkerUserId IS NULL OR b.key_worker_user_id = :keyWorkerUserId)
       )
     """
   }
@@ -176,6 +179,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     residency: String?,
     crnOrName: String?,
     keyWorkerStaffCode: String?,
+    keyWorkerUserId: UUID?,
     premisesId: UUID,
     pageable: Pageable?,
   ): Page<Cas1SpaceBookingSearchResult>

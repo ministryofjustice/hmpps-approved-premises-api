@@ -467,6 +467,7 @@ class Cas1SpaceBookingTest {
           withKeyworkerName(keyWorker.name)
           withKeyworkerStaffCode(keyWorker.deliusStaffCode)
           withKeyworkerAssignedAt(Instant.now())
+          withKeyWorkerUser(keyWorker)
         }
 
       upcomingCancelledSpaceBooking =
@@ -735,6 +736,27 @@ class Cas1SpaceBookingTest {
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?keyWorkerStaffCode=${keyWorker.deliusStaffCode}&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(1)
+      assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+
+      val spaceBookingKeyWorker = response[0].keyWorkerAllocation!!.keyWorker
+
+      assertThat(spaceBookingKeyWorker.name).isEqualTo(keyWorker.name)
+      assertThat(spaceBookingKeyWorker.code).isEqualTo(keyWorker.deliusStaffCode)
+    }
+
+    @Test
+    fun `Filter on Key Worker Staff User Id`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?keyWorkerUserId=${keyWorker.id}&sortBy=canonicalArrivalDate&sortDirection=asc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

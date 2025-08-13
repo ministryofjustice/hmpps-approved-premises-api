@@ -129,6 +129,7 @@ class Cas1SpaceBookingService(
       filterCriteria.residency?.name,
       filterCriteria.crnOrName,
       filterCriteria.keyWorkerStaffCode,
+      filterCriteria.keyWorkerUserId,
       premisesId,
       pageCriteria.toPageableOrAllPages(
         sortBy = when (pageCriteria.sortBy) {
@@ -502,6 +503,7 @@ class Cas1SpaceBookingService(
     val residency: Cas1SpaceBookingResidency?,
     val crnOrName: String?,
     val keyWorkerStaffCode: String?,
+    val keyWorkerUserId: UUID?,
   )
 
   enum class UpdateType {
