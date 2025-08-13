@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesNewLocalRestriction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -1631,19 +1632,49 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-    fun `Returns 200 with correct body when user has the CAS1_PREMISES_VIEW permission`(role: UserRole) {
+    fun `Returns 200 with correct body when user has the CAS1_PREMISES_VIEW permission, exclude non future managers`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val qCode = "FOUND"
 
         val premises = givenAnApprovedPremises(qCode = qCode)
 
-        val staffMembers = listOf(
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
+        val staffMember1 = ContextStaffMemberFactory().produce()
+        givenAUser(
+          roles = listOf(CAS1_FUTURE_MANAGER),
+          staffDetail = StaffDetailFactory.staffDetail(code = staffMember1.code),
         )
+
+        val staffMember2 = ContextStaffMemberFactory().produce()
+        givenAUser(
+          roles = listOf(CAS1_FUTURE_MANAGER),
+          staffDetail = StaffDetailFactory.staffDetail(code = staffMember2.code),
+        )
+
+        val staffMember3 = ContextStaffMemberFactory().produce()
+        givenAUser(
+          roles = listOf(CAS1_FUTURE_MANAGER),
+          staffDetail = StaffDetailFactory.staffDetail(code = staffMember3.code),
+        )
+
+        val staffMember4 = ContextStaffMemberFactory().produce()
+        givenAUser(
+          roles = listOf(CAS1_FUTURE_MANAGER),
+          staffDetail = StaffDetailFactory.staffDetail(code = staffMember4.code),
+        )
+
+        val staffMember5 = ContextStaffMemberFactory().produce()
+        givenAUser(
+          roles = listOf(CAS1_FUTURE_MANAGER),
+          staffDetail = StaffDetailFactory.staffDetail(code = staffMember5.code),
+        )
+
+        val staffMember6UserNotFutureManager = ContextStaffMemberFactory().produce()
+        givenAUser(
+          roles = listOf(UserRole.CAS1_REPORT_VIEWER),
+          staffDetail = StaffDetailFactory.staffDetail(code = staffMember6UserNotFutureManager.code),
+        )
+
+        val staffMember7NotUser = ContextStaffMemberFactory().produce()
 
         wiremockServer.stubFor(
           WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
@@ -1654,7 +1685,15 @@ class Cas1PremisesTest : IntegrationTestBase() {
                 .withBody(
                   objectMapper.writeValueAsString(
                     StaffMembersPage(
-                      content = staffMembers,
+                      content = listOf(
+                        staffMember1,
+                        staffMember2,
+                        staffMember6UserNotFutureManager,
+                        staffMember7NotUser,
+                        staffMember3,
+                        staffMember4,
+                        staffMember5,
+                      ),
                     ),
                   ),
                 ),
@@ -1670,7 +1709,13 @@ class Cas1PremisesTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              staffMembers.map(staffMemberTransformer::transformDomainToApi),
+              listOf(
+                staffMember1,
+                staffMember2,
+                staffMember3,
+                staffMember4,
+                staffMember5,
+              ).map(staffMemberTransformer::transformDomainToApi),
             ),
           )
       }

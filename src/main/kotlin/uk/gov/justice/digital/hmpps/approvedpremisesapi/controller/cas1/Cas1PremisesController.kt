@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
@@ -78,6 +79,7 @@ class Cas1PremisesController(
   private val spaceBookingService: Cas1SpaceBookingService,
   private val cas1PremisesSearchService: Cas1PremisesSearchService,
   private val cas1NationalOccupancyTransformer: Cas1NationalOccupancyTransformer,
+  private val cas1UserService: Cas1UserService,
 ) {
 
   @Operation(summary = "Returns a CSV showing premises occupancy for the next 30 days. This does not consider characteristics.")
@@ -289,7 +291,8 @@ class Cas1PremisesController(
     )
   }
 
-  @Operation(summary = "Returns the staff that work at an approved premises")
+  @Schema(deprecated = true, description = "Use /cas1/premises/{premisesId}/current-key-workers instead")
+  @Operation(summary = "Returns the staff that work at an approved premises that have the FUTURE_MANAGER role")
   @GetMapping("/premises/{premisesId}/staff")
   fun getStaff(
     @PathVariable premisesId: UUID,
@@ -305,11 +308,13 @@ class Cas1PremisesController(
       return ResponseEntity.ok(emptyList())
     }
 
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(staffMembersResult)
-        .content
-        .map(staffMemberTransformer::transformDomainToApi),
-    )
+    val allStaffMembers = extractEntityFromCasResult(staffMembersResult).content
+    val allStaffMemberCodesUpperCase = allStaffMembers.map { it.code.uppercase() }
+    val allFutureManagerStaffCodesUpperCase = cas1UserService.findFutureManagersByStaffCode(allStaffMemberCodesUpperCase)
+      .map { it.deliusStaffCode.uppercase() }
+    val allFutureManagerStaffMembers = allStaffMembers.filter { allFutureManagerStaffCodesUpperCase.contains(it.code.uppercase()) }
+
+    return ResponseEntity.ok(allFutureManagerStaffMembers.map(staffMemberTransformer::transformDomainToApi))
   }
 
   @Operation(summary = "Returns key-workers currently assigned to upcoming or current space bookings")

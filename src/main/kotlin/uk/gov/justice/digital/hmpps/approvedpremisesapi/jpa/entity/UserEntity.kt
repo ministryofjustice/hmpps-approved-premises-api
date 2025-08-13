@@ -71,6 +71,14 @@ interface UserRepository :
   )
   fun findRoleAssignmentByUsername(deliusUsername: String): List<RoleAssignmentByUsername>
 
+  @Query(
+    """SELECT u FROM UserEntity u 
+        join u.roles r ON r.role = "CAS1_FUTURE_MANAGER" 
+        where UPPER(u.deliusStaffCode) IN :staffCodes
+      """,
+  )
+  fun findFutureManagersByStaffCode(staffCodes: List<String>): List<UserEntity>
+
   interface RoleAssignmentByUsername {
     val userId: UUID
     val roleName: String?
