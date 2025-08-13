@@ -100,6 +100,12 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
 
   @Query("""select vb from Cas3VoidBedspaceEntity vb where vb.id = :voidBedspaceId and vb.bedspace.premises.id = :premisesId""")
   fun findVoidBedspace(premisesId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity?
+
+  @Query(
+    """select vb from Cas3VoidBedspaceEntity vb 
+      where vb.id = :voidBedspaceId and vb.bedspace.id = :bedspaceId and vb.bedspace.premises.id = :premisesId""",
+  )
+  fun findVoidBedspace(premisesId: UUID, bedspaceId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity?
 }
 
 @SuppressWarnings("LongParameterList")

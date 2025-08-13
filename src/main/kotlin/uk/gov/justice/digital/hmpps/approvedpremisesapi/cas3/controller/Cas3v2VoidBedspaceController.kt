@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewVoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
@@ -85,5 +86,26 @@ class Cas3v2VoidBedspaceController(
 
     val result = extractEntityFromCasResult(voidBedspace)
     return ResponseEntity.status(HttpStatus.CREATED).body(cas3VoidBedspacesTransformer.toCas3VoidBedspace(result))
+  }
+
+  @PutMapping("/v2/premises/{premisesId}/bedspaces/{bedspaceId}/void-bedspaces/{voidBedspaceId}/cancellations")
+  fun cancelVoidBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @PathVariable voidBedspaceId: UUID,
+    @RequestBody body: Cas3VoidBedspace,
+  ): ResponseEntity<Cas3VoidBedspace> {
+    val voidBedspace = voidBedspaceService.findVoidBedspace(premisesId, bedspaceId, voidBedspaceId) ?: throw NotFoundProblem(
+      voidBedspaceId,
+      "Cas3VoidBedspace",
+    )
+
+    if (!cas3UserAccessService.canViewVoidBedspaces(voidBedspace.bedspace!!.premises.probationDeliveryUnit.probationRegion.id)) {
+      throw ForbiddenProblem()
+    }
+
+    val cancelledVoidBedspace = voidBedspaceService.cancelVoidBedspace(voidBedspace, body.cancellationNotes)
+    val result = extractEntityFromCasResult(cancelledVoidBedspace)
+    return ResponseEntity.ok(cas3VoidBedspacesTransformer.toCas3VoidBedspace(result))
   }
 }

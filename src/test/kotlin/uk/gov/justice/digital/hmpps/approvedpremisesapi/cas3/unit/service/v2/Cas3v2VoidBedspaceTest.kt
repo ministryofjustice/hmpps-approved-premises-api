@@ -13,6 +13,7 @@ import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -135,6 +137,37 @@ class Cas3v2VoidBedspaceTest {
       assertThatCasResult(result)
         .isFieldValidationError()
         .hasMessage("$.startDate", "voidStartDateBeforeBedspaceStartDate")
+    }
+  }
+
+  @Nested
+  inner class CancelVoidBedspace {
+    @Test
+    fun `Previously cancelled void bedspace returns General Validation Error`() {
+      val voidBedspace = Cas3VoidBedspaceEntityFactory()
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+        .withCancellationDate(OffsetDateTime.now())
+        .withCancellationNotes("cancelled notes")
+        .produceV2()
+
+      val result = cas3v2VoidBedspaceService.cancelVoidBedspace(voidBedspace, "some notes")
+      assertThatCasResult(result).isGeneralValidationError("This Void Bedspace already has a cancellation set")
+    }
+
+    @Test
+    fun `Cancelled void bedspace with no validation issues returns Success`() {
+      val voidBedspace = Cas3VoidBedspaceEntityFactory()
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+        .produceV2()
+
+      val result = cas3v2VoidBedspaceService.cancelVoidBedspace(voidBedspace, "some notes")
+      verify { cas3VoidBedspacesRepository.save(any()) }
+      assertThatCasResult(result).isSuccess().with {
+        assertAll({
+          assertThat(it.cancellationDate).isNotNull
+          assertThat(it.cancellationNotes).isEqualTo("some notes")
+        })
+      }
     }
   }
 }
