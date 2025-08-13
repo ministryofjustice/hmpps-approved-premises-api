@@ -157,29 +157,29 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         (
             (b.key_worker_staff_code = :keyWorkerStaffCode)
         ) 
+      ) AND 
+      (
+        (:keyWorkerUserId IS NULL OR b.key_worker_user_id = :keyWorkerUserId)
       )
-    """
-
-    private const val SPACE_BOOKING_SUMMARY_SELECT_QUERY = """
-        $SPACE_BOOKING_SELECT
-        $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
-      """
-
-    private const val SPACE_BOOKING_SUMMARY_COUNT_QUERY = """
-      SELECT COUNT(*)
-      $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
     """
   }
 
   @Query(
-    value = SPACE_BOOKING_SUMMARY_SELECT_QUERY,
-    countQuery = SPACE_BOOKING_SUMMARY_COUNT_QUERY,
+    value = """
+      $SPACE_BOOKING_SELECT
+      $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
+    """,
+    countQuery = """
+      SELECT COUNT(*)
+      $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
+    """,
     nativeQuery = true,
   )
   fun search(
     residency: String?,
     crnOrName: String?,
     keyWorkerStaffCode: String?,
+    keyWorkerUserId: UUID?,
     premisesId: UUID,
     pageable: Pageable?,
   ): Page<Cas1SpaceBookingSearchResult>

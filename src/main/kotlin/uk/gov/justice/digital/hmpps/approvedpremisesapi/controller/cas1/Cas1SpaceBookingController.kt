@@ -147,7 +147,8 @@ class Cas1SpaceBookingController(
     @Parameter(description = "ID of the premises to show space bookings for", required = true) @PathVariable premisesId: UUID,
     @RequestParam residency: Cas1SpaceBookingResidency?,
     @RequestParam crnOrName: String?,
-    @RequestParam keyWorkerStaffCode: String?,
+    @Schema(deprecated = true, description = "Use keyworker user id") @RequestParam keyWorkerStaffCode: String?,
+    @RequestParam keyWorkerUserId: UUID?,
     @RequestParam sortDirection: SortDirection?,
     @RequestParam sortBy: Cas1SpaceBookingSummarySortField?,
     @RequestParam page: Int?,
@@ -161,6 +162,7 @@ class Cas1SpaceBookingController(
         residency = residency,
         crnOrName = crnOrName,
         keyWorkerStaffCode = keyWorkerStaffCode,
+        keyWorkerUserId = keyWorkerUserId,
       ),
       PageCriteria(
         sortBy = sortBy ?: Cas1SpaceBookingSummarySortField.personName,

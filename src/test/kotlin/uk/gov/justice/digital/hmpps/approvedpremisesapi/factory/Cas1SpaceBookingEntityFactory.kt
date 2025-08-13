@@ -151,6 +151,10 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.keyWorkerAssignedAt = { keyWorkerAssignedAt }
   }
 
+  fun withKeyWorkerUser(keyWorkerUser: UserEntity?) = apply {
+    this.keyWorkerUser = { keyWorkerUser }
+  }
+
   fun withCancellationOccurredAt(occurredAt: LocalDate?) = apply {
     this.cancellationOccurredAt = { occurredAt }
   }
@@ -209,10 +213,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
 
   fun withTransferType(transferType: TransferType?) = apply {
     this.transferType = { transferType }
-  }
-
-  fun withKeyWorkerUser(keyWorkerUser: UserEntity?) = apply {
-    this.keyWorkerUser = { keyWorkerUser }
   }
 
   override fun produce() = Cas1SpaceBookingEntity(

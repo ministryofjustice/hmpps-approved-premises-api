@@ -362,6 +362,7 @@ class Cas1SpaceBookingServiceTest {
           residency = null,
           crnOrName = null,
           keyWorkerStaffCode = null,
+          keyWorkerUserId = null,
         ),
         PageCriteriaFactory(Cas1SpaceBookingSummarySortField.canonicalArrivalDate)
           .produce(),
@@ -394,11 +395,14 @@ class Cas1SpaceBookingServiceTest {
       )
       val pageableCaptor = slot<Pageable>()
 
+      val keyWorkerUserId = UUID.randomUUID()
+
       every {
         spaceBookingRepository.search(
           "current",
           "theCrnOrName",
           "keyWorkerStaffCode",
+          keyWorkerUserId,
           PREMISES_ID,
           capture(pageableCaptor),
         )
@@ -410,13 +414,14 @@ class Cas1SpaceBookingServiceTest {
           residency = Cas1SpaceBookingResidency.current,
           crnOrName = "theCrnOrName",
           keyWorkerStaffCode = "keyWorkerStaffCode",
+          keyWorkerUserId = keyWorkerUserId,
         ),
         PageCriteriaFactory(inputSortField).produce(),
       )
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-      assertThat(result.value.results).hasSize(3)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.results).hasSize(3)
+      }
 
       assertThat(pageableCaptor.captured.sort.toList()[0].property).isEqualTo(sqlSortField)
     }
