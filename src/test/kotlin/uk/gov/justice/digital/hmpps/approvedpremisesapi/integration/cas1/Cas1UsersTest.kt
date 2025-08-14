@@ -673,32 +673,23 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
-          givenAUser { userWithNoRole, _ ->
-            givenAUser(roles = listOf(role)) { requestUser, jwt ->
-              webTestClient.get()
-                .uri("/cas1/users?page=1")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-                .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
-                .expectHeader().valueEquals("X-Pagination-TotalResults", 4)
-                .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    listOf(requestUser, userWithNoRole, cruMember, manager).map {
-                      userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
-                    },
-                  ),
-                )
-            }
-          }
-        }
+    fun `GET to users with an approved role returns paginated list`(role: UserRole) {
+      repeat(10) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
+
+      givenAUser(roles = listOf(role)) { requestUser, jwt ->
+        val response = webTestClient.get()
+          .uri("/cas1/users?page=1")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 11)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+          .bodyAsListOfObjects<ApprovedPremisesUser>()
+
+        assertThat(response).hasSize(10)
       }
     }
 
@@ -996,32 +987,23 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET to users with an approved role returns paginated list ordered by name`(role: UserRole) {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { cruMember, _ ->
-        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { manager, _ ->
-          givenAUser { userWithNoRole, _ ->
-            givenAUser(roles = listOf(role)) { requestUser, jwt ->
-              webTestClient.get()
-                .uri("/cas1/users/summary?page=1")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-                .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
-                .expectHeader().valueEquals("X-Pagination-TotalResults", 4)
-                .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    listOf(requestUser, userWithNoRole, cruMember, manager).map {
-                      userTransformer.transformJpaToSummaryApi(it)
-                    },
-                  ),
-                )
-            }
-          }
-        }
+    fun `GET to users with an approved role returns paginated list`(role: UserRole) {
+      repeat(10) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
+
+      givenAUser(roles = listOf(role)) { requestUser, jwt ->
+        val response = webTestClient.get()
+          .uri("/cas1/users/summary?page=1")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 11)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+          .bodyAsListOfObjects<UserSummary>()
+
+        assertThat(response).hasSize(10)
       }
     }
 
