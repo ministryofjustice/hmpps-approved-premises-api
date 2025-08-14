@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Canc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
@@ -61,6 +63,7 @@ class Cas3v2BookingService(
   private val cas3DomainEventService: Cas3v2DomainEventService,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas3v2ConfirmationRepository: Cas3v2ConfirmationRepository,
+  private val cas3ExtensionRepository: Cas3ExtensionRepository,
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
@@ -399,6 +402,44 @@ class Cas3v2BookingService(
     findAndCloseAssessment(booking, user)
 
     return CasResult.Success(cas3ConfirmationEntity)
+  }
+
+  @Transactional
+  fun createExtension(
+    booking: Cas3BookingEntity,
+    newDepartureDate: LocalDate,
+    notes: String?,
+  ) = validatedCasResult<Cas3ExtensionEntity> {
+    val expectedLastUnavailableDate =
+      workingDayService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+
+    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bedspace.id)?.let {
+      return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate()} which overlaps with the desired dates"
+    }
+
+    getVoidBedspaceWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bedspace.id)?.let {
+      return@validatedCasResult it.id hasConflictError "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+    }
+
+    if (booking.arrivalDate.isAfter(newDepartureDate)) {
+      return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+    }
+
+    val extensionEntity = Cas3ExtensionEntity(
+      id = UUID.randomUUID(),
+      previousDepartureDate = booking.departureDate,
+      newDepartureDate = newDepartureDate,
+      notes = notes,
+      booking = booking,
+      createdAt = OffsetDateTime.now(),
+    )
+
+    val extension = cas3ExtensionRepository.save(extensionEntity)
+    booking.departureDate = extensionEntity.newDepartureDate
+    booking.extensions.add(extension)
+    updateBooking(booking)
+
+    return CasResult.Success(extensionEntity)
   }
 
   private fun findAndCloseAssessment(booking: Cas3BookingEntity, user: UserEntity) {

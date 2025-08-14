@@ -36,6 +36,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Canc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
@@ -101,6 +103,7 @@ class Cas3v2BookingServiceTest {
   private val mockDepartureReasonRepository = mockk<DepartureReasonRepository>()
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
+  private val mockExtensionRepository = mockk<Cas3ExtensionRepository>()
 
   private fun createCas3v2BookingService(): Cas3v2BookingService = Cas3v2BookingService(
     cas3BookingRepository = mockBookingRepository,
@@ -117,6 +120,7 @@ class Cas3v2BookingServiceTest {
     cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
     offenderService = mockOffenderService,
     workingDayService = mockWorkingDayService,
+    cas3ExtensionRepository = mockExtensionRepository,
     cas3DomainEventService = mockCas3DomainEventService,
     userAccessService = mockUserAccessService,
     assessmentService = mockAssessmentService,
@@ -154,8 +158,7 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value).isEqualTo(bookingEntity)
+        assertThat(it).isEqualTo(bookingEntity)
       }
     }
 
@@ -172,8 +175,7 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value).isEqualTo(bookingEntity)
+        assertThat(it).isEqualTo(bookingEntity)
       }
     }
 
@@ -1208,12 +1210,11 @@ class Cas3v2BookingServiceTest {
       assertThatCasResult(result).isSuccess()
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.arrivalDate).isEqualTo(arrivalDate)
-        assertThat(result.value.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
-        assertThat(result.value.expectedDepartureDate).isEqualTo(expectedDepartureDate)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
+        assertThat(it.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(it.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(it.expectedDepartureDate).isEqualTo(expectedDepartureDate)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.arrived)
       }
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
@@ -1244,12 +1245,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.arrivalDate).isEqualTo(arrivalDate)
-        assertThat(result.value.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
-        assertThat(result.value.expectedDepartureDate).isEqualTo(expectedDepartureDate)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
+        assertThat(it.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(it.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(it.expectedDepartureDate).isEqualTo(expectedDepartureDate)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.arrived)
       }
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
@@ -1273,12 +1273,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.arrivalDate).isEqualTo(arrivalDate)
-        assertThat(result.value.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
-        assertThat(result.value.expectedDepartureDate).isEqualTo(expectedDepartureDate)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.arrived)
+        assertThat(it.arrivalDate).isEqualTo(arrivalDate)
+        assertThat(it.arrivalDateTime).isEqualTo(arrivalDate.toLocalDateTime().toInstant())
+        assertThat(it.expectedDepartureDate).isEqualTo(expectedDepartureDate)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.arrived)
       }
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
@@ -1310,12 +1309,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(cas3BookingEntity.cancellations).contains(result.value)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
+        assertThat(it.date).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(cas3BookingEntity.cancellations).contains(it)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
       }
 
       verify(exactly = 1) {
@@ -1352,12 +1350,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(cas3BookingEntity.cancellations).contains(result.value)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
+        assertThat(it.date).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(cas3BookingEntity.cancellations).contains(it)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
       }
 
       verify(exactly = 1) {
@@ -1394,12 +1391,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(bookingWithAssessmentEntity.cancellations).contains(result.value)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
+        assertThat(it.date).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(bookingWithAssessmentEntity.cancellations).contains(it)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
       }
 
       verify(exactly = 1) {
@@ -1446,12 +1442,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(bookingWithAssessmentEntity.cancellations).contains(result.value)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
+        assertThat(it.date).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(bookingWithAssessmentEntity.cancellations).contains(it)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
       }
 
       verify(exactly = 1) {
@@ -1497,12 +1492,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(bookingWithAssessmentEntity.cancellations).contains(result.value)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
+        assertThat(it.date).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(bookingWithAssessmentEntity.cancellations).contains(it)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
       }
 
       verify(exactly = 1) {
@@ -1636,12 +1630,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(bookingWithAssessmentEntity.cancellations).contains(result.value)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
+        assertThat(it.date).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(bookingWithAssessmentEntity.cancellations).contains(it)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
       }
 
       verify(exactly = 1) {
@@ -1681,12 +1674,11 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(bookingWithoutAssessmentEntity.cancellations).contains(result.value)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
+        assertThat(it.date).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(bookingWithoutAssessmentEntity.cancellations).contains(it)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.cancelled)
       }
 
       verify(exactly = 1) {
@@ -1932,15 +1924,14 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.booking).isEqualTo(bookingEntity)
-        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-        assertThat(result.value.destinationProvider).isEqualTo(null)
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.departed)
+        assertThat(it.booking).isEqualTo(bookingEntity)
+        assertThat(it.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+        assertThat(it.destinationProvider).isEqualTo(null)
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.departed)
       }
 
       verify(exactly = 1) {
@@ -2006,15 +1997,14 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.booking).isEqualTo(bookingEntity)
-        assertThat(result.value.dateTime).isEqualTo(departureDateTime)
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-        assertThat(result.value.destinationProvider).isEqualTo(null)
-        assertThat(result.value.reason).isEqualTo(reasonEntity)
-        assertThat(result.value.notes).isEqualTo(notes)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.departed)
+        assertThat(it.booking).isEqualTo(bookingEntity)
+        assertThat(it.dateTime).isEqualTo(departureDateTime)
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+        assertThat(it.destinationProvider).isEqualTo(null)
+        assertThat(it.reason).isEqualTo(reasonEntity)
+        assertThat(it.notes).isEqualTo(notes)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.departed)
       }
 
       verify(exactly = 1) {
@@ -2061,11 +2051,10 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+        assertThat(it.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it).isEqualTo(bookingEntity.confirmation)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
       }
 
       verify(exactly = 1) {
@@ -2090,11 +2079,10 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+        assertThat(it.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it).isEqualTo(bookingEntity.confirmation)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
       }
 
       verify(exactly = 1) {
@@ -2140,11 +2128,10 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+        assertThat(it.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it).isEqualTo(bookingEntity.confirmation)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
       }
 
       verify(exactly = 1) {
@@ -2186,11 +2173,10 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+        assertThat(it.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it).isEqualTo(bookingEntity.confirmation)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
       }
 
       verify(exactly = 1) {
@@ -2237,11 +2223,10 @@ class Cas3v2BookingServiceTest {
       )
 
       assertThatCasResult(result).isSuccess().with {
-        result as CasResult.Success
-        assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
-        assertThat(result.value.notes).isEqualTo("notes")
-        assertThat(result.value).isEqualTo(bookingEntity.confirmation)
-        assertThat(result.value.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
+        assertThat(it.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it).isEqualTo(bookingEntity.confirmation)
+        assertThat(it.booking.status).isEqualTo(Cas3BookingStatus.confirmed)
       }
 
       verify(exactly = 1) {
@@ -2262,8 +2247,54 @@ class Cas3v2BookingServiceTest {
     }
   }
 
+  @Nested
+  inner class CreateExtension {
+
+    @BeforeEach
+    fun setup() {
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as Cas3ExtensionEntity }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+    }
+
+    @Test
+    fun `Success with correct result when a booking has a new departure date before the existing departure date`() {
+      val bookingEntity = createCas3Booking(
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = LocalDate.parse("2022-08-26"),
+      )
+      val result = cas3BookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-25"),
+        notes = "notes",
+      )
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+        assertThat(it.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+        assertThat(it.notes).isEqualTo("notes")
+      }
+    }
+
+    @Test
+    fun `FieldValidationError when a booking has a new departure date before the arrival date`() {
+      val bookingEntity = createCas3Booking(
+        arrivalDate = LocalDate.parse("2022-08-26"),
+      )
+      val result = cas3BookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-25"),
+        notes = "notes",
+      )
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.newDepartureDate", "beforeBookingArrivalDate")
+    }
+  }
+
   private fun createCas3Booking(
     arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
+    departureDate: LocalDate = LocalDate.now().randomDateAfter(14),
     application: TemporaryAccommodationApplicationEntity? = null,
   ): Cas3BookingEntity {
     val premises = Cas3PremisesEntityFactory()
@@ -2278,6 +2309,7 @@ class Cas3v2BookingServiceTest {
       .withBedspace(bedspace)
       .withServiceName(ServiceName.temporaryAccommodation)
       .withArrivalDate(arrivalDate)
+      .withDepartureDate(departureDate)
       .withApplication(application)
       .produce()
   }

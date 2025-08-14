@@ -10,6 +10,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withConflictMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -609,11 +611,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail")
-          .isEqualTo("BedSpace is archived from ${bedspace.endDate} which overlaps with the desired dates: ${bedspace.id}")
+          .withConflictMessage("BedSpace is archived from ${bedspace.endDate} which overlaps with the desired dates: ${bedspace.id}")
       }
     }
   }
@@ -651,11 +649,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail")
-          .isEqualTo("BedSpace is archived from ${bedspace.endDate} which overlaps with the desired dates: ${bedspace.id}")
+          .withConflictMessage("BedSpace is archived from ${bedspace.endDate} which overlaps with the desired dates: ${bedspace.id}")
       }
     }
   }
@@ -693,11 +687,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail")
-          .isEqualTo("BedSpace is archived from ${bedspace.endDate} which overlaps with the desired dates: ${bedspace.id}")
+          .withConflictMessage("BedSpace is archived from ${bedspace.endDate} which overlaps with the desired dates: ${bedspace.id}")
       }
     }
   }
@@ -1063,11 +1053,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail")
-          .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
+          .withConflictMessage("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
       }
     }
   }
@@ -1114,11 +1100,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail")
-          .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-22 which overlaps with the desired dates: ${existingBooking.id}")
+          .withConflictMessage("A Booking already exists for dates from 2022-07-15 to 2022-08-22 which overlaps with the desired dates: ${existingBooking.id}")
       }
     }
   }
@@ -1215,11 +1197,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail")
-          .isEqualTo("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+          .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
       }
     }
   }
@@ -1370,11 +1348,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .is4xxClientError
-            .expectBody()
-            .jsonPath("title").isEqualTo("Conflict")
-            .jsonPath("status").isEqualTo(409)
-            .jsonPath("detail")
-            .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+            .withConflictMessage("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
         }
       }
     }
@@ -1416,11 +1390,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .is4xxClientError
-            .expectBody()
-            .jsonPath("title").isEqualTo("Conflict")
-            .jsonPath("status").isEqualTo(409)
-            .jsonPath("detail")
-            .isEqualTo("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
         }
       }
     }
@@ -1504,8 +1474,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
 
           webTestClient.post()
             .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .headers(buildTemporaryAccommodationHeaders(jwt))
             .bodyValue(
               NewCas3Arrival(
                 type = "CAS3",
@@ -1723,7 +1692,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .isBadRequest
             .expectBody()
             .jsonPath("$.title").isEqualTo("Bad Request")
-            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.arrivalDate")
+            .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.arrivalDate")
             .jsonPath("$.invalid-params[0].errorType").isEqualTo("arrivalAfterLatestDate")
         }
       }
@@ -2337,6 +2306,250 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .isNotFound
           .expectBody()
           .jsonPath("$.detail").isEqualTo("No Premises with an ID of $notFoundPremisesId could be found")
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateExtension {
+
+    @Test
+    fun `Create Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+          val conflictingBooking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn("CRN123")
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.parse("2022-07-15"))
+            withDepartureDate(LocalDate.parse("2022-08-15"))
+          }
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.parse("2022-06-14"))
+            withDepartureDate(LocalDate.parse("2022-07-14"))
+          }
+
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/extensions")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .bodyValue(
+              NewExtension(
+                newDepartureDate = LocalDate.parse("2022-07-16"),
+                notes = null,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is4xxClientError
+            .withConflictMessage("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+        }
+      }
+    }
+
+    @Test
+    fun `Create Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+          val conflictingBooking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn("CRN123")
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.parse("2022-07-15"))
+            withDepartureDate(LocalDate.parse("2022-08-15"))
+          }
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.parse("2022-06-12"))
+            withDepartureDate(LocalDate.parse("2022-07-12"))
+          }
+          val turnarounds = cas3v2TurnaroundFactory.produceAndPersistMultiple(1) {
+            withWorkingDayCount(2)
+            withCreatedAt(booking.createdAt)
+            withBooking(booking)
+          }
+          booking.turnarounds += turnarounds
+
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/extensions")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .bodyValue(
+              NewExtension(
+                newDepartureDate = LocalDate.parse("2022-07-13"),
+                notes = null,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is4xxClientError
+            .withConflictMessage("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+        }
+      }
+    }
+
+    @Test
+    fun `Create Extension returns 409 Conflict when a void bedspace for the same bed overlaps with the new departure date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+          val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBedspace(bedspace)
+            withStartDate(LocalDate.parse("2022-07-15"))
+            withEndDate(LocalDate.parse("2022-08-15"))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.parse("2022-06-14"))
+            withDepartureDate(LocalDate.parse("2022-07-14"))
+          }
+
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/extensions")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .bodyValue(
+              NewExtension(
+                newDepartureDate = LocalDate.parse("2022-07-16"),
+                notes = null,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is4xxClientError
+            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+        }
+      }
+    }
+
+    @Test
+    fun `Create Extension returns 409 Conflict when a void bedspace for the same bed overlaps with the updated booking's turnaround time`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+          val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBedspace(bedspace)
+            withStartDate(LocalDate.parse("2022-07-15"))
+            withEndDate(LocalDate.parse("2022-08-15"))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(offenderDetails.otherIds.crn)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.parse("2022-06-12"))
+            withDepartureDate(LocalDate.parse("2022-07-12"))
+          }
+          val turnarounds = cas3v2TurnaroundFactory.produceAndPersistMultiple(1) {
+            withWorkingDayCount(2)
+            withCreatedAt(booking.createdAt)
+            withBooking(booking)
+          }
+          booking.turnarounds += turnarounds
+
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/extensions")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .bodyValue(
+              NewExtension(
+                newDepartureDate = LocalDate.parse("2022-07-13"),
+                notes = null,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is4xxClientError
+            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+        }
+      }
+    }
+
+    @Test
+    fun `Create Extension returns 403 Forbidden for a premises that's not in the user's region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = givenACas3Premises()
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withDepartureDate(LocalDate.parse("2022-08-20"))
+          withPremises(premises)
+          withBedspace(
+            cas3BedspaceEntityFactory.produceAndPersist {
+              withPremises(premises)
+            },
+          )
+        }
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/extensions")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            NewExtension(
+              newDepartureDate = LocalDate.parse("2022-08-22"),
+              notes = "notes",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Create Extension returns OK with expected body, updates departureDate on Booking entity when user has one of roles CAS3_ASSESSOR`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-18"))
+          withDepartureDate(LocalDate.parse("2022-08-20"))
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        val newDate = "2022-08-22"
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/extensions")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            NewExtension(
+              newDepartureDate = LocalDate.parse(newDate),
+              notes = "notes",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+          .jsonPath(".previousDepartureDate").isEqualTo(booking.departureDate.toString())
+          .jsonPath(".newDepartureDate").isEqualTo(newDate)
+          .jsonPath(".notes").isEqualTo("notes")
+          .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
+
+        val actualBooking = bookingRepository.findByIdOrNull(booking.id)
+        assertThat(actualBooking?.departureDate).isEqualTo(LocalDate.parse(newDate))
+        assertThat(actualBooking?.originalDepartureDate).isEqualTo(booking.departureDate)
       }
     }
   }
