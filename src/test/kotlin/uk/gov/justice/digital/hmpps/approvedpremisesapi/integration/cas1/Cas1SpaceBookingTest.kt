@@ -312,6 +312,7 @@ class Cas1SpaceBookingTest {
   @Nested
   inner class SearchForSpaceBookings : SpaceBookingIntegrationTestBase() {
     lateinit var currentSpaceBooking2OfflineApplication: Cas1SpaceBookingEntity
+    lateinit var currentSpaceBooking2OfflineApplicationKeyWorker: UserEntity
     lateinit var currentSpaceBooking3: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking4Restricted: Cas1SpaceBookingEntity
     lateinit var upcomingSpaceBookingWithKeyWorker: Cas1SpaceBookingEntity
@@ -375,6 +376,7 @@ class Cas1SpaceBookingTest {
         resolved = true,
       )
 
+      currentSpaceBooking2OfflineApplicationKeyWorker = givenAUser().first
       currentSpaceBooking2OfflineApplication = createSpaceBookingWithOfflineApplication(
         crn = "CRN_CURRENT2_OFFLINE",
         firstName = "curt",
@@ -390,6 +392,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerName("Kathy Keyworker")
         withKeyworkerStaffCode("kathyk")
         withKeyworkerAssignedAt(Instant.now())
+        withKeyWorkerUser(currentSpaceBooking2OfflineApplicationKeyWorker)
       }
 
       currentSpaceBooking3 =
@@ -673,7 +676,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Filter on CRN`() {
+    fun `Filter on CRN & populates fields`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
@@ -685,8 +688,16 @@ class Cas1SpaceBookingTest {
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
       assertThat(response).hasSize(1)
-      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
-      assertThat(response[0].person.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      val bookingSummary = response[0]
+      assertThat(bookingSummary.person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
+      assertThat(bookingSummary.person.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+
+      val keyWorkerAllocation = bookingSummary.keyWorkerAllocation!!
+      assertThat(keyWorkerAllocation.keyWorker.name).isEqualTo("Kathy Keyworker")
+      assertThat(keyWorkerAllocation.keyWorker.code).isEqualTo("kathyk")
+      assertThat(keyWorkerAllocation.keyWorkerUser!!.id).isEqualTo(currentSpaceBooking2OfflineApplicationKeyWorker.id)
+      assertThat(keyWorkerAllocation.keyWorkerUser!!.name).isEqualTo("Kathy Keyworker")
+      assertThat(keyWorkerAllocation.keyWorkerUser!!.emailAddress).isEqualTo(currentSpaceBooking2OfflineApplicationKeyWorker.email)
     }
 
     @Test

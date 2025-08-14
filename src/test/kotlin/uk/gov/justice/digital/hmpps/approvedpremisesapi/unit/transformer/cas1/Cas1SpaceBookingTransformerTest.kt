@@ -471,6 +471,7 @@ class Cas1SpaceBookingTransformerTest {
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
 
+      val keyWorkerId = UUID.randomUUID()
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(
           id = id,
@@ -488,6 +489,8 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = "the staff code",
           keyWorkerAssignedAt = LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC),
           keyWorkerName = "the keyworker name",
+          keyWorkerUserId = keyWorkerId,
+          keyWorkerEmail = "the keyworker email",
           characteristicsPropertyNamesCsv = "hasTurningSpace,isCatered",
           deliusEventNumber = "event8",
           cancelled = true,
@@ -516,6 +519,9 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
+      assertThat(result.keyWorkerAllocation!!.keyWorkerUser!!.id).isEqualTo(keyWorkerId)
+      assertThat(result.keyWorkerAllocation!!.keyWorkerUser!!.name).isEqualTo("the keyworker name")
+      assertThat(result.keyWorkerAllocation!!.keyWorkerUser!!.emailAddress).isEqualTo("the keyworker email")
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isTrue()
       assertThat(result.plannedTransferRequested).isFalse()
@@ -555,6 +561,8 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = null,
           keyWorkerAssignedAt = null,
           keyWorkerName = null,
+          keyWorkerUserId = null,
+          keyWorkerEmail = null,
           characteristicsPropertyNamesCsv = null,
           deliusEventNumber = "event8",
           cancelled = false,
@@ -589,6 +597,8 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val keyWorkerStaffCode: String?,
   override val keyWorkerAssignedAt: Instant?,
   override val keyWorkerName: String?,
+  override val keyWorkerUserId: UUID?,
+  override val keyWorkerEmail: String?,
   override val characteristicsPropertyNamesCsv: String?,
   override val deliusEventNumber: String?,
   override val cancelled: Boolean,
