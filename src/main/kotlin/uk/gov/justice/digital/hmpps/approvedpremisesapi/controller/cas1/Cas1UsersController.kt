@@ -128,6 +128,7 @@ class Cas1UsersController(
     }
   }
 
+  @PaginationHeaders
   @Operation(summary = "Returns a list of user summaries (i.e. id and name only)")
   @GetMapping("/users/summary")
   fun usersSummaryGet(
