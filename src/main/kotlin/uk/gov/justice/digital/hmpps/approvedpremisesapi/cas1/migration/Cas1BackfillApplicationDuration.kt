@@ -46,6 +46,7 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
               (a.data -> 'move-on' -> 'placement-duration' ->> 'duration')::integer as duration
           from approved_premises_applications apa inner join applications a on a.id = apa.id
           where  
+          a.submitted_at IS NOT NULL AND
           apa.duration IS NULL AND 
           a.data -> 'move-on' -> 'placement-duration' ->> 'differentDuration' = 'yes'
       )
@@ -61,9 +62,17 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
 
   @Query(
     value = """
+      with to_update as (
+        SELECT a.id 
+        FROM approved_premises_applications apa inner join applications a on a.id = apa.id
+        where a.submitted_at IS NOT NULL AND 
+        apa.duration IS NULL AND  
+        ap_type = 'PIPE'
+      )
       UPDATE approved_premises_applications
       SET duration = (26 * 7)
-      WHERE duration IS NULL AND ap_type = 'PIPE'
+      FROM to_update
+      WHERE approved_premises_applications.id = to_update.id;
   """,
     nativeQuery = true,
   )
@@ -72,9 +81,17 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
 
   @Query(
     value = """
+      with to_update as (
+        SELECT a.id 
+        FROM approved_premises_applications apa inner join applications a on a.id = apa.id
+        where a.submitted_at IS NOT NULL AND 
+        apa.duration IS NULL AND 
+        ap_type = 'ESAP'
+      )
       UPDATE approved_premises_applications
       SET duration = (52 * 7)
-      WHERE duration IS NULL AND ap_type = 'ESAP'
+      FROM to_update
+      WHERE approved_premises_applications.id = to_update.id;
   """,
     nativeQuery = true,
   )
@@ -83,9 +100,17 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
 
   @Query(
     value = """
+      with to_update as (
+        SELECT a.id 
+        FROM approved_premises_applications apa inner join applications a on a.id = apa.id
+        where 
+        a.submitted_at IS NOT NULL AND 
+        apa.duration IS NULL
+      )
       UPDATE approved_premises_applications
       SET duration = (12 * 7) 
-      WHERE duration IS NULL
+      FROM to_update
+      WHERE approved_premises_applications.id = to_update.id;
   """,
     nativeQuery = true,
   )
