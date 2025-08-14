@@ -29,6 +29,14 @@ data class Cas3NewVoidBedspace(
   val notes: String? = null,
 )
 
+data class Cas3UpdateVoidBedspace(
+  val startDate: LocalDate,
+  val endDate: LocalDate,
+  val reasonId: UUID,
+  val referenceNumber: String? = null,
+  val notes: String? = null,
+)
+
 data class Cas3VoidBedspaceReason(
   val id: UUID,
   val name: String,

@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Bedspac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
@@ -36,11 +35,10 @@ class Cas3v2VoidBedspaceTest {
   @InjectMockKs
   lateinit var cas3v2VoidBedspaceService: Cas3v2VoidBedspaceService
 
-  lateinit var voidBedspaceReason: Cas3VoidBedspaceReasonEntity
+  private val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory().produce()
 
   @BeforeEach
   fun setup() {
-    voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory().produce()
     every { cas3VoidBedspaceReasonRepository.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
     every { cas3VoidBedspacesRepository.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspaceEntity }
   }
@@ -53,13 +51,13 @@ class Cas3v2VoidBedspaceTest {
       Cas3BedspaceEntityFactory().withStartDate(bedspaceStartDate).withEndDate(bedspaceEndDate).produce()
 
     @Test
-    fun `createVoidBedspaces returns Success with correct result when validation passed`() {
+    fun `createVoidBedspace returns Success with correct result when validation passed`() {
       val voidBedspaceStartDate = bedspaceStartDate.plusDays(1)
       val voidBedspaceEndDate = bedspaceEndDate.minusDays(1)
 
       val result = cas3v2VoidBedspaceService.createVoidBedspace(
-        startDate = voidBedspaceStartDate,
-        endDate = voidBedspaceEndDate,
+        voidBedspaceStartDate = voidBedspaceStartDate,
+        voidBedspaceEndDate = voidBedspaceEndDate,
         reasonId = voidBedspaceReason.id,
         referenceNumber = "12345",
         notes = "notes",
@@ -79,14 +77,14 @@ class Cas3v2VoidBedspaceTest {
     }
 
     @Test
-    fun `createVoidBedspaces returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
+    fun `createVoidBedspace returns FieldValidationError when reason does not exist and end date is before start date`() {
       // with an invalid reason and a void bedspace end date that is before the start date
       val invalidReasonId = UUID.randomUUID()
       every { cas3VoidBedspaceReasonRepository.findByIdOrNull(invalidReasonId) } returns null
 
       val result = cas3v2VoidBedspaceService.createVoidBedspace(
-        startDate = bedspaceEndDate.minusDays(1),
-        endDate = bedspaceEndDate.minusDays(2),
+        voidBedspaceStartDate = bedspaceEndDate.minusDays(1),
+        voidBedspaceEndDate = bedspaceEndDate.minusDays(2),
         reasonId = invalidReasonId,
         referenceNumber = "12345",
         notes = "notes",
@@ -100,14 +98,14 @@ class Cas3v2VoidBedspaceTest {
     }
 
     @Test
-    fun `createVoidBedspaces returns error when void start date is after bed end date`() {
+    fun `createVoidBedspace returns FieldValidationError when void bedspace start date is after bedspace end date`() {
       // when void bedspace dates are after the bedspace end date
       val voidBedspaceStartDate = bedspaceEndDate.plusDays(1)
       val voidBedspaceEndDate = bedspaceEndDate.plusDays(2)
 
       val result = cas3v2VoidBedspaceService.createVoidBedspace(
-        startDate = voidBedspaceStartDate,
-        endDate = voidBedspaceEndDate,
+        voidBedspaceStartDate = voidBedspaceStartDate,
+        voidBedspaceEndDate = voidBedspaceEndDate,
         reasonId = voidBedspaceReason.id,
         referenceNumber = "12345",
         notes = "notes",
@@ -121,13 +119,13 @@ class Cas3v2VoidBedspaceTest {
     }
 
     @Test
-    fun `createVoidBedspaces returns validation error when void start date is before bedspace start date`() {
+    fun `createVoidBedspace returns FieldValidationError when void bedspace start date is before bedspace start date`() {
       // when void bedspace dates are before bedspace start date
       val voidBedspaceStartDate = bedspaceStartDate.minusDays(2)
       val voidBedspaceEndDate = bedspaceStartDate.minusDays(1)
       val result = cas3v2VoidBedspaceService.createVoidBedspace(
-        startDate = voidBedspaceStartDate,
-        endDate = voidBedspaceEndDate,
+        voidBedspaceStartDate = voidBedspaceStartDate,
+        voidBedspaceEndDate = voidBedspaceEndDate,
         reasonId = voidBedspaceReason.id,
         referenceNumber = "12345",
         notes = "notes",
@@ -137,6 +135,119 @@ class Cas3v2VoidBedspaceTest {
       assertThatCasResult(result)
         .isFieldValidationError()
         .hasMessage("$.startDate", "voidStartDateBeforeBedspaceStartDate")
+    }
+  }
+
+  @Nested
+  inner class UpdateVoidBedspace {
+
+    @BeforeEach
+    fun setup() {
+      every { cas3VoidBedspacesRepository.findVoidBedspace(any(), any(), any()) } returns voidBedspaceEntity
+    }
+
+    private val bedspaceStartDate = LocalDate.now()
+    private val bedspaceEndDate = LocalDate.now().plusDays(100)
+    private val voidBedspaceStartDate = bedspaceStartDate.plusDays(2)
+    private val voidBedspaceEndDate = bedspaceEndDate.minusDays(1)
+    private val bedspace = Cas3BedspaceEntityFactory()
+      .withStartDate(bedspaceStartDate)
+      .withEndDate(bedspaceEndDate)
+      .produce()
+
+    private val voidBedspaceEntity = Cas3VoidBedspaceEntityFactory()
+      .withBedspace(bedspace)
+      .withYieldedReason { voidBedspaceReason }
+      .withStartDate(voidBedspaceStartDate)
+      .withEndDate(voidBedspaceEndDate)
+      .produceV2()
+
+    @Test
+    fun `updateVoidBedspace returns Success with correct result when validation passed`() {
+      val result = cas3v2VoidBedspaceService.updateVoidBedspace(
+        voidBedspaceEntity,
+        voidBedspaceStartDate = voidBedspaceStartDate,
+        voidBedspaceEndDate = voidBedspaceEndDate,
+        reasonId = voidBedspaceReason.id,
+        referenceNumber = "new ref number",
+        notes = "some new notes",
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.premises).isNull()
+        assertThat(it.id).isEqualTo(voidBedspaceEntity.id)
+        assertThat(it.reason).isEqualTo(voidBedspaceReason)
+        assertThat(it.startDate).isEqualTo(voidBedspaceStartDate)
+        assertThat(it.endDate).isEqualTo(voidBedspaceEndDate)
+        assertThat(it.referenceNumber).isEqualTo("new ref number")
+        assertThat(it.notes).isEqualTo("some new notes")
+      }
+    }
+
+    @Test
+    fun `updateVoidBedspace returns FieldValidationError when reason does not exist and end date is before start date`() {
+      every { cas3VoidBedspaceReasonRepository.findByIdOrNull(any()) } returns null
+
+      val result = cas3v2VoidBedspaceService.updateVoidBedspace(
+        voidBedspaceEntity,
+        voidBedspaceStartDate = LocalDate.now().plusDays(10),
+        voidBedspaceEndDate = LocalDate.now().plusDays(2),
+        reasonId = voidBedspaceReason.id,
+        referenceNumber = "new ref number",
+        notes = "some new notes",
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.endDate", "beforeStartDate")
+        .hasMessage("$.reason", "doesNotExist")
+    }
+
+    @Test
+    fun `updateVoidBedspace returns FieldValidationErrors when void start and end dates are before bedspace start date`() {
+      val result = cas3v2VoidBedspaceService.updateVoidBedspace(
+        voidBedspaceEntity,
+        voidBedspaceStartDate = bedspaceStartDate.minusDays(1),
+        voidBedspaceEndDate = bedspaceEndDate.plusDays(1),
+        reasonId = voidBedspaceReason.id,
+        referenceNumber = "new ref number",
+        notes = "some new notes",
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.startDate", "voidStartDateBeforeBedspaceStartDate")
+        .hasMessage("$.endDate", "voidEndDateAfterBedspaceEndDate")
+    }
+
+    @Test
+    fun `updateVoidBedspace returns FieldValidationErrors when trying to update a cancelled bedspace`() {
+      voidBedspaceEntity.cancellationDate = OffsetDateTime.now()
+
+      val result = cas3v2VoidBedspaceService.updateVoidBedspace(
+        voidBedspaceEntity,
+        voidBedspaceStartDate = bedspaceStartDate.minusDays(1),
+        voidBedspaceEndDate = bedspaceEndDate.plusDays(1),
+        reasonId = voidBedspaceReason.id,
+        referenceNumber = "new ref number",
+        notes = "some new notes",
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("This Void Bedspace has been cancelled")
+    }
+
+    @Test
+    fun `updateVoidBedspaces returns validation error when void start date is after bedspace end date`() {
+      val result = cas3v2VoidBedspaceService.updateVoidBedspace(
+        voidBedspaceEntity,
+        voidBedspaceStartDate = bedspaceEndDate.plusDays(1),
+        voidBedspaceEndDate = bedspaceEndDate.plusDays(10),
+        reasonId = voidBedspaceReason.id,
+        referenceNumber = "new ref number",
+        notes = "some new notes",
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.startDate", "voidStartDateAfterBedspaceEndDate")
+        .hasMessage("$.endDate", "voidEndDateAfterBedspaceEndDate")
     }
   }
 

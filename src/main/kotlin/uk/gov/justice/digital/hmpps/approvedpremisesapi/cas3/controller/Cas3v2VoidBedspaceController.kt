@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewVoidBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdateVoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
@@ -76,8 +77,8 @@ class Cas3v2VoidBedspaceController(
     cas3BookingService.throwIfVoidBedspaceDatesConflict(body.startDate, body.endDate, null, body.bedspaceId)
 
     val voidBedspace = voidBedspaceService.createVoidBedspace(
-      startDate = body.startDate,
-      endDate = body.endDate,
+      voidBedspaceStartDate = body.startDate,
+      voidBedspaceEndDate = body.endDate,
       reasonId = body.reasonId,
       referenceNumber = body.referenceNumber,
       notes = body.notes,
@@ -86,6 +87,44 @@ class Cas3v2VoidBedspaceController(
 
     val result = extractEntityFromCasResult(voidBedspace)
     return ResponseEntity.status(HttpStatus.CREATED).body(cas3VoidBedspacesTransformer.toCas3VoidBedspace(result))
+  }
+
+  @PutMapping("/v2/premises/{premisesId}/bedspaces/{bedspaceId}/void-bedspaces/{voidBedspaceId}")
+  fun updateVoidBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @PathVariable voidBedspaceId: UUID,
+    @RequestBody body: Cas3UpdateVoidBedspace,
+  ): ResponseEntity<Cas3VoidBedspace> {
+    val voidBedspaceEntity =
+      voidBedspaceService.findVoidBedspace(premisesId, bedspaceId, voidBedspaceId) ?: throw NotFoundProblem(
+        voidBedspaceId,
+        "Cas3VoidBedspace",
+      )
+
+    if (!cas3UserAccessService.canViewVoidBedspaces(voidBedspaceEntity.bedspace!!.premises.probationDeliveryUnit.probationRegion.id)) {
+      throw ForbiddenProblem()
+    }
+
+    cas3BookingService.throwIfBookingDatesConflict(body.startDate, body.endDate, null, bedspaceId)
+    cas3BookingService.throwIfVoidBedspaceDatesConflict(body.startDate, body.endDate, null, bedspaceId)
+
+    val updateVoidBedspaceResult = voidBedspaceService.updateVoidBedspace(
+      voidBedspaceEntity,
+      body.startDate,
+      body.endDate,
+      body.reasonId,
+      body.referenceNumber,
+      body.notes,
+    )
+
+    return ResponseEntity.ok(
+      cas3VoidBedspacesTransformer.toCas3VoidBedspace(
+        extractEntityFromCasResult(
+          updateVoidBedspaceResult,
+        ),
+      ),
+    )
   }
 
   @PutMapping("/v2/premises/{premisesId}/bedspaces/{bedspaceId}/void-bedspaces/{voidBedspaceId}/cancellations")
