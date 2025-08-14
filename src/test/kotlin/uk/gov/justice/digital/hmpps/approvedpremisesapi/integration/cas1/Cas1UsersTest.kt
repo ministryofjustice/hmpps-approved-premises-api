@@ -671,12 +671,11 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET to users with an approved role returns paginated list`(role: UserRole) {
-      repeat(10) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
+    @Test
+    fun `returns paginated list and pagination headers if page defined`() {
+      repeat(15) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
 
-      givenAUser(roles = listOf(role)) { requestUser, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { requestUser, jwt ->
         val response = webTestClient.get()
           .uri("/cas1/users?page=1")
           .header("Authorization", "Bearer $jwt")
@@ -685,11 +684,32 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
           .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 11)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 16)
           .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .bodyAsListOfObjects<ApprovedPremisesUser>()
 
         assertThat(response).hasSize(10)
+      }
+    }
+
+    @Test
+    fun `doesn't return a paginated list or pagination headers if page not defined`() {
+      repeat(15) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
+
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { requestUser, jwt ->
+        val response = webTestClient.get()
+          .uri("/cas1/users")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+          .expectHeader().doesNotExist("X-Pagination-TotalPages")
+          .expectHeader().doesNotExist("X-Pagination-TotalResults")
+          .expectHeader().doesNotExist("X-Pagination-PageSize")
+          .bodyAsListOfObjects<ApprovedPremisesUser>()
+
+        assertThat(response).hasSize(16)
       }
     }
 
@@ -985,12 +1005,11 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER"])
-    fun `GET to users with an approved role returns paginated list`(role: UserRole) {
-      repeat(10) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
+    @Test
+    fun `returns paginated list and paging headers if page size is defined`() {
+      repeat(15) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
 
-      givenAUser(roles = listOf(role)) { requestUser, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { requestUser, jwt ->
         val response = webTestClient.get()
           .uri("/cas1/users/summary?page=1")
           .header("Authorization", "Bearer $jwt")
@@ -999,11 +1018,32 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
           .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-          .expectHeader().valueEquals("X-Pagination-TotalResults", 11)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 16)
           .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .bodyAsListOfObjects<UserSummary>()
 
         assertThat(response).hasSize(10)
+      }
+    }
+
+    @Test
+    fun `doesn't return a paginated list or headers if no page size is defined`() {
+      repeat(15) { givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) }
+
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { requestUser, jwt ->
+        val response = webTestClient.get()
+          .uri("/cas1/users/summary")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+          .expectHeader().doesNotExist("X-Pagination-TotalPages")
+          .expectHeader().doesNotExist("X-Pagination-TotalResults")
+          .expectHeader().doesNotExist("X-Pagination-PageSize")
+          .bodyAsListOfObjects<UserSummary>()
+
+        assertThat(response).hasSize(16)
       }
     }
 
