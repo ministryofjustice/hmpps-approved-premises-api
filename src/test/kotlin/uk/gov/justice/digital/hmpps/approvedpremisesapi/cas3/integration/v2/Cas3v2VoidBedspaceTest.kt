@@ -37,15 +37,15 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
   @Nested
   inner class GetVoidBedspace {
 
-    fun doGetRequest(jwt: String, premisesId: UUID, voidBedspaceId: UUID) = webTestClient.get()
-      .uri("/cas3/v2/premises/$premisesId/void-bedspaces/$voidBedspaceId")
+    fun doGetRequest(jwt: String, premisesId: UUID, bedspaceId: UUID, voidBedspaceId: UUID) = webTestClient.get()
+      .uri("/cas3/v2/premises/$premisesId/bedspaces/$bedspaceId/void-bedspaces/$voidBedspaceId")
       .headers(buildTemporaryAccommodationHeaders(jwt))
       .exchange()
 
     @Test
     fun `Get Void Bedspace for non-existent premises returns 404`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        doGetRequest(jwt, UUID.randomUUID(), UUID.randomUUID())
+        doGetRequest(jwt, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID())
           .expectStatus()
           .isNotFound
       }
@@ -55,7 +55,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
     fun `Get Void Bedspace for non-existent void bedspace returns 404`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(user.probationRegion)
-        doGetRequest(jwt, premises.id, UUID.randomUUID())
+        doGetRequest(jwt, premises.id, UUID.randomUUID(), UUID.randomUUID())
           .expectStatus()
           .isNotFound
       }
@@ -67,7 +67,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         val premises = givenACas3Premises(user.probationRegion)
         val voidBedspace = createVoidBedspaces(premises).first()
 
-        val result = doGetRequest(jwt, premises.id, voidBedspace.id)
+        val result = doGetRequest(jwt, premises.id, voidBedspace.bedspace!!.id, voidBedspace.id)
           .expectStatus().isOk
           .expectBody(Cas3VoidBedspace::class.java)
           .returnResult().responseBody!!
@@ -94,7 +94,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         val otherPremises = givenACas3Premises(otherRegion)
 
         val voidBedspace = createVoidBedspaces(otherPremises).first()
-        doGetRequest(jwt, otherPremises.id, voidBedspace.id)
+        doGetRequest(jwt, otherPremises.id, voidBedspace.bedspace!!.id, voidBedspace.id)
           .expectStatus().isForbidden
       }
     }
@@ -103,7 +103,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
   @Nested
   inner class GetVoidBedspaces {
     fun doGetRequest(jwt: String, premisesId: UUID) = webTestClient.get()
-      .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
+      .uri("/cas3/v2/premises/$premisesId/bedspaces/void-bedspaces")
       .headers(buildTemporaryAccommodationHeaders(jwt))
       .exchange()
 
@@ -148,8 +148,8 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
 
   @Nested
   inner class CreateVoidBedspace {
-    fun doPostRequest(jwt: String, premisesId: UUID, voidBedspace: Cas3NewVoidBedspace) = webTestClient.post()
-      .uri("/cas3/v2/premises/$premisesId/void-bedspaces")
+    fun doPostRequest(jwt: String, premisesId: UUID, bedspaceId: UUID, voidBedspace: Cas3NewVoidBedspace) = webTestClient.post()
+      .uri("/cas3/v2/premises/$premisesId/bedspaces/$bedspaceId/void-bedspaces")
       .headers(buildTemporaryAccommodationHeaders(jwt))
       .bodyValue(voidBedspace)
       .exchange()
@@ -160,7 +160,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
       val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
       val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
       val voidBedspace = buildVoidBedspace(reason.id, bedspace.id)
-      val result = doPostRequest(jwt, premises.id, voidBedspace)
+      val result = doPostRequest(jwt, premises.id, bedspace.id, voidBedspace)
         .expectStatus()
         .isCreated
         .expectBody(Cas3VoidBedspace::class.java)
@@ -187,13 +187,10 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
         val invalidBedspaceId = UUID.randomUUID()
         val voidBedspace = buildVoidBedspace(reason.id, invalidBedspaceId)
-        doPostRequest(jwt, premises.id, voidBedspace)
+        doPostRequest(jwt, premises.id, invalidBedspaceId, voidBedspace)
           .expectStatus()
           .isNotFound
-          .expectBody()
-          .jsonPath("title").isEqualTo("Not Found")
-          .jsonPath("status").isEqualTo(404)
-          .jsonPath("detail").isEqualTo("No Cas3Bedspace with an ID of $invalidBedspaceId could be found")
+          .withNotFoundMessage("No Cas3Bedspace with an ID of $invalidBedspaceId could be found")
       }
     }
 
@@ -206,7 +203,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
 
         val voidBedspace = buildVoidBedspace(reason.id, bedspace.id)
 
-        doPostRequest(jwt, otherRegionPremises.id, voidBedspace)
+        doPostRequest(jwt, otherRegionPremises.id, bedspace.id, voidBedspace)
           .expectStatus()
           .isForbidden
       }
@@ -236,7 +233,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
 
         val voidBedspace = buildVoidBedspace(reason.id, bedspace.id, startDate = startDate, endDate = endDate)
 
-        doPostRequest(jwt, premises.id, voidBedspace)
+        doPostRequest(jwt, premises.id, bedspace.id, voidBedspace)
           .expectStatus()
           .is4xxClientError
           .expectBody()
@@ -274,7 +271,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         )
 
         val voidBedspace = buildVoidBedspace(reason.id, bedspace.id)
-        val result = doPostRequest(jwt, premises.id, voidBedspace)
+        val result = doPostRequest(jwt, premises.id, bedspace.id, voidBedspace)
           .expectStatus()
           .isCreated
           .expectBody(Cas3VoidBedspace::class.java)
@@ -314,7 +311,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         }
 
         val voidBedspace = buildVoidBedspace(reason.id, bedspace.id, newStartDate, newEndDate)
-        doPostRequest(jwt, premises.id, voidBedspace)
+        doPostRequest(jwt, premises.id, bedspace.id, voidBedspace)
           .expectStatus()
           .is4xxClientError
           .expectBody()
@@ -338,7 +335,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
           startDate = bedspaceWithCancelledVoidBedspace.startDate!!.plusDays(1),
           endDate = bedspaceWithCancelledVoidBedspace.endDate!!.minusDays(1),
         )
-        val result = doPostRequest(jwt, premises.id, voidBedspace)
+        val result = doPostRequest(jwt, premises.id, bedspaceWithCancelledVoidBedspace.id, voidBedspace)
           .expectStatus()
           .isCreated
           .expectBody(Cas3VoidBedspace::class.java)

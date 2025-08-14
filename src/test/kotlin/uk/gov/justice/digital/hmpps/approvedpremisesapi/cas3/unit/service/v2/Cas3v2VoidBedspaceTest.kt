@@ -4,6 +4,8 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.just
+import io.mockk.runs
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -32,6 +35,9 @@ class Cas3v2VoidBedspaceTest {
   @MockK
   lateinit var cas3VoidBedspaceReasonRepository: Cas3VoidBedspaceReasonRepository
 
+  @MockK
+  lateinit var cas3BookingService: Cas3v2BookingService
+
   @InjectMockKs
   lateinit var cas3v2VoidBedspaceService: Cas3v2VoidBedspaceService
 
@@ -39,6 +45,8 @@ class Cas3v2VoidBedspaceTest {
 
   @BeforeEach
   fun setup() {
+    every { cas3BookingService.throwIfBookingDatesConflict(any(), any(), any(), any()) } just runs
+    every { cas3BookingService.throwIfVoidBedspaceDatesConflict(any(), any(), any(), any()) } just runs
     every { cas3VoidBedspaceReasonRepository.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
     every { cas3VoidBedspacesRepository.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspaceEntity }
   }
@@ -72,6 +80,22 @@ class Cas3v2VoidBedspaceTest {
           assertThat(it.referenceNumber).isEqualTo("12345")
           assertThat(it.notes).isEqualTo("notes")
         })
+      }
+      verify(exactly = 1) {
+        cas3BookingService.throwIfVoidBedspaceDatesConflict(
+          voidBedspaceStartDate,
+          voidBedspaceEndDate,
+          null,
+          bedspace.id,
+        )
+      }
+      verify(exactly = 1) {
+        cas3BookingService.throwIfBookingDatesConflict(
+          voidBedspaceStartDate,
+          voidBedspaceEndDate,
+          null,
+          bedspace.id,
+        )
       }
       verify(exactly = 1) { cas3VoidBedspacesRepository.save(match { it.bedspace?.id == bedspace.id }) }
     }
@@ -182,6 +206,24 @@ class Cas3v2VoidBedspaceTest {
         assertThat(it.referenceNumber).isEqualTo("new ref number")
         assertThat(it.notes).isEqualTo("some new notes")
       }
+
+      verify(exactly = 1) {
+        cas3BookingService.throwIfVoidBedspaceDatesConflict(
+          voidBedspaceStartDate,
+          voidBedspaceEndDate,
+          null,
+          bedspace.id,
+        )
+      }
+      verify(exactly = 1) {
+        cas3BookingService.throwIfBookingDatesConflict(
+          voidBedspaceStartDate,
+          voidBedspaceEndDate,
+          null,
+          bedspace.id,
+        )
+      }
+      verify(exactly = 1) { cas3VoidBedspacesRepository.save(match { it.bedspace?.id == bedspace.id }) }
     }
 
     @Test
@@ -235,7 +277,7 @@ class Cas3v2VoidBedspaceTest {
     }
 
     @Test
-    fun `updateVoidBedspaces returns validation error when void start date is after bedspace end date`() {
+    fun `updateVoidBedspaces returns FieldValidationErrors when void start date is after bedspace end date`() {
       val result = cas3v2VoidBedspaceService.updateVoidBedspace(
         voidBedspaceEntity,
         voidBedspaceStartDate = bedspaceEndDate.plusDays(1),
