@@ -565,7 +565,17 @@ class Cas3PremisesService(
       .asSequence()
       .map { objectMapper.readValue(it.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate }
       .firstOrNull { it >= endDate }
-      ?.let { return "$.endDate" hasSingleValidationError "endDateOverlapPreviousPremisesArchiveEndDate" }
+      ?.let { archiveDate ->
+        return Cas3FieldValidationError(
+          mapOf(
+            "$.endDate" to Cas3ValidationMessage(
+              entityId = premises.id.toString(),
+              message = "endDateOverlapPreviousPremisesArchiveEndDate",
+              value = archiveDate.toString(),
+            ),
+          ),
+        )
+      }
 
     if (validationErrors.any()) {
       return fieldValidationError

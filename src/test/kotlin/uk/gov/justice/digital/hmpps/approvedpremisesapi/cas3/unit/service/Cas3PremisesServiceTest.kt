@@ -2671,7 +2671,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.archivePremises(premises, previousPremisesArchiveDate.minusDays(2))
 
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.endDate", "endDateOverlapPreviousPremisesArchiveEndDate")
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", premises.id.toString(), "endDateOverlapPreviousPremisesArchiveEndDate", previousPremisesArchiveDate.toString())
     }
 
     @Test
