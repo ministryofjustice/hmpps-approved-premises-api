@@ -81,7 +81,7 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
 
   CAS1_SPACE_BOOKING_SHORTEN(ApprovedPremisesUserPermission.spaceBookingShorten, experimental = true),
 
-  CAS1_NATIONAL_OCCUPANCY_VIEW(ApprovedPremisesUserPermission.nationalOccupancyView, experimental = true),
+  CAS1_NATIONAL_OCCUPANCY_VIEW(ApprovedPremisesUserPermission.nationalOccupancyView),
 
   CAS1_PREMISES_CAPACITY_REPORT_VIEW(ApprovedPremisesUserPermission.premisesCapacityReportView),
   CAS1_PREMISES_VIEW(ApprovedPremisesUserPermission.premisesView),

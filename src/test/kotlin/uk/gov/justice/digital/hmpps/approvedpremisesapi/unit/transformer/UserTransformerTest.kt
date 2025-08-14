@@ -382,7 +382,6 @@ class UserTransformerTest {
       assertThat(result.deliusUsername).isEqualTo("userName")
       assertThat(result.loadError).isEqualTo(null)
       verify { userTransformer.transformJpaToApi(user, approvedPremises) }
-      verify { environmentService.isNotProd() }
     }
   }
 
