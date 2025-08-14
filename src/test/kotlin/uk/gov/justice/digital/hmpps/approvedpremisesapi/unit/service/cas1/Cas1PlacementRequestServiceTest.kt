@@ -37,6 +37,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -77,6 +79,7 @@ class Cas1PlacementRequestServiceTest {
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val offenderService = mockk<OffenderService>()
+  private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
 
   private val placementRequestService = Cas1PlacementRequestService(
     placementRequestRepository,
@@ -89,6 +92,7 @@ class Cas1PlacementRequestServiceTest {
     cas1PlacementRequestDomainEventService,
     cas1BookingDomainEventService,
     offenderService,
+    lockablePlacementRequestRepository,
     clock = Clock.systemDefaultZone(),
   )
 
@@ -365,6 +369,11 @@ class Cas1PlacementRequestServiceTest {
 
     val placementRequest = createValidPlacementRequest(application, user)
     val placementRequestId = placementRequest.id
+
+    @BeforeEach
+    fun setupLockMock() {
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequestId) } returns LockablePlacementRequestEntity(placementRequestId)
+    }
 
     @Test
     fun `withdrawPlacementRequest returns Not Found if no Placement Request with ID exists`() {

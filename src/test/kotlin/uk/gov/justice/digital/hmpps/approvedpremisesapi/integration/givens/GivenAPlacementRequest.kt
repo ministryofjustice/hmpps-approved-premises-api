@@ -56,7 +56,8 @@ fun IntegrationTestBase.givenAPlacementRequest(
   essentialCriteria: List<CharacteristicEntity>? = null,
   caseManager: Cas1ApplicationUserDetailsEntity? = null,
   apType: ApprovedPremisesType? = null,
-  createdAt: OffsetDateTime = OffsetDateTime.now().randomDateTimeBefore(30),
+  applicationCreatedAt: OffsetDateTime = OffsetDateTime.now().randomDateTimeBefore(30),
+  placementRequestCreatedAt: OffsetDateTime = OffsetDateTime.now(),
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   var risksFactory = PersonRisksFactory()
 
@@ -83,7 +84,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   val app = application ?: approvedPremisesApplicationEntityFactory.produceAndPersist {
     crn?.let { withCrn(it) }
     name?.let { withName(it) }
-    withCreatedAt(createdAt)
+    withCreatedAt(applicationCreatedAt)
     withCreatedByUser(createdByUser)
     withSubmittedAt(applicationSubmittedAt)
     withReleaseType("licence")
@@ -140,6 +141,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
     if (placementApplication != null) {
       withPlacementApplication(placementApplication)
     }
+    withCreatedAt(placementRequestCreatedAt)
   }
 
   return Pair(placementRequest, app)

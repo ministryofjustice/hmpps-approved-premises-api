@@ -13,6 +13,7 @@ import java.util.UUID
 @Repository
 interface PlacementApplicationPlaceholderRepository : JpaRepository<PlacementApplicationPlaceholderEntity, UUID> {
   fun findByApplication(application: ApplicationEntity): PlacementApplicationPlaceholderEntity?
+  fun findByApplicationAndArchivedIsFalse(application: ApplicationEntity): PlacementApplicationPlaceholderEntity?
 }
 
 /**
