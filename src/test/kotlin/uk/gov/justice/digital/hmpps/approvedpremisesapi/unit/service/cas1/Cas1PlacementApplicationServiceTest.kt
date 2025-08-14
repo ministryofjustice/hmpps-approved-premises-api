@@ -270,6 +270,85 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
+    fun `Submitting an application returns validation error if no placement type or release type present`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        placementType = null,
+        placementDates = emptyList(),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = null,
+          ),
+        ),
+        releaseType = null,
+        sentenceType = null,
+        situationType = null,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
+
+      )
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Please provide at least one of placementType or releaseType.")
+    }
+
+    @Test
+    fun `Submitting an application and inferring placement type from release typ`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+
+      every { userService.getDeliusUserNameForRequest() } returns "theUsername"
+      every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } just Runs
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
+
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        placementType = null,
+        placementDates = emptyList(),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
+        ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
+      )
+
+      assertThat(result is CasResult.Success).isTrue
+      val updatedPlacementApplications = extractEntityFromCasResult(result)
+
+      assertThat(updatedPlacementApplications).hasSize(1)
+
+      val updatedPlacementApp = updatedPlacementApplications[0]
+
+      assertThat(updatedPlacementApp.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
+      assertThat(updatedPlacementApp.placementType).isEqualTo(JpaPlacementType.ADDITIONAL_PLACEMENT)
+
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
+      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, null) }
+      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
+    }
+
+    @Test
     fun `Submitting an application triggers allocation and sets a due date`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser

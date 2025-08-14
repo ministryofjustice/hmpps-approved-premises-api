@@ -9,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -316,6 +317,7 @@ class Cas1PlacementApplicationService(
   }
 
   @Transactional
+  @Suppress("CyclomaticComplexMethod")
   fun submitApplication(
     id: UUID,
     submitPlacementApplication: SubmitPlacementApplication,
@@ -340,6 +342,18 @@ class Cas1PlacementApplicationService(
       }
     }
 
+    if (submitPlacementApplication.placementType == null && submitPlacementApplication.releaseType == null) {
+      return CasResult.GeneralValidationError("Please provide at least one of placementType or releaseType.")
+    }
+
+    var placementTypeValue = when {
+      submitPlacementApplication.placementType != null -> getPlacementType(submitPlacementApplication.placementType)
+
+      submitPlacementApplication.releaseType == ReleaseTypeOption.paroleDirectedLicence -> PlacementType.RELEASE_FOLLOWING_DECISION
+      submitPlacementApplication.releaseType == ReleaseTypeOption.rotl -> PlacementType.ROTL
+      else -> PlacementType.ADDITIONAL_PLACEMENT
+    }
+
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
 
     if (placementApplicationAuthorisationResult is Either.Left) {
@@ -361,7 +375,7 @@ class Cas1PlacementApplicationService(
       allocatedToUser = allocatedUser
       submittedAt = now
       allocatedAt = now
-      placementType = getPlacementType(submitPlacementApplication.placementType)
+      placementType = placementTypeValue
       submissionGroupId = UUID.randomUUID()
       releaseType = submitPlacementApplication.releaseType?.toString()
       sentenceType = submitPlacementApplication.sentenceType?.toString()
