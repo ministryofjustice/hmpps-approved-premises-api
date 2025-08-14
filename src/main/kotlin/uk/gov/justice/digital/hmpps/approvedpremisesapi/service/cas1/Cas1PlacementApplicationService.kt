@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import arrow.core.Either
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -8,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -47,6 +49,7 @@ class Cas1PlacementApplicationService(
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val clock: Clock,
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
+  private val objectMapper: ObjectMapper,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -315,12 +318,26 @@ class Cas1PlacementApplicationService(
   @Transactional
   fun submitApplication(
     id: UUID,
-    translatedDocument: String,
-    apiPlacementType: ApiPlacementType,
-    apiPlacementDates: List<Cas1RequestedPlacementPeriod>,
+    submitPlacementApplication: SubmitPlacementApplication,
   ): CasResult<List<PlacementApplicationEntity>> {
-    if (apiPlacementDates.isEmpty()) {
-      return CasResult.GeneralValidationError("At least one placement date is required")
+    val translatedDocument = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
+
+    val cas1RequestedPlacementPeriod = when {
+      !submitPlacementApplication.placementDates.isNullOrEmpty() -> {
+        submitPlacementApplication.placementDates.map { placementDate ->
+          Cas1RequestedPlacementPeriod(
+            arrival = placementDate.expectedArrival,
+            arrivalFlexible = null,
+            duration = placementDate.duration,
+          )
+        }
+      }
+      !submitPlacementApplication.requestedPlacementPeriods.isNullOrEmpty() -> {
+        submitPlacementApplication.requestedPlacementPeriods
+      }
+      else -> {
+        return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
+      }
     }
 
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
@@ -344,15 +361,18 @@ class Cas1PlacementApplicationService(
       allocatedToUser = allocatedUser
       submittedAt = now
       allocatedAt = now
-      placementType = getPlacementType(apiPlacementType)
+      placementType = getPlacementType(submitPlacementApplication.placementType)
       submissionGroupId = UUID.randomUUID()
+      releaseType = submitPlacementApplication.releaseType?.toString()
+      sentenceType = submitPlacementApplication.sentenceType?.toString()
+      situation = submitPlacementApplication.situationType?.toString()
     }
 
     submittedPlacementApplication.dueAt = cas1TaskDeadlineService.getDeadline(submittedPlacementApplication)
 
     val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 
-    val placementApplicationsWithDates = saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, apiPlacementDates)
+    val placementApplicationsWithDates = saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, cas1RequestedPlacementPeriod)
 
     placementApplicationsWithDates.forEach { placementApplication ->
       cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(

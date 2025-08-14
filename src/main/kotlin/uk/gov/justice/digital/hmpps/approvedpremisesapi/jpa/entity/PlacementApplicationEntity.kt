@@ -138,6 +138,10 @@ data class PlacementApplicationEntity(
 
   var expectedArrivalFlexible: Boolean? = null,
 
+  var releaseType: String? = null,
+  var sentenceType: String? = null,
+  var situation: String? = null,
+
   @Version
   var version: Long = 1,
 ) {

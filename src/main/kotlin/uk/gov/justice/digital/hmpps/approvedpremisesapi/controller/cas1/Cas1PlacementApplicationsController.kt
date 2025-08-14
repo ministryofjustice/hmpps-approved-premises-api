@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PlacementApplicationsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
@@ -14,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -87,27 +85,7 @@ class Cas1PlacementApplicationsController(
     id: UUID,
     submitPlacementApplication: SubmitPlacementApplication,
   ): ResponseEntity<List<PlacementApplication>> {
-    val serializedData = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
-
-    val cas1RequestedPlacementPeriod = when {
-      !submitPlacementApplication.placementDates.isNullOrEmpty() -> {
-        submitPlacementApplication.placementDates.map { placementDate ->
-          Cas1RequestedPlacementPeriod(
-            arrival = placementDate.expectedArrival,
-            arrivalFlexible = null,
-            duration = placementDate.duration,
-          )
-        }
-      }
-      !submitPlacementApplication.requestedPlacementPeriods.isNullOrEmpty() -> {
-        submitPlacementApplication.requestedPlacementPeriods
-      }
-      else -> {
-        throw BadRequestProblem(errorDetail = "Please provide at least one of placement dates or requested placement periods.")
-      }
-    }
-
-    val result = cas1PlacementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, cas1RequestedPlacementPeriod)
+    val result = cas1PlacementApplicationService.submitApplication(id, submitPlacementApplication)
 
     val placementApplications = extractEntityFromCasResult(result)
 

@@ -626,6 +626,9 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         placementType = placementType,
         placementDates = placementDates,
         requestedPlacementPeriods = emptyList(),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
       ),
     )
 

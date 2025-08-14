@@ -21,4 +21,8 @@ data class SubmitPlacementApplication(
   val placementDates: List<PlacementDates>?,
 
   val requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>?,
+
+  val releaseType: ReleaseTypeOption?,
+  val sentenceType: SentenceTypeOption?,
+  val situationType: SituationOption?,
 )
