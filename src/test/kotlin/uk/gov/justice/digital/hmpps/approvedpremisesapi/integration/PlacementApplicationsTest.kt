@@ -18,6 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
@@ -547,6 +550,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               ),
             ),
             requestedPlacementPeriods = emptyList(),
+            releaseType = ReleaseTypeOption.licence,
+            sentenceType = null,
+            situationType = null,
           ),
         )
         .exchange()
@@ -575,6 +581,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   ),
                 ),
                 requestedPlacementPeriods = emptyList(),
+                releaseType = ReleaseTypeOption.licence,
+                sentenceType = null,
+                situationType = null,
               ),
             )
             .exchange()
@@ -609,6 +618,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   ),
                 ),
                 requestedPlacementPeriods = emptyList(),
+                releaseType = ReleaseTypeOption.licence,
+                sentenceType = null,
+                situationType = null,
               ),
             )
             .exchange()
@@ -643,6 +655,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   ),
                 ),
                 requestedPlacementPeriods = emptyList(),
+                releaseType = ReleaseTypeOption.licence,
+                sentenceType = null,
+                situationType = null,
               ),
             )
             .exchange()
@@ -673,6 +688,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   ),
                 ),
                 requestedPlacementPeriods = emptyList(),
+                releaseType = ReleaseTypeOption.licence,
+                sentenceType = null,
+                situationType = null,
               ),
             )
             .exchange()
@@ -700,6 +718,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 placementType = PlacementType.additionalPlacement,
                 placementDates = emptyList(),
                 requestedPlacementPeriods = emptyList(),
+                releaseType = ReleaseTypeOption.licence,
+                sentenceType = null,
+                situationType = null,
               ),
             )
             .exchange()
@@ -740,6 +761,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   placementType = PlacementType.additionalPlacement,
                   placementDates = emptyList(),
                   requestedPlacementPeriods = cas1RequestedPlacementPeriod,
+                  releaseType = ReleaseTypeOption.licence,
+                  sentenceType = null,
+                  situationType = null,
                 ),
               )
               .exchange()
@@ -817,6 +841,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   placementType = PlacementType.additionalPlacement,
                   placementDates = placementDates,
                   requestedPlacementPeriods = emptyList(),
+                  releaseType = ReleaseTypeOption.licence,
+                  sentenceType = SentenceTypeOption.communityOrder,
+                  situationType = SituationOption.bailSentence,
                 ),
               )
               .exchange()
@@ -849,6 +876,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
             assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(placementDates[0].duration)
             assertThat(updatedPlacementApplication.expectedArrival).isEqualTo(placementDates[0].expectedArrival)
+            assertThat(updatedPlacementApplication.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
+            assertThat(updatedPlacementApplication.sentenceType).isEqualTo(SentenceTypeOption.communityOrder.toString())
+            assertThat(updatedPlacementApplication.situation).isEqualTo(SituationOption.bailSentence.toString())
 
             domainEventAsserter.assertDomainEventOfTypeStored(
               placementApplicationEntity.application.id,
@@ -908,6 +938,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   placementType = PlacementType.additionalPlacement,
                   placementDates = placementDates,
                   requestedPlacementPeriods = emptyList(),
+                  releaseType = ReleaseTypeOption.licence,
+                  sentenceType = null,
+                  situationType = null,
                 ),
               )
               .exchange()
@@ -926,6 +959,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedEntity1.requestedDuration).isEqualTo(duration1)
             assertThat(updatedEntity1.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
+            assertThat(updatedEntity1.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
 
             val createdApp2Id = body[1].id
             val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!
@@ -1005,6 +1039,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   placementType = PlacementType.additionalPlacement,
                   placementDates = null,
                   requestedPlacementPeriods = requestedPlacementPeriod,
+                  releaseType = ReleaseTypeOption.licence,
+                  sentenceType = null,
+                  situationType = null,
                 ),
               )
               .exchange()

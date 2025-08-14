@@ -770,6 +770,9 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         placementType = placementType,
         placementDates = placementDates,
         requestedPlacementPeriods = emptyList(),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
       ),
     )
   }

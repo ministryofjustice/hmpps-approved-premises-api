@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
@@ -19,6 +20,8 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -68,6 +71,7 @@ class Cas1PlacementApplicationServiceTest {
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
+  private val objectMapper = mockk<ObjectMapper>()
 
   private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
     placementApplicationRepository,
@@ -80,6 +84,7 @@ class Cas1PlacementApplicationServiceTest {
     cas1TaskDeadlineServiceMock,
     Clock.systemDefaultZone(),
     lockablePlacementApplicationRepository,
+    objectMapper,
   )
 
   @Nested
@@ -208,6 +213,7 @@ class Cas1PlacementApplicationServiceTest {
 
   @Nested
   inner class SubmitApplicationTest {
+
     lateinit var user: UserEntity
     lateinit var dueAt: OffsetDateTime
     lateinit var application: ApprovedPremisesApplicationEntity
@@ -236,21 +242,31 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userService.getUserForRequest() } returns user
       every { cas1TaskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
+      every { objectMapper.writeValueAsString(any()) } returns "some-json-data"
     }
 
     @Test
     fun `Submitting an application returns validation error if no dates defined`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        placementType = PlacementType.releaseFollowingDecision,
+        placementDates = emptyList(),
+        requestedPlacementPeriods = null,
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
+
       val result = cas1PlacementApplicationService.submitApplication(
         placementApplication.id,
-        "translatedDocument",
-        PlacementType.releaseFollowingDecision,
-        emptyList(),
+        submitPlacementApplication,
+
       )
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
-      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("At least one placement date is required")
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Please provide at least one of placement dates or requested placement periods.")
     }
 
     @Test
@@ -265,17 +281,25 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
-      val result = cas1PlacementApplicationService.submitApplication(
-        placementApplication.id,
-        "translatedDocument",
-        PlacementType.releaseFollowingDecision,
-        listOf(
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        placementType = PlacementType.releaseFollowingDecision,
+        placementDates = emptyList(),
+        requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2024, 4, 1),
             duration = 5,
             arrivalFlexible = null,
           ),
         ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
       )
 
       assertThat(result is CasResult.Success).isTrue
@@ -297,17 +321,25 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
-      val result = cas1PlacementApplicationService.submitApplication(
-        placementApplication.id,
-        "translatedDocument",
-        PlacementType.releaseFollowingDecision,
-        listOf(
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        placementType = PlacementType.releaseFollowingDecision,
+        placementDates = emptyList(),
+        requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2024, 4, 1),
             duration = 5,
             arrivalFlexible = true,
           ),
         ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
       )
 
       assertThat(result is CasResult.Success).isTrue
@@ -322,6 +354,7 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
       assertThat(updatedPlacementApp.expectedArrivalFlexible).isTrue
       assertThat(updatedPlacementApp.authorisedDuration).isNull()
+      assertThat(updatedPlacementApp.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
@@ -340,11 +373,11 @@ class Cas1PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } just Runs
       every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
-      val result = cas1PlacementApplicationService.submitApplication(
-        placementApplication.id,
-        "translatedDocument",
-        PlacementType.releaseFollowingDecision,
-        listOf(
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        placementType = PlacementType.releaseFollowingDecision,
+        placementDates = emptyList(),
+        requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2024, 4, 1),
             duration = 5,
@@ -361,7 +394,14 @@ class Cas1PlacementApplicationServiceTest {
             arrivalFlexible = true,
           ),
         ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
 
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
       )
 
       assertThat(result is CasResult.Success).isTrue

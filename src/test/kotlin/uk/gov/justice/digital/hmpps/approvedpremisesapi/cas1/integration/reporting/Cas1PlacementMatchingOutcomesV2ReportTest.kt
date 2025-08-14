@@ -757,6 +757,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         placementType = placementType,
         placementDates = placementDates,
         requestedPlacementPeriods = emptyList(),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
       ),
     )
 
