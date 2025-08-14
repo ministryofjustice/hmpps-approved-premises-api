@@ -795,6 +795,26 @@ class Cas3PremisesService(
       return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
     }
 
+    if (endDate.isBefore(bedspace.startDate)) {
+      return "$.endDate" hasSingleValidationError "endDateBeforeBedspaceStartDate"
+    }
+
+    cas3DomainEventService.getBedspaceDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED))
+      .asSequence()
+      .map { objectMapper.readValue(it.data, CAS3BedspaceArchiveEvent::class.java).eventDetails.endDate }
+      .firstOrNull { it >= endDate }
+      ?.let { archiveDate ->
+        return Cas3FieldValidationError(
+          mapOf(
+            "$.endDate" to Cas3ValidationMessage(
+              entityId = bedspace.id.toString(),
+              message = "endDateOverlapPreviousBedspaceArchiveEndDate",
+              value = archiveDate.toString(),
+            ),
+          ),
+        )
+      }
+
     if (validationErrors.any()) {
       return fieldValidationError
     }

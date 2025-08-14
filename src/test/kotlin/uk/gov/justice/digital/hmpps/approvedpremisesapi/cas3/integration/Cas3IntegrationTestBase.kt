@@ -130,7 +130,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     return bedspace
   }
 
-  fun getUnarchivePremisesEvent(
+  fun createUnarchivePremisesEvent(
     premises: TemporaryAccommodationPremisesEntity,
     userEntity: UserEntity,
     currentStartDate: LocalDate,
@@ -159,7 +159,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     }
   }
 
-  fun getArchivePremisesEvent(
+  fun createArchivePremisesEvent(
     premises: TemporaryAccommodationPremisesEntity,
     userEntity: UserEntity,
     date: LocalDate,

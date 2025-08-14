@@ -2202,6 +2202,55 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `When archive a bedspace with end date before bedspace start date returns 404 Not Found`() {
+      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR), premisesStartDate = LocalDate.now().minusDays(3)) { user, jwt, premises ->
+
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(2), endDate = null)
+
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().minusDays(5))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("endDateBeforeBedspaceStartDate")
+      }
+    }
+
+    @Test
+    fun `When archive a bedspace with a date that clashes with an earlier archive bedspace end date then returns 400 Bad Request`() {
+      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
+        val previousBedspaceArchiveDate = LocalDate.now().minusDays(3)
+
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(300), endDate = null)
+
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, previousBedspaceArchiveDate)
+
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().minusDays(3))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("endDateOverlapPreviousBedspaceArchiveEndDate")
+          .jsonPath("$.invalid-params[0].entityId").isEqualTo(bedspace.id.toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(previousBedspaceArchiveDate.toString())
+      }
+    }
+
+    @Test
     fun `When archive a bedspace which have an active booking after the bedspace archive date returns 400`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2652,7 +2701,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
         val previousPremisesArchiveDate = LocalDate.now().minusDays(3)
 
-        getArchivePremisesEvent(premises, user, previousPremisesArchiveDate)
+        createArchivePremisesEvent(premises, user, previousPremisesArchiveDate)
 
         val archivePremises = Cas3ArchivePremises(previousPremisesArchiveDate.minusDays(3))
 
@@ -3680,10 +3729,10 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           val secondArchiveDate = LocalDate.now().minusDays(3)
           val secondUnarchiveDate = LocalDate.now().minusDays(2)
 
-          getArchivePremisesEvent(premises, userEntity, firstArchiveDate)
-          getUnarchivePremisesEvent(premises, userEntity, currentStartDate = LocalDate.now(), firstUnarchiveDate)
-          getArchivePremisesEvent(premises, userEntity, secondArchiveDate)
-          getUnarchivePremisesEvent(premises, userEntity, LocalDate.now(), secondUnarchiveDate)
+          createArchivePremisesEvent(premises, userEntity, firstArchiveDate)
+          createUnarchivePremisesEvent(premises, userEntity, currentStartDate = LocalDate.now(), firstUnarchiveDate)
+          createArchivePremisesEvent(premises, userEntity, secondArchiveDate)
+          createUnarchivePremisesEvent(premises, userEntity, LocalDate.now(), secondUnarchiveDate)
 
           // Get premises and verify archive history is in chronological order
           webTestClient.get()
