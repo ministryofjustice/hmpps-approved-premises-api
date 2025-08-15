@@ -3050,9 +3050,8 @@ class Cas3PremisesServiceTest {
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "invalidRestartDateInTheFuture")
     }
 
-    @ParameterizedTest
-    @CsvSource("0", "1")
-    fun `unarchivePremises returns FieldValidationError when restart date is equal or before last archive end date`(minusDays: Long) {
+    @Test
+    fun `unarchivePremises returns FieldValidationError when restart date is before last archive end date`() {
       val lastArchiveEndDate = LocalDate.now().minusDays(1)
       val archivedPremises = temporaryAccommodationPremisesFactory
         .withStartDate(LocalDate.now().minusDays(30))
@@ -3060,7 +3059,7 @@ class Cas3PremisesServiceTest {
         .withStatus(PropertyStatus.archived)
         .produce()
 
-      val restartDate = lastArchiveEndDate.minusDays(minusDays)
+      val restartDate = lastArchiveEndDate.minusDays(1)
 
       every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
 
@@ -3321,21 +3320,6 @@ class Cas3PremisesServiceTest {
       val archivedBedspace = createBedspace(premises, endDate = lastArchiveEndDate)
 
       val restartDate = lastArchiveEndDate.minusDays(1)
-
-      every { bedRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
-
-      val result = premisesService.unarchiveBedspace(premises, archivedBedspace.id, restartDate)
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.restartDate", "beforeLastBedspaceArchivedDate")
-    }
-
-    @Test
-    fun `unarchiveBedspace returns FieldValidationError when restart date equals last archive end date`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
-      val lastArchiveEndDate = LocalDate.now().minusDays(5)
-      val archivedBedspace = createBedspace(premises, endDate = lastArchiveEndDate)
-
-      val restartDate = lastArchiveEndDate
 
       every { bedRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
 

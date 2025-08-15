@@ -969,7 +969,7 @@ class Cas3PremisesService(
       "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
     }
 
-    if (restartDate.isBefore(bedspace.endDate) || restartDate.isEqual(bedspace.endDate)) {
+    if (restartDate.isBefore(bedspace.endDate)) {
       "$.restartDate" hasValidationError "beforeLastBedspaceArchivedDate"
     }
 
@@ -1054,7 +1054,7 @@ class Cas3PremisesService(
       "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
     }
 
-    if (restartDate.isBefore(premises.endDate) || restartDate.isEqual(premises.endDate)) {
+    if (restartDate.isBefore(premises.endDate)) {
       "$.restartDate" hasValidationError "beforeLastPremisesArchivedDate"
     }
 
