@@ -1791,6 +1791,7 @@ class Cas3DomainEventServiceTest {
   fun `savePremisesUnarchiveEvent saves event but does not emit it`() {
     val occurredAt = Instant.now()
     val currentStartDate = LocalDate.now().minusDays(20)
+    val currentEndDate = LocalDate.now().minusDays(10)
     val newStartDate = LocalDate.now().plusDays(5)
     val probationRegion = ProbationRegionEntityFactory().produce()
     val premises = createPremisesEntity(probationRegion)
@@ -1803,6 +1804,7 @@ class Cas3DomainEventServiceTest {
       userId = user.id,
       currentStartDate = currentStartDate,
       newStartDate = newStartDate,
+      currentEndDate = currentEndDate,
     )
     val data = CAS3PremisesUnarchiveEvent(
       eventDetails = eventDetails,
@@ -1822,12 +1824,12 @@ class Cas3DomainEventServiceTest {
       data = data,
     )
 
-    every { cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(eq(premises), eq(currentStartDate), eq(newStartDate), eq(user)) } returns domainEvent
+    every { cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(eq(premises), eq(currentStartDate), eq(newStartDate), eq(currentEndDate), eq(user)) } returns domainEvent
     every { domainEventRepositoryMock.save(any()) } returns null
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
-    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, newStartDate)
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(

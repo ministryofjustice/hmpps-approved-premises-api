@@ -1239,11 +1239,12 @@ class Cas3PremisesService(
 
   private fun unarchivePremisesAndSaveDomainEvent(premises: TemporaryAccommodationPremisesEntity, restartDate: LocalDate): TemporaryAccommodationPremisesEntity {
     val currentStartDate = premises.startDate
+    val currentEndDate = premises.endDate!!
     premises.startDate = restartDate
     premises.endDate = null
     premises.status = PropertyStatus.active
     val updatedPremises = premisesRepository.save(premises)
-    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, restartDate)
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, restartDate, currentEndDate)
     return updatedPremises
   }
 

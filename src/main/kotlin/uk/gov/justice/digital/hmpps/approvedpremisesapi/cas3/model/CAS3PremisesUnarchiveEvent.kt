@@ -25,4 +25,7 @@ data class CAS3PremisesUnarchiveEventDetails(
   val currentStartDate: LocalDate,
 
   val newStartDate: LocalDate,
+
+  val currentEndDate: LocalDate,
+
 )

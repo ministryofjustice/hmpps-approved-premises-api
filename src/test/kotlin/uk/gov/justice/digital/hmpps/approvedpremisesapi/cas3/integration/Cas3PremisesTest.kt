@@ -3730,9 +3730,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           val secondUnarchiveDate = LocalDate.now().minusDays(2)
 
           createArchivePremisesEvent(premises, userEntity, firstArchiveDate)
-          createUnarchivePremisesEvent(premises, userEntity, currentStartDate = LocalDate.now(), firstUnarchiveDate)
+          createUnarchivePremisesEvent(premises, userEntity, currentStartDate = LocalDate.now(), firstUnarchiveDate, firstArchiveDate)
           createArchivePremisesEvent(premises, userEntity, secondArchiveDate)
-          createUnarchivePremisesEvent(premises, userEntity, LocalDate.now(), secondUnarchiveDate)
+          createUnarchivePremisesEvent(premises, userEntity, LocalDate.now(), secondUnarchiveDate, secondArchiveDate)
 
           // Get premises and verify archive history is in chronological order
           webTestClient.get()
