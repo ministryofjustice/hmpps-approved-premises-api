@@ -48,7 +48,8 @@ interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPrem
           where  
           a.submitted_at IS NOT NULL AND
           apa.duration IS NULL AND 
-          a.data -> 'move-on' -> 'placement-duration' ->> 'differentDuration' = 'yes'
+          a.data -> 'move-on' -> 'placement-duration' ->> 'differentDuration' = 'yes' AND 
+          a.data -> 'move-on' -> 'placement-duration' ->> 'duration' != 'NaN'
       )
       UPDATE approved_premises_applications
       SET duration = to_update.duration
