@@ -211,6 +211,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -268,7 +269,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.OfflineApplicationTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PlacementApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PlacementRequestTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PostCodeDistrictTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationAreaProbationRegionMappingTestRepository
@@ -523,9 +523,6 @@ abstract class IntegrationTestBase {
   lateinit var roomTestRepository: RoomTestRepository
 
   @Autowired
-  lateinit var placementApplicationTestRepository: PlacementApplicationTestRepository
-
-  @Autowired
   lateinit var assessmentTestRepository: AssessmentTestRepository
 
   @Autowired
@@ -593,6 +590,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var cas1PremisesLocalRestrictionRepository: Cas1PremisesLocalRestrictionRepository
+
+  @Autowired
+  lateinit var placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository
 
   lateinit var offenderManagementUnitEntityFactory: PersistedFactory<OffenderManagementUnitEntity, UUID, OffenderManagementUnitEntityFactory>
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>

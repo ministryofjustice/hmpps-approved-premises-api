@@ -139,7 +139,7 @@ class Cas1PlacementApplicationService(
     authorisedDurationDays: Int,
   ): PlacementApplicationEntity {
     val application = assessment.cas1Application()
-    return placementApplicationRepository.save(
+    val placementApplication = placementApplicationRepository.save(
       placementApplicationRepository.save(
         PlacementApplicationEntity(
           id = id,
@@ -166,6 +166,13 @@ class Cas1PlacementApplicationService(
         ),
       ),
     )
+
+    cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(
+      placementApplication = placementApplication,
+      createdByUserName = null,
+    )
+
+    return placementApplication
   }
 
   fun getApplication(id: UUID): CasResult<PlacementApplicationEntity> {
@@ -371,8 +378,8 @@ class Cas1PlacementApplicationService(
 
     placementApplicationsWithDates.forEach { placementApplication ->
       cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(
-        placementApplication,
-        userService.getDeliusUserNameForRequest(),
+        placementApplication = placementApplication,
+        createdByUserName = userService.getDeliusUserNameForRequest(),
       )
       cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
       if (baselinePlacementApplication.allocatedToUser != null) {

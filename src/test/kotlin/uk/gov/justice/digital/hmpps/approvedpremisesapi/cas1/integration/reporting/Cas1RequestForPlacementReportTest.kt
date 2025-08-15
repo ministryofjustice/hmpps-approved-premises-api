@@ -98,6 +98,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   val placementAppSubmittedBeforeReportingPeriod = PlacementAppSubmittedBeforeReportingPeriod()
   val placementAppSubmittedAfterReportingPeriod = PlacementAppSubmittedAfterReportingPeriod()
 
+  val standardRFPAcceptedAndWithdrawnManagerLegacyBehaviour = StandardRFPAcceptedAndWithdrawnManagerLegacyBehaviour()
+
   @BeforeAll
   fun setup() {
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -122,6 +124,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     placementAppRejectedManager.createRequestForPlacement()
     placementAppSubmittedBeforeReportingPeriod.createRequestForPlacement()
     placementAppSubmittedAfterReportingPeriod.createRequestForPlacement()
+
+    standardRFPAcceptedAndWithdrawnManagerLegacyBehaviour.createRequestForPlacement()
   }
 
   @Test
@@ -203,6 +207,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         placementAppAdditionalAcceptedManager.assertRow(actual[4])
         placementAppParoleAcceptedAndWithdrawnManager.assertRow(actual[5])
         placementAppRejectedManager.assertRow(actual[6])
+        standardRFPAcceptedAndWithdrawnManagerLegacyBehaviour.assertRow(actual[7])
       }
   }
 
@@ -242,7 +247,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
           .convertTo<RequestForPlacementReportRow>(ExcessiveColumns.Remove)
           .toList()
 
-        assertThat(actual.size).isEqualTo(7)
+        assertThat(actual.size).isEqualTo(8)
 
         standardRFPAcceptedAndWithdrawnManager.assertRow(actual[0])
       }
@@ -256,6 +261,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "StandardRFPAcceptedAndWithdrawnManager",
         submittedAt = LocalDateTime.of(2019, 3, 15, 0, 10, 0),
         arrivalDateOnApplication = LocalDate.of(2021, 3, 12),
+        durationOnApplication = 7,
       )
       allocateAndUpdateLatestAssessment(
         applicationId = application.id,
@@ -268,8 +274,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         expectedArrival = LocalDate.of(2021, 3, 12),
         duration = 8,
       )
-      withdrawPlacementRequest(
-        applicationId = application.id,
+      withdrawPlacementApplication(
+        placementApplicationId = getPlacementApplication(application).id,
         withdrawalDate = LocalDateTime.of(2021, 3, 15, 0, 10, 0),
         reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
       )
@@ -279,7 +285,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2021-03-12")
-      assertThat(row.requested_duration_days).isEqualTo("8")
+      assertThat(row.requested_duration_days).isEqualTo("7")
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2019-03-15T00:10:00Z")
       assertThat(row.parole_decision_date).isNull()
       assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2019-03-15T00:11:00Z")
@@ -299,6 +305,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "StandardRFPRejectedManager",
         submittedAt = LocalDateTime.of(2021, 3, 1, 12, 50, 0),
         arrivalDateOnApplication = LocalDate.of(2024, 1, 1),
+        durationOnApplication = 7,
       )
       allocateAndUpdateLatestAssessment(
         applicationId = application.id,
@@ -336,6 +343,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "StandardRFPNotAssessed",
         submittedAt = LocalDateTime.of(2021, 3, 1, 15, 25, 5),
         arrivalDateOnApplication = LocalDate.of(2022, 12, 31),
+        durationOnApplication = 7,
       )
 
       withdrawApplication(
@@ -361,12 +369,57 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
+  inner class StandardRFPAcceptedAndWithdrawnManagerLegacyBehaviour {
+    lateinit var application: ApprovedPremisesApplicationEntity
+
+    fun createRequestForPlacement() {
+      application = createAndSubmitApplication(
+        crn = "StandardRFPAcceptedAndWithdrawnManagerLegacyBehaviour",
+        submittedAt = LocalDateTime.of(2021, 3, 29, 23, 59, 59),
+        arrivalDateOnApplication = LocalDate.of(2021, 3, 12),
+        durationOnApplication = 7,
+      )
+      allocateAndUpdateLatestAssessment(
+        applicationId = application.id,
+        assessorJwt = assessorJwt,
+      )
+      acceptLatestAssessmentLegacyBehaviour(
+        applicationId = application.id,
+        decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
+        assessorJwt = assessorJwt,
+        expectedArrival = LocalDate.of(2021, 3, 12),
+        duration = 8,
+      )
+      withdrawPlacementRequest(
+        applicationId = application.id,
+        withdrawalDate = LocalDateTime.of(2021, 3, 15, 0, 10, 0),
+        reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+      )
+    }
+
+    fun assertRow(row: RequestForPlacementReportRow) {
+      assertThat(row.crn).isEqualTo("StandardRFPAcceptedAndWithdrawnManagerLegacyBehaviour")
+      assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
+      assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
+      assertThat(row.requested_arrival_date).isEqualTo("2021-03-12")
+      assertThat(row.requested_duration_days).isEqualTo("8")
+      assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-29T23:59:59Z")
+      assertThat(row.parole_decision_date).isNull()
+      assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2021-03-30T00:00:59Z")
+      assertThat(row.request_for_placement_decision).isEqualTo("ACCEPTED")
+      assertThat(row.request_for_placement_decision_made_date).isEqualTo("2020-12-01T09:15:45Z")
+      assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2021-03-15T00:10:00Z")
+      assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("DUPLICATE_PLACEMENT_REQUEST")
+    }
+  }
+
   inner class StandardRFPSubmittedBeforeReportingPeriod {
     fun createRequestForPlacement() {
       createAndSubmitApplication(
         crn = "StandardRFPSubmittedBeforeReportingPeriod",
         submittedAt = LocalDateTime.of(2021, 2, 28, 23, 59, 59),
         arrivalDateOnApplication = LocalDate.of(2022, 12, 31),
+        durationOnApplication = 7,
       )
     }
   }
@@ -377,6 +430,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "StandardRFPSubmittedAfterReportingPeriod",
         submittedAt = LocalDateTime.of(2021, 4, 1, 4, 0, 0),
         arrivalDateOnApplication = LocalDate.of(2022, 12, 31),
+        durationOnApplication = 7,
       )
     }
   }
@@ -394,6 +448,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "${type}PlacementAppAssessed",
         submittedAt = LocalDateTime.of(2021, 2, 28, 23, 59, 59),
         arrivalDateOnApplication = null,
+        durationOnApplication = 7,
       )
       allocateAndUpdateLatestAssessment(
         applicationId = application.id,
@@ -403,8 +458,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -467,6 +522,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "PlacementAppRejected",
         submittedAt = LocalDateTime.of(2021, 2, 28, 23, 59, 59),
         arrivalDateOnApplication = null,
+        durationOnApplication = 7,
       )
       allocateAndUpdateLatestAssessment(
         applicationId = application.id,
@@ -476,8 +532,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -489,7 +545,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
           ),
         ),
         paroleDecisionDate = LocalDate.of(2020, 2, 10),
-        submittedAt = LocalDateTime.of(2021, 3, 29, 23, 59, 59),
+        submittedAt = LocalDateTime.of(2021, 3, 29, 23, 59, 58),
       )
       placementApplicationId = decisionPlacementApplication(
         application = application,
@@ -503,7 +559,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_type).isEqualTo("ROTL")
       assertThat(row.requested_arrival_date).isEqualTo("2029-01-01")
       assertThat(row.requested_duration_days).isEqualTo("25")
-      assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-29T23:59:59Z")
+      assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-29T23:59:58Z")
       assertThat(row.parole_decision_date).isEqualTo("2020-02-10")
       assertThat(row.request_for_placement_decision).isEqualTo("REJECTED")
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2025-12-01T15:20:00Z")
@@ -519,6 +575,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "PlacementAppSubmittedBeforeReportingPeriod",
         submittedAt = LocalDateTime.of(2021, 2, 28, 23, 59, 59),
         arrivalDateOnApplication = null,
+        durationOnApplication = 7,
       )
       allocateAndUpdateLatestAssessment(
         applicationId = application.id,
@@ -528,8 +585,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -552,6 +609,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         crn = "PlacementAppSubmittedAfterReportingPeriod",
         submittedAt = LocalDateTime.of(2021, 2, 28, 23, 59, 59),
         arrivalDateOnApplication = null,
+        durationOnApplication = 7,
       )
       allocateAndUpdateLatestAssessment(
         applicationId = application.id,
@@ -561,8 +619,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         applicationId = application.id,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
         assessorJwt = assessorJwt,
-        expectedArrival = LocalDate.of(2021, 3, 12),
-        duration = 8,
+        expectedArrival = null,
+        duration = null,
       )
       createPlacementApplication(
         application = application,
@@ -599,6 +657,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     crn: String,
     submittedAt: LocalDateTime,
     arrivalDateOnApplication: LocalDate?,
+    durationOnApplication: Int,
   ): ApprovedPremisesApplicationEntity {
     val (applicant, jwt) = givenAUser()
     val (offenderDetails, _) = givenAnOffender(
@@ -629,6 +688,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       jwt,
       SubmitApprovedPremisesApplication(
         arrivalDate = arrivalDateOnApplication,
+        duration = durationOnApplication,
         translatedDocument = {},
         isWomensApplication = false,
         isEmergencyApplication = false,
@@ -671,8 +731,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     applicationId: UUID,
     decisionDate: LocalDateTime,
     assessorJwt: String,
-    expectedArrival: LocalDate,
-    duration: Int,
+    expectedArrival: LocalDate?,
+    duration: Int?,
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
 
@@ -696,11 +756,52 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       AssessmentAcceptance(
         document = mapOf("document" to "value"),
         requirements = placementRequirements,
-        placementDates =
-        PlacementDates(
-          expectedArrival = expectedArrival,
-          duration = duration,
-        ),
+        placementDates = expectedArrival?.let {
+          PlacementDates(
+            expectedArrival = it,
+            duration = duration!!,
+          )
+        },
+        apType = ApType.normal,
+      ),
+    )
+  }
+
+  private fun acceptLatestAssessmentLegacyBehaviour(
+    applicationId: UUID,
+    decisionDate: LocalDateTime,
+    assessorJwt: String,
+    expectedArrival: LocalDate?,
+    duration: Int?,
+  ) {
+    val assessmentId = getLatestAssessment(applicationId).id
+
+    val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
+    val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+
+    val placementRequirements = PlacementRequirements(
+      type = ApType.normal,
+      location = postCodeDistrictFactory.produceAndPersist().outcode,
+      radius = 50,
+      essentialCriteria = essentialCriteria,
+      desirableCriteria = desirableCriteria,
+    )
+
+    clock.setNow(decisionDate)
+
+    cas1SimpleApiClient.assessmentAcceptLegacyBehaviour(
+      this,
+      assessmentId,
+      assessorJwt,
+      AssessmentAcceptance(
+        document = mapOf("document" to "value"),
+        requirements = placementRequirements,
+        placementDates = expectedArrival?.let {
+          PlacementDates(
+            expectedArrival = it,
+            duration = duration!!,
+          )
+        },
         apType = ApType.normal,
       ),
     )
@@ -824,6 +925,20 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     )
   }
 
+  private fun withdrawApplication(
+    applicationId: UUID,
+    withdrawalDate: LocalDateTime,
+    reason: WithdrawalReason,
+  ) {
+    clock.setNow(withdrawalDate)
+
+    cas1SimpleApiClient.applicationWithdraw(
+      this,
+      applicationId,
+      NewWithdrawal(reason),
+    )
+  }
+
   private fun withdrawPlacementRequest(
     applicationId: UUID,
     withdrawalDate: LocalDateTime,
@@ -839,20 +954,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       WithdrawPlacementRequest(
         reason,
       ),
-    )
-  }
-
-  private fun withdrawApplication(
-    applicationId: UUID,
-    withdrawalDate: LocalDateTime,
-    reason: WithdrawalReason,
-  ) {
-    clock.setNow(withdrawalDate)
-
-    cas1SimpleApiClient.applicationWithdraw(
-      this,
-      applicationId,
-      NewWithdrawal(reason),
     )
   }
 
