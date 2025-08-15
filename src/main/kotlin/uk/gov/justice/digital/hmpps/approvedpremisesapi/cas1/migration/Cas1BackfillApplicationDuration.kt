@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration
 
+import jakarta.persistence.QueryHint
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.jpa.repository.QueryHints
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -38,6 +40,7 @@ class Cas1BackfillApplicationDuration(
 
 @Repository
 interface Cas1BackfillApplicationDurationRepository : JpaRepository<ApprovedPremisesApplicationEntity, UUID> {
+  @QueryHints(QueryHint(name = "javax.persistence.query.timeout", value = "240000"))
   @Query(
     value = """
       with to_update as (
