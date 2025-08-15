@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewVoidBedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdateVoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
@@ -65,10 +65,10 @@ class Cas3v2VoidBedspaceController(
   fun createVoidBedspace(
     @PathVariable premisesId: UUID,
     @PathVariable bedspaceId: UUID,
-    @RequestBody body: Cas3NewVoidBedspace,
+    @RequestBody body: Cas3VoidBedspaceRequest,
   ): ResponseEntity<Cas3VoidBedspace> {
     val bedspace = cas3PremisesService.findBedspace(premisesId, bedspaceId) ?: throw NotFoundProblem(
-      body.bedspaceId,
+      bedspaceId,
       "Cas3Bedspace",
     )
 
@@ -94,7 +94,7 @@ class Cas3v2VoidBedspaceController(
     @PathVariable premisesId: UUID,
     @PathVariable bedspaceId: UUID,
     @PathVariable voidBedspaceId: UUID,
-    @RequestBody body: Cas3UpdateVoidBedspace,
+    @RequestBody body: Cas3VoidBedspaceRequest,
   ): ResponseEntity<Cas3VoidBedspace> {
     val voidBedspaceEntity =
       voidBedspaceService.findVoidBedspace(premisesId, bedspaceId, voidBedspaceId) ?: throw NotFoundProblem(
@@ -129,7 +129,7 @@ class Cas3v2VoidBedspaceController(
     @PathVariable premisesId: UUID,
     @PathVariable bedspaceId: UUID,
     @PathVariable voidBedspaceId: UUID,
-    @RequestBody body: Cas3VoidBedspace,
+    @RequestBody cas3VoidBedspaceCancellation: Cas3VoidBedspaceCancellation,
   ): ResponseEntity<Cas3VoidBedspace> {
     val voidBedspace = voidBedspaceService.findVoidBedspace(premisesId, bedspaceId, voidBedspaceId) ?: throw NotFoundProblem(
       voidBedspaceId,
@@ -140,7 +140,7 @@ class Cas3v2VoidBedspaceController(
       throw ForbiddenProblem()
     }
 
-    val cancelledVoidBedspace = voidBedspaceService.cancelVoidBedspace(voidBedspace, body.cancellationNotes)
+    val cancelledVoidBedspace = voidBedspaceService.cancelVoidBedspace(voidBedspace, cas3VoidBedspaceCancellation.cancellationNotes)
     val result = extractEntityFromCasResult(cancelledVoidBedspace)
     return ResponseEntity.ok(cas3VoidBedspacesTransformer.toCas3VoidBedspace(result))
   }
