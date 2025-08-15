@@ -108,9 +108,8 @@ class VoidBedspacesTest : IntegrationTestBase() {
         .json(expectedJson)
 
       val returnedFromV2 = webTestClient.get()
-        .uri("/cas3/v2/premises/${premises.id}/void-bedspaces")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", "temporary-accommodation")
+        .uri("/cas3/v2/premises/${premises.id}/bedspaces/void-bedspaces")
+        .headers(buildTemporaryAccommodationHeaders(jwt))
         .exchange()
         .expectStatus()
         .isOk

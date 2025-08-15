@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -20,10 +21,9 @@ import java.util.UUID
 class Cas3v2VoidBedspaceService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas3VoidBedspaceReasonRepository: Cas3VoidBedspaceReasonRepository,
+  private val cas3BookingService: Cas3v2BookingService,
 ) {
   fun findVoidBedspaces(premisesId: UUID): List<Cas3VoidBedspaceEntity> = cas3VoidBedspacesRepository.findActiveVoidBedspacesByPremisesId(premisesId)
-
-  fun findVoidBedspace(premisesId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity? = cas3VoidBedspacesRepository.findVoidBedspace(premisesId, voidBedspaceId)
 
   fun findVoidBedspace(premisesId: UUID, bedspaceId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity? = cas3VoidBedspacesRepository.findVoidBedspace(premisesId, bedspaceId, voidBedspaceId)
 
@@ -113,29 +113,32 @@ class Cas3v2VoidBedspaceService(
 
     return success(updatedVoidBedspaceEntity)
   }
-}
 
-private fun CasResultValidatedScope<Cas3VoidBedspaceEntity>.validateVoidBedspaceDetails(
-  bedspace: Cas3BedspacesEntity,
-  voidBedspaceStartDate: LocalDate,
-  voidBedspaceEndDate: LocalDate,
-  reason: Cas3VoidBedspaceReasonEntity?,
-): ValidationErrors {
-  if (voidBedspaceEndDate.isBefore(voidBedspaceStartDate)) {
-    "$.endDate" hasValidationError "beforeStartDate"
-  }
-  if (bedspace.endDate != null && voidBedspaceStartDate.isAfter(bedspace.endDate)) {
-    "$.startDate" hasValidationError "voidStartDateAfterBedspaceEndDate"
-  }
-  if (bedspace.startDate != null && voidBedspaceStartDate.isBefore(bedspace.startDate)) {
-    "$.startDate" hasValidationError "voidStartDateBeforeBedspaceStartDate"
-  }
-  if (bedspace.endDate != null && voidBedspaceEndDate.isAfter(bedspace.endDate)) {
-    "$.endDate" hasValidationError "voidEndDateAfterBedspaceEndDate"
-  }
-  if (reason == null) {
-    "$.reason" hasValidationError "doesNotExist"
-  }
+  private fun CasResultValidatedScope<Cas3VoidBedspaceEntity>.validateVoidBedspaceDetails(
+    bedspace: Cas3BedspacesEntity,
+    voidBedspaceStartDate: LocalDate,
+    voidBedspaceEndDate: LocalDate,
+    reason: Cas3VoidBedspaceReasonEntity?,
+  ): ValidationErrors {
+    cas3BookingService.throwIfBookingDatesConflict(voidBedspaceStartDate, voidBedspaceEndDate, null, bedspace.id)
+    cas3BookingService.throwIfVoidBedspaceDatesConflict(voidBedspaceStartDate, voidBedspaceEndDate, null, bedspace.id)
 
-  return validationErrors
+    if (voidBedspaceEndDate.isBefore(voidBedspaceStartDate)) {
+      "$.endDate" hasValidationError "beforeStartDate"
+    }
+    if (bedspace.endDate != null && voidBedspaceStartDate.isAfter(bedspace.endDate)) {
+      "$.startDate" hasValidationError "voidStartDateAfterBedspaceEndDate"
+    }
+    if (bedspace.startDate != null && voidBedspaceStartDate.isBefore(bedspace.startDate)) {
+      "$.startDate" hasValidationError "voidStartDateBeforeBedspaceStartDate"
+    }
+    if (bedspace.endDate != null && voidBedspaceEndDate.isAfter(bedspace.endDate)) {
+      "$.endDate" hasValidationError "voidEndDateAfterBedspaceEndDate"
+    }
+    if (reason == null) {
+      "$.reason" hasValidationError "doesNotExist"
+    }
+
+    return validationErrors
+  }
 }
