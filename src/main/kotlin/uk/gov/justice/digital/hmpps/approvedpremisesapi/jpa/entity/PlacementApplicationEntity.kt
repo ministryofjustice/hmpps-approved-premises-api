@@ -142,6 +142,8 @@ data class PlacementApplicationEntity(
   var sentenceType: String? = null,
   var situation: String? = null,
 
+  val backfilledAutomatic: Boolean = false,
+
   @Version
   var version: Long = 1,
 ) {

@@ -231,7 +231,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.cas1OffenderEntity = { cas1OffenderEntity }
   }
 
-  fun withDuration(duration: Int) = apply {
+  fun withDuration(duration: Int?) = apply {
     this.duration = { duration }
   }
 
