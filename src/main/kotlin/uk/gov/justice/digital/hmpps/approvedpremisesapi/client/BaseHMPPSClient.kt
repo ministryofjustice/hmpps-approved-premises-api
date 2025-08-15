@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
   private val webClientConfig: WebClientConfig,
-  private val objectMapper: ObjectMapper,
+  internal val objectMapper: ObjectMapper,
   private val webClientCache: WebClientCache,
 ) {
 

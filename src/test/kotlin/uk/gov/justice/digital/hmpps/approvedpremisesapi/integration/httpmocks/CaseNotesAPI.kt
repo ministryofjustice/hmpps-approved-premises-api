@@ -1,16 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 
-fun IntegrationTestBase.caseNotesAPIMockSuccessfulCaseNotesCall(page: Int, from: LocalDate, nomsNumber: String, result: CaseNotesPage) {
-  val fromLocalDateTime = LocalDateTime.of(from, LocalTime.MIN)
+fun IntegrationTestBase.caseNotesAPIMockSuccessfulCaseNotesCall(personIdentifier: String, request: CaseNotesRequest, result: CaseNotesPage) {
+  val requestBodyString = objectMapper.writeValueAsString(request)
 
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/case-notes/$nomsNumber?startDate=$fromLocalDateTime&page=$page&size=30",
+  mockSuccessfulPostCallWithJsonResponse(
+    url = "/search/case-notes/$personIdentifier",
     responseBody = result,
+    requestBody = equalToJson(requestBodyString, true, true),
   )
 }
