@@ -98,6 +98,8 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(cas3BedspaceId: UUID, type: DomainEventType): DomainEventEntity?
 
+  fun findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(cas3PremisesId: UUID, type: DomainEventType): DomainEventEntity?
+
   @Query(
     """
     SELECT d
