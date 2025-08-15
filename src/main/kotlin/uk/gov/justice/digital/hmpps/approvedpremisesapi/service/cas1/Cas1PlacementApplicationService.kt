@@ -9,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -320,25 +321,19 @@ class Cas1PlacementApplicationService(
     id: UUID,
     submitPlacementApplication: SubmitPlacementApplication,
   ): CasResult<List<PlacementApplicationEntity>> {
+    if (submitPlacementApplication.placementDates.isNullOrEmpty() && submitPlacementApplication.requestedPlacementPeriods.isNullOrEmpty()) {
+      return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
+    }
+
+    if (submitPlacementApplication.placementType == null && submitPlacementApplication.releaseType == null) {
+      return CasResult.GeneralValidationError("Please provide at least one of placementType or releaseType.")
+    }
+
     val translatedDocument = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
-    val cas1RequestedPlacementPeriod = when {
-      !submitPlacementApplication.placementDates.isNullOrEmpty() -> {
-        submitPlacementApplication.placementDates.map { placementDate ->
-          Cas1RequestedPlacementPeriod(
-            arrival = placementDate.expectedArrival,
-            arrivalFlexible = null,
-            duration = placementDate.duration,
-          )
-        }
-      }
-      !submitPlacementApplication.requestedPlacementPeriods.isNullOrEmpty() -> {
-        submitPlacementApplication.requestedPlacementPeriods
-      }
-      else -> {
-        return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
-      }
-    }
+    val cas1RequestedPlacementPeriod = deriveRequestedPlacementPeriods(submitPlacementApplication)!!
+
+    var placementTypeValue = getPlacementTypeForApplication(submitPlacementApplication)
 
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
 
@@ -361,7 +356,7 @@ class Cas1PlacementApplicationService(
       allocatedToUser = allocatedUser
       submittedAt = now
       allocatedAt = now
-      placementType = getPlacementType(submitPlacementApplication.placementType)
+      placementType = placementTypeValue
       submissionGroupId = UUID.randomUUID()
       releaseType = submitPlacementApplication.releaseType?.toString()
       sentenceType = submitPlacementApplication.sentenceType?.toString()
@@ -390,6 +385,29 @@ class Cas1PlacementApplicationService(
     }
 
     return CasResult.Success(placementApplicationsWithDates)
+  }
+
+  private fun deriveRequestedPlacementPeriods(submitPlacementApplication: SubmitPlacementApplication): List<Cas1RequestedPlacementPeriod>? = if (!submitPlacementApplication.placementDates.isNullOrEmpty()) {
+    submitPlacementApplication.placementDates.map { placementDate ->
+      Cas1RequestedPlacementPeriod(
+        arrival = placementDate.expectedArrival,
+        arrivalFlexible = null,
+        duration = placementDate.duration,
+      )
+    }
+  } else {
+    submitPlacementApplication.requestedPlacementPeriods
+  }
+
+  private fun getPlacementTypeForApplication(submitPlacementApplication: SubmitPlacementApplication): PlacementType {
+    var placementTypeValue = when {
+      submitPlacementApplication.placementType != null -> getPlacementType(submitPlacementApplication.placementType)
+
+      submitPlacementApplication.releaseType == ReleaseTypeOption.paroleDirectedLicence -> PlacementType.RELEASE_FOLLOWING_DECISION
+      submitPlacementApplication.releaseType == ReleaseTypeOption.rotl -> PlacementType.ROTL
+      else -> PlacementType.ADDITIONAL_PLACEMENT
+    }
+    return placementTypeValue
   }
 
   private fun saveDatesOnSubmissionToAnAppPerDate(
