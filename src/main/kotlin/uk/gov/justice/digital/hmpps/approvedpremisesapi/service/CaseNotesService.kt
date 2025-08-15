@@ -76,7 +76,7 @@ class CaseNotesService(
           }
         },
       )
-    } while (currentPage != null && currentPage.totalPages > currentPageIndex!! + 1)
+    } while (currentPage.metadata.page > currentPageIndex + 1)
 
     return CasResult.Success(allCaseNotes)
   }

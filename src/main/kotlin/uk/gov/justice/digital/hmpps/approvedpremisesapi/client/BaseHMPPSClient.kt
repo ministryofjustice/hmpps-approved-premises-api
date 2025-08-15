@@ -71,7 +71,7 @@ abstract class BaseHMPPSClient(
         .headers { it.addAll(requestBuilder.headers) }
 
       if (requestBuilder.body != null) {
-        request.bodyValue(requestBuilder.body!!)
+        request.bodyValue(objectMapper.writeValueAsString(requestBuilder.body!!))
       }
 
       val result = request
