@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -26,7 +28,11 @@ class PlacementRequestDetailTransformer(
   )
 
   @Deprecated("Use transformJpaToCas1PlacementRequestDetail instead")
-  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult, cancellations: List<CancellationEntity>): PlacementRequestDetail {
+  fun transformJpaToApi(
+    jpa: PlacementRequestEntity,
+    personInfo: PersonInfoResult,
+    cancellations: List<CancellationEntity>
+  ): PlacementRequestDetail {
     val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, personInfo)
     val personSummaryInfo = personTransformer.personInfoResultToPersonSummaryInfoResult(personInfo)
     val placementRequestBookingSummary = placementRequestBookingSummaryTransformer.getBookingSummary(jpa)
@@ -53,7 +59,8 @@ class PlacementRequestDetailTransformer(
       notes = placementRequest.notes,
       cancellations = cancellations.mapNotNull { cancellationTransformer.transformJpaToApi(it) },
       booking = placementRequestBookingSummary,
-      spaceBookings = jpa.spaceBookings.filter { it.isActive() }.map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
+      spaceBookings = jpa.spaceBookings.filter { it.isActive() }
+        .map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
       legacyBooking = if (placementRequestBookingSummary?.type == PlacementRequestBookingSummary.Type.legacy) {
         placementRequestBookingSummary
       } else {
@@ -78,8 +85,6 @@ class PlacementRequestDetailTransformer(
     return Cas1PlacementRequestDetail(
       id = placementRequest.id,
       type = placementRequest.type,
-      expectedArrival = placementRequest.expectedArrival,
-      duration = placementRequest.duration,
       location = placementRequest.location,
       radius = placementRequest.radius,
       essentialCriteria = placementRequest.essentialCriteria,
@@ -96,7 +101,8 @@ class PlacementRequestDetailTransformer(
       assessor = placementRequest.assessor,
       notes = placementRequest.notes,
       booking = placementRequestBookingSummary,
-      spaceBookings = jpa.spaceBookings.filter { it.isActive() }.map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
+      spaceBookings = jpa.spaceBookings.filter { it.isActive() }
+        .map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
       legacyBooking = if (placementRequestBookingSummary?.type == PlacementRequestBookingSummary.Type.legacy) {
         placementRequestBookingSummary
       } else {
@@ -106,6 +112,32 @@ class PlacementRequestDetailTransformer(
       isParole = jpa.isParole,
       application = applicationTransformer.transformJpaToCas1Application(jpa.application, personInfo),
       openChangeRequests = openChangeRequests,
+      requestedPlacementPeriod = requestedPlacementPeriod(jpa.placementApplication),
+      authorisedPlacementPeriod = authorisedPlacementPeriod(jpa.placementApplication),
     )
   }
+
+  fun PlacementRequestDetailTransformer.requestedPlacementPeriod(placementApplication: PlacementApplicationEntity): Cas1RequestedPlacementPeriod? {
+    return placementApplication.requestedDuration?.let {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementApplication.expectedArrival!!,
+        duration = it,
+        arrivalFlexible = placementApplication.expectedArrivalFlexible,
+      )
+    }
+  }
+
+  fun authorisedPlacementPeriod(placementApplication: PlacementApplicationEntity): Cas1RequestedPlacementPeriod? {
+   return  placementApplication.authorisedDuration?.let {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementApplication.expectedArrival!!,
+        duration = it,
+        arrivalFlexible = placementApplication.expectedArrivalFlexible,
+      )
+    }
+  }
+
+}
+
+
 }

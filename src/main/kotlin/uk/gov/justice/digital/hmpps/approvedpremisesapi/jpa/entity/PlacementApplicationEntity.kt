@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementDates
 import java.time.LocalDate
@@ -164,6 +165,16 @@ data class PlacementApplicationEntity(
     null
   }
 
+  fun requestedPlacementPeriod() = requestedDuration?.let {
+    Cas1RequestedPlacementPeriod(
+      arrival = expectedArrival!!,
+      duration = requestedDuration!!,
+      arrivalFlexible = expectedArrivalFlexible,
+    )
+  }
+
+
+
   override fun toString() = "PlacementApplicationEntity: $id"
 }
 
@@ -241,6 +252,6 @@ enum class PlacementApplicationWithdrawalReason(val apiValue: WithdrawPlacementR
   ;
 
   companion object {
-    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementApplicationWithdrawalReason? = PlacementApplicationWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementApplicationWithdrawalReason? = entries.firstOrNull { it.apiValue == apiValue }
   }
 }
