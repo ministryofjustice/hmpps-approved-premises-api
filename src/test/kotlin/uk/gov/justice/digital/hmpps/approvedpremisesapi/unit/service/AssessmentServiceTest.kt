@@ -58,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -69,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
@@ -100,6 +100,7 @@ class AssessmentServiceTest {
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val lockableAssessmentRepository = mockk<LockableAssessmentRepository>()
+  private val cas1AssessmentService = mockk<Cas1AssessmentService>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -118,6 +119,7 @@ class AssessmentServiceTest {
     cas1ApplicationStatusService,
     Clock.systemDefaultZone(),
     lockableAssessmentRepository,
+    cas1AssessmentService,
   )
 
   @Test
@@ -1322,6 +1324,7 @@ class AssessmentServiceTest {
         previousAssessment.id,
       )
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+      every { cas1AssessmentService.getRequiredQualificationsToAssess(application) } returns emptyList()
 
       val result = assessmentService.reallocateAssessment(
         allocatingUser = actingUser,
@@ -1347,6 +1350,7 @@ class AssessmentServiceTest {
         previousAssessment.id,
       )
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+      every { cas1AssessmentService.getRequiredQualificationsToAssess(application) } returns emptyList()
 
       val result = assessmentService.reallocateAssessment(
         allocatingUser = actingUser,
@@ -1381,14 +1385,11 @@ class AssessmentServiceTest {
           .produce()
       }
 
-      application.apply {
-        apType = ApprovedPremisesType.PIPE
-      }
-
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(
         previousAssessment.id,
       )
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+      every { cas1AssessmentService.getRequiredQualificationsToAssess(application) } returns listOf(UserQualification.PIPE)
 
       val result = assessmentService.reallocateAssessment(
         allocatingUser = actingUser,
@@ -1446,6 +1447,7 @@ class AssessmentServiceTest {
         previousAssessment.id,
       )
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+      every { cas1AssessmentService.getRequiredQualificationsToAssess(application) } returns emptyList()
 
       every { cas1ApplicationStatusService.assessmentCreated(any()) } returns Unit
       every { cas1ApplicationStatusService.assessmentUpdated(any()) } returns Unit
@@ -1522,6 +1524,7 @@ class AssessmentServiceTest {
         previousAssessment.id,
       )
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+      every { cas1AssessmentService.getRequiredQualificationsToAssess(application) } returns emptyList()
 
       every { cas1ApplicationStatusService.assessmentCreated(any()) } returns Unit
       every { cas1ApplicationStatusService.assessmentUpdated(any()) } returns Unit
