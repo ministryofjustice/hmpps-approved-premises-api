@@ -343,7 +343,6 @@ abstract class ApplicationEntity(
   var version: Long = 1,
 ) {
   fun getLatestAssessment(): AssessmentEntity? = this.assessments.maxByOrNull { it.createdAt }
-  abstract fun getRequiredQualifications(): List<UserQualification>
 }
 
 @SuppressWarnings("LongParameterList")
@@ -453,28 +452,7 @@ class ApprovedPremisesApplicationEntity(
   val isEsapApplication: Boolean
     get() = apType == ApprovedPremisesType.ESAP
 
-  fun hasTeamCode(code: String) = teamCodes.any { it.teamCode == code }
-  override fun getRequiredQualifications(): List<UserQualification> {
-    val requiredQualifications = mutableListOf<UserQualification>()
-
-    when (apType) {
-      ApprovedPremisesType.PIPE -> requiredQualifications += UserQualification.PIPE
-      ApprovedPremisesType.ESAP -> requiredQualifications += UserQualification.ESAP
-      ApprovedPremisesType.RFAP -> requiredQualifications += UserQualification.RECOVERY_FOCUSED
-      ApprovedPremisesType.MHAP_ST_JOSEPHS -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
-      ApprovedPremisesType.MHAP_ELLIOTT_HOUSE -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
-      else -> {}
-    }
-
-    if (noticeType == Cas1ApplicationTimelinessCategory.emergency || noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
-      requiredQualifications += UserQualification.EMERGENCY
-    }
-
-    return requiredQualifications
-  }
-
   fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
-  fun getLatestBooking(): BookingEntity? = getLatestPlacementRequest()?.booking
   fun isSubmitted() = submittedAt != null
 
   @Deprecated(
@@ -557,9 +535,7 @@ class TemporaryAccommodationApplicationEntity(
   deletedAt,
   assessments,
   nomsNumber,
-) {
-  override fun getRequiredQualifications(): List<UserQualification> = emptyList()
-}
+)
 
 /**
  * Provides a version of the ApplicationEntity with no relationships, allowing

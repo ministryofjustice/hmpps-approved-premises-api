@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.TypedTask
@@ -66,6 +68,7 @@ class Cas1TasksController(
   private val userTransformer: UserTransformer,
   private val cas1TaskService: Cas1TaskService,
   private val requestContextService: RequestContextService,
+  private val cas1AssessmentService: Cas1AssessmentService,
 ) {
 
   @Operation(summary = "List all tasks")
@@ -187,7 +190,7 @@ class Cas1TasksController(
     return TaskInfo(
       transformedTask = getAssessmentTask(assessment, offenderSummaries),
       crn = assessment.application.crn,
-      requiredQualifications = assessment.application.getRequiredQualifications(),
+      requiredQualifications = cas1AssessmentService.getRequiredQualificationsToAssess(assessment.application as ApprovedPremisesApplicationEntity),
       requiredPermission = requiredPermission,
     )
   }
@@ -206,7 +209,7 @@ class Cas1TasksController(
     return TaskInfo(
       transformedTask = getPlacementApplicationTask(placementApplication, offenderSummaries),
       crn = placementApplication.application.crn,
-      requiredQualifications = placementApplication.application.getRequiredQualifications(),
+      requiredQualifications = cas1AssessmentService.getRequiredQualificationsToAssess(placementApplication.application),
       requiredPermission = UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
     )
   }
