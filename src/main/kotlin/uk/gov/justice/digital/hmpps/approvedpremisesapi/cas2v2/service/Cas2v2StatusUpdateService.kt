@@ -52,6 +52,7 @@ class Cas2v2StatusUpdateService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  // NOT UNIT TESTED
   @Transactional
   @SuppressWarnings("ReturnCount")
   fun createForAssessment(
