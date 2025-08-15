@@ -135,6 +135,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     userEntity: UserEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
+    currentEndDate: LocalDate,
   ) {
     domainEventFactory.produceAndPersist {
       withService(ServiceName.temporaryAccommodation)
@@ -152,6 +153,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
               userId = userEntity.id,
               currentStartDate = currentStartDate,
               newStartDate = newStartDate,
+              currentEndDate = currentEndDate,
             ),
           ),
         ),

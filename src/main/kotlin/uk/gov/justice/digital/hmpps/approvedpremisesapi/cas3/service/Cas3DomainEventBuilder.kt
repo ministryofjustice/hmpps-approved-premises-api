@@ -254,6 +254,7 @@ class Cas3DomainEventBuilder(
     premises: TemporaryAccommodationPremisesEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
+    currentEndDate: LocalDate,
     user: UserEntity,
   ): DomainEvent<CAS3PremisesUnarchiveEvent> {
     val domainEventId = UUID.randomUUID()
@@ -269,7 +270,7 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.premisesUnarchived,
-        eventDetails = buildCAS3PremisesUnarchiveEventDetails(premises, currentStartDate, newStartDate, user),
+        eventDetails = buildCAS3PremisesUnarchiveEventDetails(premises, currentStartDate, newStartDate, currentEndDate, user),
       ),
     )
   }
@@ -486,12 +487,14 @@ class Cas3DomainEventBuilder(
     premises: PremisesEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
+    currentEndDate: LocalDate,
     user: UserEntity,
   ) = CAS3PremisesUnarchiveEventDetails(
     premisesId = premises.id,
     userId = user.id,
     currentStartDate = currentStartDate,
     newStartDate = newStartDate,
+    currentEndDate = currentEndDate,
   )
 
   private fun buildCAS3BedspaceArchiveEventDetails(

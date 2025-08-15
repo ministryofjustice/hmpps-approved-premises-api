@@ -596,12 +596,14 @@ class Cas3DomainEventBuilderTest {
   @Test
   fun `getPremisesUnarchiveEvent transforms the premises information correctly to a domain event`() {
     val currentStartDate = LocalDate.now().minusDays(20)
+    val currentEndDate = LocalDate.now().minusDays(10)
     val newStartDate = LocalDate.now().plusDays(5)
     val probationRegion = probationRegionEntity()
     val premises = createCas3PremisesEntity(probationRegion)
+    premises.endDate = currentEndDate
     val user = userEntity(probationRegion)
 
-    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, user)
+    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user)
 
     assertAll({
       assertThat(event.applicationId).isNull()
