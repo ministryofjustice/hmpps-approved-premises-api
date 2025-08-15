@@ -299,8 +299,19 @@ class Cas1PlacementApplicationServiceTest {
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Please provide at least one of placementType or releaseType.")
     }
 
-    @Test
-    fun `Submitting an application and inferring placement type from release typ`() {
+    @ParameterizedTest
+    @CsvSource(
+      "paroleDirectedLicence, RELEASE_FOLLOWING_DECISION",
+      "rotl, ROTL",
+      "licence, ADDITIONAL_PLACEMENT",
+      "hdc, ADDITIONAL_PLACEMENT",
+      "pss, ADDITIONAL_PLACEMENT",
+      "inCommunity, ADDITIONAL_PLACEMENT",
+      "notApplicable, ADDITIONAL_PLACEMENT",
+      "extendedDeterminateLicence, ADDITIONAL_PLACEMENT",
+      "reReleasedPostRecall, ADDITIONAL_PLACEMENT",
+    )
+    fun `Submitting an application and inferring placement type from release type`(releaseType: String, jpaPlacementType: String) {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -322,7 +333,7 @@ class Cas1PlacementApplicationServiceTest {
             arrivalFlexible = true,
           ),
         ),
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.valueOf(releaseType),
         sentenceType = null,
         situationType = null,
       )
@@ -339,8 +350,8 @@ class Cas1PlacementApplicationServiceTest {
 
       val updatedPlacementApp = updatedPlacementApplications[0]
 
-      assertThat(updatedPlacementApp.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
-      assertThat(updatedPlacementApp.placementType).isEqualTo(JpaPlacementType.ADDITIONAL_PLACEMENT)
+      assertThat(updatedPlacementApp.releaseType).isEqualTo(releaseType)
+      assertThat(updatedPlacementApp.placementType.toString()).isEqualTo(jpaPlacementType)
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }

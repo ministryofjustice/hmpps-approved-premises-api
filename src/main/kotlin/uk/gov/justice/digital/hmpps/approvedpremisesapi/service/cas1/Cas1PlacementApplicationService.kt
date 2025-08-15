@@ -317,42 +317,23 @@ class Cas1PlacementApplicationService(
   }
 
   @Transactional
-  @Suppress("CyclomaticComplexMethod")
   fun submitApplication(
     id: UUID,
     submitPlacementApplication: SubmitPlacementApplication,
   ): CasResult<List<PlacementApplicationEntity>> {
-    val translatedDocument = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
-
-    val cas1RequestedPlacementPeriod = when {
-      !submitPlacementApplication.placementDates.isNullOrEmpty() -> {
-        submitPlacementApplication.placementDates.map { placementDate ->
-          Cas1RequestedPlacementPeriod(
-            arrival = placementDate.expectedArrival,
-            arrivalFlexible = null,
-            duration = placementDate.duration,
-          )
-        }
-      }
-      !submitPlacementApplication.requestedPlacementPeriods.isNullOrEmpty() -> {
-        submitPlacementApplication.requestedPlacementPeriods
-      }
-      else -> {
-        return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
-      }
+    if (submitPlacementApplication.placementDates.isNullOrEmpty() && submitPlacementApplication.requestedPlacementPeriods.isNullOrEmpty()) {
+      return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
     }
 
     if (submitPlacementApplication.placementType == null && submitPlacementApplication.releaseType == null) {
       return CasResult.GeneralValidationError("Please provide at least one of placementType or releaseType.")
     }
 
-    var placementTypeValue = when {
-      submitPlacementApplication.placementType != null -> getPlacementType(submitPlacementApplication.placementType)
+    val translatedDocument = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
-      submitPlacementApplication.releaseType == ReleaseTypeOption.paroleDirectedLicence -> PlacementType.RELEASE_FOLLOWING_DECISION
-      submitPlacementApplication.releaseType == ReleaseTypeOption.rotl -> PlacementType.ROTL
-      else -> PlacementType.ADDITIONAL_PLACEMENT
-    }
+    val cas1RequestedPlacementPeriod = deriveRequestedPlacementPeriods(submitPlacementApplication)!!
+
+    var placementTypeValue = getPlacementTypeForApplication(submitPlacementApplication)
 
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
 
@@ -404,6 +385,29 @@ class Cas1PlacementApplicationService(
     }
 
     return CasResult.Success(placementApplicationsWithDates)
+  }
+
+  private fun deriveRequestedPlacementPeriods(submitPlacementApplication: SubmitPlacementApplication): List<Cas1RequestedPlacementPeriod>? = if (!submitPlacementApplication.placementDates.isNullOrEmpty()) {
+    submitPlacementApplication.placementDates.map { placementDate ->
+      Cas1RequestedPlacementPeriod(
+        arrival = placementDate.expectedArrival,
+        arrivalFlexible = null,
+        duration = placementDate.duration,
+      )
+    }
+  } else {
+    submitPlacementApplication.requestedPlacementPeriods
+  }
+
+  private fun getPlacementTypeForApplication(submitPlacementApplication: SubmitPlacementApplication): PlacementType {
+    var placementTypeValue = when {
+      submitPlacementApplication.placementType != null -> getPlacementType(submitPlacementApplication.placementType)
+
+      submitPlacementApplication.releaseType == ReleaseTypeOption.paroleDirectedLicence -> PlacementType.RELEASE_FOLLOWING_DECISION
+      submitPlacementApplication.releaseType == ReleaseTypeOption.rotl -> PlacementType.ROTL
+      else -> PlacementType.ADDITIONAL_PLACEMENT
+    }
+    return placementTypeValue
   }
 
   private fun saveDatesOnSubmissionToAnAppPerDate(
