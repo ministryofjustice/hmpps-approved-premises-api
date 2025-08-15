@@ -20,22 +20,15 @@ data class Cas3VoidBedspace(
   val cancellationNotes: String?,
 )
 
-data class Cas3NewVoidBedspace(
+data class Cas3VoidBedspaceRequest(
   val startDate: LocalDate,
   val endDate: LocalDate,
   val reasonId: UUID,
-  val bedspaceId: UUID,
   val referenceNumber: String? = null,
   val notes: String? = null,
 )
 
-data class Cas3UpdateVoidBedspace(
-  val startDate: LocalDate,
-  val endDate: LocalDate,
-  val reasonId: UUID,
-  val referenceNumber: String? = null,
-  val notes: String? = null,
-)
+data class Cas3VoidBedspaceCancellation(val cancellationNotes: String?)
 
 data class Cas3VoidBedspaceReason(
   val id: UUID,
