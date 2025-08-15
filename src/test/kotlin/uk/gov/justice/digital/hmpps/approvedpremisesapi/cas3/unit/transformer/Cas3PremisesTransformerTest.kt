@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
@@ -111,6 +111,7 @@ class Cas3PremisesTransformerTest {
         probationDeliveryUnit = probationDeliveryUnit,
         characteristics = listOf(characteristic),
         startDate = premises.startDate,
+        endDate = premises.endDate,
         status = Cas3PremisesStatus.online,
         notes = premises.notes,
         turnaroundWorkingDays = premises.turnaroundWorkingDays,
@@ -176,6 +177,7 @@ class Cas3PremisesTransformerTest {
         probationDeliveryUnit = probationDeliveryUnit,
         characteristics = emptyList(),
         startDate = premises.startDate,
+        endDate = premises.endDate,
         status = Cas3PremisesStatus.online,
         notes = premises.notes,
         turnaroundWorkingDays = 2,
