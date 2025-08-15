@@ -3616,6 +3616,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .expectBody()
             .jsonPath("$.id").isEqualTo(premises.id.toString())
             .jsonPath("$.status").isEqualTo("online")
+            .jsonPath("$.premisesEndDate").isEqualTo(null)
             .jsonPath("$.totalOnlineBedspaces").isEqualTo(3)
             .jsonPath("$.totalUpcomingBedspaces").isEqualTo(4)
             .jsonPath("$.totalArchivedBedspaces").isEqualTo(3)
@@ -3640,6 +3641,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .expectBody()
             .jsonPath("$.id").isEqualTo(premises.id.toString())
             .jsonPath("$.status").isEqualTo("online")
+            .jsonPath("$.premisesEndDate").isEqualTo(null)
             .jsonPath("$.totalOnlineBedspaces").isEqualTo(0)
             .jsonPath("$.totalUpcomingBedspaces").isEqualTo(0)
             .jsonPath("$.totalArchivedBedspaces").isEqualTo(0)
@@ -3680,6 +3682,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenATemporaryAccommodationPremises(
           region = userEntity.probationRegion,
+          endDate = LocalDate.now().minusDays(1),
           status = PropertyStatus.archived,
         ) { premises ->
 
@@ -3692,6 +3695,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .expectBody()
             .jsonPath("$.id").isEqualTo(premises.id.toString())
             .jsonPath("$.status").isEqualTo("archived")
+            .jsonPath("$.premisesEndDate").isEqualTo(premises.endDate.toString())
             .jsonPath("$.totalOnlineBedspaces").isEqualTo(0)
             .jsonPath("$.totalUpcomingBedspaces").isEqualTo(0)
             .jsonPath("$.totalArchivedBedspaces").isEqualTo(0)

@@ -161,6 +161,7 @@ class Cas3PremisesController(
     val result = Cas3PremisesBedspaceTotals(
       id = premises.id,
       status = if (premises.status == PropertyStatus.active) Cas3PremisesStatus.online else Cas3PremisesStatus.archived,
+      premisesEndDate = premises.endDate,
       totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
       totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
       totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
