@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAsses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -50,7 +49,7 @@ class Cas1AssessmentService(
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
-  private val assessmentListener: AssessmentListener,
+  private val applicationStatusService: Cas1ApplicationStatusService,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
@@ -86,7 +85,7 @@ class Cas1AssessmentService(
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
     assessment.allocatedToUser = allocatedUser
 
-    assessmentListener.prePersist(assessment)
+    applicationStatusService.assessmentCreated(assessment)
     assessment = assessmentRepository.save(assessment)
 
     if (allocatedUser != null) {
@@ -135,7 +134,7 @@ class Cas1AssessmentService(
 
     assessment.data = data
 
-    preUpdateAssessment(assessment)
+    applicationStatusService.assessmentUpdated(assessment)
     val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
 
     return CasResult.Success(savedAssessment)
@@ -250,7 +249,7 @@ class Cas1AssessmentService(
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
 
     val assessmentToUpdate = clarificationNoteEntity.assessment as ApprovedPremisesAssessmentEntity
-    preUpdateAssessment(assessmentToUpdate)
+    applicationStatusService.assessmentUpdated(assessment)
     approvedPremisesAssessmentRepository.save(assessmentToUpdate)
 
     return CasResult.Success(savedNote)
@@ -288,7 +287,7 @@ class Cas1AssessmentService(
     assessment.submittedAt = acceptedAt
     assessment.decision = AssessmentDecision.ACCEPTED
 
-    preUpdateAssessment(assessment)
+    applicationStatusService.assessmentUpdated(assessment)
     val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
 
     /*
@@ -371,7 +370,7 @@ class Cas1AssessmentService(
     assessment.decision = AssessmentDecision.REJECTED
     assessment.rejectionRationale = rejectionRationale
 
-    preUpdateAssessment(assessment)
+    applicationStatusService.assessmentUpdated(assessment)
     val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
 
     val application = savedAssessment.application as ApprovedPremisesApplicationEntity
@@ -398,7 +397,7 @@ class Cas1AssessmentService(
 
       assessment.isWithdrawn = true
 
-      preUpdateAssessment(assessment)
+      applicationStatusService.assessmentUpdated(assessment)
       assessmentRepository.save(assessment)
 
       cas1AssessmentEmailService.assessmentWithdrawn(
@@ -416,10 +415,6 @@ class Cas1AssessmentService(
 
   private fun preUpdateClarificationNote(note: AssessmentClarificationNoteEntity) {
     assessmentClarificationNoteListener.preUpdate(note)
-  }
-
-  private fun preUpdateAssessment(assessment: ApprovedPremisesAssessmentEntity) {
-    assessmentListener.preUpdate(assessment)
   }
 
   @SuppressWarnings("ReturnCount")
