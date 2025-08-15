@@ -1,18 +1,20 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
+class Cas2UserFactory : Factory<Cas2User> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var username: Yielded<String> = { randomStringUpperCase(12) }
+  private var nomisAccountType: Yielded<String?> = { randomStringUpperCase(12) }
+  private var externalOrigin: Yielded<String?> = { randomStringUpperCase(12) }
   private var name: Yielded<String> = { randomStringUpperCase(12) }
   private var email: Yielded<String?> = { randomEmailAddress() }
   private var nomisStaffId: Yielded<Long?> = { randomInt(100000, 900000).toLong() }
@@ -23,13 +25,11 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
   private var isEnabled: Yielded<Boolean> = { true }
   private var isActive: Yielded<Boolean> = { true }
   private var applications: Yielded<MutableList<Cas2ApplicationEntity>> = { mutableListOf() }
-  private var externalOrigin: Yielded<String?> = { randomStringUpperCase(12) }
-
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
 
-  fun withActiveNomisCaseloadId(activeCaseloadId: String) = apply {
+  fun withActiveNomisCaseloadId(activeCaseloadId: String?) = apply {
     this.activeNomisCaseloadId = { activeCaseloadId }
   }
 
@@ -41,15 +41,23 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.username = { username }
   }
 
+  fun withExternalOrigin(externalOrigin: String?) = apply {
+    this.externalOrigin = { externalOrigin }
+  }
+
+  fun withNomisAccountType(nomisAccountType: String?) = apply {
+    this.nomisAccountType = { nomisAccountType }
+  }
+
   fun withNomisStaffCode(nomisStaffId: Long) = apply {
     this.nomisStaffId = { nomisStaffId }
   }
 
-  fun withDeliusStaffCode(deliusStaffCode: String) = apply {
+  fun withDeliusStaffCode(deliusStaffCode: String?) = apply {
     this.deliusStaffCode = { deliusStaffCode }
   }
 
-  fun withNomisStaffIdentifier(nomisStaffId: Long) = apply {
+  fun withNomisStaffIdentifier(nomisStaffId: Long?) = apply {
     this.nomisStaffId = { nomisStaffId }
   }
 
@@ -61,10 +69,6 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.email = { email }
   }
 
-  fun withExternalOrigin(externalOrigin: String?) = apply {
-    this.externalOrigin = { externalOrigin }
-  }
-
   fun withUserType(t: Cas2UserType) = apply {
     this.userType = { t }
   }
@@ -73,11 +77,15 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.isActive = { isActive }
   }
 
+  fun withIsEnabled(isEnabled: Boolean) = apply {
+    this.isEnabled = { isEnabled }
+  }
+
   fun withDeliusTeamCodes(deliusTeamCodes: List<String>?) = apply {
     this.deliusTeamCodes = { deliusTeamCodes }
   }
 
-  override fun produce(): Cas2UserEntity = Cas2UserEntity(
+  override fun produce(): Cas2User = Cas2User(
     id = this.id(),
     username = this.username(),
     name = this.name(),
@@ -91,5 +99,6 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     isActive = this.isActive(),
     applications = this.applications(),
     externalOrigin = this.externalOrigin(),
+    nomisAccountType = this.nomisAccountType(),
   )
 }

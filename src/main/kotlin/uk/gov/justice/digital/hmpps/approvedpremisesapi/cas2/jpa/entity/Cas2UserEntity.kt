@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -8,6 +9,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
@@ -29,6 +31,7 @@ enum class Cas2UserType(val authSource: String) {
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
   fun findByUsername(username: String): Cas2UserEntity?
   fun findByUsernameAndUserType(username: String, type: Cas2UserType): Cas2UserEntity?
+  fun findByNomisStaffId(nomisStaffId: Long): Cas2UserEntity?
 }
 
 @Entity
@@ -39,8 +42,8 @@ data class Cas2UserEntity(
   val username: String,
 
   // Cas2v2User interface implementation
-  var email: String?,
-  var name: String,
+  override var email: String?,
+  override var name: String,
 
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
@@ -62,9 +65,17 @@ data class Cas2UserEntity(
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
 
+  @UpdateTimestamp
+  private val updatedAt: OffsetDateTime? = null,
+
+  var nomisAccountType: String? = null,
+
+  @Column(name = "external_type")
+  var externalOrigin: String? = null,
+
   @OneToMany(mappedBy = "createdByCas2User")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
-) {
+) : UnifiedUser {
   override fun toString() = "CAS2 user $id"
 
   fun staffIdentifier() = when (userType) {
