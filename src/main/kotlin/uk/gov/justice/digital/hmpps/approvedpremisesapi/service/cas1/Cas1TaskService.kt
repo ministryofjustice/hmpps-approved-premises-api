@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -30,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
 @Service
 class Cas1TaskService(
@@ -49,7 +49,7 @@ class Cas1TaskService(
     val cruManagementAreaId: UUID?,
     val types: List<TaskEntityType>,
     val allocatedToUserId: UUID?,
-    val requiredQualification: UserQualification?,
+    val requiredQualification: ApiUserQualification?,
     val crnOrName: String?,
     val isCompleted: Boolean,
   )
