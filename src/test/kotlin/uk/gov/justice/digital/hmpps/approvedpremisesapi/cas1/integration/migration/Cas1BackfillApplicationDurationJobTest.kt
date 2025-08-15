@@ -131,6 +131,24 @@ class Cas1BackfillApplicationDurationJobTest : IntegrationTestBase() {
       submittedAt = null,
     )
 
+    val application8ArrivalDate = OffsetDateTime.now().minusDays(9).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()
+    val application8ApTypeStandardNaN = givenACas1Application(
+      arrivalDate = application8ArrivalDate,
+      apType = ApprovedPremisesType.NORMAL,
+      submittedAt = OffsetDateTime.now(),
+      data = """{
+                "move-on": {
+                    "placement-duration": {
+                        "differentDuration": "yes",
+                        "duration": "NaN",
+                        "durationDays": "?",
+                        "durationWeeks": "?",
+                        "reason": "i don't know yet"
+                    }
+                }
+            }""",
+    )
+
     migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillApplicationDuration)
 
     val updatedApplication1 = approvedPremisesApplicationRepository.findByIdOrNull(application1OverriddenDuration.id)!!
@@ -188,5 +206,9 @@ class Cas1BackfillApplicationDurationJobTest : IntegrationTestBase() {
     val updatedApplication7NotSubmitted = approvedPremisesApplicationRepository.findByIdOrNull(application7ApTypePipeNotSubmitted.id)!!
     assertThat(updatedApplication7NotSubmitted.arrivalDate).isEqualTo(application7ArrivalDate)
     assertThat(updatedApplication7NotSubmitted.duration).isNull()
+
+    val updatedApplication8ApTypeStandardNaN = approvedPremisesApplicationRepository.findByIdOrNull(application8ApTypeStandardNaN.id)!!
+    assertThat(updatedApplication8ApTypeStandardNaN.arrivalDate).isEqualTo(application8ArrivalDate)
+    assertThat(updatedApplication8ApTypeStandardNaN.duration).isEqualTo(12 * 7)
   }
 }
