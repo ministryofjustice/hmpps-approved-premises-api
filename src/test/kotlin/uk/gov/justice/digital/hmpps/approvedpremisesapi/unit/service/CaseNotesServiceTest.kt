@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.PageMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
@@ -47,7 +48,7 @@ class CaseNotesServiceTest {
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
+          personIdentifier = nomsNumber,
           from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
           page = 0,
           pageSize = 2,
@@ -64,7 +65,7 @@ class CaseNotesServiceTest {
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
+          personIdentifier = nomsNumber,
           from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
           page = 0,
           pageSize = 2,
@@ -93,7 +94,7 @@ class CaseNotesServiceTest {
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
+          personIdentifier = nomsNumber,
           from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
           page = 0,
           pageSize = 2,
@@ -101,16 +102,19 @@ class CaseNotesServiceTest {
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseNotesPage(
-          totalElements = 6,
-          totalPages = 2,
-          number = 1,
           content = caseNotesPageOne,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            totalElements = 6,
+            page = 2,
+            size = 1,
+          ),
         ),
       )
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
+          personIdentifier = nomsNumber,
           from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
           page = 1,
           pageSize = 2,
@@ -118,10 +122,13 @@ class CaseNotesServiceTest {
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseNotesPage(
-          totalElements = 4,
-          totalPages = 2,
-          number = 2,
           content = caseNotesPageTwo,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            page = 2,
+            size = 2,
+            totalElements = 4,
+          ),
         ),
       )
 
@@ -150,7 +157,7 @@ class CaseNotesServiceTest {
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
+          personIdentifier = nomsNumber,
           from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
           page = 0,
           pageSize = 2,
@@ -158,16 +165,19 @@ class CaseNotesServiceTest {
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseNotesPage(
-          totalElements = 6,
-          totalPages = 2,
-          number = 1,
           content = caseNotesPageOne,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            totalElements = 6,
+            page = 2,
+            size = 1,
+          ),
         ),
       )
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
+          personIdentifier = nomsNumber,
           from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
           page = 1,
           pageSize = 2,
@@ -175,10 +185,13 @@ class CaseNotesServiceTest {
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseNotesPage(
-          totalElements = 4,
-          totalPages = 2,
-          number = 2,
           content = caseNotesPageTwo,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            page = 2,
+            size = 2,
+            totalElements = 4,
+          ),
         ),
       )
 

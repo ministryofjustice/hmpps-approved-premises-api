@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.PageMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -12,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.caseNotesAPIMockSuccessfulCaseNotesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 class CaseNotesTest : IntegrationTestBase() {
   @Autowired
@@ -113,14 +117,24 @@ class CaseNotesTest : IntegrationTestBase() {
         )
 
         caseNotesAPIMockSuccessfulCaseNotesCall(
-          0,
-          LocalDate.now().minusDays(365),
           offenderDetails.otherIds.nomsNumber!!,
+          CaseNotesRequest(
+            includeSensitive = true,
+            occurredFrom = LocalDateTime.of(LocalDate.now().minusDays(365), LocalTime.MIN),
+            page = 0,
+            size = 30,
+            typeSubTypes = emptySet(),
+            occurredTo = null,
+            sort = "occurrenceDateTime,desc",
+          ),
           CaseNotesPage(
-            totalElements = 4,
-            totalPages = 1,
-            number = 1,
             content = caseNotes,
+            hasCaseNotes = true,
+            metadata = PageMetaData(
+              totalElements = 4,
+              size = 1,
+              page = 1,
+            ),
           ),
         )
 
@@ -161,14 +175,22 @@ class CaseNotesTest : IntegrationTestBase() {
         )
 
         caseNotesAPIMockSuccessfulCaseNotesCall(
-          0,
-          LocalDate.now().minusDays(365),
           offenderDetails.otherIds.nomsNumber!!,
+          CaseNotesRequest(
+            includeSensitive = true,
+            occurredFrom = LocalDateTime.of(LocalDate.now().minusDays(365), LocalTime.MIN),
+            page = 0,
+            size = 30,
+            sort = "occurrenceDateTime,desc",
+          ),
           CaseNotesPage(
-            totalElements = 5,
-            totalPages = 1,
-            number = 1,
             content = caseNotes,
+            metadata = PageMetaData(
+              size = 1,
+              page = 1,
+              totalElements = 5,
+            ),
+            hasCaseNotes = true,
           ),
         )
 
