@@ -6,14 +6,14 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2StatusUpdateTransformer
 
 class Cas2v2AssessmentsTransformerTest {
-  private val mockCas2v2StatusUpdateEntity = mockk<Cas2v2StatusUpdateEntity>()
-  private val cas2v2AssessmentEntity = Cas2v2AssessmentEntityFactory()
+  private val mockCas2v2StatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
+  private val cas2v2AssessmentEntity = Cas2AssessmentEntityFactory()
     .withNacroReferralId("NACRO_ID")
     .withAssessorName("Firsty Lasty")
     .withStatusUpdates(mutableListOf(mockCas2v2StatusUpdateEntity, mockCas2v2StatusUpdateEntity))

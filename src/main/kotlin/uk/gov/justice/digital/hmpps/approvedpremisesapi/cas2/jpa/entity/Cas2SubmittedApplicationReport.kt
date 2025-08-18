@@ -9,6 +9,7 @@ import java.util.UUID
 
 @Repository
 interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEntity, UUID> {
+  // TODO besscerule - double check this report is suitable for Cas2v2
   @Query(
     """
     SELECT

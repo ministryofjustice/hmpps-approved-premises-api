@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateDetailEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -214,7 +214,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     assertJsonEquals(expectedJson, result)
   }
 
-  private fun cas2v2StatusUpdateDetails(statusUpdateDetail: Cas2v2StatusUpdateDetailEntity): String = """
+  private fun cas2v2StatusUpdateDetails(statusUpdateDetail: Cas2StatusUpdateDetailEntity): String = """
     {
         "crn": "${statusUpdateDetail.statusUpdate.application.crn}",
         "noms_number": "${statusUpdateDetail.statusUpdate.application.nomsNumber}", 
@@ -223,11 +223,11 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
         "assessment_id": "${statusUpdateDetail.statusUpdate.assessment!!.id}",
         "status_label": "${statusUpdateDetail.statusUpdate.label}",
         "detail_label": "${statusUpdateDetail.label}",
-        "created_at": "${statusUpdateDetail.createdAt!!.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}"
+        "created_at": "${statusUpdateDetail.createdAt!!.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
     }
   """.trimIndent()
 
-  private fun cas2v2StatusUpdatesJson(statusUpdate: Cas2v2StatusUpdateEntity): String = """
+  private fun cas2v2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
     {
       	"id": "${statusUpdate.id}",
       	"crn": "${statusUpdate.application.crn}",
@@ -237,12 +237,13 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       	"assessor_name": "${statusUpdate.assessor.name}",
         "created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
-        "label": "${statusUpdate.label}"
+        "label": "${statusUpdate.label}",
+        "assessor_origin": "${statusUpdate.assessor.origin}",
     }    
   """.trimIndent()
 //              	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
 
-  private fun cas2v2ApplicationNotesJson(applicationNotes: Cas2v2ApplicationNoteEntity): String = """
+  private fun cas2v2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
       "id": "${applicationNotes.id}",
       "crn": "${applicationNotes.application.crn}",
@@ -250,12 +251,12 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "application_id": "${applicationNotes.application.id}",
       "assessment_id": "${applicationNotes.assessment!!.id}",
       "created_by_user": "${applicationNotes.getUser().name}",
-      "created_by_user_type": "NOMIS",
-      "body": "${applicationNotes.body}"
+      "created_by_user_type": "nomis",
+      "body": "${applicationNotes.body}",
   }
   """.trimIndent()
 
-  private fun cas2v2AssessmentsJson(assessment: Cas2v2AssessmentEntity): String = """
+  private fun cas2v2AssessmentsJson(assessment: Cas2AssessmentEntity): String = """
     {
         "id": "${assessment.id}",
         "crn": "${assessment.application.crn}",
@@ -267,14 +268,14 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     }
   """.trimIndent()
 
-  private fun cas2v2ApplicationsJson(application: Cas2v2ApplicationEntity): String = """
+  private fun cas2v2ApplicationsJson(application: Cas2ApplicationEntity): String = """
     {
       "id": "${application.id}",
       "crn": "${application.crn}",
       "noms_number": "${application.nomsNumber}",
       "data": ${application.data},
       "document": ${application.document},
-      "created_by_user": "${application.createdByUser.name}",
+      "created_by_user": "${application.createdByCas2User!!.name}",
       "created_at": "$CREATED_AT",
       "submitted_at": "$SUBMITTED_AT",
       "referring_prison_code": "${application.referringPrisonCode}",
@@ -289,38 +290,38 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   """.trimIndent()
 
   private fun cas2v2ApplicationNoteEntity(
-    application: Cas2v2ApplicationEntity,
-    assessment: Cas2v2AssessmentEntity,
-    user: Cas2v2UserEntity,
-  ) = cas2v2NoteEntityFactory.produceAndPersist {
+    application: Cas2ApplicationEntity,
+    assessment: Cas2AssessmentEntity,
+    user: Cas2UserEntity,
+  ) = cas2NoteEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
-    withCreatedByUser(user)
+    withCreatedByUser(produceAndPersistNomisUserEntity(user))
     withBody("some body text")
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
   }
 
   private fun cas2v2StatusUpdateEntity(
-    application: Cas2v2ApplicationEntity,
-    assessment: Cas2v2AssessmentEntity,
-    externalAssessor: Cas2v2UserEntity,
-  ): Cas2v2StatusUpdateEntity = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+    application: Cas2ApplicationEntity,
+    assessment: Cas2AssessmentEntity,
+    externalAssessor: Cas2UserEntity,
+  ): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
     withStatusId(UUID.randomUUID())
-    withAssessor(externalAssessor)
+    withAssessor(produceAndPersistExternalUserEntity(externalAssessor))
     withLabel("Some Label")
     withDescription("Some Description")
   }
 
-  private fun cas2StatusUpdateDetailEntity(statusUpdate: Cas2v2StatusUpdateEntity): Cas2v2StatusUpdateDetailEntity = cas2v2StatusUpdateDetailEntityFactory.produceAndPersist {
+  private fun cas2StatusUpdateDetailEntity(statusUpdate: Cas2StatusUpdateEntity): Cas2StatusUpdateDetailEntity = cas2StatusUpdateDetailEntityFactory.produceAndPersist {
     withStatusUpdate(statusUpdate)
     withLabel("Some detailed label")
     withStatusDetailId(UUID.randomUUID())
     withCreatedAt(OffsetDateTime.parse(CREATED_AT).withOffsetSameInstant(ZoneOffset.UTC))
   }
 
-  private fun cas2v2AssessmentEntity(application: Cas2v2ApplicationEntity) = cas2v2AssessmentEntityFactory.produceAndPersist {
+  private fun cas2v2AssessmentEntity(application: Cas2ApplicationEntity) = cas2AssessmentEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessorName(randomStringMultiCaseWithNumbers(10))
     withNacroReferralId(randomNumberChars(10))
@@ -329,31 +330,33 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
   private fun cas2v2ApplicationEntity(
     offenderDetails: OffenderDetailSummary,
-    user: Cas2v2UserEntity,
-  ): Cas2v2ApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+    user: Cas2UserEntity,
+  ): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-    withCreatedByUser(user)
+    withCreatedByUser(produceAndPersistNomisUserEntity(user))
+    withCreatedByCas2User(user)
     withData(DATA_JSON_SIMPLE)
     withDocument(DOCUMENT_JSON_SIMPLE)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withReferringPrisonCode(randomStringMultiCaseWithNumbers(3))
     withTelephoneNumber(randomStringMultiCaseWithNumbers(7))
-
     withConditionalReleaseDate(LocalDate.parse(arrivedAtDateOnly))
     withHdcEligibilityDate(LocalDate.parse(arrivedAtDateOnly))
     withBailHearingDate(LocalDate.parse(arrivedAtDateOnly))
     withPreferredAreas("some areas")
   }
 
-  private fun nomisUserEntity() = cas2v2UserEntityFactory.produceAndPersist {
-    withName(randomStringMultiCaseWithNumbers(12))
-    withEmail(randomEmailAddress())
-    withUserType(Cas2v2UserType.NOMIS)
-//    withNomisUsername(randomStringMultiCaseWithNumbers(7))
-//    withActiveCaseloadId(randomStringMultiCaseWithNumbers(3))
-    withNomisStaffCode(9L)
-    withNomisStaffIdentifier(90L)
+  private fun nomisUserEntity(): Cas2UserEntity {
+    val cas2User = cas2UserEntityFactory.produceAndPersist {
+      withName(randomStringMultiCaseWithNumbers(12))
+      withEmail(randomEmailAddress())
+      withUserType(Cas2UserType.NOMIS)
+      withNomisStaffCode(9L)
+      withNomisStaffIdentifier(90L)
+    }
+
+    return cas2User
   }
 }
