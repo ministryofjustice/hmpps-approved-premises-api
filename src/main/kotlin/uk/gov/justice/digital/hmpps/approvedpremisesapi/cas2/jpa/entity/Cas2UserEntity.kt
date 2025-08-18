@@ -39,8 +39,8 @@ data class Cas2UserEntity(
   val username: String,
 
   // Cas2v2User interface implementation
-  var email: String?,
-  var name: String,
+  override var email: String?,
+  override var name: String,
 
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
@@ -64,7 +64,7 @@ data class Cas2UserEntity(
 
   @OneToMany(mappedBy = "createdByCas2User")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
-) {
+) : UnifiedUser {
   override fun toString() = "CAS2 user $id"
 
   fun staffIdentifier() = when (userType) {

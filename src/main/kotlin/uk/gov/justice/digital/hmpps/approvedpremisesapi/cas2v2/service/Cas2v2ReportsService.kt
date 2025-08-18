@@ -4,9 +4,9 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationStatusUpdatesReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2SubmittedApplicationReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UnsubmittedApplicationsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubmittedApplicationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UnsubmittedApplicationsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.UnsubmittedApplicationsReportRow
@@ -14,13 +14,13 @@ import java.io.OutputStream
 
 @Service
 class Cas2v2ReportsService(
-  private val cas2v2SubmittedApplicationReportRepository: Cas2v2SubmittedApplicationReportRepository,
-  private val cas2v2ApplicationStatusUpdatesReportRepository: Cas2v2ApplicationStatusUpdatesReportRepository,
-  private val cas2v2UnsubmittedApplicationsReportRepository: Cas2v2UnsubmittedApplicationsReportRepository,
+  private val cas2SubmittedApplicationReportRepository: Cas2SubmittedApplicationReportRepository,
+  private val cas2ApplicationStatusUpdatesReportRepository: Cas2ApplicationStatusUpdatesReportRepository,
+  private val cas2UnsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,
 ) {
 
   fun createSubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = cas2v2SubmittedApplicationReportRepository.generateSubmittedApplicationReportRows().map { row ->
+    val reportData = cas2SubmittedApplicationReportRepository.generateSubmittedApplicationReportRows().map { row ->
       SubmittedApplicationReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -46,7 +46,7 @@ class Cas2v2ReportsService(
   }
 
   fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
-    val reportData = cas2v2ApplicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows().map { row ->
+    val reportData = cas2ApplicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows().map { row ->
       ApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -68,7 +68,7 @@ class Cas2v2ReportsService(
   }
 
   fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = cas2v2UnsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows().map { row ->
+    val reportData = cas2UnsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows().map { row ->
       UnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),
         personCrn = row.getPersonCrn(),

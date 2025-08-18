@@ -38,7 +38,7 @@ data class Cas2ApplicationNoteEntity(
   val id: UUID,
 
   @Transient
-  final val createdByUser: Cas2User,
+  final val createdByUser: UnifiedUser,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
@@ -78,10 +78,10 @@ data class Cas2ApplicationNoteEntity(
     }
   }
 
-  fun getUser(): Cas2User = when {
+  fun getUser(): UnifiedUser = when {
     createdByNomisUser != null -> this.createdByNomisUser!!
     createdByExternalUser != null -> this.createdByExternalUser!!
-    else -> this.createdByCas2User!! as Cas2User
+    else -> this.createdByCas2User!! as UnifiedUser
   }
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
