@@ -7,14 +7,18 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+// TODO besscerule change name of interface with CAS2
 @Repository
-interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEntity, String> {
+interface ApplicationSummaryRepository :
+  JpaRepository<Cas2ApplicationSummaryEntity, String>,
+  JpaSpecificationExecutor<Cas2ApplicationSummaryEntity> {
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
   fun findInProgressApplications(userId: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 

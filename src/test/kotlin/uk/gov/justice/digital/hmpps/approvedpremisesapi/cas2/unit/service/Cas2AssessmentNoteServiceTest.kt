@@ -557,7 +557,7 @@ class Cas2AssessmentNoteServiceTest {
     }
 
     @Nested
-    inner class AsCas2User {
+    inner class AsUnifiedUser {
       private val submittedDate = OffsetDateTime.now().minusDays(2)
       private val createdAt = OffsetDateTime.now().minusDays(1)
 

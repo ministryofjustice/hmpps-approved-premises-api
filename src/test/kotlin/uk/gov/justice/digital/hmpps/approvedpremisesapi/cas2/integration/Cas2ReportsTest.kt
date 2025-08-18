@@ -403,6 +403,20 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withNomisUsername("NOMIS_USER_1")
       }
 
+      val user2 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_2")
+      }
+
+      // TODO besscerule - added as now the query states that applicationOrigin cannot be null so every test needs to set up app data
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withId(event2.applicationId!!)
+        withCreatedByUser(user2)
+        withCrn(event1Details.personReference.crn.toString())
+        withNomsNumber(event2Details.personReference.noms)
+        withData("{}")
+        withReferringPrisonCode("NEW")
+      }
+
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(event1.applicationId!!)
         withCreatedByUser(user1)
