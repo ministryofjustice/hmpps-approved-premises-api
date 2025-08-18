@@ -144,6 +144,7 @@ class Cas3v2PremisesController(
       departureDate = newBooking.departureDate,
       bedspaceId = newBooking.bedspaceId,
       assessmentId = newBooking.assessmentId,
+      enableTurnarounds = newBooking.enableTurnarounds ?: false,
     )
     return ResponseEntity.status(HttpStatus.CREATED).body(
       bookingTransformer.transformJpaToApi(

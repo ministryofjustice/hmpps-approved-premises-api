@@ -46,7 +46,7 @@ data class Cas3PremisesEntity(
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
 
-  @Column(name = "turnaround_working_day_count")
+  @Column(name = "turnaround_working_days")
   var turnaroundWorkingDays: Int,
 
   @OneToMany(mappedBy = "premises", fetch = FetchType.LAZY)

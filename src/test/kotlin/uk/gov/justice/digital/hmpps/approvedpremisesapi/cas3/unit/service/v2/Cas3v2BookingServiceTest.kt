@@ -260,6 +260,7 @@ class Cas3v2BookingServiceTest {
         bedspaceStartDate.plusDays(90),
         bedspaceId = null,
         assessmentId,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.bedspaceId", "empty")
@@ -277,10 +278,11 @@ class Cas3v2BookingServiceTest {
       every { mockBedspaceRepository.findByIdOrNull(bedspace.id) } returns null
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -299,6 +301,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessmentId,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.departureDate", "beforeBookingArrivalDate")
@@ -316,10 +319,11 @@ class Cas3v2BookingServiceTest {
       every { mockBedspaceRepository.findByIdOrNull(bedspace.id) } returns null
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -339,6 +343,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessmentId,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.bedspaceId", "doesNotExist")
@@ -356,10 +361,11 @@ class Cas3v2BookingServiceTest {
       every { mockBedspaceRepository.findByIdOrNull(bedspace.id) } returns bedspace
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -378,6 +384,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.arrivalDate", "bookingArrivalDateBeforeBedspaceStartDate")
@@ -400,10 +407,11 @@ class Cas3v2BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -420,6 +428,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessmentId,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.assessmentId", "doesNotExist")
@@ -445,10 +454,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -468,6 +478,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isSuccess()
@@ -518,10 +529,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
 
@@ -542,6 +554,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         null,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isSuccess()
@@ -585,10 +598,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -608,6 +622,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isSuccess()
@@ -656,10 +671,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -679,6 +695,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = true,
       )
 
       assertThatCasResult(authorisableResult).isSuccess()
@@ -700,7 +717,7 @@ class Cas3v2BookingServiceTest {
         mockCas3v2TurnaroundRepository.save(
           match {
             it.booking == bookingSlot.captured &&
-              it.workingDayCount == 0
+              it.workingDayCount == premises.turnaroundWorkingDays
           },
         )
       }
@@ -726,10 +743,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -752,6 +770,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isSuccess()
@@ -804,10 +823,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -827,6 +847,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isSuccess()
@@ -878,10 +899,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -901,6 +923,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isSuccess()
@@ -952,10 +975,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -972,6 +996,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessmentId,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isFieldValidationError().hasMessage("$.assessmentId", "doesNotExist")
@@ -997,10 +1022,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -1022,6 +1048,7 @@ class Cas3v2BookingServiceTest {
             departureDate,
             bedspace.id,
             assessment.id,
+            enableTurnarounds = false,
           )
         }
 
@@ -1072,10 +1099,11 @@ class Cas3v2BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
           bedspace.id,
           arrivalDate,
           departureDate,
+          bookingId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -1097,6 +1125,7 @@ class Cas3v2BookingServiceTest {
         departureDate,
         bedspace.id,
         assessment.id,
+        enableTurnarounds = false,
       )
 
       assertThatCasResult(authorisableResult).isConflictError().hasMessage("BedSpace is archived from ${LocalDate.now()} which overlaps with the desired dates")

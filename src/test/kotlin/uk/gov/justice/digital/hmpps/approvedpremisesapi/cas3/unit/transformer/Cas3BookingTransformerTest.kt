@@ -117,7 +117,7 @@ class Cas3BookingTransformerTest {
       ),
     ).produce(),
     bedspaces = mutableListOf(),
-    turnaroundWorkingDays = 3
+    turnaroundWorkingDays = 3,
   )
 
   private val bedspaceCharacteristic = Cas3BedspaceCharacteristicEntityFactory().produce()

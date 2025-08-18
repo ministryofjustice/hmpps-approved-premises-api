@@ -826,6 +826,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           }
         }
 
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/bookings")
           .headers(buildTemporaryAccommodationHeaders(jwt))
@@ -1106,7 +1108,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Booking returns OK with correct body when only cancelled bookings for the same bed overlap`() {
+  fun `Create Booking returns OK with correct body when only cancelled bookings for the same bedspace overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val arrivalDate = LocalDate.parse("2022-07-15")
@@ -1167,7 +1169,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Booking returns 409 Conflict when a void bedspace for the same bed overlaps`() {
+  fun `Create Booking returns 409 Conflict when a void bedspace for the same bedspace overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
@@ -1192,6 +1194,41 @@ class Cas3v2BookingTest : IntegrationTestBase() {
               serviceName = ServiceName.temporaryAccommodation,
               bedspaceId = bedspace.id,
               assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Booking returns 409 Conflict when a void bedspace for the same bedspace overlaps with the turnaround time`() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = LocalDate.parse("2022-06-13"))
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          withBedspace(bedspace)
+          withStartDate(LocalDate.parse("2022-07-15"))
+          withEndDate(LocalDate.parse("2022-08-15"))
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+        }
+
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            Cas3NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-06-13"),
+              departureDate = LocalDate.parse("2022-07-13"),
+              serviceName = ServiceName.temporaryAccommodation,
+              bedspaceId = bedspace.id,
+              enableTurnarounds = true,
             ),
           )
           .exchange()
