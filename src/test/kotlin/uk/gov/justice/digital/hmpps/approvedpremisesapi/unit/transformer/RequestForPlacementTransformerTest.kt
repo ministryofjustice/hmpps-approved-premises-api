@@ -14,8 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -141,26 +140,18 @@ class RequestForPlacementTransformerTest {
         .withAssessment(assessment)
         .produce()
 
-      val placementRequest = PlacementRequestEntityFactory()
+      PlacementRequestEntityFactory()
         .withApplication(application)
         .withAssessment(assessment)
         .withPlacementRequirements(placementRequirements)
+        .withSpaceBookings(
+          mutableListOf(
+            Cas1SpaceBookingEntityFactory().produce(),
+          ),
+        )
         .produce()
         .apply {
           placementApplication.placementRequest = this
-        }
-
-      val premises = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .produce()
-
-      BookingEntityFactory()
-        .withApplication(application)
-        .withPlacementRequest(placementRequest)
-        .withPremises(premises)
-        .produce()
-        .apply {
-          placementRequest.booking = this
         }
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -357,20 +348,12 @@ class RequestForPlacementTransformerTest {
         .withApplication(application)
         .withAssessment(assessment)
         .withPlacementRequirements(placementRequirements)
+        .withSpaceBookings(
+          mutableListOf(
+            Cas1SpaceBookingEntityFactory().produce(),
+          ),
+        )
         .produce()
-
-      val premises = ApprovedPremisesEntityFactory()
-        .withDefaults()
-        .produce()
-
-      BookingEntityFactory()
-        .withApplication(application)
-        .withPlacementRequest(placementRequest)
-        .withPremises(premises)
-        .produce()
-        .apply {
-          placementRequest.booking = this
-        }
 
       val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true)
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
@@ -283,11 +284,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    transformPlacementRequestJpaToApi(
                       unmatchedPlacementRequest,
                       PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
-                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    transformPlacementRequestJpaToApi(
                       withdrawnPlacementRequest,
                       PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
@@ -481,7 +482,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    transformPlacementRequestJpaToApi(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                     ),
@@ -511,7 +512,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    transformPlacementRequestJpaToApi(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                     ),
@@ -541,11 +542,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     placementRequest5thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     placementRequest10thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -574,11 +575,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     placementRequest1stJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     placementRequest5thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -607,7 +608,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     placementRequestA1,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -640,7 +641,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     placementRequestA1,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -668,7 +669,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     standardRelease,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -696,7 +697,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                  transformPlacementRequestJpaToApi(
                     parole,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -738,7 +739,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    transformPlacementRequestJpaToApi(
                       placementOffender1On5thJanTierA2Parole,
                       PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
                     ),
@@ -1410,5 +1411,31 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
         }
       }
     }
+  }
+
+  fun transformPlacementRequestJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
+    requestedPlacementDuration = jpa.duration,
+    requestedPlacementArrivalDate = jpa.expectedArrival,
+    id = jpa.id,
+    person = personTransformer.transformModelToPersonApi(personInfo),
+    placementRequestStatus = getStatus(jpa),
+    isParole = jpa.isParole,
+    personTier = jpa.application.riskRatings?.tier?.value?.level,
+    applicationId = jpa.application.id,
+    applicationSubmittedDate = jpa.application.submittedAt?.toLocalDate(),
+    firstBookingPremisesName = null,
+    firstBookingArrivalDate = null,
+  )
+
+  fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
+    if (placementRequest.hasActiveBooking()) {
+      return PlacementRequestStatus.matched
+    }
+
+    if (placementRequest.bookingNotMades.any()) {
+      return PlacementRequestStatus.unableToMatch
+    }
+
+    return PlacementRequestStatus.notMatched
   }
 }

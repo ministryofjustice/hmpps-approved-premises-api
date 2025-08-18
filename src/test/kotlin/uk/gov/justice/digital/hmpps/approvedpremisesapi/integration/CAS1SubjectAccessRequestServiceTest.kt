@@ -708,7 +708,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "duration": ${placementRequest.duration},
         "created_at": "$CREATED_AT",
         "placement_application_id": "${placementRequest.placementApplication?.id}",
-        "booking_id": "${placementRequest.booking?.id}",
         "application_id": "${placementRequest.application.id}",
         "assessment_id": "${placementRequest.assessment.id}",
         "notes": "${placementRequest.notes}",

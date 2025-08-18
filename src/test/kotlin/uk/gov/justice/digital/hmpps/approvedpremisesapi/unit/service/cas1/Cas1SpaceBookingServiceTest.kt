@@ -184,38 +184,6 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Returns conflict error if a legacy booking already exists for the same premises and placement request`() {
-      val legacyBooking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val placementRequestWithLegacyBooking = placementRequest.copy(
-        booking = legacyBooking,
-      )
-
-      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
-      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(validatedCreateBooking)
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequestWithLegacyBooking
-      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
-        LockablePlacementRequestEntity(placementRequest.id)
-
-      val result = service.createNewBooking(
-        premisesId = premises.id,
-        placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
-        createdBy = user,
-        characteristics = emptyList(),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(legacyBooking.id)
-      assertThat(result.message).contains("A legacy Booking already exists")
-    }
-
-    @Test
     fun `Creates new booking if all data is valid`() {
       val premises = ApprovedPremisesEntityFactory()
         .withDefaults()

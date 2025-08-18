@@ -103,13 +103,6 @@ class Cas1SpaceBookingService(
       is Success -> result.value
     }
 
-    val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
-    placementRequest!!.booking?.let {
-      if (it.isActive()) {
-        return it.id hasConflictError "A legacy Booking already exists for this premises and placement request"
-      }
-    }
-
     if (cas1SpaceBookingRepository.findByPlacementRequestId(placementRequestId).any { it.isActive() }) {
       return placementRequestId hasConflictError "A Space Booking already exists for this placement request"
     }

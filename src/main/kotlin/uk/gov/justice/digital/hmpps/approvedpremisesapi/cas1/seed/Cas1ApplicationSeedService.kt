@@ -356,40 +356,6 @@ class Cas1ApplicationSeedService(
       ),
     )
 
-    val bookingArrivalDate = LocalDate.of(2027, 1, 2)
-    val bookingDepartureDate = LocalDate.of(2027, 1, 6)
-
-    bookingRepository.save(
-      BookingEntity(
-        id = UUID.randomUUID(),
-        crn = crn,
-        arrivalDate = bookingArrivalDate,
-        departureDate = bookingDepartureDate,
-        keyWorkerStaffCode = null,
-        arrivals = mutableListOf(),
-        departures = mutableListOf(),
-        nonArrival = null,
-        cancellations = mutableListOf(),
-        confirmation = null,
-        extensions = mutableListOf(),
-        premises = approvedPremisesRepository.findByName("SWSC Men Premise 1"),
-        bed = null,
-        service = ServiceName.approvedPremises.value,
-        originalArrivalDate = bookingArrivalDate,
-        originalDepartureDate = bookingDepartureDate,
-        createdAt = OffsetDateTime.now(),
-        application = null,
-        offlineApplication = offlineApplication,
-        turnarounds = mutableListOf(),
-        dateChanges = mutableListOf(),
-        nomsNumber = personInfo.offenderDetailSummary.otherIds.nomsNumber,
-        placementRequest = null,
-        status = BookingStatus.confirmed,
-        adhoc = true,
-        offenderName = null,
-      ),
-    )
-
     val spaceBookingArrivalDate = LocalDate.of(2028, 5, 12)
     val spaceBookingDepartureDate = LocalDate.of(2028, 7, 6)
     val createdByUser = (userService.getExistingUserOrCreate(deliusUserName) as GetUserResponse.Success).user

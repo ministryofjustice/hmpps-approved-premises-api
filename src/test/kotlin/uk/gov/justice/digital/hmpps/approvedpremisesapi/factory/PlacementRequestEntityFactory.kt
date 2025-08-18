@@ -112,7 +112,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an Application"),
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an Assessment"),
     createdAt = this.createdAt(),
-    booking = this.booking(),
     spaceBookings = this.spaceBookings(),
     bookingNotMades = this.bookingNotMades(),
     notes = this.notes(),

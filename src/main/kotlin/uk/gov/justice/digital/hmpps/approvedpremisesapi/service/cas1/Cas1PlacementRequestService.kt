@@ -162,7 +162,6 @@ class Cas1PlacementRequestService(
       createdAt = OffsetDateTime.now(),
       assessment = placementRequirements.assessment,
       application = placementRequirements.application,
-      booking = null,
       spaceBookings = mutableListOf(),
       bookingNotMades = mutableListOf(),
       notes = notes,

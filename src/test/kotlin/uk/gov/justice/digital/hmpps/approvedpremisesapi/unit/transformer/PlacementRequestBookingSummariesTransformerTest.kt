@@ -80,31 +80,6 @@ class PlacementRequestBookingSummariesTransformerTest {
     .produce()
 
   @Test
-  fun `Transforms placement request booking summary correctly when booking is legacy booking`() {
-    val bookingSummary = PlacementRequestBookingSummary(
-      booking.id,
-      booking.premises.id,
-      booking.premises.name,
-      booking.arrivalDate,
-      booking.departureDate,
-      booking.createdAt.toInstant(),
-      PlacementRequestBookingSummary.Type.legacy,
-    )
-
-    every { bookingSummaryTransformer.transformJpaToApi(booking) } returns bookingSummary
-
-    val result = placementRequestBookingSummaryTransformer.getBookingSummary(placementRequest)
-
-    assertThat(result!!.id).isEqualTo(booking.id)
-    assertThat(result.premisesId).isEqualTo(booking.premises.id)
-    assertThat(result.premisesName).isEqualTo(booking.premises.name)
-    assertThat(result.arrivalDate).isEqualTo(booking.arrivalDate)
-    assertThat(result.departureDate).isEqualTo(booking.departureDate)
-    assertThat(result.createdAt).isEqualTo(booking.createdAt.toInstant())
-    assertThat(result.type).isEqualTo(PlacementRequestBookingSummary.Type.legacy)
-  }
-
-  @Test
   fun `Transforms placement request booking summary correctly when booking is space booking`() {
     val spaceBookingSummary = PlacementRequestBookingSummary(
       spaceBooking.id,
@@ -117,7 +92,6 @@ class PlacementRequestBookingSummariesTransformerTest {
     )
 
     val placementWithSpaceBooking = placementRequest.copy(
-      booking = null,
       spaceBookings = mutableListOf(spaceBooking),
     )
 
@@ -136,9 +110,7 @@ class PlacementRequestBookingSummariesTransformerTest {
 
   @Test
   fun `Transform placement request booking summary returns null when no space bookings`() {
-    val placementWithSpaceBooking = placementRequest.copy(
-      booking = null,
-    )
+    val placementWithSpaceBooking = placementRequest.copy()
 
     val result = placementRequestBookingSummaryTransformer.getBookingSummary(placementWithSpaceBooking)
 
@@ -148,7 +120,6 @@ class PlacementRequestBookingSummariesTransformerTest {
   @Test
   fun `Transform placement request booking summary returns null when no active space bookings`() {
     val placementWithCancelledSpaceBooking = placementRequest.copy(
-      booking = null,
       spaceBookings = mutableListOf(
         spaceBooking.copy(
           cancellationOccurredAt = LocalDate.now(),
