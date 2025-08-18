@@ -90,6 +90,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         b.key_worker_staff_code AS keyWorkerStaffCode,
         b.key_worker_assigned_at AS keyWorkerAssignedAt,
         b.key_worker_name AS keyWorkerName,
+        key_worker_user.id as keyWorkerUserId,
+        key_worker_user.email AS keyWorkerEmail,
         CASE 
           WHEN apa.id IS NOT NULL THEN apa.name
           ELSE offline_app.name
@@ -114,6 +116,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       FROM cas1_space_bookings b
       LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
+      LEFT OUTER JOIN users key_worker_user ON b.key_worker_user_id = key_worker_user.id
       WHERE 
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 
@@ -199,6 +202,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.key_worker_staff_code AS keyWorkerStaffCode,
       b.key_worker_assigned_at AS keyWorkerAssignedAt,
       b.key_worker_name AS keyWorkerName,
+      key_worker_user.id as keyWorkerUserId,
+      key_worker_user.email AS keyWorkerEmail,
     CASE
         WHEN apa.id IS NOT NULL THEN apa.name
         ELSE offline_app.name
@@ -226,6 +231,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       FROM cas1_space_bookings b
       LEFT JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
+      LEFT OUTER JOIN users key_worker_user ON b.key_worker_user_id = key_worker_user.id
       WHERE 
         b.canonical_arrival_date <= :date AND 
         b.canonical_departure_date > :date AND
@@ -394,6 +400,8 @@ interface Cas1SpaceBookingSearchResult {
   val keyWorkerStaffCode: String?
   val keyWorkerAssignedAt: Instant?
   val keyWorkerName: String?
+  val keyWorkerUserId: UUID?
+  val keyWorkerEmail: String?
   val characteristicsPropertyNamesCsv: String?
   val deliusEventNumber: String?
   val cancelled: Boolean

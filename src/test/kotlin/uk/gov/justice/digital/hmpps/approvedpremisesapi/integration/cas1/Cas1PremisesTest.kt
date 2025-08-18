@@ -1007,6 +1007,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBookingEarly: Cas1SpaceBookingEntity
     lateinit var spaceBookingLate: Cas1SpaceBookingEntity
+    lateinit var spaceBookingOfflineApplicationKeyWorker: UserEntity
     lateinit var spaceBookingOfflineApplication: Cas1SpaceBookingEntity
     lateinit var applicationA: ApprovedPremisesApplicationEntity
     lateinit var placementRequestA: PlacementRequestEntity
@@ -1025,7 +1026,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
     val summaryDate: LocalDate = now()
     val tierA = "A2"
     val tierB = "B3"
-    val releaseTypeToBeDetermined = "TBD"
 
     @SuppressWarnings("UnusedPrivateProperty", "LongMethod")
     @BeforeAll
@@ -1130,6 +1130,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         )
       }
 
+      spaceBookingOfflineApplicationKeyWorker = givenAUser().first
       spaceBookingOfflineApplication = createSpaceBookingWithOfflineApplication(
         crn = offenderOffline.crn,
         firstName = offenderOffline.name.forename,
@@ -1143,6 +1144,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
         )
+        withKeyworkerStaffCode("key worker 1 code")
+        withKeyworkerName("key worker 1 name")
+        withKeyWorkerUser(spaceBookingOfflineApplicationKeyWorker)
       }
 
       // cancelled - ignored
@@ -1296,6 +1300,13 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(bookingSummary1.canonicalDepartureDate).isEqualTo(bookingSummary1.canonicalDepartureDate)
       assertThat(bookingSummary1.characteristics.size).isEqualTo(1)
       assertThat(bookingSummary1.characteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_SINGLE_ROOM)
+
+      val bookingSummary1KeyWorkerAllocation = bookingSummary1.keyWorkerAllocation!!
+      assertThat(bookingSummary1KeyWorkerAllocation.keyWorker.name).isEqualTo("key worker 1 name")
+      assertThat(bookingSummary1KeyWorkerAllocation.keyWorker.code).isEqualTo("key worker 1 code")
+      assertThat(bookingSummary1KeyWorkerAllocation.keyWorkerUser!!.id).isEqualTo(spaceBookingOfflineApplicationKeyWorker.id)
+      assertThat(bookingSummary1KeyWorkerAllocation.keyWorkerUser!!.name).isEqualTo("key worker 1 name")
+      assertThat(bookingSummary1KeyWorkerAllocation.keyWorkerUser!!.emailAddress).isEqualTo(spaceBookingOfflineApplicationKeyWorker.email)
 
       val offender1 = bookingSummary1.person
       assertThat(offender1.crn).isEqualTo(offenderOffline.crn)
