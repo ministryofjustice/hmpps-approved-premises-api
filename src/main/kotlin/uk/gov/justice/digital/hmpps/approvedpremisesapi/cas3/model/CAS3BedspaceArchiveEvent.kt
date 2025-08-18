@@ -21,6 +21,8 @@ data class CAS3BedspaceArchiveEventDetails(
 
   val endDate: java.time.LocalDate,
 
+  val currentEndDate: java.time.LocalDate?,
+
   val userId: java.util.UUID,
 
 )

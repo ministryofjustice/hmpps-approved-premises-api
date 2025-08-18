@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
@@ -74,6 +75,7 @@ class Cas3PremisesService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val roomRepository: RoomRepository,
   private val bedspaceRepository: BedRepository,
+  private val domainEventRepository: DomainEventRepository,
   private val characteristicService: CharacteristicService,
   private val workingDayService: WorkingDayService,
   private val cas3DomainEventService: Cas3DomainEventService,
@@ -600,7 +602,7 @@ class Cas3PremisesService(
         )
       }
 
-      canArchiveBedspace(premisesId = premises.id, bedspaceId = null, endDate = endDate)?.let {
+      canArchiveBedspace(filterByPremisesId = premises.id, filterByBedspaceId = null, endDate = endDate)?.let {
         return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
       }
 
@@ -772,6 +774,35 @@ class Cas3PremisesService(
       return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesAlreadyArchived"
     }
 
+    val latestPremisesArchiveDomainEvent = domainEventRepository.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(
+      premisesId,
+      CAS3_PREMISES_ARCHIVED,
+    ) ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotScheduledToArchive"
+
+    val premisesArchiveDomainEventData = objectMapper.readValue(latestPremisesArchiveDomainEvent.data, CAS3PremisesArchiveEvent::class.java)
+
+    if (premisesArchiveDomainEventData.eventDetails.endDate <= LocalDate.now()) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesArchiveDateInThePast"
+    }
+
+    val bedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
+    bedspaces.forEach { bedspace ->
+      val latestBedspaceArchiveDomainEvent = domainEventRepository.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(
+        bedspace.id,
+        DomainEventType.CAS3_BEDSPACE_ARCHIVED,
+      )
+
+      if (latestBedspaceArchiveDomainEvent != null && latestBedspaceArchiveDomainEvent.createdAt >= latestPremisesArchiveDomainEvent.createdAt) {
+        val bedspaceArchiveDomainEventData = objectMapper.readValue(latestBedspaceArchiveDomainEvent.data, CAS3BedspaceArchiveEvent::class.java)
+
+        bedspaceRepository.save(
+          bedspace.copy(
+            endDate = bedspaceArchiveDomainEventData.eventDetails.currentEndDate,
+          ),
+        )
+      }
+    }
+
     premises.endDate = null
     premises.status = PropertyStatus.active
 
@@ -819,7 +850,7 @@ class Cas3PremisesService(
       return fieldValidationError
     }
 
-    canArchiveBedspace(premisesId = null, bedspaceId = bedspaceId, endDate = endDate)?.let { return it }
+    canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, endDate = endDate)?.let { return it }
 
     val updatedBedspace = archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
 
@@ -1161,15 +1192,15 @@ class Cas3PremisesService(
     entity
   }
 
-  private fun canArchiveBedspace(premisesId: UUID?, bedspaceId: UUID?, endDate: LocalDate): Cas3FieldValidationError<BedEntity>? {
+  private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, endDate: LocalDate): Cas3FieldValidationError<BedEntity>? {
     val overlapBookings = when {
-      premisesId != null -> bookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, endDate).sortedByDescending { it.departureDate }
-      bedspaceId != null -> bookingRepository.findActiveOverlappingBookingByBed(bedspaceId, endDate).sortedByDescending { it.departureDate }
+      filterByPremisesId != null -> bookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, endDate).sortedByDescending { it.departureDate }
+      filterByBedspaceId != null -> bookingRepository.findActiveOverlappingBookingByBed(filterByBedspaceId, endDate).sortedByDescending { it.departureDate }
       else -> emptyList()
     }
     val lastOverlapVoid = when {
-      premisesId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(premisesId, endDate).maxByOrNull { it.endDate }
-      bedspaceId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(bedspaceId, endDate).maxByOrNull { it.endDate }
+      filterByPremisesId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(filterByPremisesId, endDate).maxByOrNull { it.endDate }
+      filterByBedspaceId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(filterByBedspaceId, endDate).maxByOrNull { it.endDate }
       else -> null
     }
 
@@ -1249,9 +1280,10 @@ class Cas3PremisesService(
   }
 
   private fun archiveBedspaceAndSaveDomainEvent(bedspace: BedEntity, endDate: LocalDate): BedEntity {
+    val originalEndDate = bedspace.endDate
     bedspace.endDate = endDate
     val updatedBedspace = bedspaceRepository.save(bedspace)
-    cas3DomainEventService.saveBedspaceArchiveEvent(updatedBedspace)
+    cas3DomainEventService.saveBedspaceArchiveEvent(updatedBedspace, originalEndDate)
     return updatedBedspace
   }
 

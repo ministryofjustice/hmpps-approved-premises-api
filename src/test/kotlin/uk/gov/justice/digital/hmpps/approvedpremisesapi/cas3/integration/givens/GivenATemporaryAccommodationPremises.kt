@@ -68,7 +68,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithUser(
  */
 fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRooms(
   region: ProbationRegionEntity = givenAProbationRegion(),
-  roomCount: Int = 1,
+  bedspaceCount: Int = 1,
   roomNames: List<String> = emptyList(),
   roomCharacteristics: List<CharacteristicEntity> = emptyList(),
   block: (premises: TemporaryAccommodationPremisesEntity, rooms: List<RoomEntity>) -> Unit,
@@ -76,7 +76,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRooms(
   val premises = givenATemporaryAccommodationPremises(region)
   val rooms = mutableListOf<RoomEntity>()
 
-  repeat(roomCount) { index ->
+  repeat(bedspaceCount) { index ->
     val roomName = if (roomNames.size > index) roomNames[index] else randomStringMultiCaseWithNumbers(8)
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -91,7 +91,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRooms(
 
 fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRoomsAndBeds(
   region: ProbationRegionEntity = givenAProbationRegion(),
-  roomCount: Int = 1,
+  bedspaceCount: Int = 1,
   bedStartDates: List<LocalDate> = emptyList(),
   bedEndDates: List<LocalDate?> = emptyList(),
   roomNames: List<String> = emptyList(),
@@ -100,7 +100,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRoomsAndBeds(
 ) {
   givenATemporaryAccommodationPremisesWithRooms(
     region = region,
-    roomCount = roomCount,
+    bedspaceCount = bedspaceCount,
     roomNames = roomNames,
     roomCharacteristics = roomCharacteristics,
   ) { premises, rooms ->
@@ -124,7 +124,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithRoomsAndBeds(
 
 fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
   roles: List<UserRole> = emptyList(),
-  roomCount: Int = 1,
+  bedspaceCount: Int = 1,
   premisesStatus: PropertyStatus = PropertyStatus.active,
   premisesEndDate: LocalDate? = null,
   bedStartDates: List<LocalDate> = emptyList(),
@@ -138,7 +138,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
   ) { user, jwt ->
     givenATemporaryAccommodationPremisesWithRoomsAndBeds(
       region = user.probationRegion,
-      roomCount = roomCount,
+      bedspaceCount = bedspaceCount,
       bedStartDates = bedStartDates,
       bedEndDates = bedEndDates,
       roomNames = roomNames,
@@ -153,20 +153,5 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
 
       block(user, jwt, premises, rooms, beds)
     }
-  }
-}
-
-fun IntegrationTestBase.givenATemporaryAccommodationPremisesWithUserScheduledForArchive(
-  roles: List<UserRole> = emptyList(),
-  archiveDate: LocalDate = LocalDate.now().plusDays(10),
-  premisesStatus: PropertyStatus = PropertyStatus.active,
-  block: (user: UserEntity, jwt: String, premises: TemporaryAccommodationPremisesEntity) -> Unit,
-) {
-  givenATemporaryAccommodationPremisesWithUser(
-    roles = roles,
-    premisesEndDate = archiveDate,
-    premisesStatus = premisesStatus,
-  ) { user, jwt, premises ->
-    block(user, jwt, premises)
   }
 }

@@ -260,9 +260,9 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveBedspaceArchiveEvent(bedspace: BedEntity) {
+  fun saveBedspaceArchiveEvent(bedspace: BedEntity, currentEndDate: LocalDate?) {
     val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, user)
+    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, currentEndDate, user)
 
     saveAndEmit(
       domainEvent = domainEvent,

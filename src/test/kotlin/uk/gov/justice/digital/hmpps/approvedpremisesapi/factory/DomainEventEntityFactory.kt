@@ -26,7 +26,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var crn: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var type: Yielded<DomainEventType> = { DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED }
   private var occurredAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(7) }
   private var data: Yielded<String> = { "{}" }
   private var service: Yielded<String> = { randomOf(listOf("CAS1", "CAS2", "CAS2V2", "CAS3")) }
   private var triggerSource: Yielded<TriggerSourceType?> = { null }
