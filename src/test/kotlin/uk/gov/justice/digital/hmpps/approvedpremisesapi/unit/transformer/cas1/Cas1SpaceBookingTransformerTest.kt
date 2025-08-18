@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
@@ -141,6 +142,12 @@ class Cas1SpaceBookingTransformerTest {
         legacyDeliusCategoryCode = "delius",
       )
 
+      val keyWorkerUser = UserEntityFactory()
+        .withName("Mr Key Worker User")
+        .withEmail("keyworker@test.com")
+        .withDefaults()
+        .produce()
+
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
         .withPlacementRequest(placementRequest)
@@ -148,6 +155,7 @@ class Cas1SpaceBookingTransformerTest {
         .withKeyworkerName("Mr Key Worker")
         .withKeyworkerStaffCode("K123")
         .withKeyworkerAssignedAt(LocalDateTime.parse("2007-12-03T10:15:30").toInstant(ZoneOffset.UTC))
+        .withKeyWorkerUser(keyWorkerUser)
         .withActualArrivalDate(LocalDate.of(2009, 2, 5))
         .withActualArrivalTime(LocalTime.of(11, 25, 10, 0))
         .withActualDepartureDate(LocalDate.of(2012, 12, 25))
@@ -241,9 +249,13 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
       assertThat(result.tier).isEqualTo("A")
 
-      assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("Mr Key Worker")
-      assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("K123")
-      assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2007-12-03"))
+      val keyWorkerAllocation = result.keyWorkerAllocation!!
+      assertThat(keyWorkerAllocation.keyWorker.name).isEqualTo("Mr Key Worker")
+      assertThat(keyWorkerAllocation.keyWorker.code).isEqualTo("K123")
+      assertThat(keyWorkerAllocation.allocatedAt).isEqualTo(LocalDate.parse("2007-12-03"))
+      assertThat(keyWorkerAllocation.keyWorkerUser!!.id).isEqualTo(keyWorkerUser.id)
+      assertThat(keyWorkerAllocation.keyWorkerUser!!.name).isEqualTo("Mr Key Worker User")
+      assertThat(keyWorkerAllocation.keyWorkerUser!!.emailAddress).isEqualTo("keyworker@test.com")
 
       assertThat(result.cancellation!!.occurredAt).isEqualTo(LocalDate.parse("2039-12-28"))
       assertThat(result.cancellation!!.recordedAt).isEqualTo(Instant.parse("2023-12-29T11:25:10.00Z"))
