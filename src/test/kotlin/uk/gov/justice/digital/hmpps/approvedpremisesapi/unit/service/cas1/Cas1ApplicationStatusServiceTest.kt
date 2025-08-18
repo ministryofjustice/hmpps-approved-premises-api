@@ -14,15 +14,19 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 @ExtendWith(MockKExtension::class)
 class Cas1ApplicationStatusServiceTest {
@@ -93,6 +97,156 @@ class Cas1ApplicationStatusServiceTest {
       verify { applicationRepository.save(application) }
 
       assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
+    }
+  }
+
+  @Nested
+  inner class AssessmentCreated {
+
+    @Test
+    fun `If not allocated to user, set application status to UNALLOCATED_ASSESSMENT`() {
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withAllocatedToUser(null)
+        .produce()
+
+      service.assessmentCreated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+    }
+
+    @Test
+    fun `If allocated to user, set application status to AWAITING_ASSESSMENT`() {
+      val application = ApprovedPremisesApplicationEntityFactory().withDefaults().produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaults().produce())
+        .produce()
+
+      service.assessmentCreated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+    }
+  }
+
+  @Nested
+  inner class AssessmentUpdated {
+
+    @Test
+    fun `If requested further information with no assessment decision, do nothing`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withDecision(null)
+        .produce()
+
+      service.assessmentUpdated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+    }
+
+    @Test
+    fun `If assessment is withdrawn, do nothing`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withIsWithdrawn(true)
+        .withDecision(AssessmentDecision.ACCEPTED)
+        .produce()
+
+      service.assessmentUpdated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+    }
+
+    @Test
+    fun `If no decision and assessment has data, application status is ASSESSMENT_IN_PROGRESS`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withDecision(null)
+        .withData("{ }")
+        .produce()
+
+      service.assessmentUpdated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+    }
+
+    @Test
+    fun `If decision is accepted and application has request for placement, application status is AWAITING_PLACEMENT`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .withArrivalDate(OffsetDateTime.now())
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withDecision(AssessmentDecision.ACCEPTED)
+        .produce()
+
+      service.assessmentUpdated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+    }
+
+    @Test
+    fun `If decision is accepted and application doesn't have a request for placement, application status is PENDING_PLACEMENT_REQUEST`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .withArrivalDate(null)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withDecision(AssessmentDecision.ACCEPTED)
+        .produce()
+
+      service.assessmentUpdated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+    }
+
+    @Test
+    fun `If decision is rejected, application status is REJECTED`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withDecision(AssessmentDecision.REJECTED)
+        .produce()
+
+      service.assessmentUpdated(assessment)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
     }
   }
 

@@ -29,13 +29,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
@@ -66,7 +66,7 @@ class AssessmentService(
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
-  private val assessmentListener: AssessmentListener,
+  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
 ) {
@@ -617,13 +617,13 @@ class AssessmentService(
 
   private fun prePersistAssessment(assessment: AssessmentEntity) {
     if (assessment is ApprovedPremisesAssessmentEntity) {
-      assessmentListener.prePersist(assessment)
+      cas1ApplicationStatusService.assessmentCreated(assessment)
     }
   }
 
   private fun preUpdateAssessment(assessment: AssessmentEntity) {
     if (assessment is ApprovedPremisesAssessmentEntity) {
-      assessmentListener.preUpdate(assessment)
+      cas1ApplicationStatusService.assessmentUpdated(assessment)
     }
   }
 
