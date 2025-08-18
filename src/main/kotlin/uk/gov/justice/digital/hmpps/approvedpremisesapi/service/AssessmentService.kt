@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
@@ -69,6 +70,7 @@ class AssessmentService(
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
+  private val cas1AssessmentService: Cas1AssessmentService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -467,7 +469,7 @@ class AssessmentService(
     }
 
     val application = currentAssessment.application
-    val requiredQualifications = application.getRequiredQualifications()
+    val requiredQualifications = cas1AssessmentService.getRequiredQualificationsToAssess(application as ApprovedPremisesApplicationEntity)
 
     if (!canUserAssessPlacement(assigneeUser, currentAssessment)) {
       return CasResult.FieldValidationError(

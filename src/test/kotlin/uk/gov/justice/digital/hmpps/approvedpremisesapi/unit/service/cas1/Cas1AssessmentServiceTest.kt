@@ -1705,4 +1705,48 @@ class Cas1AssessmentServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetRequiredQualificationsToAssess {
+
+    @ParameterizedTest
+    @CsvSource(
+      "emergency,EMERGENCY",
+      "shortNotice,EMERGENCY",
+      "standard,",
+    )
+    fun `returns correctly for timeliness categories`(noticeType: Cas1ApplicationTimelinessCategory, qualification: UserQualification?) {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withNoticeType(noticeType)
+        .produce()
+
+      assertThat(cas1AssessmentService.getRequiredQualificationsToAssess(application)).isEqualTo(listOfNotNull(qualification))
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "PIPE,PIPE",
+      "ESAP,ESAP",
+      "RFAP,RECOVERY_FOCUSED",
+      "MHAP_ST_JOSEPHS,MENTAL_HEALTH_SPECIALIST",
+      "MHAP_ELLIOTT_HOUSE,MENTAL_HEALTH_SPECIALIST",
+    )
+    fun `returns matching qualification for an application made to that type of premises`(apType: ApprovedPremisesType, qualification: UserQualification?) {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApType(apType)
+        .produce()
+
+      assertThat(cas1AssessmentService.getRequiredQualificationsToAssess(application)).isEqualTo(listOfNotNull(qualification))
+    }
+  }
 }

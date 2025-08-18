@@ -21,7 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -407,6 +409,25 @@ class Cas1AssessmentService(
         application = assessment.application as ApprovedPremisesApplicationEntity,
       )
     }
+  }
+
+  fun getRequiredQualificationsToAssess(application: ApprovedPremisesApplicationEntity): List<UserQualification> {
+    val requiredQualifications = mutableListOf<UserQualification>()
+
+    when (application.apType) {
+      ApprovedPremisesType.PIPE -> requiredQualifications += UserQualification.PIPE
+      ApprovedPremisesType.ESAP -> requiredQualifications += UserQualification.ESAP
+      ApprovedPremisesType.RFAP -> requiredQualifications += UserQualification.RECOVERY_FOCUSED
+      ApprovedPremisesType.MHAP_ST_JOSEPHS -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
+      ApprovedPremisesType.MHAP_ELLIOTT_HOUSE -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
+      else -> {}
+    }
+
+    if (application.noticeType == Cas1ApplicationTimelinessCategory.emergency || application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+      requiredQualifications += UserQualification.EMERGENCY
+    }
+
+    return requiredQualifications
   }
 
   private fun prePersistClarificationNote(note: AssessmentClarificationNoteEntity) {

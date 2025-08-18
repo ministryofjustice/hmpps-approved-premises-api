@@ -207,11 +207,39 @@ data class UserQualificationAssignmentEntity(
 }
 
 enum class UserQualification {
+  /**
+   * required to assess CAS1 applications and placement applications where
+   * the application ap_type = 'PIPE'
+   */
   PIPE,
+
+  /**
+   * ignores any restrictions for a Limited Access Offender
+   */
   LAO,
+
+  /**
+   * required to assess CAS1 applications and placement applications where
+   * the application ap_type = 'ESAP'
+   */
   ESAP,
+
+  /**
+   * required to assess CAS1 applications and placement applications where
+   * the application is an emergency or short notice application
+   */
   EMERGENCY,
+
+  /**
+   * required to assess CAS1 applications and placement applications where
+   * the application ap_type = 'RFAP'
+   */
   RECOVERY_FOCUSED,
+
+  /**
+   * required to assess CAS1 applications and placement applications where
+   * the application ap_type = 'MHAP*'
+   */
   MENTAL_HEALTH_SPECIALIST,
 }
 
