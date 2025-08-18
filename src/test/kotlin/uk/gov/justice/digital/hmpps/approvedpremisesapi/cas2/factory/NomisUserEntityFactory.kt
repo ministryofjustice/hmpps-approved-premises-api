@@ -27,7 +27,7 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
     this.id = { id }
   }
 
-  fun withActiveCaseloadId(activeCaseloadId: String) = apply {
+  fun withActiveCaseloadId(activeCaseloadId: String?) = apply {
     this.activeCaseloadId = { activeCaseloadId }
   }
 
@@ -61,6 +61,10 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
 
   fun withIsActive(isActive: Boolean) = apply {
     this.isActive = { isActive }
+  }
+
+  fun withIsEnabled(isEnabled: Boolean) = apply {
+    this.isEnabled = { isEnabled }
   }
 
   override fun produce(): NomisUserEntity = NomisUserEntity(

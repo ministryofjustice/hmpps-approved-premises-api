@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 
 @ExtendWith(MockKExtension::class)
-class Cas2UserServiceTest {
+class UnifiedUserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockNomisUserRolesApiClient = mockk<NomisUserRolesApiClient>()
   private val mockNomisUserRolesForRequesterApiClient = mockk<NomisUserRolesForRequesterApiClient>()
@@ -213,7 +213,7 @@ class Cas2UserServiceTest {
   }
 
   @Nested
-  inner class GetCas2UserForRequest {
+  inner class GetUnifiedUserForRequest {
 
     @Nested
     inner class WhenExistingUser {

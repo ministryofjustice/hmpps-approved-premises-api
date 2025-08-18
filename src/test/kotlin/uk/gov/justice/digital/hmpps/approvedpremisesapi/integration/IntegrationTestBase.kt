@@ -9,7 +9,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,13 +29,12 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2NoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
@@ -50,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
@@ -57,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.ExternalUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.NomisUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
@@ -65,7 +62,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Confirm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExtensionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3NonArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceCancellationEntityFactory
@@ -77,18 +73,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
@@ -293,7 +284,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
@@ -305,16 +295,10 @@ import java.util.UUID
 @Tag("integration")
 abstract class IntegrationTestBase {
   @Autowired
-  lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
-
-  @Autowired
-  private lateinit var cas3PemisesCharacteristicRepository: Cas3PremisesCharacteristicRepository
-
-  @Autowired
   lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   @Autowired
-  lateinit var cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
+  private lateinit var cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
@@ -455,7 +439,13 @@ abstract class IntegrationTestBase {
   lateinit var cas2StatusUpdateRepository: Cas2StatusUpdateTestRepository
 
   @Autowired
+  lateinit var cas2UserRepository: Cas2UserRepository
+
+  @Autowired
   lateinit var cas2NoteRepository: Cas2ApplicationNoteRepository
+
+  @Autowired
+  lateinit var cas2StatusUpdateDetailEntityRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
   lateinit var temporaryAccommodationApplicationRepository: TemporaryAccommodationApplicationTestRepository
@@ -468,9 +458,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var nomisUserRepository: NomisUserTestRepository
-
-  @Autowired
-  lateinit var cas2UserRepository: Cas2UserRepository
 
   @Autowired
   lateinit var externalUserRepository: ExternalUserTestRepository
@@ -501,9 +488,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var characteristicRepository: CharacteristicRepository
-
-  @Autowired
-  lateinit var cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository
 
   @Autowired
   lateinit var roomRepository: RoomRepository
@@ -619,9 +603,6 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository
 
-  @Autowired
-  lateinit var cas3BedspacesRepository: Cas3BedspacesRepository
-
   lateinit var offenderManagementUnitEntityFactory: PersistedFactory<OffenderManagementUnitEntity, UUID, OffenderManagementUnitEntityFactory>
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
@@ -657,6 +638,7 @@ abstract class IntegrationTestBase {
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
   lateinit var cas2AssessmentEntityFactory: PersistedFactory<Cas2AssessmentEntity, UUID, Cas2AssessmentEntityFactory>
   lateinit var cas2StatusUpdateEntityFactory: PersistedFactory<Cas2StatusUpdateEntity, UUID, Cas2StatusUpdateEntityFactory>
+  lateinit var cas2UserEntityFactory: PersistedFactory<Cas2UserEntity, UUID, Cas2UserEntityFactory>
   lateinit var cas2StatusUpdateDetailEntityFactory: PersistedFactory<Cas2StatusUpdateDetailEntity, UUID, Cas2StatusUpdateDetailEntityFactory>
   lateinit var cas2NoteEntityFactory: PersistedFactory<Cas2ApplicationNoteEntity, UUID, Cas2NoteEntityFactory>
   lateinit var temporaryAccommodationApplicationEntityFactory: PersistedFactory<TemporaryAccommodationApplicationEntity, UUID, TemporaryAccommodationApplicationEntityFactory>
@@ -671,8 +653,6 @@ abstract class IntegrationTestBase {
   lateinit var assessmentClarificationNoteEntityFactory: PersistedFactory<AssessmentClarificationNoteEntity, UUID, AssessmentClarificationNoteEntityFactory>
   lateinit var assessmentReferralHistoryUserNoteEntityFactory: PersistedFactory<AssessmentReferralHistoryUserNoteEntity, UUID, AssessmentReferralHistoryUserNoteEntityFactory>
   lateinit var assessmentReferralHistorySystemNoteEntityFactory: PersistedFactory<AssessmentReferralHistorySystemNoteEntity, UUID, AssessmentReferralHistorySystemNoteEntityFactory>
-  lateinit var cas3BedspaceCharacteristicEntityFactory: PersistedFactory<Cas3BedspaceCharacteristicEntity, UUID, Cas3BedspaceCharacteristicEntityFactory>
-  lateinit var cas3PremisesCharacteristicEntityFactory: PersistedFactory<Cas3PremisesCharacteristicEntity, UUID, Cas3PremisesCharacteristicEntityFactory>
   lateinit var characteristicEntityFactory: PersistedFactory<CharacteristicEntity, UUID, CharacteristicEntityFactory>
   lateinit var roomEntityFactory: PersistedFactory<RoomEntity, UUID, RoomEntityFactory>
   lateinit var bedEntityFactory: PersistedFactory<BedEntity, UUID, BedEntityFactory>
@@ -791,8 +771,6 @@ abstract class IntegrationTestBase {
     assessmentClarificationNoteEntityFactory = PersistedFactory({ AssessmentClarificationNoteEntityFactory() }, assessmentClarificationNoteRepository)
     assessmentReferralHistoryUserNoteEntityFactory = PersistedFactory({ AssessmentReferralHistoryUserNoteEntityFactory() }, assessmentReferralUserNoteRepository)
     assessmentReferralHistorySystemNoteEntityFactory = PersistedFactory({ AssessmentReferralHistorySystemNoteEntityFactory() }, assessmentReferralSystemNoteRepository)
-    cas3BedspaceCharacteristicEntityFactory = PersistedFactory({ Cas3BedspaceCharacteristicEntityFactory() }, cas3BedspaceCharacteristicRepository)
-    cas3PremisesCharacteristicEntityFactory = PersistedFactory({ Cas3PremisesCharacteristicEntityFactory() }, cas3PemisesCharacteristicRepository)
     characteristicEntityFactory = PersistedFactory({ CharacteristicEntityFactory() }, characteristicRepository)
     roomEntityFactory = PersistedFactory({ RoomEntityFactory() }, roomRepository)
     bedEntityFactory = PersistedFactory({ BedEntityFactory() }, bedRepository)
@@ -1025,12 +1003,6 @@ abstract class InitialiseDatabasePerClassTestBase : IntegrationTestBase() {
   }
 }
 
-fun WebTestClient.ResponseSpec.withForbiddenMessage(message: String = "You are not authorized to access this endpoint"): WebTestClient.BodyContentSpec = this.expectStatus()
-  .isForbidden.expectBody()
-  .jsonPath("title").isEqualTo("Forbidden")
-  .jsonPath("status").isEqualTo(403)
-  .jsonPath("detail").isEqualTo(message)
-
 fun WebTestClient.ResponseSpec.withNotFoundMessage(message: String): WebTestClient.BodyContentSpec = this.expectStatus()
   .isNotFound.expectBody()
   .jsonPath("title").isEqualTo("Not Found")
@@ -1043,15 +1015,3 @@ fun WebTestClient.ResponseSpec.withConflictMessage(message: String): WebTestClie
   .jsonPath("title").isEqualTo("Conflict")
   .jsonPath("status").isEqualTo(409)
   .jsonPath("detail").isEqualTo(message)
-
-fun WebTestClient.ResponseSpec.failsWithValidationMessages(vararg invalidParams: InvalidParam): WebTestClient.ResponseSpec {
-  val validationError = this.bodyAsObject<ValidationError>()
-
-  assertAll({
-    assertThat(validationError.status).isEqualTo(400)
-    assertThat(validationError.title).isEqualTo("Bad Request")
-    assertThat(validationError.invalidParams).containsAll(invalidParams.toList())
-  })
-
-  return this
-}

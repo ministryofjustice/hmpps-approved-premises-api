@@ -8,6 +8,7 @@ import java.util.UUID
 
 @Repository
 interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
+  // TODO besscerule check it is ok for Cas2v2 reports as removed Z from startedAt for Cas2v2 reports (prev they had them but now they use Cas2)
   @Query(
     """
       SELECT
