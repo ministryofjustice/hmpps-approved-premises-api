@@ -19,9 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesComplete
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithRoomsAndBeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithUserScheduledForArchive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationRooms
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
@@ -1335,7 +1335,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         val bedspaceTwo = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(5), endDate = LocalDate.now().plusDays(5))
         val archiveBedspaceInFiveDays = LocalDate.now().plusDays(5)
-        createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, archiveBedspaceInFiveDays)
+        createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, null, archiveBedspaceInFiveDays)
         expectedBedspaces.add(
           getExpectedBedspaceWithArchiveHistory(
             bedspaceTwo,
@@ -1481,7 +1481,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     ): Cas3Bedspace {
       history.forEach { (eventStatus, date) ->
         when (eventStatus) {
-          Cas3BedspaceStatus.archived -> createBedspaceArchiveDomainEvent(bedspace.id, premisesId, userId, date)
+          Cas3BedspaceStatus.archived -> createBedspaceArchiveDomainEvent(bedspace.id, premisesId, userId, null, date)
           Cas3BedspaceStatus.online -> createBedspaceUnarchiveDomainEvent(
             bedspace.copy(endDate = date),
             premisesId,
@@ -1516,13 +1516,13 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         )
 
         val archiveBedspaceYesterday = LocalDate.now().minusDays(1)
-        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, archiveBedspaceYesterday)
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspaceYesterday)
 
         val archiveBedspace3DaysAgo = LocalDate.now().minusDays(3)
-        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, archiveBedspace3DaysAgo)
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspace3DaysAgo)
 
         val archiveBedspaceDayAfterTomorrow = LocalDate.now().plusDays(2)
-        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, archiveBedspaceDayAfterTomorrow)
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspaceDayAfterTomorrow)
 
         val archivedBedspace = bedspace.copy(
           endDate = LocalDate.now().minusDays(7),
@@ -2231,7 +2231,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(300), endDate = null)
 
-        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, previousBedspaceArchiveDate)
+        createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, previousBedspaceArchiveDate)
 
         val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().minusDays(3))
 
@@ -2568,7 +2568,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             LocalDate.now().minusDays(2),
             null,
           ),
-          roomCount = 3,
+          bedspaceCount = 3,
         ) { premises, rooms, bedspaces ->
           val archivePremises = Cas3ArchivePremises(LocalDate.now())
           val bedspaceOne = bedspaces.first()
@@ -2629,7 +2629,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         givenATemporaryAccommodationPremisesWithRoomsAndBeds(
           region = user.probationRegion,
-          roomCount = 2,
+          bedspaceCount = 2,
         ) { premises, rooms, bedspaces ->
 
           val archivePremises = Cas3ArchivePremises(LocalDate.now().minusDays(8))
@@ -2654,7 +2654,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         givenATemporaryAccommodationPremisesWithRoomsAndBeds(
           region = user.probationRegion,
-          roomCount = 2,
+          bedspaceCount = 2,
         ) { premises, rooms, bedspaces ->
 
           val archivePremises = Cas3ArchivePremises(LocalDate.now().plusMonths(3).plusDays(1))
@@ -2702,7 +2702,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
         val previousPremisesArchiveDate = LocalDate.now().minusDays(3)
 
-        createArchivePremisesEvent(premises, user, previousPremisesArchiveDate)
+        createArchivePremisesDomainEvent(premises, user, previousPremisesArchiveDate)
 
         val archivePremises = Cas3ArchivePremises(previousPremisesArchiveDate.minusDays(3))
 
@@ -2727,7 +2727,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         givenATemporaryAccommodationPremisesWithRoomsAndBeds(
           region = user.probationRegion,
-          roomCount = 2,
+          bedspaceCount = 2,
           bedStartDates = listOf(LocalDate.now().minusDays(100), LocalDate.now().plusDays(5)),
         ) { premises, rooms, bedspaces ->
 
@@ -2761,7 +2761,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             LocalDate.now().minusDays(75),
             LocalDate.now().minusDays(30),
           ),
-          roomCount = 3,
+          bedspaceCount = 3,
         ) { premises, rooms, bedspaces ->
           val premisesArchiveDate = LocalDate.now().plusDays(5)
 
@@ -3438,12 +3438,28 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   inner class CancelScheduledArchivePremises {
     @Test
     fun `Cancel scheduled archive premises returns 200 OK when successful`() {
-      givenATemporaryAccommodationPremisesWithUserScheduledForArchive(
+      givenATemporaryAccommodationPremisesComplete(
         roles = listOf(UserRole.CAS3_ASSESSOR),
-        archiveDate = LocalDate.now().plusDays(10),
+        premisesEndDate = LocalDate.now().plusDays(10),
         premisesStatus = PropertyStatus.archived,
-      ) { _, jwt, premises ->
-        givenATemporaryAccommodationRooms(premises = premises)
+        bedspaceCount = 3,
+        bedEndDates = listOf(
+          LocalDate.now().plusDays(10),
+          LocalDate.now().plusDays(10),
+          LocalDate.now().plusDays(10),
+        ),
+      ) { user, jwt, premises, rooms, bedspaces ->
+
+        val premisesArchiveDate = premises.endDate!!
+        createArchivePremisesDomainEvent(premises, user, premisesArchiveDate)
+
+        val bedspaceOne = bedspaces.first()
+        createBedspaceArchiveDomainEvent(bedspaceOne.id, premises.id, user.id, null, premisesArchiveDate)
+        val bedspaceTwo = bedspaces.drop(1).first()
+        val bedspaceTwoCurrentEndDate = bedspaceTwo.endDate ?: premisesArchiveDate.plusDays(12)
+        createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, bedspaceTwoCurrentEndDate, premisesArchiveDate)
+        val bedspaceThree = bedspaces.drop(2).first()
+        createBedspaceArchiveDomainEvent(bedspaceThree.id, premises.id, user.id, null, premisesArchiveDate)
 
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
@@ -3456,9 +3472,17 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("endDate").doesNotExist()
 
         // Verify the premise was updated
-        val updatePremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
-        assertThat(updatePremises.endDate).isNull()
-        assertThat(updatePremises.status).isEqualTo(PropertyStatus.active)
+        val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.endDate).isNull()
+        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.active)
+
+        // Verify bedspace were updated
+        val updatedBedspaces = bedRepository.findByRoomPremisesId(premises.id)
+        updatedBedspaces.containsAll(listOf(bedspaceOne, bedspaceTwo, bedspaceThree))
+        assertThat(updatedBedspaces).hasSize(3)
+        assertThat(updatedBedspaces.first { it.id == bedspaceOne.id }.endDate).isNull()
+        assertThat(updatedBedspaces.first { it.id == bedspaceTwo.id }.endDate).isEqualTo(bedspaceTwoCurrentEndDate)
+        assertThat(updatedBedspaces.first { it.id == bedspaceThree.id }.endDate).isNull()
       }
     }
 
@@ -3734,10 +3758,10 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           val secondArchiveDate = LocalDate.now().minusDays(3)
           val secondUnarchiveDate = LocalDate.now().minusDays(2)
 
-          createArchivePremisesEvent(premises, userEntity, firstArchiveDate)
-          createUnarchivePremisesEvent(premises, userEntity, currentStartDate = LocalDate.now(), firstUnarchiveDate, firstArchiveDate)
-          createArchivePremisesEvent(premises, userEntity, secondArchiveDate)
-          createUnarchivePremisesEvent(premises, userEntity, LocalDate.now(), secondUnarchiveDate, secondArchiveDate)
+          createArchivePremisesDomainEvent(premises, userEntity, firstArchiveDate)
+          createUnarchivePremisesDomainEvent(premises, userEntity, currentStartDate = LocalDate.now(), firstUnarchiveDate, firstArchiveDate)
+          createArchivePremisesDomainEvent(premises, userEntity, secondArchiveDate)
+          createUnarchivePremisesDomainEvent(premises, userEntity, LocalDate.now(), secondUnarchiveDate, secondArchiveDate)
 
           // Get premises and verify archive history is in chronological order
           webTestClient.get()

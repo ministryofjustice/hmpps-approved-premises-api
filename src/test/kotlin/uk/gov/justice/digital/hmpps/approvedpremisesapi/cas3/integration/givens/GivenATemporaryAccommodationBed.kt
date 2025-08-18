@@ -24,14 +24,14 @@ fun IntegrationTestBase.givenATemporaryAccommodationBed(
   return bed
 }
 
-fun IntegrationTestBase.givenATemporaryAccommodationBeds(
-  room: RoomEntity? = null,
+fun IntegrationTestBase.givenATemporaryAccommodationBedsWithPremises(
+  premises: TemporaryAccommodationPremisesEntity? = null,
   count: Int = 1,
   startDates: List<LocalDate> = emptyList(),
   endDates: List<LocalDate?> = emptyList(),
   block: ((beds: List<BedEntity>) -> Unit)? = null,
 ): List<BedEntity> {
-  val resolvedRoom = room ?: givenATemporaryAccommodationRoom()
+  val resolvedPremises = premises ?: givenATemporaryAccommodationPremises()
   val beds = mutableListOf<BedEntity>()
 
   repeat(count) { index ->
@@ -39,7 +39,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationBeds(
     val endDate = if (endDates.size > index) endDates[index] else null
 
     val bed = givenATemporaryAccommodationBed(
-      room = resolvedRoom,
+      room = givenATemporaryAccommodationRoom(resolvedPremises),
       startDate = startDate,
       endDate = endDate,
     )

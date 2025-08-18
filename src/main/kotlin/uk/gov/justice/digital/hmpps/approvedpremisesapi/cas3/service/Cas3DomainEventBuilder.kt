@@ -205,6 +205,7 @@ class Cas3DomainEventBuilder(
 
   fun getBedspaceArchiveEvent(
     bedspace: BedEntity,
+    currentEndDate: LocalDate?,
     user: UserEntity,
   ): DomainEvent<CAS3BedspaceArchiveEvent> {
     val domainEventId = UUID.randomUUID()
@@ -222,7 +223,7 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceArchived,
-        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, user),
+        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, currentEndDate, user),
       ),
     )
   }
@@ -499,10 +500,12 @@ class Cas3DomainEventBuilder(
 
   private fun buildCAS3BedspaceArchiveEventDetails(
     bedspace: BedEntity,
+    currentEndDate: LocalDate?,
     user: UserEntity,
   ) = CAS3BedspaceArchiveEventDetails(
     bedspaceId = bedspace.id,
     userId = user.id,
+    currentEndDate = currentEndDate,
     endDate = bedspace.endDate!!,
     premisesId = bedspace.room.premises.id,
   )

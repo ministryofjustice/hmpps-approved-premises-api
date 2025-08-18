@@ -130,7 +130,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     return bedspace
   }
 
-  fun createUnarchivePremisesEvent(
+  fun createUnarchivePremisesDomainEvent(
     premises: TemporaryAccommodationPremisesEntity,
     userEntity: UserEntity,
     currentStartDate: LocalDate,
@@ -161,7 +161,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     }
   }
 
-  fun createArchivePremisesEvent(
+  fun createArchivePremisesDomainEvent(
     premises: TemporaryAccommodationPremisesEntity,
     userEntity: UserEntity,
     date: LocalDate,
@@ -218,7 +218,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     serviceScope = ServiceName.temporaryAccommodation.value,
   )
 
-  protected fun createBedspaceArchiveDomainEvent(bedspaceId: UUID, premisesId: UUID, userId: UUID, endDate: LocalDate) = domainEventFactory.produceAndPersist {
+  protected fun createBedspaceArchiveDomainEvent(bedspaceId: UUID, premisesId: UUID, userId: UUID, currentEndDate: LocalDate?, endDate: LocalDate) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3BedspaceId(bedspaceId)
     withType(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
@@ -232,6 +232,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
             bedspaceId = bedspaceId,
             userId = userId,
             premisesId = premisesId,
+            currentEndDate = currentEndDate,
             endDate = endDate,
           ),
         ),
