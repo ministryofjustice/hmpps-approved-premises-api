@@ -110,6 +110,13 @@ class Cas1SpaceBookingTransformer(
           keyWorker = true,
           name = name,
         ),
+        keyWorkerUser = keyWorkerUser?.let {
+          UserSummary(
+            id = it.id,
+            name = it.name,
+            emailAddress = it.email,
+          )
+        },
         allocatedAt = assignedAt?.toLocalDate(),
       )
     } else {
