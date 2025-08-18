@@ -442,6 +442,35 @@ class Cas3v2BookingService(
     return CasResult.Success(extensionEntity)
   }
 
+  @Transactional
+  fun createTurnaround(
+    booking: Cas3BookingEntity,
+    workingDays: Int,
+  ) = validatedCasResult<Cas3v2TurnaroundEntity> {
+    if (workingDays < 0) {
+      "$.workingDays" hasValidationError "isNotAPositiveInteger"
+    }
+    val expectedLastUnavailableDate = workingDayService.addWorkingDays(booking.departureDate, workingDays)
+    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bedspace.id)?.let {
+      return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate()} which overlaps with the desired dates"
+    }
+    getVoidBedspaceWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bedspace.id)?.let {
+      return@validatedCasResult it.id hasConflictError "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+    }
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+    val turnaround = cas3v2TurnaroundRepository.save(
+      Cas3v2TurnaroundEntity(
+        id = UUID.randomUUID(),
+        workingDayCount = workingDays,
+        createdAt = OffsetDateTime.now(),
+        booking = booking,
+      ),
+    )
+    return CasResult.Success(turnaround)
+  }
+
   private fun findAndCloseAssessment(booking: Cas3BookingEntity, user: UserEntity) {
     booking.application?.let {
       val assessment =

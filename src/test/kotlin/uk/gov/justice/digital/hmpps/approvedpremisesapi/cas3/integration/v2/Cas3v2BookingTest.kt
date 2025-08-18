@@ -11,6 +11,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
@@ -1172,7 +1173,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, _ ->
         val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
         val (_, assessment) = givenCas3ApplicationAndAssessment(user, offenderDetails)
-        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
+        val existingVoidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBedspace(bedspace)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
@@ -1197,7 +1198,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .is4xxClientError
-          .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+          .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingVoidBedspace.id}")
       }
     }
   }
@@ -1359,7 +1360,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         givenAnOffender { offenderDetails, _ ->
           val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
 
-          val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          val conflictingVoidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBedspace(bedspace)
             withStartDate(LocalDate.parse("2022-07-15"))
             withEndDate(LocalDate.parse("2022-08-15"))
@@ -1390,7 +1391,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .is4xxClientError
-            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingVoidBedspace.id}")
         }
       }
     }
@@ -2406,7 +2407,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
-          val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          val conflictingVoidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBedspace(bedspace)
             withStartDate(LocalDate.parse("2022-07-15"))
             withEndDate(LocalDate.parse("2022-08-15"))
@@ -2435,7 +2436,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .is4xxClientError
-            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingVoidBedspace.id}")
         }
       }
     }
@@ -2445,7 +2446,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
-          val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          val conflictingVoidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBedspace(bedspace)
             withStartDate(LocalDate.parse("2022-07-15"))
             withEndDate(LocalDate.parse("2022-08-15"))
@@ -2480,7 +2481,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .is4xxClientError
-            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+            .withConflictMessage("A Void Bedspace already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingVoidBedspace.id}")
         }
       }
     }
@@ -2550,6 +2551,168 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         val actualBooking = bookingRepository.findByIdOrNull(booking.id)
         assertThat(actualBooking?.departureDate).isEqualTo(LocalDate.parse(newDate))
         assertThat(actualBooking?.originalDepartureDate).isEqualTo(booking.departureDate)
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateTurnaround {
+    @Test
+    fun `Create Turnaround returns 404 Not Found if the premises was not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${UUID.randomUUID()}/bookings/${UUID.randomUUID()}/turnarounds")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(NewTurnaround(workingDays = 2))
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Create Turnaround returns 404 Not Found if the booking was not found on the premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, _) = givenCas3PremisesAndBedspace(userEntity)
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${UUID.randomUUID()}/turnarounds")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(NewTurnaround(workingDays = 2))
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Create Turnaround returns 400 Bad Request if the number of working days is not a positive integer`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/turnarounds")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(NewTurnaround(workingDays = -1))
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.workingDays")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("isNotAPositiveInteger")
+      }
+    }
+
+    @Test
+    fun `Create Turnaround returns 404 Not Found if a premises that does not exist `() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+
+        val notFoundPremisesId = UUID.randomUUID()
+        webTestClient.post()
+          .uri("/cas3/v2/premises/$notFoundPremisesId/bookings/${booking.id}/turnarounds")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(NewTurnaround(workingDays = 2))
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $notFoundPremisesId could be found")
+      }
+    }
+
+    @Test
+    fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing booking`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+          withArrivalDate(LocalDate.of(2023, 2, 3))
+          withDepartureDate(LocalDate.of(2023, 5, 3))
+        }
+        val conflictingBooking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+          withArrivalDate(LocalDate.of(2023, 5, 5))
+          withDepartureDate(LocalDate.of(2023, 8, 5))
+        }
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/turnarounds")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(NewTurnaround(workingDays = 2))
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .withConflictMessage("A Booking already exists for dates from 2023-05-05 to 2023-08-05 which overlaps with the desired dates: ${conflictingBooking.id}")
+      }
+    }
+
+    @Test
+    fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing void bedspace`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+          withArrivalDate(LocalDate.of(2023, 2, 3))
+          withDepartureDate(LocalDate.of(2023, 5, 3))
+        }
+        val conflictingVoidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          withBedspace(bedspace)
+          withStartDate(LocalDate.of(2023, 5, 5))
+          withEndDate(LocalDate.of(2023, 5, 19))
+          withYieldedReason {
+            cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+          }
+        }
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/turnarounds")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(NewTurnaround(workingDays = 2))
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .withConflictMessage("A Void Bedspace already exists for dates from 2023-05-05 to 2023-05-19 which overlaps with the desired dates: ${conflictingVoidBedspace.id}")
+      }
+    }
+
+    @Test
+    fun `Create Turnaround returns 200 OK with the created turnaround`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}/turnarounds")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(NewTurnaround(workingDays = 2))
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+          .jsonPath("$.workingDays").isEqualTo(2)
       }
     }
   }
