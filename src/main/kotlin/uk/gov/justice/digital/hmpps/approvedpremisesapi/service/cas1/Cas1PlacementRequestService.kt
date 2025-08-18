@@ -55,36 +55,6 @@ class Cas1PlacementRequestService(
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun getAllActive(
-    searchCriteria: AllActiveSearchCriteria,
-    pageCriteria: PageCriteria<PlacementRequestSortField>,
-  ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    val pageable = pageCriteria.toPageable(
-      when (pageCriteria.sortBy) {
-        PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
-        PlacementRequestSortField.createdAt -> "created_at"
-        PlacementRequestSortField.expectedArrival -> "expected_arrival"
-        PlacementRequestSortField.duration -> "duration"
-        PlacementRequestSortField.requestType -> "request_type"
-        PlacementRequestSortField.personName -> "person_name"
-        PlacementRequestSortField.personRisksTier -> "person_risks_tier"
-      },
-    )
-
-    val response = placementRequestRepository.allForDashboard(
-      status = searchCriteria.status?.name,
-      crnOrName = searchCriteria.crnOrName,
-      tier = searchCriteria.tier,
-      arrivalDateFrom = searchCriteria.arrivalDateStart,
-      arrivalDateTo = searchCriteria.arrivalDateEnd,
-      requestType = searchCriteria.requestType?.name,
-      cruManagementAreaId = searchCriteria.cruManagementAreaId,
-      pageable = pageable,
-    )
-
-    return Pair(response.content, getMetadata(response, pageCriteria))
-  }
-
   fun getAllCas1Active(
     searchCriteria: AllActiveSearchCriteria,
     pageCriteria: PageCriteria<PlacementRequestSortField>,
