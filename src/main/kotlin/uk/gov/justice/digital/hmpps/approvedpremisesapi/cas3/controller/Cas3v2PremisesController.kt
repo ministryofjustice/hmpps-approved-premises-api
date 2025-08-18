@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Can
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ExtensionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -61,6 +64,7 @@ class Cas3v2PremisesController(
   private val cas3DepartureTransformer: Cas3DepartureTransformer,
   private val cas3ConfirmationTransformer: Cas3ConfirmationTransformer,
   private val cas3ExtensionTransformer: Cas3ExtensionTransformer,
+  private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
 ) {
 
   @GetMapping("/premises/{premisesId}/bookings")
@@ -283,6 +287,25 @@ class Cas3v2PremisesController(
     )
     return ResponseEntity.status(HttpStatus.CREATED).body(
       cas3ExtensionTransformer.transformJpaToApi(
+        jpa = extractEntityFromCasResult(result),
+      ),
+    )
+  }
+
+  @PostMapping("/premises/{premisesId}/bookings/{bookingId}/turnarounds")
+  fun postPremisesBookingTurnaround(
+    @PathVariable premisesId: UUID,
+    @PathVariable bookingId: UUID,
+    @RequestBody newTurnaround: NewTurnaround,
+  ): ResponseEntity<Cas3Turnaround> {
+    val user = usersService.getUserForRequest()
+    val booking = getBookingForPremisesOrThrow(premisesId, bookingId, user)
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+      throw ForbiddenProblem()
+    }
+    val result = cas3BookingService.createTurnaround(booking, newTurnaround.workingDays)
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+      cas3TurnaroundTransformer.transformJpaToApi(
         jpa = extractEntityFromCasResult(result),
       ),
     )
