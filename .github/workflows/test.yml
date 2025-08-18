@@ -105,7 +105,7 @@ jobs:
             build/test-results
             build/reports/tests
       - name: Publish Test Report
-        uses: ctrf-io/github-test-reporter@v1
+        uses: ctrf-io/github-test-reporter@a63590595a9ae45cb646c55a314110f910d360d2
         with:
           report-path: './build/test-results/unitTest/*.xml'
           use-suite-name: true
@@ -213,7 +213,7 @@ jobs:
             build/reports/tests
 
       - name: Publish Test Report
-        uses: ctrf-io/github-test-reporter@v1
+        uses: ctrf-io/github-test-reporter@a63590595a9ae45cb646c55a314110f910d360d2
         with:
           report-path: './build/test-results/integrationTest/*.xml'
           use-suite-name: true
