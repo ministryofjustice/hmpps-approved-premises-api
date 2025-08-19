@@ -237,12 +237,12 @@ class Cas1PlacementRequestService(
   fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState = WithdrawableState(
     withdrawable = placementRequest.isInWithdrawableState(),
     withdrawn = placementRequest.isWithdrawn,
-    userMayDirectlyWithdraw = placementRequest.isForApplicationsArrivalDate() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
+    userMayDirectlyWithdraw = false,
   )
 
   /**
-   * This function should not be called directly. Instead, use [Cas1WithdrawableService.withdrawPlacementRequest] that
-   * will indirectly invoke this function. It will also ensure that:
+   * This function should not be called directly. Instead, use [Cas1WithdrawableService] that
+   * will indirectly invoke this function via cascading down the withdrawal tree. It will also ensure that:
    *
    * 1. The entity is withdrawable, and error if not
    * 2. The user is allowed to withdraw it, and error if not

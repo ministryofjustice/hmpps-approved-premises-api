@@ -72,22 +72,6 @@ class Cas1ApplicationStatusService(
     bookingMade(spaceBooking.application!!)
   }
 
-  @Deprecated("This can be removed")
-  fun lastBookingCancelled(
-    booking: BookingEntity,
-    isUserRequestedWithdrawal: Boolean,
-  ) {
-    if (!isUserRequestedWithdrawal || booking.application == null) {
-      return
-    }
-    val application = booking.application!!
-    val bookings = bookingRepository.findAllByApplication(application)
-    val anyActiveBookings = bookings.any { it.isActive() }
-    if (!anyActiveBookings) {
-      lastBookingCancelled(booking.application!! as ApprovedPremisesApplicationEntity)
-    }
-  }
-
   fun spaceBookingCancelled(spaceBooking: Cas1SpaceBookingEntity, isUserRequestedWithdrawal: Boolean = true) {
     if (!isUserRequestedWithdrawal || spaceBooking.application == null) {
       return

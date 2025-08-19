@@ -236,11 +236,7 @@ data class WithdrawableEntitiesWithNotes(
 
 enum class WithdrawableEntityType(val label: String) {
   Application("Application"),
-
-  /**
-   * See [PlacementRequestEntity.isForApplicationsArrivalDate] for why we label this as Request for Placement
-   */
-  PlacementRequest("Request for Placement"),
+  PlacementRequest("Placement Request"),
   PlacementApplication("Request for Placement"),
   SpaceBooking("Space Booking"),
 }

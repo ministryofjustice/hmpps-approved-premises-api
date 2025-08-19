@@ -45,14 +45,6 @@ class Cas1UserAccessService(
   }
 
   /**
-   * This function only checks if the user has the correct permissions to withdraw the given placement request.
-   *
-   * It doesn't consider if the placement request is in a withdrawable state
-   */
-  fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity) = placementRequest.application.createdByUser == user ||
-    user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS)
-
-  /**
    * This function only checks if the user has the correct permissions to withdraw the given placement application.
    *
    * It doesn't consider if the placement request is in a withdrawable state

@@ -64,22 +64,4 @@ interface PlacementRequestsCas1 {
     produces = ["application/json"],
   )
   fun search(@RequestParam(value = "status", required = false) status: PlacementRequestStatus?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "tier", required = false) tier: RiskTierLevel?, @RequestParam(value = "arrivalDateStart", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateStart: java.time.LocalDate?, @RequestParam(value = "arrivalDateEnd", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateEnd: java.time.LocalDate?, @RequestParam(value = "requestType", required = false) requestType: PlacementRequestRequestType?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: PlacementRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<Cas1PlacementRequestSummary>> = getDelegate().search(status, crnOrName, tier, arrivalDateStart, arrivalDateEnd, requestType, cruManagementAreaId, page, sortBy, sortDirection)
-
-  @Operation(
-    tags = ["Placement requests"],
-    summary = "Withdraws a placement request",
-    operationId = "withdrawPlacementRequest",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1PlacementRequestDetail::class))]),
-      ApiResponse(responseCode = "404", description = "invalid applicationId", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/placement-requests/{id}/withdrawal"],
-    produces = ["application/json"],
-    consumes = ["application/json"],
-  )
-  fun withdrawPlacementRequest(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Withdrawal details") @RequestBody(required = false) body: Cas1WithdrawPlacementRequest?): ResponseEntity<Cas1PlacementRequestDetail> = getDelegate().withdrawPlacementRequest(id, body)
 }

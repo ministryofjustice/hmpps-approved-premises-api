@@ -113,8 +113,6 @@ class Cas1WithdrawableTreeBuilderTest {
     assertThat(result.render(includeIds = false).trim()).isEqualTo(
       """
 Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y
----> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
 ------> PlacementRequest(), withdrawn:Y, withdrawable:N, mayDirectlyWithdraw:N
 ---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
@@ -173,8 +171,6 @@ Notes: []
     assertThat(result.render(includeIds = false).trim()).isEqualTo(
       """
 Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
----> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
@@ -228,8 +224,6 @@ Notes: [1 or more placements cannot be withdrawn as they have an arrival]
     assertThat(result.render(includeIds = false).trim()).isEqualTo(
       """
 Application(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
----> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N
-------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N
 ---> PlacementApplication(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ------> PlacementRequest(), withdrawn:N, withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
 ---------> SpaceBooking(), withdrawn:N, withdrawable:Y, mayDirectlyWithdraw:N, BLOCKING - ArrivalRecordedInCas1
