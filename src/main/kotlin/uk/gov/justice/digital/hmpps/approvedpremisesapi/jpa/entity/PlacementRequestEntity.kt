@@ -251,8 +251,7 @@ data class PlacementRequestEntity(
 ) {
   fun isInWithdrawableState() = isActive()
 
-  fun hasActiveBooking() = (booking != null && booking?.cancellations.isNullOrEmpty()) ||
-    (spaceBookings.any { it.isActive() })
+  fun hasActiveBooking() = (spaceBookings.any { it.isActive() })
 
   fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 

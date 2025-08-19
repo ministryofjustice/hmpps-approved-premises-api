@@ -6,15 +6,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
@@ -89,7 +89,7 @@ class Cas1PlacementRequestEmailServiceTest {
     @Test
     fun `placementRequestWithdrawn doesnt send email to CRU if no email addresses defined`() {
       val application = createApplication(cruManagementAreaEmail = null)
-      val placementRequest = createPlacementRequest(application, booking = null)
+      val placementRequest = createPlacementRequest(application, spaceBooking = null)
 
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
@@ -99,11 +99,10 @@ class Cas1PlacementRequestEmailServiceTest {
     @Test
     fun `placementRequestWithdrawn doesnt send email to CRU if email addresses defined and active booking`() {
       val application = createApplication(cruManagementAreaEmail = CRU_EMAIL)
-      val booking = BookingEntityFactory()
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
-        .withDefaultPremises()
         .produce()
-      val placementRequest = createPlacementRequest(application, booking)
+      val placementRequest = createPlacementRequest(application, spaceBooking)
 
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
@@ -113,7 +112,7 @@ class Cas1PlacementRequestEmailServiceTest {
     @Test
     fun `placementRequestWithdrawn sends match request withdrawn email to CRU if email addresses defined and no booking`() {
       val application = createApplication(cruManagementAreaEmail = CRU_EMAIL)
-      val placementRequest = createPlacementRequest(application, booking = null)
+      val placementRequest = createPlacementRequest(application, spaceBooking = null)
 
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
@@ -140,14 +139,13 @@ class Cas1PlacementRequestEmailServiceTest {
       val application = createApplication(
         applicantEmail = null,
       )
-      val booking = BookingEntityFactory()
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
-        .withDefaultPremises()
         .produce()
 
       val placementRequest = createPlacementRequest(
         application,
-        booking,
+        spaceBooking,
         hasPlacementApplication = false,
       )
 
@@ -162,14 +160,13 @@ class Cas1PlacementRequestEmailServiceTest {
       val application = createApplication(
         applicantEmail = null,
       )
-      val booking = BookingEntityFactory()
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
-        .withDefaultPremises()
         .produce()
 
       val placementRequest = createPlacementRequest(
         application,
-        booking,
+        spaceBooking,
         hasPlacementApplication = true,
       )
 
@@ -183,14 +180,13 @@ class Cas1PlacementRequestEmailServiceTest {
       val application = createApplication(
         applicantEmail = APPLICANT_EMAIL,
       )
-      val booking = BookingEntityFactory()
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
-        .withDefaultPremises()
         .produce()
 
       val placementRequest = createPlacementRequest(
         application,
-        booking,
+        spaceBooking,
         hasPlacementApplication = false,
       )
 
@@ -220,14 +216,13 @@ class Cas1PlacementRequestEmailServiceTest {
         applicantEmail = APPLICANT_EMAIL,
         caseManagerNotApplicant = true,
       )
-      val booking = BookingEntityFactory()
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
-        .withDefaultPremises()
         .produce()
 
       val placementRequest = createPlacementRequest(
         application,
-        booking,
+        spaceBooking,
         hasPlacementApplication = false,
       )
 
@@ -271,14 +266,13 @@ class Cas1PlacementRequestEmailServiceTest {
       val application = createApplication(
         applicantEmail = APPLICANT_EMAIL,
       )
-      val booking = BookingEntityFactory()
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
-        .withDefaultPremises()
         .produce()
 
       val placementRequest = createPlacementRequest(
         application,
-        booking,
+        spaceBooking,
         hasPlacementApplication = false,
       )
 
@@ -340,7 +334,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
   private fun createPlacementRequest(
     application: ApprovedPremisesApplicationEntity,
-    booking: BookingEntity?,
+    spaceBooking: Cas1SpaceBookingEntity?,
     hasPlacementApplication: Boolean = false,
   ): PlacementRequestEntity {
     val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -362,7 +356,7 @@ class Cas1PlacementRequestEmailServiceTest {
       .withAssessment(assessment)
       .withPlacementRequirements(placementRequirements)
       .withPlacementApplication(if (hasPlacementApplication) placementApplication else null)
-      .withBooking(booking)
+      .withSpaceBookings(listOfNotNull(spaceBooking).toMutableList())
       .produce()
   }
 }

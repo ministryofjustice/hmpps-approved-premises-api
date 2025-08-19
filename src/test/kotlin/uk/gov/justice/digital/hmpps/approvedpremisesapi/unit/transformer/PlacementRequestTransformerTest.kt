@@ -203,28 +203,17 @@ class PlacementRequestTransformerTest {
 
     @Test
     fun `returns a status of matched when a placement request has a booking`() {
-      val premises = ApprovedPremisesEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-        .produce()
-
-      val booking = BookingEntityFactory()
-        .withServiceName(ServiceName.approvedPremises)
-        .withPremises(premises)
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
         .produce()
 
       val placementRequirementsEntity = placementRequirementsFactory.produce()
 
       val placementRequestEntity = placementRequestFactory
         .withPlacementRequirements(placementRequirementsEntity)
-        .withBooking(booking)
+        .withSpaceBookings(mutableListOf(spaceBooking))
         .produce()
 
-      every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
+      every { mockBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns mockBookingSummary
 
       val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
