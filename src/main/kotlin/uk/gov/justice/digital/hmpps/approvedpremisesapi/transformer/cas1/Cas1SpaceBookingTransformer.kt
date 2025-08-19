@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -110,14 +109,10 @@ class Cas1SpaceBookingTransformer(
           keyWorker = true,
           name = name,
         ),
-        keyWorkerUser = keyWorkerUser?.let {
-          UserSummary(
-            id = it.id,
-            name = it.name,
-            emailAddress = it.email,
-          )
-        },
         allocatedAt = assignedAt?.toLocalDate(),
+        name = name,
+        userId = keyWorkerUser?.id,
+        emailAddress = keyWorkerUser?.email,
       )
     } else {
       null
@@ -229,13 +224,9 @@ class Cas1SpaceBookingTransformer(
           keyWorker = true,
           name = searchResult.keyWorkerName!!,
         ),
-        keyWorkerUser = searchResult.keyWorkerUserId?.let {
-          UserSummary(
-            id = it,
-            name = searchResult.keyWorkerName!!,
-            emailAddress = searchResult.keyWorkerEmail,
-          )
-        },
+        name = searchResult.keyWorkerName!!,
+        userId = searchResult.keyWorkerUserId,
+        emailAddress = searchResult.keyWorkerEmail,
       )
     },
     characteristics = searchResult.getCharacteristicPropertyNames().mapNotNull { propertyName ->
