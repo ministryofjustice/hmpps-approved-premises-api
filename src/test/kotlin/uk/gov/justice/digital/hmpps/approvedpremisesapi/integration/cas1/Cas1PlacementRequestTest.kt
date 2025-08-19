@@ -276,11 +276,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    transformPlacementRequestJpaToApi(
+                    transformNotMatchedPlacementRequestJpaToApiSummary(
                       unmatchedPlacementRequest,
                       PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
-                    transformPlacementRequestJpaToApi(
+                    transformNotMatchedPlacementRequestJpaToApiSummary(
                       withdrawnPlacementRequest,
                       PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                     ),
@@ -474,7 +474,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    transformPlacementRequestJpaToApi(
+                    transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                     ),
@@ -504,7 +504,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    transformPlacementRequestJpaToApi(
+                    transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                     ),
@@ -534,11 +534,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest5thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest10thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -567,11 +567,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest1stJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest5thJan,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -600,7 +600,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -633,7 +633,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -661,7 +661,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     standardRelease,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -689,7 +689,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 listOf(
-                  transformPlacementRequestJpaToApi(
+                  transformNotMatchedPlacementRequestJpaToApiSummary(
                     parole,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -731,7 +731,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   listOf(
-                    transformPlacementRequestJpaToApi(
+                    transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementOffender1On5thJanTierA2Parole,
                       PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
                     ),
@@ -1066,31 +1066,19 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       }
     }
 
-    fun transformPlacementRequestJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
+    fun transformNotMatchedPlacementRequestJpaToApiSummary(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
       requestedPlacementDuration = jpa.duration,
       requestedPlacementArrivalDate = jpa.expectedArrival,
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      placementRequestStatus = getStatus(jpa),
+      placementRequestStatus = PlacementRequestStatus.notMatched,
       isParole = jpa.isParole,
       personTier = jpa.application.riskRatings?.tier?.value?.level,
       applicationId = jpa.application.id,
       applicationSubmittedDate = jpa.application.submittedAt?.toLocalDate(),
-      firstBookingPremisesName = jpa.booking?.premises?.name,
-      firstBookingArrivalDate = jpa.booking?.arrivalDate,
+      firstBookingPremisesName = null,
+      firstBookingArrivalDate = null,
     )
-
-    fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
-      if (placementRequest.hasActiveBooking()) {
-        return PlacementRequestStatus.matched
-      }
-
-      if (placementRequest.bookingNotMades.any()) {
-        return PlacementRequestStatus.unableToMatch
-      }
-
-      return PlacementRequestStatus.notMatched
-    }
   }
 
   @Nested
