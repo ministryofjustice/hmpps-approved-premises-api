@@ -55,19 +55,6 @@ class Cas1PlacementRequestEmailService(
       "withdrawnBy" to withdrawalTriggeredBy.getName(),
     )
 
-    if (placementRequest.isForLegacyInitialRequestForPlacement()) {
-      /**
-       * For information on why we send a request for placement email
-       * instead of match request, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
-       **/
-      emailNotifier.sendEmails(
-        recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
-        templateId = Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-        personalisation = personalisation,
-        application = application,
-      )
-    }
-
     if (!placementRequest.hasActiveBooking()) {
       val area = application.cruManagementArea
       area?.emailAddress?.let { cruEmail ->

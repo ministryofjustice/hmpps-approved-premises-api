@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.AREA_NAME
@@ -173,127 +172,6 @@ class Cas1PlacementRequestEmailServiceTest {
       service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
       mockEmailNotificationService.assertNoEmailsRequested()
-    }
-
-    @Test
-    fun `placementRequestWithdrawn sends placement request withdrawn email to applicant if placement request not linked to placement application`() {
-      val application = createApplication(
-        applicantEmail = APPLICANT_EMAIL,
-      )
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      val placementRequest = createPlacementRequest(
-        application,
-        spaceBooking,
-        hasPlacementApplication = false,
-      )
-
-      service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
-
-      mockEmailNotificationService.assertEmailRequestCount(1)
-      mockEmailNotificationService.assertEmailRequested(
-        APPLICANT_EMAIL,
-        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-        mapOf(
-          "applicationUrl" to "http://frontend/applications/${application.id}",
-          "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to CRN,
-          "applicationArea" to AREA_NAME,
-          "startDate" to placementRequest.expectedArrival.toString(),
-          "endDate" to placementRequest.expectedDeparture().toString(),
-          "withdrawnBy" to WITHDRAWING_USER_NAME,
-          "additionalDatesSet" to "no",
-        ),
-        application,
-      )
-    }
-
-    @Test
-    fun `placementRequestWithdrawn sends placement request withdrawn email to applicant and case manager if case manager not applicant`() {
-      val application = createApplication(
-        applicantEmail = APPLICANT_EMAIL,
-        caseManagerNotApplicant = true,
-      )
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      val placementRequest = createPlacementRequest(
-        application,
-        spaceBooking,
-        hasPlacementApplication = false,
-      )
-
-      service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
-
-      mockEmailNotificationService.assertEmailRequestCount(2)
-      mockEmailNotificationService.assertEmailRequested(
-        APPLICANT_EMAIL,
-        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-        mapOf(
-          "applicationUrl" to "http://frontend/applications/${application.id}",
-          "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to CRN,
-          "applicationArea" to AREA_NAME,
-          "startDate" to placementRequest.expectedArrival.toString(),
-          "endDate" to placementRequest.expectedDeparture().toString(),
-          "withdrawnBy" to WITHDRAWING_USER_NAME,
-          "additionalDatesSet" to "no",
-        ),
-        application,
-      )
-      mockEmailNotificationService.assertEmailRequested(
-        CASE_MANAGER_EMAIL,
-        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-        mapOf(
-          "applicationUrl" to "http://frontend/applications/${application.id}",
-          "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to CRN,
-          "applicationArea" to AREA_NAME,
-          "startDate" to placementRequest.expectedArrival.toString(),
-          "endDate" to placementRequest.expectedDeparture().toString(),
-          "withdrawnBy" to WITHDRAWING_USER_NAME,
-          "additionalDatesSet" to "no",
-        ),
-        application,
-      )
-    }
-
-    @Test
-    fun `placementRequestWithdrawn uses hard coded withdrawn by if triggered by seed job`() {
-      val application = createApplication(
-        applicantEmail = APPLICANT_EMAIL,
-      )
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      val placementRequest = createPlacementRequest(
-        application,
-        spaceBooking,
-        hasPlacementApplication = false,
-      )
-
-      service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredBySeedJob)
-
-      mockEmailNotificationService.assertEmailRequestCount(1)
-      mockEmailNotificationService.assertEmailRequested(
-        APPLICANT_EMAIL,
-        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-        mapOf(
-          "applicationUrl" to "http://frontend/applications/${application.id}",
-          "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-          "crn" to CRN,
-          "applicationArea" to AREA_NAME,
-          "startDate" to placementRequest.expectedArrival.toString(),
-          "endDate" to placementRequest.expectedDeparture().toString(),
-          "withdrawnBy" to "Application Support",
-          "additionalDatesSet" to "no",
-        ),
-        application,
-      )
     }
   }
 
