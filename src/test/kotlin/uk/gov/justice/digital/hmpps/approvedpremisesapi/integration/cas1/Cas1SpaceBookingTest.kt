@@ -1855,6 +1855,12 @@ class Cas1SpaceBookingTest {
 
       apDeliusContextMockSuccessfulStaffDetailByCodeCall(keyWorkerStaffDetail)
 
+      // uses old code but doesn't have future manager role, should be ignored
+      givenAUser(
+        roles = listOf(),
+        staffDetail = StaffDetailFactory.staffDetail(code = "OldCode"),
+        mockStaffUserDetailsCall = false,
+      )
       val (keyWorkerUser, _) = givenAUser(
         roles = listOf(CAS1_FUTURE_MANAGER),
         staffDetail = StaffDetailFactory.staffDetail(code = "NewCode"),
