@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -130,6 +131,9 @@ class ApplicationsTransformer(
       },
       apType = applicationEntity.apType.asApiType(),
       licenceExpiryDate = applicationEntity.licenceExpiryDate,
+
+      releaseType = applicationEntity.releaseType?.let { ReleaseTypeOption.valueOf(it) },
+      sentenceType = applicationEntity.sentenceType?.let { SentenceTypeOption.valueOf(it) },
     )
   }
 

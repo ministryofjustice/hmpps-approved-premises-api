@@ -17,13 +17,13 @@ import org.junit.jupiter.params.provider.NullSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplication
@@ -123,7 +123,7 @@ class ApplicationsTransformersTest {
 
   @ParameterizedTest
   @MethodSource("applicationStatusArgs")
-  fun `transformJpaToApi transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
+  fun `transformCas1JpaToApi transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
     val (apiStatus, jpaStatus) = args
 
     val applicantUserDetails = Cas1ApplicationUserDetailsEntityFactory().produce()
@@ -136,12 +136,14 @@ class ApplicationsTransformersTest {
       .withCaseManagerIsNotApplicant(true)
       .withCaseManagerUserDetails(caseManagerUserDetails)
       .withLicenseExpiredDate(LocalDate.of(2026, 5, 5))
+      .withReleaseType(ReleaseTypeOption.notApplicable.name)
+      .withSentenceType(SentenceTypeOption.bailPlacement.name)
       .produce()
 
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(applicantUserDetails) } returns Cas1ApplicationUserDetails("applicant", "", "")
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(caseManagerUserDetails) } returns Cas1ApplicationUserDetails("caseManager", "", "")
 
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
+    val result = applicationsTransformer.transformCas1JpaToApi(application, mockk())
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
@@ -151,10 +153,12 @@ class ApplicationsTransformersTest {
     assertThat(result.caseManagerIsNotApplicant).isTrue()
     assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
     assertThat(result.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 5, 5))
+    assertThat(result.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
+    assertThat(result.releaseType).isEqualTo(ReleaseTypeOption.notApplicable)
   }
 
   @Test
-  fun `transformJpaToApi returns the Ap and Cru Management Area`() {
+  fun `transformCas1JpaToApi returns the Ap and Cru Management Area`() {
     val apAreaEntity = ApAreaEntityFactory().produce()
     val cruManagementAreaEntity = Cas1CruManagementAreaEntityFactory().produce()
     val application = approvedPremisesApplicationFactory
@@ -173,7 +177,7 @@ class ApplicationsTransformersTest {
     } returns cCruManagementArea
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(any()) } returns Cas1ApplicationUserDetails("", "", "")
 
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
+    val result = applicationsTransformer.transformCas1JpaToApi(application, mockk())
 
     assertThat(result.apArea).isEqualTo(apArea)
     assertThat(result.cruManagementArea).isEqualTo(cCruManagementArea)
@@ -188,7 +192,7 @@ class ApplicationsTransformersTest {
     "MHAP_ST_JOSEPHS,mhapStJosephs",
     "MHAP_ELLIOTT_HOUSE,mhapElliottHouse",
   )
-  fun `transformJpaToApi transforms ap type correctly`(jpaTypeString: String, apiTypeString: String) {
+  fun `transformCas1JpaToApi transforms ap type correctly`(jpaTypeString: String, apiTypeString: String) {
     val jpaType = ApprovedPremisesType.valueOf(jpaTypeString)
     val expectedApiType = ApType.valueOf(apiTypeString)
 
@@ -196,7 +200,7 @@ class ApplicationsTransformersTest {
 
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(any()) } returns Cas1ApplicationUserDetails("", "", "")
 
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
+    val result = applicationsTransformer.transformCas1JpaToApi(application, mockk())
 
     assertThat(result.apType).isEqualTo(expectedApiType)
   }

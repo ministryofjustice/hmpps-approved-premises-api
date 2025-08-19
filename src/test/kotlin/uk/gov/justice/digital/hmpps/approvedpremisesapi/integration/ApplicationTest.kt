@@ -354,6 +354,8 @@ class ApplicationTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withData("""{"thingId":123}""")
+            withReleaseType(ReleaseTypeOption.inCommunity.name)
+            withSentenceType(SentenceTypeOption.bailPlacement.name)
           }
 
           val rawResponseBody = webTestClient.get()
@@ -373,6 +375,8 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
           assertThat(responseBody.createdByUserId).isEqualTo(applicationEntity.createdByUser.id)
           assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
+          assertThat(responseBody.releaseType).isEqualTo(ReleaseTypeOption.inCommunity)
+          assertThat(responseBody.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
           assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
         }
       }
