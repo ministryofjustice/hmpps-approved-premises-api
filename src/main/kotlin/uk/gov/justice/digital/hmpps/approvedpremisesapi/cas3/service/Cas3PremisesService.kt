@@ -546,6 +546,7 @@ class Cas3PremisesService(
     )
   }
 
+  @Suppress("CyclomaticComplexMethod")
   @Transactional
   fun archivePremises(
     premises: TemporaryAccommodationPremisesEntity,
@@ -605,15 +606,17 @@ class Cas3PremisesService(
       canArchiveBedspace(filterByPremisesId = premises.id, filterByBedspaceId = null, endDate = endDate)?.let {
         return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
       }
+    }
 
+    // archive premises
+    val archivedPremises = archivePremisesAndSaveDomainEvent(premises, endDate)
+
+    if (activeBedspaces.any()) {
       // archive all online bedspaces
       activeBedspaces.forEach { bedspace ->
         archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
       }
     }
-
-    // archive premises
-    val archivedPremises = archivePremisesAndSaveDomainEvent(premises, endDate)
 
     return success(archivedPremises)
   }
