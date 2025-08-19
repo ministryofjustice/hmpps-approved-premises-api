@@ -39,8 +39,15 @@ interface UserRepository :
 
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
 
-  @Query("SELECT DISTINCT u FROM UserEntity u where UPPER(u.deliusStaffCode) IN :staffCodes")
-  fun findByDeliusStaffCodeIn(staffCodes: List<String>): List<UserEntity>
+  @Query(
+    """
+    SELECT DISTINCT u 
+    FROM UserEntity u 
+    JOIN u.roles r
+    WHERE UPPER(u.deliusStaffCode) IN :staffCodes AND r.role = :role
+    """,
+  )
+  fun findByDeliusStaffCodeAndRole(staffCodes: List<String>, role: UserRole): List<UserEntity>
 
   fun findByDeliusStaffCode(staffCode: String): UserEntity?
 
