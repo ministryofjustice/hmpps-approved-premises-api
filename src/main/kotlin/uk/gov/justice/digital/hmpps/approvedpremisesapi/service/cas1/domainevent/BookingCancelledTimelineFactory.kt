@@ -8,8 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingCan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventPayloadBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventDescriber
@@ -22,7 +20,6 @@ import java.util.UUID
 @Service
 class BookingCancelledTimelineFactory(
   val domainEventService: Cas1DomainEventService,
-  private val bookingRepository: BookingRepository,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
 ) : LegacyTimelineFactory<Cas1BookingCancelledContentPayload> {
   override fun produce(domainEventId: UUID): Cas1DomainEventDescriber.EventDescriptionAndPayload<Cas1BookingCancelledContentPayload> {
@@ -30,11 +27,7 @@ class BookingCancelledTimelineFactory(
 
     val bookingId = event.data.eventDetails.bookingId
 
-    val bookingDetail: BookingCancellationDetail = if (event.spaceBookingId != null) {
-      getSpaceBookingCancellationDetailForEvent(bookingId, event)
-    } else {
-      getBookingCancellationDetailForEvent(bookingId, event)
-    }
+    val bookingDetail: BookingCancellationDetail = getSpaceBookingCancellationDetailForEvent(bookingId, event)
 
     return Cas1DomainEventDescriber.EventDescriptionAndPayload(
       buildDescription(bookingDetail),
@@ -73,32 +66,6 @@ class BookingCancelledTimelineFactory(
       arrivalDate = spaceBooking.canonicalArrivalDate,
       departureDate = spaceBooking.canonicalDepartureDate,
       appealChangeRequestId = event.data.eventDetails.appealChangeRequestId,
-    )
-  }
-
-  @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getBookingCancellationDetailForEvent(bookingId: UUID, event: GetCas1DomainEvent<Cas1DomainEventEnvelope<BookingCancelled>>): BookingCancellationDetail {
-    val booking = bookingRepository.findByIdOrNull(bookingId)
-      ?: throw RuntimeException("Booking ID $bookingId with cancellation not found")
-    if (booking.cancellations.count() != 1) {
-      throw RuntimeException("Booking ID $bookingId does not have one cancellation")
-    }
-    val cancellation = booking.cancellations.first()
-    val otherReasonText =
-      if (cancellation.reason.id == CancellationReasonRepository.CAS1_RELATED_OTHER_ID &&
-        !cancellation.otherReason.isNullOrEmpty()
-      ) {
-        ": ${cancellation.otherReason}."
-      } else {
-        ""
-      }
-    return BookingCancellationDetail(
-      premisesName = booking.premises.name,
-      premisesId = booking.premises.id,
-      cancellationReason = "'${event.data.eventDetails.cancellationReason}'$otherReasonText",
-      arrivalDate = booking.arrivalDate,
-      departureDate = booking.departureDate,
-      appealChangeRequestId = null,
     )
   }
 

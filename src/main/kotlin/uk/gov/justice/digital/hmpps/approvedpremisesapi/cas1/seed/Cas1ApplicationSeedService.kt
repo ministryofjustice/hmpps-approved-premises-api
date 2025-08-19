@@ -7,7 +7,6 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -22,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity.Companion.CHARACTERISTICS_OF_INTEREST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -59,7 +56,6 @@ import kotlin.random.Random
 @Service
 class Cas1ApplicationSeedService(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
-  private val bookingRepository: BookingRepository,
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
@@ -353,40 +349,6 @@ class Cas1ApplicationSeedService(
         createdAt = OffsetDateTime.now(),
         eventNumber = "2",
         name = "${offenderDetail.firstName.uppercase()} ${offenderDetail.surname.uppercase()}",
-      ),
-    )
-
-    val bookingArrivalDate = LocalDate.of(2027, 1, 2)
-    val bookingDepartureDate = LocalDate.of(2027, 1, 6)
-
-    bookingRepository.save(
-      BookingEntity(
-        id = UUID.randomUUID(),
-        crn = crn,
-        arrivalDate = bookingArrivalDate,
-        departureDate = bookingDepartureDate,
-        keyWorkerStaffCode = null,
-        arrivals = mutableListOf(),
-        departures = mutableListOf(),
-        nonArrival = null,
-        cancellations = mutableListOf(),
-        confirmation = null,
-        extensions = mutableListOf(),
-        premises = approvedPremisesRepository.findByName("SWSC Men Premise 1"),
-        bed = null,
-        service = ServiceName.approvedPremises.value,
-        originalArrivalDate = bookingArrivalDate,
-        originalDepartureDate = bookingDepartureDate,
-        createdAt = OffsetDateTime.now(),
-        application = null,
-        offlineApplication = offlineApplication,
-        turnarounds = mutableListOf(),
-        dateChanges = mutableListOf(),
-        nomsNumber = personInfo.offenderDetailSummary.otherIds.nomsNumber,
-        placementRequest = null,
-        status = BookingStatus.confirmed,
-        adhoc = true,
-        offenderName = null,
       ),
     )
 
