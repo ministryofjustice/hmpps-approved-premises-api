@@ -31,7 +31,11 @@ interface Cas1BackfillKeyWorkerUserAssignmentsJobRepository : JpaRepository<Cas1
   @Query(
     """
     UPDATE cas1_space_bookings b
-    SET key_worker_user_id = (SELECT id FROM users u WHERE UPPER(u.delius_staff_code) = UPPER(b.key_worker_staff_code))
+    SET key_worker_user_id = (
+        SELECT u.id FROM users u 
+        INNER JOIN user_role_assignments role on role.role = 'CAS1_FUTURE_MANAGER' and role.user_id = u.id
+        WHERE UPPER(u.delius_staff_code) = UPPER(b.key_worker_staff_code)
+    )
     WHERE b.key_worker_staff_code IS NOT NULL AND b.key_worker_user_id IS NULL
   """,
     nativeQuery = true,
@@ -43,8 +47,9 @@ interface Cas1BackfillKeyWorkerUserAssignmentsJobRepository : JpaRepository<Cas1
     """
     UPDATE cas1_space_bookings b
     SET key_worker_user_id = (
-      SELECT id FROM users u 
-      inner join cas1_key_worker_staff_code_lookup lookup ON 
+      SELECT u.id FROM users u 
+      INNER JOIN user_role_assignments role on role.role = 'CAS1_FUTURE_MANAGER' and role.user_id = u.id
+      INNER JOIN cas1_key_worker_staff_code_lookup lookup ON 
         UPPER(lookup.staff_code_1) = UPPER(b.key_worker_staff_code) AND 
         UPPER(u.delius_staff_code) = UPPER(lookup.staff_code_2)
     )
