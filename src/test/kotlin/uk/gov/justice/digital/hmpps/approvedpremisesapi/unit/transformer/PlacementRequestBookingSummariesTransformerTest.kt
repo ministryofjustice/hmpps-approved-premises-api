@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -54,20 +53,11 @@ class PlacementRequestBookingSummariesTransformerTest {
     .withDefaults()
     .produce()
 
-  val booking = BookingEntityFactory()
-    .withId(UUID.randomUUID())
-    .withPremises(premises)
-    .withArrivalDate(LocalDate.now().minusDays(10))
-    .withDepartureDate(LocalDate.now().plusDays(5))
-    .withCreatedAt(OffsetDateTime.now())
-    .produce()
-
   val placementRequest =
     PlacementRequestEntityFactory()
       .withPlacementRequirements(placementRequirements)
       .withApplication(application)
       .withAssessment(assessment)
-      .withBooking(booking)
       .withSpaceBookings(mutableListOf())
       .produce()
 
@@ -78,31 +68,6 @@ class PlacementRequestBookingSummariesTransformerTest {
     .withCanonicalDepartureDate(LocalDate.now().plusDays(5))
     .withCreatedAt(OffsetDateTime.now())
     .produce()
-
-  @Test
-  fun `Transforms placement request booking summary correctly when booking is legacy booking`() {
-    val bookingSummary = PlacementRequestBookingSummary(
-      booking.id,
-      booking.premises.id,
-      booking.premises.name,
-      booking.arrivalDate,
-      booking.departureDate,
-      booking.createdAt.toInstant(),
-      PlacementRequestBookingSummary.Type.legacy,
-    )
-
-    every { bookingSummaryTransformer.transformJpaToApi(booking) } returns bookingSummary
-
-    val result = placementRequestBookingSummaryTransformer.getBookingSummary(placementRequest)
-
-    assertThat(result!!.id).isEqualTo(booking.id)
-    assertThat(result.premisesId).isEqualTo(booking.premises.id)
-    assertThat(result.premisesName).isEqualTo(booking.premises.name)
-    assertThat(result.arrivalDate).isEqualTo(booking.arrivalDate)
-    assertThat(result.departureDate).isEqualTo(booking.departureDate)
-    assertThat(result.createdAt).isEqualTo(booking.createdAt.toInstant())
-    assertThat(result.type).isEqualTo(PlacementRequestBookingSummary.Type.legacy)
-  }
 
   @Test
   fun `Transforms placement request booking summary correctly when booking is space booking`() {
@@ -117,7 +82,6 @@ class PlacementRequestBookingSummariesTransformerTest {
     )
 
     val placementWithSpaceBooking = placementRequest.copy(
-      booking = null,
       spaceBookings = mutableListOf(spaceBooking),
     )
 
@@ -136,9 +100,7 @@ class PlacementRequestBookingSummariesTransformerTest {
 
   @Test
   fun `Transform placement request booking summary returns null when no space bookings`() {
-    val placementWithSpaceBooking = placementRequest.copy(
-      booking = null,
-    )
+    val placementWithSpaceBooking = placementRequest.copy()
 
     val result = placementRequestBookingSummaryTransformer.getBookingSummary(placementWithSpaceBooking)
 
@@ -148,7 +110,6 @@ class PlacementRequestBookingSummariesTransformerTest {
   @Test
   fun `Transform placement request booking summary returns null when no active space bookings`() {
     val placementWithCancelledSpaceBooking = placementRequest.copy(
-      booking = null,
       spaceBookings = mutableListOf(
         spaceBooking.copy(
           cancellationOccurredAt = LocalDate.now(),

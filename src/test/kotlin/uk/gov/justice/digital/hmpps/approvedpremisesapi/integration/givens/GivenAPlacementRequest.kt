@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -43,7 +42,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   tier: String? = null,
   mappa: String? = null,
   applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
-  booking: BookingEntity? = null,
   apArea: ApAreaEntity? = null,
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
@@ -128,9 +126,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
     withWithdrawalReason(withdrawalReason)
     withIsParole(isParole)
     withPlacementRequirements(placementRequirements)
-    if (booking != null) {
-      withBooking(booking)
-    }
     if (expectedArrival != null) {
       withExpectedArrival(expectedArrival)
     }

@@ -21,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
@@ -239,18 +237,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Creates a new booking if data is valid and legacy and space bookings are cancelled`() {
-      val legacyBookingWithCancellation = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val cancellationEntity = CancellationEntityFactory()
-        .withBooking(legacyBookingWithCancellation)
-        .withReason(CancellationReasonEntityFactory().produce())
-        .produce()
-
-      legacyBookingWithCancellation.cancellations = mutableListOf(cancellationEntity)
-
+    fun `Creates a new booking if data is valid and all space bookings are cancelled`() {
       val spaceBookingWithCancellation = Cas1SpaceBookingEntityFactory()
         .withPremises(premises)
         .withPlacementRequest(placementRequest)
@@ -266,7 +253,6 @@ class Cas1SpaceBookingServiceTest {
 
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
-        .withBooking(legacyBookingWithCancellation)
         .withSpaceBookings(mutableListOf(spaceBookingWithCancellation))
         .withApplication(application)
         .withPlacementApplication(placementApplication)

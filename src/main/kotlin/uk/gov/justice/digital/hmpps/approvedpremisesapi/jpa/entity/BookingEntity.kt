@@ -331,9 +331,6 @@ data class BookingEntity(
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
   var turnarounds: MutableList<Cas3TurnaroundEntity>,
   var nomsNumber: String?,
-  @Deprecated("Bookings are no longer used in CAS1, this relationship can be removed")
-  @OneToOne(mappedBy = "booking")
-  var placementRequest: PlacementRequestEntity?,
   @Enumerated(value = EnumType.STRING)
   var status: BookingStatus?,
   val adhoc: Boolean? = null,

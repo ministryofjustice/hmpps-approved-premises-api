@@ -221,15 +221,6 @@ data class PlacementRequestEntity(
    */
   val notes: String?,
 
-  /**
-   * If a booking is cancelled it will remain linked to the placement
-   * request until a new booking is made against it
-   */
-  @Deprecated("Bookings are no longer used in CAS1, this relationship can be removed")
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "booking_id")
-  var booking: BookingEntity?,
-
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var spaceBookings: MutableList<Cas1SpaceBookingEntity>,
 

@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -71,12 +70,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "ApplicationTimeline" :[],
         "Assessments": [],
         "AssessmentClarificationNotes": [],
-        "Bookings": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "BedMoves": [],
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -111,12 +107,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(application, timelineNotes, offender)}],
         "Assessments": [],
         "AssessmentClarificationNotes": [],
-        "Bookings": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "BedMoves": [],
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -152,12 +145,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "ApplicationTimeline" :[],
         "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
         "AssessmentClarificationNotes": [],
-        "Bookings": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "BedMoves": [],
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -193,12 +183,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       offenderDetails,
       clarificationNote,
     )}],
-       "Bookings": [],
        "SpaceBookings": [],
        "OfflineApplications":  [],
        "BookingExtensions": [],
-       "Cancellations": [],
-       "BedMoves": [],
        "Appeals": [],
        "PlacementApplications": [],
        "PlacementRequests": [],
@@ -246,12 +233,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationTimeline" :[],
       "Assessments": [],
       "AssessmentClarificationNotes": [],
-      "Bookings": [],
       "SpaceBookings":  [ ${spaceBookingsJson(booking)} ],
       "OfflineApplications":  [],
       "BookingExtensions": [],
-      "Cancellations": [],
-      "BedMoves": [],
       "Appeals": [],
       "PlacementApplications": [],
       "PlacementRequests": [],
@@ -291,12 +275,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationTimeline" : [],
       "Assessments": [],
       "AssessmentClarificationNotes": [],
-      "Bookings": [],
       "SpaceBookings":  [ ${spaceBookingsJson(booking)} ],
       "OfflineApplications": [${offlineApplicationForSpaceBookingJson(booking)}],
       "BookingExtensions": [],
-      "Cancellations": [],
-      "BedMoves": [],
       "Appeals": [],
       "PlacementApplications": [],
       "PlacementRequests": [],
@@ -316,8 +297,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offenderDetails, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offenderDetails)
 
-    val booking = bookingEntity(offenderDetails, application)
-
     val result =
       sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
@@ -329,12 +308,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationTimeline" :[],
       "Assessments": [],
       "AssessmentClarificationNotes": [],
-      "Bookings": [${bookingsJson(booking)}],
       "SpaceBookings":  [],
       "OfflineApplications":  [],
       "BookingExtensions": [],
-      "Cancellations": [],
-      "BedMoves": [],
       "Appeals": [],
       "PlacementApplications": [],
       "PlacementRequests": [],
@@ -343,122 +319,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "BookingNotMades" : [],
       "DomainEvents": [],
       "DomainEventsMetadata": []
-    }
-    """.trimIndent()
-
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
-  fun `Get CAS1 information - have a booking with an offline application`() {
-    val (offenderDetails, _) = givenAnOffender()
-    val application = approvedPremisesApplicationEntity(offenderDetails)
-    val offlineApplication = offlineApplicationEntity(offenderDetails)
-    val booking = bookingEntity(offenderDetails, application, offlineApplication)
-
-    val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
-
-    assertNotNull(result)
-
-    val expectedJson = """
-    {       
-        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
-        "ApplicationTimeline" :[],
-        "Assessments": [],
-        "AssessmentClarificationNotes": [],
-        "Bookings":[${bookingsJson(booking)}],
-        "SpaceBookings": [],
-        "OfflineApplications": [${offlineApplicationJson(booking)}],
-        "BookingExtensions": [],
-        "Cancellations": [],
-        "BedMoves": [],
-        "Appeals": [],
-        "PlacementApplications": [],
-        "PlacementRequests": [],
-        "PlacementRequirements": [],
-        "PlacementRequirementCriteria" : [],
-        "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
-    }
-    """.trimIndent()
-
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
-  fun `Get CAS1 information - have a booking with extension`() {
-    val (offenderDetails, _) = givenAnOffender()
-    val application = approvedPremisesApplicationEntity(offenderDetails)
-
-    val booking = bookingEntity(offenderDetails, application)
-    val bookingExtension = bookingExtensionEntity(booking)
-
-    val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
-
-    assertNotNull(result)
-
-    val expectedJson = """
-    {
-        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
-        "ApplicationTimeline" :[],
-        "Assessments": [],
-        "AssessmentClarificationNotes": [],
-        "Bookings": [${bookingsJson(booking)}],
-        "SpaceBookings":  [],
-        "OfflineApplications":  [],
-        "BookingExtensions":[${bookingExtensionJson(bookingExtension)}],
-        "Cancellations": [],
-        "BedMoves": [],
-        "Appeals": [],
-        "PlacementApplications": [],
-        "PlacementRequests": [],
-        "PlacementRequirements": [],
-        "PlacementRequirementCriteria" : [],
-        "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
-    }
-    """.trimIndent()
-
-    assertJsonEquals(expectedJson, result)
-  }
-
-  @Test
-  fun `Get CAS1 information - have a booking cancellation`() {
-    val (offenderDetails, _) = givenAnOffender()
-    val application = approvedPremisesApplicationEntity(offenderDetails)
-
-    val booking = bookingEntity(offenderDetails, application)
-    val cancellation = cancellationEntity(booking)
-
-    val result =
-      sarService.getCAS1Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
-
-    assertNotNull(result)
-
-    val expectedJson = """
-    {      
-        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
-        "ApplicationTimeline" :[],
-        "Assessments": [],
-        "AssessmentClarificationNotes": [],
-        "Bookings": [${bookingsJson(booking)}],
-        "SpaceBookings":  [],
-        "OfflineApplications":  [],
-        "BookingExtensions": [],
-        "Cancellations": [${cancellationJson(cancellation)}],
-        "BedMoves": [],
-        "Appeals": [],
-        "PlacementApplications": [],
-        "PlacementRequests": [],
-        "PlacementRequirements": [],
-        "PlacementRequirementCriteria" : [],
-        "BookingNotMades" : [],
-        "DomainEvents": [],
-        "DomainEventsMetadata": []
     }
     """.trimIndent()
 
@@ -483,12 +343,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "ApplicationTimeline" :[],
         "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
         "AssessmentClarificationNotes": [],
-        "Bookings": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
         "BookingExtensions": [],
-        "Cancellations": [],
-        "BedMoves": [],
         "Appeals":[ ${appealsJson(appeal)}],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -520,12 +377,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationTimeline" :[],
       "Assessments": [],
       "AssessmentClarificationNotes": [],
-      "Bookings": [],
       "SpaceBookings": [],
       "OfflineApplications":  [],
       "BookingExtensions": [],
-      "Cancellations": [],
-      "BedMoves": [],
       "Appeals": [],
       "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
       "PlacementRequests": [],
@@ -545,10 +399,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)
-    val booking = bookingEntity(offender, application)
     val placementApplication = placementApplicationEntity(application)
 
-    val placementRequest = placementRequestEntity(booking, assessment, application, placementApplication)
+    val placementRequest = placementRequestEntity(assessment, application, placementApplication)
     val result =
       sarService.getCAS1Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
@@ -560,12 +413,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "ApplicationTimeline" :[],
         "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
         "AssessmentClarificationNotes": [],
-        "Bookings": [${bookingsJson(booking)}],
         "OfflineApplications":  [],    
         "SpaceBookings":  [],    
         "BookingExtensions": [],
-        "Cancellations": [],
-        "BedMoves": [],
         "Appeals": [],
         "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
         "PlacementRequests": [${approvedPremisesPlacementRequestsJson(placementRequest)}],
@@ -585,9 +435,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offender, _) = givenAnOffender()
     val application = approvedPremisesApplicationEntity(offender)
     val assessment = approvedPremisesAssessmentEntity(application)
-    val booking = bookingEntity(offender, application)
     val placementApplication = placementApplicationEntity(application)
-    val placementRequest = placementRequestEntity(booking, assessment, application, placementApplication)
+    val placementRequest = placementRequestEntity(assessment, application, placementApplication)
     val bookingNotMade = bookingNotMadeEntity(placementRequest)
 
     val result =
@@ -601,12 +450,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "ApplicationTimeline" :[],
       "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
       "AssessmentClarificationNotes": [],
-      "Bookings":[${bookingsJson(booking)}],
       "SpaceBookings":  [],    
       "OfflineApplications":  [],    
       "BookingExtensions": [],
-      "Cancellations": [],
-      "BedMoves": [],
       "Appeals": [],
       "PlacementApplications": [${approvedPremisesPlacementApplicationsJson(placementApplication)}],
       "PlacementRequests": [${approvedPremisesPlacementRequestsJson(placementRequest)}],
@@ -639,12 +485,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "ApplicationTimeline" :[],
         "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
         "AssessmentClarificationNotes": [],
-        "Bookings": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],    
         "BookingExtensions": [],
-        "Cancellations": [],
-        "BedMoves": [],
         "Appeals": [],
         "PlacementApplications": [],
         "PlacementRequests": [],
@@ -708,7 +551,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "duration": ${placementRequest.duration},
         "created_at": "$CREATED_AT",
         "placement_application_id": "${placementRequest.placementApplication?.id}",
-        "booking_id": "${placementRequest.booking?.id}",
         "application_id": "${placementRequest.application.id}",
         "assessment_id": "${placementRequest.assessment.id}",
         "notes": "${placementRequest.notes}",
@@ -882,17 +724,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       }
     """.trimIndent()
 
-  private fun offlineApplicationJson(booking: BookingEntity) =
-    """
-      {
-        "crn": "${booking.crn}",
-        "noms_number": "${booking.nomsNumber}",
-        "offline_application_id":"${booking.offlineApplication!!.id}",
-        "booking_id":"${booking.id}",
-        "created_at":"$CREATED_AT"
-      }
-    """.trimIndent()
-
   private fun offlineApplicationEntity(offenderDetails: OffenderDetailSummary) = offlineApplicationEntityFactory.produceAndPersist {
     withService(ServiceName.approvedPremises.value)
     withCrn(offenderDetails.otherIds.crn)
@@ -901,12 +732,10 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   private fun placementRequestEntity(
-    booking: BookingEntity,
     assessment: ApprovedPremisesAssessmentEntity,
     application: ApprovedPremisesApplicationEntity,
     placementApplication: PlacementApplicationEntity,
   ) = placementRequestFactory.produceAndPersist {
-    withBooking(booking)
     withAssessment(assessment)
     withApplication(application)
     withPlacementApplication(placementApplication)

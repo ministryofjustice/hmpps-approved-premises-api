@@ -296,7 +296,6 @@ from
               pr.duration, 
               pr.created_at,
               pr.placement_application_id, 
-              pr.booking_id,
               pr.application_id,
               pr.assessment_id,
               pr.notes,
@@ -435,35 +434,15 @@ from
         select json_agg(offline_applications) as json
         from ( 
             select 
-                CASE
-                    WHEN B.id is NOT NULL THEN B.CRN
-                    ELSE sb.crn
-                END AS crn,
-                CASE
-                    WHEN B.id is NOT NULL THEN B.noms_number
-                    ELSE null
-                END AS noms_number,
+                sb.crn,
+                null AS noms_number,
                 oa.id as offline_application_id, 
-                CASE
-                    WHEN B.id is NOT NULL THEN b.id
-                    ELSE sb.id
-                END AS booking_id,                
+                sb.id AS booking_id,                
                 oa.created_at 
             from offline_applications oa 
-            left join bookings b on b.offline_application_id = oa.id 
             left join cas1_space_bookings sb on sb.offline_application_id = oa.id 
-            where 
-                (b.crn = :crn
-                    or 
-                b.noms_number = :noms_number) 
-                OR 
-                (sb.crn = :crn)
+            where sb.crn = :crn
             and (
-                  (:start_date::date is null or b.created_at >= :start_date)
-              and 
-                  (:end_date::date is null or b.created_at <= :end_date)
-                ) 
-                OR (
                   (:start_date::date is null or sb.created_at >= :start_date)
               and 
                   (:end_date::date is null or sb.created_at <= :end_date)
@@ -509,51 +488,6 @@ from
           )booking_not_mades
       """.trimIndent(),
       MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
-    )
-    return toJsonString(result)
-  }
-
-  fun bedMoves(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-  ): String? {
-    var result = jdbcTemplate.queryForMap(
-      """
-       select json_agg(bed_moves) as json
-       from (
-          select
-              b.crn ,
-              b.noms_number,
-              bm.notes,
-              previous_bed."name" as previous_bed_name,
-              previous_bed.code as previous_bed_code,
-              new_bed."name" as new_bed_name,
-              new_bed.code as new_bed_code,
-              bm.created_at
-          from
-              bed_moves bm
-          inner join bookings b on
-              b.id = bm.booking_id
-          inner join beds previous_bed on 
-            bm.previous_bed_id  = previous_bed.id 
-          inner join beds new_bed on 
-            bm.new_bed_id  = new_bed.id 
-                  
-          where
-              (b.crn = :crn
-                  or b.noms_number = :noms_number )
-            and (:start_date::date is null or b.created_at >= :start_date)
-            and (:end_date::date is null or b.created_at <= :end_date)
-        ) bed_moves
-      """.trimIndent(),
-      MapSqlParameterSource().addSarParameters(
-        crn,
-        nomsNumber,
-        startDate,
-        endDate,
-      ),
     )
     return toJsonString(result)
   }

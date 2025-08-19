@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -24,7 +23,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
   private var assessment: Yielded<ApprovedPremisesAssessmentEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
-  private var booking: Yielded<BookingEntity?> = { null }
   private var spaceBookings: Yielded<MutableList<Cas1SpaceBookingEntity>> = { mutableListOf() }
   private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
   private var notes: Yielded<String?> = { null }
@@ -46,14 +44,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
 
   fun withExpectedArrival(expectedArrival: LocalDate) = apply {
     this.expectedArrival = { expectedArrival }
-  }
-
-  fun withBooking(booking: BookingEntity?) = apply {
-    this.booking = { booking }
-  }
-
-  fun withBooking(configuration: BookingEntityFactory.() -> Unit) = apply {
-    this.booking = { BookingEntityFactory().apply(configuration).produce() }
   }
 
   fun withSpaceBookings(bookings: MutableList<Cas1SpaceBookingEntity>) = apply {
@@ -112,7 +102,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an Application"),
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an Assessment"),
     createdAt = this.createdAt(),
-    booking = this.booking(),
     spaceBookings = this.spaceBookings(),
     bookingNotMades = this.bookingNotMades(),
     notes = this.notes(),
