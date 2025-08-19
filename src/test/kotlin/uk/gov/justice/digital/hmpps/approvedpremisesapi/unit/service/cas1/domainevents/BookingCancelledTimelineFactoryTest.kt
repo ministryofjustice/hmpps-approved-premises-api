@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.unit.seed.Cas1LinkedBookingToPlacementRequestSeedJobTest.Companion.bookingId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -50,6 +49,10 @@ class BookingCancelledTimelineFactoryTest {
   lateinit var service: BookingCancelledTimelineFactory
 
   val id: UUID = UUID.randomUUID()
+
+  companion object {
+    val bookingId: UUID = UUID.randomUUID()
+  }
 
   @Nested
   inner class Booking {

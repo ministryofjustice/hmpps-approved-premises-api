@@ -27,7 +27,6 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   approvedPremisesReplayDomainEvents("approved_premises_replay_domain_events"),
   approvedPremisesDuplicateApplication("approved_premises_duplicate_application"),
   approvedPremisesUpdateEventNumber("approved_premises_update_event_number"),
-  approvedPremisesLinkBookingToPlacementRequest("approved_premises_link_booking_to_placement_request"),
   approvedPremisesOutOfServiceBeds("approved_premises_out_of_service_beds"),
   approvedPremisesCruManagementAreas("approved_premises_cru_management_areas"),
   approvedPremisesUpdateSpaceBooking("approved_premises_update_space_booking"),
