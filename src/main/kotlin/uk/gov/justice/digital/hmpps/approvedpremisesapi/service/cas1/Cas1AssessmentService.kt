@@ -287,13 +287,17 @@ class Cas1AssessmentService(
     assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
     assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
     assessment.reasonForLateApplication = reasonForLateApplication
-
     assessment.document = document
     assessment.submittedAt = acceptedAt
     assessment.decision = AssessmentDecision.ACCEPTED
 
     applicationStatusService.assessmentUpdated(assessment)
+
     val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
+    val application = savedAssessment.application as ApprovedPremisesApplicationEntity
+
+    val caseSummary = getOffenderDetails(application.crn, LaoStrategy.NeverRestricted)
+      ?: throw RuntimeException("Offender details not found for CRN: ${application.crn} when creating Application Assessed Domain Event")
 
     /*
     Note - these placement requirements are required for all subsequent placement applications linked
@@ -311,11 +315,6 @@ class Cas1AssessmentService(
         notes,
       )
     }
-
-    val application = savedAssessment.application as ApprovedPremisesApplicationEntity
-
-    val caseSummary = getOffenderDetails(application.crn, LaoStrategy.NeverRestricted)
-      ?: throw RuntimeException("Offender details not found for CRN: ${application.crn} when creating Application Assessed Domain Event")
 
     cas1AssessmentDomainEventService.assessmentAccepted(
       application = application,
