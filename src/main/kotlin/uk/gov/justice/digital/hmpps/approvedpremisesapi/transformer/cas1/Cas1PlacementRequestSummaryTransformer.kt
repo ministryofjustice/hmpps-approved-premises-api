@@ -29,20 +29,6 @@ class Cas1PlacementRequestSummaryTransformer(
     firstBookingArrivalDate = jpa.getBookingArrivalDate(),
   )
 
-  fun transformPlacementRequestJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
-    requestedPlacementDuration = jpa.duration,
-    requestedPlacementArrivalDate = jpa.expectedArrival,
-    id = jpa.id,
-    person = personTransformer.transformModelToPersonApi(personInfo),
-    placementRequestStatus = getStatus(jpa),
-    isParole = jpa.isParole,
-    personTier = jpa.application.riskRatings?.tier?.value?.level,
-    applicationId = jpa.application.id,
-    applicationSubmittedDate = jpa.application.submittedAt?.toLocalDate(),
-    firstBookingPremisesName = jpa.booking?.premises?.name,
-    firstBookingArrivalDate = jpa.booking?.arrivalDate,
-  )
-
   fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
     if (placementRequest.hasActiveBooking()) {
       return PlacementRequestStatus.matched
