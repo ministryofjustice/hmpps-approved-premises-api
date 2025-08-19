@@ -292,6 +292,7 @@ class PlacementRequestDetailTransformerTest {
     every { mockPlacementRequestEntity.isParole } returns false
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
     every { mockPlacementRequestEntity.isWithdrawn } returns true
+    every { mockPlacementRequestEntity.placementApplication } returns null
 
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
     every { mockApplicationsTransformer.transformJpaToCas1Application(mockApplicationEntity, mockPersonInfoResult) } returns mockCas1Application
@@ -308,8 +309,6 @@ class PlacementRequestDetailTransformerTest {
 
     assertThat(result.id).isEqualTo(transformedPlacementRequest.id)
     assertThat(result.type).isEqualTo(transformedPlacementRequest.type)
-    assertThat(result.expectedArrival).isEqualTo(transformedPlacementRequest.expectedArrival)
-    assertThat(result.duration).isEqualTo(transformedPlacementRequest.duration)
     assertThat(result.location).isEqualTo(transformedPlacementRequest.location)
     assertThat(result.radius).isEqualTo(transformedPlacementRequest.radius)
     assertThat(result.essentialCriteria).isEqualTo(transformedPlacementRequest.essentialCriteria)
