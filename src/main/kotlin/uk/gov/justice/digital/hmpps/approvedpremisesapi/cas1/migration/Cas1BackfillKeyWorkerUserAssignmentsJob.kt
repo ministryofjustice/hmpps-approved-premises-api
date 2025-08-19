@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration
 
+import jakarta.persistence.QueryHint
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.jpa.repository.QueryHints
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -27,6 +29,7 @@ class Cas1BackfillKeyWorkerUserAssignmentsJob(
 
 @Repository
 interface Cas1BackfillKeyWorkerUserAssignmentsJobRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
+  @QueryHints(QueryHint(name = "javax.persistence.query.timeout", value = "240000"))
   @Modifying
   @Query(
     """
@@ -42,6 +45,7 @@ interface Cas1BackfillKeyWorkerUserAssignmentsJobRepository : JpaRepository<Cas1
   )
   fun addMissingKeyWorkerUserIds(): Int
 
+  @QueryHints(QueryHint(name = "javax.persistence.query.timeout", value = "240000"))
   @Modifying
   @Query(
     """
