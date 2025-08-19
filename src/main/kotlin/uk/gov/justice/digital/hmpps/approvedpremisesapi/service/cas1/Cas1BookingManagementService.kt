@@ -40,6 +40,7 @@ class Cas1BookingManagementService(
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val lockableCas1SpaceBookingEntityRepository: LockableCas1SpaceBookingEntityRepository,
   private val userService: UserService,
+  private val cas1KeyWorkerService: Cas1KeyWorkerService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val springEventPublisher: SpringEventPublisher,
 ) {
@@ -198,7 +199,7 @@ class Cas1BookingManagementService(
     }
 
     val staffCodeAndUser = if (keyWorker.staffCode != null) {
-      val user = userService.findByDeliusStaffCode(keyWorker.staffCode)
+      val user = cas1KeyWorkerService.findByDeliusStaffCode(keyWorker.staffCode)
 
       if (user == null) {
         log.warn("Could not find user for staffCode ${keyWorker.staffCode} when assigning keyworker")

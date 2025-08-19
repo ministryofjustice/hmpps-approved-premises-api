@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1KeyWorkerService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
@@ -86,6 +87,9 @@ class Cas1BookingManagementServiceTest {
 
   @MockK
   lateinit var userService: UserService
+
+  @MockK
+  lateinit var cas1KeyWorkerService: Cas1KeyWorkerService
 
   @MockK
   lateinit var cas1ChangeRequestService: Cas1ChangeRequestService
@@ -1136,7 +1140,7 @@ class Cas1BookingManagementServiceTest {
 
     @Test
     fun `Returns validation error if no staff record exists with the given staff code, when staff code provided directly`() {
-      every { userService.findByDeliusStaffCode("StaffCode1") } returns null
+      every { cas1KeyWorkerService.findByDeliusStaffCode("StaffCode1") } returns null
       every {
         staffMemberService.getStaffMemberByCode("StaffCode1")
       } returns CasResult.NotFound("staff", "qcode")
@@ -1204,7 +1208,7 @@ class Cas1BookingManagementServiceTest {
 
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(any(), any(), any(), any()) } returns Unit
-      every { userService.findByDeliusStaffCode("StaffCode1") } returns null
+      every { cas1KeyWorkerService.findByDeliusStaffCode("StaffCode1") } returns null
 
       val staffDetail = StaffDetailFactory.staffDetail(
         code = "StaffCode1",
@@ -1249,7 +1253,7 @@ class Cas1BookingManagementServiceTest {
       every { cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(any(), any(), any(), any()) } returns Unit
 
       val user = UserEntityFactory().withDefaults().withDeliusStaffCode("StaffCode1").produce()
-      every { userService.findByDeliusStaffCode("StaffCode1") } returns user
+      every { cas1KeyWorkerService.findByDeliusStaffCode("StaffCode1") } returns user
 
       val staffDetail = StaffDetailFactory.staffDetail(
         code = "StaffCode1",
