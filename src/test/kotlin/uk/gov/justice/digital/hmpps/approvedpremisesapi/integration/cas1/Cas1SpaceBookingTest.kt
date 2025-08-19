@@ -697,9 +697,9 @@ class Cas1SpaceBookingTest {
       val keyWorkerAllocation = bookingSummary.keyWorkerAllocation!!
       assertThat(keyWorkerAllocation.keyWorker.name).isEqualTo("Kathy Keyworker")
       assertThat(keyWorkerAllocation.keyWorker.code).isEqualTo("kathyk")
-      assertThat(keyWorkerAllocation.keyWorkerUser!!.id).isEqualTo(currentSpaceBooking2OfflineApplicationKeyWorker.id)
-      assertThat(keyWorkerAllocation.keyWorkerUser!!.name).isEqualTo("Kathy Keyworker")
-      assertThat(keyWorkerAllocation.keyWorkerUser!!.emailAddress).isEqualTo(currentSpaceBooking2OfflineApplicationKeyWorker.email)
+      assertThat(keyWorkerAllocation.userId).isEqualTo(currentSpaceBooking2OfflineApplicationKeyWorker.id)
+      assertThat(keyWorkerAllocation.name).isEqualTo("Kathy Keyworker")
+      assertThat(keyWorkerAllocation.emailAddress).isEqualTo(currentSpaceBooking2OfflineApplicationKeyWorker.email)
     }
 
     @Test

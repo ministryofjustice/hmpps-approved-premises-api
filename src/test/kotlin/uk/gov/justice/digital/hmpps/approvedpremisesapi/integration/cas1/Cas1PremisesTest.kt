@@ -1304,9 +1304,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
       val bookingSummary1KeyWorkerAllocation = bookingSummary1.keyWorkerAllocation!!
       assertThat(bookingSummary1KeyWorkerAllocation.keyWorker.name).isEqualTo("key worker 1 name")
       assertThat(bookingSummary1KeyWorkerAllocation.keyWorker.code).isEqualTo("key worker 1 code")
-      assertThat(bookingSummary1KeyWorkerAllocation.keyWorkerUser!!.id).isEqualTo(spaceBookingOfflineApplicationKeyWorker.id)
-      assertThat(bookingSummary1KeyWorkerAllocation.keyWorkerUser!!.name).isEqualTo("key worker 1 name")
-      assertThat(bookingSummary1KeyWorkerAllocation.keyWorkerUser!!.emailAddress).isEqualTo(spaceBookingOfflineApplicationKeyWorker.email)
+      assertThat(bookingSummary1KeyWorkerAllocation.userId).isEqualTo(spaceBookingOfflineApplicationKeyWorker.id)
+      assertThat(bookingSummary1KeyWorkerAllocation.name).isEqualTo("key worker 1 name")
+      assertThat(bookingSummary1KeyWorkerAllocation.emailAddress).isEqualTo(spaceBookingOfflineApplicationKeyWorker.email)
 
       val offender1 = bookingSummary1.person
       assertThat(offender1.crn).isEqualTo(offenderOffline.crn)
