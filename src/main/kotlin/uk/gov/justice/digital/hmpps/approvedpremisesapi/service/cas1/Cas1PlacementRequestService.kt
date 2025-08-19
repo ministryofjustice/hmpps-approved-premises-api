@@ -47,7 +47,6 @@ class Cas1PlacementRequestService(
   private val cancellationRepository: CancellationRepository,
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
-  private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val offenderService: OffenderService,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
@@ -249,7 +248,6 @@ class Cas1PlacementRequestService(
     }
 
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, withdrawalContext.withdrawalTriggeredBy)
-    cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }

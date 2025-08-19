@@ -212,8 +212,20 @@ class Cas1DomainEventDescriber(
     val event = domainEventService.getMatchRequestWithdrawnEvent(domainEventSummary.id())
 
     /**
-     * See documentation in [Cas1PlacementRequestDomainEventService] for why this is reported as a request for placement
-     **/
+     * In prior versions of the application if a request for placement was made
+     * on the original application no placement_application was created or
+     * linked to the relates placement_request.
+     *
+     * To allow us to report on that request for placement being withdrawn,
+     * we tied the withdrawal events to the placement_request itself, instead
+     * of a placement_application (Which didn't exist)
+     *
+     * This behaviour no longer exists because a placement application will always
+     * exist to tie the withdrawal to.
+     *
+     * Regardless, we still need to show the description for these legacy
+     * withdrawal events
+     * */
     val description = event.describe { data ->
       val dates = data.eventDetails.datePeriod
       val reasonDescription = data.eventDetails.withdrawalReason.javaConstantNameToSentence()

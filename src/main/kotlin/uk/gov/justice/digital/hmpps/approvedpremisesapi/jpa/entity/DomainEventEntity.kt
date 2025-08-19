@@ -417,6 +417,12 @@ enum class DomainEventType(
       apiType = Cas1EventType.placementApplicationAllocated,
     ),
   ),
+
+  @Deprecated(
+    """
+    Domain events of this type should no longer be created. Instead APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN is used to capture this event
+  """,
+  )
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.matchRequestWithdrawn.value,
