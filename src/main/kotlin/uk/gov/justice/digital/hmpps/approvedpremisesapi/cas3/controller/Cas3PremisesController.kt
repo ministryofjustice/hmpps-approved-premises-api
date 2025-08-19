@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspacesReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesBedspaceTotals
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
@@ -145,6 +146,20 @@ class Cas3PremisesController(
     val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises))
 
     return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory))
+  }
+
+  @GetMapping("/premises/{premisesId}/can-archive")
+  fun canArchivePremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3BedspacesReference> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = cas3PremisesService.canArchivePremisesInFuture(premisesId)
+
+    return ResponseEntity.ok(result)
   }
 
   @GetMapping("/premises/{premisesId}/bedspace-totals")
