@@ -18,8 +18,10 @@ class Cas1BackfillKeyWorkerUserAssignmentsJob(
   override val shouldRunInTransaction = true
   override fun process(pageSize: Int) {
     val updateCount = repository.addMissingKeyWorkerUserIds()
+    migrationLogger.info("Have updated $updateCount space bookings using direct mapping")
 
-    migrationLogger.info("Have updated $updateCount space bookings")
+    val updateCountLookup = repository.addMissingKeyWorkerUserIdsUsingLookup()
+    migrationLogger.info("Have updated $updateCountLookup space bookings using lookup")
   }
 }
 
@@ -35,4 +37,20 @@ interface Cas1BackfillKeyWorkerUserAssignmentsJobRepository : JpaRepository<Cas1
     nativeQuery = true,
   )
   fun addMissingKeyWorkerUserIds(): Int
+
+  @Modifying
+  @Query(
+    """
+    UPDATE cas1_space_bookings b
+    SET key_worker_user_id = (
+      SELECT id FROM users u 
+      inner join cas1_key_worker_staff_code_lookup lookup ON 
+        UPPER(lookup.staff_code_1) = UPPER(b.key_worker_staff_code) AND 
+        UPPER(u.delius_staff_code) = UPPER(lookup.staff_code_2)
+    )
+    WHERE b.key_worker_staff_code IS NOT NULL AND b.key_worker_user_id IS NULL
+  """,
+    nativeQuery = true,
+  )
+  fun addMissingKeyWorkerUserIdsUsingLookup(): Int
 }

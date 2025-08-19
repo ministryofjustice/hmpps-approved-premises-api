@@ -9,11 +9,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1KeyWorkerStaffCodeLookupEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1KeyWorkerStaffCodeLookupRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 
 class Cas1BackfillKeyWorkerUserAssignmentsJobTest : IntegrationTestBase() {
   @Autowired
   lateinit var migrationJobService: MigrationJobService
+
+  @Autowired
+  lateinit var cas1KeyWorkerStaffCodeLookupRepository: Cas1KeyWorkerStaffCodeLookupRepository
 
   @Test
   fun `backfill applications correctly`() {
@@ -37,6 +42,15 @@ class Cas1BackfillKeyWorkerUserAssignmentsJobTest : IntegrationTestBase() {
       keyWorkerUser = keyWorker4User,
     )
 
+    val (keyWorker5User, _) = givenAUser(staffDetail = StaffDetailFactory.staffDetail(code = "NEWCODE4"))
+    cas1KeyWorkerStaffCodeLookupRepository.save(
+      Cas1KeyWorkerStaffCodeLookupEntity("OldCode4", "NeWCODE4"),
+    )
+    val booking5KeyWorkerUsingOldCode = givenACas1SpaceBooking(
+      keyWorkerStaffCode = "oldcode4",
+      keyWorkerUser = keyWorker5User,
+    )
+
     migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillKeyWorkerUserAssignments)
 
     assertThat(
@@ -54,5 +68,9 @@ class Cas1BackfillKeyWorkerUserAssignmentsJobTest : IntegrationTestBase() {
     assertThat(
       cas1SpaceBookingRepository.findByIdOrNull(booking4KeyWorkerUserAlreadySet.id)!!.keyWorkerUser!!.id,
     ).isEqualTo(keyWorker4User.id)
+
+    assertThat(
+      cas1SpaceBookingRepository.findByIdOrNull(booking5KeyWorkerUsingOldCode.id)!!.keyWorkerUser!!.id,
+    ).isEqualTo(keyWorker5User.id)
   }
 }

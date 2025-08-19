@@ -71,6 +71,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1KeyWorkerStaffCodeLookupEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1KeyWorkerStaffCodeLookupRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -1753,6 +1755,9 @@ class Cas1SpaceBookingTest {
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var keyWorker: UserEntity
 
+    @Autowired
+    lateinit var cas1KeyWorkerStaffCodeLookupRepository: Cas1KeyWorkerStaffCodeLookupRepository
+
     @BeforeEach
     fun setupTestData() {
       region = givenAProbationRegion()
@@ -1802,7 +1807,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording key worker using staff code returns OK and emits domain event`() {
+    fun `Recording key worker using staff code that exists in users table returns OK and emits domain event`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
       val (keyWorkerUser, _) = givenAUser(
         roles = listOf(CAS1_FUTURE_MANAGER),
@@ -1835,6 +1840,48 @@ class Cas1SpaceBookingTest {
       assertThat(updatedSpaceBooking.keyWorkerUser?.id).isEqualTo(keyWorkerUser.id)
       assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorkerStaffDetail.name.forenames()} ${keyWorkerStaffDetail.name.surname}")
       assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("CodeXYZ")
+      assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
+    }
+
+    @Test
+    fun `Recording key worker using staff code that is in key worker lookup table returns OK and emits domain event`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val keyWorkerStaffDetail = StaffDetailFactory.staffDetail(code = "OldCode")
+
+      cas1KeyWorkerStaffCodeLookupRepository.save(
+        Cas1KeyWorkerStaffCodeLookupEntity("OldCode", "NewCode"),
+      )
+
+      apDeliusContextMockSuccessfulStaffDetailByCodeCall(keyWorkerStaffDetail)
+
+      val (keyWorkerUser, _) = givenAUser(
+        roles = listOf(CAS1_FUTURE_MANAGER),
+        staffDetail = StaffDetailFactory.staffDetail(code = "NewCode"),
+      )
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/keyworker")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1AssignKeyWorker(
+            staffCode = "OldCode",
+            userId = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
+      )
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+      assertThat(updatedSpaceBooking.keyWorkerUser?.id).isEqualTo(keyWorkerUser.id)
+      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorkerStaffDetail.name.forenames()} ${keyWorkerStaffDetail.name.surname}")
+      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("OldCode")
       assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
     }
 
