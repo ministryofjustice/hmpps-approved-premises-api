@@ -259,6 +259,11 @@ data class PlacementRequestEntity(
   fun isActive() = !isWithdrawn
 
   /**
+   * Note - we're in the process of fixing the following issue and are now created
+   * placement_application[automatic=true] on application submission for the requested
+   * dates (if any). We still need to backfill placement_application[automatic=true] for
+   * existing entries, the following documentation holds for these entities
+   *
    * In the model we don't currently have an entity representing the placement request
    * dates specified when the application was originally created. Instead, this is first
    * realised as an automatically created [PlacementRequestEntity] when the [AssessmentEntity]

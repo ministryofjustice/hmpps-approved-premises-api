@@ -33,7 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_YEAR
@@ -329,7 +329,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         matcherApAreaName = "MATCHER2CRU",
       )
 
-      withdrawPlacementRequest(applicationId = application.id)
+      withdrawPlacementApplication(
+        placementApplicationId = getPlacementApplication(application).id,
+      )
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
@@ -785,16 +787,14 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     return latestPlacementApplicationId
   }
 
-  private fun withdrawPlacementRequest(
-    applicationId: UUID,
+  private fun withdrawPlacementApplication(
+    placementApplicationId: UUID,
   ) {
-    val placementRequestId = getApplication(applicationId).placementRequests.first { it.isForApplicationsArrivalDate() }.id
-
-    cas1SimpleApiClient.placementRequestWithdraw(
+    cas1SimpleApiClient.placementApplicationWithdraw(
       this,
-      placementRequestId,
-      WithdrawPlacementRequest(
-        WithdrawPlacementRequestReason.duplicatePlacementRequest,
+      placementApplicationId,
+      WithdrawPlacementApplication(
+        WithdrawPlacementRequestReason.noCapacityDueToLostBed,
       ),
     )
   }
@@ -802,7 +802,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   private fun cancelBooking(
     applicationId: UUID,
   ) {
-    val placementRequest = getApplication(applicationId).placementRequests.first { it.isForApplicationsArrivalDate() }
+    val placementRequest = getApplication(applicationId).placementRequests.first()
     val booking = placementRequest.spaceBookings.first { it.isActive() }
 
     cas1SimpleApiClient.spaceBookingCancel(

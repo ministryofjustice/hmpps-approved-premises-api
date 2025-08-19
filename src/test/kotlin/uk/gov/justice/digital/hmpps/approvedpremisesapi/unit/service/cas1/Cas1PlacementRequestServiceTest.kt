@@ -54,7 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
@@ -109,11 +108,9 @@ class Cas1PlacementRequestServiceTest {
   @Nested
   inner class CreatePlacementRequest {
 
-    @ParameterizedTest
-    @EnumSource(PlacementRequestSource::class)
-    fun `createPlacementRequest creates a placement request with the correct deadline`(source: PlacementRequestSource) {
+    @Test
+    fun `createPlacementRequest creates a placement request with the correct deadline`() {
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(assigneeUser)
@@ -135,7 +132,6 @@ class Cas1PlacementRequestServiceTest {
       )
 
       val placementRequest = placementRequestService.createPlacementRequest(
-        source,
         placementRequirements,
         placementDates,
         "Some notes",
@@ -149,8 +145,6 @@ class Cas1PlacementRequestServiceTest {
       assertThat(placementRequest.assessment.id).isEqualTo(assessment.id)
       assertThat(placementRequest.application.id).isEqualTo(application.id)
       assertThat(placementRequest.isParole).isFalse()
-
-      verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
     }
   }
 

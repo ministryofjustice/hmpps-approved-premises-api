@@ -112,6 +112,32 @@ class Cas1SimpleApiClient {
       .isOk
   }
 
+  /**
+   * This uses the /assessments/{id}/acceptance endpoint
+   * instead of /cas1/assessments/{id}/acceptance. The
+   * former endpoint doesn't create a placement_applications
+   * entry for initial requests for placements, providing us
+   * with a way to test reporting on these legacy placements
+   *
+   * Once we've migrated these existing entries to also
+   * have an entry in placement_applications, we can remove
+   * this function
+   */
+  fun assessmentAcceptLegacyBehaviour(
+    integrationTestBase: IntegrationTestBase,
+    assessmentId: UUID,
+    assessorJwt: String,
+    body: AssessmentAcceptance,
+  ) {
+    integrationTestBase.webTestClient.post()
+      .uri("/assessments/$assessmentId/acceptance")
+      .header("Authorization", "Bearer $assessorJwt")
+      .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
   fun assessmentReject(
     integrationTestBase: IntegrationTestBase,
     assessmentId: UUID,

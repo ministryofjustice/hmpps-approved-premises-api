@@ -7,11 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Clock
@@ -26,65 +22,12 @@ class Cas1PlacementRequestDomainEventService(
   val clock: Clock,
 ) {
 
-  fun placementRequestCreated(
-    placementRequest: PlacementRequestEntity,
-    source: PlacementRequestSource,
-  ) {
-    /**
-     * We only raise domain events for the match request [PlacementRequestEntity] that was created
-     * automatically when the application was assessed (i.e. the one created to fulfill the arrival
-     * date specified on the application).
-     *
-     * For more information on why we do this, see [PlacementRequestEntity.isForApplicationsArrivalDate]
-     *
-     */
-    if (source != PlacementRequestSource.ASSESSMENT_OF_APPLICATION) {
-      return
-    }
-
-    val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = Instant.now()
-    val application = placementRequest.application
-
-    val eventDetails = RequestForPlacementCreated(
-      applicationId = application.id,
-      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
-      requestForPlacementId = placementRequest.id,
-      personReference = PersonReference(
-        crn = application.crn,
-        noms = application.nomsNumber ?: "Unknown NOMS Number",
-      ),
-      deliusEventNumber = application.eventNumber,
-      createdAt = eventOccurredAt,
-      createdBy = null,
-      expectedArrival = placementRequest.expectedArrival,
-      duration = placementRequest.duration,
-      requestForPlacementType = RequestForPlacementType.initial,
-    )
-
-    domainEventService.saveRequestForPlacementCreatedEvent(
-      SaveCas1DomainEvent(
-        id = domainEventId,
-        applicationId = application.id,
-        crn = application.crn,
-        nomsNumber = application.nomsNumber,
-        occurredAt = eventOccurredAt,
-        triggerSource = TriggerSourceType.SYSTEM,
-        data = RequestForPlacementCreatedEnvelope(
-          id = domainEventId,
-          timestamp = eventOccurredAt,
-          eventType = EventType.requestForPlacementCreated,
-          eventDetails = eventDetails,
-        ),
-      ),
-    )
-  }
-
   fun placementRequestWithdrawn(placementRequest: PlacementRequestEntity, withdrawalContext: WithdrawalContext) {
     /**
      * We only raise domain events for the match request [PlacementRequestEntity] that was created
      * automatically when the application was assessed (i.e. the one created to fulfill the arrival
-     * date specified on the application).
+     * date specified on the application), if there is no corresponding
+     * placement_application[automatic=true] (in which case a domain event is raised for that instead)
      *
      * For more information on why we do this, see [PlacementRequestEntity.isForApplicationsArrivalDate]
      *

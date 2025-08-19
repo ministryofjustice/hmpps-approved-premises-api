@@ -1958,11 +1958,6 @@ class AssessmentTest : IntegrationTestBase() {
             DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
           )
 
-          domainEventAsserter.assertDomainEventOfTypeStored(
-            application.id,
-            DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-          )
-
           val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
 
           assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)

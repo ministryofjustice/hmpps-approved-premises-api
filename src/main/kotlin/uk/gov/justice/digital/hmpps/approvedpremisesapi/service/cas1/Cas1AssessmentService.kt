@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -57,6 +58,8 @@ class Cas1AssessmentService(
   private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val taskDeadlineService: Cas1TaskDeadlineService,
   private val userAllocator: UserAllocator,
+  private val placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository,
+  private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val clock: Clock,
 ) {
 
@@ -302,6 +305,7 @@ class Cas1AssessmentService(
 
     if (includesRequestForPlacement) {
       createRequestForPlacement(
+        assessment,
         placementRequirementsResult,
         placementDates,
         notes,
@@ -324,6 +328,10 @@ class Cas1AssessmentService(
     cas1AssessmentEmailService.assessmentAccepted(application)
 
     if (includesRequestForPlacement) {
+      // it may be worth moving this logic into cas1PlacementApplicationService.createAutomaticPlacementApplication
+      // so all emails related to requests for placements are managed in cas1PlacementApplicationService
+      // before doing this carefully review which emails are sent for this path and the
+      // cas1PlacementApplicationService.recordDecision (accepted) path
       cas1PlacementRequestEmailService.placementRequestSubmitted(application)
     }
 
@@ -331,17 +339,37 @@ class Cas1AssessmentService(
   }
 
   private fun createRequestForPlacement(
+    assessment: ApprovedPremisesAssessmentEntity,
     placementRequirements: PlacementRequirementsEntity,
     placementDates: PlacementDates,
     notes: String?,
   ) {
+    val application = assessment.application
+
+    val placementApplicationPlaceholder = placementApplicationPlaceholderRepository.findByApplication(application)
+      ?: error("Can't find placement application placeholder entry for application ${application.id}")
+    placementApplicationPlaceholder.archived = true
+    placementApplicationPlaceholderRepository.save(placementApplicationPlaceholder)
+
+    val placementApplicationAutomatic = cas1PlacementApplicationService.createAutomaticPlacementApplication(
+      id = placementApplicationPlaceholder.id,
+      assessment = assessment,
+      authorisedExpectedArrival = placementDates.expectedArrival,
+      authorisedDurationDays = placementDates.duration,
+    )
+
+    // This logic should probably be moved into
+    // cas1PlacementApplicationService.createAutomaticPlacementApplication,
+    // (called above)
+    //
+    // That ensures that the Cas1PlacementApplicationService manages all
+    // creations of placement requests from placement applications
     placementRequestService.createPlacementRequest(
-      PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
       placementRequirements,
       placementDates,
       notes,
       false,
-      null,
+      placementApplicationAutomatic,
     )
   }
 

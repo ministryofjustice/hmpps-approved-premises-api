@@ -606,7 +606,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       NewPlacementApplication(application.id),
     )
 
-    val placementApplicationId = getPlacementApplication(application).id
+    val placementApplicationId = getNonAutomaticPlacementApplication(application).id
 
     cas1SimpleApiClient.placementApplicationUpdate(
       this,
@@ -634,13 +634,13 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     cas1SimpleApiClient.placementApplicationReallocate(
       integrationTestBase = this,
-      placementApplicationId = getPlacementApplication(application).id,
+      placementApplicationId = getNonAutomaticPlacementApplication(application).id,
       NewReallocation(userId = assessor.id),
     )
 
     cas1SimpleApiClient.placementApplicationDecision(
       integrationTestBase = this,
-      placementApplicationId = getPlacementApplication(application).id,
+      placementApplicationId = getNonAutomaticPlacementApplication(application).id,
       assessorJwt = assessorJwt,
       body = PlacementApplicationDecisionEnvelope(
         decision = PlacementApplicationDecision.accepted,
@@ -764,7 +764,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getPlacementApplications(application: ApplicationEntity) = placementApplicationRepository.findByApplication(application).filter { it.reallocatedAt == null }
 
-  private fun getPlacementApplication(application: ApplicationEntity) = getPlacementApplications(application).first()
+  private fun getNonAutomaticPlacementApplication(application: ApplicationEntity) = getPlacementApplications(application).first { !it.automatic }
 
   private fun getReportUrl(reportName: Cas1ReportName, startDate: LocalDate, endDate: LocalDate) = "/cas1/reports/${reportName.value}?startDate=$startDate&endDate=$endDate"
 }

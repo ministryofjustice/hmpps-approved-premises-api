@@ -14,6 +14,15 @@ class Cas1PlacementRequestEmailService(
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
 ) {
 
+  /**
+   * This is only sent if the placement request relates to the 'initial'
+   * request for placement. Because we now create a placement application
+   * 'automatic' for these requests, we should delegate sending this
+   * email to the `PlacementApplicationService' (which _does_ send this
+   * email for other types of placement applications on submission). Note
+   * that for those other types the PLACEMENT_REQUEST_SUBMITTED_V2 template
+   * is used.
+   */
   fun placementRequestSubmitted(
     application: ApprovedPremisesApplicationEntity,
   ) {
