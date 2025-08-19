@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1KeyWorkerStaffCodeLookupEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1KeyWorkerStaffCodeLookupRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
@@ -24,31 +25,54 @@ class Cas1BackfillKeyWorkerUserAssignmentsJobTest : IntegrationTestBase() {
   fun `backfill applications correctly`() {
     val booking1NoKeyWorker = givenACas1SpaceBooking()
 
-    val (keyWorker2User, _) = givenAUser(staffDetail = StaffDetailFactory.staffDetail(code = "staffCode1"))
+    // not future manager, will be ignored
+    givenAUser(
+      staffDetail = StaffDetailFactory.staffDetail(code = "staffCode1"),
+      roles = listOf(),
+    )
+    val (keyWorker2UserFutureManager, _) = givenAUser(
+      staffDetail = StaffDetailFactory.staffDetail(code = "staffCode1"),
+      roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
+    )
     val booking2KeyWorkerStaffCodeSet = givenACas1SpaceBooking(
-      keyWorkerStaffCode = keyWorker2User.deliusStaffCode.uppercase(),
+      keyWorkerStaffCode = "STAFFCODE1",
       keyWorkerUser = null,
     )
 
-    val (keyWorker3User, _) = givenAUser(staffDetail = StaffDetailFactory.staffDetail(code = "STAFFCODE2"))
+    val (keyWorker3User, _) = givenAUser(
+      staffDetail = StaffDetailFactory.staffDetail(code = "STAFFCODE2"),
+      roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
+    )
     val booking3KeyWorkerStaffCodeSet = givenACas1SpaceBooking(
-      keyWorkerStaffCode = keyWorker3User.deliusStaffCode.uppercase(),
+      keyWorkerStaffCode = "STAFFCODE2",
       keyWorkerUser = null,
     )
 
-    val (keyWorker4User, _) = givenAUser(staffDetail = StaffDetailFactory.staffDetail(code = "staffcode3"))
+    val (keyWorker4User, _) = givenAUser(
+      staffDetail = StaffDetailFactory.staffDetail(code = "staffcode3"),
+
+      roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
+    )
     val booking4KeyWorkerUserAlreadySet = givenACas1SpaceBooking(
-      keyWorkerStaffCode = keyWorker4User.deliusStaffCode,
+      keyWorkerStaffCode = "staffcode3",
       keyWorkerUser = keyWorker4User,
     )
 
-    val (keyWorker5User, _) = givenAUser(staffDetail = StaffDetailFactory.staffDetail(code = "NEWCODE4"))
+    // not future manager, will be ignored
+    givenAUser(
+      staffDetail = StaffDetailFactory.staffDetail(code = "NEWCODE4"),
+      roles = listOf(),
+    )
+    val (keyWorker5UserFutureManager, _) = givenAUser(
+      staffDetail = StaffDetailFactory.staffDetail(code = "NEWCODE4"),
+      roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
+    )
     cas1KeyWorkerStaffCodeLookupRepository.save(
       Cas1KeyWorkerStaffCodeLookupEntity("OldCode4", "NeWCODE4"),
     )
     val booking5KeyWorkerUsingOldCode = givenACas1SpaceBooking(
       keyWorkerStaffCode = "oldcode4",
-      keyWorkerUser = keyWorker5User,
+      keyWorkerUser = keyWorker5UserFutureManager,
     )
 
     migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillKeyWorkerUserAssignments)
@@ -59,7 +83,7 @@ class Cas1BackfillKeyWorkerUserAssignmentsJobTest : IntegrationTestBase() {
 
     assertThat(
       cas1SpaceBookingRepository.findByIdOrNull(booking2KeyWorkerStaffCodeSet.id)!!.keyWorkerUser!!.id,
-    ).isEqualTo(keyWorker2User.id)
+    ).isEqualTo(keyWorker2UserFutureManager.id)
 
     assertThat(
       cas1SpaceBookingRepository.findByIdOrNull(booking3KeyWorkerStaffCodeSet.id)!!.keyWorkerUser!!.id,
@@ -71,6 +95,6 @@ class Cas1BackfillKeyWorkerUserAssignmentsJobTest : IntegrationTestBase() {
 
     assertThat(
       cas1SpaceBookingRepository.findByIdOrNull(booking5KeyWorkerUsingOldCode.id)!!.keyWorkerUser!!.id,
-    ).isEqualTo(keyWorker5User.id)
+    ).isEqualTo(keyWorker5UserFutureManager.id)
   }
 }
