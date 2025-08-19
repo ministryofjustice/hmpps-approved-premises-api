@@ -59,7 +59,6 @@ import kotlin.collections.toSet
 @Service
 class Cas1SpaceBookingService(
   private val cas1PremisesService: Cas1PremisesService,
-  private val placementRequestService: Cas1PlacementRequestService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
@@ -101,13 +100,6 @@ class Cas1SpaceBookingService(
     ) {
       is CasResult.Error -> return result.reviseType()
       is Success -> result.value
-    }
-
-    val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
-    placementRequest!!.booking?.let {
-      if (it.isActive()) {
-        return it.id hasConflictError "A legacy Booking already exists for this premises and placement request"
-      }
     }
 
     if (cas1SpaceBookingRepository.findByPlacementRequestId(placementRequestId).any { it.isActive() }) {

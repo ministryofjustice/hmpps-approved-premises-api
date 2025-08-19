@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
@@ -76,7 +75,6 @@ import java.util.UUID
 
 class Cas1SpaceBookingServiceTest {
   private val cas1PremisesService = mockk<Cas1PremisesService>()
-  private val placementRequestService = mockk<Cas1PlacementRequestService>()
   private val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val cas1BookingEmailService = mockk<Cas1BookingEmailService>()
@@ -94,7 +92,6 @@ class Cas1SpaceBookingServiceTest {
 
   private val service = Cas1SpaceBookingService(
     cas1PremisesService,
-    placementRequestService,
     spaceBookingRepository,
     cas1BookingDomainEventService,
     cas1BookingEmailService,
@@ -164,7 +161,6 @@ class Cas1SpaceBookingServiceTest {
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
       every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(validatedCreateBooking)
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
 
       val result = service.createNewBooking(
@@ -181,38 +177,6 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result.conflictingEntityId).isEqualTo(placementRequest.id)
       assertThat(result.message).contains("A Space Booking already exists")
-    }
-
-    @Test
-    fun `Returns conflict error if a legacy booking already exists for the same premises and placement request`() {
-      val legacyBooking = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      val placementRequestWithLegacyBooking = placementRequest.copy(
-        booking = legacyBooking,
-      )
-
-      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
-      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(validatedCreateBooking)
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequestWithLegacyBooking
-      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
-        LockablePlacementRequestEntity(placementRequest.id)
-
-      val result = service.createNewBooking(
-        premisesId = premises.id,
-        placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
-        createdBy = user,
-        characteristics = emptyList(),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(legacyBooking.id)
-      assertThat(result.message).contains("A legacy Booking already exists")
     }
 
     @Test
@@ -234,7 +198,6 @@ class Cas1SpaceBookingServiceTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
@@ -309,7 +272,6 @@ class Cas1SpaceBookingServiceTest {
         .withPlacementApplication(placementApplication)
         .produce()
 
-      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
@@ -1287,11 +1249,6 @@ class Cas1SpaceBookingServiceTest {
     private var existingChangeRequest = Cas1ChangeRequestEntityFactory()
       .withSpaceBooking(existingSpaceBooking)
       .produce()
-
-    @BeforeEach
-    fun commonMocks() {
-      every { placementRequestService.getPlacementRequestOrNull(any()) } returns existingSpaceBooking.placementRequest
-    }
 
     @Test
     fun `should return validation error if arrivalDate is not in the future`() {
