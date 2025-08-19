@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
@@ -19,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -45,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
@@ -62,7 +59,6 @@ class Cas1PlacementRequestServiceTest {
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
   private val cancellationRepository = mockk<CancellationRepository>()
-  private val userAccessService = mockk<Cas1UserAccessService>()
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
@@ -75,7 +71,6 @@ class Cas1PlacementRequestServiceTest {
     bookingNotMadeRepository,
     placementRequirementsRepository,
     cancellationRepository,
-    userAccessService,
     applicationService,
     cas1PlacementRequestEmailService,
     cas1PlacementRequestDomainEventService,
@@ -294,9 +289,7 @@ class Cas1PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       placementRequest.isWithdrawn = true
 
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
-
-      val result = placementRequestService.getWithdrawableState(placementRequest, user)
+      val result = placementRequestService.getWithdrawableState(placementRequest)
 
       assertThat(result.withdrawn).isTrue()
       assertThat(result.withdrawable).isFalse()
@@ -307,42 +300,19 @@ class Cas1PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       placementRequest.isWithdrawn = false
 
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
-
-      val result = placementRequestService.getWithdrawableState(placementRequest, user)
+      val result = placementRequestService.getWithdrawableState(placementRequest)
 
       assertThat(result.withdrawn).isFalse()
       assertThat(result.withdrawable).isTrue()
     }
 
-    @ParameterizedTest
-    @CsvSource("true", "false")
-    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
+    @Test
+    fun `getWithdrawableState userMayDirectlyWithdraw is always false`() {
       val placementRequest = createValidPlacementRequest(application, user)
 
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns canWithdraw
+      val result = placementRequestService.getWithdrawableState(placementRequest)
 
-      val result = placementRequestService.getWithdrawableState(placementRequest, user)
-
-      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
-    }
-
-    @Test
-    fun `getWithdrawableState userMayDirectlyWithdraw returns false if not for original app dates`() {
-      val placementRequest = createValidPlacementRequest(
-        application,
-        user,
-        placementApplication = PlacementApplicationEntityFactory()
-          .withCreatedByUser(user)
-          .withApplication(application)
-          .produce(),
-      )
-
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
-
-      val result = placementRequestService.getWithdrawableState(placementRequest, user)
-
-      assertThat(result.userMayDirectlyWithdraw).isFalse()
+      assertThat(result.userMayDirectlyWithdraw).isFalse
     }
   }
 
@@ -387,7 +357,6 @@ class Cas1PlacementRequestServiceTest {
     fun `withdrawPlacementRequest returns Success and saves withdrawn PlacementRequest, triggering emails and domain events and cascades`(
       reason: PlacementRequestWithdrawalReason?,
     ) {
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequest)
@@ -428,7 +397,6 @@ class Cas1PlacementRequestServiceTest {
 
     @Test
     fun `withdrawPlacementRequest updates application status to 'PENDING_PLACEMENT_REQUEST' if no other non-active placement requests`() {
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
@@ -469,7 +437,6 @@ class Cas1PlacementRequestServiceTest {
 
     @Test
     fun `withdrawPlacementRequest does not update application status to 'PENDING_PLACEMENT_REQUEST' if there are other active placement requests`() {
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
@@ -505,7 +472,6 @@ class Cas1PlacementRequestServiceTest {
 
     @Test
     fun `withdrawPlacementRequest doesnt updates application status if user didn't trigger withdrawal`() {
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
@@ -538,7 +504,6 @@ class Cas1PlacementRequestServiceTest {
 
     @Test
     fun `withdrawPlacementRequest doesnt updates application status if triggered by seed job`() {
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
@@ -598,8 +563,6 @@ class Cas1PlacementRequestServiceTest {
         WithdrawableEntityType.SpaceBooking -> providedReason
       }
 
-      verify { userAccessService wasNot Called }
-
       verify {
         placementRequestRepository.save(
           match {
@@ -636,7 +599,6 @@ class Cas1PlacementRequestServiceTest {
 
     @Test
     fun `withdrawPlacementRequest success if user directly requested withdrawal`() {
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequest)

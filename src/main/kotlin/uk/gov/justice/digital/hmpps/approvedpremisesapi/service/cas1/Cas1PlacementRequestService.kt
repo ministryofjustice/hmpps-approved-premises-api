@@ -45,7 +45,6 @@ class Cas1PlacementRequestService(
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
   private val cancellationRepository: CancellationRepository,
-  private val userAccessService: Cas1UserAccessService,
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
@@ -205,15 +204,15 @@ class Cas1PlacementRequestService(
     return CasResult.Success(bookingNotMadeRepository.save(bookingNotMade))
   }
 
-  fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+  fun getWithdrawableState(placementRequest: PlacementRequestEntity): WithdrawableState = WithdrawableState(
     withdrawable = placementRequest.isInWithdrawableState(),
     withdrawn = placementRequest.isWithdrawn,
-    userMayDirectlyWithdraw = placementRequest.isForLegacyInitialRequestForPlacement() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
+    userMayDirectlyWithdraw = false,
   )
 
   /**
-   * This function should not be called directly. Instead, use [Cas1WithdrawableService.withdrawPlacementRequest] that
-   * will indirectly invoke this function. It will also ensure that:
+   * This function should not be called directly. Instead, use [Cas1WithdrawableService] that
+   * will indirectly invoke this function via cascading down the withdrawal tree. It will also ensure that:
    *
    * 1. The entity is withdrawable, and error if not
    * 2. The user is allowed to withdraw it, and error if not
