@@ -37,6 +37,8 @@ interface UserRepository :
   )
   fun findByNameContainingIgnoreCase(str: String): List<UserEntity>
 
+  fun findByDeliusUsernameIgnoreCase(deliusUsername: String): UserEntity?
+
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
 
   @Query(

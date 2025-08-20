@@ -19,7 +19,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -30,6 +36,8 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
+  private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
+  private val userRepository: UserRepository,
 ) : MigrationJob() {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -141,6 +149,29 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
     )
 
     placementRequest.placementApplication = placementApplication
+
+    if (placementApplication.isWithdrawn) {
+      val withdrawalInfo = cas1BackfillAutomaticPlacementApplicationsRepository.findPlacementRequestWithdrawalEventInfo(
+        applicationId = application.id,
+        placementRequestId = placementRequest.id,
+      ) ?: error("cannot find withdrawal domain event for placement request ${placementRequest.id}")
+
+      val withdrawingUserName = withdrawalInfo.getWithdrawnBy()
+        ?: error("cannot find withdrawal domain event triggered by for placement request ${placementRequest.id}")
+
+      val withdrawnByUser = userRepository.findByDeliusUsernameIgnoreCase(withdrawingUserName)
+        ?: error("cannot find user with username $withdrawingUserName for placement request ${placementRequest.id}")
+
+      cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        withdrawalContext = WithdrawalContext(
+          withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
+          triggeringEntityType = WithdrawableEntityType.PlacementApplication,
+          triggeringEntityId = placementApplication.id,
+        ),
+        eventOccurredAt = withdrawalInfo.getOccurredAt(),
+      )
+    }
   }
 
   private fun determineWithdrawalReason(placementRequest: PlacementRequestEntity) = when (placementRequest.withdrawalReason) {
@@ -168,4 +199,24 @@ interface Cas1BackfillAutomaticPlacementApplicationsRepository : JpaRepository<A
     nativeQuery = true,
   )
   fun applicationIdsWithStandardPlacementRequestsWithoutAPlacementApp(): List<UUID>
+
+  @Query(
+    value = """
+        SELECT 
+         data -> 'eventDetails' -> 'withdrawnBy' -> 'staffMember' ->> 'username' as withdrawnBy,
+         occurred_at
+       FROM domain_events
+        WHERE
+          application_id = :applicationId AND
+          type = 'APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN' AND
+          cast(data -> 'eventDetails' ->> 'matchRequestId' AS uuid) = :placementRequestId
+    """,
+    nativeQuery = true,
+  )
+  fun findPlacementRequestWithdrawalEventInfo(applicationId: UUID, placementRequestId: UUID): PlacementRequestWithdrawnInfo?
+
+  interface PlacementRequestWithdrawnInfo {
+    fun getWithdrawnBy(): String?
+    fun getOccurredAt(): Instant
+  }
 }
