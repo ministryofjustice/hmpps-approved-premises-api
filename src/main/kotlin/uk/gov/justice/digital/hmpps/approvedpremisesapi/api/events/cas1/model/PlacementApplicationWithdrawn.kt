@@ -36,7 +36,7 @@ data class PlacementApplicationWithdrawn(
   @get:JsonProperty("withdrawnAt", required = true) val withdrawnAt: java.time.Instant,
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("withdrawnBy", required = true) val withdrawnBy: WithdrawnBy,
+  @get:JsonProperty("withdrawnBy", required = true) val withdrawnBy: WithdrawnBy?,
 
   @Schema(example = "RELATED_APPLICATION_WITHDRAWN", required = true, description = "")
   @get:JsonProperty("withdrawalReason", required = true) val withdrawalReason: kotlin.String,

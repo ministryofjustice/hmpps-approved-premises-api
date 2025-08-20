@@ -10,12 +10,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -25,6 +30,9 @@ import java.util.UUID
 class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() {
   @Autowired
   lateinit var migrationJobService: MigrationJobService
+
+  @Autowired
+  lateinit var placementRequestDomainEventService: Cas1PlacementRequestDomainEventService
 
   @SuppressWarnings("LongMethod")
   @Test
@@ -173,6 +181,16 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
       assessmentAllocatedTo = application5AssessmentAllocatedTo,
       isWithdrawn = true,
       withdrawalReason = PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,
+    )
+
+    val (withdrawingUser, _) = givenAUser()
+    placementRequestDomainEventService.placementRequestWithdrawn(
+      application5Pr1,
+      withdrawalContext = WithdrawalContext(
+        WithdrawalTriggeredByUser(withdrawingUser),
+        WithdrawableEntityType.PlacementRequest,
+        application5Pr1.id,
+      ),
     )
 
     // application with one pr linked to a pa (do nothing case)
@@ -354,6 +372,11 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application5Pa1.allocatedToUser!!.id).isEqualTo(application5AssessmentAllocatedTo.id)
     assertThat(application5Pa1.allocatedAt).isEqualTo(application5Pr1.assessment.allocatedAt)
     assertThat(application5Pa1.reallocatedAt).isNull()
+
+    domainEventAsserter.assertDomainEventOfTypeStored(
+      application5Pr1.application.id,
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
+    )
 
     assertThat(placementApplicationPlaceholderRepository.findByIdOrNull(application5Placeholder.id)!!.archived).isTrue
 

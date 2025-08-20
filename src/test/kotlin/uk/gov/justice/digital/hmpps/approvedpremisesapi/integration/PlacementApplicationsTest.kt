@@ -1492,7 +1492,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
             }
 
-            snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+            domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
             emailAsserter.assertEmailsRequestedCount(3)
             emailAsserter.assertEmailRequested(
@@ -1551,7 +1551,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
               }
 
-              snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+              domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
               emailAsserter.assertEmailsRequestedCount(3)
               emailAsserter.assertEmailRequested(

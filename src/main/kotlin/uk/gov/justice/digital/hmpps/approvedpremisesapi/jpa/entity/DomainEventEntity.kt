@@ -404,6 +404,7 @@ enum class DomainEventType(
       Cas1TimelineEventType.placementApplicationWithdrawn,
       payloadType = PlacementApplicationWithdrawn::class,
       apiType = Cas1EventType.placementApplicationWithdrawn,
+      emittable = false,
     ),
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED(

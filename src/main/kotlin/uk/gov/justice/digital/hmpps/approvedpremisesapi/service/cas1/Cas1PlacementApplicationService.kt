@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -290,7 +291,11 @@ class Cas1PlacementApplicationService(
 
     val savedApplication = placementApplicationRepository.save(placementApplication)
 
-    cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext)
+    cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(
+      placementApplication,
+      withdrawalContext,
+      eventOccurredAt = Instant.now(clock),
+    )
     cas1PlacementApplicationEmailService.placementApplicationWithdrawn(
       placementApplication = placementApplication,
       wasBeingAssessedBy = wasBeingAssessedBy,
