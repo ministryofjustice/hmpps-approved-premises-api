@@ -52,6 +52,7 @@ fun IntegrationTestBase.givenACas1Application(
   data: String? = "{}",
   apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
   createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+  duration: Int? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ) = givenAnApplication(
   createdByUser,
@@ -68,6 +69,7 @@ fun IntegrationTestBase.givenACas1Application(
   data,
   apType,
   createdAt,
+  duration,
   block,
 )
 
@@ -87,6 +89,7 @@ fun IntegrationTestBase.givenAnApplication(
   data: String? = "{}",
   apType: ApprovedPremisesType = ApprovedPremisesType.NORMAL,
   createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+  duration: Int? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val riskRatings = tier?.let {
@@ -107,6 +110,7 @@ fun IntegrationTestBase.givenAnApplication(
     withCaseManagerIsNotApplicant(caseManager != null)
     withApplicantUserDetails(applicant)
     withArrivalDate(arrivalDate)
+    withDuration(duration)
     withData(data)
     withApType(apType)
   }
