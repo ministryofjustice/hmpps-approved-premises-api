@@ -1,0 +1,2 @@
+delius_username,notes,roles,qualifications,remove_existing_roles_and_qualifications,cru_management_area_override
+AutomatedTestUser,Used by probation-integration E2E. We leave existing roles to avoid wiping out CAS1 qualifications,CAS3_REFERRER,,NO
