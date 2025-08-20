@@ -285,7 +285,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2021-03-12")
-      assertThat(row.requested_duration_days).isEqualTo("7")
+      assertThat(row.requested_duration).isEqualTo("7")
+      assertThat(row.authorised_duration).isEqualTo("8")
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2019-03-15T00:10:00Z")
       assertThat(row.parole_decision_date).isNull()
       assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2019-03-15T00:11:00Z")
@@ -323,7 +324,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2024-01-01")
-      assertThat(row.requested_duration_days).isNull()
+      assertThat(row.requested_duration).isEqualTo("7")
+      assertThat(row.authorised_duration).isNull()
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-01T12:50:00Z")
       assertThat(row.parole_decision_date).isNull()
       assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2021-03-01T12:51:00Z")
@@ -357,7 +359,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2022-12-31")
-      assertThat(row.requested_duration_days).isNull()
+      assertThat(row.requested_duration).isEqualTo("7")
+      assertThat(row.authorised_duration).isNull()
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-01T15:25:05Z")
       assertThat(row.parole_decision_date).isNull()
       assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2021-03-01T15:25:05Z")
@@ -402,7 +405,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2021-03-12")
-      assertThat(row.requested_duration_days).isEqualTo("8")
+      assertThat(row.requested_duration).isEqualTo("7")
+      assertThat(row.authorised_duration).isEqualTo("8")
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-29T23:59:59Z")
       assertThat(row.parole_decision_date).isNull()
       assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2021-03-30T00:00:59Z")
@@ -497,7 +501,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         },
       )
       assertThat(row.requested_arrival_date).isEqualTo("2029-01-01")
-      assertThat(row.requested_duration_days).isEqualTo("25")
+      assertThat(row.requested_duration).isEqualTo("25")
       assertThat(row.request_for_placement_submitted_date).isEqualTo(submittedAt.format(DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss'Z'")))
       assertThat(row.parole_decision_date).isEqualTo("2020-02-10")
       assertThat(row.request_for_placement_decision).isEqualTo("ACCEPTED")
@@ -558,7 +562,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_id).isEqualTo(placementApplicationId.toString())
       assertThat(row.request_for_placement_type).isEqualTo("ROTL")
       assertThat(row.requested_arrival_date).isEqualTo("2029-01-01")
-      assertThat(row.requested_duration_days).isEqualTo("25")
+      assertThat(row.requested_duration).isEqualTo("25")
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-29T23:59:58Z")
       assertThat(row.parole_decision_date).isEqualTo("2020-02-10")
       assertThat(row.request_for_placement_decision).isEqualTo("REJECTED")
@@ -642,7 +646,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     val request_for_placement_id: String?,
     val request_for_placement_type: String?,
     val requested_arrival_date: String?,
-    val requested_duration_days: String?,
+    val requested_duration: String?,
+    val authorised_duration: String?,
     val request_for_placement_submitted_date: String?,
     val parole_decision_date: String?,
     val request_for_placement_last_allocated_to_assessor_date: String?,
