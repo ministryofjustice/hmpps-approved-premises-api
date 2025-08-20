@@ -11,11 +11,13 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
@@ -46,8 +48,8 @@ class Cas2EmailServiceTest {
     submittedApplicationUrlTemplate,
     nacroEmail,
   )
-  private val oldUser = NomisUserEntityFactory().produce()
-  private val newUser = NomisUserEntityFactory().produce()
+  private val oldUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+  private val newUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private val oldOmu = OffenderManagementUnitEntityFactory()
     .withPrisonCode("LIV")
     .withPrisonName("HMP LIVERPOOL")
@@ -65,7 +67,9 @@ class Cas2EmailServiceTest {
   private val application =
     Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
       .withReferringPrisonCode("PRI")
-      .withCreatedByUser(oldUser).produce()
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(oldUser))
+      .withCreatedByCas2User(oldUser)
+      .produce()
 
   private val assessorLink = submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString())
   private val link = applicationUrlTemplate.replace("#id", application.id.toString())
@@ -74,7 +78,7 @@ class Cas2EmailServiceTest {
     application = application,
     prisonCode = oldOmu.prisonCode,
     createdAt = OffsetDateTime.now().minusDays(2),
-    allocatedPomUser = oldUser,
+    allocatedPomUser = transformCas2UserEntityToNomisUserEntity(oldUser),
   )
   private val applicationAssignmentOld = Cas2ApplicationAssignmentEntity(
     id = UUID.randomUUID(),
@@ -88,7 +92,7 @@ class Cas2EmailServiceTest {
     application = application,
     prisonCode = newOmu.prisonCode,
     createdAt = OffsetDateTime.now(),
-    allocatedPomUser = newUser,
+    allocatedPomUser = transformCas2UserEntityToNomisUserEntity(newUser),
   )
 
   private val cas2StatusUpdateEntity = Cas2StatusUpdateEntityFactory()
@@ -216,11 +220,11 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `send location changed emails`() {
-    application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
+    application.createApplicationAssignment(oldOmu.prisonCode, transformCas2UserEntityToNomisUserEntity(oldUser))
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
-    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(transformCas2UserEntityToNomisUserEntity(oldUser))
 
     every {
       emailNotificationService.sendCas2Email(
@@ -282,11 +286,11 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `send location changed emails with default status`() {
-    application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
+    application.createApplicationAssignment(oldOmu.prisonCode, transformCas2UserEntityToNomisUserEntity(oldUser))
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
-    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(transformCas2UserEntityToNomisUserEntity(oldUser))
 
     every {
       emailNotificationService.sendCas2Email(
@@ -384,7 +388,7 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `should send cas2ToTransferringPomApplicationTransferredToAnotherPrison email when user id is provided`() {
-    every { nomisUserRepository.findById(oldUser.id) } returns Optional.of(oldUser)
+    every { nomisUserRepository.findById(oldUser.id) } returns Optional.of(transformCas2UserEntityToNomisUserEntity(oldUser))
     every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns oldOmu
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(any()) } returns null
@@ -434,7 +438,7 @@ class Cas2EmailServiceTest {
 
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns null
-    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(transformCas2UserEntityToNomisUserEntity(oldUser))
 
     val exception = assertThrows<IllegalStateException> {
       emailService.sendLocationChangedEmails(
@@ -452,7 +456,7 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOlder)
 
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns null
-    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(transformCas2UserEntityToNomisUserEntity(oldUser))
 
     val exception = assertThrows<IllegalStateException> {
       emailService.sendLocationChangedEmails(
@@ -477,7 +481,7 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(newOmu.prisonCode) } returns newOmu
     every { nomisUserRepository.findById(oldUser.id) } returns Optional.empty()
 
-    application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
+    application.createApplicationAssignment(oldOmu.prisonCode, transformCas2UserEntityToNomisUserEntity(oldUser))
 
     val result = assertThrows<IllegalStateException> {
       emailService.sendLocationChangedEmails(
@@ -519,7 +523,7 @@ class Cas2EmailServiceTest {
   inner class GetReferrerEmail {
     @Test
     fun `POM email is returned when application is assigned to a POM`() {
-      application.createApplicationAssignment("PRI1", oldUser)
+      application.createApplicationAssignment("PRI1", transformCas2UserEntityToNomisUserEntity(oldUser))
       val email = emailService.getReferrerEmail(application)
 
       assertThat(application.applicationAssignments).hasSize(1)
@@ -528,7 +532,7 @@ class Cas2EmailServiceTest {
 
     @Test
     fun `OMU email is returned when application has transferred and not assigned to a POM`() {
-      application.createApplicationAssignment("PRI1", oldUser)
+      application.createApplicationAssignment("PRI1", transformCas2UserEntityToNomisUserEntity(oldUser))
       application.createApplicationAssignment(newOmu.prisonCode, null)
       every { offenderManagementUnitRepository.findByPrisonCode(newOmu.prisonCode) } returns newOmu
       val email = emailService.getReferrerEmail(application)

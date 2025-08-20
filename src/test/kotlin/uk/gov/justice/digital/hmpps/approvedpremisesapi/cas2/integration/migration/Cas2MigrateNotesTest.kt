@@ -7,7 +7,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
@@ -43,7 +44,7 @@ class Cas2MigrateNotesTest : MigrationJobTestBase() {
           assessment1NoteIds.add(
             cas2NoteEntityFactory.produceAndPersist {
               withApplication(submittedApplication1)
-              withCreatedByUser(userEntity)
+              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
             }.id,
           )
         }
@@ -53,7 +54,7 @@ class Cas2MigrateNotesTest : MigrationJobTestBase() {
             cas2NoteEntityFactory.produceAndPersist {
               withApplication(submittedApplication1)
               withAssessment(assessment1)
-              withCreatedByUser(userEntity)
+              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
             }.id,
           )
         }
@@ -69,7 +70,7 @@ class Cas2MigrateNotesTest : MigrationJobTestBase() {
           assessment2NoteIds.add(
             cas2NoteEntityFactory.produceAndPersist {
               withApplication(submittedApplication2)
-              withCreatedByUser(userEntity)
+              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
             }.id,
           )
         }
@@ -79,7 +80,7 @@ class Cas2MigrateNotesTest : MigrationJobTestBase() {
             cas2NoteEntityFactory.produceAndPersist {
               withApplication(submittedApplication2)
               withAssessment(assessment2)
-              withCreatedByUser(userEntity)
+              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
             }.id,
           )
         }
@@ -99,9 +100,10 @@ class Cas2MigrateNotesTest : MigrationJobTestBase() {
     }
   }
 
-  private fun createApplicationEntity(userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
+  private fun createApplicationEntity(userEntity: Cas2UserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withCreatedByUser(userEntity)
+    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+    withCreatedByCas2User(userEntity)
     withData("{}")
     withSubmittedAt(submittedAt)
   }

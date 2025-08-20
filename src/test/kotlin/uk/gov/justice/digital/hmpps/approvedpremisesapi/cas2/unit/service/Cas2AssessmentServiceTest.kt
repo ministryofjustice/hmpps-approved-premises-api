@@ -8,11 +8,13 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
@@ -30,11 +32,12 @@ class Cas2AssessmentServiceTest {
 
     @Test
     fun `saves and returns entity from db`() {
+      val cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+        .produce()
       val application = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(
-          NomisUserEntityFactory()
-            .produce(),
-        ).produce()
+        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(cas2User))
+        .withCreatedByCas2User(cas2User)
+        .produce()
       val assessEntity = Cas2AssessmentEntity(
         id = UUID.randomUUID(),
         application = application,
@@ -65,11 +68,12 @@ class Cas2AssessmentServiceTest {
     @Test
     fun `saves and returns entity from db`() {
       val assessmentId = UUID.randomUUID()
+      val cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+        .produce()
       val application = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(
-          NomisUserEntityFactory()
-            .produce(),
-        ).produce()
+        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(cas2User))
+        .withCreatedByCas2User(cas2User)
+        .produce()
       val assessEntity = Cas2AssessmentEntity(
         id = assessmentId,
         application = application,
