@@ -35,11 +35,12 @@ class Cas1RequestForPlacementReportRepository(
     pap.id AS request_for_placement_id, 
     'STANDARD' AS request_for_placement_type,
     to_char(pap.expected_arrival_date, 'YYYY-MM-DD') AS requested_arrival_date,
-    pr.duration AS requested_duration_days,
+    apa.duration AS requested_duration,
     to_char(CAST(a.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     null AS parole_decision_date,
     to_char(CAST(latest_assessment.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,
     latest_assessment.decision AS request_for_placement_decision,
+    pr.duration AS authorised_duration,
     to_char(CAST(latest_assessment.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
     CASE
       WHEN pr.id IS NULL THEN to_char(apa_withdrawn_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -93,11 +94,12 @@ UNION ALL
       ELSE ''
     END AS request_for_placement_type, 
     to_char(pa.expected_arrival, 'YYYY-MM-DD') AS requested_arrival_date,
-    pa.requested_duration AS requested_duration_days,
+    pa.requested_duration AS requested_duration,
     to_char(CAST(pa.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     to_char(CAST(pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as timestamp), 'YYYY-MM-DD') AS parole_decision_date,
     to_char(CAST(pa.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,
     pa.decision AS request_for_placement_decision,
+    pa.authorised_duration AS authorised_duration,
     to_char(CAST(pa.decision_made_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
     to_char(withdrawn_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_withdrawal_date,
     pa.withdrawal_reason AS request_for_placement_withdrawal_reason,
