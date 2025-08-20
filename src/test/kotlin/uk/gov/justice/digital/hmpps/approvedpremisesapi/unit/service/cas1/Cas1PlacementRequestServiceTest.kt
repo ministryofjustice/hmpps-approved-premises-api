@@ -5,7 +5,6 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -15,18 +14,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -46,8 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -62,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.Clock
 import java.time.LocalDate
@@ -683,201 +672,6 @@ class Cas1PlacementRequestServiceTest {
   }
 
   @Nested
-  inner class GetAllActive {
-
-    @Test
-    fun `getAllActive returns results and no metadata when a page number is not provided`() {
-      val placementRequests = createPlacementRequests(2)
-      val page = mockk<Page<PlacementRequestEntity>>()
-
-      every { page.content } returns placementRequests
-
-      every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name) } returns page
-
-      val (requests, metadata) = placementRequestService.getAllActive(
-        Cas1PlacementRequestService.AllActiveSearchCriteria(
-          PlacementRequestStatus.matched,
-        ),
-        PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
-      )
-
-      assertThat(requests).isEqualTo(placementRequests)
-      assertThat(metadata).isNull()
-    }
-
-    @Test
-    fun `getAllActive returns a page and metadata when a page number is provided`() {
-      val placementRequests = createPlacementRequests(2)
-      val page = mockk<Page<PlacementRequestEntity>>()
-      val pageRequest = mockk<PageRequest>()
-
-      mockkStatic(PageRequest::class)
-
-      every { PageRequest.of(0, 10, Sort.by("created_at").ascending()) } returns pageRequest
-      every { page.content } returns placementRequests
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      every {
-        placementRequestRepository.allForDashboard(
-          status = PlacementRequestStatus.matched.name,
-          pageable = pageRequest,
-        )
-      } returns page
-
-      val (requests, metadata) = placementRequestService.getAllActive(
-        Cas1PlacementRequestService.AllActiveSearchCriteria(
-          PlacementRequestStatus.matched,
-        ),
-        PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
-      )
-
-      assertThat(requests).isEqualTo(placementRequests)
-      assertThat(metadata?.currentPage).isEqualTo(1)
-      assertThat(metadata?.pageSize).isEqualTo(10)
-      assertThat(metadata?.totalPages).isEqualTo(10)
-      assertThat(metadata?.totalResults).isEqualTo(100)
-    }
-
-    @Test
-    fun `getAllActive returns a page and metadata when a page number, sort field and direction is provided`() {
-      val placementRequests = createPlacementRequests(2)
-      val page = mockk<Page<PlacementRequestEntity>>()
-      val pageRequest = mockk<PageRequest>()
-
-      mockkStatic(PageRequest::class)
-
-      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-      every { page.content } returns placementRequests
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      every {
-        placementRequestRepository.allForDashboard(
-          status = PlacementRequestStatus.matched.name,
-          pageable = pageRequest,
-        )
-      } returns page
-
-      val (requests, metadata) = placementRequestService.getAllActive(
-        Cas1PlacementRequestService.AllActiveSearchCriteria(
-          PlacementRequestStatus.matched,
-          null,
-          null,
-          null,
-          null,
-          null,
-        ),
-        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-      )
-
-      assertThat(requests).isEqualTo(placementRequests)
-      assertThat(metadata?.currentPage).isEqualTo(1)
-      assertThat(metadata?.pageSize).isEqualTo(10)
-      assertThat(metadata?.totalPages).isEqualTo(10)
-      assertThat(metadata?.totalResults).isEqualTo(100)
-    }
-
-    @Test
-    fun `getAllActive returns only results for tier when provided`() {
-      val tier = "A2"
-
-      val placementRequests = createPlacementRequests(2, tier = tier)
-      val page = mockk<Page<PlacementRequestEntity>>()
-      val pageRequest = mockk<PageRequest>()
-
-      mockkStatic(PageRequest::class)
-
-      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-      every { page.content } returns placementRequests
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      every { placementRequestRepository.allForDashboard(tier = tier, pageable = pageRequest) } returns page
-
-      val (requests, metadata) = placementRequestService.getAllActive(
-        Cas1PlacementRequestService.AllActiveSearchCriteria(
-          tier = tier,
-        ),
-        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-      )
-
-      assertThat(requests).isEqualTo(placementRequests)
-      assertThat(metadata?.currentPage).isEqualTo(1)
-      assertThat(metadata?.pageSize).isEqualTo(10)
-      assertThat(metadata?.totalPages).isEqualTo(10)
-      assertThat(metadata?.totalResults).isEqualTo(100)
-    }
-
-    @Test
-    fun `getAllActive returns only results with arrival date after or equal to start when provided`() {
-      val startDate = LocalDate.parse("2023-08-08")
-
-      val placementRequests = createPlacementRequests(2, arrivalDate = startDate)
-      val page = mockk<Page<PlacementRequestEntity>>()
-      val pageRequest = mockk<PageRequest>()
-
-      mockkStatic(PageRequest::class)
-
-      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-      every { page.content } returns placementRequests
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      every {
-        placementRequestRepository.allForDashboard(
-          arrivalDateFrom = startDate,
-          pageable = pageRequest,
-        )
-      } returns page
-
-      val (requests, metadata) = placementRequestService.getAllActive(
-        Cas1PlacementRequestService.AllActiveSearchCriteria(
-          arrivalDateStart = startDate,
-        ),
-        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-      )
-
-      assertThat(requests).isEqualTo(placementRequests)
-      assertThat(metadata?.currentPage).isEqualTo(1)
-      assertThat(metadata?.pageSize).isEqualTo(10)
-      assertThat(metadata?.totalPages).isEqualTo(10)
-      assertThat(metadata?.totalResults).isEqualTo(100)
-    }
-
-    @Test
-    fun `getAllActive returns only results with arrival date before or equal to end when provided`() {
-      val endDate = LocalDate.parse("2023-08-08")
-
-      val placementRequests = createPlacementRequests(2, arrivalDate = endDate)
-      val page = mockk<Page<PlacementRequestEntity>>()
-      val pageRequest = mockk<PageRequest>()
-
-      mockkStatic(PageRequest::class)
-
-      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-      every { page.content } returns placementRequests
-      every { page.totalPages } returns 10
-      every { page.totalElements } returns 100
-
-      every { placementRequestRepository.allForDashboard(arrivalDateTo = endDate, pageable = pageRequest) } returns page
-
-      val (requests, metadata) = placementRequestService.getAllActive(
-        Cas1PlacementRequestService.AllActiveSearchCriteria(
-          arrivalDateEnd = endDate,
-        ),
-        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-      )
-
-      assertThat(requests).isEqualTo(placementRequests)
-      assertThat(metadata?.currentPage).isEqualTo(1)
-      assertThat(metadata?.pageSize).isEqualTo(10)
-      assertThat(metadata?.totalPages).isEqualTo(10)
-      assertThat(metadata?.totalResults).isEqualTo(100)
-    }
-  }
-
-  @Nested
   inner class GetPlacementRequest {
 
     @Test
@@ -938,55 +732,6 @@ class Cas1PlacementRequestServiceTest {
 
       assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
     }
-  }
-
-  private fun createPlacementRequests(num: Int, crn: String? = null, tier: String? = null, arrivalDate: LocalDate? = null): List<PlacementRequestEntity> = List(num) {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .apply {
-        if (crn != null) this.withCrn(crn)
-
-        if (tier != null) {
-          this.withRiskRatings(
-            PersonRisksFactory()
-              .withTier(
-                RiskWithStatus(
-                  RiskTier(
-                    level = tier,
-                    lastUpdated = LocalDate.now(),
-                  ),
-                ),
-              )
-              .produce(),
-          )
-        }
-      }
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(user)
-      .produce()
-
-    PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withApplication(application)
-      .withAssessment(assessment)
-      .apply {
-        if (arrivalDate != null) {
-          this.withExpectedArrival(arrivalDate)
-        }
-      }
-      .produce()
   }
 
   private fun createValidPlacementRequest(

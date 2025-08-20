@@ -7,7 +7,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -16,19 +15,11 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 
 @RestController
 interface PlacementRequestsApi {
@@ -51,23 +42,6 @@ interface PlacementRequestsApi {
     consumes = ["application/json"],
   )
   fun placementRequestsIdBookingPost(@Parameter(description = "ID of the placement request", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Booking details", required = true) @RequestBody newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> = getDelegate().placementRequestsIdBookingPost(id, newPlacementRequestBooking)
-
-  @PaginationHeaders
-  @Operation(
-    tags = ["Placement requests"],
-    summary = "Gets all placement requests",
-    operationId = "placementRequestsDashboardGet",
-    description = """Deprecated, use cas1/placement-requests instead.""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(array = ArraySchema(schema = Schema(implementation = PlacementRequest::class)))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/placement-requests/dashboard"],
-    produces = ["application/json"],
-  )
-  fun placementRequestsDashboardGet(@RequestParam(value = "status", required = false) status: PlacementRequestStatus?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "tier", required = false) tier: RiskTierLevel?, @RequestParam(value = "arrivalDateStart", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateStart: java.time.LocalDate?, @RequestParam(value = "arrivalDateEnd", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) arrivalDateEnd: java.time.LocalDate?, @RequestParam(value = "requestType", required = false) requestType: PlacementRequestRequestType?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: PlacementRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> = getDelegate().placementRequestsDashboardGet(status, crnOrName, tier, arrivalDateStart, arrivalDateEnd, requestType, cruManagementAreaId, page, sortBy, sortDirection)
 
   @Operation(
     tags = ["Placement requests"],
