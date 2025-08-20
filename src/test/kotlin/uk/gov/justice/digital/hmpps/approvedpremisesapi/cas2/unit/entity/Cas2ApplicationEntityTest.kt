@@ -6,8 +6,8 @@ import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 
 class Cas2ApplicationEntityTest {
@@ -23,8 +23,8 @@ class Cas2ApplicationEntityTest {
   fun `entity returns values from the newest assignment`() {
     val application = Cas2ApplicationEntityFactory().produce()
     application.createApplicationAssignment("ONE", application.createdByUser)
-    val user2 = NomisUserEntityFactory().produce()
-    application.createApplicationAssignment("TWO", user2)
+    val user2 = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+    application.createApplicationAssignment("TWO", transformCas2UserEntityToNomisUserEntity(user2))
     assertThat(application.currentPrisonCode).isEqualTo("TWO")
     assertThat(application.currentPomUserId).isEqualTo(user2.id)
   }
@@ -39,20 +39,18 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `isCreatedBy returns true when nomis user did create application`() {
-    val nomisUser = NomisUserEntityFactory()
-      .produce()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 
-    assertThat(application.isCreatedBy(nomisUser)).isTrue()
+    assertThat(application.isCreatedBy(transformCas2UserEntityToNomisUserEntity(nomisUser))).isTrue()
   }
 
   @Test
   fun `isCreatedBy returns false when nomis user did not create application`() {
-    val nomisUser = NomisUserEntityFactory()
-      .produce()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
     val application = Cas2ApplicationEntityFactory()
       .withCreatedByCas2User(null)
       .produce()
@@ -97,11 +95,11 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `nomis user returns correct isActive status with getCreatedByUserIsActive`() {
-    val nomisUser = NomisUserEntityFactory()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
       .withIsActive(true)
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 
@@ -122,11 +120,11 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `nomis user returns correct nomisUsername with getCreatedByUsername`() {
-    val nomisUser = NomisUserEntityFactory()
-      .withNomisUsername("nomis_username")
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+      .withUsername("nomis_username")
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 
@@ -147,11 +145,11 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `nomis user returns correct name with getCreatedByCanonicalName`() {
-    val nomisUser = NomisUserEntityFactory()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
       .withName("nomis_name")
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 
@@ -172,11 +170,11 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `nomis user returns correct id with getCreatedById`() {
-    val nomisUser = NomisUserEntityFactory()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
       .withName("nomis_name")
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 
@@ -197,11 +195,11 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `nomis user returns correct user identifier with getCreatedByUserIdentifier`() {
-    val nomisUser = NomisUserEntityFactory()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
       .withName("nomis_name")
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 
@@ -222,11 +220,11 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `nomis user returns correct email with getCreatedByUserEmail`() {
-    val nomisUser = NomisUserEntityFactory()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
       .withName("nomis_name")
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 
@@ -247,11 +245,11 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `nomis user returns correct name with getCreatedByUserType`() {
-    val nomisUser = NomisUserEntityFactory()
+    val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
       .withName("nomis_name")
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByUser(nomisUser)
+      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
       .withCreatedByCas2User(null)
       .produce()
 

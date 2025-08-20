@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.SubmissionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -69,8 +70,8 @@ class Cas2SubmissionsController(
   @PostMapping("/submissions")
   @Transactional
   fun submissionsPost(@RequestBody submitCas2Application: SubmitCas2Application): ResponseEntity<Unit> {
-    val user = cas2UserService.getUserForRequest()
-    val submitResult = applicationService.submitApplication(submitCas2Application, user)
+    val user = cas2UserService.getCas2UserForRequest()
+    val submitResult = applicationService.submitApplication(submitCas2Application, transformCas2UserEntityToNomisUserEntity(user))
 
     extractEntityFromCasResult(submitResult)
 
@@ -82,7 +83,7 @@ class Cas2SubmissionsController(
   }
 
   private fun ensureNomisUserPersisted() {
-    cas2UserService.getUserForRequest()
+    cas2UserService.getCas2UserForRequest()
   }
 
   private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2SubmittedApplicationSummary> {
