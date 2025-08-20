@@ -99,7 +99,6 @@ class PlacementRequestDetailTransformerTest {
       ),
     )
 
-    every { mockPlacementRequestEntity.booking } returns null
     every { mockPlacementRequestEntity.spaceBookings } returns mutableListOf()
     every { mockPlacementRequestEntity.isParole } returns false
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity

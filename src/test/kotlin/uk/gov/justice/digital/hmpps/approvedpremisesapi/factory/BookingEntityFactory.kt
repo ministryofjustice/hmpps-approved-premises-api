@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -50,7 +49,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
   private var turnarounds: Yielded<MutableList<Cas3TurnaroundEntity>>? = null
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
-  private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
   private var status: Yielded<BookingStatus?> = { null }
   private var adhoc: Yielded<Boolean?> = { null }
   private var offenderName: Yielded<String?> = { null }
@@ -190,10 +188,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.nomsNumber = { nomsNumber }
   }
 
-  fun withPlacementRequest(placementRequest: PlacementRequestEntity) = apply {
-    this.placementRequest = { placementRequest }
-  }
-
   fun withStatus(status: BookingStatus) = apply {
     this.status = { status }
   }
@@ -229,7 +223,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     offlineApplication = this.offlineApplication(),
     turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
     nomsNumber = this.nomsNumber(),
-    placementRequest = this.placementRequest(),
     status = this.status.invoke(),
     adhoc = this.adhoc(),
     offenderName = this.offenderName(),

@@ -23,22 +23,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -265,37 +258,19 @@ class PlacementRequestTransformerTest {
     }
 
     @Test
-    fun `returns a status of notMatched when a placement request has a cancelled booking`() {
-      val premises = ApprovedPremisesEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-        .produce()
-
-      val booking = BookingEntityFactory()
-        .withServiceName(ServiceName.approvedPremises)
-        .withPremises(premises)
-        .produce()
-
-      booking.let {
-        it.cancellations = mutableListOf(
-          CancellationEntityFactory().withBooking(it).withReason(
-            CancellationReasonEntityFactory().produce(),
-          ).produce(),
-        )
-      }
-
+    fun `returns a status of notMatched when a placement request has a cancelled space booking`() {
       val placementRequirementsEntity = placementRequirementsFactory.produce()
 
       val placementRequestEntity = placementRequestFactory
         .withPlacementRequirements(placementRequirementsEntity)
-        .withBooking(booking)
+        .withSpaceBookings(
+          mutableListOf(
+            Cas1SpaceBookingEntityFactory()
+              .withCancellationOccurredAt(LocalDate.now())
+              .produce(),
+          ),
+        )
         .produce()
-
-      every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
 
       val result = placementRequestTransformer.transformJpaToApi(
         placementRequestEntity,
@@ -357,29 +332,11 @@ class PlacementRequestTransformerTest {
     }
 
     @Test
-    fun `delegates mapping of legacy booking`() {
-      val booking = BookingEntityFactory().withDefaults().produce()
-
-      val placementRequestEntity = placementRequestFactory
-        .withPlacementRequirements(placementRequirementsFactory.produce())
-        .withBooking(booking)
-        .withSpaceBookings(mutableListOf())
-        .produce()
-
-      every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
-
-      val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
-
-      assertThat(result.booking).isEqualTo(mockBookingSummary)
-    }
-
-    @Test
     fun `delegates mapping of space booking`() {
       val spaceBooking = Cas1SpaceBookingEntityFactory().produce()
 
       val placementRequestEntity = placementRequestFactory
         .withPlacementRequirements(placementRequirementsFactory.produce())
-        .withBooking(null)
         .withSpaceBookings(mutableListOf(spaceBooking))
         .produce()
 

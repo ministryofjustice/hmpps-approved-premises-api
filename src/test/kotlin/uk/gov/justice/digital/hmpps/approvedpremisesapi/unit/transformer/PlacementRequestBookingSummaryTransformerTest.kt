@@ -51,7 +51,6 @@ class PlacementRequestBookingSummaryTransformerTest {
         offlineApplication = null,
         turnarounds = mutableListOf(),
         nomsNumber = "NOMS123",
-        placementRequest = null,
         status = null,
         offenderName = null,
       )

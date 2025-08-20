@@ -28,10 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
@@ -1414,10 +1414,10 @@ class Cas1TasksTest {
           assessmentAllocatedTo = otherUser,
           createdByUser = user,
           crn = offenderDetails.otherIds.crn,
-          booking = bookingEntityFactory.produceAndPersist {
-            withPremises(givenAnApprovedPremises())
-          },
           apType = ApprovedPremisesType.ESAP,
+        )
+        givenACas1SpaceBooking(
+          placementRequest = placementRequest1,
         )
 
         val (placementRequest2, _) = givenAPlacementRequest(
@@ -1425,10 +1425,10 @@ class Cas1TasksTest {
           createdByUser = user,
           crn = offenderDetails.otherIds.crn,
           dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
-          booking = bookingEntityFactory.produceAndPersist {
-            withPremises(givenAnApprovedPremises())
-          },
           apType = ApprovedPremisesType.RFAP,
+        )
+        givenACas1SpaceBooking(
+          placementRequest = placementRequest2,
         )
 
         val offenderSummaries = getOffenderSummaries(offenderDetails)
