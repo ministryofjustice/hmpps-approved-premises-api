@@ -96,21 +96,25 @@ class Cas3v2BookingService(
     departureDate: LocalDate,
     bedspaceId: UUID?,
     assessmentId: UUID?,
+    enableTurnarounds: Boolean,
   ): CasResult<Cas3BookingEntity> = validatedCasResult {
     if (bedspaceId == null) {
       "$.bedspaceId" hasValidationError "empty"
       return@validatedCasResult fieldValidationError
     }
 
-    getBookingWithConflictingDates(arrivalDate, departureDate, bookingId = null, bedspaceId)?.let {
+    val expectedLastUnavailableDate =
+      workingDayService.addWorkingDays(departureDate, premises.turnaroundWorkingDays)
+    getBookingWithConflictingDates(arrivalDate, closedDate = expectedLastUnavailableDate, bookingId = null, bedspaceId)?.let {
       return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate()} which overlaps with the desired dates"
     }
 
-    cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
-      bedspaceId,
+    getVoidBedspaceWithConflictingDates(
       startDate = arrivalDate,
-      endDate = departureDate,
-    ).firstOrNull()?.let {
+      endDate = expectedLastUnavailableDate,
+      bookingId = null,
+      bedspaceId = bedspaceId,
+    )?.let {
       return@validatedCasResult it.id hasConflictError "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
     }
 
@@ -180,7 +184,7 @@ class Cas3v2BookingService(
     val turnaround = cas3v2TurnaroundRepository.save(
       Cas3v2TurnaroundEntity(
         id = UUID.randomUUID(),
-        workingDayCount = 0,
+        workingDayCount = getWorkingDayCount(enableTurnarounds, premises),
         createdAt = bookingCreatedAt,
         booking = booking,
       ),
@@ -191,6 +195,11 @@ class Cas3v2BookingService(
     cas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(booking, user)
 
     success(booking)
+  }
+
+  private fun getWorkingDayCount(enableTurnarounds: Boolean, premises: Cas3PremisesEntity) = when (enableTurnarounds) {
+    true -> premises.turnaroundWorkingDays
+    else -> 0
   }
 
   @Transactional

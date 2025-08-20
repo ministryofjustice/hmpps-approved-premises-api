@@ -112,6 +112,7 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
     assertThat(cas3PremisesEntity.localAuthorityArea?.id).isEqualTo(temporaryAccommodationPremisesEntity.localAuthorityArea?.id)
     assertThat(cas3PremisesEntity.status).isEqualTo(temporaryAccommodationPremisesEntity.status)
     assertThat(cas3PremisesEntity.notes).isEqualTo(temporaryAccommodationPremisesEntity.notes)
+    assertThat(cas3PremisesEntity.turnaroundWorkingDays).isEqualTo(temporaryAccommodationPremisesEntity.turnaroundWorkingDays)
   }
 
   private fun assertThatBedspacesMatchRoomsAndBeds(cas3PremisesEntity: Cas3PremisesEntity, temporaryAccommodationPremisesEntity: TemporaryAccommodationPremisesEntity) {

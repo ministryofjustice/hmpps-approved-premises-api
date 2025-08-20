@@ -31,6 +31,7 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
   private var characteristics: Yielded<MutableList<Cas3PremisesCharacteristicEntity>> = { mutableListOf() }
   private var bedspaces: Yielded<MutableList<Cas3BedspacesEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.entries) }
+  private var turnaroundWorkingDays: Yielded<Int> = { 3 }
 
   fun withDefaults() = apply {
     withDefaultProbationDeliveryUnit()
@@ -107,5 +108,6 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     status = this.status(),
     probationDeliveryUnit = this.probationDeliveryUnit!!.invoke(),
     bedspaces = this.bedspaces(),
+    turnaroundWorkingDays = this.turnaroundWorkingDays(),
   )
 }

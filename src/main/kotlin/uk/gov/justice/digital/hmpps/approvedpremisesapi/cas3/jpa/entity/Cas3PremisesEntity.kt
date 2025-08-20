@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -44,6 +45,9 @@ data class Cas3PremisesEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
+
+  @Column(name = "turnaround_working_days")
+  var turnaroundWorkingDays: Int,
 
   @OneToMany(mappedBy = "premises", fetch = FetchType.LAZY)
   var bedspaces: MutableList<Cas3BedspacesEntity>,

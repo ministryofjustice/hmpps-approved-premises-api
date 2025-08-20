@@ -81,6 +81,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
       addressLine2 = premise.addressLine2,
       town = premise.town,
       localAuthorityArea = premise.localAuthorityArea,
+      turnaroundWorkingDays = premise.turnaroundWorkingDays,
       status = premise.status,
       notes = premise.notes,
       probationDeliveryUnit = premise.probationDeliveryUnit!!,
