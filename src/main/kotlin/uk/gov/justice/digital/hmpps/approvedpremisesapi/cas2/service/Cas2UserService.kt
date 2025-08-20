@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.nomisuserroles.No
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.nomisuserroles.NomisUserDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -31,13 +32,13 @@ class Cas2UserService(
   private val cas2UserRepository: Cas2UserRepository,
 ) {
   // BAIL-WIP When we migrate, remove this method and force all calls to getCas2UserForRequest
-  fun getUserForRequest(): NomisUserEntity {
-    val authenticatedPrincipal = httpAuthService.getNomisPrincipalOrThrow()
-    val jwt = authenticatedPrincipal.token.tokenValue
-    val username = authenticatedPrincipal.name
-
-    return getNomisUserForUsername(username, jwt)
-  }
+//  fun getUserForRequest(): NomisUserEntity {
+//    val authenticatedPrincipal = httpAuthService.getNomisPrincipalOrThrow()
+//    val jwt = authenticatedPrincipal.token.tokenValue
+//    val username = authenticatedPrincipal.name
+//
+//    return getNomisUserForUsername(username, jwt)
+//  }
 
   fun getCas2UserForRequest(): Cas2UserEntity {
     val authenticatedPrincipal = httpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
@@ -181,6 +182,7 @@ class Cas2UserService(
         isActive = nomisUserDetails.active,
         deliusTeamCodes = null,
         deliusStaffCode = null,
+        createdAt = OffsetDateTime.now(),
       ),
     )
   }

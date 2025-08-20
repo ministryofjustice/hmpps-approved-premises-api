@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesFor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.nomisuserroles.NomisUserDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -97,6 +98,7 @@ class Cas2v2UserService(
         isActive = nomisUserDetails.active,
         deliusTeamCodes = null,
         deliusStaffCode = null,
+        createdAt = OffsetDateTime.now(),
       ),
     )
   }
@@ -161,6 +163,7 @@ class Cas2v2UserService(
         email = externalUserDetails.email,
         isEnabled = externalUserDetails.enabled,
         isActive = true,
+        createdAt = OffsetDateTime.now(),
       ),
     )
   }

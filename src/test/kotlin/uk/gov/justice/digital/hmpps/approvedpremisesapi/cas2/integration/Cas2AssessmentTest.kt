@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
@@ -92,7 +93,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
 
       givenACas2PomUser { referrer, _ ->
         givenACas2Assessor { assessor, jwt ->
-          val submittedApplication = createSubmittedApplication(applicationId, referrer)
+          val submittedApplication = createSubmittedApplication(applicationId, transformCas2UserEntityToNomisUserEntity(referrer))
 
           // with an assessment
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
@@ -195,7 +196,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
 
       givenACas2PomUser { referrer, _ ->
         givenACas2Assessor { assessor, jwt ->
-          val submittedApplication = createSubmittedApplication(applicationId, referrer)
+          val submittedApplication = createSubmittedApplication(applicationId, transformCas2UserEntityToNomisUserEntity(referrer))
 
           // with an assessment
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
@@ -230,7 +231,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
 
       givenACas2PomUser { referrer, _ ->
         givenACas2Admin { admin, jwt ->
-          val submittedApplication = createSubmittedApplication(applicationId, referrer)
+          val submittedApplication = createSubmittedApplication(applicationId, transformCas2UserEntityToNomisUserEntity(referrer))
 
           // with an assessment
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {

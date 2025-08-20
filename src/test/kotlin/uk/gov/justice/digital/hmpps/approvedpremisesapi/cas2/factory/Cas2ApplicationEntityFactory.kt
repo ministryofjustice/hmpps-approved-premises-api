@@ -10,7 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -111,7 +113,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
 
   fun withApplicationAssignments(
     prisonCode: String = "PRI",
-    user: NomisUserEntity = NomisUserEntityFactory().produce(),
+    user: Cas2UserEntity = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce(),
   ) = apply {
     this.applicationAssignments = {
       mutableListOf(
@@ -119,7 +121,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
           id = UUID.randomUUID(),
           application = mockk(),
           prisonCode = prisonCode,
-          allocatedPomUser = user,
+          allocatedPomUser = transformCas2UserEntityToNomisUserEntity(user),
           createdAt = OffsetDateTime.now(),
         ),
       )
@@ -158,7 +160,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     val application = Cas2ApplicationEntity(
       id = this.id(),
       crn = this.crn(),
-      createdByUser = this.createdByUser?.invoke() ?: NomisUserEntityFactory().produce(),
+      createdByUser = this.createdByUser?.invoke() ?: transformCas2UserEntityToNomisUserEntity(Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()),
       createdByCas2User = this.createdByCas2User,
       data = this.data(),
       document = this.document(),

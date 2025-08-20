@@ -13,13 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 
 @ExtendWith(MockKExtension::class)
-class UnifiedUserServiceTest {
+class Cas2UserServiceTest {
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockNomisUserRolesApiClient = mockk<NomisUserRolesApiClient>()
   private val mockNomisUserRolesForRequesterApiClient = mockk<NomisUserRolesForRequesterApiClient>()
@@ -75,144 +75,7 @@ class UnifiedUserServiceTest {
     .produce()
 
   @Nested
-  inner class GetNomisUserForRequest {
-
-    @Nested
-    inner class WhenExistingUser {
-
-      @Test
-      fun `does not update user if Nomis-User-Roles API returns same email and activeCaseLoadId`() {
-        // setup auth service
-        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
-        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
-        every { mockPrincipal.token.tokenValue } returns "abc123"
-        every { mockPrincipal.name } returns username
-
-        // setup nomis roles api
-        val oldUserData = NomisUserEntityFactory()
-          .withNomisUsername(username)
-          .withName("Bob Robson")
-          .withEmail("same@example.com")
-          .withActiveCaseloadId("123")
-          .produce()
-
-        val newUserData = NomisUserDetailFactory()
-          .withFirstName("Jim")
-          .withLastName("Jimmerson")
-          .withEmail("same@example.com")
-          .withActiveCaseloadId("123")
-          .produce()
-
-        every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe("abc123") } returns ClientResult.Success(
-          HttpStatus.OK,
-          newUserData,
-        )
-        // setup repository
-        every { mockUserRepository.findByNomisUsername(username) } returns oldUserData
-        verify(exactly = 0) { mockUserRepository.save(any()) }
-
-        assertThat(cas2UserService.getUserForRequest()).matches {
-          it.nomisUsername == username &&
-            it.email == "same@example.com" &&
-            it.activeCaseloadId == "123"
-        }
-      }
-
-      @Test
-      fun `updates user if Nomis-User-Roles API returns new data`() {
-        // setup auth service
-        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
-        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
-        every { mockPrincipal.token.tokenValue } returns "abc123"
-        every { mockPrincipal.name } returns username
-
-        // setup nomis roles api
-        val oldUserData = NomisUserEntityFactory()
-          .withNomisUsername(username)
-          .withEmail("old@example.com")
-          .withActiveCaseloadId("DEF")
-          .produce()
-        val newUserData = NomisUserDetailFactory()
-          .withUsername(username)
-          .withEmail("new@example.com")
-          .withActiveCaseloadId("ABC")
-          .produce()
-
-        every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe("abc123") } returns ClientResult.Success(
-          HttpStatus.OK,
-          newUserData,
-        )
-        // setup repository
-        every { mockUserRepository.findByNomisUsername(username) } returns oldUserData
-        every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
-
-        assertThat(cas2UserService.getUserForRequest()).matches {
-          it.nomisUsername == username &&
-            it.email == "new@example.com" &&
-            it.activeCaseloadId == "ABC"
-        }
-      }
-
-      @Test
-      fun `throws error if user has no email address`() {
-        // setup auth service
-        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
-        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
-        every { mockPrincipal.token.tokenValue } returns "abc123"
-        every { mockPrincipal.name } returns username
-
-        val newUserData = NomisUserDetailFactory()
-          .withUsername(username)
-          .withEmail(null)
-          .withActiveCaseloadId("ABC")
-          .produce()
-
-        val jwt = "abc123"
-        every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe(jwt) } returns ClientResult.Success(
-          HttpStatus.OK,
-          newUserData,
-        )
-
-        val error = assertThrows<IllegalStateException> { cas2UserService.getNomisUserForUsername(username, jwt) }
-        assertThat(error).hasMessage("User $username does not have a primary email set in NOMIS")
-      }
-    }
-
-    @Nested
-    inner class WhenNewUser {
-
-      @Test
-      fun `saves and returns new User with details from Nomis-User-Roles API`() {
-        // setup auth service
-        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
-        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
-        every { mockPrincipal.token.tokenValue } returns "abc123"
-        every { mockPrincipal.name } returns username
-
-        every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe("abc123") } returns ClientResult.Success(
-          HttpStatus.OK,
-          newUserData,
-        )
-        // setup repository
-        every { mockUserRepository.findByNomisUsername(username) } returns null
-        every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
-
-        assertThat(cas2UserService.getUserForRequest()).matches {
-          it.nomisUsername == username &&
-            it.name == "Jim Jimmerson" &&
-            it.accountType == "CLOSED" &&
-            it.nomisStaffId.toInt() == 5678 &&
-            it.email == "example@example.com" &&
-            !it.isEnabled &&
-            !it.isActive &&
-            it.activeCaseloadId == "456"
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class GetUnifiedUserForRequest {
+  inner class GetCas2UserForRequest {
 
     @Nested
     inner class WhenExistingUser {
@@ -385,17 +248,17 @@ class UnifiedUserServiceTest {
 
       @Test
       fun `returns user from database and does not create new user as already in database`() {
-        val user = NomisUserEntityFactory()
-          .withNomisUsername(username)
+        val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+          .withUsername(username)
           .withName("Bob Robson")
           .withEmail("same@example.com")
-          .withActiveCaseloadId("123")
+          .withActiveNomisCaseloadId("123")
           .produce()
-
-        every { mockUserRepository.findByNomisStaffId(user.nomisStaffId) } returns user
+        val nomisUser = transformCas2UserEntityToNomisUserEntity(user)
+        every { mockUserRepository.findByNomisStaffId(user.nomisStaffId!!) } returns nomisUser
         verify(exactly = 0) { mockUserRepository.save(any()) }
 
-        assertThat(cas2UserService.getUserByStaffId(user.nomisStaffId)).isEqualTo(user)
+        assertThat(cas2UserService.getUserByStaffId(user.nomisStaffId!!)).isEqualTo(nomisUser)
       }
     }
 
@@ -424,26 +287,28 @@ class UnifiedUserServiceTest {
       fun `does not save when existing`() {
         every { mockUserRepository.findByNomisStaffId(eq(newUserData.staffId)) } returns null
 
-        val userEntity = NomisUserEntityFactory().produce()
-        every { mockUserRepository.findByNomisUsername(username) } returns userEntity
+        val userEntity = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+        val nomisUser = transformCas2UserEntityToNomisUserEntity(userEntity)
+        every { mockUserRepository.findByNomisUsername(username) } returns nomisUser
 
         val result = cas2UserService.getUserByStaffId(newUserData.staffId)
         verify(exactly = 0) { mockUserRepository.save(any()) }
-        assertThat(result).isEqualTo(userEntity)
+        assertThat(result).isEqualTo(nomisUser)
       }
     }
 
     @Test
     fun `returns gracefully if the username is existing`() {
-      val userEntity = NomisUserEntityFactory().produce()
+      val userEntity = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+      val nomisUser = transformCas2UserEntityToNomisUserEntity(userEntity)
       every { mockUserRepository.findByNomisStaffId(newUserData.staffId) } returns null
       every { mockUserRepository.save(any()) } throws DataIntegrityViolationException("DataIntegrityViolationException")
-      every { mockUserRepository.findByNomisUsername(username) } returns null andThen userEntity
+      every { mockUserRepository.findByNomisUsername(username) } returns null andThen nomisUser
 
       val result = cas2UserService.getUserByStaffId(newUserData.staffId)
       verify(exactly = 1) { mockUserRepository.save(any()) }
       verify(exactly = 2) { mockUserRepository.findByNomisUsername(newUserData.username) }
-      assertThat(result).isEqualTo(userEntity)
+      assertThat(result).isEqualTo(nomisUser)
     }
 
     @Test
