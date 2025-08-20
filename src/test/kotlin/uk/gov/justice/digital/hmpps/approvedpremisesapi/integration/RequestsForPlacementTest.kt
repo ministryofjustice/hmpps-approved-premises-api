@@ -44,7 +44,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
     @Suppress("unused")
     @Test
-    fun `Get all Requests for Placement for an application returns a 200 response with the expected value`() {
+    fun `Get all Requests for Placement for an application returns a 200 response with the expected value, newest first`() {
       givenAUser { user, jwt ->
         givenAnAssessmentForApprovedPremises(
           allocatedToUser = null,
@@ -56,6 +56,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           }
 
           val submittedInitialAutomaticPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-12-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -66,6 +67,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           }
 
           val submittedAdditionalPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-11-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -83,6 +85,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           }
 
           val withdrawnPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-10-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())
@@ -101,17 +104,17 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           }
 
           val placementRequest = placementRequestFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
             withApplication(application)
             withAssessment(assessment)
             withPlacementRequirements(placementRequirements)
-            withCreatedAt(OffsetDateTime.now())
           }
 
           val withdrawnPlacementRequest = placementRequestFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-09-03T10:15:30+01"))
             withApplication(application)
             withAssessment(assessment)
             withPlacementRequirements(placementRequirements)
-            withCreatedAt(OffsetDateTime.now())
             withIsWithdrawn(true)
             withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
           }
@@ -137,13 +140,13 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.manual)
           assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
 
-          assertThat(requestForPlacements[3].id).isEqualTo(placementRequest.id)
+          assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
           assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
-          assertThat(requestForPlacements[3].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+          assertThat(requestForPlacements[3].isWithdrawn).isTrue()
 
-          assertThat(requestForPlacements[4].id).isEqualTo(withdrawnPlacementRequest.id)
+          assertThat(requestForPlacements[4].id).isEqualTo(placementRequest.id)
           assertThat(requestForPlacements[4].type).isEqualTo(RequestForPlacementType.automatic)
-          assertThat(requestForPlacements[4].isWithdrawn).isTrue()
+          assertThat(requestForPlacements[4].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
         }
       }
     }

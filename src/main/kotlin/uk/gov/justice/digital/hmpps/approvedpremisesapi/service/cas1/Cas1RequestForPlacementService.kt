@@ -32,7 +32,7 @@ class Cas1RequestForPlacementService(
       placementApplications.map { toRequestForPlacement(it, requestingUser) } +
         placementRequests.map { toRequestForPlacement(it, requestingUser) }
 
-    return CasResult.Success(result)
+    return CasResult.Success(result.sortedByDescending { it.createdAt })
   }
 
   private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(

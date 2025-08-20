@@ -80,6 +80,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -2473,7 +2474,19 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withCreatedByUser(user)
           }
 
-          val submittedPlacementApplication = placementApplicationFactory.produceAndPersist {
+          val submittedInitialAutomaticPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-12-03T10:15:30+01"))
+            withApplication(application)
+            withCreatedByUser(user)
+            withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withExpectedArrival(LocalDate.now())
+            withRequestedDuration(1)
+            withPlacementType(PlacementType.AUTOMATIC)
+            withAutomatic(true)
+          }
+
+          val submittedAdditionalPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-11-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -2491,6 +2504,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           val withdrawnPlacementApplication = placementApplicationFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-10-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())
@@ -2509,17 +2523,17 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           val placementRequest = placementRequestFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
             withApplication(application)
             withAssessment(assessment)
             withPlacementRequirements(placementRequirements)
-            withCreatedAt(OffsetDateTime.now())
           }
 
           val withdrawnPlacementRequest = placementRequestFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.parse("2007-09-03T10:15:30+01"))
             withApplication(application)
             withAssessment(assessment)
             withPlacementRequirements(placementRequirements)
-            withCreatedAt(OffsetDateTime.now())
             withIsWithdrawn(true)
             withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
           }
@@ -2532,22 +2546,26 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .isOk
             .bodyAsListOfObjects<RequestForPlacement>()
 
-          assertThat(requestForPlacements).hasSize(4)
-          assertThat(requestForPlacements[0].id).isEqualTo(submittedPlacementApplication.id)
-          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements).hasSize(5)
+          assertThat(requestForPlacements[0].id).isEqualTo(submittedInitialAutomaticPlacementApplication.id)
+          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
 
-          assertThat(requestForPlacements[1].id).isEqualTo(withdrawnPlacementApplication.id)
+          assertThat(requestForPlacements[1].id).isEqualTo(submittedAdditionalPlacementApplication.id)
           assertThat(requestForPlacements[1].type).isEqualTo(RequestForPlacementType.manual)
-          assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+          assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
 
-          assertThat(requestForPlacements[2].id).isEqualTo(placementRequest.id)
-          assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.automatic)
-          assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+          assertThat(requestForPlacements[2].id).isEqualTo(withdrawnPlacementApplication.id)
+          assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
 
           assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
           assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[3].isWithdrawn).isTrue()
+
+          assertThat(requestForPlacements[4].id).isEqualTo(placementRequest.id)
+          assertThat(requestForPlacements[4].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[4].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
         }
       }
     }
