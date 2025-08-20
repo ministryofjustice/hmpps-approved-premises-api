@@ -19,7 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveActions
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspacesReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
@@ -1410,5 +1412,39 @@ class Cas3PremisesService(
   private fun Cas3PremisesStatus.transformStatus() = when (this) {
     Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
+  }
+
+  fun canArchivePremisesInFuture(premisesId: UUID): Cas3BedspacesReference {
+    val threeMonthsFromToday = LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
+    val affectedBedspaces = mutableListOf<Cas3BedspaceReference>()
+
+    val overlapBookings = bookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now())
+
+    overlapBookings.map {
+      val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
+      if (bookingTurnaround >= threeMonthsFromToday) {
+        affectedBedspaces.add(
+          Cas3BedspaceReference(
+            id = it.bed!!.id,
+            reference = it.bed!!.name,
+          ),
+        )
+      }
+    }
+
+    val overlappingVoids = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(premisesId, threeMonthsFromToday)
+
+    overlappingVoids.map {
+      affectedBedspaces.add(
+        Cas3BedspaceReference(
+          id = it.bed!!.id,
+          reference = it.bed!!.name,
+        ),
+      )
+    }
+
+    return Cas3BedspacesReference(
+      affectedBedspaces = affectedBedspaces,
+    )
   }
 }
