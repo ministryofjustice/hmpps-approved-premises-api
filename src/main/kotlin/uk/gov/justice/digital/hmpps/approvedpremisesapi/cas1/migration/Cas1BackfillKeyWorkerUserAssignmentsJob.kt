@@ -20,10 +20,10 @@ class Cas1BackfillKeyWorkerUserAssignmentsJob(
   override val shouldRunInTransaction = true
   override fun process(pageSize: Int) {
     val updateCount = repository.addMissingKeyWorkerUserIds()
-    migrationLogger.info("Have updated $updateCount space bookings using direct mapping")
+    migrationLogger.info("Have considered $updateCount space bookings for update using direct mapping")
 
     val updateCountLookup = repository.addMissingKeyWorkerUserIdsUsingLookup()
-    migrationLogger.info("Have updated $updateCountLookup space bookings using lookup")
+    migrationLogger.info("Have considered $updateCountLookup space bookings for update using lookup")
   }
 }
 
