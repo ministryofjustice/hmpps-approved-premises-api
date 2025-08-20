@@ -1106,6 +1106,58 @@ class Cas3PremisesService(
     success(unarchivePremises)
   }
 
+  @Transactional
+  fun cancelUnarchivePremises(
+    premisesId: UUID,
+  ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
+    val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
+      ?: return CasResult.NotFound("Premises", premisesId.toString())
+
+    if (!premises.isPremisesArchived()) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesAlreadyOnline"
+    }
+
+    val latestUnarchiveEvent = domainEventRepository.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(
+      premisesId,
+      CAS3_PREMISES_UNARCHIVED,
+    ) ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotScheduledToUnarchive"
+
+    val unarchiveEventData = objectMapper.readValue(latestUnarchiveEvent.data, CAS3PremisesUnarchiveEvent::class.java)
+
+    if (unarchiveEventData.eventDetails.newStartDate <= LocalDate.now()) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesUnarchiveDateInThePast"
+    }
+
+    premises.startDate = unarchiveEventData.eventDetails.currentStartDate
+    premises.endDate = unarchiveEventData.eventDetails.currentEndDate
+    premises.status = PropertyStatus.archived
+
+    val updatedPremises = premisesRepository.save(premises)
+
+    val bedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
+    bedspaces.forEach { bedspace ->
+      val latestBedspaceUnarchiveEvent = domainEventRepository.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(
+        bedspace.id,
+        DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
+      )
+
+      if (latestBedspaceUnarchiveEvent != null) {
+        val bedspaceUnarchiveEventData = objectMapper.readValue(latestBedspaceUnarchiveEvent.data, CAS3BedspaceUnarchiveEvent::class.java)
+        val previousBedspaceStartDate = bedspaceUnarchiveEventData.eventDetails.currentStartDate
+        val previousBedspaceEndDate = bedspaceUnarchiveEventData.eventDetails.currentEndDate
+
+        bedspaceRepository.save(
+          bedspace.copy(
+            startDate = previousBedspaceStartDate,
+            endDate = previousBedspaceEndDate,
+          ),
+        )
+      }
+    }
+
+    success(updatedPremises)
+  }
+
   fun getBedspaceTotals(premises: TemporaryAccommodationPremisesEntity): CasResult.Success<TemporaryAccommodationPremisesTotalBedspacesByStatus> {
     val bedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
 

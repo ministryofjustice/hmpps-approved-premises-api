@@ -3435,6 +3435,115 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   }
 
   @Nested
+  inner class CancelUnarchivePremises {
+    @Test
+    fun `Cancel unarchive premises returns 200 OK when successful`() {
+      val currentEndDate = LocalDate.now().minusDays(2)
+      val newStartDate = LocalDate.now().plusDays(5)
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesEndDate = currentEndDate,
+        premisesStartDate = LocalDate.now().plusDays(5),
+        premisesStatus = PropertyStatus.archived,
+      ) { userEntity, jwt, premises ->
+
+        val previousStartDate = LocalDate.now().minusDays(30)
+
+        premises.startDate = newStartDate
+        temporaryAccommodationPremisesRepository.save(premises)
+
+        val room = roomEntityFactory.produceAndPersist { withPremises(premises) }
+        val bedspace = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+          withStartDate(newStartDate)
+          withEndDate(currentEndDate)
+        }
+
+        createUnarchivePremisesDomainEvent(
+          premises,
+          userEntity,
+          previousStartDate.minusDays(30),
+          newStartDate.minusDays(15),
+          previousStartDate.minusDays(20),
+        )
+
+        createUnarchivePremisesDomainEvent(
+          premises,
+          userEntity,
+          previousStartDate,
+          newStartDate,
+          currentEndDate,
+        )
+
+        createBedspaceUnarchiveDomainEvent(
+          bedspace,
+          premises.id,
+          userEntity.id,
+          newStartDate.minusDays(15),
+        )
+
+        createBedspaceUnarchiveDomainEvent(
+          bedspace,
+          premises.id,
+          userEntity.id,
+          newStartDate,
+        )
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+
+        val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.archived)
+        assertThat(updatedPremises.startDate).isEqualTo(previousStartDate)
+        assertThat(updatedPremises.endDate).isEqualTo(currentEndDate)
+
+        val updatedBed = bedRepository.findById(bedspace.id).get()
+        assertThat(updatedBed.startDate).isEqualTo(newStartDate)
+        assertThat(updatedBed.endDate).isEqualTo(currentEndDate)
+      }
+    }
+
+    @Test
+    fun `Cancel unarchive premises returns 404 when premises is not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val id = UUID.randomUUID()
+
+        webTestClient.put()
+          .uri("/cas3/premises/$id/cancel-unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("detail").isEqualTo("No Premises with an ID of $id could be found")
+      }
+    }
+
+    @Test
+    fun `Cancel unarchive premises returns 403 when user is not authorized`() {
+      givenAUser { _, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { givenAProbationRegion() }
+        }
+
+        webTestClient.put()
+          .uri("/cas3/premises/${premises.id}/cancel-unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Nested
   inner class CancelScheduledArchivePremises {
     @Test
     fun `Cancel scheduled archive premises returns 200 OK when successful`() {
