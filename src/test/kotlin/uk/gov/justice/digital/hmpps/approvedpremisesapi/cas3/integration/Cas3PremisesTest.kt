@@ -1043,7 +1043,20 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         premises
       }
 
-      val allPremises = (onlinePremisesWithBedspaceWithoutEndDate + onlinePremisesWithBedspaceWithEndDate + archivedPremises)
+      val premisesWithStartDateInFuture = getListPremisesByStatus(
+        probationRegion = probationRegion,
+        probationDeliveryUnit = probationDeliveryUnit,
+        localAuthorityArea = localAuthorityArea,
+        numberOfPremises = 2,
+        startDate = LocalDate.now().plusDays(5),
+        propertyStatus = PropertyStatus.active,
+      ).map { premises ->
+        val upcomingBedspaces = createBedspaces(premises, Cas3BedspaceStatus.upcoming)
+        premisesSummary.add(createPremisesSummary(premises, upcomingBedspaces.size))
+        premises
+      }
+
+      val allPremises = (onlinePremisesWithBedspaceWithoutEndDate + onlinePremisesWithBedspaceWithEndDate + archivedPremises + premisesWithStartDateInFuture)
       return Pair(allPremises.sortedBy { it.id }, premisesSummary.sortedBy { it.id })
     }
 
@@ -1165,6 +1178,38 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           premises.probationDeliveryUnit!!,
           premises.localAuthorityArea!!,
           status,
+          totalOnlineBedspaces = 0,
+          totalUpcomingBedspaces = 0,
+          totalArchivedBedspaces = 0,
+        )
+
+        val responseBody = webTestClient.get()
+          .uri("/cas3/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremises))
+      }
+    }
+
+    @Test
+    fun `Get Premises by ID returns OK with correct body when a premises start date is in the future`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStatus = PropertyStatus.active,
+        premisesStartDate = LocalDate.now().plusDays(3),
+      ) { user, jwt, premises ->
+        val expectedPremises = createCas3Premises(
+          premises,
+          user.probationRegion,
+          premises.probationDeliveryUnit!!,
+          premises.localAuthorityArea!!,
+          Cas3PremisesStatus.archived,
           totalOnlineBedspaces = 0,
           totalUpcomingBedspaces = 0,
           totalArchivedBedspaces = 0,
@@ -2867,10 +2912,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("id").isEqualTo(premises.id.toString())
-          .jsonPath("status").isEqualTo("online")
+          .jsonPath("status").isEqualTo("archived")
 
         val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
         assertThat(updatedPremises.status).isEqualTo(PropertyStatus.active)
+        assertThat(updatedPremises.startDate).isEqualTo(restartDate)
         assertThat(updatedPremises.endDate).isNull()
 
         val updatedBedspaces = bedRepository.findAll()
