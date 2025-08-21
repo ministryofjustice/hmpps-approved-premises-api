@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.WithdrawnBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -106,11 +107,22 @@ class Cas1PlacementApplicationDomainEventService(
   fun placementApplicationWithdrawn(
     placementApplication: PlacementApplicationEntity,
     withdrawalContext: WithdrawalContext,
-    eventOccurredAt: Instant,
   ) {
     require(withdrawalContext.withdrawalTriggeredBy is WithdrawalTriggeredByUser) { "Only withdrawals triggered by users are supported" }
     val user = withdrawalContext.withdrawalTriggeredBy.user
 
+    return placementApplicationWithdrawn(
+      placementApplication = placementApplication,
+      eventOccurredAt = Instant.now(clock),
+      withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
+    )
+  }
+
+  fun placementApplicationWithdrawn(
+    placementApplication: PlacementApplicationEntity,
+    withdrawnBy: WithdrawnBy,
+    eventOccurredAt: Instant,
+  ) {
     val domainEventId = UUID.randomUUID()
     val application = placementApplication.application
 
@@ -124,7 +136,7 @@ class Cas1PlacementApplicationDomainEventService(
       ),
       deliusEventNumber = application.eventNumber,
       withdrawnAt = eventOccurredAt,
-      withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
+      withdrawnBy = withdrawnBy,
       withdrawalReason = placementApplication.withdrawalReason!!.name,
       placementDates = listOfNotNull(
         placementApplication.placementDates()?.let {

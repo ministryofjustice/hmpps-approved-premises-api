@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiDecision
@@ -210,7 +209,6 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             WithdrawableEntityType.PlacementApplication,
             placementApplication.id,
           ),
-          Instant.now(),
         )
       }.hasMessage("Only withdrawals triggered by users are supported")
     }
@@ -221,8 +219,6 @@ class Cas1PlacementApplicationDomainEventServiceTest {
       every { domainEventTransformer.toWithdrawnBy(user) } returns withdrawnBy
       every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
 
-      val now = Instant.now()
-
       service.placementApplicationWithdrawn(
         placementApplication,
         withdrawalContext = WithdrawalContext(
@@ -230,7 +226,6 @@ class Cas1PlacementApplicationDomainEventServiceTest {
           WithdrawableEntityType.PlacementApplication,
           placementApplication.id,
         ),
-        eventOccurredAt = now,
       )
 
       verify(exactly = 1) {
@@ -240,7 +235,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.applicationId).isEqualTo(application.id)
             assertThat(it.crn).isEqualTo(CRN)
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
-            assertThat(it.occurredAt).isEqualTo(now)
+            assertThat(it.occurredAt).isWithinTheLastMinute()
             assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, placementApplication.id.toString())
 
             val eventDetails = it.data.eventDetails
