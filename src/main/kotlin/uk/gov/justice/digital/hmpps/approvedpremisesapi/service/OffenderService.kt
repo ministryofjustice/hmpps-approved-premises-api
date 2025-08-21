@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.manageadjudicationsapi.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.manageadjudicationsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -296,7 +296,6 @@ class OffenderService(
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
     val allAdjudications = mutableListOf<Adjudication>()
-    val allAgencies = mutableListOf<Agency>()
 
     var currentPage: AdjudicationsPage? = null
     var currentPageIndex = 0
@@ -319,13 +318,11 @@ class OffenderService(
       }
 
       allAdjudications.addAll(currentPage.results)
-      allAgencies.addAll(currentPage.agencies)
     } while (currentPage != null && currentPage.results.size == adjudicationsConfig.prisonApiPageSize)
 
     return AuthorisableActionResult.Success(
       AdjudicationsPage(
-        results = allAdjudications,
-        agencies = allAgencies,
+        results = allAdjudications
       ),
     )
   }
