@@ -232,6 +232,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
             .isForbidden
         }
 
+        // this test should contain an offender with an incorrect crn as opposed to not containing any
         @Test
         fun `Searching for a CRN that does not exist returns 404`() {
           apDeliusContextAddCaseSummaryToBulkResponse(
@@ -260,6 +261,8 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
       @Nested
       inner class WhenSuccessful {
+
+        // could be using parameterized tests here
         @Test
         fun `Searching for a CRN returns OK with correct body`() {
           givenACas2v2DeliusUser { _, jwt ->
