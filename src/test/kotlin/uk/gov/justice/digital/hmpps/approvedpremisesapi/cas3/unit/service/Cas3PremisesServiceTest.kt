@@ -3340,101 +3340,71 @@ class Cas3PremisesServiceTest {
   }
 
   @Nested
-  inner class CancelArchiveBedspace {
-
+  inner class CancelScheduledArchiveBedspace {
     @Test
-    fun `cancelArchiveBedspace returns Success when scheduled archive is cancelled`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
-      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
-      val scheduledToArchiveBedspace = BedEntityFactory()
-        .withYieldedRoom { room }
-        .withStartDate(LocalDate.now().minusDays(30))
-        .withEndDate(LocalDate.now().plusDays(1)) // Archived tomorrow
-        .produce()
+    fun `cancelScheduledArchiveBedspace returns Success when scheduled bedspace to archive is cancelled`() {
+      val premises = createPremisesEntity()
+      val bedspaceArchiveDate = LocalDate.now().plusDays(1)
+      val archivedBedspace = createBedspace(premises, LocalDate.now().minusDays(30), bedspaceArchiveDate)
 
-      premises.rooms.add(room)
-      room.beds.add(scheduledToArchiveBedspace)
+      val updatedBedspace = archivedBedspace.copy(endDate = null)
 
-      val updatedBedspace = scheduledToArchiveBedspace.copy(endDate = null)
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
+      val bedspaceDomainEventData = createBedspaceArchiveEvent(premisesId = premises.id, bedspaceId = archivedBedspace.id, userId = UUID.randomUUID(), currentEndDate = null, endDate = bedspaceArchiveDate)
+      val bedspaceDomainEvent = createBedspaceArchiveDomainEvent(bedspaceDomainEventData)
 
-      every { bedRepositoryMock.save(any()) } returns updatedBedspace
+      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(archivedBedspace.id, CAS3_BEDSPACE_ARCHIVED) } returns bedspaceDomainEvent
+      every { bedRepositoryMock.save(match { it.id == archivedBedspace.id }) } returns updatedBedspace
 
-      val result = premisesService.cancelArchiveBedspace(premises, scheduledToArchiveBedspace.id)
+      val result = premisesService.cancelScheduledArchiveBedspace(premises, archivedBedspace.id)
 
       assertThatCasResult(result).isSuccess().with { bed ->
-        assertThat(bed.id).isEqualTo(scheduledToArchiveBedspace.id)
+        assertThat(bed.id).isEqualTo(archivedBedspace.id)
         assertThat(bed.endDate).isNull()
       }
 
       verify(exactly = 1) {
         bedRepositoryMock.save(
           match<BedEntity> {
-            it.id == scheduledToArchiveBedspace.id && it.endDate == null
+            it.id == archivedBedspace.id && it.endDate == null
           },
         )
       }
     }
 
     @Test
-    fun `cancelArchiveBedspace returns FieldValidationError when bedspace does not exist`() {
+    fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace does not exist`() {
       val premises = temporaryAccommodationPremisesFactory.produce()
       val nonExistentBedspaceId = UUID.randomUUID()
 
-      val result = premisesService.cancelArchiveBedspace(premises, nonExistentBedspaceId)
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, nonExistentBedspaceId) } returns null
+
+      val result = premisesService.cancelScheduledArchiveBedspace(premises, nonExistentBedspaceId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "doesNotExist")
     }
 
     @Test
-    fun `cancelArchiveBedspace returns FieldValidationError when bedspace is not scheduled to be archived`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
-      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
-      val onlineBedspace = BedEntityFactory()
-        .withYieldedRoom { room }
-        .withStartDate(LocalDate.now().minusDays(10))
-        .withEndDate(null) // Not archived
-        .produce()
+    fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace is not scheduled to be archived`() {
+      val premises = createPremisesEntity()
+      val onlineBedspace = createBedspace(premises, LocalDate.now().minusDays(10))
 
-      premises.rooms.add(room)
-      room.beds.add(onlineBedspace)
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, onlineBedspace.id) } returns onlineBedspace
 
-      val result = premisesService.cancelArchiveBedspace(premises, onlineBedspace.id)
+      val result = premisesService.cancelScheduledArchiveBedspace(premises, onlineBedspace.id)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceNotScheduledToArchive")
     }
 
-    @Test
-    fun `cancelArchiveBedspace returns FieldValidationError when bedspace is already archived`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
-      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
-      val onlineBedspace = BedEntityFactory()
-        .withYieldedRoom { room }
-        .withStartDate(LocalDate.now().minusDays(10))
-        .withEndDate(LocalDate.now().minusDays(1)) // Archived yesterday
-        .produce()
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3PremisesServiceTest#endDateProvider")
+    fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace is already archived`(endDate: LocalDate) {
+      val premises = createPremisesEntity()
+      val archivedBedspace = createBedspace(premises, LocalDate.now().minusDays(10), endDate)
 
-      premises.rooms.add(room)
-      room.beds.add(onlineBedspace)
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
 
-      val result = premisesService.cancelArchiveBedspace(premises, onlineBedspace.id)
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceAlreadyArchived")
-    }
-
-    @Test
-    fun `cancelArchiveBedspace returns FieldValidationError when bedspace is already archived (today)`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
-      val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
-      val onlineBedspace = BedEntityFactory()
-        .withYieldedRoom { room }
-        .withStartDate(LocalDate.now().minusDays(10))
-        .withEndDate(LocalDate.now()) // Archived today
-        .produce()
-
-      premises.rooms.add(room)
-      room.beds.add(onlineBedspace)
-
-      val result = premisesService.cancelArchiveBedspace(premises, onlineBedspace.id)
+      val result = premisesService.cancelScheduledArchiveBedspace(premises, archivedBedspace.id)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceAlreadyArchived")
     }
@@ -3528,16 +3498,12 @@ class Cas3PremisesServiceTest {
       )
     }
 
-    @ParameterizedTest(name = "When cancelling a scheduled archive premise whose end date is [{0}], return premisesAlreadyArchived")
-    @CsvSource(
-      value = [
-        "Today",
-        "Before Today",
-      ],
-    )
-    fun `When cancelling a scheduled archive premise whose end date is in the past return premisesAlreadyArchived`(endDateLabel: String) {
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3PremisesServiceTest#endDateProvider")
+    fun `When cancelling a scheduled archive premise whose end date is today or in the past return premisesAlreadyArchived`(endDate: LocalDate) {
       val premises = createPremisesEntity()
-      premises.endDate = if (endDateLabel == "Today") LocalDate.now() else LocalDate.now().minusDays(1)
+      premises.endDate = endDate
+      premises.status = PropertyStatus.archived
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
 
@@ -3587,33 +3553,12 @@ class Cas3PremisesServiceTest {
         "premisesArchiveDateInThePast",
       )
     }
-
-    private fun createPremisesEntity(): TemporaryAccommodationPremisesEntity {
-      val probationRegion = ProbationRegionEntityFactory()
-        .withApArea(ApAreaEntityFactory().produce())
-        .produce()
-
-      val localAuthority = LocalAuthorityEntityFactory()
-        .produce()
-
-      val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      return temporaryAccommodationPremisesFactory
-        .withService(ServiceName.temporaryAccommodation.value)
-        .withProbationRegion(probationRegion)
-        .withProbationDeliveryUnit(probationDeliveryUnit)
-        .withLocalAuthorityArea(localAuthority)
-        .withStatus(PropertyStatus.archived)
-        .produce()
-    }
   }
 
   @Nested
-  inner class CancelUnarchiveBedspace {
+  inner class CancelScheduledUnarchiveBedspace {
     @Test
-    fun `cancelUnarchiveBedspace returns Success when scheduled unarchive is cancelled`() {
+    fun `cancelScheduledUnarchiveBedspace returns Success when scheduled unarchive is cancelled`() {
       val bedspaceId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory.produce()
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
@@ -3643,7 +3588,7 @@ class Cas3PremisesServiceTest {
       every { bedRepositoryMock.save(any()) } returns updatedBedspace
       every { cas3DomainEventServiceMock.getLastBedspaceUnarchiveEventDetails(bedspaceId) } returns eventDetails
 
-      val result = premisesService.cancelUnarchiveBedspace(bedspaceId)
+      val result = premisesService.cancelScheduledUnarchiveBedspace(bedspaceId)
 
       assertThatCasResult(result).isSuccess().with { bed ->
         assertThat(bed.id).isEqualTo(bedspaceId)
@@ -3661,7 +3606,7 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `cancelUnarchiveBedspace returns FieldValidationError when bedspace unarchive event does not exist`() {
+    fun `cancelScheduledUnarchiveBedspace returns FieldValidationError when bedspace unarchive event does not exist`() {
       val bedspaceId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory.produce()
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
@@ -3678,14 +3623,14 @@ class Cas3PremisesServiceTest {
       every { cas3DomainEventServiceMock.getLastBedspaceUnarchiveEventDetails(bedspaceId) } returns null
       every { bedRepositoryMock.findById(bedspaceId) } returns Optional.of(scheduledToUnarchiveBedspace)
 
-      val result = premisesService.cancelUnarchiveBedspace(bedspaceId)
+      val result = premisesService.cancelScheduledUnarchiveBedspace(bedspaceId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceNotScheduledToUnarchive")
     }
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3PremisesServiceTest#startDateProvider")
-    fun `cancelUnarchiveBedspace returns FieldValidationError when bedspace startDate (already online)`(startDate: LocalDate) {
+    fun `cancelScheduledUnarchiveBedspace returns FieldValidationError when bedspace startDate (already online)`(startDate: LocalDate) {
       val bedspaceId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory.produce()
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
@@ -3701,13 +3646,13 @@ class Cas3PremisesServiceTest {
 
       every { bedRepositoryMock.findById(bedspaceId) } returns Optional.of(scheduledToUnarchiveBedspace)
 
-      val result = premisesService.cancelUnarchiveBedspace(bedspaceId)
+      val result = premisesService.cancelScheduledUnarchiveBedspace(bedspaceId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceAlreadyOnline")
     }
 
     @Test
-    fun `cancelUnarchiveBedspace returns FieldValidationError when bedspace does not exist`() {
+    fun `cancelScheduledUnarchiveBedspace returns FieldValidationError when bedspace does not exist`() {
       val bedspaceId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory.produce()
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
@@ -3722,16 +3667,16 @@ class Cas3PremisesServiceTest {
       premises.rooms.add(room)
       room.beds.add(scheduledToUnarchiveBedspace)
 
-      val result = premisesService.cancelUnarchiveBedspace(bedspaceId)
+      val result = premisesService.cancelScheduledUnarchiveBedspace(bedspaceId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "doesNotExist")
     }
   }
 
   @Nested
-  inner class CancelUnarchivePremises {
+  inner class CancelScheduledUnarchivePremises {
     @Test
-    fun `cancelUnarchivePremises returns Success when premises is successfully restored to previous state`() {
+    fun `cancelScheduledUnarchivePremises returns Success when premises is successfully restored to previous state`() {
       val previousStartDate = LocalDate.now().minusDays(30)
       val currentEndDate = LocalDate.now().minusDays(2)
       val currentStartDate = LocalDate.now().plusDays(5)
@@ -3775,7 +3720,7 @@ class Cas3PremisesServiceTest {
       every { premisesRepositoryMock.save(any()) } returns premises
       every { bedRepositoryMock.save(any()) } returns bedspace
 
-      val result = premisesService.cancelUnarchivePremises(premises.id)
+      val result = premisesService.cancelScheduledUnarchivePremises(premises.id)
 
       assertThatCasResult(result).isSuccess().with { updatedPremises ->
         assertThat(updatedPremises.id).isEqualTo(premises.id)
@@ -3804,7 +3749,7 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `cancelUnarchivePremises returns FieldValidationError when premises is already online`() {
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises is already online`() {
       val premisesId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory
         .withId(premisesId)
@@ -3814,13 +3759,13 @@ class Cas3PremisesServiceTest {
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premisesId) } returns premises
 
-      val result = premisesService.cancelUnarchivePremises(premisesId)
+      val result = premisesService.cancelScheduledUnarchivePremises(premisesId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyOnline")
     }
 
     @Test
-    fun `cancelUnarchivePremises returns FieldValidationError when premises start date is today`() {
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises start date is today`() {
       val premisesId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory
         .withId(premisesId)
@@ -3830,13 +3775,13 @@ class Cas3PremisesServiceTest {
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premisesId) } returns premises
 
-      val result = premisesService.cancelUnarchivePremises(premisesId)
+      val result = premisesService.cancelScheduledUnarchivePremises(premisesId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyOnline")
     }
 
     @Test
-    fun `cancelUnarchivePremises returns FieldValidationError when no unarchive event found`() {
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when no unarchive event found`() {
       val premisesId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory
         .withId(premisesId)
@@ -3848,13 +3793,13 @@ class Cas3PremisesServiceTest {
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premisesId) } returns premises
       every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premisesId, DomainEventType.CAS3_PREMISES_UNARCHIVED) } returns null
 
-      val result = premisesService.cancelUnarchivePremises(premisesId)
+      val result = premisesService.cancelScheduledUnarchivePremises(premisesId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesNotScheduledToUnarchive")
     }
 
     @Test
-    fun `cancelUnarchivePremises returns FieldValidationError when unarchive event in the past`() {
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when unarchive event in the past`() {
       val premisesId = UUID.randomUUID()
       val premises = temporaryAccommodationPremisesFactory
         .withId(premisesId)
@@ -3879,28 +3824,48 @@ class Cas3PremisesServiceTest {
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premisesId) } returns premises
       every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premisesId, DomainEventType.CAS3_PREMISES_UNARCHIVED) } returns premisesDomainEvent
 
-      val result = premisesService.cancelUnarchivePremises(premisesId)
+      val result = premisesService.cancelScheduledUnarchivePremises(premisesId)
 
       assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesUnarchiveDateInThePast")
     }
 
     @Test
-    fun `cancelUnarchivePremises returns NotFound when premises does not exist`() {
+    fun `cancelScheduledUnarchivePremises returns NotFound when premises does not exist`() {
       val premisesId = UUID.randomUUID()
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premisesId) } returns null
 
-      val result = premisesService.cancelUnarchivePremises(premisesId)
+      val result = premisesService.cancelScheduledUnarchivePremises(premisesId)
 
       assertThatCasResult(result).isNotFound("Premises", premisesId.toString())
     }
   }
 
   private fun createPremisesAndBedspace(): Pair<TemporaryAccommodationPremisesEntity, BedEntity> {
-    val premises = temporaryAccommodationPremisesFactory.produce()
+    val premises = createPremisesEntity()
     val bedspace = createBedspace(premises)
 
     return Pair(premises, bedspace)
+  }
+
+  private fun createPremisesEntity(): TemporaryAccommodationPremisesEntity {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(ApAreaEntityFactory().produce())
+      .produce()
+
+    val localAuthority = LocalAuthorityEntityFactory()
+      .produce()
+
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    return temporaryAccommodationPremisesFactory
+      .withService(ServiceName.temporaryAccommodation.value)
+      .withProbationRegion(probationRegion)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withLocalAuthorityArea(localAuthority)
+      .produce()
   }
 
   private fun createBedspace(premises: TemporaryAccommodationPremisesEntity, startDate: LocalDate = LocalDate.now().minusDays(180), endDate: LocalDate? = null): BedEntity {
@@ -3983,6 +3948,16 @@ class Cas3PremisesServiceTest {
       return Stream.of(
         Arguments.of(startDateNow),
         Arguments.of(starDatePast),
+      )
+    }
+
+    @JvmStatic
+    fun endDateProvider(): Stream<Arguments> {
+      val endDateNow = LocalDate.now().toString()
+      val endDatePast = LocalDate.now().minusDays(1).toString()
+      return Stream.of(
+        Arguments.of(endDateNow),
+        Arguments.of(endDatePast),
       )
     }
   }

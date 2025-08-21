@@ -477,7 +477,7 @@ class Cas3PremisesController(
     }
 
     val result = extractEntityFromCasResult(
-      cas3PremisesService.cancelUnarchiveBedspace(bedspaceId),
+      cas3PremisesService.cancelScheduledUnarchiveBedspace(bedspaceId),
     )
 
     return ResponseEntity.ok(
@@ -497,7 +497,7 @@ class Cas3PremisesController(
     }
 
     val result = extractEntityFromCasResult(
-      cas3PremisesService.cancelArchiveBedspace(premises, bedspaceId),
+      cas3PremisesService.cancelScheduledArchiveBedspace(premises, bedspaceId),
     )
 
     return ResponseEntity.ok(
@@ -535,7 +535,7 @@ class Cas3PremisesController(
     }
 
     val updatedPremises = extractEntityFromCasResult(
-      cas3PremisesService.cancelUnarchivePremises(premisesId),
+      cas3PremisesService.cancelScheduledUnarchivePremises(premisesId),
     )
 
     return ResponseEntity.ok(
