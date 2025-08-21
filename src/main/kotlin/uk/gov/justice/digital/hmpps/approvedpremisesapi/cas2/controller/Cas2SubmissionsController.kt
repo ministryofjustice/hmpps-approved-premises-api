@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -31,7 +30,6 @@ class Cas2SubmissionsController(
   private val applicationService: Cas2ApplicationService,
   private val submissionsTransformer: SubmissionsTransformer,
   private val offenderService: Cas2OffenderService,
-  private val externalUserService: ExternalUserService,
   private val cas2UserService: Cas2UserService,
 ) {
 
@@ -79,7 +77,7 @@ class Cas2SubmissionsController(
   }
 
   private fun ensureExternalUserPersisted() {
-    externalUserService.getUserForRequest()
+    cas2UserService.getCas2UserForRequest()
   }
 
   private fun ensureNomisUserPersisted() {

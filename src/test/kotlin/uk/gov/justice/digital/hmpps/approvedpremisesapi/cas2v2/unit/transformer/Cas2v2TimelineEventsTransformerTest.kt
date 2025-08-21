@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -49,7 +48,7 @@ class Cas2v2TimelineEventsTransformerTest {
         .withLabel("status update")
         .withApplication(submittedCas2v2ApplicationFactory.produce())
         .withAssessor(
-          transformCas2UserEntityToExternalUserEntity(cas2User),
+          cas2User,
         ).produce()
 
       val statusWithDetailCreatedAt = OffsetDateTime.now().minusDays(1)
@@ -78,7 +77,7 @@ class Cas2v2TimelineEventsTransformerTest {
         .withLabel("status update with details")
         .withApplication(submittedCas2v2ApplicationFactory.produce())
         .withAssessor(
-          transformCas2UserEntityToExternalUserEntity(externalCas2User),
+          externalCas2User,
         )
         .produce()
 

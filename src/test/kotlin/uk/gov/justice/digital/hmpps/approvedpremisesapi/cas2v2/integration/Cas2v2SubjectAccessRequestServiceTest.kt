@@ -238,7 +238,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
         "created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
         "label": "${statusUpdate.label}",
-        "assessor_origin": "${statusUpdate.assessor.origin}",
+        "assessor_origin": "${statusUpdate.assessor.externalType}",
     }    
   """.trimIndent()
 //              	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
@@ -309,7 +309,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     withApplication(application)
     withAssessment(assessment)
     withStatusId(UUID.randomUUID())
-    withAssessor(produceAndPersistExternalUserEntity(externalAssessor))
+    withAssessor(externalAssessor)
     withLabel("Some Label")
     withDescription("Some Description")
   }
