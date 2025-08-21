@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OAsysSectionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -37,9 +38,9 @@ class Cas2PeopleController(
   @SuppressWarnings("TooGenericExceptionThrown", "ThrowsCount")
   @GetMapping("/people/search")
   fun peopleSearchGet(@RequestParam nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = cas2UserService.getUserForRequest()
+    val currentUser = cas2UserService.getCas2UserForRequest()
 
-    val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
+    val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser))
 
     when (probationOffenderResult) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")

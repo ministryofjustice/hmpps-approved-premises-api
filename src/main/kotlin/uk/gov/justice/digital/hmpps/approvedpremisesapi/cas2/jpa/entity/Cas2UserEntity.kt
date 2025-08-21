@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
@@ -49,7 +50,6 @@ data class Cas2UserEntity(
   // accountType is Cas2UserType.EXTERNAL
   var externalType: String? = null,
 
-
   // Nomis specific fields that are only expected to have values if the
   // accountType is Cas2UserType.NOMIS
   var nomisStaffId: Long? = null,
@@ -67,6 +67,9 @@ data class Cas2UserEntity(
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
+
+  @UpdateTimestamp
+  private val updatedAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "createdByCas2User")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),

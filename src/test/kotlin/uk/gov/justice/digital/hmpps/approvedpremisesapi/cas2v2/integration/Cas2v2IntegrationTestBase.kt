@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2NoteEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersistedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.IntegrationTestDbManager
@@ -34,27 +33,5 @@ abstract class Cas2v2IntegrationTestBase : IntegrationTestBase() {
     cas2UserEntityFactory = PersistedFactory({ Cas2UserEntityFactory() }, cas2UserRepository)
     cas2NoteEntityFactory = PersistedFactory({ Cas2NoteEntityFactory() }, cas2NoteRepository)
     cas2StatusUpdateDetailEntityFactory = PersistedFactory({ Cas2StatusUpdateDetailEntityFactory() }, cas2StatusUpdateDetailEntityRepository)
-  }
-
-  // TODO besscerule remove below after phase 1
-
-  fun produceAndPersistNomisUserEntity(cas2UserEntity: Cas2UserEntity) = nomisUserEntityFactory.produceAndPersist {
-    withId(cas2UserEntity.id)
-    withNomisUsername(cas2UserEntity.username)
-    withName(cas2UserEntity.name)
-    withEmail(cas2UserEntity.email)
-    withApplications(cas2UserEntity.applications)
-    withNomisStaffIdentifier(cas2UserEntity.nomisStaffId!!)
-    withActiveCaseloadId(cas2UserEntity.activeNomisCaseloadId)
-    withIsActive(cas2UserEntity.isActive)
-    withIsEnabled(cas2UserEntity.isEnabled)
-  }
-
-  fun produceAndPersistExternalUserEntity(cas2UserEntity: Cas2UserEntity) = externalUserEntityFactory.produceAndPersist {
-    withId(cas2UserEntity.id)
-    withUsername(cas2UserEntity.username)
-    withName(cas2UserEntity.name)
-    withEmail(cas2UserEntity.email!!)
-    withIsEnabled(cas2UserEntity.isEnabled)
   }
 }

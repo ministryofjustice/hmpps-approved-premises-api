@@ -9,8 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -286,11 +288,11 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun cas2ApplicationNoteEntity(
     application: Cas2ApplicationEntity,
     assessment: Cas2AssessmentEntity,
-    user: NomisUserEntity,
+    user: Cas2UserEntity,
   ) = cas2NoteEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
-    withCreatedByUser(user)
+    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
     withBody("some body text")
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
   }
@@ -298,12 +300,12 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun cas2StatusUpdateEntity(
     application: Cas2ApplicationEntity,
     assessment: Cas2AssessmentEntity,
-    externalAssessor: ExternalUserEntity,
+    externalAssessor: Cas2UserEntity,
   ): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
     withStatusId(UUID.randomUUID())
-    withAssessor(externalAssessor)
+    withAssessor(transformCas2UserEntityToExternalUserEntity(externalAssessor))
     withLabel("Some Label")
     withDescription("Some Description")
   }
@@ -314,11 +316,12 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withStatusDetailId(UUID.randomUUID())
   }
 
-  private fun externalUserEntity() = externalUserEntityFactory.produceAndPersist {
+  private fun externalUserEntity() = cas2UserEntityFactory.produceAndPersist {
     withName(randomStringMultiCaseWithNumbers(12))
     withEmail(randomEmailAddress())
-    withOrigin("NACRO")
+    withExternalType("NACRO")
     withUsername(randomStringMultiCaseWithNumbers(10))
+    withUserType(Cas2UserType.EXTERNAL)
   }
 
   private fun cas2AssessmentEntity(application: Cas2ApplicationEntity) = cas2AssessmentEntityFactory.produceAndPersist {
@@ -330,11 +333,12 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   private fun cas2ApplicationEntity(
     offenderDetails: OffenderDetailSummary,
-    user: NomisUserEntity,
+    user: Cas2UserEntity,
   ) = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-    withCreatedByUser(user)
+    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
+    withCreatedByCas2User(user)
     withData(DATA_JSON_SIMPLE)
     withDocument(DOCUMENT_JSON_SIMPLE)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
@@ -347,12 +351,17 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withPreferredAreas("some areas")
   }
 
-  private fun nomisUserEntity() = nomisUserEntityFactory.produceAndPersist {
-    withName(randomStringMultiCaseWithNumbers(12))
-    withEmail(randomEmailAddress())
-    withNomisUsername(randomStringMultiCaseWithNumbers(7))
-    withActiveCaseloadId(randomStringMultiCaseWithNumbers(3))
-    withNomisStaffCode(9L)
-    withNomisStaffIdentifier(90L)
+  private fun nomisUserEntity(): Cas2UserEntity {
+    val cas2User = cas2UserEntityFactory.produceAndPersist {
+      withName(randomStringMultiCaseWithNumbers(12))
+      withEmail(randomEmailAddress())
+      withUsername(randomStringMultiCaseWithNumbers(7))
+      withActiveNomisCaseloadId(randomStringMultiCaseWithNumbers(3))
+      withNomisStaffCode(9L)
+      withNomisStaffIdentifier(90L)
+      withUserType(Cas2UserType.NOMIS)
+    }
+    produceAndPersistNomisUserEntity(cas2User)
+    return cas2User
   }
 }

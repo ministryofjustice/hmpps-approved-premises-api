@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.jwt.Jwt
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
@@ -36,18 +38,18 @@ class ExternalUserServiceTest {
       val username = "JIM_JIMMERSON"
       val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
       val mockToken = mockk<Jwt>()
-
       every { mockPrincipal.token } returns mockToken
       every { mockToken.tokenValue } returns "JWT"
 
       every { mockHttpAuthService.getCas2AuthenticatedPrincipalOrThrow() } returns mockPrincipal
       every { mockPrincipal.name } returns username
 
-      val user = ExternalUserEntityFactory().produce()
+      val user = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
+      val externalUser = transformCas2UserEntityToExternalUserEntity(user)
 
-      every { mockUserRepository.findByUsername(username) } returns user
+      every { mockUserRepository.findByUsername(username) } returns externalUser
 
-      assertThat(userService.getUserForRequest()).isEqualTo(user)
+      assertThat(userService.getUserForRequest()).isEqualTo(externalUser)
 
       verify(exactly = 0) { mockManageUsersApiClient.getExternalUserDetails(username, "JWT") }
       verify(exactly = 0) { mockUserRepository.save(any()) }
