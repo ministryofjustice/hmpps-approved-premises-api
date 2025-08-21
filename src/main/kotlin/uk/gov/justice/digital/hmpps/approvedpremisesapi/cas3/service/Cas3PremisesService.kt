@@ -605,7 +605,7 @@ class Cas3PremisesService(
         )
       }
 
-      canArchiveBedspace(filterByPremisesId = premises.id, filterByBedspaceId = null, endDate = endDate)?.let {
+      canArchivePremisesBedspaces(premises.id, endDate)?.let {
         return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
       }
     }
@@ -855,7 +855,7 @@ class Cas3PremisesService(
       return fieldValidationError
     }
 
-    canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, endDate = endDate)?.let { return it }
+    canArchiveBedspace(bedspaceId, endDate)?.let { return it }
 
     val updatedBedspace = archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
 
@@ -1273,21 +1273,33 @@ class Cas3PremisesService(
     entity
   }
 
+  private fun canArchiveBedspace(bedspaceId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, endDate = endDate)
+
+  private fun canArchivePremisesBedspaces(premisesId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = premisesId, filterByBedspaceId = null, endDate = endDate)
+
   private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, endDate: LocalDate): Cas3FieldValidationError<BedEntity>? {
-    val overlapBookings = when {
-      filterByPremisesId != null -> bookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, endDate).sortedByDescending { it.departureDate }
-      filterByBedspaceId != null -> bookingRepository.findActiveOverlappingBookingByBed(filterByBedspaceId, endDate).sortedByDescending { it.departureDate }
+    val allBookings = when {
+      filterByPremisesId != null -> bookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, LocalDate.now()).sortedByDescending { it.departureDate }
+      filterByBedspaceId != null -> bookingRepository.findActiveOverlappingBookingByBed(filterByBedspaceId, LocalDate.now()).sortedByDescending { it.departureDate }
       else -> emptyList()
     }
+    val overlapBookings = allBookings.filter { it.departureDate > endDate }
     val lastOverlapVoid = when {
       filterByPremisesId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(filterByPremisesId, endDate).maxByOrNull { it.endDate }
       filterByBedspaceId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(filterByBedspaceId, endDate).maxByOrNull { it.endDate }
       else -> null
     }
 
-    val lastBookingsTurnaroundDate = overlapBookings.associate {
-      it.id to workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
-    }
+    val lastBookingsTurnaroundDate = allBookings
+      .mapNotNull { booking ->
+        val turnaroundDate = workingDayService.addWorkingDays(booking.departureDate, booking.turnaround?.workingDayCount ?: 0)
+        if (turnaroundDate > endDate) {
+          booking.id to turnaroundDate
+        } else {
+          null
+        }
+      }
+      .toMap()
 
     val lastTurnaroundDateEntry = lastBookingsTurnaroundDate.maxByOrNull { it.value }
     val lastTurnaroundBookingId = lastTurnaroundDateEntry?.key
@@ -1304,8 +1316,7 @@ class Cas3PremisesService(
         ),
       )
     } else if (lastTurnaroundDate != null) {
-      val lastOverlapBooking =
-        getLastBookingOverlapBedspaceArchiveDate(overlapBookings, lastBookingsTurnaroundDate, lastTurnaroundDate)
+      val lastOverlapBooking = getLastBookingOverlapBedspaceArchiveDate(overlapBookings, lastBookingsTurnaroundDate, lastTurnaroundDate)
       return if (lastOverlapBooking != null && lastOverlapBooking.departureDate == lastTurnaroundDate) {
         Cas3FieldValidationError(
           mapOf(

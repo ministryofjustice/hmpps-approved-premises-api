@@ -2336,6 +2336,87 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `When archive a bedspace with a void end date after the bedspace archive date returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+
+        val bedspaceArchivingDate = LocalDate.now().plusDays(10)
+        cas3VoidBedspaceEntityFactory.produceAndPersist {
+          withBed(bedspace)
+          withPremises(premises)
+          withStartDate(bedspaceArchivingDate.minusDays(2))
+          withEndDate(bedspaceArchivingDate.plusDays(2))
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+        }
+
+        val archiveBedspace = Cas3ArchiveBedspace(bedspaceArchivingDate)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingVoid")
+          .jsonPath("$.invalid-params[0].entityId").isEqualTo(bedspace.id.toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(bedspaceArchivingDate.plusDays(3).toString())
+      }
+    }
+
+    @Test
+    fun `When archive a bedspace with a booking turnaround after the bedspace archive date returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { user.probationRegion }
+        }
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+
+        val bedspaceArchivingDate = LocalDate.now().plusDays(10)
+        val booking = bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBed(bedspace)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(randomStringMultiCaseWithNumbers(8))
+          withStatus(BookingStatus.provisional)
+          withArrivalDate(LocalDate.now().minusDays(20))
+          withDepartureDate(bedspaceArchivingDate.minusDays(1))
+        }
+
+        cas3TurnaroundFactory.produceAndPersist {
+          withBooking(booking)
+          withWorkingDayCount(3)
+        }
+
+        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(archiveBedspace)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingTurnaround")
+          .jsonPath("$.invalid-params[0].entityId").isEqualTo(bedspace.id.toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(bedspaceArchivingDate.plusDays(4).toString())
+      }
+    }
+
+    @Test
     fun `When archive a bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
