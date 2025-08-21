@@ -49,7 +49,7 @@ class Cas1RequestForPlacementServiceTest {
 
   private fun mockRfp(): RequestForPlacement {
     val mock = mockk<RequestForPlacement>()
-    every { mock.createdAt } returns Instant.now()
+    every { mock.submittedAt } returns Instant.now()
     return mock
   }
 
