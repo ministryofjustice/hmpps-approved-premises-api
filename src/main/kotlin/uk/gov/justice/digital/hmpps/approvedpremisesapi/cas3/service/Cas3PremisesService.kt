@@ -627,7 +627,7 @@ class Cas3PremisesService(
 
   @SuppressWarnings("TooGenericExceptionThrown")
   fun getAvailabilityForRange(
-    premises: PremisesEntity,
+    premises: TemporaryAccommodationPremisesEntity,
     startDate: LocalDate,
     endDate: LocalDate,
   ): Map<LocalDate, Availability> {
@@ -653,7 +653,7 @@ class Cas3PremisesService(
 
   @SuppressWarnings("MagicNumber")
   fun createBedspace(
-    premises: PremisesEntity,
+    premises: TemporaryAccommodationPremisesEntity,
     bedspaceReference: String,
     startDate: LocalDate,
     notes: String?,
@@ -710,7 +710,7 @@ class Cas3PremisesService(
   }
 
   fun updateBedspace(
-    premises: PremisesEntity,
+    premises: TemporaryAccommodationPremisesEntity,
     bedspaceId: UUID,
     bedspaceReference: String,
     notes: String?,
@@ -1022,7 +1022,7 @@ class Cas3PremisesService(
     success(unarchivedBedspace)
   }
 
-  fun cancelUnarchiveBedspace(
+  fun cancelScheduledUnarchiveBedspace(
     bedspaceId: UUID,
   ): CasResult<BedEntity> = validatedCasResult {
     val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
@@ -1045,12 +1045,12 @@ class Cas3PremisesService(
     success(updatedBedspace)
   }
 
-  fun cancelArchiveBedspace(
-    premises: PremisesEntity,
+  @Transactional
+  fun cancelScheduledArchiveBedspace(
+    premises: TemporaryAccommodationPremisesEntity,
     bedspaceId: UUID,
   ): CasResult<BedEntity> = validatedCasResult {
-    val bedspace = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedspaceId }
-      ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+    val bedspace = bedspaceRepository.findCas3Bedspace(premises.id, bedspaceId) ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
 
     // Check if bedspace not scheduled to archive
     if (bedspace.endDate == null) {
@@ -1062,10 +1062,34 @@ class Cas3PremisesService(
       return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyArchived"
     }
 
-    // Update the bedspace to cancel scheduled archive
+    if (premises.endDate != null && premises.endDate!!.isAfter(LocalDate.now())) {
+      domainEventRepository.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(
+        premises.id,
+        CAS3_PREMISES_ARCHIVED,
+      )?.let {
+        // Premises scheduled to archive, cancel scheduled premises and bedspaces set to archive
+        val result = cancelScheduledArchivePremises(premises.id)
+        if (result is CasResult.FieldValidationError) {
+          return Cas3FieldValidationError(result.validationMessages as Map<String, Cas3ValidationMessage>)
+        }
+
+        val updatedBedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
+          ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+        return success(updatedBedspace)
+      }
+    }
+
+    val latestBedspaceArchiveDomainEvent = domainEventRepository.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(
+      bedspace.id,
+      DomainEventType.CAS3_BEDSPACE_ARCHIVED,
+    ) ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "bedspaceNotScheduledToArchive"
+
+    val bedspaceArchiveDomainEventData = objectMapper.readValue(latestBedspaceArchiveDomainEvent.data, CAS3BedspaceArchiveEvent::class.java)
+
+    // Update the bedspace to cancel a scheduled archive
     val updatedBedspace = bedspaceRepository.save(
       bedspace.copy(
-        endDate = null,
+        endDate = bedspaceArchiveDomainEventData.eventDetails.currentEndDate,
       ),
     )
 
@@ -1109,7 +1133,7 @@ class Cas3PremisesService(
   }
 
   @Transactional
-  fun cancelUnarchivePremises(
+  fun cancelScheduledUnarchivePremises(
     premisesId: UUID,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
