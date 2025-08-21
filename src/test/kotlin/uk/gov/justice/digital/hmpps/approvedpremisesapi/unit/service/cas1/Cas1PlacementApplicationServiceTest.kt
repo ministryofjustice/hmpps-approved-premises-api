@@ -1002,7 +1002,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext, any()) } returns Unit
+      every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any(), any()) } returns Unit
 
       val result = cas1PlacementApplicationService.withdrawPlacementApplication(
@@ -1035,7 +1035,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any(), any()) } returns Unit
+      every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any(), any()) } returns Unit
 
       val result = cas1PlacementApplicationService.withdrawPlacementApplication(
