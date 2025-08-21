@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationStatusTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -151,7 +150,7 @@ class StatusUpdateServiceTest {
       fun setUp() {
         val cas2StatusUpdateEntity = Cas2StatusUpdateEntityFactory()
           .withApplication(application)
-          .withAssessor(transformCas2UserEntityToExternalUserEntity(assessor))
+          .withAssessor(assessor)
           .withStatusId(activeStatus.id)
           .produce()
 
@@ -189,7 +188,7 @@ class StatusUpdateServiceTest {
         statusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
-          assessor = transformCas2UserEntityToExternalUserEntity(assessor),
+          assessor = assessor,
         )
 
         verify {
@@ -246,7 +245,7 @@ class StatusUpdateServiceTest {
         statusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
-          assessor = transformCas2UserEntityToExternalUserEntity(assessor),
+          assessor = assessor,
         )
 
         verify(exactly = 0) {
@@ -267,7 +266,7 @@ class StatusUpdateServiceTest {
           val cas2StatusUpdateEntity = Cas2StatusUpdateEntityFactory()
             .withApplication(application)
             .withAssessment(assessment)
-            .withAssessor(transformCas2UserEntityToExternalUserEntity(assessor))
+            .withAssessor(assessor)
             .withStatusId(activeStatusWithDetail.id)
             .produce()
 
@@ -321,7 +320,7 @@ class StatusUpdateServiceTest {
           statusUpdateService.createForAssessment(
             assessmentId = assessment.id,
             statusUpdate = applicationStatusUpdateWithDetail,
-            assessor = transformCas2UserEntityToExternalUserEntity(assessor),
+            assessor = assessor,
           )
 
           verify {
@@ -398,7 +397,7 @@ class StatusUpdateServiceTest {
           statusUpdateService.createForAssessment(
             assessmentId = assessmentWithNoEmail.id,
             statusUpdate = applicationStatusUpdateWithDetail,
-            assessor = transformCas2UserEntityToExternalUserEntity(assessor),
+            assessor = assessor,
           )
 
           verify(exactly = 1) {
@@ -425,7 +424,7 @@ class StatusUpdateServiceTest {
           statusUpdateService.createForAssessment(
             assessmentId = assessment.id,
             statusUpdate = applicationStatusUpdate,
-            assessor = transformCas2UserEntityToExternalUserEntity(assessor),
+            assessor = assessor,
           )
 
           verify(exactly = 0) {

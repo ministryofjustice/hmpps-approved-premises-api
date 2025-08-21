@@ -25,8 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
@@ -45,7 +43,6 @@ class Cas2AssessmentNoteServiceTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
   private val mockUserService = mockk<Cas2UserService>()
-  private val mockExternalUserService = mockk<ExternalUserService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockUserAccessService = mockk<Cas2UserAccessService>()
@@ -56,7 +53,6 @@ class Cas2AssessmentNoteServiceTest {
     mockAssessmentRepository,
     mockApplicationNoteRepository,
     mockUserService,
-    mockExternalUserService,
     mockHttpAuthService,
     mockEmailNotificationService,
     mockUserAccessService,
@@ -481,7 +477,7 @@ class Cas2AssessmentNoteServiceTest {
           assessment = assessment,
         )
         every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
-        every { mockExternalUserService.getUserForRequest() } returns transformCas2UserEntityToExternalUserEntity(externalUser)
+        every { mockUserService.getCas2UserForRequest() } returns externalUser
         every { cas2EmailService.getReferrerEmail(any()) } returns "email"
         every { mockApplicationNoteRepository.save(any()) } answers
           {
@@ -544,7 +540,7 @@ class Cas2AssessmentNoteServiceTest {
         )
 
         every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
-        every { mockExternalUserService.getUserForRequest() } returns transformCas2UserEntityToExternalUserEntity(externalUser)
+        every { mockUserService.getCas2UserForRequest() } returns externalUser
         every { cas2EmailService.getReferrerEmail(any()) } answers { callOriginal() }
         every { mockApplicationNoteRepository.save(any()) } answers
           {

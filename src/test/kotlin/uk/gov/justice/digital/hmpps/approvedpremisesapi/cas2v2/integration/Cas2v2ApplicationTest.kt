@@ -234,9 +234,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         withStatusId(status.second)
         withApplication(application)
         withAssessor(
-          produceAndPersistExternalUserEntity(
-            cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.EXTERNAL) },
-          ),
+          cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.EXTERNAL) },
         )
       }
 
@@ -382,9 +380,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           withLabel("More information requested")
           withApplication(secondApplicationEntity)
           withAssessor(
-            produceAndPersistExternalUserEntity(
-              cas2User,
-            ),
+            cas2User,
           )
         }
 
@@ -668,18 +664,17 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
   private fun addStatusUpdates(applicationId: UUID, assessor: Cas2UserEntity) {
     val otherCas2Assessor = cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.EXTERNAL) }
-    val otherAssessor = produceAndPersistExternalUserEntity(otherCas2Assessor)
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withLabel("More information requested")
       withApplication(cas2ApplicationRepository.findById(applicationId).get())
-      withAssessor(otherAssessor)
+      withAssessor(otherCas2Assessor)
     }
     // this is the one that should be returned as latestStatusUpdate
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
       withLabel("Awaiting decision")
       withApplication(cas2ApplicationRepository.findById(applicationId).get())
-      withAssessor(produceAndPersistExternalUserEntity(assessor))
+      withAssessor(assessor)
     }
   }
 
