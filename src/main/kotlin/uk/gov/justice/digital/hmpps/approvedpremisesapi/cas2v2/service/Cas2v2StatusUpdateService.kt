@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ref
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.reference.Cas2v2PersistedApplicationStatusFinder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -85,7 +84,7 @@ class Cas2v2StatusUpdateService(
         id = UUID.randomUUID(),
         assessment = assessment,
         application = assessment.application,
-        assessor = transformCas2UserEntityToExternalUserEntity(assessor),
+        assessor = assessor,
         statusId = status.id,
         description = status.description,
         label = status.label,
@@ -153,7 +152,7 @@ class Cas2v2StatusUpdateService(
               username = assessor.username,
               name = assessor.name,
               email = assessor.email!!,
-              origin = "assessor.origin",
+              origin = assessor.externalType,
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),

@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
@@ -143,7 +142,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `Get CAS2 Information - Application with Note and Status update`() {
     val (offenderDetails, _) = givenAnOffender()
     val user = nomisUserEntity()
-    val externalAssessor = externalUserEntity()
+    val externalAssessor = cas2UserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
@@ -179,7 +178,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   fun `Get CAS2 Information - Domain Events`() {
     val (offenderDetails, _) = givenAnOffender()
     val user = nomisUserEntity()
-    val externalAssessor = externalUserEntity()
+    val externalAssessor = cas2UserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
@@ -232,7 +231,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       	"application_id": "${statusUpdate.application.id}",
       	"assessment_id": "${statusUpdate.assessment!!.id}",
       	"assessor_name": "${statusUpdate.assessor.name}",
-        "assessor_origin": "${statusUpdate.assessor.origin}",
+        "assessor_origin": "${statusUpdate.assessor.externalType}",
       	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
         "label": "${statusUpdate.label}"
@@ -305,7 +304,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withApplication(application)
     withAssessment(assessment)
     withStatusId(UUID.randomUUID())
-    withAssessor(transformCas2UserEntityToExternalUserEntity(externalAssessor))
+    withAssessor(externalAssessor)
     withLabel("Some Label")
     withDescription("Some Description")
   }
@@ -316,7 +315,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withStatusDetailId(UUID.randomUUID())
   }
 
-  private fun externalUserEntity() = cas2UserEntityFactory.produceAndPersist {
+  private fun cas2UserEntity() = cas2UserEntityFactory.produceAndPersist {
     withName(randomStringMultiCaseWithNumbers(12))
     withEmail(randomEmailAddress())
     withExternalType("NACRO")

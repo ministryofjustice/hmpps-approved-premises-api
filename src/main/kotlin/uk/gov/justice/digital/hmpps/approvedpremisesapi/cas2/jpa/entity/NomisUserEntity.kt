@@ -23,7 +23,7 @@ interface NomisUserRepository : JpaRepository<NomisUserEntity, UUID> {
 @Table(name = "nomis_users")
 data class NomisUserEntity(
   @Id
-  val id: UUID,
+  override val id: UUID,
   val nomisUsername: String,
   var nomisStaffId: Long,
   override var name: String,

@@ -228,10 +228,6 @@ class Cas2ApplicationService(
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
-    println("hello")
-    println(user)
-    println(application.createdByUser)
-
     if (!application.isCreatedBy(user)) {
       return CasResult.Unauthorised()
     }

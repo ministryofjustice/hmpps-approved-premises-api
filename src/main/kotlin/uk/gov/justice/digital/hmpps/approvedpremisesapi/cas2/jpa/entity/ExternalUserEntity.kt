@@ -18,7 +18,7 @@ interface ExternalUserRepository : JpaRepository<ExternalUserEntity, UUID> {
 @Table(name = "external_users")
 data class ExternalUserEntity(
   @Id
-  val id: UUID,
+  override val id: UUID,
   val username: String,
   var isEnabled: Boolean,
   var origin: String,

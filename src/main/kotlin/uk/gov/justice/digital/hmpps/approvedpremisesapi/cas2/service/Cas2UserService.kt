@@ -247,6 +247,7 @@ class Cas2UserService(
         email = externalUserDetails.email,
         isEnabled = externalUserDetails.enabled,
         isActive = true,
+        createdAt = OffsetDateTime.now(),
       ),
     )
   }

@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -54,7 +53,7 @@ class TimelineEventsTransformerTest {
         .withLabel("status update")
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          transformCas2UserEntityToExternalUserEntity(cas2User),
+          cas2User,
         ).produce()
 
       val statusWithDetailCreatedAt = OffsetDateTime.now().minusDays(1)
@@ -79,10 +78,8 @@ class TimelineEventsTransformerTest {
         .withLabel("status update with details")
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          transformCas2UserEntityToExternalUserEntity(
-            Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).withName("Anne Other Assessor")
-              .produce(),
-          ),
+          Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).withName("Anne Other Assessor")
+            .produce(),
         )
         .produce()
 
