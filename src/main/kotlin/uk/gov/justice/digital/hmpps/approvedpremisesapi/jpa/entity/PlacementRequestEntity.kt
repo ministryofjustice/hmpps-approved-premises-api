@@ -22,6 +22,8 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -194,6 +196,16 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   ): Page<Cas1PlacementRequestSummary>
 }
 
+/**
+ * A [PlacementRequestEntity] is created once a request for placement [PlacementApplicationEntity]
+ * is accepted. All space bookings in the system should be tied to a [PlacementRequestEntity]
+ * (there are a few legacy bookings that are _not_ linked, see [Cas1SpaceBookingEntity.placementRequest])
+ *
+ * When the system was originally written [PlacementApplicationEntity]s were not created for
+ * requests for placements made in the original [ApprovedPremisesApplicationEntity], meaning
+ * not all [PlacementRequestEntity]s are tied to [PlacementApplicationEntity]s. For more information
+ * see [isForLegacyInitialRequestForPlacement]
+ */
 @Entity
 @Table(name = "placement_requests")
 data class PlacementRequestEntity(
@@ -210,6 +222,9 @@ data class PlacementRequestEntity(
   @JoinColumn(name = "assessment_id")
   val assessment: ApprovedPremisesAssessmentEntity,
 
+  /**
+   * See [isForLegacyInitialRequestForPlacement] for why this is nullable
+   */
   @OneToOne
   @JoinColumn(name = "placement_application_id")
   var placementApplication: PlacementApplicationEntity?,
@@ -249,42 +264,40 @@ data class PlacementRequestEntity(
   fun isActive() = !isWithdrawn
 
   /**
-   * Note - we're in the process of fixing the following issue and are now created
-   * placement_application[automatic=true] on application submission for the requested
-   * dates (if any). We still need to backfill placement_application[automatic=true] for
-   * existing entries, the following documentation holds for these entities
+   * Before 26/8/25, if a request for placement was made as part of the original
+   * application, a corresponding [PlacementApplicationEntity] wasn't created. Because
+   * of this, older [PlacementRequestEntity]s maybe not have a corresponding
+   * [PlacementApplicationEntity]
    *
-   * In the model we don't currently have an entity representing the placement request
-   * dates specified when the application was originally created. Instead, this is first
-   * realised as an automatically created [PlacementRequestEntity] when the [AssessmentEntity]
-   * is approved.
+   * As of  26/8/25, we now create a [PlacementApplicationEntity] for all requests
+   * for placements made on the original application, on application authorisation.
+   * These are denoted by having the placement type 'AUTOMATIC'
    *
-   * Ideally we'd model the request for these dates as a subtype of [PlacementApplicationEntity].
-   * Unfortunately, it's non-trivial to amend the data model and workflow implementation
-   * to allow us to use [PlacementApplicationEntity] for this purpose.
-   *
-   * Note that we do populated [PlacementApplicationPlaceholderEntity] to support reporting on
-   * such requests. This could maybe be used as a starting point to fix the data model.
+   * (Note - we have a migration job to fix this that is currnetly under developemnet.
+   * Once complete and ran, all [PlacementRequestEntity]s will have a corresponding
+   * [PlacementApplicationEntity]. The job is [Cas1BackfillAutomaticPlacementApplicationsJob])
    *
    * For Withdrawal functionality we have a use-case for the user to be able to withdraw the original
-   * application dates without withdrawing the whole application and/or assessment.
+   * request for placement without withdrawing the whole application and/or assessment.
    *
-   * Without a first class entity to represent these dates, we have instead elected to use
-   * the [PlacementRequestEntity] that was created for these dates to represent this yet unrealised entity.
+   * Where there isn't a first class entity to represent these requests for placements
+   * (i.e. an entry in [PlacementApplicationEntity]), we instead use the [PlacementRequestEntity]
+   * that was created for these dates to represent the request for placement.
    *
    * Whilst not ideal, this gives us a tangible and addressable entity against which:
    *
-   * 1) The user can request withdrawals
-   * 2) We can raise domain events
-   * 3) We can send emails
-   *
-   * To achieve the aforementioned facade we present such instances of [PlacementRequestEntity] as a
-   * 'Request for Placement' whenever presented to user, whether in a list of withdrawable elements,
-   * being described on the domain event timeline, or being mentioned in an email on withdrawal
+   * 1) The user can withdraw the initial request for placement (by including it in response from
+   * [uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService])
+   * 2) We can raise domain events for request for placement creation and withdrawal
+   * 3) We can use to return request for placement information from [Cas1RequestForPlacementService]
+   * 4) We can send emails
    *
    * This property is used to identify such instances.
+   *
+   * Note that we also populate [PlacementApplicationPlaceholderEntity] for any intial request
+   * for placements to support reporting.
    */
-  fun isForApplicationsArrivalDate() = placementApplication == null
+  fun isForLegacyInitialRequestForPlacement() = placementApplication == null
 }
 
 @Repository

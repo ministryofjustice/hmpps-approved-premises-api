@@ -29,13 +29,13 @@ class Cas1PlacementRequestDomainEventService(
      * date specified on the application), if there is no corresponding
      * placement_application[automatic=true] (in which case a domain event is raised for that instead)
      *
-     * For more information on why we do this, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+     * For more information on why we do this, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
      *
      * If this logic was to be changed to raise domain events on withdrawal of _any_ Match Request,
      * the logic setting requestIsForApplicationsArrivalDate on the domain event should be updated
      * and the logic used to render the event description for the timeline should also be reviewed
      */
-    if (!placementRequest.isForApplicationsArrivalDate()) {
+    if (!placementRequest.isForLegacyInitialRequestForPlacement()) {
       return
     }
 

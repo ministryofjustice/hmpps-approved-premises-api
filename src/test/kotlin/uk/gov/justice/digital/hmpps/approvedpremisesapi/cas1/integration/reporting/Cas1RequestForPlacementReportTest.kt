@@ -951,7 +951,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   ) {
     clock.setNow(withdrawalDate)
 
-    val placementRequestId = getApplication(applicationId).placementRequests.first { it.isForApplicationsArrivalDate() }.id
+    val placementRequestId = getApplication(applicationId).placementRequests.first { it.isForLegacyInitialRequestForPlacement() }.id
 
     cas1SimpleApiClient.placementRequestWithdraw(
       this,

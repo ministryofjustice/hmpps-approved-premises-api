@@ -17,13 +17,19 @@ interface PlacementApplicationPlaceholderRepository : JpaRepository<PlacementApp
 }
 
 /**
- * Used to capture requests for placements implicit in the original applications
+ * Used to capture requests for placements made in the original applications
  * i.e. where an arrival date is defined in the original application
  *
- * These entries are archived on application submission, because we then
- * have a corresponding entry into placement_applications[automatic=true]
+ * For new applications these entries are archived on application submission,
+ * because we then have a corresponding entry into placement_applications[automatic=true]
  *
- * See [PlacementRequestEntity.isForApplicationsArrivalDate] for more information
+ * For older applications where we weren't creating a placement_applications[automatic=true],
+ * these are not archived
+ *
+ * This table only exists to provide us with a unique ID in the requests for placements
+ * report.
+ *
+ * See [PlacementRequestEntity.isForLegacyInitialRequestForPlacement] for more information
  */
 @Entity
 @Table(name = "placement_applications_placeholder")

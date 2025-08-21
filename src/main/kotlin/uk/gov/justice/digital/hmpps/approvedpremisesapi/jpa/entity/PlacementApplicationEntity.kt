@@ -61,6 +61,16 @@ interface LockablePlacementApplicationRepository : JpaRepository<LockablePlaceme
   fun acquirePessimisticLock(id: UUID): LockablePlacementApplicationEntity?
 }
 
+/**
+ * Represents a Request for Placement, either included in the original application
+ * (with some caveats, see below), or made after the application has been assessed
+ *
+ * 'automatic' request for placements are those included in the original application.
+ * These [PlacementApplicationEntity]s are created when that application is assessed
+ * and accepted. Note - these were only created as of 26/8/25.
+ * See [PlacementRequestEntity.isForLegacyInitialRequestForPlacement] for more information.
+ *
+ */
 @Entity
 @Table(name = "placement_applications")
 data class PlacementApplicationEntity(
@@ -111,6 +121,10 @@ data class PlacementApplicationEntity(
    * Automatic applications do not go through the regular placement
    * applications review process (they're approved on creation),
    * or appear as completed tasks
+   *
+   * These type of requests for placemnets were only created as of 26/8/25.
+   * See [PlacementRequestEntity.isForLegacyInitialRequestForPlacement] for
+   * more information
    */
   val automatic: Boolean,
 
