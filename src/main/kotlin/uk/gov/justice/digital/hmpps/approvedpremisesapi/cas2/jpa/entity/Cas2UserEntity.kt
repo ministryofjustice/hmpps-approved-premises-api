@@ -30,13 +30,14 @@ enum class Cas2UserType(val authSource: String) {
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
   fun findByUsername(username: String): Cas2UserEntity?
   fun findByUsernameAndUserType(username: String, type: Cas2UserType): Cas2UserEntity?
+  fun findByUserType(type: Cas2UserType): List<Cas2UserEntity>
 }
 
 @Entity
 @Table(name = "cas_2_users")
 data class Cas2UserEntity(
   @Id
-  val id: UUID,
+  override val id: UUID,
   val username: String,
 
   // Cas2v2User interface implementation

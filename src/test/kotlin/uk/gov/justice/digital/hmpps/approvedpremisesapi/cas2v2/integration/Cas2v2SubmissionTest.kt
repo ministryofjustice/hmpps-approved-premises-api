@@ -399,21 +399,21 @@ class Cas2v2SubmissionTest(
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
-              withAssessor(produceAndPersistExternalUserEntity(assessor))
+              withAssessor(assessor)
               withLabel("1st update")
             }
 
             val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
-              withAssessor(produceAndPersistExternalUserEntity(assessor))
+              withAssessor(assessor)
               withLabel("2nd update")
             }
 
             val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
-              withAssessor(produceAndPersistExternalUserEntity(assessor))
+              withAssessor(assessor)
               withStatusId(UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"))
               withLabel("3rd update")
             }
@@ -577,21 +577,21 @@ class Cas2v2SubmissionTest(
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
-              withAssessor(produceAndPersistExternalUserEntity(assessor))
+              withAssessor(assessor)
               withLabel("1st update")
             }
 
             val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
-              withAssessor(produceAndPersistExternalUserEntity(assessor))
+              withAssessor(assessor)
               withLabel("2nd update")
             }
 
             val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
-              withAssessor(produceAndPersistExternalUserEntity(assessor))
+              withAssessor(assessor)
               withStatusId(UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"))
               withLabel("3rd update")
             }
@@ -732,7 +732,7 @@ class Cas2v2SubmissionTest(
 
                 val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
-                  withAssessor(produceAndPersistExternalUserEntity(assessor))
+                  withAssessor(assessor)
                   withAssessment(assessmentEntity)
                   withLabel("1st update")
                 }
@@ -740,14 +740,14 @@ class Cas2v2SubmissionTest(
                 val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withAssessment(assessmentEntity)
-                  withAssessor(produceAndPersistExternalUserEntity(assessor))
+                  withAssessor(assessor)
                   withLabel("2nd update")
                 }
 
                 val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withAssessment(assessmentEntity)
-                  withAssessor(produceAndPersistExternalUserEntity(assessor))
+                  withAssessor(assessor)
                   withLabel("3rd update")
                 }
 

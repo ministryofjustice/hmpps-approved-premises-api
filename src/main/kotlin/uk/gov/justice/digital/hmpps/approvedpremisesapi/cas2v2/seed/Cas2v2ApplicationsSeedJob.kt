@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
@@ -118,7 +117,7 @@ class Cas2v2ApplicationsSeedJob(
         id = UUID.randomUUID(),
         application = application,
         assessment = application.assessment,
-        assessor = transformCas2UserEntityToExternalUserEntity(assessor),
+        assessor = assessor,
         description = status.description,
         label = status.label,
         statusId = status.id,

@@ -28,7 +28,6 @@ class Cas2AssessmentNoteService(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
   private val userService: Cas2UserService,
-  private val externalUserService: ExternalUserService,
   private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,
   private val userAccessService: Cas2UserAccessService,
@@ -46,7 +45,7 @@ class Cas2AssessmentNoteService(
       ?: return AuthorisableActionResult.NotFound()
 
     if (httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()) {
-      val savedNote = saveNote(assessment, note.note, externalUserService.getUserForRequest())
+      val savedNote = saveNote(assessment, note.note, userService.getCas2UserForRequest())
       sendEmailToReferrer(savedNote)
 
       return AuthorisableActionResult.Success(

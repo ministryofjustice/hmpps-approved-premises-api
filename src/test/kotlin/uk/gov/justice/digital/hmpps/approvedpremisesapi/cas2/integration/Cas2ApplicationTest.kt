@@ -27,12 +27,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
@@ -423,7 +421,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(AssignmentType::class)
     fun `applications with conditional release date before today not returned`(assignmentType: AssignmentType) {
-      givenACas2Assessor { assessor, _ ->
+      givenACas2Assessor { _, _ ->
         givenACas2PomUser { userAPrisonA, jwt ->
           givenAnOffender { offenderDetails, _ ->
 
@@ -454,7 +452,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withActiveNomisCaseloadId(samePrisonCode)
               withUserType(Cas2UserType.NOMIS)
             }
-            samePrisonApplication.createApplicationAssignment(samePrisonCode, transformCas2UserEntityToNomisUserEntity(userBPrisonA))
+
+            samePrisonApplication.createApplicationAssignment(samePrisonCode, produceAndPersistNomisUserEntity(userBPrisonA))
             cas2ApplicationRepository.saveAndFlush(samePrisonApplication)
 
             val unallocatedApplication =
@@ -464,7 +463,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withActiveNomisCaseloadId(otherPrisonCode)
               withUserType(Cas2UserType.NOMIS)
             }
-            unallocatedApplication.createApplicationAssignment(otherPrisonCode, transformCas2UserEntityToNomisUserEntity(userCPrisonB))
+            unallocatedApplication.createApplicationAssignment(otherPrisonCode, produceAndPersistNomisUserEntity(userCPrisonB))
             unallocatedApplication.createApplicationAssignment(samePrisonCode, null)
             cas2ApplicationRepository.saveAndFlush(unallocatedApplication)
 
@@ -586,11 +585,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         withStatusId(status.second)
         withApplication(application)
         withAssessor(
-          transformCas2UserEntityToExternalUserEntity(
-            cas2UserEntityFactory.produceAndPersist {
-              withUserType(Cas2UserType.EXTERNAL)
-            },
-          ),
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.EXTERNAL)
+          },
         )
       }
 
@@ -1082,7 +1079,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  private fun addStatusUpdates(applicationId: UUID, assessor: ExternalUserEntity) {
+  private fun addStatusUpdates(applicationId: UUID, assessor: Cas2UserEntity) {
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withLabel("More information requested")
       withApplication(cas2ApplicationRepository.findById(applicationId).get())
