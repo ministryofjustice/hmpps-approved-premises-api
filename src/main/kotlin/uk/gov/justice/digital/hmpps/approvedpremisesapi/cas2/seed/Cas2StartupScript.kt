@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
@@ -110,7 +111,7 @@ class Cas2StartupScript(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     seedLogger.info("Auto-scripting status update $idx for application ${application.id}")
-    val assessor = cas2UserRepository.findAll().random()
+    val assessor = cas2UserRepository.findByUserType(Cas2UserType.EXTERNAL).random()
     val status = findStatusAtPosition(idx)
     val update = statusUpdateRepository.save(
       Cas2StatusUpdateEntity(
