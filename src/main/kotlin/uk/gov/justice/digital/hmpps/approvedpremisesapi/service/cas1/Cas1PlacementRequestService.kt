@@ -208,7 +208,7 @@ class Cas1PlacementRequestService(
   fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState = WithdrawableState(
     withdrawable = placementRequest.isInWithdrawableState(),
     withdrawn = placementRequest.isWithdrawn,
-    userMayDirectlyWithdraw = placementRequest.isForApplicationsArrivalDate() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
+    userMayDirectlyWithdraw = placementRequest.isForLegacyInitialRequestForPlacement() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
   )
 
   /**
@@ -270,7 +270,7 @@ class Cas1PlacementRequestService(
    * See [uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob] for more information.
    */
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) = placementRequestRepository.findByApplicationId(applicationId)
-    .filter { it.isForApplicationsArrivalDate() }
+    .filter { it.isForLegacyInitialRequestForPlacement() }
 
   private fun updateApplicationStatusOnWithdrawal(
     placementRequest: PlacementRequestEntity,

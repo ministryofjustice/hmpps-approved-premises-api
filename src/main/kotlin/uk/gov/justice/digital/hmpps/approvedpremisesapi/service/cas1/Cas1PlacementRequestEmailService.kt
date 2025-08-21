@@ -55,10 +55,10 @@ class Cas1PlacementRequestEmailService(
       "withdrawnBy" to withdrawalTriggeredBy.getName(),
     )
 
-    if (placementRequest.isForApplicationsArrivalDate()) {
+    if (placementRequest.isForLegacyInitialRequestForPlacement()) {
       /**
        * For information on why we send a request for placement email
-       * instead of match request, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+       * instead of match request, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
        **/
       emailNotifier.sendEmails(
         recipientEmailAddresses = application.interestedPartiesEmailAddresses(),

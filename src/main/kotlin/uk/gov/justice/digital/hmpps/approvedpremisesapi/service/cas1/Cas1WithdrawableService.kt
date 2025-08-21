@@ -238,7 +238,7 @@ enum class WithdrawableEntityType(val label: String) {
   Application("Application"),
 
   /**
-   * See [PlacementRequestEntity.isForApplicationsArrivalDate] for why we label this as Request for Placement
+   * See [PlacementRequestEntity.isForLegacyInitialRequestForPlacement] for why we label this as Request for Placement
    */
   PlacementRequest("Request for Placement"),
   PlacementApplication("Request for Placement"),

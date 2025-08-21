@@ -55,13 +55,13 @@ class RequestForPlacementTransformer(
    * This will only exist once the application has been approved, as such, the potential
    * status' for this entity are limited.
    *
-   * For more information, For more information, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+   * For more information, For more information, see [PlacementRequestEntity.isForLegacyInitialRequestForPlacement]
    */
   fun transformPlacementRequestEntityToApi(
     placementRequestEntity: PlacementRequestEntity,
     canBeDirectlyWithdrawn: Boolean,
   ): RequestForPlacement {
-    check(placementRequestEntity.isForApplicationsArrivalDate()) {
+    check(placementRequestEntity.isForLegacyInitialRequestForPlacement()) {
       "Can only transform placement requests that are for the application's arrival date"
     }
 
