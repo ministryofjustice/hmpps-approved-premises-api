@@ -93,7 +93,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.DomainEventSummaryImpl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -2475,10 +2474,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           val submittedInitialAutomaticPlacementApplication = placementApplicationFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.parse("2007-12-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
-            withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withSubmittedAt(OffsetDateTime.parse("2007-12-03T10:15:30+01"))
             withExpectedArrival(LocalDate.now())
             withRequestedDuration(1)
             withPlacementType(PlacementType.AUTOMATIC)
@@ -2486,10 +2484,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           val submittedAdditionalPlacementApplication = placementApplicationFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.parse("2007-11-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
-            withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withSubmittedAt(OffsetDateTime.parse("2007-11-03T10:15:30+01"))
             withExpectedArrival(LocalDate.now())
             withRequestedDuration(2)
           }
@@ -2504,10 +2501,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           val withdrawnPlacementApplication = placementApplicationFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.parse("2007-10-03T10:15:30+01"))
             withApplication(application)
             withCreatedByUser(user)
-            withSubmittedAt(OffsetDateTime.now())
+            withSubmittedAt(OffsetDateTime.parse("2007-10-03T10:15:30+01"))
             withIsWithdrawn(true)
             withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
             withExpectedArrival(LocalDate.now())
