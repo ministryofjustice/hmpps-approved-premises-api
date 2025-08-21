@@ -19,11 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveActions
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspacesReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
@@ -1451,9 +1451,9 @@ class Cas3PremisesService(
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }
 
-  fun canArchivePremisesInFuture(premisesId: UUID): Cas3BedspacesReference {
+  fun canArchivePremisesInFuture(premisesId: UUID): Cas3ValidationResults {
     val threeMonthsFromToday = LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
-    val affectedBedspaces = mutableListOf<Cas3BedspaceReference>()
+    val affectedBedspaces = mutableListOf<Cas3ValidationResult>()
 
     val overlapBookings = bookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now())
 
@@ -1461,9 +1461,10 @@ class Cas3PremisesService(
       val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
       if (bookingTurnaround >= threeMonthsFromToday) {
         affectedBedspaces.add(
-          Cas3BedspaceReference(
-            id = it.bed!!.id,
-            reference = it.bed!!.name,
+          Cas3ValidationResult(
+            entityId = it.bed!!.id,
+            entityReference = it.bed!!.name,
+            date = bookingTurnaround,
           ),
         )
       }
@@ -1473,15 +1474,47 @@ class Cas3PremisesService(
 
     overlappingVoids.map {
       affectedBedspaces.add(
-        Cas3BedspaceReference(
-          id = it.bed!!.id,
-          reference = it.bed!!.name,
+        Cas3ValidationResult(
+          entityId = it.bed!!.id,
+          entityReference = it.bed!!.name,
+          date = it.endDate,
         ),
       )
     }
 
-    return Cas3BedspacesReference(
-      affectedBedspaces = affectedBedspaces,
+    return Cas3ValidationResults(
+      items = affectedBedspaces,
     )
+  }
+
+  fun canArchiveBedspaceInFuture(premisesId: UUID, bedspaceId: UUID): CasResult<Cas3ValidationResult?> {
+    val bedEntity = bedspaceRepository.findCas3Bedspace(premisesId, bedspaceId) ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
+
+    val threeMonthsFromToday = LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
+    val blockingArchiveDates = mutableListOf<LocalDate>()
+
+    val overlapBookings = bookingRepository.findActiveOverlappingBookingByBed(bedspaceId, LocalDate.now())
+
+    overlapBookings.map {
+      val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
+      if (bookingTurnaround >= threeMonthsFromToday) {
+        blockingArchiveDates += bookingTurnaround
+      }
+    }
+
+    val overlappingVoid = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(
+      bedspaceId,
+      threeMonthsFromToday,
+    ).maxByOrNull { it.endDate }
+
+    if (overlappingVoid != null) {
+      blockingArchiveDates += overlappingVoid.endDate
+    }
+
+    if (blockingArchiveDates.isEmpty()) {
+      return CasResult.Success(null)
+    } else {
+      return CasResult.Success(Cas3ValidationResult(bedspaceId, bedEntity.room.name, blockingArchiveDates.max()))
+    }
   }
 }
