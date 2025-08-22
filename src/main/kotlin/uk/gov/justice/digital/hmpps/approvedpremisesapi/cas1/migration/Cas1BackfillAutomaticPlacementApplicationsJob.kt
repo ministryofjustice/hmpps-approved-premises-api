@@ -210,6 +210,7 @@ interface Cas1BackfillAutomaticPlacementApplicationsRepository : JpaRepository<A
           application_id = :applicationId AND
           type = 'APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN' AND
           cast(data -> 'eventDetails' ->> 'matchRequestId' AS uuid) = :placementRequestId
+        LIMIT 1  
     """,
     nativeQuery = true,
   )
