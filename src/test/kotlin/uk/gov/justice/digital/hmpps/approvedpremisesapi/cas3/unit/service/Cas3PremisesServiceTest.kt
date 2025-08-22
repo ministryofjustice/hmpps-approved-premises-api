@@ -73,6 +73,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -121,6 +122,7 @@ class Cas3PremisesServiceTest {
     workingDayServiceMock,
     cas3DomainEventServiceMock,
     objectMapper,
+    Clock.systemDefaultZone(),
   )
 
   private fun createPremisesUnarchiveEvent(premisesId: UUID, userId: UUID, newStartDate: LocalDate, currentEndDate: LocalDate, currentStartDate: LocalDate = LocalDate.now()): CAS3PremisesUnarchiveEvent {

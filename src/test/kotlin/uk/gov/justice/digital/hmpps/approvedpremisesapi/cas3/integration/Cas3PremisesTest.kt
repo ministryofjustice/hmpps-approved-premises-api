@@ -69,6 +69,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -2374,22 +2375,25 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `When archive a bedspace with a booking turnaround after the bedspace archive date returns 400`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        clock.setNow(LocalDateTime.parse("2025-07-03T10:15:30"))
+
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.now(clock).minusDays(360))
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { user.probationRegion }
         }
-        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now(clock).minusDays(360), endDate = null)
 
-        val bedspaceArchivingDate = LocalDate.now().plusDays(10)
+        val bedspaceArchivingDate = LocalDate.now(clock).plusDays(10)
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBed(bedspace)
           withServiceName(ServiceName.temporaryAccommodation)
           withCrn(randomStringMultiCaseWithNumbers(8))
           withStatus(BookingStatus.provisional)
-          withArrivalDate(LocalDate.now().minusDays(20))
+          withArrivalDate(LocalDate.now(clock).minusDays(20))
           withDepartureDate(bedspaceArchivingDate.minusDays(1))
         }
 
@@ -2412,7 +2416,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingTurnaround")
           .jsonPath("$.invalid-params[0].entityId").isEqualTo(bedspace.id.toString())
-          .jsonPath("$.invalid-params[0].value").isEqualTo(bedspaceArchivingDate.plusDays(3).toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(bedspaceArchivingDate.plusDays(4).toString())
       }
     }
 
