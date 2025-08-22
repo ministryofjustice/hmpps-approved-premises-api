@@ -41,7 +41,7 @@ jobs:
 
   ktlint-check:
     name: KtLintCheck
-    runs-on: ubuntu-latest
+    runs-on: hmpps-github-actions-runner
     needs: gradle_build
     env:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -60,7 +60,7 @@ jobs:
 
   detekt:
     name: detekt
-    runs-on: ubuntu-latest
+    runs-on: hmpps-github-actions-runner
     needs: gradle_build
     env:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -79,7 +79,7 @@ jobs:
 
   unit_test:
     name: Unit tests
-    runs-on: ubuntu-latest
+    runs-on: hmpps-github-actions-runner
     needs: gradle_build
     env:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -129,7 +129,7 @@ jobs:
 
   integration_test:
     name: Integration Test
-    runs-on: ubuntu-latest
+    runs-on: hmpps-github-actions-runner
     needs: gradle_build
     strategy:
       fail-fast: false
