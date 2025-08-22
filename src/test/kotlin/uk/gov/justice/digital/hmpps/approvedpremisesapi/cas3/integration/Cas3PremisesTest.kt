@@ -2398,7 +2398,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withWorkingDayCount(3)
         }
 
-        val archiveBedspace = Cas3ArchiveBedspace(LocalDate.now().plusDays(5))
+        val archiveBedspace = Cas3ArchiveBedspace(bedspaceArchivingDate)
 
         webTestClient.post()
           .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/archive")
@@ -2412,7 +2412,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingTurnaround")
           .jsonPath("$.invalid-params[0].entityId").isEqualTo(bedspace.id.toString())
-          .jsonPath("$.invalid-params[0].value").isEqualTo(bedspaceArchivingDate.plusDays(4).toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(bedspaceArchivingDate.plusDays(3).toString())
       }
     }
 

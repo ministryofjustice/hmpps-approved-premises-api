@@ -1331,7 +1331,7 @@ class Cas3PremisesService(
         Cas3FieldValidationError(
           mapOf(
             "$.endDate" to Cas3ValidationMessage(
-              entityId = overlapBookings.firstOrNull { overlapBooking -> overlapBooking.id == lastTurnaroundBookingId }?.bed?.id.toString(),
+              entityId = allBookings.firstOrNull { booking -> booking.id == lastTurnaroundBookingId }?.bed?.id.toString(),
               message = "existingTurnaround",
               value = lastTurnaroundDate.plusDays(1).toString(),
             ),
