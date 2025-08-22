@@ -22,7 +22,6 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -273,10 +272,6 @@ data class PlacementRequestEntity(
    * for placements made on the original application when the application is
    * authorised and accepted. These placement applications will have a placement
    * type of 'AUTOMATIC'
-   *
-   * (Note - we are developing a migration job [Cas1BackfillAutomaticPlacementApplicationsJob]
-   * that will ensure a placement application exists for every placement request, at which
-   * point this property will be redundant)
    *
    * For Withdrawal functionality we have a use-case for the user to be able to withdraw the original
    * request for placement without withdrawing the whole application and/or assessment.
