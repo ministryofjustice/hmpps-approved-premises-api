@@ -39,6 +39,13 @@ class Cas1ReportService(
       "last_appealed_assessor_name",
       "matcher_username",
       "matcher_name",
+      "ethnicity",
+      "nationality",
+      "religion",
+      "disabilities",
+      "has_physical_disability",
+      "has_learning_social_communication_difficulty",
+      "has_mental_health_condition",
     )
   }
 

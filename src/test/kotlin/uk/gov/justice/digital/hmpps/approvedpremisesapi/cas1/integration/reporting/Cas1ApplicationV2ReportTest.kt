@@ -191,6 +191,13 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(headers).doesNotContain("initial_assessor_name")
         assertThat(headers).doesNotContain("last_appealed_assessor_username")
         assertThat(headers).doesNotContain("last_appealed_assessor_name")
+        assertThat(headers).doesNotContain("ethnicity")
+        assertThat(headers).doesNotContain("nationality")
+        assertThat(headers).doesNotContain("religion")
+        assertThat(headers).doesNotContain("disabilities")
+        assertThat(headers).doesNotContain("has_physical_disability")
+        assertThat(headers).doesNotContain("has_learning_social_communication_difficulty")
+        assertThat(headers).doesNotContain("has_mental_health_condition")
 
         val actual = DataFrame
           .readCSV(completeCsvString.byteInputStream())
@@ -325,12 +332,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.noms).isEqualTo("noms1")
       assertThat(row.age_in_years).isEqualTo("25")
       assertThat(row.gender).isEqualTo("Male")
-      assertThat(row.ethnicity).isEqualTo("not yet provided")
-      assertThat(row.nationality).isEqualTo("not yet provided")
-      assertThat(row.religion).isEqualTo("not yet provided")
-      assertThat(row.has_physical_disability).isEqualTo("not yet provided")
-      assertThat(row.has_learning_social_communication_difficulty).isEqualTo("not yet provided")
-      assertThat(row.has_mental_health_condition).isEqualTo("not yet provided")
       assertThat(row.tier).isEqualTo("C")
       assertThat(row.mappa).isEqualTo("CAT cat1/LEVEL level1")
       assertThat(row.offence_id).isEqualTo("offenceId1")
@@ -341,6 +342,22 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.referral_ldu).isEqualTo("ldu1")
       assertThat(row.referral_region).isEqualTo("refRegion1")
       assertThat(row.referral_team).isEqualTo("refTeam1")
+
+      if (shouldIncludePii) {
+        assertThat(row.ethnicity).isEqualTo("not yet provided")
+        assertThat(row.nationality).isEqualTo("not yet provided")
+        assertThat(row.religion).isEqualTo("not yet provided")
+        assertThat(row.has_physical_disability).isEqualTo("not yet provided")
+        assertThat(row.has_learning_social_communication_difficulty).isEqualTo("not yet provided")
+        assertThat(row.has_mental_health_condition).isEqualTo("not yet provided")
+      } else {
+        assertThat(row.ethnicity).isNull()
+        assertThat(row.nationality).isNull()
+        assertThat(row.religion).isNull()
+        assertThat(row.has_physical_disability).isNull()
+        assertThat(row.has_learning_social_communication_difficulty).isNull()
+        assertThat(row.has_mental_health_condition).isNull()
+      }
 
       if (shouldIncludePii) {
         assertThat(row.referrer_username).isEqualTo("USER1")
@@ -752,12 +769,12 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     val noms: String?,
     val age_in_years: String?,
     val gender: String?,
-    val ethnicity: String,
-    val nationality: String,
-    val religion: String,
-    val has_physical_disability: String,
-    val has_learning_social_communication_difficulty: String,
-    val has_mental_health_condition: String,
+    val ethnicity: String?,
+    val nationality: String?,
+    val religion: String?,
+    val has_physical_disability: String?,
+    val has_learning_social_communication_difficulty: String?,
+    val has_mental_health_condition: String?,
     val tier: String?,
     val mappa: String?,
     val offence_id: String?,
