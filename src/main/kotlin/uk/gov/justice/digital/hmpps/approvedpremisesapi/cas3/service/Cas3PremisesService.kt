@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -82,6 +83,7 @@ class Cas3PremisesService(
   private val workingDayService: WorkingDayService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val objectMapper: ObjectMapper,
+  private val clock: Clock,
 ) {
 
   companion object {
@@ -823,11 +825,11 @@ class Cas3PremisesService(
     val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
       ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
 
-    if (endDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST))) {
+    if (endDate.isBefore(LocalDate.now(clock).minusDays(MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
     }
 
-    if (endDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE))) {
+    if (endDate.isAfter(LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
     }
 
@@ -1279,8 +1281,8 @@ class Cas3PremisesService(
 
   private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, endDate: LocalDate): Cas3FieldValidationError<BedEntity>? {
     val allBookings = when {
-      filterByPremisesId != null -> bookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, LocalDate.now()).sortedByDescending { it.departureDate }
-      filterByBedspaceId != null -> bookingRepository.findActiveOverlappingBookingByBed(filterByBedspaceId, LocalDate.now()).sortedByDescending { it.departureDate }
+      filterByPremisesId != null -> bookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
+      filterByBedspaceId != null -> bookingRepository.findActiveOverlappingBookingByBed(filterByBedspaceId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
       else -> emptyList()
     }
     val overlapBookings = allBookings.filter { it.departureDate > endDate }
