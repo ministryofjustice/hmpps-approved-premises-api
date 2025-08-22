@@ -5,24 +5,19 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PlacementRequestsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
@@ -38,7 +33,6 @@ class Cas1PlacementRequestsController(
   private val cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer,
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderDetailService: OffenderDetailService,
-  private val cas1WithdrawableService: Cas1WithdrawableService,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
 ) : PlacementRequestsCas1Delegate {
 
@@ -105,39 +99,6 @@ class Cas1PlacementRequestsController(
     val user = getUserForRequest()
 
     val placementRequest = extractEntityFromCasResult(placementRequestService.getPlacementRequest(user, id))
-
-    return ResponseEntity.ok(toCas1PlacementRequestDetail(user, placementRequest))
-  }
-
-  override fun withdrawPlacementRequest(
-    id: UUID,
-    body: Cas1WithdrawPlacementRequest?,
-  ): ResponseEntity<Cas1PlacementRequestDetail> {
-    val user = getUserForRequest()
-
-    val reason = when (body?.reason) {
-      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
-      WithdrawPlacementRequestReason.changeInCircumstances -> PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
-      WithdrawPlacementRequestReason.changeInReleaseDecision -> PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION
-      WithdrawPlacementRequestReason.noCapacityDueToLostBed -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
-      WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
-      WithdrawPlacementRequestReason.noCapacity -> PlacementRequestWithdrawalReason.NO_CAPACITY
-      WithdrawPlacementRequestReason.errorInPlacementRequest -> PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.withdrawnByPP -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.relatedApplicationWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.relatedPlacementRequestWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.relatedPlacementApplicationWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      null -> null
-    }
-
-    val (placementRequest, _) = extractEntityFromCasResult(
-      cas1WithdrawableService.withdrawPlacementRequest(
-        id,
-        user,
-        reason,
-      ),
-    )
 
     return ResponseEntity.ok(toCas1PlacementRequestDetail(user, placementRequest))
   }

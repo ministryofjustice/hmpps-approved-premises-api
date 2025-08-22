@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * @param id
  * @param type
- * @param dates 0, 1 or more dates can be specified depending upon the WithdrawableType
+ * @param dates 0 or 1 dates can be specified depending upon the WithdrawableType
  */
 data class Withdrawable(
 

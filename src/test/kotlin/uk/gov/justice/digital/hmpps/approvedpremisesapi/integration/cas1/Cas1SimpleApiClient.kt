@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -105,32 +104,6 @@ class Cas1SimpleApiClient {
   ) {
     integrationTestBase.webTestClient.post()
       .uri("/cas1/assessments/$assessmentId/acceptance")
-      .header("Authorization", "Bearer $assessorJwt")
-      .bodyValue(body)
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
-
-  /**
-   * This uses the /assessments/{id}/acceptance endpoint
-   * instead of /cas1/assessments/{id}/acceptance. The
-   * former endpoint doesn't create a placement_applications
-   * entry for initial requests for placements, providing us
-   * with a way to test reporting on these legacy placements
-   *
-   * Once we've migrated these existing entries to also
-   * have an entry in placement_applications, we can remove
-   * this function
-   */
-  fun assessmentAcceptLegacyBehaviour(
-    integrationTestBase: IntegrationTestBase,
-    assessmentId: UUID,
-    assessorJwt: String,
-    body: AssessmentAcceptance,
-  ) {
-    integrationTestBase.webTestClient.post()
-      .uri("/assessments/$assessmentId/acceptance")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
@@ -296,22 +269,6 @@ class Cas1SimpleApiClient {
       .exchange()
       .expectStatus()
       .isCreated
-  }
-
-  fun placementRequestWithdraw(
-    integrationTestBase: IntegrationTestBase,
-    placementRequestId: UUID,
-    body: WithdrawPlacementRequest,
-  ) {
-    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
-
-    integrationTestBase.webTestClient.post()
-      .uri("/cas1/placement-requests/$placementRequestId/withdrawal")
-      .header("Authorization", "Bearer $managerJwt")
-      .bodyValue(body)
-      .exchange()
-      .expectStatus()
-      .isOk
   }
 
   fun placementRequestBookingNotMade(

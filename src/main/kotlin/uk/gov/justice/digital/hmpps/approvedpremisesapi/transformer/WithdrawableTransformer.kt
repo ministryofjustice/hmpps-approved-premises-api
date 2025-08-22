@@ -14,9 +14,9 @@ class WithdrawableTransformer {
     entity.id,
     when (entity.type) {
       WithdrawableEntityType.Application -> WithdrawableType.application
-      WithdrawableEntityType.PlacementRequest -> WithdrawableType.placementRequest
       WithdrawableEntityType.PlacementApplication -> WithdrawableType.placementApplication
       WithdrawableEntityType.SpaceBooking -> WithdrawableType.spaceBooking
+      WithdrawableEntityType.PlacementRequest -> error("It's not possible to withdraw a placement request directly")
     },
     entity.dates.map { DatePeriod(it.startDate, it.endDate) },
   )

@@ -12,10 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -25,8 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
@@ -35,9 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -1325,94 +1318,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   ),
                 )
             }
-          }
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class WithdrawPlacementRequest {
-    @Test
-    fun `Withdraw Placement Request without a JWT returns 401`() {
-      webTestClient.post()
-        .uri("/cas1/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Withdraw Placement Request without CAS1_CRU_MEMBER returns 403`() {
-      givenAUser { creator, _ ->
-        givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_JANITOR)) { user, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = user) {
-              givenAPlacementRequest(
-                assessmentAllocatedTo = user,
-                createdByUser = creator,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.post()
-                  .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
-                  .header("Authorization", "Bearer $jwt")
-                  .bodyValue(
-                    WithdrawPlacementRequest(
-                      reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
-                    ),
-                  )
-                  .exchange()
-                  .expectStatus()
-                  .isForbidden
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @SuppressWarnings("MaxLineLength")
-    @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, raises domain event, sends email to CRU and Applicant if it represents dates included on application on submission`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
-            apArea = givenAnApArea(),
-            cruManagementArea = givenACas1CruManagementArea(),
-          ) { placementRequest, _ ->
-
-            webTestClient.post()
-              .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
-              .bodyValue(
-                WithdrawPlacementRequest(
-                  reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
-                ),
-              )
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonPath("$.person.crn").isEqualTo(placementRequest.application.crn)
-
-            val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-            assertThat(persistedPlacementRequest.isWithdrawn).isTrue
-            assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-
-            snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN)
-
-            emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(
-              placementRequest.application.cruManagementArea!!.emailAddress!!,
-              Cas1NotifyTemplates.MATCH_REQUEST_WITHDRAWN_V2,
-            )
-            emailAsserter.assertEmailRequested(
-              placementRequest.application.createdByUser.email!!,
-              Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
-            )
           }
         }
       }

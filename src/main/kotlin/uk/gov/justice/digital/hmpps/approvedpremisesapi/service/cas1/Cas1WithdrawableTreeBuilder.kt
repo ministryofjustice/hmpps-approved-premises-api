@@ -33,10 +33,6 @@ class Cas1WithdrawableTreeBuilder(
   fun treeForApp(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableTree {
     val children = mutableListOf<WithdrawableTreeNode>()
 
-    placementRequestService.getPlacementRequestForInitialApplicationDates(application.id).forEach {
-      children.add(treeForPlacementReq(it, user).rootNode)
-    }
-
     cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id).forEach {
       children.add(treeForPlacementApp(it, user).rootNode)
     }
@@ -88,7 +84,7 @@ class Cas1WithdrawableTreeBuilder(
         applicationId = placementRequest.application.id,
         entityType = WithdrawableEntityType.PlacementRequest,
         entityId = placementRequest.id,
-        status = placementRequestService.getWithdrawableState(placementRequest, user),
+        status = placementRequestService.getWithdrawableState(placementRequest),
         dates = listOf(WithdrawableDatePeriod(placementRequest.expectedArrival, placementRequest.expectedDeparture())),
         children = spaceBookingChildren,
       ),

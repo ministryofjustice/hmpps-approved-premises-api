@@ -9,10 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -139,99 +136,6 @@ class Cas1UserAccessServiceTest {
         .produce()
 
       assertThat(service.userMayWithdrawApplication(user, application)).isFalse
-    }
-  }
-
-  @Nested
-  inner class UserMayWithdrawPlacementRequest {
-    private val probationRegion = ProbationRegionEntityFactory().withDefaults().produce()
-    private val user = UserEntityFactory().withProbationRegion(probationRegion).produce()
-    private val anotherUserInRegion = UserEntityFactory().withProbationRegion(probationRegion).produce()
-
-    @Test
-    fun `userMayWithdrawPlacementRequest returns true if application was created by user`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .produce()
-
-      assertThat(service.userMayWithdrawPlacementRequest(user, placementRequest)).isTrue
-    }
-
-    @Test
-    fun `userMayWithdrawPlacementRequest returns false if application was not created by user and doesn't have CAS1_CRU_MEMBER role`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(anotherUserInRegion)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .produce()
-
-      assertThat(service.userMayWithdrawPlacementRequest(user, placementRequest)).isFalse
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementRequest returns true if user has CAS1_CRU_MEMBER or JANITOR role`(
-      role: UserRole,
-    ) {
-      val otherUser = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      otherUser.addRoleForUnitTest(role)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .produce()
-
-      val canWithdrawPlacementRequest = listOf(CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
-
-      assertThat(service.userMayWithdrawPlacementRequest(otherUser, placementRequest)).isEqualTo(canWithdrawPlacementRequest)
     }
   }
 

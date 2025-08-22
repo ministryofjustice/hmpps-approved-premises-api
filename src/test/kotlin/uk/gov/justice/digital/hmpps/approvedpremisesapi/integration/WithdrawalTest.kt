@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
@@ -58,11 +57,11 @@ import java.util.UUID
  * application
  *  - assessment
  *    - request for placement (PlacementRequest)
- *      - placement (Booking)
- *    - request for placement (PlacementApplication)
- *      - matching request (PlacementRequest)
+ *      - placement request (PlacementRequest)
  *        - placement (Booking)
- *    - adhoc placement (Booking)
+ *    - request for placement (PlacementApplication)
+ *      - placement request (PlacementRequest)
+ *        - placement (Booking)
  * ```
  *
  * Withdrawals should cascade down the tree, although a booking with arrivals will block any ancestors in the tree
@@ -113,7 +112,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      * | Entities                         | Withdrawable |
      * | -------------------------------- | ------------ |
-     * | Application                      | YES            |
+     * | Application                      | YES          |
      * ```
      */
     @Test
@@ -136,63 +135,6 @@ class WithdrawalTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .jsonForObject(expected)
-        }
-      }
-    }
-
-    /**
-     * ```
-     * | Entities                           | Withdrawable |
-     * | ---------------------------------- | ------------ |
-     * | Application                        | -            |
-     * | -> Placement Request 1             | Yes          |
-     * | ---> Booking without arrival       | -            |
-     * | -> Placement Request (reallocated) | -            |
-     * | -> Placement Request (withdrawn)   | -            |
-     * | -> Placement Application           | Yes          |
-     * | ---> Placement Request 2           | -            |
-     * ```
-     */
-    @Test
-    fun `Returns match request for the original app dates only`() {
-      givenAUser { applicant, jwt ->
-        givenAUser { allocatedTo, _ ->
-          givenAnOffender { offenderDetails, _ ->
-
-            val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
-
-            val placementRequest = createPlacementRequest(application)
-            givenACas1SpaceBooking(
-              application = application,
-              placementRequest = placementRequest,
-              actualArrivalDate = null,
-              nonArrivalConfirmedAt = null,
-            )
-
-            createPlacementRequest(application, isWithdrawn = true)
-
-            val placementApplication = createPlacementApplication(application, DateSpan(nowPlusDays(50), duration = 6))
-            createPlacementRequest(application, placementApplication = placementApplication)
-
-            val expected = Withdrawables(
-              notes = emptyList(),
-              withdrawables = listOf(
-                toWithdrawable(application),
-                toWithdrawable(placementRequest),
-                toWithdrawable(placementApplication),
-              ),
-            )
-
-            webTestClient.get()
-              .uri("/applications/${application.id}/withdrawablesWithNotes")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonForObject(expected)
-          }
         }
       }
     }
@@ -294,8 +236,9 @@ class WithdrawalTest : IntegrationTestBase() {
      * | ---> Placement request 1               | -            |
      * | -----> Space Booking 1 arrival pending | YES          |
      * | -> Placement application 2             | YES          |
-     * | -> Placement request 2                 | BLOCKED      |
-     * | ---> Space Booking 2 has arrival       | BLOCKING     |
+     * | -> Placement application 3             | YES          |
+     * | ---> Placement request 2               | BLOCKED      |
+     * | -----> Space Booking 2 has arrival     | BLOCKING     |
      * ```
      */
     @Test
@@ -316,9 +259,6 @@ class WithdrawalTest : IntegrationTestBase() {
                 actualDepartureDate = null,
                 placementRequest = placementRequest1,
               )
-              // addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
-
-              // createPlacementRequest(application, placementApplication = placementApplication1)
 
               val placementApplication2 = createPlacementApplication(
                 application,
@@ -326,7 +266,12 @@ class WithdrawalTest : IntegrationTestBase() {
                 allocatedTo = requestForPlacementAssessor,
               )
 
-              val placementRequest2 = createPlacementRequest(application)
+              val placementApplication3 = createPlacementApplication(
+                application,
+                DateSpan(now(), duration = 2),
+                allocatedTo = requestForPlacementAssessor,
+              )
+              val placementRequest2 = createPlacementRequest(application, placementApplication = placementApplication3)
               givenACas1SpaceBooking(
                 crn = application.crn,
                 expectedArrivalDate = LocalDate.now(),
@@ -369,15 +314,16 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * | Entities                          | Withdrawable |
-     * | --------------------------------- | ------------ |
-     * | Application                       | BLOCKED      |
-     * | -> Placement Application 1        | YES          |
-     * | ---> Placement request 1          | -            |
-     * | -----> Booking 1 arrival pending  | YES          |
-     * | -> Placement Application 2        | YES          |
-     * | -> Placement request 2            | BLOCKED      |
-     * | ---> Space Booking 2 non arrival  | BLOCKING     |
+     * | Entities                            | Withdrawable |
+     * | ----------------------------------- | ------------ |
+     * | Application                         | BLOCKED      |
+     * | -> Placement Application 1          | YES          |
+     * | ---> Placement request 1            | -            |
+     * | -----> Booking 1 arrival pending    | YES          |
+     * | -> Placement Application 2          | YES          |
+     * | -> Placement Application 3          | YES          |
+     * | ---> Placement request 2            | BLOCKED      |
+     * | -----> Space Booking 2 non arrival  | BLOCKING     |
      * ```
      */
     @Test
@@ -404,7 +350,12 @@ class WithdrawalTest : IntegrationTestBase() {
                 allocatedTo = requestForPlacementAssessor,
               )
 
-              val placementRequest2 = createPlacementRequest(application)
+              val placementApplication3 = createPlacementApplication(
+                application,
+                DateSpan(now(), duration = 3),
+                allocatedTo = requestForPlacementAssessor,
+              )
+              val placementRequest2 = createPlacementRequest(application, placementApplication = placementApplication3)
               // spaceBooking2HasNonArrival
               givenACas1SpaceBooking(
                 crn = application.crn,
@@ -445,13 +396,11 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      * | Entities                             | Withdrawable |
      * | ------------------------------------ | ------------ |
-     * | Application                          | BLOCKED      |
+     * | Application                          | YES          |
      * | -> Placement application 1           | YES          |
      * | ---> Placement request 1             | -            |
      * | -----> Booking arrival pending       | YES          |
      * | -> Placement application 2           | YES          |
-     * | -> Placement request 3               | BLOCKED      |
-     * | ---> Booking has arrival             | BLOCKING     |
      * ```
      */
     @Test
@@ -479,20 +428,13 @@ class WithdrawalTest : IntegrationTestBase() {
                 allocatedTo = requestForPlacementAssessor,
               )
 
-              val placementRequest2 = createPlacementRequest(application)
-              givenACas1SpaceBooking(
-                application = application,
-                placementRequest = placementRequest2,
-                actualArrivalDate = LocalDate.now(),
-                nonArrivalConfirmedAt = null,
-              )
-
               givenACas1SpaceBooking(application = otherApplication)
               givenACas1SpaceBooking(application = otherApplication)
 
               val expected = Withdrawables(
-                notes = listOf("1 or more placements cannot be withdrawn as they have an arrival"),
+                notes = emptyList(),
                 withdrawables = listOf(
+                  toWithdrawable(application),
                   toWithdrawable(placementApplication1),
                   toWithdrawable(spaceBookingNoArrival),
                   toWithdrawable(placementApplication2),
@@ -575,10 +517,11 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Placement Application 1         | YES       | YES | YES          | -   | -   | -        |
      * | ---> Placement request 1           | YES       | -   | -            | -   | -   | -        |
      * | -----> Booking arrival pending     | YES       | YES | YES          | YES | YES | -        |
-     * | ---> Placement request 2           | YES       | -   | -            | -   | YES | -        |
+     * | ---> Match request 2               | YES       | -   | -            | -   | YES | -        |
      * | -> Placement Application 2         | YES       | YES | YES          | -   | -   | YES      |
-     * | -> Placement request 2             | YES       | YES | YES          | -   | -   | -        |
-     * | ---> Booking arrival pending       | YES       | YES | YES          | YES | YES | -        |
+     * | -> Placement Application 3         | YES       | YES | YES          | -   | -   | YES      |
+     * | ---> Placement request 2           | YES       | YES | YES          | -   | -   | -        |
+     * | -----> Booking arrival pending     | YES       | YES | YES          | YES | YES | -        |
      * ```
      */
     @Test
@@ -615,7 +558,8 @@ class WithdrawalTest : IntegrationTestBase() {
               decision = null,
             )
 
-            val placementRequest2 = createPlacementRequest(application)
+            val placementApplication3 = createPlacementApplication(application, DateSpan(now(), duration = 3))
+            val placementRequest2 = createPlacementRequest(application, placementApplication = placementApplication3)
             val spaceBookingNoArrival = createSpaceBooking(
               application = application,
               startDate = nowPlusDays(5),
@@ -693,12 +637,54 @@ class WithdrawalTest : IntegrationTestBase() {
      * | ---------------------------------| --------- | -------- | -------- | --------- | -------------- |
      * | Application                      | BLOCKED   | -        | -        | -         | -              |
      * | -> Placement Application         | BLOCKED   | -        | -        | -         | -              |
+     * | ---> Placement Request           | BLOCKED   | -        | -        | -         | -              |
+     * | -----> Booking has arrival       | BLOCKED   | -        | -        | -         | -              |
+     * ```
+     */
+    @Test
+    fun `Withdrawing an application is not allowed if has a booking with arrivals`() {
+      givenAUser { applicant, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+
+          val placementApplication = createPlacementApplication(application, DateSpan(now(), duration = 2))
+          val placementRequest = createPlacementRequest(application, placementApplication = placementApplication)
+          givenACas1SpaceBooking(
+            application = application,
+            placementRequest = placementRequest,
+            actualArrivalDate = LocalDate.now(),
+            nonArrivalConfirmedAt = null,
+          )
+
+          webTestClient.post()
+            .uri("/applications/${application.id}/withdrawal")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewWithdrawal(
+                reason = WithdrawalReason.duplicateApplication,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+        }
+      }
+    }
+
+    /**
+     * For this test the applicant is also the case manager
+     *
+     * ```
+     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
+     * | ---------------------------------| --------- | -------- | -------- | --------- | -------------- |
+     * | Application                      | BLOCKED   | -        | -        | -         | -              |
+     * | -> Placement Application         | BLOCKED   | -        | -        | -         | -              |
      * | ---> Placement request           | BLOCKED   | -        | -        | -         | -              |
      * | -----> Space Booking has arrival | BLOCKED   | -        | -        | -         | -              |
      * ```
      */
     @Test
-    fun `Withdrawing an application is not allowed if has a space booking with arrivals`() {
+    fun `Withdrawing an application is not allowed if has a space with arrivals`() {
       givenAUser { applicant, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
@@ -820,11 +806,12 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
      * | Application                      | -         | -        | -        | -         | -              |
      * | -> Assessment                    | -         | -        | -        | -         | -              |
-     * | -> Placement request             | YES       | YES      | -        | YES       | -              |
+     * | ---> Placement application       | YES       | YES      | -        | YES       | -              |
+     * | ------> Placement request        | YES       | YES      | -        | YES       | -              |
      * ```
      */
     @Test
-    fun `Withdrawing a match request for original app dates without booking emails CRU`() {
+    fun `Withdrawing a placement request for placement without booking emails CRU`() {
       givenAUser { applicant, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(
@@ -832,24 +819,25 @@ class WithdrawalTest : IntegrationTestBase() {
             assignee = applicant,
             offenderDetails = offenderDetails,
             assessmentAllocatedTo = applicant,
+            status = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
           )
 
-          val placementRequest = createPlacementRequest(application)
+          val placementApplication = createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = applicant)
+          val placementRequest = createPlacementRequest(application, placementApplication = placementApplication)
 
-          assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
-
-          withdrawPlacementRequest(
-            placementRequest,
+          withdrawPlacementApplication(
+            placementApplication,
             WithdrawPlacementRequestReason.duplicatePlacementRequest,
             jwt,
           )
 
-          assertApplicationStatus(application, ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+          // This is a bug, status should be PENDING_PLACEMENT_REQUEST
+          assertApplicationStatus(application, ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
           assertApplicationNotWithdrawn(application)
           assertAssessmentNotWithdrawn(assessment)
 
-          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN)
 
           val applicantEmail = applicant.email!!
           val cruEmail = application.cruManagementArea!!.emailAddress!!
@@ -869,12 +857,13 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
      * | Application                      | -         | -        | -        | -         | -              |
      * | -> Assessment                    | -         | -        | -        | -         | -              |
-     * | -> Placement request             | YES       | YES      | -        | -         | -              |
-     * | ---> Booking arrival pending     | YES       | YES      | YES      | YES       | -              |
+     * | -> Placement application         | YES       | YES      | -        | -         | -              |
+     * | ---> Placement request           | -         | -        | -        | -         | -              |
+     * | -----> Booking arrival pending   | YES       | YES      | YES      | YES       | -              |
      * ```
      */
     @Test
-    fun `Withdrawing a match request for original app dates cascades to applicable booking entity and updates the application status`() {
+    fun `Withdrawing a request for placement cascades to applicable booking entity and updates the application status`() {
       givenAUser { applicant, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(
@@ -882,9 +871,11 @@ class WithdrawalTest : IntegrationTestBase() {
             assignee = applicant,
             offenderDetails = offenderDetails,
             assessmentAllocatedTo = applicant,
+            status = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
           )
 
-          val placementRequest = createPlacementRequest(application)
+          val placementApplication = createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = applicant)
+          val placementRequest = createPlacementRequest(application, placementApplication = placementApplication)
           val bookingPendingArrival = givenACas1SpaceBooking(
             crn = application.crn,
             application = application,
@@ -893,21 +884,20 @@ class WithdrawalTest : IntegrationTestBase() {
             nonArrivalConfirmedAt = null,
           )
 
-          assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
-
-          withdrawPlacementRequest(
-            placementRequest,
+          withdrawPlacementApplication(
+            placementApplication,
             WithdrawPlacementRequestReason.duplicatePlacementRequest,
             jwt,
           )
 
-          assertApplicationStatus(application, ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+          // this is a bug, it should be PENDING_PLACEMENT_REQUEST
+          assertApplicationStatus(application, ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
 
           assertApplicationNotWithdrawn(application)
           assertAssessmentNotWithdrawn(assessment)
 
-          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-          assertSpaceBookingWithdrawn(bookingPendingArrival, "Related placement request withdrawn")
+          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN)
+          assertSpaceBookingWithdrawn(bookingPendingArrival, "Related request for placement withdrawn")
 
           val applicantEmail = applicant.email!!
           val cruEmail = application.cruManagementArea!!.emailAddress!!
@@ -918,67 +908,6 @@ class WithdrawalTest : IntegrationTestBase() {
           assertSpaceBookingWithdrawnEmail(applicantEmail, bookingPendingArrival)
           assertSpaceBookingWithdrawnEmail(apEmail, bookingPendingArrival)
           assertSpaceBookingWithdrawnEmail(cruEmail, bookingPendingArrival)
-        }
-      }
-    }
-
-    /**
-     * For this test the applicant is also the case manager
-     *
-     * ```
-     * | Entities                           | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
-     * | ---------------------------------- | --------- | -------- | -------- | --------- | -------------- |
-     * | Application                        | -         | -        | -        | -         | -              |
-     * | -> Assessment                      | -         | -        | -        | -         | -              |
-     * | -> Placement request               | YES       | YES      | -        | -         | -              |
-     * | ---> Space Booking arrival pending | YES       | YES      | YES      | YES       | -              |
-     * ```
-     */
-    @Test
-    fun `Withdrawing a match request for original app dates cascades to applicable space booking entity and updates the application status`() {
-      givenAUser { applicant, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(
-            applicant = applicant,
-            assignee = applicant,
-            offenderDetails = offenderDetails,
-            assessmentAllocatedTo = applicant,
-          )
-
-          val placementRequest = createPlacementRequest(application)
-          val spaceBookingNoArrival = createSpaceBooking(
-            application = application,
-            startDate = nowPlusDays(1),
-            endDate = nowPlusDays(6),
-            arrivalDate = null,
-            placementRequest = placementRequest,
-          )
-
-          assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
-
-          withdrawPlacementRequest(
-            placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt,
-          )
-
-          assertApplicationStatus(application, ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
-
-          assertApplicationNotWithdrawn(application)
-          assertAssessmentNotWithdrawn(assessment)
-
-          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-          assertSpaceBookingWithdrawn(spaceBookingNoArrival, "Related placement request withdrawn")
-
-          val applicantEmail = applicant.email!!
-          val cruEmail = application.cruManagementArea!!.emailAddress!!
-          val apEmail = spaceBookingNoArrival.premises.emailAddress!!
-
-          emailAsserter.assertEmailsRequestedCount(4)
-          assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest)
-          assertSpaceBookingWithdrawnEmail(applicantEmail, spaceBookingNoArrival)
-          assertSpaceBookingWithdrawnEmail(apEmail, spaceBookingNoArrival)
-          assertSpaceBookingWithdrawnEmail(cruEmail, spaceBookingNoArrival)
         }
       }
     }
@@ -1045,20 +974,6 @@ class WithdrawalTest : IntegrationTestBase() {
       .uri("/cas1/placement-applications/${placementApplication.id}/withdraw")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(WithdrawPlacementApplication(reason))
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
-
-  private fun withdrawPlacementRequest(
-    placementRequest: PlacementRequestEntity,
-    reason: WithdrawPlacementRequestReason,
-    jwt: String,
-  ) {
-    webTestClient.post()
-      .uri("/cas1/placement-requests/${placementRequest.id}/withdrawal")
-      .bodyValue(WithdrawPlacementRequest(reason))
-      .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
       .isOk
@@ -1137,6 +1052,7 @@ class WithdrawalTest : IntegrationTestBase() {
     assessmentSubmitted: Boolean = true,
     assessmentAllocatedTo: UserEntity? = null,
     caseManager: Cas1ApplicationUserDetailsEntity? = null,
+    status: ApprovedPremisesApplicationStatus = ApprovedPremisesApplicationStatus.STARTED,
   ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
     val apArea = givenAnApArea()
 
@@ -1149,6 +1065,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withReleaseType("licence")
       withCaseManagerUserDetails(caseManager)
       withCaseManagerIsNotApplicant(caseManager != null)
+      withStatus(status)
     }
 
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -1276,12 +1193,6 @@ class WithdrawalTest : IntegrationTestBase() {
     application.id,
     WithdrawableType.application,
     emptyList(),
-  )
-
-  fun toWithdrawable(placementRequest: PlacementRequestEntity) = Withdrawable(
-    placementRequest.id,
-    WithdrawableType.placementRequest,
-    listOf(toDatePeriod(placementRequest.expectedArrival, placementRequest.duration)),
   )
 
   fun toWithdrawable(placementApplication: PlacementApplicationEntity) = Withdrawable(

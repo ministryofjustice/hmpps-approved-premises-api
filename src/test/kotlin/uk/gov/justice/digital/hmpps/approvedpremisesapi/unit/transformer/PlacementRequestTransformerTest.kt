@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
@@ -21,8 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
@@ -44,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 
 class PlacementRequestTransformerTest {
@@ -345,38 +341,6 @@ class PlacementRequestTransformerTest {
       val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
       assertThat(result.booking).isEqualTo(mockBookingSummary)
-    }
-  }
-
-  @Nested
-  inner class TransformToWithdrawable {
-
-    @Test
-    fun `transforms a placement request entity`() {
-      val id = UUID.randomUUID()
-
-      val placementRequestEntity = placementRequestFactory
-        .withId(id)
-        .withPlacementRequirements(placementRequirementsFactory.produce())
-        .withNotes("Some notes")
-        .withExpectedArrival(LocalDate.of(2023, 12, 11))
-        .withDuration(30)
-        .produce()
-
-      val result = placementRequestTransformer.transformToWithdrawable(placementRequestEntity)
-
-      assertThat(result).isEqualTo(
-        Withdrawable(
-          id,
-          WithdrawableType.placementRequest,
-          listOf(
-            DatePeriod(
-              LocalDate.of(2023, 12, 11),
-              LocalDate.of(2024, 1, 10),
-            ),
-          ),
-        ),
-      )
     }
   }
 }

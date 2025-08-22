@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -43,14 +42,6 @@ class Cas1UserAccessService(
           )
     else -> false
   }
-
-  /**
-   * This function only checks if the user has the correct permissions to withdraw the given placement request.
-   *
-   * It doesn't consider if the placement request is in a withdrawable state
-   */
-  fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity) = placementRequest.application.createdByUser == user ||
-    user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS)
 
   /**
    * This function only checks if the user has the correct permissions to withdraw the given placement application.
