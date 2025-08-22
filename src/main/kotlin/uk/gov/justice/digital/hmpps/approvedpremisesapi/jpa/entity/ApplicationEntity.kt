@@ -384,8 +384,9 @@ class ApprovedPremisesApplicationEntity(
   var sentenceType: String?,
   var situation: String?,
   /**
-   * If a request for placement was made in the original application, this provides
-   * the arrival date at midnight in UTC (See ApplicationService.getArrivalDate)
+   * If a request for placement was made in the original application, this value
+   * will provide the requested arrival date at midnight in UTC
+   * (See [ApplicationService.getArrivalDate])
    *
    * Ideally we'd persist this as a date only (as is provided by the UI)
    */
@@ -393,16 +394,16 @@ class ApprovedPremisesApplicationEntity(
   /**
    * The duration agreed by the applicant. This is typically the default duration
    * for the corresponding apType, but the applicant will have the option to
-   * modify this.
+   * modify this if they've specified an arrival date
    *
    * Note that this will be populated even if the applicant didn't make a request
-   * for a placement as part of the original application (i.e. arrivalDate isn't null)
+   * for a placement as part of the original application (i.e. arrivalDate is null)
    */
   var duration: Int?,
   /**
    * The offender name. This should only be used for search purposes (i.e. SQL)
    * If returning the offender name to the user, use the [OffenderService], which
-   * will consider any LAO restrictions
+   * will also consider any LAO restrictions
    */
   @Deprecated("To be replaced by [Cas1OffenderEntity]")
   var name: String,

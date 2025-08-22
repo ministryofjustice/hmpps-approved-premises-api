@@ -148,9 +148,9 @@ class Cas1PlacementRequestService(
 
   @Deprecated(
     """
-    Because all create placement requests are now linked to a placement application, we should 
-    really be using the createPlacementRequestsFromPlacementApplication function as the entry point for all requests. 
-    At that point this function will become private
+    Because all new placement requests are now linked to a placement application, we should 
+    really be using the createPlacementRequestsFromPlacementApplication function as the entry point
+    to create any placement requests. At that point this function will become private
     """,
   )
   fun createPlacementRequest(
