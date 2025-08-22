@@ -229,6 +229,18 @@ class AssessmentService(
     return CasResult.Success(savedAssessment)
   }
 
+  /**
+   * This function is now only used by CAS1 for reporting integration tests
+   * (see Cas1RequestForPlacementReportTest.acceptLatestAssessmentLegacyBehaviour).
+   *
+   * The UI is now using `Cas1AssessmentService` via /cas1/ endpoints.
+   *
+   * Once APS-2577 is complete the related report test can be removed as it's no
+   * longer required (via APS-2596), meaning CAS1 specific code can also
+   * be removed from this function
+   *
+   * Note that CAS3 may still be using this function
+   */
   @Deprecated("will be removed in the near future, use cas specific version instead")
   @SuppressWarnings("ThrowsCount")
   fun acceptAssessment(

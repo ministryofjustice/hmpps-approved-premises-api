@@ -358,12 +358,14 @@ class Cas1AssessmentService(
       authorisedDurationDays = placementDates.duration,
     )
 
-    // This logic should probably be moved into
-    // cas1PlacementApplicationService.createAutomaticPlacementApplication,
-    // (called above)
-    //
-    // That ensures that the Cas1PlacementApplicationService manages all
-    // creations of placement requests from placement applications
+    /*
+    This logic should probably be moved into
+    cas1PlacementApplicationService.createAutomaticPlacementApplication
+    (called above)
+
+    This will ensure that the Cas1PlacementApplicationService manages all
+    creations of placement requests from placement applications
+     */
     placementRequestService.createPlacementRequest(
       placementRequirements,
       placementDates,

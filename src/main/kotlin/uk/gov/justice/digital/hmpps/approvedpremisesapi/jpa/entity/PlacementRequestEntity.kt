@@ -201,10 +201,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
  * is accepted. All space bookings in the system should be tied to a [PlacementRequestEntity]
  * (there are a few legacy bookings that are _not_ linked, see [Cas1SpaceBookingEntity.placementRequest])
  *
- * When the system was originally written [PlacementApplicationEntity]s were not created for
+ * When the system was originally written, [PlacementApplicationEntity]s were not created for
  * requests for placements made in the original [ApprovedPremisesApplicationEntity], meaning
  * not all [PlacementRequestEntity]s are tied to [PlacementApplicationEntity]s. For more information
- * see [isForLegacyInitialRequestForPlacement]
+ * on this see [isForLegacyInitialRequestForPlacement]
  */
 @Entity
 @Table(name = "placement_requests")
@@ -265,24 +265,25 @@ data class PlacementRequestEntity(
 
   /**
    * Before 26/8/25, if a request for placement was made as part of the original
-   * application, a corresponding [PlacementApplicationEntity] wasn't created. Because
-   * of this, older [PlacementRequestEntity]s maybe not have a corresponding
-   * [PlacementApplicationEntity]
+   * application (i.e. an arrival date was defined), a corresponding [PlacementApplicationEntity]
+   * wasn't created. Because of this, older [PlacementRequestEntity]s maybe not have
+   * a corresponding [PlacementApplicationEntity]
    *
    * As of  26/8/25, we now create a [PlacementApplicationEntity] for all requests
-   * for placements made on the original application, on application authorisation.
-   * These are denoted by having the placement type 'AUTOMATIC'
+   * for placements made on the original application when the application is
+   * authorised and accepted. These placement applications will have a placement
+   * type of 'AUTOMATIC'
    *
-   * (Note - we have a migration job to fix this that is currnetly under developemnet.
-   * Once complete and ran, all [PlacementRequestEntity]s will have a corresponding
-   * [PlacementApplicationEntity]. The job is [Cas1BackfillAutomaticPlacementApplicationsJob])
+   * (Note - we are developing a migration job [Cas1BackfillAutomaticPlacementApplicationsJob]
+   * that will ensure a placement application exists for every placement request, at which
+   * point this property will be redundant)
    *
    * For Withdrawal functionality we have a use-case for the user to be able to withdraw the original
    * request for placement without withdrawing the whole application and/or assessment.
    *
-   * Where there isn't a first class entity to represent these requests for placements
-   * (i.e. an entry in [PlacementApplicationEntity]), we instead use the [PlacementRequestEntity]
-   * that was created for these dates to represent the request for placement.
+   * Where there isn't a first class entity to represent initial requests for placements
+   * (i.e. there isn't an entry in [PlacementApplicationEntity]), we instead use the
+   * [PlacementRequestEntity] that was created for these dates to represent the request for placement.
    *
    * Whilst not ideal, this gives us a tangible and addressable entity against which:
    *
@@ -290,12 +291,12 @@ data class PlacementRequestEntity(
    * [uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService])
    * 2) We can raise domain events for request for placement creation and withdrawal
    * 3) We can use to return request for placement information from [Cas1RequestForPlacementService]
-   * 4) We can send emails
    *
-   * This property is used to identify such instances.
+   * This property is used to identify such instances
    *
-   * Note that we also populate [PlacementApplicationPlaceholderEntity] for any intial request
-   * for placements to support reporting.
+   * Note that we also populate [PlacementApplicationPlaceholderEntity] for any initial request
+   * for placements to support reporting on initial requests before a [PlcementRequestEntity]
+   * exists
    */
   fun isForLegacyInitialRequestForPlacement() = placementApplication == null
 }
