@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.PageMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -12,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.caseNotesAPIMockSuccessfulCaseNotesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 class CaseNotesTest : IntegrationTestBase() {
   @Autowired
@@ -113,14 +117,24 @@ class CaseNotesTest : IntegrationTestBase() {
         )
 
         caseNotesAPIMockSuccessfulCaseNotesCall(
-          0,
-          LocalDate.now().minusDays(365),
           offenderDetails.otherIds.nomsNumber!!,
+          CaseNotesRequest(
+            includeSensitive = true,
+            occurredFrom = LocalDateTime.of(LocalDate.now().minusDays(365), LocalTime.MIN),
+            page = 1,
+            size = 30,
+            typeSubTypes = emptySet(),
+            occurredTo = null,
+            sort = "occurredAt,desc",
+          ),
           CaseNotesPage(
-            totalElements = 4,
-            totalPages = 1,
-            number = 1,
             content = caseNotes,
+            hasCaseNotes = true,
+            metadata = PageMetaData(
+              totalElements = 4,
+              size = 1,
+              page = 1,
+            ),
           ),
         )
 
@@ -161,14 +175,22 @@ class CaseNotesTest : IntegrationTestBase() {
         )
 
         caseNotesAPIMockSuccessfulCaseNotesCall(
-          0,
-          LocalDate.now().minusDays(365),
           offenderDetails.otherIds.nomsNumber!!,
+          CaseNotesRequest(
+            includeSensitive = true,
+            occurredFrom = LocalDateTime.of(LocalDate.now().minusDays(365), LocalTime.MIN),
+            page = 1,
+            size = 30,
+            sort = "occurredAt,desc",
+          ),
           CaseNotesPage(
-            totalElements = 5,
-            totalPages = 1,
-            number = 1,
             content = caseNotes,
+            metadata = PageMetaData(
+              size = 1,
+              page = 1,
+              totalElements = 5,
+            ),
+            hasCaseNotes = true,
           ),
         )
 
@@ -182,6 +204,74 @@ class CaseNotesTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(listOf(caseNoteWithType, caseNoteWithTypeDescription).map(caseNoteTransformer::transformModelToApi)),
+          )
+      }
+    }
+  }
+
+  @Test
+  fun `Getting case notes paginates across multiple pages`() {
+    givenAUser { _, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val page1 = listOf(
+          CaseNoteFactory().produce(),
+          CaseNoteFactory().produce(),
+        )
+        val page2 = listOf(
+          CaseNoteFactory().produce(),
+          CaseNoteFactory().produce(),
+        )
+
+        caseNotesAPIMockSuccessfulCaseNotesCall(
+          offenderDetails.otherIds.nomsNumber!!,
+          CaseNotesRequest(
+            includeSensitive = true,
+            occurredFrom = LocalDateTime.of(LocalDate.now().minusDays(365), LocalTime.MIN),
+            page = 1,
+            size = 30,
+            sort = "occurredAt,desc",
+          ),
+          CaseNotesPage(
+            content = page1,
+            hasCaseNotes = true,
+            metadata = PageMetaData(
+              totalElements = 31,
+              size = 30,
+              page = 1,
+            ),
+          ),
+        )
+
+        caseNotesAPIMockSuccessfulCaseNotesCall(
+          offenderDetails.otherIds.nomsNumber,
+          CaseNotesRequest(
+            includeSensitive = true,
+            occurredFrom = LocalDateTime.of(LocalDate.now().minusDays(365), LocalTime.MIN),
+            page = 2,
+            size = 30,
+            sort = "occurredAt,desc",
+          ),
+          CaseNotesPage(
+            content = page2,
+            hasCaseNotes = true,
+            metadata = PageMetaData(
+              totalElements = 31,
+              size = 30,
+              page = 2,
+            ),
+          ),
+        )
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString((page1 + page2).map(caseNoteTransformer::transformModelToApi)),
           )
       }
     }

@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 
 @Component
 class CaseNotesClient(
@@ -15,8 +15,9 @@ class CaseNotesClient(
   objectMapper: ObjectMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
-  fun getCaseNotesPage(nomsNumber: String, from: LocalDate, page: Int, pageSize: Int) = getRequest<CaseNotesPage> {
-    val fromLocalDateTime = LocalDateTime.of(from, LocalTime.MIN)
-    path = "/case-notes/$nomsNumber?startDate=$fromLocalDateTime&page=$page&size=$pageSize"
+  fun getCaseNotesPage(personIdentifier: String, caseNotesRequest: CaseNotesRequest) = postRequest<CaseNotesPage> {
+    path = "/search/case-notes/$personIdentifier"
+    body = objectMapper.writeValueAsString(caseNotesRequest)
+    headers = HttpHeaders().apply { set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) }
   }
 }

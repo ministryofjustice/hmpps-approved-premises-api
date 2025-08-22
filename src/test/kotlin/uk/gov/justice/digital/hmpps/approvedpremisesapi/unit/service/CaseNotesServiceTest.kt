@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.datetime.LocalDateTime
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,12 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.PageMetaData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CaseNotesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
+import java.time.LocalTime
 
 class CaseNotesServiceTest {
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
@@ -45,14 +49,21 @@ class CaseNotesServiceTest {
     fun `getFilteredPrisonCaseNotesByNomsNumber returns NotFound when Case Notes request returns a 404`() {
       val nomsNumber = "NOMS456"
 
+      val caseNotesRequest = CaseNotesRequest(
+        page = 1,
+        includeSensitive = true,
+        occurredFrom = java.time.LocalDateTime.of(LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()), LocalTime.MIN),
+        size = 2,
+        sort = "occurredAt,desc",
+      )
+
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
-          from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
-          page = 0,
-          pageSize = 2,
+          personIdentifier = nomsNumber,
+          caseNotesRequest = caseNotesRequest,
+
         )
-      } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.NOT_FOUND, null)
+      } returns StatusCode(HttpMethod.POST, "/search/case-notes/$nomsNumber", HttpStatus.NOT_FOUND, null)
 
       val result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
       assertThatCasResult(result).isNotFound("CaseNotes", nomsNumber)
@@ -62,14 +73,20 @@ class CaseNotesServiceTest {
     fun `getFilteredPrisonCaseNotesByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
       val nomsNumber = "NOMS456"
 
+      val caseNotesRequest = CaseNotesRequest(
+        page = 1,
+        includeSensitive = true,
+        occurredFrom = java.time.LocalDateTime.of(LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()), LocalTime.MIN),
+        size = 2,
+        sort = "occurredAt,desc",
+      )
+
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
-          from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
-          page = 0,
-          pageSize = 2,
+          personIdentifier = nomsNumber,
+          caseNotesRequest = caseNotesRequest,
         )
-      } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/v2", HttpStatus.FORBIDDEN, null)
+      } returns StatusCode(HttpMethod.POST, "/search/case-notes/$nomsNumber", HttpStatus.FORBIDDEN, null)
 
       val result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
       assertThatCasResult(result).isUnauthorised()
@@ -91,44 +108,63 @@ class CaseNotesServiceTest {
         CaseNoteFactory().withType("TYPE").withSubType("EXCLUDED_SUBTYPE").produce(),
       )
 
-      every {
-        mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
-          from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
-          page = 0,
-          pageSize = 2,
-        )
-      } returns ClientResult.Success(
-        HttpStatus.OK,
-        CaseNotesPage(
-          totalElements = 6,
-          totalPages = 2,
-          number = 1,
-          content = caseNotesPageOne,
-        ),
+      val caseNotesRequest = CaseNotesRequest(
+        page = 1,
+        includeSensitive = true,
+        occurredFrom = java.time.LocalDateTime.of(LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()), LocalTime.MIN),
+        size = 2,
+        sort = "occurredAt,desc",
       )
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
-          from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
-          page = 1,
-          pageSize = 2,
+          personIdentifier = nomsNumber,
+          caseNotesRequest = caseNotesRequest,
         )
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseNotesPage(
-          totalElements = 4,
-          totalPages = 2,
-          number = 2,
+          content = caseNotesPageOne,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            totalElements = 6,
+            page = 1,
+            size = 1,
+          ),
+        ),
+      )
+
+      val caseNotesRequest2 = CaseNotesRequest(
+        page = 2,
+        includeSensitive = true,
+        occurredFrom = java.time.LocalDateTime.of(LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()), LocalTime.MIN),
+        size = 2,
+        sort = "occurredAt,desc",
+      )
+
+      every {
+        mockCaseNotesClient.getCaseNotesPage(
+          personIdentifier = nomsNumber,
+          caseNotesRequest = caseNotesRequest2,
+
+        )
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseNotesPage(
           content = caseNotesPageTwo,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            page = 2,
+            size = 2,
+            totalElements = 4,
+          ),
         ),
       )
 
       val result = service.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, false)
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).containsAll(caseNotesPageOne.subList(0, 1) + caseNotesPageTwo.subList(0, 1))
+        assertThat(it).containsAll(caseNotesPageOne.subList(1, 1) + caseNotesPageTwo.subList(2, 2))
       }
     }
 
@@ -148,37 +184,57 @@ class CaseNotesServiceTest {
         CaseNoteFactory().withTypeDescription("Alert").produce(),
       )
 
-      every {
-        mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
-          from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
-          page = 0,
-          pageSize = 2,
-        )
-      } returns ClientResult.Success(
-        HttpStatus.OK,
-        CaseNotesPage(
-          totalElements = 6,
-          totalPages = 2,
-          number = 1,
-          content = caseNotesPageOne,
-        ),
+      val caseNotesRequest = CaseNotesRequest(
+        page = 1,
+        includeSensitive = true,
+        occurredFrom = java.time.LocalDateTime.of(LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()), LocalTime.MIN),
+        size = 2,
+        sort = "occurredAt,desc",
       )
 
       every {
         mockCaseNotesClient.getCaseNotesPage(
-          nomsNumber = nomsNumber,
-          from = LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()),
-          page = 1,
-          pageSize = 2,
+          personIdentifier = nomsNumber,
+          caseNotesRequest = caseNotesRequest,
+
         )
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseNotesPage(
-          totalElements = 4,
-          totalPages = 2,
-          number = 2,
+          content = caseNotesPageOne,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            totalElements = 6,
+            page = 1,
+            size = 2,
+          ),
+        ),
+      )
+
+      val caseNotesRequest2 = CaseNotesRequest(
+        page = 2,
+        includeSensitive = true,
+        occurredFrom = java.time.LocalDateTime.of(LocalDate.now().minusDays(prisonCaseNotesConfigBindingModel.lookbackDays!!.toLong()), LocalTime.MIN),
+        size = 2,
+        sort = "occurredAt,desc",
+      )
+
+      every {
+        mockCaseNotesClient.getCaseNotesPage(
+          personIdentifier = nomsNumber,
+          caseNotesRequest = caseNotesRequest2,
+
+        )
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseNotesPage(
           content = caseNotesPageTwo,
+          hasCaseNotes = true,
+          metadata = PageMetaData(
+            page = 2,
+            size = 2,
+            totalElements = 4,
+          ),
         ),
       )
 

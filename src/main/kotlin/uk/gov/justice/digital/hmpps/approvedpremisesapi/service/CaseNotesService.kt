@@ -6,11 +6,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class CaseNotesService(
@@ -46,15 +49,18 @@ class CaseNotesService(
     val fromDate = LocalDate.now().minusDays(prisonCaseNotesConfig.lookbackDays.toLong())
 
     var currentPage: CaseNotesPage?
-    var currentPageIndex: Int? = null
+    var nextPageNumber = 1
+    val requestedPageSize = prisonCaseNotesConfig.prisonApiPageSize
     do {
-      if (currentPageIndex == null) {
-        currentPageIndex = 0
-      } else {
-        currentPageIndex += 1
-      }
+      val caseNotesRequest = CaseNotesRequest(
+        page = nextPageNumber,
+        size = requestedPageSize,
+        occurredFrom = LocalDateTime.of(fromDate, LocalTime.MIN),
+        includeSensitive = true,
+        sort = "occurredAt,desc",
+      )
 
-      val caseNotesPageResponse = caseNotesClient.getCaseNotesPage(nomsNumber, fromDate, currentPageIndex, prisonCaseNotesConfig.prisonApiPageSize)
+      val caseNotesPageResponse = caseNotesClient.getCaseNotesPage(nomsNumber, caseNotesRequest)
       currentPage = when (caseNotesPageResponse) {
         is ClientResult.Success -> caseNotesPageResponse.body
         is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
@@ -76,7 +82,11 @@ class CaseNotesService(
           }
         },
       )
-    } while (currentPage != null && currentPage.totalPages > currentPageIndex!! + 1)
+
+      nextPageNumber = currentPage.metadata.page + 1
+    } while (
+      (currentPage.metadata.page * requestedPageSize) < currentPage.metadata.totalElements
+    )
 
     return CasResult.Success(allCaseNotes)
   }
