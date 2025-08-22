@@ -23,9 +23,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
-import java.time.Instant
 import java.util.UUID
 
+/**
+ * Note - Development of this backfill job is still in progress and needs testing before
+ * running in prod. For more information, see notes on APS-2577
+ */
 @Service
 class Cas1BackfillAutomaticPlacementApplicationsJob(
   private val transactionTemplate: TransactionTemplate,
@@ -154,18 +157,22 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
     placementRequest.placementApplication = placementApplication
 
     if (placementApplication.isWithdrawn) {
-      val matchRequestWithdrawnDomainEvent = cas1DomainEventService.getMatchRequestWithdrawnEvent(
-        cas1BackfillAutomaticPlacementApplicationsRepository.findMatchRequestWithdrawnEventId(
-          applicationId = application.id,
-          placementRequestId = placementRequest.id,
-        ) ?: error("cannot find withdrawal domain event for placement request ${placementRequest.id}"),
-      )!!
-
-      cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(
-        placementApplication = placementApplication,
-        withdrawnBy = matchRequestWithdrawnDomainEvent.data.eventDetails.withdrawnBy,
-        eventOccurredAt = matchRequestWithdrawnDomainEvent.data.timestamp,
+      val withdrawnDomainEventId = cas1BackfillAutomaticPlacementApplicationsRepository.findMatchRequestWithdrawnEventId(
+        applicationId = application.id,
+        placementRequestId = placementRequest.id,
       )
+
+      if (withdrawnDomainEventId != null) {
+        val matchRequestWithdrawnDomainEvent = cas1DomainEventService.getMatchRequestWithdrawnEvent(withdrawnDomainEventId)!!
+        cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(
+          placementApplication = placementApplication,
+          withdrawnBy = matchRequestWithdrawnDomainEvent.data.eventDetails.withdrawnBy,
+          eventOccurredAt = matchRequestWithdrawnDomainEvent.data.timestamp,
+        )
+      } else {
+        // we didn't initially create match request withdrawn events. this warning should only appear for older placement requests
+        log.warn("could not find match request withdrawn domain event for placement request ${placementRequest.id} created on ${placementRequest.createdAt}")
+      }
     }
   }
 
@@ -207,9 +214,4 @@ interface Cas1BackfillAutomaticPlacementApplicationsRepository : JpaRepository<A
     nativeQuery = true,
   )
   fun findMatchRequestWithdrawnEventId(applicationId: UUID, placementRequestId: UUID): UUID?
-
-  interface PlacementRequestWithdrawnInfo {
-    fun getWithdrawnBy(): String?
-    fun getOccurredAt(): Instant
-  }
 }
