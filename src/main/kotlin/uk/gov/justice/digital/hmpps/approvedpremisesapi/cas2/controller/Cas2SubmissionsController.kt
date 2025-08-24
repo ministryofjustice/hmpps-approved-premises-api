@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.SubmissionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -30,7 +30,6 @@ class Cas2SubmissionsController(
   private val applicationService: Cas2ApplicationService,
   private val submissionsTransformer: SubmissionsTransformer,
   private val offenderService: Cas2OffenderService,
-  private val externalUserService: ExternalUserService,
   private val cas2UserService: Cas2UserService,
 ) {
 
@@ -69,8 +68,8 @@ class Cas2SubmissionsController(
   @PostMapping("/submissions")
   @Transactional
   fun submissionsPost(@RequestBody submitCas2Application: SubmitCas2Application): ResponseEntity<Unit> {
-    val user = cas2UserService.getUserForRequest()
-    val submitResult = applicationService.submitApplication(submitCas2Application, user)
+    val user = cas2UserService.getCas2UserForRequest()
+    val submitResult = applicationService.submitApplication(submitCas2Application, transformCas2UserEntityToNomisUserEntity(user))
 
     extractEntityFromCasResult(submitResult)
 
@@ -78,11 +77,11 @@ class Cas2SubmissionsController(
   }
 
   private fun ensureExternalUserPersisted() {
-    externalUserService.getUserForRequest()
+    cas2UserService.getCas2UserForRequest()
   }
 
   private fun ensureNomisUserPersisted() {
-    cas2UserService.getUserForRequest()
+    cas2UserService.getCas2UserForRequest()
   }
 
   private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2SubmittedApplicationSummary> {

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -20,7 +21,8 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(userEntity)
+          withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+          withCreatedByCas2User(userEntity)
           withSubmittedAt(OffsetDateTime.now())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -28,7 +30,7 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
         }
 
         application.createApplicationAssignment(prisonCode = "LON1", allocatedPomUser = null)
-        application.createApplicationAssignment(prisonCode = "LON2", allocatedPomUser = userEntity)
+        application.createApplicationAssignment(prisonCode = "LON2", allocatedPomUser = transformCas2UserEntityToNomisUserEntity(userEntity))
         application.createApplicationAssignment(prisonCode = "LON3", allocatedPomUser = null)
         application.createApplicationAssignment(prisonCode = "LON4", allocatedPomUser = null)
 
@@ -55,7 +57,8 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(userEntity)
+          withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+          withCreatedByCas2User(userEntity)
           withSubmittedAt(OffsetDateTime.now())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -67,7 +70,7 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
           application = application,
           prisonCode = "LON1",
           createdAt = OffsetDateTime.now().minusDays(3),
-          allocatedPomUser = userEntity,
+          allocatedPomUser = transformCas2UserEntityToNomisUserEntity(userEntity),
         )
 
         val assignment2 = Cas2ApplicationAssignmentEntity(
@@ -101,14 +104,17 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
       givenACas2PomUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationHDC = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
+            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+            withCreatedByCas2User(userEntity)
           }
           val applicationCourt = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
+            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+            withCreatedByCas2User(userEntity)
             withApplicationOrigin(ApplicationOrigin.courtBail)
           }
           val applicationPrison = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
+            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+            withCreatedByCas2User(userEntity)
             withApplicationOrigin(ApplicationOrigin.prisonBail)
           }
 
@@ -134,11 +140,13 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
       givenACas2PomUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationNoBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
+            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+            withCreatedByCas2User(userEntity)
           }
 
           val applicationBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
+            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+            withCreatedByCas2User(userEntity)
             withBailHearingDate(now)
           }
 

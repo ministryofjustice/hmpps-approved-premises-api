@@ -9,7 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import java.time.OffsetDateTime
@@ -72,9 +73,10 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
     Assertions.assertThat(unsubmittedApplication.get().assessment).isNull()
   }
 
-  private fun createApplicationEntity(userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
+  private fun createApplicationEntity(userEntity: Cas2UserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withCreatedByUser(userEntity)
+    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
+    withCreatedByCas2User(userEntity)
     withData("{}")
     withSubmittedAt(submittedAt)
   }

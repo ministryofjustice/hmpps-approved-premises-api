@@ -20,7 +20,7 @@ interface NomisUserRepository : JpaRepository<NomisUserEntity, UUID> {
 @Table(name = "nomis_users")
 data class NomisUserEntity(
   @Id
-  val id: UUID,
+  override val id: UUID,
   val nomisUsername: String,
   var nomisStaffId: Long,
   override var name: String,
@@ -35,6 +35,6 @@ data class NomisUserEntity(
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
-) : Cas2User {
+) : UnifiedUser {
   override fun toString() = "Nomis user $id"
 }
