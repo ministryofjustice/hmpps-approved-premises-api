@@ -84,8 +84,7 @@ class Cas2v2StatusUpdateTest(
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { applicant, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(produceAndPersistNomisUserEntity(applicant))
-            withCreatedByCas2User(applicant)
+            withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
           }
 
@@ -152,8 +151,7 @@ class Cas2v2StatusUpdateTest(
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { applicant, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(produceAndPersistNomisUserEntity(applicant))
-            withCreatedByCas2User(applicant)
+            withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
           }
 
@@ -187,8 +185,7 @@ class Cas2v2StatusUpdateTest(
           givenACas2v2Assessor { _, jwt ->
             givenACas2v2PomUser { applicant, _ ->
               val application = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(produceAndPersistNomisUserEntity(applicant))
-                withCreatedByCas2User(applicant)
+                withCreatedByUser(applicant)
                 withSubmittedAt(submittedAt)
                 withNomsNumber("123NOMS")
               }

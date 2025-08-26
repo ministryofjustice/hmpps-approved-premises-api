@@ -20,7 +20,7 @@ interface ApplicationSummaryRepository :
   JpaRepository<Cas2ApplicationSummaryEntity, String>,
   JpaSpecificationExecutor<Cas2ApplicationSummaryEntity> {
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
-  fun findInProgressApplications(userId: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findInProgressApplications(userId: UUID, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
@@ -42,8 +42,6 @@ interface ApplicationSummaryRepository :
 
   fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
-  fun findByPrisonCode(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
   fun findBySubmittedAtIsNotNull(pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 }
 
@@ -55,20 +53,11 @@ data class Cas2ApplicationSummaryEntity(
   val crn: String,
   @Column(name = "noms_number")
   var nomsNumber: String,
-  /*
-   * BAIL-WIP The userid  is retrieved from the sql view named cas_2_application_summary or
-   * cas_2_application_summary_live`. These will need work before we start to use the cas2
-   * user entity. I’m not how best to bridge the view into the cas2 user entity way of working
-   * see https://dsdmoj.atlassian.net/browse/CBA-693
-   */
+  // TODO besscerule changing type seems like a good idea, unless it is not actually the UUID and is a different kind of ID
   @Column(name = "created_by_user_id")
-  val userId: String,
+  val userId: UUID,
   @Column(name = "name")
   val userName: String,
-  @Column(name = "created_by_cas2_user_id")
-  val createdByCas2UserId: String? = null,
-  @Column(name = "created_by_cas2_user_name")
-  val createdByCas2UserName: String? = null,
   @Column(name = "allocated_pom_user_id")
   val allocatedPomUserId: UUID?,
   @Column(name = "allocated_pom_name")
@@ -95,8 +84,4 @@ data class Cas2ApplicationSummaryEntity(
   var bailHearingDate: LocalDate? = null,
   @Column(name = "application_origin")
   var applicationOrigin: String? = null,
-
-) {
-  fun getCreatedById(): String = createdByCas2UserId ?: userId
-  fun getCreatedByUsername(): String = createdByCas2UserName ?: userName
-}
+)

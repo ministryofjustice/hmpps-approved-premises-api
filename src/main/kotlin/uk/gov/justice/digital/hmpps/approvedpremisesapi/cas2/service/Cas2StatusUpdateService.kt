@@ -191,7 +191,7 @@ class StatusUpdateService(
         ),
       )
     } else {
-      val msg = "Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}"
+      val msg = "Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}"
       log.error(msg)
       Sentry.captureMessage(msg)
     }

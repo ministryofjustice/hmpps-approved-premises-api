@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationStatusTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -61,8 +60,7 @@ class StatusUpdateServiceTest {
 
   private val applicant = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private val application = Cas2ApplicationEntityFactory()
-    .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(applicant))
-    .withCreatedByCas2User(applicant)
+    .withCreatedByUser(applicant)
     .withCrn("CRN123")
     .withNomsNumber("NOMSABC")
     .produce()
@@ -184,7 +182,7 @@ class StatusUpdateServiceTest {
 
       @Test
       fun `saves and asks the domain event service to create a status-updated event`() {
-        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.getCreatedByUserEmail())
+        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.createdByUser.email)
         statusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
@@ -315,7 +313,7 @@ class StatusUpdateServiceTest {
           every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
             Cas2StatusDetail("exampleStatusDetail", ""),
           )
-          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.getCreatedByUserEmail()
+          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.createdByUser.email
 
           statusUpdateService.createForAssessment(
             assessmentId = assessment.id,
@@ -375,8 +373,7 @@ class StatusUpdateServiceTest {
         fun `alerts Sentry when the Referrer does not have an email`() {
           val cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withEmail(null).produce()
           val submittedApplicationWithNoReferrerEmail = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(cas2User))
-            .withCreatedByCas2User(cas2User)
+            .withCreatedByUser(cas2User)
             .withCrn("CRN123")
             .withNomsNumber("NOMSABC")
             .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))

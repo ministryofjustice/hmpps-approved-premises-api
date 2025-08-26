@@ -44,7 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2Ass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -101,7 +100,7 @@ class Cas2v2ApplicationServiceTest {
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = randomStringMultiCaseWithNumbers(6),
         nomsNumber = randomStringMultiCaseWithNumbers(6),
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         userName = "first last",
         createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
@@ -153,7 +152,7 @@ class Cas2v2ApplicationServiceTest {
       id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
       crn = randomStringMultiCaseWithNumbers(6),
       nomsNumber = randomStringMultiCaseWithNumbers(6),
-      userId = "836a9460-b177-433a-a0d9-262509092c9f",
+      userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
       userName = "first last",
       createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
       submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
@@ -245,10 +244,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns
         Cas2ApplicationEntityFactory()
-          .withCreatedByUser(
-            transformCas2UserEntityToNomisUserEntity(cas2User),
-          )
-          .withCreatedByCas2User(cas2User)
+          .withCreatedByUser(cas2User)
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
@@ -264,10 +260,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns
         Cas2ApplicationEntityFactory()
-          .withCreatedByUser(
-            transformCas2UserEntityToNomisUserEntity(cas2User),
-          )
-          .withCreatedByCas2User(cas2User)
+          .withCreatedByUser(cas2User)
           .produce()
 
       every { mockCas2v2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns false
@@ -287,10 +280,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
 
       val cas2v2ApplicationEntity = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(userEntity),
-        )
-        .withCreatedByCas2User(userEntity)
+        .withCreatedByUser(userEntity)
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns cas2v2ApplicationEntity
@@ -378,7 +368,7 @@ class Cas2v2ApplicationServiceTest {
       assertThat(result.entity.crn).isEqualTo(crn)
       assertThat(result.entity.bailHearingDate).isEqualTo(bailHearingDate)
       assertThat(result.entity.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
-      assertThat(result.entity.createdByCas2User).isEqualTo(user)
+      assertThat(result.entity.createdByUser).isEqualTo(user)
     }
   }
 
@@ -411,9 +401,8 @@ class Cas2v2ApplicationServiceTest {
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
-          transformCas2UserEntityToNomisUserEntity(cas2User)
+          cas2User
         }
-        .withCreatedByCas2User(cas2User)
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
@@ -435,8 +424,7 @@ class Cas2v2ApplicationServiceTest {
 
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
@@ -461,8 +449,7 @@ class Cas2v2ApplicationServiceTest {
 
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
 
@@ -493,8 +480,7 @@ class Cas2v2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
@@ -541,8 +527,7 @@ class Cas2v2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
@@ -596,10 +581,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withYieldedCreatedByUser {
-          transformCas2UserEntityToNomisUserEntity(cas2User)
-        }
-        .withCreatedByCas2User(cas2User)
+        .withYieldedCreatedByUser({ cas2User })
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
@@ -619,10 +601,7 @@ class Cas2v2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(user),
-        )
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
@@ -645,11 +624,7 @@ class Cas2v2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(user),
-
-        )
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
 
@@ -677,10 +652,7 @@ class Cas2v2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(user),
-        )
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withData(data)
         .produce()
 
@@ -748,10 +720,7 @@ class Cas2v2ApplicationServiceTest {
 
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(differentUser),
-        )
-        .withCreatedByCas2User(differentUser)
+        .withCreatedByUser(differentUser)
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns cas2v2Application
@@ -765,10 +734,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns GeneralValidationError when application has already been submitted`() {
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(user),
-        )
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
@@ -790,10 +756,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns GeneralValidationError when application has already been abandoned`() {
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(user),
-        )
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
 
@@ -820,10 +783,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success and stores event`() {
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(user),
-        )
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withSubmittedAt(null)
         .produce()
 

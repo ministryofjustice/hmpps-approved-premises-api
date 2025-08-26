@@ -48,16 +48,12 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.nomisStaffId = { nomisStaffId }
   }
 
-  fun withDeliusStaffCode(deliusStaffCode: String) = apply {
-    this.deliusStaffCode = { deliusStaffCode }
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
   }
 
   fun withNomisStaffIdentifier(nomisStaffId: Long) = apply {
     this.nomisStaffId = { nomisStaffId }
-  }
-
-  fun withApplications(applications: MutableList<Cas2ApplicationEntity>) = apply {
-    this.applications = { applications }
   }
 
   fun withEmail(email: String?) = apply {
@@ -66,10 +62,6 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
 
   fun withExternalType(externalType: String?) = apply {
     this.externalType = { externalType }
-  }
-
-  fun withNomisAccountType(nomisAccountType: String?) = apply {
-    this.nomisAccountType = { nomisAccountType }
   }
 
   fun withUserType(t: Cas2UserType) = apply {

@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ref
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2StatusUpdateService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
@@ -77,8 +76,7 @@ class Cas2v2StartupScript(
         crn = "X320742",
         nomsNumber = seedConfig.onStartup.script.noms,
         createdAt = createdAt,
-        createdByUser = transformCas2UserEntityToNomisUserEntity(cas2UserEntity),
-        createdByCas2User = cas2UserEntity,
+        createdByUser = cas2UserEntity,
         data = dataFor(state = state, nomsNumber = "DO16821"),
         document = documentFor(state = state, nomsNumber = "DO16821"),
         submittedAt = submittedAt,

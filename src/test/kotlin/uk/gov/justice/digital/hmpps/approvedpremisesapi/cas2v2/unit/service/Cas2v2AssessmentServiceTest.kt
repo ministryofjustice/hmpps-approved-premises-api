@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -34,10 +33,8 @@ class Cas2v2AssessmentServiceTest {
       val cas2User = Cas2UserEntityFactory()
         .produce()
       val cas2v2Application = Cas2ApplicationEntityFactory()
-        .withCreatedByCas2User(cas2User)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(cas2User),
-        ).produce()
+        .withCreatedByUser(cas2User)
+        .produce()
       val assessEntity = Cas2AssessmentEntity(
         id = UUID.randomUUID(),
         application = cas2v2Application,
@@ -71,10 +68,8 @@ class Cas2v2AssessmentServiceTest {
       val cas2User = Cas2UserEntityFactory()
         .produce()
       val cas2v2Application = Cas2ApplicationEntityFactory()
-        .withCreatedByCas2User(cas2User)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(cas2User),
-        ).produce()
+        .withCreatedByUser(cas2User)
+        .produce()
       val assessEntity = Cas2AssessmentEntity(
         id = assessmentId,
         application = cas2v2Application,

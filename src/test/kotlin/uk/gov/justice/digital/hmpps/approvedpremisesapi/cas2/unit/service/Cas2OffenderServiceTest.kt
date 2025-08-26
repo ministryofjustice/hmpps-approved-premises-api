@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -178,7 +177,7 @@ class Cas2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.NOT_FOUND, null)
 
-      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser)) is ProbationOffenderSearchResult.NotFound).isTrue
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, currentUser) is ProbationOffenderSearchResult.NotFound).isTrue
     }
 
     @Test
@@ -186,7 +185,7 @@ class Cas2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
 
-      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser)) is ProbationOffenderSearchResult.NotFound).isTrue
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, currentUser) is ProbationOffenderSearchResult.NotFound).isTrue
     }
 
     @Test
@@ -218,7 +217,7 @@ class Cas2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      val result = offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser))
+      val result = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
 
       assertThat(result is ProbationOffenderSearchResult.Success.Full).isTrue
       result as ProbationOffenderSearchResult.Success.Full
@@ -238,7 +237,7 @@ class Cas2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
 
-      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser)) is ProbationOffenderSearchResult.Forbidden).isTrue
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, currentUser) is ProbationOffenderSearchResult.Forbidden).isTrue
     }
 
     @Test
@@ -269,7 +268,7 @@ class Cas2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser)) is ProbationOffenderSearchResult.Forbidden).isTrue
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber, currentUser) is ProbationOffenderSearchResult.Forbidden).isTrue
     }
 
     @Test
@@ -277,7 +276,7 @@ class Cas2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.INTERNAL_SERVER_ERROR, null)
 
-      val result = offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser))
+      val result = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
 
       assertThat(result is ProbationOffenderSearchResult.Unknown).isTrue
       result as ProbationOffenderSearchResult.Unknown
@@ -297,7 +296,7 @@ class Cas2OffenderServiceTest {
 
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.BAD_GATEWAY, null)
 
-      val result = offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser))
+      val result = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
 
       assertThat(result is ProbationOffenderSearchResult.NotFound).isTrue
     }
@@ -330,7 +329,7 @@ class Cas2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      val result = offenderService.getPersonByNomsNumber(nomsNumber, transformCas2UserEntityToNomisUserEntity(currentUser))
+      val result = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
 
       assertThat(result is ProbationOffenderSearchResult.Success.Full).isTrue
       result as ProbationOffenderSearchResult.Success.Full

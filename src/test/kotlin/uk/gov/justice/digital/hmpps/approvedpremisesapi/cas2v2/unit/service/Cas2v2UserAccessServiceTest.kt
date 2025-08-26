@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import java.time.OffsetDateTime
 
 class Cas2v2UserAccessServiceTest {
@@ -32,8 +31,7 @@ class Cas2v2UserAccessServiceTest {
       @Test
       fun `returns true`() {
         val application = Cas2ApplicationEntityFactory()
-          .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .produce()
 
         assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, application)).isTrue
@@ -53,8 +51,7 @@ class Cas2v2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val cas2v2Application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUser))
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .produce()
 
           assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isFalse
@@ -72,8 +69,7 @@ class Cas2v2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val cas2v2Application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUser))
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("different-prison")
             .produce()
@@ -92,8 +88,7 @@ class Cas2v2UserAccessServiceTest {
           @Test
           fun `returns false`() {
             val cas2v2Application = Cas2ApplicationEntityFactory()
-              .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUserWithNoPrison))
-              .withCreatedByCas2User(anotherUserWithNoPrison)
+              .withCreatedByUser(anotherUserWithNoPrison)
               .withSubmittedAt(OffsetDateTime.now())
               .produce()
 
@@ -119,8 +114,7 @@ class Cas2v2UserAccessServiceTest {
         @Test
         fun `returns true if the user created the application`() {
           val cas2v2Application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-            .withCreatedByCas2User(user)
+            .withCreatedByUser(user)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
             .produce()
@@ -131,8 +125,7 @@ class Cas2v2UserAccessServiceTest {
         @Test
         fun `returns true when user NOT creator`() {
           val cas2v2Application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUser))
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
             .produce()
@@ -150,15 +143,13 @@ class Cas2v2UserAccessServiceTest {
 
         private val submittedPrisonApplication = Cas2ApplicationEntityFactory()
           .withApplicationOrigin(ApplicationOrigin.prisonBail)
-          .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(referrerOne))
-          .withCreatedByCas2User(referrerOne)
+          .withCreatedByUser(referrerOne)
           .withSubmittedAt(OffsetDateTime.now())
           .produce()
 
         private val unsubmittedPrisonApplication = Cas2ApplicationEntityFactory()
           .withApplicationOrigin(ApplicationOrigin.prisonBail)
-          .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(referrerOne))
-          .withCreatedByCas2User(referrerOne)
+          .withCreatedByUser(referrerOne)
           .produce()
 
         @Nested

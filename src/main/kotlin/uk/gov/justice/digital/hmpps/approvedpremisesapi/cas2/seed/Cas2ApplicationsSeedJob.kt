@@ -4,18 +4,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
@@ -30,7 +27,6 @@ import java.util.UUID
 @SuppressWarnings("LongParameterList")
 class Cas2ApplicationsSeedJob(
   private val repository: Cas2ApplicationRepository,
-  private val userRepository: NomisUserRepository,
   private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
@@ -59,7 +55,7 @@ class Cas2ApplicationsSeedJob(
       return log.info("Skipping ${row.id}: already seeded")
     }
 
-    val applicant = userRepository.findByNomisUsername(row.createdBy) ?: throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")
+    val applicant = cas2UserRepository.findByUsernameAndUserType(row.createdBy, Cas2UserType.NOMIS) ?: throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")
 
     try {
       createApplication(row, applicant)
@@ -68,7 +64,7 @@ class Cas2ApplicationsSeedJob(
     }
   }
 
-  private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: NomisUserEntity) {
+  private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: Cas2UserEntity) {
     val application = repository.save(
       Cas2ApplicationEntity(
         id = row.id,
@@ -79,8 +75,6 @@ class Cas2ApplicationsSeedJob(
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),
         document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,
-        applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
       ),
     )
     if (row.submittedAt != null) {
@@ -132,7 +126,6 @@ class Cas2ApplicationsSeedJob(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
       ),
     )
     application.assessment = assessment

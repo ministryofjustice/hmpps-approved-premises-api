@@ -3,18 +3,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed
 import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -42,7 +39,6 @@ const val MINUTES_PER_DAY = 60 * 24
 class Cas2StartupScript(
   private val seedLogger: SeedLogger,
   private val seedConfig: SeedConfig,
-  private val nomisUserRepository: NomisUserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
@@ -58,15 +54,15 @@ class Cas2StartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2 applications")
-    nomisUserRepository.findAll().forEach { user ->
+    cas2UserRepository.findByUserType(Cas2UserType.NOMIS).forEach { user ->
       listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
         createApplicationFor(applicant = user, state = state)
       }
     }
   }
 
-  private fun createApplicationFor(applicant: NomisUserEntity, state: String) {
-    seedLogger.info("Auto-scripting application for ${applicant.nomisUsername}, in state $state")
+  private fun createApplicationFor(applicant: Cas2UserEntity, state: String) {
+    seedLogger.info("Auto-scripting application for ${applicant.username}, in state $state")
     val createdAt = randomDateTime()
     val submittedAt = if (state == "IN_PROGRESS") null else createdAt.plusDays(randomInt(EARLIEST_SUBMISSION, LATEST_SUBMISSION).toLong())
     val application =
@@ -79,15 +75,12 @@ class Cas2StartupScript(
         data = dataFor(state = state, nomsNumber = "A1234AI"),
         document = documentFor(state = state, nomsNumber = "A1234AI"),
         submittedAt = submittedAt,
-        referringPrisonCode = if (submittedAt != null) applicant.activeCaseloadId else null,
-        applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
-
+        referringPrisonCode = if (submittedAt != null) applicant.activeNomisCaseloadId else null,
       )
 
     // create application assignments for submitted applications
-    if (submittedAt != null && applicant.activeCaseloadId != null) {
-      application.createApplicationAssignment(prisonCode = applicant.activeCaseloadId!!, allocatedPomUser = applicant)
+    if (submittedAt != null && applicant.activeNomisCaseloadId != null) {
+      application.createApplicationAssignment(prisonCode = applicant.activeNomisCaseloadId!!, allocatedPomUser = applicant)
     }
     applicationRepository.save(application)
 
@@ -145,7 +138,6 @@ class Cas2StartupScript(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
       ),
     )
     application.assessment = assessment

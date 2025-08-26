@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
@@ -114,8 +113,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       givenACas2Assessor { assessor, _ ->
         givenAnOffender { offenderDetails, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
             withReferringPrisonCode(oldOmu.prisonCode)
             withSubmittedAt(OffsetDateTime.now())
             withCrn(offenderDetails.otherIds.crn)
@@ -123,7 +121,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             withConditionalReleaseDate(LocalDate.now().plusDays(1))
           }
 
-          application.createApplicationAssignment(application.referringPrisonCode!!, transformCas2UserEntityToNomisUserEntity(userEntity))
+          application.createApplicationAssignment(application.referringPrisonCode!!, userEntity)
           cas2ApplicationRepository.save(application)
 
           cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -317,6 +315,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             withApplication(application)
             withLabel("Status Update")
             withAssessor(assessor)
+            withCreatedAt(OffsetDateTime.now())
           }
 
           val nomisStaffInformationResponse = NomisStaffInformationFactory().produce()
@@ -344,7 +343,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             nomisUserDetailsResponse,
           )
 
-          assertThat(nomisUserRepository.findByNomisUsername(nomisUsername = newUserName)).isNull()
+          assertThat(cas2UserRepository.findByUsername(username = newUserName)).isNull()
 
           val event = stubEvent(eventType, detailUrl, application.nomsNumber)
           publishMessageToTopic(eventType, event)
@@ -358,7 +357,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
           assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
 
-          val missingUser = nomisUserRepository.findByNomisUsername(newUserName)
+          val missingUser = cas2UserRepository.findByUsername(newUserName)
           assertThat(updatedApplication.currentPomUserId).isEqualTo(missingUser!!.id)
 
           verifyEmailsSentForAllocationChangedCase(
@@ -366,7 +365,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             pomManagerEmail = nomisUserDetailsResponse.primaryEmail!!,
           )
 
-          assertThat(nomisUserRepository.findByNomisUsername(nomisUsername = newUserName)).isNotNull
+          assertThat(cas2UserRepository.findByUsername(username = newUserName)).isNotNull
         }
       }
     }
@@ -514,15 +513,14 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     omu: OffenderManagementUnitEntity = oldOmu,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(transformCas2UserEntityToNomisUserEntity(allocatedPom))
-      withCreatedByCas2User(allocatedPom)
+      withCreatedByUser(allocatedPom)
       withSubmittedAt(OffsetDateTime.now())
       withCrn(offenderDetails.otherIds.crn)
       withCreatedAt(OffsetDateTime.now().minusDays(28))
       withConditionalReleaseDate(LocalDate.now().plusDays(1))
     }
 
-    application.createApplicationAssignment(omu.prisonCode, transformCas2UserEntityToNomisUserEntity(allocatedPom))
+    application.createApplicationAssignment(omu.prisonCode, allocatedPom)
     return cas2ApplicationRepository.save(application)
   }
 
@@ -531,8 +529,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     offenderDetails: OffenderDetailSummary,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-      withCreatedByCas2User(user)
+      withCreatedByUser(user)
       withSubmittedAt(OffsetDateTime.now())
       withCrn(offenderDetails.otherIds.crn)
       withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -543,7 +540,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       id = UUID.randomUUID(),
       application = application,
       prisonCode = oldOmu.prisonCode,
-      allocatedPomUser = transformCas2UserEntityToNomisUserEntity(user),
+      allocatedPomUser = user,
       createdAt = OffsetDateTime.parse(OCCURRING_AT),
     )
 

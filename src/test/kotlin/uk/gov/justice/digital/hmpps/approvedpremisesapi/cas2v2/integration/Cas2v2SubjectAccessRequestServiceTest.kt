@@ -51,7 +51,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   @Test
   fun `Get CAS2 v2 Information - Applications`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = cas2NomisUserEntity()
 
     val application = cas2v2ApplicationEntity(offenderDetails, user)
 
@@ -81,7 +81,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   @Test
   fun `Get CAS2 v2 Information - Application with assessment`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = cas2NomisUserEntity()
 
     val application = cas2v2ApplicationEntity(offenderDetails, user)
     val assessment = cas2v2AssessmentEntity(application)
@@ -112,7 +112,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   @Test
   fun `Get CAS2 v2 Information - Application with Note`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = cas2NomisUserEntity()
 
     val application = cas2v2ApplicationEntity(offenderDetails, user)
     val assessment = cas2v2AssessmentEntity(application)
@@ -146,7 +146,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   @Test
   fun `Get CAS2 v2 Information - Application with Note and Status update`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = cas2NomisUserEntity()
     val application = cas2v2ApplicationEntity(offenderDetails, user)
     val assessment = cas2v2AssessmentEntity(application)
 
@@ -182,7 +182,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   @Test
   fun `Get CAS2 v2 Information - Domain Events`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = cas2NomisUserEntity()
     val application = cas2v2ApplicationEntity(offenderDetails, user)
     val assessment = cas2v2AssessmentEntity(application)
 
@@ -238,11 +238,12 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
         "created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
         "label": "${statusUpdate.label}",
-        "assessor_origin": "${statusUpdate.assessor.externalType}",
+        "assessor_origin": ${statusUpdate.assessor.externalType},
     }    
   """.trimIndent()
 //              	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
 
+  // TODO besscerule os the changing of user type from nomis to NOMIS OK?
   private fun cas2v2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
       "id": "${applicationNotes.id}",
@@ -250,8 +251,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "noms_number": "${applicationNotes.application.nomsNumber}",
       "application_id": "${applicationNotes.application.id}",
       "assessment_id": "${applicationNotes.assessment!!.id}",
-      "created_by_user": "${applicationNotes.getUser().name}",
-      "created_by_user_type": "nomis",
+      "created_by_user": "${applicationNotes.createdByCas2User.name}",
+      "created_by_user_type": "NOMIS",
       "body": "${applicationNotes.body}",
   }
   """.trimIndent()
@@ -275,7 +276,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "noms_number": "${application.nomsNumber}",
       "data": ${application.data},
       "document": ${application.document},
-      "created_by_user": "${application.createdByCas2User!!.name}",
+      "created_by_user": "${application.createdByUser.name}",
       "created_at": "$CREATED_AT",
       "submitted_at": "$SUBMITTED_AT",
       "referring_prison_code": "${application.referringPrisonCode}",
@@ -296,7 +297,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   ) = cas2NoteEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
-    withCreatedByUser(produceAndPersistNomisUserEntity(user))
+    withCreatedByCas2User(user)
     withBody("some body text")
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
   }
@@ -334,8 +335,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   ): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-    withCreatedByUser(produceAndPersistNomisUserEntity(user))
-    withCreatedByCas2User(user)
+    withCreatedByUser(user)
     withData(DATA_JSON_SIMPLE)
     withDocument(DOCUMENT_JSON_SIMPLE)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
@@ -348,15 +348,11 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     withPreferredAreas("some areas")
   }
 
-  private fun nomisUserEntity(): Cas2UserEntity {
-    val cas2User = cas2UserEntityFactory.produceAndPersist {
-      withName(randomStringMultiCaseWithNumbers(12))
-      withEmail(randomEmailAddress())
-      withUserType(Cas2UserType.NOMIS)
-      withNomisStaffCode(9L)
-      withNomisStaffIdentifier(90L)
-    }
-
-    return cas2User
+  private fun cas2NomisUserEntity() = cas2UserEntityFactory.produceAndPersist {
+    withName(randomStringMultiCaseWithNumbers(12))
+    withEmail(randomEmailAddress())
+    withUserType(Cas2UserType.NOMIS)
+    withNomisStaffCode(9L)
+    withNomisStaffIdentifier(90L)
   }
 }

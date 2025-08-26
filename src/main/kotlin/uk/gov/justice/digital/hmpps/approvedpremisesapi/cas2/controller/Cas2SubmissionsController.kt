@@ -18,15 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.SubmissionsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Cas2Controller
 class Cas2SubmissionsController(
-  private val httpAuthService: HttpAuthService,
   private val applicationService: Cas2ApplicationService,
   private val submissionsTransformer: SubmissionsTransformer,
   private val offenderService: Cas2OffenderService,
@@ -35,12 +32,8 @@ class Cas2SubmissionsController(
 
   @GetMapping("/submissions")
   fun submissionsGet(@RequestParam page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
-    val principal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
-    if (principal.isExternalUser()) {
-      ensureExternalUserPersisted()
-    } else {
-      ensureNomisUserPersisted()
-    }
+    // TODO besscerule no longer need the extra call as there is only one user type
+    cas2UserService.getCas2UserForRequest()
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
@@ -54,12 +47,8 @@ class Cas2SubmissionsController(
 
   @GetMapping("/submissions/{applicationId}")
   fun submissionsApplicationIdGet(@PathVariable applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
-    val principal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
-    if (principal.isExternalUser()) {
-      ensureExternalUserPersisted()
-    } else {
-      ensureNomisUserPersisted()
-    }
+    // TODO besscerule no longer need the extra call as there is only one user type
+    cas2UserService.getCas2UserForRequest()
 
     val application = extractEntityFromCasResult(applicationService.getSubmittedApplicationForAssessor(applicationId))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
@@ -69,19 +58,11 @@ class Cas2SubmissionsController(
   @Transactional
   fun submissionsPost(@RequestBody submitCas2Application: SubmitCas2Application): ResponseEntity<Unit> {
     val user = cas2UserService.getCas2UserForRequest()
-    val submitResult = applicationService.submitApplication(submitCas2Application, transformCas2UserEntityToNomisUserEntity(user))
+    val submitResult = applicationService.submitApplication(submitCas2Application, user)
 
     extractEntityFromCasResult(submitResult)
 
     return ResponseEntity(HttpStatus.OK)
-  }
-
-  private fun ensureExternalUserPersisted() {
-    cas2UserService.getCas2UserForRequest()
-  }
-
-  private fun ensureNomisUserPersisted() {
-    cas2UserService.getCas2UserForRequest()
   }
 
   private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2SubmittedApplicationSummary> {
