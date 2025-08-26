@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
 
 @Component()
 class Cas2ApplicationsTransformer(
@@ -58,11 +57,11 @@ class Cas2ApplicationsTransformer(
     personName: String,
   ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.getCreatedById()),
-    createdByUserName = jpaSummary.getCreatedByUsername(),
+    createdByUserId = jpaSummary.createdByCas2UserId,
+    createdByUserName = jpaSummary.createdByCas2UserName,
     // BAIL-WIP The two allocated POM fields are left unchanged as it will currently ALWAYS be a nomis user.
-    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
-    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: jpaSummary.createdByCas2UserId,
+    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.createdByCas2UserName,
     currentPrisonName = jpaSummary.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName }
       ?: jpaSummary.currentPrisonCode,
     assignmentDate = jpaSummary.assignmentDate?.toLocalDate() ?: jpaSummary.createdAt.toLocalDate(),

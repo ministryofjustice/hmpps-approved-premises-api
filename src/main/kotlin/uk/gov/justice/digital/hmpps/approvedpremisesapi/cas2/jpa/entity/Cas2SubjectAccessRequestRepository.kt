@@ -40,8 +40,8 @@ class Cas2SubjectAccessRequestRepository(
           CAST( ca.bail_hearing_date as DATE) 
         from
         	cas_2_applications ca
-        inner join nomis_users nu on
-        	nu.id = ca.created_by_user_id
+        inner join cas_2_users nu on
+        	nu.id = ca.created_by_cas2_user_id
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number ) 
@@ -97,23 +97,14 @@ class Cas2SubjectAccessRequestRepository(
           	ca.noms_number,
           	can.application_id,
           	can.assessment_id, 
-          	case 
-          		when can.created_by_cas2_user_id is not null then eu."name"
-          		when created_by_nomis_user_id is not null then nu."name"
-          		else 'unknown'
-          	end as created_by_user,
-          	case 
-          		when can.created_by_cas2_user_id is not null then eu.user_type
-          		when created_by_nomis_user_id is not null then 'nomis'
-          		else 'unknown'
-          	end as created_by_user_type,
+          	cu."name" as created_by_user,
+          	cu.user_type as created_by_user_type,
           	can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
           	ca.id  = can.application_id 
-          left join cas_2_users eu on 
-          	eu.id = can.created_by_cas2_user_id
-          left join nomis_users nu on nu.id = can.created_by_nomis_user_id 
+          left join cas_2_users cu on 
+          	cu.id = can.created_by_cas2_user_id
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )

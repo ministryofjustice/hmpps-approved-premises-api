@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
@@ -192,74 +191,73 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class GetApplicationSummariesWithAssignmentType {
 
-    fun abandonedApplication(userEntity: Cas2UserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
-      withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
-
+    private fun abandonedApplication(userEntity: Cas2UserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
       withData("{}")
       withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
       withAbandonedAt(OffsetDateTime.now())
+      withCreatedByCas2User(userEntity)
     }
 
-    fun inProgressApplication(userEntity: Cas2UserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
+    private fun inProgressApplication(userEntity: Cas2UserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
       withSubmittedAt(null)
-      withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
       withCrn(crn)
       withData("{}")
       withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
       withHdcEligibilityDate(LocalDate.now().plusMonths(3))
+      withCreatedByCas2User(userEntity)
     }
 
     fun submittedApplication(userEntity: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
         withCrn(crn)
         withData("{}")
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now())
+        withCreatedByCas2User(userEntity)
       }
       application.createApplicationAssignment(
         prisonCode = userEntity.activeNomisCaseloadId!!,
-        allocatedPomUser = transformCas2UserEntityToNomisUserEntity(userEntity),
+        allocatedPomUser = userEntity,
       )
       return realApplicationRepository.save(application)
     }
 
-    fun oldSubmittedApplication(userEntity: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
+    private fun oldSubmittedApplication(userEntity: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
         withCrn(crn)
         withData("{}")
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now().minusDays(1))
+        withCreatedByCas2User(userEntity)
       }
       application.createApplicationAssignment(
         prisonCode = userEntity.activeNomisCaseloadId!!,
-        allocatedPomUser = transformCas2UserEntityToNomisUserEntity(userEntity),
+        allocatedPomUser = userEntity,
       )
       return realApplicationRepository.save(application)
     }
 
-    fun transferredOutApplication(userEntity: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
+    private fun transferredOutApplication(userEntity: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
         withCrn(crn)
         withData("{}")
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now())
+        withCreatedByCas2User(userEntity)
       }
       application.createApplicationAssignment(
         prisonCode = userEntity.activeNomisCaseloadId!!,
-        allocatedPomUser = transformCas2UserEntityToNomisUserEntity(userEntity),
+        allocatedPomUser = userEntity,
       )
       application.createApplicationAssignment(prisonCode = "ZZZ", allocatedPomUser = null)
       return realApplicationRepository.save(application)
     }
 
-    fun transferredInApplication(
+    private fun transferredInApplication(
       transferredToUser: Cas2UserEntity?,
       transferredFromUser: Cas2UserEntity,
       crn: String,
@@ -267,12 +265,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       prisonCode: String? = null,
     ): Cas2ApplicationEntity {
       val application = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(transformCas2UserEntityToNomisUserEntity(transferredFromUser))
         withCrn(crn)
         withData("{}")
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now())
+        withCreatedByCas2User(transferredFromUser)
       }
       if (!isInternalTransfer) {
         application.createApplicationAssignment(
@@ -283,7 +281,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       if (transferredToUser != null) {
         application.createApplicationAssignment(
           prisonCode = transferredToUser.activeNomisCaseloadId!!,
-          allocatedPomUser = transformCas2UserEntityToNomisUserEntity(transferredToUser),
+          allocatedPomUser = transferredToUser,
         )
       }
 
@@ -426,7 +424,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
 
             val inProgressApplication = Cas2ApplicationEntityFactory()
-              .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userAPrisonA))
               .withCreatedByCas2User(userAPrisonA)
               .withCrn(offenderDetails.otherIds.crn)
               .withData("{}")
@@ -439,7 +436,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             val allocatedApplication =
               inProgressApplication.copy(id = UUID.randomUUID(), submittedAt = OffsetDateTime.now())
             cas2ApplicationRepository.saveAndFlush(allocatedApplication)
-            allocatedApplication.createApplicationAssignment(userAPrisonA.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(userAPrisonA))
+            allocatedApplication.createApplicationAssignment(userAPrisonA.activeNomisCaseloadId!!, userAPrisonA)
 
             val deallocatedApplication = allocatedApplication.copy(id = UUID.randomUUID())
             cas2ApplicationRepository.saveAndFlush(deallocatedApplication)
@@ -453,7 +450,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withUserType(Cas2UserType.NOMIS)
             }
 
-            samePrisonApplication.createApplicationAssignment(samePrisonCode, produceAndPersistNomisUserEntity(userBPrisonA))
+            samePrisonApplication.createApplicationAssignment(samePrisonCode, userBPrisonA)
             cas2ApplicationRepository.saveAndFlush(samePrisonApplication)
 
             val unallocatedApplication =
@@ -463,7 +460,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withActiveNomisCaseloadId(otherPrisonCode)
               withUserType(Cas2UserType.NOMIS)
             }
-            unallocatedApplication.createApplicationAssignment(otherPrisonCode, produceAndPersistNomisUserEntity(userCPrisonB))
+            unallocatedApplication.createApplicationAssignment(otherPrisonCode, userCPrisonB)
             unallocatedApplication.createApplicationAssignment(samePrisonCode, null)
             cas2ApplicationRepository.saveAndFlush(unallocatedApplication)
 
@@ -558,7 +555,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       ): Cas2ApplicationEntity {
         val isSubmitted = assignmentType != AssignmentType.IN_PROGRESS
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
           withCreatedByCas2User(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -568,7 +564,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           }
         }
         if (isSubmitted) {
-          application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(userEntity))
+          application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, userEntity)
         }
         if (assignmentType == AssignmentType.DEALLOCATED) {
           application.createApplicationAssignment("OTHER", null)
@@ -646,21 +642,20 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications with pagination returns 200 with correct body and header`() {
-      givenACas2PomUser { otherUser, _ ->
+      givenACas2PomUser { _, _ ->
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
 
             repeat(12) {
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedByCas2User(userEntity)
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
               }
 
-              application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(userEntity))
+              application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, userEntity)
               cas2ApplicationRepository.save(application)
             }
 
@@ -763,11 +758,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               repeat(5) {
                 cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userAPrisonA))
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                   withReferringPrisonCode(userAPrisonA.activeNomisCaseloadId!!)
+                  withCreatedByCas2User(userAPrisonA)
                 }
               }
 
@@ -778,13 +773,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withUserType(Cas2UserType.NOMIS)
               }
 
-              val nomisUserBPrisonA = produceAndPersistNomisUserEntity(userBPrisonA)
-
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedByCas2User(userBPrisonA)
-                  withCreatedByUser(nomisUserBPrisonA)
+
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
@@ -792,7 +785,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                   withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
                   withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                 }
-                application.createApplicationAssignment(userBPrisonA.activeNomisCaseloadId!!, nomisUserBPrisonA)
+                application.createApplicationAssignment(userBPrisonA.activeNomisCaseloadId!!, userBPrisonA)
                 cas2ApplicationRepository.save(application)
                 userBPrisonAApplications.add(application)
               }
@@ -800,7 +793,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates today
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(nomisUserBPrisonA)
                   withCreatedByCas2User(userBPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -809,7 +801,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                   withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
                   withConditionalReleaseDate(LocalDate.now())
                 }
-                application.createApplicationAssignment(userBPrisonA.activeNomisCaseloadId!!, nomisUserBPrisonA)
+                application.createApplicationAssignment(userBPrisonA.activeNomisCaseloadId!!, userBPrisonA)
                 cas2ApplicationRepository.save(application)
                 userBPrisonAApplications.add(application)
               }
@@ -818,7 +810,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(nomisUserBPrisonA)
                 withCreatedByCas2User(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -827,7 +818,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
               }
-              excludedApplication.createApplicationAssignment(userBPrisonA.activeNomisCaseloadId!!, nomisUserBPrisonA)
+              excludedApplication.createApplicationAssignment(userBPrisonA.activeNomisCaseloadId!!, userBPrisonA)
               cas2ApplicationRepository.save(excludedApplication)
 
               val userCPrisonB = cas2UserEntityFactory.produceAndPersist {
@@ -835,10 +826,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withActiveNomisCaseloadId("another prison")
               }
 
-              val nomisUserCPrisonB = produceAndPersistNomisUserEntity(userCPrisonB)
-
               val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(nomisUserCPrisonB)
                 withCreatedByCas2User(userCPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -846,7 +834,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withReferringPrisonCode(userCPrisonB.activeNomisCaseloadId!!)
                 withSubmittedAt(OffsetDateTime.now().minusDays(14))
               }
-              otherPrisonApplication.createApplicationAssignment(userCPrisonB.activeNomisCaseloadId!!, nomisUserCPrisonB)
+              otherPrisonApplication.createApplicationAssignment(userCPrisonB.activeNomisCaseloadId!!, userCPrisonB)
               cas2ApplicationRepository.save(otherPrisonApplication)
 
               val responseBody = webTestClient.get()
@@ -885,11 +873,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(5) {
                 userAPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userAPrisonA))
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withReferringPrisonCode(userAPrisonA.activeNomisCaseloadId!!)
+                    withCreatedByCas2User(userAPrisonA)
                   }.id,
                 )
               }
@@ -899,14 +887,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withActiveNomisCaseloadId(userAPrisonA.activeNomisCaseloadId!!)
               }
 
-              val nomisUserBPrisonA = produceAndPersistNomisUserEntity(userBPrisonA)
-
               val userBPrisonAApplicationIds = mutableListOf<UUID>()
 
               repeat(6) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByUser(nomisUserBPrisonA)
                     withCreatedByCas2User(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
@@ -922,7 +907,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(2) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByUser(nomisUserBPrisonA)
                     withCreatedByCas2User(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
@@ -936,7 +920,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(nomisUserBPrisonA)
                 withCreatedByCas2User(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -974,7 +957,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     inner class AsLicenceCaseAdminUser {
       @Test
       fun `Get all applications for prison returns 200 with correct body`() {
-        givenACas2Assessor { assessor, _ ->
+        givenACas2Assessor { _, _ ->
           givenACas2LicenceCaseAdminUser { caseAdminPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
 
@@ -983,14 +966,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withActiveNomisCaseloadId(caseAdminPrisonA.activeNomisCaseloadId!!)
               }
 
-              val nomisPomUserPrisonA = produceAndPersistNomisUserEntity(pomUserPrisonA)
-
               val userBPrisonAApplicationIds = mutableListOf<UUID>()
 
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(nomisPomUserPrisonA)
                   withCreatedByCas2User(pomUserPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -999,7 +979,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                   withReferringPrisonCode(caseAdminPrisonA.activeNomisCaseloadId!!)
                   withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                 }
-                application.createApplicationAssignment(caseAdminPrisonA.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(caseAdminPrisonA))
+                application.createApplicationAssignment(caseAdminPrisonA.activeNomisCaseloadId!!, caseAdminPrisonA)
                 cas2ApplicationRepository.save(application)
 
                 userBPrisonAApplicationIds.add(application.id)
@@ -1008,7 +988,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release date of today
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(transformCas2UserEntityToNomisUserEntity(pomUserPrisonA))
                   withCreatedByCas2User(pomUserPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -1018,14 +997,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                   withConditionalReleaseDate(LocalDate.now())
                 }
 
-                application.createApplicationAssignment(caseAdminPrisonA.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(caseAdminPrisonA))
+                application.createApplicationAssignment(caseAdminPrisonA.activeNomisCaseloadId!!, caseAdminPrisonA)
                 cas2ApplicationRepository.save(application)
                 userBPrisonAApplicationIds.add(application.id)
               }
 
               // submitted application with a conditional release date before today
               val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(nomisPomUserPrisonA)
                 withCreatedByCas2User(pomUserPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1035,17 +1013,14 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
               }
 
-              excludedApplication.createApplicationAssignment(caseAdminPrisonA.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(caseAdminPrisonA))
+              excludedApplication.createApplicationAssignment(caseAdminPrisonA.activeNomisCaseloadId!!, caseAdminPrisonA)
 
               val pomUserPrisonB = cas2UserEntityFactory.produceAndPersist {
                 withUserType(Cas2UserType.NOMIS)
                 withActiveNomisCaseloadId("other_prison")
               }
 
-              val nomisPomUserPrisonB = produceAndPersistNomisUserEntity(pomUserPrisonB)
-
               val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(nomisPomUserPrisonB)
                 withCreatedByCas2User(pomUserPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1097,10 +1072,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class GetToIndexUsingIsSubmitted {
 
-    var jwtForUser: String? = null
-    val submittedIds = mutableSetOf<UUID>()
-    val unSubmittedIds = mutableSetOf<UUID>()
-    lateinit var excludedApplicationId: UUID
+    private var jwtForUser: String? = null
+    private val submittedIds = mutableSetOf<UUID>()
+    private val unSubmittedIds = mutableSetOf<UUID>()
+    private lateinit var excludedApplicationId: UUID
 
     @BeforeEach
     fun setup() {
@@ -1114,14 +1089,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(3) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                  withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
                   withCreatedByCas2User(userEntity)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
                   withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                 }
-                application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(userEntity))
+                application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, userEntity)
                 cas2ApplicationRepository.save(application)
                 submittedIds.add(application.id)
               }
@@ -1131,34 +1105,32 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
-                  withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
                   withCreatedByCas2User(userEntity)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
                   withConditionalReleaseDate(LocalDate.now())
                 }
-                application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(userEntity))
+                application.createApplicationAssignment(userEntity.activeNomisCaseloadId!!, userEntity)
                 cas2ApplicationRepository.save(application)
                 submittedIds.add(application.id)
               }
 
               // submitted application with a conditional release date before today
-              val submittedApplicationWithCondionalReleaseDate = cas2ApplicationEntityFactory.produceAndPersist {
+              val submittedApplicationWithConditionalReleaseDate = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
                 withCreatedByCas2User(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
               }
-              submittedApplicationWithCondionalReleaseDate.createApplicationAssignment(
+              submittedApplicationWithConditionalReleaseDate.createApplicationAssignment(
                 userEntity.activeNomisCaseloadId!!,
-                transformCas2UserEntityToNomisUserEntity(userEntity),
+                userEntity,
               )
-              cas2ApplicationRepository.save(submittedApplicationWithCondionalReleaseDate)
-              excludedApplicationId = submittedApplicationWithCondionalReleaseDate.id
+              cas2ApplicationRepository.save(submittedApplicationWithConditionalReleaseDate)
+              excludedApplicationId = submittedApplicationWithConditionalReleaseDate.id
 
               addStatusUpdates(submittedIds.first(), assessor)
 
@@ -1166,7 +1138,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(4) {
                 unSubmittedIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
                     withCreatedByCas2User(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
@@ -1176,19 +1147,17 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // create a submitted application by another user which should not be in results
               val otherUserApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(otherUser))
                 withCreatedByCas2User(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
               }
 
-              otherUserApplication.createApplicationAssignment(otherUser.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(otherUser))
+              otherUserApplication.createApplicationAssignment(otherUser.activeNomisCaseloadId!!, otherUser)
               cas2ApplicationRepository.save(otherUserApplication)
 
               // create an unsubmitted application by another user which should not be in results
               cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(otherUser))
                 withCreatedByCas2User(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
@@ -1249,11 +1218,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       @Test
       fun `Get single in progress application returns 200 with correct body`() {
         givenACas2PomUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, inmateDetails ->
+          givenAnOffender { offenderDetails, _ ->
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
               withCreatedByCas2User(userEntity)
               withData(
                 data,
@@ -1279,7 +1247,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser.id == it.createdBy.id &&
+                applicationEntity.createdByCas2User.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
             }
@@ -1373,7 +1341,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Get single submitted application returns 200 with timeline events when application is transferred in`() {
-        givenACas2PomUser { userEntity, jwt ->
+        givenACas2PomUser { userEntity, _ ->
           givenACas2PomUser { otherUser, otherJwt ->
             givenAnOffender { offenderDetails, _ ->
               val prisonName = "PRISON"
@@ -1426,7 +1394,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenACas2PomUser(
             mockCallToGetMe = false,
             nomisUserDetailsConfigBlock = {},
-          ) { otherUser, otherJwt ->
+          ) { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               val prisonName = "PRISON"
               val omuEmail = "test@test.com"
@@ -1464,20 +1432,17 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       inner class WhenDifferentPrison {
         @Test
         fun `Get single submitted application is forbidden`() {
-          givenACas2PomUser { userEntity, jwt ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+          givenACas2PomUser { _, jwt ->
+            givenAnOffender { offenderDetails, _ ->
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withUserType(Cas2UserType.NOMIS)
                 withActiveNomisCaseloadId("other_caseload")
               }
 
-              val nomisOtherUser = produceAndPersistNomisUserEntity(otherUser)
-
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withSubmittedAt(OffsetDateTime.now())
-                withCreatedByUser(nomisOtherUser)
                 withCreatedByCas2User(otherUser)
                 withData(
                   data,
@@ -1500,18 +1465,15 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         @Test
         fun `Get single submitted application returns 200 with timeline events`() {
           givenACas2PomUser { userEntity, jwt ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+            givenAnOffender { offenderDetails, _ ->
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withUserType(Cas2UserType.NOMIS)
                 withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
               }
 
-              val nomisOtherUser = produceAndPersistNomisUserEntity(otherUser)
-
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(nomisOtherUser)
                 withCreatedByCas2User(otherUser)
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
@@ -1547,18 +1509,15 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         @Test
         fun `Get single unsubmitted application returns 403`() {
           givenACas2PomUser { userEntity, jwt ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+            givenAnOffender { offenderDetails, _ ->
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withUserType(Cas2UserType.NOMIS)
                 withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
               }
 
-              val nomisOtherUser = produceAndPersistNomisUserEntity(otherUser)
-
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(nomisOtherUser)
                 withCreatedByCas2User(otherUser)
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
               }
@@ -1583,7 +1542,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     inner class Cas2BailFields {
       @Test
       fun `Create new application for CAS-2 returns 201 with correct body - check that although we pass in prisonBail we will get out homeDetentionCurfew as this not written yet`() {
-        givenACas2PomUser { userEntity, jwt ->
+        givenACas2PomUser { _, jwt ->
           givenAnOffender { offenderDetails, _ ->
 
             // BAIL-WIP we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
@@ -1621,7 +1580,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     inner class PomUsers {
       @Test
       fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
-        givenACas2PomUser { userEntity, jwt ->
+        givenACas2PomUser { _, jwt ->
           givenAnOffender { offenderDetails, _ ->
 
             val result = webTestClient.post()
@@ -1651,7 +1610,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Create new application returns 404 when a person cannot be found`() {
-        givenACas2PomUser { userEntity, jwt ->
+        givenACas2PomUser { _, jwt ->
           val crn = "X1234"
 
           webTestClient.post()
@@ -1672,7 +1631,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Create new application returns 403 when a person is restricted`() {
-        givenACas2PomUser { userEntity, jwt ->
+        givenACas2PomUser { _, jwt ->
 
           val crn = "CRNRESTRICTED"
           val noms = "NOMSRESTRICTED"
@@ -1773,7 +1732,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(submittingUser))
               withCreatedByCas2User(submittingUser)
             }
 
@@ -1814,7 +1772,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(submittingUser))
               withCreatedByCas2User(submittingUser)
             }
 
@@ -1853,7 +1810,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(submittingUser))
               withCreatedByCas2User(submittingUser)
             }
 
@@ -1895,7 +1851,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
-      withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
       withCreatedByCas2User(userEntity)
       withData(
         data,
@@ -1919,13 +1874,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
-      withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
       withCreatedByCas2User(userEntity)
       withReferringPrisonCode(omu.prisonCode)
       withSubmittedAt(OffsetDateTime.now().minusDays(1))
     }
 
-    applicationEntity.createApplicationAssignment(prisonCode = omu.prisonCode, allocatedPomUser = transformCas2UserEntityToNomisUserEntity(userEntity))
+    applicationEntity.createApplicationAssignment(prisonCode = omu.prisonCode, allocatedPomUser = userEntity)
     cas2ApplicationRepository.save(applicationEntity)
 
     cas2AssessmentEntityFactory.produceAndPersist {

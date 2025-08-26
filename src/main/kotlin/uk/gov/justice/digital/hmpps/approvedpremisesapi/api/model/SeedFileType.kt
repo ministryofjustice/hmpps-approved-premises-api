@@ -15,6 +15,7 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   cas2Applications("cas2_applications"),
   cas2v2Applications("cas2v2_applications"),
   cas2v2Users("cas2v2_users"),
+  cas2Users("cas2_users"),
   temporaryAccommodationUsers("temporary_accommodation_users"),
   approvedPremisesUsers("approved_premises_users"),
   characteristics("characteristics"),

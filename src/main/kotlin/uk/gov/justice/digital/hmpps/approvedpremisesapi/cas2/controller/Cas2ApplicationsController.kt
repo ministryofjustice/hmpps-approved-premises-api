@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -51,7 +50,7 @@ class Cas2ApplicationsController(
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
     val (results, metadata) = applicationService.getApplicationSummaries(
-      transformCas2UserEntityToNomisUserEntity(user),
+      user,
       pageCriteria,
       assignmentType,
     )
@@ -63,7 +62,7 @@ class Cas2ApplicationsController(
   @GetMapping("/applications/{applicationId}")
   fun getCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Cas2Application> {
     val user = userService.getCas2UserForRequest()
-    val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, transformCas2UserEntityToNomisUserEntity(user)))
+    val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, user))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
@@ -72,7 +71,7 @@ class Cas2ApplicationsController(
   fun createCas2Application(@RequestBody body: NewApplication): ResponseEntity<Cas2Application> {
     val user = userService.getCas2UserForRequest()
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
-    val applicationResult = applicationService.createApplication(personInfo, transformCas2UserEntityToNomisUserEntity(user))
+    val applicationResult = applicationService.createApplication(personInfo, user)
 
     val application = extractEntityFromCasResult(applicationResult)
 
@@ -95,7 +94,7 @@ class Cas2ApplicationsController(
       applicationId =
       applicationId,
       data = serializedData,
-      transformCas2UserEntityToNomisUserEntity(user),
+      user,
     )
 
     return ResponseEntity.ok(getPersonDetailAndTransform(extractEntityFromCasResult(applicationResult)))
@@ -105,7 +104,7 @@ class Cas2ApplicationsController(
   @PutMapping("/applications/{applicationId}/abandon")
   fun abandonCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Unit> {
     val user = userService.getCas2UserForRequest()
-    extractEntityFromCasResult(applicationService.abandonApplication(applicationId, transformCas2UserEntityToNomisUserEntity(user)))
+    extractEntityFromCasResult(applicationService.abandonApplication(applicationId, user))
     return ResponseEntity.ok(Unit)
   }
 

@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -86,7 +85,6 @@ class Cas2StatusUpdateTest(
       givenACas2Assessor { _, jwt ->
         givenACas2PomUser { applicant, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(applicant))
             withCreatedByCas2User(applicant)
             withSubmittedAt(OffsetDateTime.now())
           }
@@ -154,7 +152,6 @@ class Cas2StatusUpdateTest(
       givenACas2Assessor { _, jwt ->
         givenACas2PomUser { applicant, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(applicant))
             withCreatedByCas2User(applicant)
             withSubmittedAt(OffsetDateTime.now())
           }
@@ -189,7 +186,6 @@ class Cas2StatusUpdateTest(
           givenACas2Assessor { _, jwt ->
             givenACas2PomUser { applicant, _ ->
               val application = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(applicant))
                 withCreatedByCas2User(applicant)
                 withSubmittedAt(submittedAt)
                 withNomsNumber("123NOMS")

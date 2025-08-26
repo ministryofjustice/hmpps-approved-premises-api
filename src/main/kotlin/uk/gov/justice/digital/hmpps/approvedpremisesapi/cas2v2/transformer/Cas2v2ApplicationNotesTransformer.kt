@@ -10,8 +10,8 @@ class Cas2v2ApplicationNotesTransformer {
   fun transformJpaToApi(
     jpa: Cas2ApplicationNoteEntity,
   ): Cas2v2ApplicationNote {
-    val name = jpa.getUser().name
-    val email = jpa.getUser().email ?: "Not found"
+    val name = jpa.createdByCas2User.name
+    val email = jpa.createdByCas2User.email ?: "Not found"
     return Cas2v2ApplicationNote(
       id = jpa.id,
       name = name,

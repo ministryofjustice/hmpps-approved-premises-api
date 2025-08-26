@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.time.Instant
 import java.time.LocalDate
@@ -56,9 +55,6 @@ class Cas2v2SubmissionsTransformerTest {
 
   private val cas2v2ApplicationFactory = Cas2ApplicationEntityFactory()
     .withCreatedByCas2User(user)
-    .withCreatedByUser(
-      transformCas2UserEntityToNomisUserEntity(user),
-    )
 
   private val submittedCas2v2ApplicationFactory = cas2v2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
@@ -129,8 +125,8 @@ class Cas2v2SubmissionsTransformerTest {
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRN123",
         nomsNumber = "NOMS456",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
-        userName = "first last",
+        createdByCas2UserId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
+        createdByCas2UserName = "first last",
         createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
         hdcEligibilityDate = LocalDate.parse("2023-04-29"),

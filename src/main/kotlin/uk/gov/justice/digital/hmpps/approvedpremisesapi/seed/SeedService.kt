@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2ApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.ShortTermAccommodationCreateOmusSeedJob
@@ -80,6 +81,7 @@ class SeedService(
         SeedFileType.cas2Applications -> getBean(Cas2ApplicationsSeedJob::class)
         SeedFileType.cas2v2Applications -> getBean(Cas2v2ApplicationsSeedJob::class)
         SeedFileType.cas2v2Users -> getBean(Cas2v2UsersSeedJob::class)
+        SeedFileType.cas2Users -> getBean(Cas2UsersSeedJob::class)
         SeedFileType.approvedPremisesUsers -> getBean(Cas1UsersSeedJob::class)
         SeedFileType.temporaryAccommodationUsers -> getBean(Cas3UsersSeedJob::class)
         SeedFileType.characteristics -> getBean(CharacteristicsSeedJob::class)

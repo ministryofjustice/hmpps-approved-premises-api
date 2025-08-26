@@ -40,10 +40,6 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   )
   fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
 
-  // BAIL-WIP - this will need updating when we switch over to cas2users
-  @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
-  fun findAllByCreatedByUserId(id: UUID): List<Cas2ApplicationEntity>
-
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
       "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
@@ -91,16 +87,10 @@ data class Cas2ApplicationEntity(
 
   val crn: String,
 
-  // BAIL-WIP - When start to create application for delius users, this will need to be nullable, but that creates cas2cade effects whenever we us code like `staffIdentifier = application.createdByUser.nomisStaffId`,`
-  // BAIL-WIP - Set this to deprecated when we make it optional
-  // BAIL-WIP - this will become private to force the use of getters
-  @ManyToOne
-  @JoinColumn(name = "created_by_user_id")
-  val createdByUser: NomisUserEntity,
-
+  // TODO besscerule removed createdByUser and switched to createdByCas2User - might want to switch the naming back in the future
   @ManyToOne
   @JoinColumn(name = "created_by_cas2_user_id")
-  val createdByCas2User: Cas2UserEntity? = null,
+  val createdByCas2User: Cas2UserEntity,
 
   @Type(JsonType::class)
   var data: String?,
@@ -140,25 +130,12 @@ data class Cas2ApplicationEntity(
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 
-  fun isCreatedBy(user: NomisUserEntity): Boolean = createdByUser.id == user.id
-  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByCas2User?.id == user.id
+  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByCas2User.id == user.id
 
-  fun getCreatedById(): UUID = createdByCas2User?.id ?: createdByUser.id
-  fun getCreatedByCanonicalName(): String = createdByCas2User?.name ?: createdByUser.name
-  fun getCreatedByUsername(): String = createdByCas2User?.username ?: createdByUser.nomisUsername
-  fun getCreatedByUserIdentifier(): String = createdByCas2User?.staffIdentifier() ?: createdByUser.nomisStaffId.toString()
-  fun getCreatedByUserEmail(): String? = createdByCas2User?.email ?: createdByUser.email
-  fun getCreatedByUserIsActive(): Boolean = createdByCas2User?.isActive ?: createdByUser.isActive
-
-  fun getCreatedByUserType(): Cas2StaffMember.Usertype {
-    if (createdByCas2User != null) {
-      return when (createdByCas2User!!.userType) {
-        Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
-        Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
-        Cas2UserType.EXTERNAL -> throw ForbiddenProblem() // BAIL-WIP - The cas2 staff member usertype does not know about external users, we need to add it in the yaml
-      }
-    }
-    return Cas2StaffMember.Usertype.nomis
+  fun getCreatedByUserType() = when (createdByCas2User.userType) {
+    Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
+    Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
+    Cas2UserType.EXTERNAL -> throw ForbiddenProblem() // BAIL-WIP - The cas2 staff member usertype does not know about external users, we need to add it in the yaml
   }
 
   val currentPrisonCode: String?
@@ -171,7 +148,7 @@ data class Cas2ApplicationEntity(
 
   fun isLocationChange(latestPrisonCode: String) = currentPrisonCode != latestPrisonCode
   fun isTransferredApplication() = applicationAssignments.map { it.prisonCode }.distinct().size > 1
-  fun createApplicationAssignment(prisonCode: String, allocatedPomUser: NomisUserEntity?) {
+  fun createApplicationAssignment(prisonCode: String, allocatedPomUser: Cas2UserEntity?) {
     this.applicationAssignments.add(
       Cas2ApplicationAssignmentEntity(
         id = UUID.randomUUID(),

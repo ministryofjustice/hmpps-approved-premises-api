@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
@@ -32,9 +31,9 @@ data class NomisUserEntity(
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
-
-  @OneToMany(mappedBy = "createdByUser")
-  val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
+// TODO removed as no longer needed as isn't in app table
+//  @OneToMany(mappedBy = "createdByUser")
+//  val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
 ) : UnifiedUser {
   override fun toString() = "Nomis user $id"
 }

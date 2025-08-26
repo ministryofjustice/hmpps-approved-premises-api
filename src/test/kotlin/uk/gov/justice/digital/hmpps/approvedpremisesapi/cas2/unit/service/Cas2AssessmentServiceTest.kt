@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
@@ -35,7 +34,6 @@ class Cas2AssessmentServiceTest {
       val cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
         .produce()
       val application = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(cas2User))
         .withCreatedByCas2User(cas2User)
         .produce()
       val assessEntity = Cas2AssessmentEntity(
@@ -71,7 +69,6 @@ class Cas2AssessmentServiceTest {
       val cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
         .produce()
       val application = Cas2ApplicationEntityFactory()
-        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(cas2User))
         .withCreatedByCas2User(cas2User)
         .produce()
       val assessEntity = Cas2AssessmentEntity(

@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Submitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.NomisUserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
@@ -207,7 +206,6 @@ class Cas2SubmissionTest(
           givenAnOffender { offenderDetails, _ ->
             val submittedcas2applicationentitySecond = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
                 withCreatedByCas2User(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
@@ -217,7 +215,6 @@ class Cas2SubmissionTest(
 
             val submittedcas2applicationentityFirst = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
                 withCreatedByCas2User(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
@@ -227,7 +224,6 @@ class Cas2SubmissionTest(
 
             val submittedcas2applicationentityThird = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
                 withCreatedByCas2User(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
@@ -237,7 +233,6 @@ class Cas2SubmissionTest(
 
             val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
                 withCreatedByCas2User(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
@@ -302,7 +297,7 @@ class Cas2SubmissionTest(
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&
-          expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
+          expectedSubmittedApplication.createdByCas2User.id == it.createdByUserId &&
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
 
@@ -320,7 +315,6 @@ class Cas2SubmissionTest(
     ): Cas2ApplicationEntity {
       val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
-        withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
         withCreatedByCas2User(user)
         withSubmittedAt(null)
         withData(
@@ -372,7 +366,6 @@ class Cas2SubmissionTest(
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
               withCreatedByCas2User(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withData(
@@ -434,14 +427,13 @@ class Cas2SubmissionTest(
             val assignmentDate = OffsetDateTime.now().minusDays(5)
 
             val newPom = cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.NOMIS) }
-            val nomisNewPom = produceAndPersistNomisUserEntity(newPom)
             applicationEntity.applicationAssignments.addAll(
               mutableListOf(
                 Cas2ApplicationAssignmentEntity(
                   id = UUID.randomUUID(),
                   application = applicationEntity,
                   prisonCode = "LON",
-                  allocatedPomUser = transformCas2UserEntityToNomisUserEntity(user),
+                  allocatedPomUser = user,
                   createdAt = OffsetDateTime.now().minusDays(18),
                 ),
                 Cas2ApplicationAssignmentEntity(
@@ -455,7 +447,7 @@ class Cas2SubmissionTest(
                   id = UUID.randomUUID(),
                   application = applicationEntity,
                   prisonCode = "PBI",
-                  allocatedPomUser = nomisNewPom,
+                  allocatedPomUser = newPom,
                   createdAt = assignmentDate,
                 ),
               ),
@@ -492,7 +484,7 @@ class Cas2SubmissionTest(
 
             val applicant = nomisUserTransformer.transformJpaToApi(
               applicationEntity
-                .createdByUser,
+                .createdByCas2User,
             )
 
             assertThat(responseBody).matches {
@@ -580,7 +572,6 @@ class Cas2SubmissionTest(
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                   withCrn(offenderDetails.otherIds.crn)
-                  withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
                   withCreatedByCas2User(user)
                   withReferringPrisonCode("PRI")
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -634,7 +625,7 @@ class Cas2SubmissionTest(
                     id = UUID.randomUUID(),
                     application = applicationEntity,
                     prisonCode = "PRI",
-                    allocatedPomUser = transformCas2UserEntityToNomisUserEntity(user),
+                    allocatedPomUser = user,
                     createdAt = applicationEntity.submittedAt!!,
                   ),
                 )
@@ -658,7 +649,7 @@ class Cas2SubmissionTest(
 
                 val applicant = nomisUserTransformer.transformJpaToApi(
                   applicationEntity
-                    .createdByUser,
+                    .createdByCas2User,
                 )
 
                 assertThat(responseBody).matches {
@@ -738,7 +729,6 @@ class Cas2SubmissionTest(
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
-            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(submittingUser))
             withCreatedByCas2User(submittingUser)
             withData(
               """
@@ -825,7 +815,6 @@ class Cas2SubmissionTest(
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
-            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(submittingUser))
             withCreatedByCas2User(submittingUser)
             withData(
               """
@@ -885,7 +874,6 @@ class Cas2SubmissionTest(
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
             withId(applicationId)
-            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(submittingUser))
             withCreatedByCas2User(submittingUser)
             withData(
               """

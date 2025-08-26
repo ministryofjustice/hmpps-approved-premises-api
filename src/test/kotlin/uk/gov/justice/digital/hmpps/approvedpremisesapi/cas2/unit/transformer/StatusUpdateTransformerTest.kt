@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ExternalUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.StatusUpdateTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import java.time.OffsetDateTime
 
 class StatusUpdateTransformerTest {
@@ -25,7 +24,6 @@ class StatusUpdateTransformerTest {
     .produce()
 
   private val submittedApplicationWithNomisUser = Cas2ApplicationEntityFactory()
-    .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
     .withCreatedByCas2User(user)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()

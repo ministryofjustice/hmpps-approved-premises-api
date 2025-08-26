@@ -120,21 +120,15 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withUsername("NOMIS_USER_1")
       }
 
-      val nomisUser1 = produceAndPersistNomisUserEntity(user1)
-
       val user2 = cas2UserEntityFactory.produceAndPersist {
         withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_2")
       }
 
-      val nomisUser2 = produceAndPersistNomisUserEntity(user2)
-
       val user3 = cas2UserEntityFactory.produceAndPersist {
         withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_3")
       }
-
-      val nomisUser3 = produceAndPersistNomisUserEntity(user3)
 
       val applicationId1 = UUID.randomUUID()
       val applicationId2 = UUID.randomUUID()
@@ -142,7 +136,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId1)
-        withCreatedByUser(nomisUser1)
         withCreatedByCas2User(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
@@ -155,7 +148,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId2)
-        withCreatedByUser(nomisUser2)
         withCreatedByCas2User(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
@@ -176,7 +168,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         id = UUID.randomUUID(),
         application = application1,
         prisonCode = "LON",
-        allocatedPomUser = nomisUser3,
+        allocatedPomUser = user3,
         createdAt = OffsetDateTime.now(),
       )
       val application1Assignment3 = Cas2ApplicationAssignmentEntity(
@@ -190,14 +182,13 @@ class Cas2ReportsTest : IntegrationTestBase() {
         id = UUID.randomUUID(),
         application = application1,
         prisonCode = "NEW",
-        allocatedPomUser = nomisUser1,
+        allocatedPomUser = user1,
         createdAt = OffsetDateTime.now().minusHours(4),
       )
 
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
-        withCreatedByUser(nomisUser2)
         withCreatedByCas2User(user2)
         withCreatedAt(tooOldCreated)
         withData("{}")
@@ -417,19 +408,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withUsername("NOMIS_USER_1")
       }
 
-      val nomisUser1 = produceAndPersistNomisUserEntity(user1)
-
       val user2 = cas2UserEntityFactory.produceAndPersist {
         withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_2")
       }
 
-      val nomisUser2 = produceAndPersistNomisUserEntity(user2)
-
       // TODO besscerule - added as now the query states that applicationOrigin cannot be null so every test needs to set up app data
       cas2ApplicationEntityFactory.produceAndPersist {
         withId(event2.applicationId!!)
-        withCreatedByUser(nomisUser2)
         withCreatedByCas2User(user2)
         withCrn(event1Details.personReference.crn.toString())
         withNomsNumber(event2Details.personReference.noms)
@@ -439,7 +425,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(event1.applicationId!!)
-        withCreatedByUser(nomisUser1)
         withCreatedByCas2User(user1)
         withCrn(event1Details.personReference.crn.toString())
         withNomsNumber(event2Details.personReference.noms)
@@ -452,8 +437,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withUsername("NOMIS_USER_3")
       }
 
-      val nomisUser3 = produceAndPersistNomisUserEntity(user3)
-
       val application1Assignment1 = Cas2ApplicationAssignmentEntity(
         id = UUID.randomUUID(),
         application = application1,
@@ -465,7 +448,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         id = UUID.randomUUID(),
         application = application1,
         prisonCode = "LON",
-        allocatedPomUser = nomisUser3,
+        allocatedPomUser = user3,
         createdAt = OffsetDateTime.now(),
       )
       val application1Assignment3 = Cas2ApplicationAssignmentEntity(
@@ -479,7 +462,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         id = UUID.randomUUID(),
         application = application1,
         prisonCode = "NEW",
-        allocatedPomUser = nomisUser1,
+        allocatedPomUser = user1,
         createdAt = OffsetDateTime.now().minusHours(4),
       )
 
@@ -552,17 +535,12 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withUsername("NOMIS_USER_1")
       }
 
-      val nomisUser1 = produceAndPersistNomisUserEntity(user1)
-
       val user2 = cas2UserEntityFactory.produceAndPersist {
         withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_2")
       }
 
-      val nomisUser2 = produceAndPersistNomisUserEntity(user2)
-
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(nomisUser1)
         withCreatedByCas2User(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
@@ -573,7 +551,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(nomisUser2)
         withCreatedByCas2User(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
@@ -585,7 +562,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(nomisUser2)
         withCreatedByCas2User(user2)
         withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
@@ -594,7 +570,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       // submitted application, which should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(nomisUser2)
         withCreatedByCas2User(user2)
         withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")
@@ -607,7 +582,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application2.crn,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
-          startedBy = application2.createdByUser.nomisUsername,
+          startedBy = application2.createdByCas2User.username,
           applicationOrigin = application2.applicationOrigin,
         ),
         UnsubmittedApplicationsReportRow(
@@ -615,7 +590,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
-          startedBy = application1.createdByUser.nomisUsername,
+          startedBy = application1.createdByCas2User.username,
           applicationOrigin = application1.applicationOrigin,
         ),
       )

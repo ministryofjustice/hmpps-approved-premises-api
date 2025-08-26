@@ -131,7 +131,6 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
 
     private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
-      withCreatedByUser(produceAndPersistNomisUserEntity(referrer))
       withCreatedByCas2User(referrer)
       withSubmittedAt(OffsetDateTime.now())
     }
@@ -261,7 +260,6 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
 
     private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
-      withCreatedByUser(produceAndPersistNomisUserEntity(referrer))
       withCreatedByCas2User(referrer)
       withSubmittedAt(OffsetDateTime.now())
     }
