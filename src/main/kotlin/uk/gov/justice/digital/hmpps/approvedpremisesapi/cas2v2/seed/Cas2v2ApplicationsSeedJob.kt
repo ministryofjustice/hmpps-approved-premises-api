@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import java.io.IOException
@@ -77,8 +76,7 @@ class Cas2v2ApplicationsSeedJob(
         crn = row.crn,
         nomsNumber = row.nomsNumber,
         createdAt = row.createdAt,
-        createdByUser = transformCas2UserEntityToNomisUserEntity(cas2UserEntity),
-        createdByCas2User = cas2UserEntity,
+        createdByUser = cas2UserEntity,
         applicationOrigin = row.applicationOrigin,
         bailHearingDate = row.bailHearingDate.toLocalDate(),
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),

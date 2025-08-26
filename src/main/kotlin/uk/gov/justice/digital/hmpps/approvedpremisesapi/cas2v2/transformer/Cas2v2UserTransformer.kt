@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import java.time.OffsetDateTime
 
@@ -33,48 +31,5 @@ fun transformCas2UserEntityToNomisUserEntity(userEntity: Cas2UserEntity): NomisU
   accountType = userEntity.nomisAccountType ?: "TODO",
   isEnabled = userEntity.isEnabled,
   isActive = userEntity.isActive,
-  applications = userEntity.applications,
   activeCaseloadId = userEntity.activeNomisCaseloadId,
-)
-
-fun transformNomisUserEntityToCas2UserEntity(userEntity: NomisUserEntity): Cas2UserEntity = Cas2UserEntity(
-  id = userEntity.id,
-  username = userEntity.nomisUsername,
-  name = userEntity.name,
-  email = userEntity.email,
-  activeNomisCaseloadId = userEntity.activeCaseloadId,
-  createdAt = OffsetDateTime.now(),
-  deliusStaffCode = null,
-  deliusTeamCodes = null,
-  userType = Cas2UserType.NOMIS,
-  isActive = userEntity.isActive,
-  isEnabled = userEntity.isEnabled,
-  nomisStaffId = userEntity.nomisStaffId,
-  applications = userEntity.applications,
-)
-
-fun transformCas2UserEntityToExternalUserEntity(userEntity: Cas2UserEntity): ExternalUserEntity = ExternalUserEntity(
-  id = userEntity.id,
-  name = userEntity.name,
-  isEnabled = userEntity.isEnabled,
-  username = userEntity.username,
-  origin = userEntity.externalType ?: "TODO",
-  email = userEntity.email ?: "TODO",
-  createdAt = OffsetDateTime.now(),
-)
-
-fun transformExternalUserEntityToCas2UserEntity(userEntity: ExternalUserEntity): Cas2UserEntity = Cas2UserEntity(
-  id = userEntity.id,
-  username = userEntity.username,
-  name = userEntity.name,
-  email = userEntity.email,
-  activeNomisCaseloadId = null,
-  createdAt = OffsetDateTime.now(),
-  deliusStaffCode = null,
-  deliusTeamCodes = null,
-  userType = Cas2UserType.EXTERNAL,
-  isActive = true,
-  isEnabled = userEntity.isEnabled,
-  nomisStaffId = null,
-  applications = mutableListOf(),
 )

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
@@ -62,8 +61,7 @@ class Cas2MigrateStatusUpdatesTest : MigrationJobTestBase() {
 
   private fun createApplicationEntity(userEntity: Cas2UserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(userEntity))
-    withCreatedByCas2User(userEntity)
+    withCreatedByUser(userEntity)
     withData("{}")
     withSubmittedAt(submittedAt)
   }

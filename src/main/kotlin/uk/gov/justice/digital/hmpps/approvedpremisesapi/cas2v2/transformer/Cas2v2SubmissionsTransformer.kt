@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
 
 @Component
 class Cas2v2SubmissionsTransformer(
@@ -26,7 +25,7 @@ class Cas2v2SubmissionsTransformer(
   ): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
     id = jpa.id,
     person = personTransformer.transformModelToPersonApi(personInfo),
-    submittedBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByCas2User!!),
+    submittedBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
     document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
@@ -42,7 +41,7 @@ class Cas2v2SubmissionsTransformer(
   ): Cas2v2SubmittedApplicationSummary = Cas2v2SubmittedApplicationSummary(
     id = jpaSummary.id,
     personName = personName,
-    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdByUserId = jpaSummary.userId,
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     crn = jpaSummary.crn,

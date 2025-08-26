@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -16,8 +15,7 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   private var cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private var application: Yielded<Cas2ApplicationEntity> = {
     Cas2ApplicationEntityFactory()
-      .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(cas2User))
-      .withCreatedByCas2User(cas2User)
+      .withCreatedByUser(cas2User)
       .produce()
   }
   private var nacroReferralId: String? = null

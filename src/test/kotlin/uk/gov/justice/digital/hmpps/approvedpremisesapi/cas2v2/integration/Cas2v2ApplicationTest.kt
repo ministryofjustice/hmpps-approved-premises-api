@@ -219,8 +219,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         userEntity: Cas2UserEntity,
         offenderDetails: OffenderDetailSummary,
       ): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-        withCreatedByCas2User(userEntity)
+        withCreatedByUser(userEntity)
         withCrn(offenderDetails.otherIds.crn)
         withCreatedAt(OffsetDateTime.now().minusDays(28))
         withConditionalReleaseDate(LocalDate.now().plusDays(1))
@@ -334,8 +333,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         // abandoned application
         val abandonedApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-          withCreatedByCas2User(userEntity)
+          withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
@@ -344,8 +342,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         // unsubmitted application
         val firstApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-          withCreatedByCas2User(userEntity)
+          withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
@@ -354,8 +351,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         // submitted application, CRD >= today so should be returned
         val secondApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-          withCreatedByCas2User(userEntity)
+          withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
@@ -365,8 +361,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         // submitted application, CRD = yesterday, so should not be returned
         val thirdApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-          withCreatedByCas2User(userEntity)
+          withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
@@ -385,8 +380,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         }
 
         val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(produceAndPersistNomisUserEntity(otherUser))
-          withCreatedByCas2User(otherUser)
+          withCreatedByUser(otherUser)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
         }
@@ -412,10 +406,10 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             firstApplicationEntity.nomsNumber == it.nomsNumber &&
             "${offenderDetails.firstName} ${offenderDetails.surname}" == it.personName &&
             firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
-            firstApplicationEntity.createdByCas2User!!.id == it.createdByUserId &&
+            firstApplicationEntity.createdByUser.id == it.createdByUserId &&
             firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
             firstApplicationEntity.hdcEligibilityDate == it.hdcEligibilityDate &&
-            firstApplicationEntity.createdByCas2User!!.name == it.createdByUserName
+            firstApplicationEntity.createdByUser.name == it.createdByUserName
         }
 
         Assertions.assertThat(responseBody).noneMatch {
@@ -448,8 +442,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
 
             val courtBailApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-              withCreatedByCas2User(userEntity)
+              withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
@@ -457,8 +450,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             }
 
             val prisonBailApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-              withCreatedByCas2User(userEntity)
+              withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
@@ -466,8 +458,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             }
 
             val hdcApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-              withCreatedByCas2User(userEntity)
+              withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
@@ -525,8 +516,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         repeat(12) {
           cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
             withCrn(offenderDetails.otherIds.crn)
             withData("{}")
             withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
@@ -699,10 +689,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 submittedIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withCreatedByCas2User(userEntity)
-                    withCreatedByUser(
-                      produceAndPersistNomisUserEntity(userEntity),
-                    )
+                    withCreatedByUser(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
@@ -717,10 +704,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 submittedIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
-                    withCreatedByCas2User(userEntity)
-                    withCreatedByUser(
-                      produceAndPersistNomisUserEntity(userEntity),
-                    )
+                    withCreatedByUser(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
@@ -732,10 +716,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               // submitted application with a conditional release date before today
               excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
-                withCreatedByCas2User(userEntity)
-                withCreatedByUser(
-                  produceAndPersistNomisUserEntity(userEntity),
-                )
+                withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
@@ -748,10 +729,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               repeat(4) {
                 unSubmittedIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByCas2User(userEntity)
-                    withCreatedByUser(
-                      produceAndPersistNomisUserEntity(userEntity),
-                    )
+                    withCreatedByUser(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                   }.id,
@@ -760,10 +738,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               // create a submitted application by another user which should not be in results
               cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(otherUser)
-                withCreatedByUser(
-                  produceAndPersistNomisUserEntity(otherUser),
-                )
+                withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
@@ -771,10 +746,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               // create an unsubmitted application by another user which should not be in results
               cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(otherUser)
-                withCreatedByUser(
-                  produceAndPersistNomisUserEntity(otherUser),
-                )
+                withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
               }
@@ -1086,10 +1058,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       cas2v2UserEntity: Cas2UserEntity,
       applicationOrigin: ApplicationOrigin,
     ) = cas2ApplicationEntityFactory.produceAndPersist {
-      withCreatedByCas2User(cas2v2UserEntity)
-      withCreatedByUser(
-        produceAndPersistNomisUserEntity(cas2v2UserEntity),
-      )
+      withCreatedByUser(cas2v2UserEntity)
       withApplicationOrigin(applicationOrigin)
     }
   }
@@ -1122,10 +1091,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
-              withCreatedByCas2User(userEntity)
-              withCreatedByUser(
-                produceAndPersistNomisUserEntity(userEntity),
-              )
+              withCreatedByUser(userEntity)
               withData(
                 data,
               )
@@ -1150,7 +1116,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByCas2User!!.id == it.createdBy.id &&
+                applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
             }
@@ -1177,10 +1143,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
-              withCreatedByCas2User(userEntity)
-              withCreatedByUser(
-                produceAndPersistNomisUserEntity(userEntity),
-              )
+              withCreatedByUser(userEntity)
               withSubmittedAt(OffsetDateTime.now().minusDays(1))
             }
 
@@ -1226,12 +1189,10 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withActiveNomisCaseloadId("other_caseload")
               }
 
-              val otherUser = produceAndPersistNomisUserEntity(otherCas2User)
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withSubmittedAt(OffsetDateTime.now())
-                withCreatedByCas2User(otherCas2User)
-                withCreatedByUser(otherUser)
+                withCreatedByUser(otherCas2User)
                 withData(
                   data,
                 )
@@ -1276,8 +1237,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(produceAndPersistNomisUserEntity(otherUser))
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
               }
@@ -1320,8 +1280,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(produceAndPersistNomisUserEntity(otherUser))
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
               }
 
@@ -1349,8 +1308,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(produceAndPersistNomisUserEntity(otherUser))
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
                 withApplicationOrigin(ApplicationOrigin.prisonBail)
@@ -1375,8 +1333,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(produceAndPersistNomisUserEntity(otherUser))
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withApplicationOrigin(ApplicationOrigin.prisonBail)
               }
 
@@ -1401,8 +1358,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(produceAndPersistNomisUserEntity(otherUser))
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
                 withApplicationOrigin(ApplicationOrigin.courtBail)
               }
@@ -1549,8 +1505,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         cas2ApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
           withId(applicationId)
-          withCreatedByUser(produceAndPersistNomisUserEntity(submittingUser))
-          withCreatedByCas2User(submittingUser)
+          withCreatedByUser(submittingUser)
         }
 
         val resultBody = webTestClient.put()
@@ -1599,8 +1554,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                   submittedPrisonBailApplications.add(
                     cas2ApplicationEntityFactory.produceAndPersist {
                       withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                      withCreatedByUser(produceAndPersistNomisUserEntity(user))
-                      withCreatedByCas2User(user)
+                      withCreatedByUser(user)
                       withCrn(offenderDetails.otherIds.crn)
                       withApplicationOrigin(ApplicationOrigin.prisonBail)
                       withData("{}")
@@ -1615,8 +1569,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 unsubmittedPrisonBailApplications.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
                     withCreatedAt(OffsetDateTime.now().minusDays(1))
-                    withCreatedByUser(produceAndPersistNomisUserEntity(user))
-                    withCreatedByCas2User(user)
+                    withCreatedByUser(user)
                     withCrn(offenderDetails.otherIds.crn)
                     withApplicationOrigin(ApplicationOrigin.prisonBail)
                     withData("{}")
@@ -1625,8 +1578,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 )
                 cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedAt(OffsetDateTime.now().minusDays(1))
-                  withCreatedByUser(produceAndPersistNomisUserEntity(user))
-                  withCreatedByCas2User(user)
+                  withCreatedByUser(user)
                   withCrn(offenderDetails.otherIds.crn)
                   withApplicationOrigin(ApplicationOrigin.courtBail)
                   withData("{}")
@@ -1689,7 +1641,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             application.id == it.id &&
               application.crn == it.person.crn &&
               application.createdAt.toInstant() == it.createdAt &&
-              application.createdByCas2User!!.id == it.createdBy.id &&
+              application.createdByUser.id == it.createdBy.id &&
               application.submittedAt?.toInstant() == it.submittedAt &&
               serializableToJsonNode(application.data) == serializableToJsonNode(it.data)
           }
@@ -1742,8 +1694,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
-      withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-      withCreatedByCas2User(userEntity)
+      withCreatedByUser(userEntity)
       withData(
         data,
       )

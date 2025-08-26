@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
@@ -29,12 +28,10 @@ class TimelineEventsTransformerTest {
   private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
 
   private val submittedCas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
 
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
@@ -89,7 +86,7 @@ class TimelineEventsTransformerTest {
       val note = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),
         createdAt = noteCreatedAt,
-        createdByUser = nomisUser,
+        createdByCas2User = nomisUser,
         application = submittedCas2ApplicationFactory.produce(),
         body = "a comment",
         assessment = Cas2AssessmentEntityFactory().produce(),
@@ -102,7 +99,7 @@ class TimelineEventsTransformerTest {
         id = UUID.randomUUID(),
         createdAt = OffsetDateTime.now().minusDays(70),
         prisonCode = "FEI",
-        allocatedPomUser = transformCas2UserEntityToNomisUserEntity(nomisUser),
+        allocatedPomUser = nomisUser,
         application = application,
       )
 
@@ -110,7 +107,7 @@ class TimelineEventsTransformerTest {
         id = UUID.randomUUID(),
         createdAt = OffsetDateTime.now().minusDays(55),
         prisonCode = "FEI",
-        allocatedPomUser = transformCas2UserEntityToNomisUserEntity(pomUser),
+        allocatedPomUser = pomUser,
         application = application,
       )
 
@@ -132,8 +129,7 @@ class TimelineEventsTransformerTest {
 
       val jpaEntity = submittedCas2ApplicationFactory
         .withSubmittedAt(submittedAt)
-        .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(nomisUser))
-        .withCreatedByCas2User(nomisUser)
+        .withCreatedByUser(nomisUser)
         .withStatusUpdates(mutableListOf(statusUpdateEntity, statusUpdateWithDetailsEntity))
         .withNotes(mutableListOf(note))
         .withApplicationAssignments(applicationAssignments)
@@ -173,7 +169,7 @@ class TimelineEventsTransformerTest {
             type = TimelineEventType.cas2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
-            createdByName = note.getUser().name,
+            createdByName = note.createdByCas2User.name,
             body = "a comment",
           ),
           Cas2TimelineEvent(

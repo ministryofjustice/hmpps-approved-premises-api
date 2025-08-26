@@ -31,18 +31,19 @@ interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
   fun findByUsername(username: String): Cas2UserEntity?
   fun findByUsernameAndUserType(username: String, type: Cas2UserType): Cas2UserEntity?
   fun findByUserType(type: Cas2UserType): List<Cas2UserEntity>
+  fun findByNomisStaffId(nomisStaffId: Long): Cas2UserEntity?
 }
 
 @Entity
 @Table(name = "cas_2_users")
 data class Cas2UserEntity(
   @Id
-  override val id: UUID,
+  val id: UUID,
   val username: String,
 
   // Cas2v2User interface implementation
-  override var email: String?,
-  override var name: String,
+  var email: String?,
+  var name: String,
 
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
@@ -72,9 +73,11 @@ data class Cas2UserEntity(
   @UpdateTimestamp
   private val updatedAt: OffsetDateTime? = null,
 
-  @OneToMany(mappedBy = "createdByCas2User")
+  @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
-) : UnifiedUser {
+
+  // TODO removed Cas2User as no longer necessary as just one user type
+) {
   override fun toString() = "CAS2 user $id"
 
   fun staffIdentifier() = when (userType) {

@@ -112,8 +112,7 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
-      withCreatedByUser(produceAndPersistNomisUserEntity(userEntity))
-      withCreatedByCas2User(userEntity)
+      withCreatedByUser(userEntity)
       withData(
         data,
       )

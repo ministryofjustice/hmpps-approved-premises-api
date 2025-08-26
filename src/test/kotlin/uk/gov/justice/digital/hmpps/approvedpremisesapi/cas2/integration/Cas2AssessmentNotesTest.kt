@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
@@ -92,8 +91,7 @@ class Cas2AssessmentNotesTest(
 
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withId(applicationId)
-            withCreatedByUser(transformCas2UserEntityToNomisUserEntity(referrer))
-            withCreatedByCas2User(referrer)
+            withCreatedByUser(referrer)
             withSubmittedAt(OffsetDateTime.now())
             withNomsNumber("123NOMS")
           }
@@ -162,12 +160,11 @@ class Cas2AssessmentNotesTest(
 
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withId(applicationId)
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(referrer))
-                withCreatedByCas2User(referrer)
+                withCreatedByUser(referrer)
                 withSubmittedAt(OffsetDateTime.now())
               }
 
-              application.createApplicationAssignment(referrer.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(referrer))
+              application.createApplicationAssignment(referrer.activeNomisCaseloadId!!, referrer)
 
               cas2ApplicationRepository.save(application)
 
@@ -235,12 +232,9 @@ class Cas2AssessmentNotesTest(
                   withUserType(Cas2UserType.NOMIS)
                 }
 
-                val nomisOtherUser = produceAndPersistNomisUserEntity(otherUser)
-
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
-                  withCreatedByUser(nomisOtherUser)
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
                 }
@@ -279,16 +273,13 @@ class Cas2AssessmentNotesTest(
                   withActiveNomisCaseloadId(referrer.activeNomisCaseloadId!!)
                 }
 
-                val nomisOtherUser = produceAndPersistNomisUserEntity(otherUser)
-
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(nomisOtherUser)
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withReferringPrisonCode(referrer.activeNomisCaseloadId!!)
                 }
 
-                applicationEntity.createApplicationAssignment(referrer.activeNomisCaseloadId!!, nomisOtherUser)
+                applicationEntity.createApplicationAssignment(referrer.activeNomisCaseloadId!!, otherUser)
 
                 cas2ApplicationRepository.save(applicationEntity)
 
@@ -353,12 +344,11 @@ class Cas2AssessmentNotesTest(
 
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withId(applicationId)
-                withCreatedByUser(transformCas2UserEntityToNomisUserEntity(referrer))
-                withCreatedByCas2User(referrer)
+                withCreatedByUser(referrer)
                 withSubmittedAt(OffsetDateTime.now())
               }
 
-              application.createApplicationAssignment(referrer.activeNomisCaseloadId!!, transformCas2UserEntityToNomisUserEntity(referrer))
+              application.createApplicationAssignment(referrer.activeNomisCaseloadId!!, referrer)
 
               cas2ApplicationRepository.save(application)
 
@@ -426,12 +416,9 @@ class Cas2AssessmentNotesTest(
                   withActiveNomisCaseloadId("another-prison")
                 }
 
-                val nomisUser = produceAndPersistNomisUserEntity(otherUser)
-
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
-                  withCreatedByUser(nomisUser)
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
                 }
@@ -470,16 +457,13 @@ class Cas2AssessmentNotesTest(
                   withActiveNomisCaseloadId(referrer.activeNomisCaseloadId!!)
                 }
 
-                val nomisUser = produceAndPersistNomisUserEntity(otherUser)
-
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(nomisUser)
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withReferringPrisonCode(referrer.activeNomisCaseloadId!!)
                 }
 
-                applicationEntity.createApplicationAssignment(referrer.activeNomisCaseloadId!!, nomisUser)
+                applicationEntity.createApplicationAssignment(referrer.activeNomisCaseloadId!!, otherUser)
 
                 cas2ApplicationRepository.save(applicationEntity)
 

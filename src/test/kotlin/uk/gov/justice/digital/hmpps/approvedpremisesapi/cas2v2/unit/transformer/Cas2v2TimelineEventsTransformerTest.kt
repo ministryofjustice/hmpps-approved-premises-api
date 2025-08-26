@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -21,16 +20,10 @@ class Cas2v2TimelineEventsTransformerTest {
   private val user = Cas2UserEntityFactory().produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
-    .withCreatedByUser(
-      transformCas2UserEntityToNomisUserEntity(user),
-    )
+    .withCreatedByUser(user)
 
   private val submittedCas2v2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
-    .withCreatedByUser(
-      transformCas2UserEntityToNomisUserEntity(user),
-    )
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
 
   private val timelineEventTransformer = Cas2v2TimelineEventsTransformer()
@@ -87,7 +80,7 @@ class Cas2v2TimelineEventsTransformerTest {
       val note = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),
         createdAt = noteCreatedAt,
-        createdByUser = nomisUser,
+        createdByCas2User = nomisUser,
         application = submittedCas2v2ApplicationFactory.produce(),
         body = "a comment",
         assessment = Cas2AssessmentEntityFactory().produce(),
@@ -97,10 +90,7 @@ class Cas2v2TimelineEventsTransformerTest {
 
       val jpaEntity = submittedCas2v2ApplicationFactory
         .withSubmittedAt(submittedAt)
-        .withCreatedByUser(
-          transformCas2UserEntityToNomisUserEntity(nomisUser),
-        )
-        .withCreatedByCas2User(nomisUser)
+        .withCreatedByUser(nomisUser)
         .withStatusUpdates(mutableListOf(statusUpdateEntity, statusUpdateWithDetailsEntity))
         .withNotes(mutableListOf(note))
         .produce()
@@ -127,7 +117,7 @@ class Cas2v2TimelineEventsTransformerTest {
             type = TimelineEventType.cas2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
-            createdByName = note.getUser().name,
+            createdByName = note.createdByCas2User.name,
             body = "a comment",
           ),
           Cas2TimelineEvent(

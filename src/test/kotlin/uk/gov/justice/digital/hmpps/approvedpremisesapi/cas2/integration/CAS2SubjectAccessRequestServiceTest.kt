@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -46,7 +45,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Applications`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = nomisCas2UserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
 
@@ -76,7 +75,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with assessment`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = nomisCas2UserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -107,7 +106,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with Note`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = nomisCas2UserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -141,7 +140,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with Note and Status update`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = nomisCas2UserEntity()
     val externalAssessor = cas2UserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -177,7 +176,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Domain Events`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = nomisUserEntity()
+    val user = nomisCas2UserEntity()
     val externalAssessor = cas2UserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -238,6 +237,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }    
   """.trimIndent()
 
+  // TODO besscerule - is it ok to change case of created_by_user_type
   private fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
       "id": "${applicationNotes.id}",
@@ -245,8 +245,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "noms_number": "${applicationNotes.application.nomsNumber}",
       "application_id": "${applicationNotes.application.id}",
       "assessment_id": "${applicationNotes.assessment!!.id}",
-      "created_by_user": "${applicationNotes.getUser().name}",
-      "created_by_user_type": "nomis",
+      "created_by_user": "${applicationNotes.createdByCas2User.name}",
+      "created_by_user_type": "NOMIS",
       "body": "${applicationNotes.body}"
   }
   """.trimIndent()
@@ -291,7 +291,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ) = cas2NoteEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
-    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
+    withCreatedByCas2User(user)
     withBody("some body text")
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
   }
@@ -336,8 +336,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ) = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-    withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-    withCreatedByCas2User(user)
+    withCreatedByUser(user)
+    withCreatedByUser(user)
     withData(DATA_JSON_SIMPLE)
     withDocument(DOCUMENT_JSON_SIMPLE)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
@@ -350,7 +350,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withPreferredAreas("some areas")
   }
 
-  private fun nomisUserEntity(): Cas2UserEntity {
+  private fun nomisCas2UserEntity(): Cas2UserEntity {
     val cas2User = cas2UserEntityFactory.produceAndPersist {
       withName(randomStringMultiCaseWithNumbers(12))
       withEmail(randomEmailAddress())
@@ -360,7 +360,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withNomisStaffIdentifier(90L)
       withUserType(Cas2UserType.NOMIS)
     }
-    produceAndPersistNomisUserEntity(cas2User)
     return cas2User
   }
 }

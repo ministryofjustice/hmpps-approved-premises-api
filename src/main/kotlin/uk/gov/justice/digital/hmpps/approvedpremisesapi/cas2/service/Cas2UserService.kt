@@ -1,13 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
-import jakarta.transaction.Transactional
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
@@ -26,20 +23,10 @@ class Cas2UserService(
   private val httpAuthService: HttpAuthService,
   private val nomisUserRolesApiClient: NomisUserRolesApiClient,
   private val nomisUserRolesForRequesterApiClient: NomisUserRolesForRequesterApiClient,
-  private val nomisUserRepository: NomisUserRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val manageUsersApiClient: ManageUsersApiClient,
   private val cas2UserRepository: Cas2UserRepository,
 ) {
-  // BAIL-WIP When we migrate, remove this method and force all calls to getCas2UserForRequest
-//  fun getUserForRequest(): NomisUserEntity {
-//    val authenticatedPrincipal = httpAuthService.getNomisPrincipalOrThrow()
-//    val jwt = authenticatedPrincipal.token.tokenValue
-//    val username = authenticatedPrincipal.name
-//
-//    return getNomisUserForUsername(username, jwt)
-//  }
-
   fun getCas2UserForRequest(): Cas2UserEntity {
     val authenticatedPrincipal = httpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
     val jwt = authenticatedPrincipal.token.tokenValue
@@ -49,10 +36,10 @@ class Cas2UserService(
     return getCas2UserForUsername(username, jwt, userType)
   }
 
-  fun getNomisUserById(id: UUID) = nomisUserRepository.findById(id).orElseThrow { NotFoundProblem(id, "NomisUser") }
+  fun getCas2UserById(id: UUID): Cas2UserEntity = cas2UserRepository.findById(id).orElseThrow { NotFoundProblem(id, "Cas2User") }
 
-  fun getUserByStaffId(staffId: Long): NomisUserEntity {
-    val userDetails = nomisUserRepository.findByNomisStaffId(staffId)
+  fun getUserByStaffId(staffId: Long): Cas2UserEntity {
+    val userDetails = cas2UserRepository.findByNomisStaffId(staffId)
     if (userDetails != null) {
       return userDetails
     }
@@ -76,64 +63,34 @@ class Cas2UserService(
     is ClientResult.Failure -> nomsStaffInformationResponse.throwException()
   }
 
-  @Transactional(value = Transactional.TxType.REQUIRES_NEW)
-  fun getNomisUserForUsername(username: String, jwt: String): NomisUserEntity {
-    val nomisUserDetails = when (
-      val nomisUserDetailResponse = nomisUserRolesForRequesterApiClient.getUserDetailsForMe(jwt)
-    ) {
-      is ClientResult.Success -> nomisUserDetailResponse.body
-      is ClientResult.Failure -> nomisUserDetailResponse.throwException()
-    }
-
-    if (nomisUserDetails.primaryEmail == null) {
-      error("User $username does not have a primary email set in NOMIS")
-    }
-
-    val normalisedUsername = username.uppercase()
-    val existingUser = nomisUserRepository.findByNomisUsername(normalisedUsername)
-
-    if (existingUser != null) {
-      if (existingUserDetailsHaveChanged(existingUser, nomisUserDetails)) {
-        existingUser.email = nomisUserDetails.primaryEmail
-        existingUser.activeCaseloadId = nomisUserDetails.activeCaseloadId
-        nomisUserRepository.save(existingUser)
-      }
-      return existingUser
-    }
-    return ensureUserExists(username = normalisedUsername, nomisUserDetails)
-  }
-
   private fun ensureUserExists(
     username: String,
     nomisUserDetails: NomisUserDetail,
-  ): NomisUserEntity {
-    return nomisUserRepository.findByNomisUsername(username) ?: try {
-      nomisUserRepository.save(
-        NomisUserEntity(
+  ): Cas2UserEntity {
+    return cas2UserRepository.findByUsername(username) ?: try {
+      cas2UserRepository.save(
+        Cas2UserEntity(
           id = UUID.randomUUID(),
           name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
-          nomisUsername = username,
+          username = username,
           nomisStaffId = nomisUserDetails.staffId,
-          accountType = nomisUserDetails.accountType,
+          nomisAccountType = nomisUserDetails.accountType,
           email = nomisUserDetails.primaryEmail,
           isEnabled = nomisUserDetails.enabled,
           isActive = nomisUserDetails.active,
-          activeCaseloadId = nomisUserDetails.activeCaseloadId,
+          activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
+          userType = Cas2UserType.NOMIS,
+          deliusTeamCodes = null,
+          deliusStaffCode = null,
+          // TODO besscerule i think we shouldn't have to add this - but otherwise tests fail
+          createdAt = OffsetDateTime.now(),
         ),
       )
     } catch (ex: DataIntegrityViolationException) {
-      return nomisUserRepository.findByNomisUsername(username)
+      return cas2UserRepository.findByUsername(username)
         ?: throw IllegalStateException("User creation failed and username $username not found", ex)
     }
   }
-
-  private fun existingUserDetailsHaveChanged(
-    existingUser: NomisUserEntity,
-    nomisUserDetails: NomisUserDetail,
-  ): Boolean = (
-    existingUser.email != nomisUserDetails.primaryEmail ||
-      existingUser.activeCaseloadId != nomisUserDetails.activeCaseloadId
-    )
 
   fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType): Cas2UserEntity {
     val normalisedUsername = username.uppercase()

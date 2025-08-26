@@ -17,17 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2StatusUpdateTransformerTest {
   private val user = Cas2UserEntityFactory().produce()
   private val cas2v2SubmittedApplication = Cas2ApplicationEntityFactory()
-    .withCreatedByUser(
-      transformCas2UserEntityToNomisUserEntity(user),
-    )
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 

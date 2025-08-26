@@ -11,10 +11,9 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
@@ -93,7 +92,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
 
       givenACas2PomUser { referrer, _ ->
         givenACas2Assessor { assessor, jwt ->
-          val submittedApplication = createSubmittedApplication(applicationId, transformCas2UserEntityToNomisUserEntity(referrer))
+          val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
@@ -131,7 +130,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: NomisUserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())
@@ -196,7 +195,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
 
       givenACas2PomUser { referrer, _ ->
         givenACas2Assessor { assessor, jwt ->
-          val submittedApplication = createSubmittedApplication(applicationId, transformCas2UserEntityToNomisUserEntity(referrer))
+          val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
@@ -230,8 +229,8 @@ class Cas2AssessmentTest : IntegrationTestBase() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2PomUser { referrer, _ ->
-        givenACas2Admin { admin, jwt ->
-          val submittedApplication = createSubmittedApplication(applicationId, transformCas2UserEntityToNomisUserEntity(referrer))
+        givenACas2Admin { _, jwt ->
+          val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
@@ -260,7 +259,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: NomisUserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())

@@ -128,8 +128,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId1)
         withApplicationOrigin(ApplicationOrigin.courtBail)
-        withCreatedByUser(produceAndPersistNomisUserEntity(user1))
-        withCreatedByCas2User(user1)
+        withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
         withCreatedAt(oldCreated)
@@ -141,8 +140,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId2)
         withApplicationOrigin(ApplicationOrigin.courtBail)
-        withCreatedByUser(produceAndPersistNomisUserEntity(user2))
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
         withCreatedAt(newerCreated)
@@ -154,8 +152,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
-        withCreatedByUser(produceAndPersistNomisUserEntity(user2))
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCreatedAt(tooOldCreated)
         withData("{}")
         withSubmittedAt(tooOldSubmitted)
@@ -340,15 +337,13 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val user = cas2UserEntityFactory.produceAndPersist()
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(user))
-        withCreatedByCas2User(user)
+        withCreatedByUser(user)
       }
       val application1ID = application1.id
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
         withApplicationOrigin(ApplicationOrigin.courtBail)
-        withCreatedByUser(produceAndPersistNomisUserEntity(user))
-        withCreatedByCas2User(user)
+        withCreatedByUser(user)
       }
       val application2ID = application2.id
 
@@ -501,8 +496,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(user1))
-        withCreatedByCas2User(user1)
+        withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
         withCreatedAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
@@ -511,8 +505,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(user2))
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCrn("CRN_2")
         withApplicationOrigin(ApplicationOrigin.prisonBail)
         withNomsNumber("NOMS_2")
@@ -523,8 +516,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(user2))
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
@@ -532,8 +524,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       // submitted application, which should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(user2))
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")
         withSubmittedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(50))
@@ -546,14 +537,14 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           applicationOrigin = application2.applicationOrigin,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
-          startedBy = application2.createdByCas2User!!.username,
+          startedBy = application2.createdByUser.username,
         ),
         UnsubmittedApplicationsReportRow(
           applicationId = application1.id.toString(),
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
-          startedBy = application1.createdByCas2User!!.username,
+          startedBy = application1.createdByUser.username,
           applicationOrigin = application1.applicationOrigin,
         ),
       )
@@ -651,8 +642,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
   ): Cas2ApplicationEntity {
     if (applicationOrigin == null) {
       return cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(user))
-        withCreatedByCas2User(user)
+        withCreatedByUser(user)
         withCreatedAt(created)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
@@ -661,8 +651,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       }
     } else {
       return cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(produceAndPersistNomisUserEntity(user))
-        withCreatedByCas2User(user)
+        withCreatedByUser(user)
         withCreatedAt(created)
         withApplicationOrigin(applicationOrigin)
         withCrn("CRN_2")

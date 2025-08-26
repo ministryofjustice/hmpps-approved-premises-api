@@ -29,8 +29,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
       withUsername("ROGER_SMITH_FAKE")
     }
 
-    produceAndPersistNomisUserEntity(applicant)
-
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
 
@@ -67,12 +65,10 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `An IN_PROGRESS application has _data_ but no _document_ or Assessment`() {
     cas2ApplicationRepository.deleteAll()
 
-    val cas2NomisUser = cas2UserEntityFactory.produceAndPersist {
-      withUserType(Cas2UserType.NOMIS)
+    cas2UserEntityFactory.produceAndPersist {
       withUsername("ROGER_SMITH_FAKE")
+      withUserType(Cas2UserType.NOMIS)
     }
-
-    produceAndPersistNomisUserEntity(cas2NomisUser)
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
@@ -114,18 +110,14 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment AND status updates AND first class fields`() {
     cas2ApplicationRepository.deleteAll()
 
-    val cas2NomisUser = cas2UserEntityFactory.produceAndPersist {
-      withUserType(Cas2UserType.NOMIS)
+    cas2UserEntityFactory.produceAndPersist {
       withUsername("ROGER_SMITH_FAKE")
+      withUserType(Cas2UserType.NOMIS)
     }
 
-    produceAndPersistNomisUserEntity(cas2NomisUser)
-
-    val cas2ExternalUser = cas2UserEntityFactory.produceAndPersist {
+    cas2UserEntityFactory.produceAndPersist {
       withUserType(Cas2UserType.EXTERNAL)
     }
-
-    produceAndPersistExternalUserEntity(cas2ExternalUser)
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
@@ -169,19 +161,15 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `An IN_REVIEW application has _data_, _document_ AND status updates`() {
     cas2ApplicationRepository.deleteAll()
 
-    val cas2NomisUser = cas2UserEntityFactory.produceAndPersist {
-      withUserType(Cas2UserType.NOMIS)
+    cas2UserEntityFactory.produceAndPersist {
       withUsername("ROGER_SMITH_FAKE")
+      withUserType(Cas2UserType.NOMIS)
     }
 
-    produceAndPersistNomisUserEntity(cas2NomisUser)
-
-    val cas2ExternalUser = cas2UserEntityFactory.produceAndPersist {
+    cas2UserEntityFactory.produceAndPersist {
       withUsername("CAS2_ASSESSOR")
       withUserType(Cas2UserType.EXTERNAL)
     }
-
-    produceAndPersistExternalUserEntity(cas2ExternalUser)
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")

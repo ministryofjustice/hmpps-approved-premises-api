@@ -5,12 +5,13 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import java.time.OffsetDateTime
+import java.util.UUID
 
 @Component
 object Cas2v2ApplicationSummarySpecifications {
 
-  fun hasUserId(userId: String): Specification<Cas2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
-    criteriaBuilder.equal(root.get<String>("userId"), userId)
+  fun hasUserId(userId: UUID): Specification<Cas2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
+    criteriaBuilder.equal(root.get<UUID>("userId"), userId)
   }
 
   fun hasCrnOrNomsNumber(crnOrNomsNumber: String): Specification<Cas2ApplicationSummaryEntity> = Specification<Cas2ApplicationSummaryEntity> { root, _, criteriaBuilder ->

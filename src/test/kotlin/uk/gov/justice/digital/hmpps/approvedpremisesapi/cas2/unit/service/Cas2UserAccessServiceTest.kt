@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import java.time.OffsetDateTime
 
 class Cas2UserAccessServiceTest {
@@ -30,32 +29,31 @@ class Cas2UserAccessServiceTest {
       @Test
       fun `returns true if currently allocated POM or if in same prison`() {
         val application = Cas2ApplicationEntityFactory()
-          .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(otherUser))
-          .withCreatedByCas2User(otherUser)
+          .withCreatedByUser(otherUser)
           .withSubmittedAt(OffsetDateTime.now())
           .withReferringPrisonCode(referringPrisonCode)
           .produce()
 
         // created by user is the first assigned POM
-        application.createApplicationAssignment(referringPrisonCode, transformCas2UserEntityToNomisUserEntity(otherUser))
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isFalse
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(samePrisonUser), application)).isFalse
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(otherUser), application)).isTrue
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(otherPrisonUser), application)).isTrue
+        application.createApplicationAssignment(referringPrisonCode, otherUser)
+        assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(samePrisonUser, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(otherUser, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(otherPrisonUser, application)).isTrue
 
         // transfer to new prison, POM in new prison can view
         application.createApplicationAssignment(transferredToPrisonCode, null)
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isTrue
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(samePrisonUser), application)).isTrue
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(otherUser), application)).isFalse
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(otherPrisonUser), application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(samePrisonUser, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(otherUser, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(otherPrisonUser, application)).isFalse
 
         // allocate to new POM
-        application.createApplicationAssignment(transferredToPrisonCode, transformCas2UserEntityToNomisUserEntity(user))
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isTrue
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(samePrisonUser), application)).isTrue
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(otherUser), application)).isFalse
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(otherPrisonUser), application)).isFalse
+        application.createApplicationAssignment(transferredToPrisonCode, user)
+        assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(samePrisonUser, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(otherUser, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(otherPrisonUser, application)).isFalse
       }
     }
 
@@ -67,11 +65,10 @@ class Cas2UserAccessServiceTest {
       @Test
       fun `returns true`() {
         val application = Cas2ApplicationEntityFactory()
-          .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .produce()
 
-        assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
       }
     }
 
@@ -88,11 +85,10 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUser))
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .produce()
 
-          assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isFalse
+          assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
         }
       }
 
@@ -107,13 +103,12 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUser))
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("different-prison")
             .produce()
 
-          assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isFalse
+          assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
         }
 
         @Nested
@@ -127,12 +122,11 @@ class Cas2UserAccessServiceTest {
           @Test
           fun `returns false`() {
             val application = Cas2ApplicationEntityFactory()
-              .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUserWithNoPrison))
-              .withCreatedByCas2User(anotherUserWithNoPrison)
+              .withCreatedByUser(anotherUserWithNoPrison)
               .withSubmittedAt(OffsetDateTime.now())
               .produce()
 
-            assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(userWithNoPrison), application)).isFalse
+            assertThat(userAccessService.userCanViewApplication(userWithNoPrison, application)).isFalse
           }
         }
       }
@@ -149,25 +143,23 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns true if the user created the application`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(user))
-            .withCreatedByCas2User(user)
+            .withCreatedByUser(user)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
             .produce()
 
-          assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isTrue
+          assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
         }
 
         @Test
         fun `returns true when user NOT creator`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(transformCas2UserEntityToNomisUserEntity(anotherUser))
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
             .produce()
 
-          assertThat(userAccessService.userCanViewApplication(transformCas2UserEntityToNomisUserEntity(user), application)).isTrue
+          assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
         }
       }
     }

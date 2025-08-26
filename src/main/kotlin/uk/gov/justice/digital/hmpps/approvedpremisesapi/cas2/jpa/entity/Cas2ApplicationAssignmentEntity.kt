@@ -33,6 +33,6 @@ data class Cas2ApplicationAssignmentEntity(
    */
   @ManyToOne
   @JoinColumn(name = "allocated_pom_user_id")
-  val allocatedPomUser: NomisUserEntity? = null,
+  val allocatedPomUser: Cas2UserEntity? = null,
   val createdAt: OffsetDateTime,
 )

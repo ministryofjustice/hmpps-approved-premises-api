@@ -10,10 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
@@ -28,7 +27,6 @@ import java.util.UUID
 @SuppressWarnings("LongParameterList")
 class Cas2ApplicationsSeedJob(
   private val repository: Cas2ApplicationRepository,
-  private val userRepository: NomisUserRepository,
   private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
@@ -57,7 +55,7 @@ class Cas2ApplicationsSeedJob(
       return log.info("Skipping ${row.id}: already seeded")
     }
 
-    val applicant = userRepository.findByNomisUsername(row.createdBy) ?: throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")
+    val applicant = cas2UserRepository.findByUsernameAndUserType(row.createdBy, Cas2UserType.NOMIS) ?: throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")
 
     try {
       createApplication(row, applicant)
@@ -66,7 +64,7 @@ class Cas2ApplicationsSeedJob(
     }
   }
 
-  private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: NomisUserEntity) {
+  private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: Cas2UserEntity) {
     val application = repository.save(
       Cas2ApplicationEntity(
         id = row.id,

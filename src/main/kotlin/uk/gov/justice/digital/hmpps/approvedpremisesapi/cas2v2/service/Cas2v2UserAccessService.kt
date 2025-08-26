@@ -23,7 +23,7 @@ class Cas2v2UserAccessService(
 
     if (isPrisonBailReferral) return true
 
-    if (user.id == application.createdByCas2User!!.id) return true
+    if (user.id == application.createdByUser.id) return true
 
     if (application.submittedAt == null) return false
 
@@ -48,12 +48,12 @@ class Cas2v2UserAccessService(
 
     return when (user.userType) {
       Cas2UserType.NOMIS ->
-        user.id == application.createdByCas2User!!.id ||
+        user.id == application.createdByUser.id ||
           offenderIsFromSamePrisonAsUser(
             application.referringPrisonCode,
             user.activeNomisCaseloadId,
           )
-      Cas2UserType.DELIUS -> user.id == application.createdByCas2User!!.id
+      Cas2UserType.DELIUS -> user.id == application.createdByUser.id
       Cas2UserType.EXTERNAL -> true
     }
   }
