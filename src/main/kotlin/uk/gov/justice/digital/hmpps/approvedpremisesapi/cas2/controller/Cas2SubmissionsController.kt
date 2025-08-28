@@ -32,6 +32,7 @@ class Cas2SubmissionsController(
 
   @GetMapping("/submissions")
   fun submissionsGet(@RequestParam page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
+    // TODO besscerule no longer need the extra call as there is only one user type
     cas2UserService.getCas2UserForRequest()
 
     val sortDirection = SortDirection.asc
@@ -46,6 +47,7 @@ class Cas2SubmissionsController(
 
   @GetMapping("/submissions/{applicationId}")
   fun submissionsApplicationIdGet(@PathVariable applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
+    // TODO besscerule no longer need the extra call as there is only one user type
     cas2UserService.getCas2UserForRequest()
 
     val application = extractEntityFromCasResult(applicationService.getSubmittedApplicationForAssessor(applicationId))

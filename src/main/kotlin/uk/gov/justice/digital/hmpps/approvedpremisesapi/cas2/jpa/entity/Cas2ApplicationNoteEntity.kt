@@ -49,6 +49,7 @@ data class Cas2ApplicationNoteEntity(
   @JoinColumn(name = "assessment_id")
   var assessment: Cas2AssessmentEntity?,
 
+  // TODO besscerule removed the old external user, now we do everything using the cas 2 user
   @ManyToOne
   @JoinColumn(name = "created_by_cas2_user_id")
   val createdByCas2User: Cas2UserEntity,

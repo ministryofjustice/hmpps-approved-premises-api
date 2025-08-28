@@ -42,8 +42,6 @@ interface ApplicationSummaryRepository :
 
   fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
-  fun findByPrisonCode(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
   fun findBySubmittedAtIsNotNull(pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 }
 
@@ -55,6 +53,7 @@ data class Cas2ApplicationSummaryEntity(
   val crn: String,
   @Column(name = "noms_number")
   var nomsNumber: String,
+  // TODO besscerule changing type seems like a good idea, unless it is not actually the UUID and is a different kind of ID
   @Column(name = "created_by_cas2_user_id")
   val createdByCas2UserId: UUID,
   @Column(name = "created_by_cas2_user_name")

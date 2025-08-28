@@ -128,6 +128,9 @@ data class Cas2ApplicationEntity(
   @Enumerated(EnumType.STRING)
   var applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 ) {
+
+  // TODO besscerule deleted and refactored a load of code that was present to allow 2 users - now we just have cas2 users
+
   override fun toString() = "Cas2ApplicationEntity: $id"
 
   fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByCas2User.id == user.id

@@ -86,6 +86,7 @@ class Cas2SubjectAccessRequestRepository(
     return toJsonString(result)
   }
 
+  // TODO besscerule double check that the change to this query is ok - now we just have one type of user so it has been simplified
   fun getApplicationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
