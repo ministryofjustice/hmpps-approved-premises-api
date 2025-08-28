@@ -18,10 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspacesReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesBedspaceTotals
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
@@ -149,7 +150,7 @@ class Cas3PremisesController(
   }
 
   @GetMapping("/premises/{premisesId}/can-archive")
-  fun canArchivePremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3BedspacesReference> {
+  fun canArchivePremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3ValidationResults> {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
@@ -265,6 +266,22 @@ class Cas3PremisesController(
     val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getBedspaceArchiveHistory(bedspaceId))
 
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, archiveHistory))
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/can-archive")
+  fun canArchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3ValidationResult?> {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val result = extractEntityFromCasResult(cas3PremisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId))
+
+    return ResponseEntity.ok(result)
   }
 
   @PostMapping("/premises/{premisesId}/bedspaces")

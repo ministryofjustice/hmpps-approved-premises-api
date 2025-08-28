@@ -3942,6 +3942,364 @@ class Cas3PremisesServiceTest {
     )
   }
 
+  @Nested
+  inner class CanArchiveBedspaceInFuture {
+    private val premisesId = UUID.randomUUID()
+    private val bedspaceId = UUID.randomUUID()
+
+    @Test
+    fun `returns NotFound when bedspace does not exist`() {
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns null
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isNotFound("Bedspace", bedspaceId.toString())
+    }
+
+    @Test
+    fun `returns Success when no blocking dates exist`() {
+      val bedEntity = createBedspace(createPremisesEntity())
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns emptyList()
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNull()
+      }
+    }
+
+    @Test
+    fun `returns Success with validation result when overlapping booking has turnaround date exactly 3 months from today`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val departureDate = LocalDate.now().plusDays(85) // About 3 months minus working days adjustment
+      val turnaroundDays = 5
+      val expectedTurnaroundDate = LocalDate.now().plusMonths(3)
+
+      val booking = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate)
+        .produce()
+
+      Cas3TurnaroundEntityFactory()
+        .withBooking(booking)
+        .withWorkingDayCount(turnaroundDays)
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns listOf(booking)
+      every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns emptyList()
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNotNull
+        assertThat(validationResult!!.entityId).isEqualTo(bedspaceId)
+        assertThat(validationResult.entityReference).isEqualTo(bedEntity.room.name)
+        assertThat(validationResult.date).isEqualTo(expectedTurnaroundDate)
+      }
+    }
+
+    @Test
+    fun `returns Success when a booking has turnaround date less than 3 months from today`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val departureDate = LocalDate.now().plusDays(60)
+      val turnaroundDays = 5
+      val expectedTurnaroundDate = LocalDate.now().plusDays(65) // Less than 3 months
+
+      val booking = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate)
+        .produce()
+
+      Cas3TurnaroundEntityFactory()
+        .withBooking(booking)
+        .withWorkingDayCount(turnaroundDays)
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns listOf(booking)
+      every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns emptyList()
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNull()
+      }
+    }
+
+    @Test
+    fun `returns Success with validation result when a booking has turnaround date greater than 3 months from today`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val departureDate = LocalDate.now().plusDays(100)
+      val turnaroundDays = 10
+      val expectedTurnaroundDate = LocalDate.now().plusMonths(4) // More than 3 months
+
+      val booking = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate)
+        .produce()
+
+      Cas3TurnaroundEntityFactory()
+        .withBooking(booking)
+        .withWorkingDayCount(turnaroundDays)
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns listOf(booking)
+      every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns emptyList()
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNotNull
+        assertThat(validationResult!!.entityId).isEqualTo(bedspaceId)
+        assertThat(validationResult.entityReference).isEqualTo(bedEntity.room.name)
+        assertThat(validationResult.date).isEqualTo(expectedTurnaroundDate)
+      }
+    }
+
+    @Test
+    fun `returns Success when booking departure date is less than 3 months from today`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val departureDate = LocalDate.now().plusDays(60)
+
+      val booking = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate)
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns listOf(booking)
+      every { workingDayServiceMock.addWorkingDays(departureDate, 0) } returns departureDate
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns emptyList()
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNull()
+      }
+    }
+
+    @Test
+    fun `returns Success with validation result when a void has end date exactly 3 months from today`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val voidEndDate = LocalDate.now().plusMonths(3)
+
+      val voidEntity = Cas3VoidBedspaceEntityFactory()
+        .withBed(bedEntity)
+        .withEndDate(voidEndDate)
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns listOf(voidEntity)
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNotNull
+        assertThat(validationResult!!.entityId).isEqualTo(bedspaceId)
+        assertThat(validationResult.entityReference).isEqualTo(bedEntity.room.name)
+        assertThat(validationResult.date).isEqualTo(voidEndDate)
+      }
+    }
+
+    @Test
+    fun `returns Success with validation result when void end date is greater than 3 months from today`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val voidEndDate = LocalDate.now().plusMonths(4)
+
+      val voidEntity = Cas3VoidBedspaceEntityFactory()
+        .withBed(bedEntity)
+        .withEndDate(voidEndDate)
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns listOf(voidEntity)
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNotNull
+        assertThat(validationResult!!.entityId).isEqualTo(bedspaceId)
+        assertThat(validationResult.entityReference).isEqualTo(bedEntity.room.name)
+        assertThat(validationResult.date).isEqualTo(voidEndDate)
+      }
+    }
+
+    @Test
+    fun `returns Success with validation result with latest blocking date when both booking and void have blocking dates`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val departureDate = LocalDate.now().plusDays(85)
+      val turnaroundDays = 10
+      val bookingTurnaroundDate = LocalDate.now().plusMonths(3).plusDays(5)
+      val voidEndDate = LocalDate.now().plusMonths(3).plusDays(10) // Later than booking turnaround
+
+      val booking = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate)
+        .produce()
+
+      Cas3TurnaroundEntityFactory()
+        .withBooking(booking)
+        .withWorkingDayCount(turnaroundDays)
+        .produce()
+
+      val voidEntity = Cas3VoidBedspaceEntityFactory()
+        .withBed(bedEntity)
+        .withEndDate(voidEndDate)
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns listOf(booking)
+      every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns bookingTurnaroundDate
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns listOf(voidEntity)
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNotNull
+        assertThat(validationResult!!.entityId).isEqualTo(bedspaceId)
+        assertThat(validationResult.entityReference).isEqualTo(bedEntity.room.name)
+        assertThat(validationResult.date).isEqualTo(voidEndDate) // Should be the latest date
+      }
+    }
+
+    @Test
+    fun `returns Success with validation result with latest blocking date when multiple overlapping bookings exist`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val departureDate1 = LocalDate.now().plusDays(85)
+      val departureDate2 = LocalDate.now().plusDays(90)
+      val turnaroundDays = 5
+      val bookingTurnaroundDate1 = LocalDate.now().plusMonths(3).plusDays(2)
+      val bookingTurnaroundDate2 = LocalDate.now().plusMonths(3).plusDays(8) // Later
+
+      val booking1 = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate1)
+        .produce()
+
+      Cas3TurnaroundEntityFactory()
+        .withBooking(booking1)
+        .withWorkingDayCount(turnaroundDays)
+        .produce()
+
+      val booking2 = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate2)
+        .produce()
+
+      Cas3TurnaroundEntityFactory()
+        .withBooking(booking2)
+        .withWorkingDayCount(turnaroundDays)
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns listOf(booking1, booking2)
+      every { workingDayServiceMock.addWorkingDays(departureDate1, any()) } returns bookingTurnaroundDate1
+      every { workingDayServiceMock.addWorkingDays(departureDate2, any()) } returns bookingTurnaroundDate2
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns emptyList()
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNotNull
+        assertThat(validationResult!!.entityId).isEqualTo(bedspaceId)
+        assertThat(validationResult.entityReference).isEqualTo(bedEntity.room.name)
+        assertThat(validationResult.date).isEqualTo(bookingTurnaroundDate2) // Should be the latest date
+      }
+    }
+
+    @Test
+    fun `returns Success with validation result with latest void end date when multiple overlapping voids exist`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val voidEndDate1 = LocalDate.now().plusMonths(3).plusDays(3)
+      val voidEndDate2 = LocalDate.now().plusMonths(3).plusDays(7) // Later
+
+      val voidEntity1 = Cas3VoidBedspaceEntityFactory()
+        .withBed(bedEntity)
+        .withEndDate(voidEndDate1)
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+        .produce()
+
+      val voidEntity2 = Cas3VoidBedspaceEntityFactory()
+        .withBed(bedEntity)
+        .withEndDate(voidEndDate2)
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns listOf(voidEntity1, voidEntity2)
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNotNull
+        assertThat(validationResult!!.entityId).isEqualTo(bedspaceId)
+        assertThat(validationResult.entityReference).isEqualTo(bedEntity.room.name)
+        assertThat(validationResult.date).isEqualTo(voidEndDate2) // Should be the latest date
+      }
+    }
+
+    @Test
+    fun `returns Success when booking turnaround date is exactly one day before 3 months`() {
+      val premises = createPremisesEntity()
+      val bedEntity = createBedspace(premises)
+      val departureDate = LocalDate.now().plusDays(85)
+      val turnaroundDays = 5
+      val expectedTurnaroundDate = LocalDate.now().plusMonths(3).minusDays(1) // Just under threshold
+
+      val booking = bookingEntityFactory
+        .withPremises(bedEntity.room.premises)
+        .withBed(bedEntity)
+        .withDepartureDate(departureDate)
+        .produce()
+
+      Cas3TurnaroundEntityFactory()
+        .withBooking(booking)
+        .withWorkingDayCount(turnaroundDays)
+        .produce()
+
+      every { bedRepositoryMock.findCas3Bedspace(premisesId, bedspaceId) } returns bedEntity
+      every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceId, any()) } returns listOf(booking)
+      every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceId, any()) } returns emptyList()
+
+      val result = premisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId)
+
+      assertThatCasResult(result).isSuccess().with { validationResult ->
+        assertThat(validationResult).isNull()
+      }
+    }
+  }
+
   companion object {
     @JvmStatic
     fun startDateProvider(): Stream<Arguments> {
