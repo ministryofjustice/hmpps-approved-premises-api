@@ -86,6 +86,7 @@ data class Cas2ApplicationEntity(
 
   val crn: String,
 
+  // TODO besscerule merged the user type to just one (Cas2UserEntity)
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: Cas2UserEntity,

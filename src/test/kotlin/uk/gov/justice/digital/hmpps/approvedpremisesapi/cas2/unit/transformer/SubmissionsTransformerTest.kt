@@ -88,7 +88,7 @@ class SubmissionsTransformerTest {
     every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
     every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
     every { mockOffenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
-    every { mockCas2UserService.getNomisUserById(any()) } returns nomisUserEntity
+    every { mockCas2UserService.getCas2UserById(any()) } returns nomisUserEntity
   }
 
   @Nested
@@ -104,7 +104,7 @@ class SubmissionsTransformerTest {
       val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
-      every { mockCas2UserService.getNomisUserById(any()) } returns nomisUserEntity
+      every { mockCas2UserService.getCas2UserById(any()) } returns nomisUserEntity
 
       every { mockNomisUserTransformer.transformJpaToApi(any<Cas2ApplicationEntity>()) } returns mockNomisUser
 

@@ -36,7 +36,7 @@ class Cas2UserService(
     return getCas2UserForUsername(username, jwt, userType)
   }
 
-  fun getNomisUserById(id: UUID) = cas2UserRepository.findById(id).orElseThrow { NotFoundProblem(id, "NomisUser") }
+  fun getCas2UserById(id: UUID): Cas2UserEntity = cas2UserRepository.findById(id).orElseThrow { NotFoundProblem(id, "Cas2User") }
 
   fun getUserByStaffId(staffId: Long): Cas2UserEntity {
     val userDetails = cas2UserRepository.findByNomisStaffId(staffId)

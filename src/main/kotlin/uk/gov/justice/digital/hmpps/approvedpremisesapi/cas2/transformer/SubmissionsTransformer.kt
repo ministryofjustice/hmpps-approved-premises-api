@@ -26,7 +26,7 @@ class SubmissionsTransformer(
     jpa: Cas2ApplicationEntity,
     personInfo: PersonInfoResult.Success,
   ): Cas2SubmittedApplication {
-    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!) }
+    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getCas2UserById(jpa.currentPomUserId!!) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2SubmittedApplication(
       id = jpa.id,

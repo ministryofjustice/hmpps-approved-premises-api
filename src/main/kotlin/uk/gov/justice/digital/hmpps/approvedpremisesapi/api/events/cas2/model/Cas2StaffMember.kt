@@ -20,6 +20,8 @@ data class Cas2StaffMember(
 
     nomis("nomis"),
     delius("delius"),
+
+    // TODO besscerule added in auth as we now have it set up with external users
     auth("auth"), ;
 
     companion object {
