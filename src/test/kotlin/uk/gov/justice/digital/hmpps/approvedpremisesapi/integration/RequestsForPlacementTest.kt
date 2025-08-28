@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -62,6 +64,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withRequestedDuration(1)
             withPlacementType(PlacementType.AUTOMATIC)
             withAutomatic(true)
+            withSentenceType(SentenceTypeOption.bailPlacement.name)
           }
 
           val submittedAdditionalPlacementApplication = placementApplicationFactory.produceAndPersist {
@@ -70,6 +73,7 @@ class RequestsForPlacementTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.parse("2007-11-03T10:15:30+01"))
             withExpectedArrival(LocalDate.now())
             withRequestedDuration(2)
+            withReleaseType(ReleaseTypeOption.licence.name)
           }
 
           val submittedButReallocatedPlacementApplication = placementApplicationFactory.produceAndPersist {
@@ -127,22 +131,37 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           assertThat(requestForPlacements[0].id).isEqualTo(submittedInitialAutomaticPlacementApplication.id)
           assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
+          assertThat(requestForPlacements[0].sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
+          assertThat(requestForPlacements[0].releaseType).isNull()
+          assertThat(requestForPlacements[0].situation).isNull()
 
           assertThat(requestForPlacements[1].id).isEqualTo(submittedAdditionalPlacementApplication.id)
           assertThat(requestForPlacements[1].type).isEqualTo(RequestForPlacementType.manual)
           assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
+          assertThat(requestForPlacements[1].sentenceType).isNull()
+          assertThat(requestForPlacements[1].releaseType).isEqualTo(ReleaseTypeOption.licence)
+          assertThat(requestForPlacements[1].situation).isNull()
 
           assertThat(requestForPlacements[2].id).isEqualTo(withdrawnPlacementApplication.id)
           assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.manual)
           assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+          assertThat(requestForPlacements[2].sentenceType).isNull()
+          assertThat(requestForPlacements[0].releaseType).isNull()
+          assertThat(requestForPlacements[2].situation).isNull()
 
           assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
           assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[3].isWithdrawn).isTrue()
+          assertThat(requestForPlacements[3].sentenceType).isNull()
+          assertThat(requestForPlacements[0].releaseType).isNull()
+          assertThat(requestForPlacements[3].situation).isNull()
 
           assertThat(requestForPlacements[4].id).isEqualTo(placementRequest.id)
           assertThat(requestForPlacements[4].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[4].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+          assertThat(requestForPlacements[4].sentenceType).isNull()
+          assertThat(requestForPlacements[0].releaseType).isNull()
+          assertThat(requestForPlacements[4].situation).isNull()
         }
       }
     }
@@ -183,6 +202,8 @@ class RequestsForPlacementTest : IntegrationTestBase() {
           assertThat(requestForPlacements[0].id).isEqualTo(placementRequest.id)
           assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+          assertThat(requestForPlacements[0].sentenceType).isNull()
+          assertThat(requestForPlacements[0].situation).isNull()
         }
       }
     }

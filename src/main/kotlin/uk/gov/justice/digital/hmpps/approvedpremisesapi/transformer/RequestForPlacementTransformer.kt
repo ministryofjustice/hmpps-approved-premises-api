@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -47,6 +50,9 @@ class RequestForPlacementTransformer(
     canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
     withdrawalReason = placementApplicationEntity.withdrawalReason?.apiValue,
     status = placementApplicationEntity.deriveStatus(),
+    sentenceType = placementApplicationEntity.sentenceType?.let { SentenceTypeOption.valueOf(it) },
+    releaseType = placementApplicationEntity.releaseType?.let { ReleaseTypeOption.valueOf(it) },
+    situation = placementApplicationEntity.situation?.let { SituationOption.valueOf(it) },
   )
 
   /**
@@ -64,6 +70,8 @@ class RequestForPlacementTransformer(
     check(placementRequestEntity.isForLegacyInitialRequestForPlacement()) {
       "Can only transform placement requests that are for the application's arrival date"
     }
+
+    val application = placementRequestEntity.application
 
     return RequestForPlacement(
       id = placementRequestEntity.id,
@@ -93,6 +101,9 @@ class RequestForPlacementTransformer(
       canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
       withdrawalReason = placementRequestEntity.withdrawalReason?.apiValue,
       status = placementRequestEntity.deriveStatus(),
+      sentenceType = application.sentenceType?.let { SentenceTypeOption.valueOf(it) },
+      releaseType = application.releaseType?.let { ReleaseTypeOption.valueOf(it) },
+      situation = application.situation?.let { SituationOption.valueOf(it) },
     )
   }
 
