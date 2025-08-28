@@ -147,13 +147,18 @@ class Cas3DomainEventServiceTest {
     val dataTomorrow = createBedspaceArchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, null, endDate = endDateTomorrow)
     val domainEventEntityTomorrow = createArchiveDomainEvent(dataTomorrow)
 
-    every { domainEventRepositoryMock.findBedspacesDomainEventsByType(listOf(bedspaceId), listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED.toString(), DomainEventType.CAS3_BEDSPACE_UNARCHIVED.toString())) } returns listOf(
+    every {
+      domainEventRepositoryMock.findBedspacesActiveDomainEventsByType(
+        listOf(bedspaceId),
+        listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED.toString(), DomainEventType.CAS3_BEDSPACE_UNARCHIVED.toString()),
+      )
+    } returns listOf(
       domainEventEntityYesterday,
       domainEventEntityToday,
       domainEventEntityTomorrow,
     )
 
-    val event = cas3DomainEventService.getBedspaceDomainEvents(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED))
+    val event = cas3DomainEventService.getBedspaceActiveDomainEvents(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED))
     assertThat(event).isEqualTo(
       listOf(
         domainEventEntityYesterday,
@@ -170,48 +175,6 @@ class Cas3DomainEventServiceTest {
     every { domainEventRepositoryMock.findByIdOrNull(id) } returns null
 
     assertThat(cas3DomainEventService.getBookingCancelledEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getLastBedspaceUnarchiveEventDetails returns null when event does not exist`() {
-    val id = UUID.randomUUID()
-
-    every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(id, DomainEventType.CAS3_BEDSPACE_UNARCHIVED) } returns null
-
-    assertThat(cas3DomainEventService.getLastBedspaceUnarchiveEventDetails(id)).isNull()
-  }
-
-  @Test
-  fun `getLastBedspaceUnarchiveEventDetails returns original start date and end date`() {
-    val id = UUID.randomUUID()
-    val premisesId = UUID.randomUUID()
-    val bedspaceId = UUID.randomUUID()
-    val occurredAt = OffsetDateTime.now()
-    val newStartDate = LocalDate.now().plusDays(1)
-    val currentStartDate = LocalDate.now().minusDays(2)
-    val currentEndDate = LocalDate.now().minusDays(1)
-
-    val data = CAS3BedspaceUnarchiveEvent(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.bedspaceUnarchived,
-      eventDetails = CAS3BedspaceUnarchiveEventDetails(bedspaceId, premisesId, user.id, currentStartDate, currentEndDate, newStartDate),
-    )
-
-    every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceId, DomainEventType.CAS3_BEDSPACE_UNARCHIVED) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(null)
-      .withCrn(null)
-      .withCas3BedspaceId(bedspaceId)
-      .withNomsNumber(null)
-      .withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val eventDetails = cas3DomainEventService.getLastBedspaceUnarchiveEventDetails(bedspaceId)
-    assertThat(eventDetails?.currentStartDate).isEqualTo(currentStartDate)
-    assertThat(eventDetails?.currentEndDate).isEqualTo(currentEndDate)
   }
 
   @Test

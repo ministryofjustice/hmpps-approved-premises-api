@@ -10,7 +10,6 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedEvent
@@ -76,12 +75,6 @@ class Cas3DomainEventService(
       ?: throw MissingTopicException("domainevents not found")
   }
 
-  fun getLastBedspaceUnarchiveEventDetails(bedspaceId: UUID): CAS3BedspaceUnarchiveEventDetails? {
-    val domainEventEntity = domainEventRepository.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceId, DomainEventType.CAS3_BEDSPACE_UNARCHIVED) ?: return null
-
-    return objectMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
-  }
-
   fun getBookingCancelledEvent(id: UUID) = get<CAS3BookingCancelledEvent>(id)
 
   fun getBookingConfirmedEvent(id: UUID) = get<CAS3BookingConfirmedEvent>(id)
@@ -102,17 +95,17 @@ class Cas3DomainEventService(
 
   fun getAssessmentUpdatedEvents(assessmentId: UUID) = domainEventRepository.findByAssessmentIdAndType(assessmentId, DomainEventType.CAS3_ASSESSMENT_UPDATED)
 
-  fun getBedspaceDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesDomainEventsByType(
+  fun getBedspaceActiveDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesActiveDomainEventsByType(
     listOf(id),
     bedspaceDomainEventTypes.map { it.toString() },
   )
 
-  fun getBedspacesDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesDomainEventsByType(
+  fun getBedspacesActiveDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesActiveDomainEventsByType(
     ids,
     bedspaceDomainEventTypes.map { it.toString() },
   )
 
-  fun getPremisesDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesDomainEventsByType(
+  fun getPremisesActiveDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesActiveDomainEventsByType(
     id,
     premisesDomainEventTypes.map { it.toString() },
   )
@@ -323,6 +316,7 @@ class Cas3DomainEventService(
         type = enumTypeFromDataType(domainEvent.data::class),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
+        cas3CancelledAt = null,
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS3",
         triggeredByUserId = user?.id,

@@ -35,6 +35,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var metadata: Yielded<Map<MetaDataName, String?>> = { emptyMap() }
   private var schemaVersion: Yielded<Int?> = { null }
   private var applicationOrigin: Yielded<ApplicationOrigin?> = { null }
+  private var cas3CancelledAt: Yielded<OffsetDateTime?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -78,6 +79,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
+  }
+
+  fun withCas3CancelledAt(cancelledAt: OffsetDateTime?) = apply {
+    this.cas3CancelledAt = { cancelledAt }
   }
 
   fun withData(data: String) = apply {
@@ -142,5 +147,6 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     cas1SpaceBookingId = this.cas1SpaceBookingId(),
     cas3PremisesId = this.cas3PremisesId(),
     cas3BedspaceId = this.cas3BedspaceId(),
+    cas3CancelledAt = this.cas3CancelledAt(),
   )
 }

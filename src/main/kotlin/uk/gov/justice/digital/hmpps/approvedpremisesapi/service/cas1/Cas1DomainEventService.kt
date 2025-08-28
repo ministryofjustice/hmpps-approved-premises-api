@@ -319,6 +319,7 @@ class Cas1DomainEventService(
         type = eventType,
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
+        cas3CancelledAt = null,
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
         triggerSource = domainEvent.triggerSource,

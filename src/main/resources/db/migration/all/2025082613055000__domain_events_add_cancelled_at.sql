@@ -1,0 +1,2 @@
+ALTER TABLE domain_events
+    ADD COLUMN IF NOT EXISTS cas3_cancelled_at TIMESTAMP WITH TIME ZONE NULL;
