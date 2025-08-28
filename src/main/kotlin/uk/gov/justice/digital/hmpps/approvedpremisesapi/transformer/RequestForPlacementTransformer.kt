@@ -31,13 +31,13 @@ class RequestForPlacementTransformer(
     placementDates = listOf(placementApplicationEntity.placementDates()!!.toApiType()),
     requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
       arrival = placementApplicationEntity.expectedArrival!!,
-      arrivalFlexible = null,
+      arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
       duration = placementApplicationEntity.requestedDuration!!,
     ),
     authorisedPlacementPeriod = placementApplicationEntity.authorisedDuration?.let {
       Cas1RequestedPlacementPeriod(
         arrival = placementApplicationEntity.expectedArrival!!,
-        arrivalFlexible = null,
+        arrivalFlexible = placementApplicationEntity.expectedArrivalFlexible,
         duration = it,
       )
     },

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -53,16 +54,53 @@ class PlacementRequestDetailTransformer(
       assessor = placementRequest.assessor,
       notes = placementRequest.notes,
       booking = placementRequestBookingSummary,
-      spaceBookings = jpa.spaceBookings.filter { it.isActive() }.map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
       legacyBooking = if (placementRequestBookingSummary?.type == PlacementRequestBookingSummary.Type.legacy) {
         placementRequestBookingSummary
       } else {
         null
       },
-      isWithdrawn = jpa.isWithdrawn,
       isParole = jpa.isParole,
+      isWithdrawn = jpa.isWithdrawn,
       application = applicationTransformer.transformJpaToCas1Application(jpa.application, personInfo),
+      spaceBookings = jpa.spaceBookings.filter { it.isActive() }
+        .map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
       openChangeRequests = openChangeRequests,
+      requestedPlacementPeriod = requestedPlacementPeriod(jpa),
+      authorisedPlacementPeriod = authorisedPlacementPeriod(jpa),
     )
+  }
+
+  private fun requestedPlacementPeriod(placementRequestEntity: PlacementRequestEntity): Cas1RequestedPlacementPeriod {
+    val placementApplication = placementRequestEntity.placementApplication
+    return if (placementRequestEntity.isForLegacyInitialRequestForPlacement()) {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementRequestEntity.expectedArrival,
+        duration = placementRequestEntity.duration,
+        arrivalFlexible = null,
+      )
+    } else {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementApplication!!.expectedArrival!!,
+        duration = placementApplication.requestedDuration!!,
+        arrivalFlexible = placementApplication.expectedArrivalFlexible,
+      )
+    }
+  }
+
+  private fun authorisedPlacementPeriod(placementRequestEntity: PlacementRequestEntity): Cas1RequestedPlacementPeriod {
+    val placementApplication = placementRequestEntity.placementApplication
+    return if (placementRequestEntity.isForLegacyInitialRequestForPlacement()) {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementRequestEntity.expectedArrival,
+        duration = placementRequestEntity.duration,
+        arrivalFlexible = null,
+      )
+    } else {
+      Cas1RequestedPlacementPeriod(
+        arrival = placementApplication!!.expectedArrival!!,
+        duration = placementApplication.authorisedDuration!!,
+        arrivalFlexible = placementApplication.expectedArrivalFlexible,
+      )
+    }
   }
 }

@@ -257,6 +257,6 @@ enum class PlacementApplicationWithdrawalReason(val apiValue: WithdrawPlacementR
   ;
 
   companion object {
-    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementApplicationWithdrawalReason? = PlacementApplicationWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementApplicationWithdrawalReason? = entries.firstOrNull { it.apiValue == apiValue }
   }
 }
