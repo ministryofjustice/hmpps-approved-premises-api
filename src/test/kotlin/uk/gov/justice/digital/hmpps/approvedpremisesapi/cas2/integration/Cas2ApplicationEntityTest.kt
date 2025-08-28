@@ -20,7 +20,7 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByCas2User(userEntity)
+          withCreatedByUser(userEntity)
           withSubmittedAt(OffsetDateTime.now())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -55,7 +55,7 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByCas2User(userEntity)
+          withCreatedByUser(userEntity)
           withSubmittedAt(OffsetDateTime.now())
           withCrn(offenderDetails.otherIds.crn)
           withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -101,14 +101,14 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
       givenACas2PomUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationHDC = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
           }
           val applicationCourt = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
             withApplicationOrigin(ApplicationOrigin.courtBail)
           }
           val applicationPrison = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
             withApplicationOrigin(ApplicationOrigin.prisonBail)
           }
 
@@ -134,11 +134,11 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
       givenACas2PomUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationNoBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
           }
 
           val applicationBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
             withBailHearingDate(now)
           }
 

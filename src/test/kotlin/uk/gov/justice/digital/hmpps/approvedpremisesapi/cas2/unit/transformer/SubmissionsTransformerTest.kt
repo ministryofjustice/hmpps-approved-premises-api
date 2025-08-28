@@ -59,7 +59,7 @@ class SubmissionsTransformerTest {
 
   private val nomisUserEntity = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(nomisUserEntity)
+    .withCreatedByUser(nomisUserEntity)
 
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
@@ -146,7 +146,7 @@ class SubmissionsTransformerTest {
         id = applicationSummary.id,
         crn = applicationSummary.crn,
         nomsNumber = applicationSummary.nomsNumber,
-        createdByUserId = applicationSummary.createdByCas2UserId,
+        createdByUserId = applicationSummary.createdByUserId,
         createdAt = applicationSummary.createdAt.toInstant(),
         submittedAt = applicationSummary.submittedAt!!.toInstant(),
         personName = "Example Offender",

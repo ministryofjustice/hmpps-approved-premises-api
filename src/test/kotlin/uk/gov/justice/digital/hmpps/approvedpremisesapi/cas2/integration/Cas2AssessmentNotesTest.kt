@@ -91,7 +91,7 @@ class Cas2AssessmentNotesTest(
 
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withId(applicationId)
-            withCreatedByCas2User(referrer)
+            withCreatedByUser(referrer)
             withSubmittedAt(OffsetDateTime.now())
             withNomsNumber("123NOMS")
           }
@@ -160,7 +160,7 @@ class Cas2AssessmentNotesTest(
 
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withId(applicationId)
-                withCreatedByCas2User(referrer)
+                withCreatedByUser(referrer)
                 withSubmittedAt(OffsetDateTime.now())
               }
 
@@ -234,7 +234,7 @@ class Cas2AssessmentNotesTest(
 
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
                 }
@@ -274,7 +274,7 @@ class Cas2AssessmentNotesTest(
                 }
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withReferringPrisonCode(referrer.activeNomisCaseloadId!!)
                 }
@@ -344,7 +344,7 @@ class Cas2AssessmentNotesTest(
 
               val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withId(applicationId)
-                withCreatedByCas2User(referrer)
+                withCreatedByUser(referrer)
                 withSubmittedAt(OffsetDateTime.now())
               }
 
@@ -418,7 +418,7 @@ class Cas2AssessmentNotesTest(
 
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withId(applicationId)
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now())
                   withReferringPrisonCode("another-prison")
                 }
@@ -458,7 +458,7 @@ class Cas2AssessmentNotesTest(
                 }
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByCas2User(otherUser)
+                  withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withReferringPrisonCode(referrer.activeNomisCaseloadId!!)
                 }

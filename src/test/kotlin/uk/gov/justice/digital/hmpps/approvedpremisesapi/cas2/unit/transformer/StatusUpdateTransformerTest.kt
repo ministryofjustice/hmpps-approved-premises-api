@@ -24,12 +24,12 @@ class StatusUpdateTransformerTest {
     .produce()
 
   private val submittedApplicationWithNomisUser = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 
   private val submittedApplicationWithCas2UserDelius = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(cas2User)
+    .withCreatedByUser(cas2User)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 

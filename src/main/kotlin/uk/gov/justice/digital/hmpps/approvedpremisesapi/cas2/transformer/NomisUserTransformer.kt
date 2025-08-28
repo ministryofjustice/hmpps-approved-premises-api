@@ -9,11 +9,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 class NomisUserTransformer {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity): NomisUser = NomisUser(
-    id = jpa.createdByCas2User.id,
-    name = jpa.createdByCas2User.name,
-    nomisUsername = jpa.createdByCas2User.username,
-    isActive = jpa.createdByCas2User.isActive,
-    email = jpa.createdByCas2User.email,
+    id = jpa.createdByUser.id,
+    name = jpa.createdByUser.name,
+    nomisUsername = jpa.createdByUser.username,
+    isActive = jpa.createdByUser.isActive,
+    email = jpa.createdByUser.email,
   )
 
   // BAIL-WIP overload so the transformer will take both entity types and still return the badly named nomis user

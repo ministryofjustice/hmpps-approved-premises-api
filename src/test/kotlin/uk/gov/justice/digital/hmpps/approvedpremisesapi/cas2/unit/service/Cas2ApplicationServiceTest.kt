@@ -146,7 +146,7 @@ class Cas2ApplicationServiceTest {
     @ValueSource(booleans = [true, false])
     fun `finds assignable application as the latest application's status-update list is empty or null`(statusUpdatesListNull: Boolean) {
       val application = Cas2ApplicationEntityFactory()
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withNomsNumber(nomsNumber)
         .withStatusUpdates(mutableListOf())
         .produce()
@@ -163,7 +163,7 @@ class Cas2ApplicationServiceTest {
 
     private fun createApplicationWithStatusUpdateEntity(statusUpdateEntityLabel: String): Cas2ApplicationEntity {
       val application = Cas2ApplicationEntityFactory()
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withNomsNumber(nomsNumber)
         .produce()
 
@@ -336,7 +336,7 @@ class Cas2ApplicationServiceTest {
         .produce()
       every { mockApplicationRepository.findByIdOrNull(any()) } returns
         Cas2ApplicationEntityFactory()
-          .withCreatedByCas2User(cas2User)
+          .withCreatedByUser(cas2User)
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
@@ -355,7 +355,7 @@ class Cas2ApplicationServiceTest {
         .produce()
       every { mockApplicationRepository.findByIdOrNull(any()) } returns
         Cas2ApplicationEntityFactory()
-          .withCreatedByCas2User(cas2User)
+          .withCreatedByUser(cas2User)
           .produce()
 
       every { mockUserAccessService.userCanViewApplication(any(), any()) } returns false
@@ -375,7 +375,7 @@ class Cas2ApplicationServiceTest {
         .produce()
 
       val applicationEntity = Cas2ApplicationEntityFactory()
-        .withCreatedByCas2User(userEntity)
+        .withCreatedByUser(userEntity)
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
@@ -409,7 +409,7 @@ class Cas2ApplicationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.crn).isEqualTo(crn)
-        assertThat(it.createdByCas2User).isEqualTo(nomisUser)
+        assertThat(it.createdByUser).isEqualTo(nomisUser)
       }
     }
   }
@@ -440,7 +440,7 @@ class Cas2ApplicationServiceTest {
         .produce()
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withYieldedCreatedByCas2User({ cas2User })
+        .withYieldedCreatedByUser({ cas2User })
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
@@ -461,7 +461,7 @@ class Cas2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
@@ -483,7 +483,7 @@ class Cas2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
 
@@ -511,7 +511,7 @@ class Cas2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
@@ -550,7 +550,7 @@ class Cas2ApplicationServiceTest {
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByCas2User(user)
+        .withCreatedByUser(user)
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
@@ -594,7 +594,7 @@ class Cas2ApplicationServiceTest {
           .produce()
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withYieldedCreatedByCas2User {
+          .withYieldedCreatedByUser {
             cas2User
           }
           .produce()
@@ -616,7 +616,7 @@ class Cas2ApplicationServiceTest {
 
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withSubmittedAt(OffsetDateTime.now())
           .produce()
 
@@ -637,7 +637,7 @@ class Cas2ApplicationServiceTest {
 
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
@@ -663,7 +663,7 @@ class Cas2ApplicationServiceTest {
 
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withData(data)
           .produce()
 
@@ -734,7 +734,7 @@ class Cas2ApplicationServiceTest {
 
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(differentUser)
+          .withCreatedByUser(differentUser)
           .produce()
 
         every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
@@ -748,7 +748,7 @@ class Cas2ApplicationServiceTest {
       fun `returns GeneralValidationError when application has already been submitted`() {
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withSubmittedAt(OffsetDateTime.now())
           .produce()
 
@@ -767,7 +767,7 @@ class Cas2ApplicationServiceTest {
       fun `returns GeneralValidationError when application has already been abandoned`() {
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
@@ -786,7 +786,7 @@ class Cas2ApplicationServiceTest {
       fun `throws a validation error if InmateDetails (for prison code) are not available`() {
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withSubmittedAt(null)
           .produce()
 
@@ -817,7 +817,7 @@ class Cas2ApplicationServiceTest {
       fun `throws an UpstreamApiException if prison code is null`() {
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withSubmittedAt(null)
           .produce()
 
@@ -859,7 +859,7 @@ class Cas2ApplicationServiceTest {
       fun `returns Success and stores event`() {
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .withSubmittedAt(null)
           .produce()
 
@@ -868,7 +868,6 @@ class Cas2ApplicationServiceTest {
         every {
           mockApplicationRepository.findByIdOrNull(applicationId)
         } returns application
-        application
 
         val inmateDetail = InmateDetailFactory()
           .withAssignedLivingUnit(

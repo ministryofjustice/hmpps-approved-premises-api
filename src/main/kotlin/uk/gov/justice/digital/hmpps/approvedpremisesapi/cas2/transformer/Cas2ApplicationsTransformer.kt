@@ -57,11 +57,11 @@ class Cas2ApplicationsTransformer(
     personName: String,
   ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = jpaSummary.createdByCas2UserId,
-    createdByUserName = jpaSummary.createdByCas2UserName,
+    createdByUserId = jpaSummary.createdByUserId,
+    createdByUserName = jpaSummary.createdByUserName,
     // BAIL-WIP The two allocated POM fields are left unchanged as it will currently ALWAYS be a nomis user.
-    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: jpaSummary.createdByCas2UserId,
-    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.createdByCas2UserName,
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: jpaSummary.createdByUserId,
+    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.createdByUserName,
     currentPrisonName = jpaSummary.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName }
       ?: jpaSummary.currentPrisonCode,
     assignmentDate = jpaSummary.assignmentDate?.toLocalDate() ?: jpaSummary.createdAt.toLocalDate(),

@@ -28,10 +28,10 @@ class TimelineEventsTransformerTest {
   private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
 
   private val submittedCas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
 
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
@@ -129,7 +129,7 @@ class TimelineEventsTransformerTest {
 
       val jpaEntity = submittedCas2ApplicationFactory
         .withSubmittedAt(submittedAt)
-        .withCreatedByCas2User(nomisUser)
+        .withCreatedByUser(nomisUser)
         .withStatusUpdates(mutableListOf(statusUpdateEntity, statusUpdateWithDetailsEntity))
         .withNotes(mutableListOf(note))
         .withApplicationAssignments(applicationAssignments)

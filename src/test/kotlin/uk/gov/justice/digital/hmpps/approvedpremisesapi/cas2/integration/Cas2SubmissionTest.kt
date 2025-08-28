@@ -206,7 +206,7 @@ class Cas2SubmissionTest(
           givenAnOffender { offenderDetails, _ ->
             val submittedcas2applicationentitySecond = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByCas2User(user)
+                withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-02T09:00:00+01:00"))
@@ -215,7 +215,7 @@ class Cas2SubmissionTest(
 
             val submittedcas2applicationentityFirst = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByCas2User(user)
+                withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-01T09:00:00+01:00"))
@@ -224,7 +224,7 @@ class Cas2SubmissionTest(
 
             val submittedcas2applicationentityThird = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByCas2User(user)
+                withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-03T09:00:00+01:00"))
@@ -233,7 +233,7 @@ class Cas2SubmissionTest(
 
             val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
               .produceAndPersist {
-                withCreatedByCas2User(user)
+                withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(null)
@@ -297,7 +297,7 @@ class Cas2SubmissionTest(
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&
-          expectedSubmittedApplication.createdByCas2User.id == it.createdByUserId &&
+          expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
 
@@ -315,7 +315,7 @@ class Cas2SubmissionTest(
     ): Cas2ApplicationEntity {
       val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
-        withCreatedByCas2User(user)
+        withCreatedByUser(user)
         withSubmittedAt(null)
         withData(
           """
@@ -366,7 +366,7 @@ class Cas2SubmissionTest(
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
-              withCreatedByCas2User(user)
+              withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withData(
                 """
@@ -484,7 +484,7 @@ class Cas2SubmissionTest(
 
             val applicant = nomisUserTransformer.transformJpaToApi(
               applicationEntity
-                .createdByCas2User,
+                .createdByUser,
             )
 
             assertThat(responseBody).matches {
@@ -572,7 +572,7 @@ class Cas2SubmissionTest(
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                   withCrn(offenderDetails.otherIds.crn)
-                  withCreatedByCas2User(user)
+                  withCreatedByUser(user)
                   withReferringPrisonCode("PRI")
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                   withData(
@@ -649,7 +649,7 @@ class Cas2SubmissionTest(
 
                 val applicant = nomisUserTransformer.transformJpaToApi(
                   applicationEntity
-                    .createdByCas2User,
+                    .createdByUser,
                 )
 
                 assertThat(responseBody).matches {
@@ -729,7 +729,7 @@ class Cas2SubmissionTest(
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
-            withCreatedByCas2User(submittingUser)
+            withCreatedByUser(submittingUser)
             withData(
               """
                         {
@@ -815,7 +815,7 @@ class Cas2SubmissionTest(
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
-            withCreatedByCas2User(submittingUser)
+            withCreatedByUser(submittingUser)
             withData(
               """
             {
@@ -874,7 +874,7 @@ class Cas2SubmissionTest(
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
             withId(applicationId)
-            withCreatedByCas2User(submittingUser)
+            withCreatedByUser(submittingUser)
             withData(
               """
             {

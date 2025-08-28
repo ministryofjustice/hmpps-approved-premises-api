@@ -20,10 +20,10 @@ class Cas2v2TimelineEventsTransformerTest {
   private val user = Cas2UserEntityFactory().produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
 
   private val submittedCas2v2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
 
   private val timelineEventTransformer = Cas2v2TimelineEventsTransformer()
@@ -90,7 +90,7 @@ class Cas2v2TimelineEventsTransformerTest {
 
       val jpaEntity = submittedCas2v2ApplicationFactory
         .withSubmittedAt(submittedAt)
-        .withCreatedByCas2User(nomisUser)
+        .withCreatedByUser(nomisUser)
         .withStatusUpdates(mutableListOf(statusUpdateEntity, statusUpdateWithDetailsEntity))
         .withNotes(mutableListOf(note))
         .produce()

@@ -11,7 +11,7 @@ import java.util.UUID
 object Cas2v2ApplicationSummarySpecifications {
 
   fun hasUserId(userId: UUID): Specification<Cas2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
-    criteriaBuilder.equal(root.get<UUID>("createdByCas2UserId"), userId)
+    criteriaBuilder.equal(root.get<UUID>("createdByUserId"), userId)
   }
 
   fun hasCrnOrNomsNumber(crnOrNomsNumber: String): Specification<Cas2ApplicationSummaryEntity> = Specification<Cas2ApplicationSummaryEntity> { root, _, criteriaBuilder ->

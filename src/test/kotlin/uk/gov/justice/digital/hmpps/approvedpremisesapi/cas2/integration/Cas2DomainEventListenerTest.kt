@@ -113,7 +113,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       givenACas2Assessor { assessor, _ ->
         givenAnOffender { offenderDetails, _ ->
           val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withCreatedByCas2User(userEntity)
+            withCreatedByUser(userEntity)
             withReferringPrisonCode(oldOmu.prisonCode)
             withSubmittedAt(OffsetDateTime.now())
             withCrn(offenderDetails.otherIds.crn)
@@ -513,7 +513,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     omu: OffenderManagementUnitEntity = oldOmu,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withCreatedByCas2User(allocatedPom)
+      withCreatedByUser(allocatedPom)
       withSubmittedAt(OffsetDateTime.now())
       withCrn(offenderDetails.otherIds.crn)
       withCreatedAt(OffsetDateTime.now().minusDays(28))
@@ -529,7 +529,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     offenderDetails: OffenderDetailSummary,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
-      withCreatedByCas2User(user)
+      withCreatedByUser(user)
       withSubmittedAt(OffsetDateTime.now())
       withCrn(offenderDetails.otherIds.crn)
       withCreatedAt(OffsetDateTime.now().minusDays(28))

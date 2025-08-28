@@ -81,7 +81,7 @@ class Cas2AllocationChangedServiceTest {
     val newUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withActiveNomisCaseloadId("ONE").produce()
     val application = Cas2ApplicationEntityFactory()
       .withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(newUser)
+      .withCreatedByUser(newUser)
       .produce()
     application.createApplicationAssignment(prisonCode = newUser.activeNomisCaseloadId!!, allocatedPomUser = newUser)
 
@@ -113,7 +113,7 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `handles Allocation Changed Event and save new allocation, when location changed event already exists`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
     application.createApplicationAssignment(prisonCode = "CODE", allocatedPomUser = user)
     application.createApplicationAssignment(prisonCode = pomAllocation.prison.code, null)
 
@@ -136,7 +136,7 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `handle Allocation Changed Event and throw error when no nomis user is found`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
@@ -148,7 +148,7 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `handle Allocation Changed Event and throw error when pomAllocation not found from event detailUrl`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,
@@ -208,7 +208,7 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `application assignment is not created when POM has not changed`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
     application.createApplicationAssignment(prisonCode = user.activeNomisCaseloadId!!, allocatedPomUser = user)
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(

@@ -71,7 +71,7 @@ class Cas2ApplicationsSeedJob(
         crn = row.crn,
         nomsNumber = row.nomsNumber,
         createdAt = row.createdAt,
-        createdByCas2User = applicant,
+        createdByUser = applicant,
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),
         document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,

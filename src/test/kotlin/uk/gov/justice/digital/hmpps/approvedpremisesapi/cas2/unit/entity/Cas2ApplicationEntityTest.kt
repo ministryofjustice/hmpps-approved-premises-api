@@ -14,14 +14,14 @@ class Cas2ApplicationEntityTest {
   @Test
   fun `createApplicationAssigment adds assignment to list`() {
     val application = Cas2ApplicationEntityFactory().produce()
-    application.createApplicationAssignment("PRI", application.createdByCas2User)
+    application.createApplicationAssignment("PRI", application.createdByUser)
     assertThat(application.applicationAssignments).hasSize(1)
   }
 
   @Test
   fun `entity returns values from the newest assignment`() {
     val application = Cas2ApplicationEntityFactory().produce()
-    application.createApplicationAssignment("ONE", application.createdByCas2User)
+    application.createApplicationAssignment("ONE", application.createdByUser)
     val user2 = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
     application.createApplicationAssignment("TWO", user2)
     assertThat(application.currentPrisonCode).isEqualTo("TWO")
@@ -31,7 +31,7 @@ class Cas2ApplicationEntityTest {
   @Test
   fun `currentPomUserId returns null when not allocated`() {
     val application = Cas2ApplicationEntityFactory().produce()
-    application.createApplicationAssignment("ONE", application.createdByCas2User)
+    application.createApplicationAssignment("ONE", application.createdByUser)
     application.createApplicationAssignment("TWO", null)
     assertThat(application.currentPomUserId).isEqualTo(null)
   }
@@ -41,7 +41,7 @@ class Cas2ApplicationEntityTest {
     val cas2User = Cas2UserEntityFactory()
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByCas2User(cas2User)
+      .withCreatedByUser(cas2User)
       .produce()
 
     assertThat(application.isCreatedBy(cas2User)).isTrue()
@@ -54,7 +54,7 @@ class Cas2ApplicationEntityTest {
     val originalCas2User = Cas2UserEntityFactory()
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByCas2User(originalCas2User)
+      .withCreatedByUser(originalCas2User)
       .produce()
 
     assertThat(application.isCreatedBy(cas2User)).isFalse()
@@ -66,7 +66,7 @@ class Cas2ApplicationEntityTest {
       .withName("nomis_name")
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByCas2User(nomisUser)
+      .withCreatedByUser(nomisUser)
       .produce()
 
     assertThat(Cas2StaffMember.Usertype.nomis).isEqualTo(application.getCreatedByUserType())
@@ -79,7 +79,7 @@ class Cas2ApplicationEntityTest {
       .withUserType(Cas2UserType.DELIUS)
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByCas2User(cas2User)
+      .withCreatedByUser(cas2User)
       .produce()
 
     assertThat(Cas2StaffMember.Usertype.delius).isEqualTo(application.getCreatedByUserType())
@@ -92,7 +92,7 @@ class Cas2ApplicationEntityTest {
       .withUserType(Cas2UserType.NOMIS)
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByCas2User(cas2User)
+      .withCreatedByUser(cas2User)
       .produce()
 
     assertThat(Cas2StaffMember.Usertype.nomis).isEqualTo(application.getCreatedByUserType())
@@ -105,7 +105,7 @@ class Cas2ApplicationEntityTest {
       .withUserType(Cas2UserType.EXTERNAL)
       .produce()
     val application = Cas2ApplicationEntityFactory()
-      .withCreatedByCas2User(cas2User)
+      .withCreatedByUser(cas2User)
       .produce()
 
     assertThrows<ForbiddenProblem> { application.getCreatedByUserType() }

@@ -76,7 +76,7 @@ class Cas2v2ApplicationsSeedJob(
         crn = row.crn,
         nomsNumber = row.nomsNumber,
         createdAt = row.createdAt,
-        createdByCas2User = cas2UserEntity,
+        createdByUser = cas2UserEntity,
         applicationOrigin = row.applicationOrigin,
         bailHearingDate = row.bailHearingDate.toLocalDate(),
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),

@@ -276,7 +276,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "noms_number": "${application.nomsNumber}",
       "data": ${application.data},
       "document": ${application.document},
-      "created_by_user": "${application.createdByCas2User.name}",
+      "created_by_user": "${application.createdByUser.name}",
       "created_at": "$CREATED_AT",
       "submitted_at": "$SUBMITTED_AT",
       "referring_prison_code": "${application.referringPrisonCode}",
@@ -335,7 +335,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   ): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-    withCreatedByCas2User(user)
+    withCreatedByUser(user)
     withData(DATA_JSON_SIMPLE)
     withDocument(DOCUMENT_JSON_SIMPLE)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))

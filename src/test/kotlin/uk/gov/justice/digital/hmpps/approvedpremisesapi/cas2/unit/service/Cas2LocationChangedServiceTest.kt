@@ -70,7 +70,7 @@ class Cas2LocationChangedServiceTest {
   @Test
   fun `handle Location Changed Event and save assignment`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
 
     application.createApplicationAssignment(prisonCode = "OLDID", allocatedPomUser = user)
 
@@ -90,7 +90,7 @@ class Cas2LocationChangedServiceTest {
   @Test
   fun `handle Location Changed Event and no further action as prison location not changed`() {
     val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
     application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
@@ -107,7 +107,7 @@ class Cas2LocationChangedServiceTest {
   @ValueSource(strings = ["OUT", "TRN"])
   fun `no action taken when updated prison code is $`(ignorableCode: String) {
     val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
     application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
 
     val releasedPrisoner = prisoner.copy(prisonId = ignorableCode)
@@ -125,7 +125,7 @@ class Cas2LocationChangedServiceTest {
   @Test
   fun `handle Location Changed Event and throw error when prisoner not found from event detailUrl`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
-      .withCreatedByCas2User(user).produce()
+      .withCreatedByUser(user).produce()
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,

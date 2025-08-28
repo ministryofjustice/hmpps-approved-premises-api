@@ -10,8 +10,8 @@ ALTER TABLE cas_2_application_notes
     DROP constraint IF EXISTS has_user;
 
 ALTER TABLE cas_2_application_notes
-    ADD CONSTRAINT has_user_cas2_or_nomis
+    ADD CONSTRAINT has_user_cas2
         CHECK
-            ((created_by_nomis_user_id is not null and created_by_cas2_user_id is null)
+            ((created_by_cas2_user_id is null)
             OR
-             (created_by_nomis_user_id is null and created_by_cas2_user_id is not null));
+             (created_by_cas2_user_id is not null));

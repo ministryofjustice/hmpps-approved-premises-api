@@ -20,7 +20,7 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
         applications.application_origin AS applicationOrigin
 
       FROM cas_2_applications applications
-      JOIN cas_2_users users ON users.id = applications.created_by_cas2_user_id
+      JOIN cas_2_users users ON users.id = applications.created_by_user_id
       WHERE applications.submitted_at IS NULL
         AND applications.created_at  > CURRENT_DATE - 365
       ORDER BY startedAt DESC;

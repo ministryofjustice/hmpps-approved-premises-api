@@ -66,7 +66,7 @@ class Cas2EmailServiceTest {
   private val application =
     Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
       .withReferringPrisonCode("PRI")
-      .withCreatedByCas2User(oldUser)
+      .withCreatedByUser(oldUser)
       .produce()
 
   private val assessorLink = submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString())
@@ -543,7 +543,7 @@ class Cas2EmailServiceTest {
     fun `createdByUser email is returned when the application has not been assigned to a POM`() {
       val email = emailService.getReferrerEmail(application)
       assertThat(application.applicationAssignments).hasSize(0)
-      assertThat(email).isEqualTo(application.createdByCas2User.email)
+      assertThat(email).isEqualTo(application.createdByUser.email)
     }
   }
 }

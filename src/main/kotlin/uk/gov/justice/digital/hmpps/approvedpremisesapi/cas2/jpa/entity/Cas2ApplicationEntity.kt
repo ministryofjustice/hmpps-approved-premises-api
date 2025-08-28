@@ -87,10 +87,10 @@ data class Cas2ApplicationEntity(
 
   val crn: String,
 
-  // TODO besscerule removed createdByUser and switched to createdByCas2User - might want to switch the naming back in the future
+  // TODO besscerule removed createdByUser and switched to createdByUser - might want to switch the naming back in the future
   @ManyToOne
-  @JoinColumn(name = "created_by_cas2_user_id")
-  val createdByCas2User: Cas2UserEntity,
+  @JoinColumn(name = "created_by_user_id")
+  val createdByUser: Cas2UserEntity,
 
   @Type(JsonType::class)
   var data: String?,
@@ -133,9 +133,9 @@ data class Cas2ApplicationEntity(
 
   override fun toString() = "Cas2ApplicationEntity: $id"
 
-  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByCas2User.id == user.id
+  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByUser.id == user.id
 
-  fun getCreatedByUserType() = when (createdByCas2User.userType) {
+  fun getCreatedByUserType() = when (createdByUser.userType) {
     Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
     Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
     Cas2UserType.EXTERNAL -> throw ForbiddenProblem() // BAIL-WIP - The cas2 staff member usertype does not know about external users, we need to add it in the yaml

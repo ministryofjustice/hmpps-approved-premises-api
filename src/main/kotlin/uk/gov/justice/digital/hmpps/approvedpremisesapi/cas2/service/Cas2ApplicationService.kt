@@ -144,7 +144,7 @@ class Cas2ApplicationService(
       Cas2ApplicationEntity(
         id = UUID.randomUUID(),
         crn = personInfoResult.crn,
-        createdByCas2User = user,
+        createdByUser = user,
         data = null,
         document = null,
         createdAt = OffsetDateTime.now(),
@@ -305,9 +305,9 @@ class Cas2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByCas2User.nomisStaffId!!,
-                name = application.createdByCas2User.name,
-                username = application.createdByCas2User.username,
+                staffIdentifier = application.createdByUser.nomisStaffId!!,
+                name = application.createdByUser.name,
+                username = application.createdByUser.username,
                 usertype = application.getCreatedByUserType(),
               ),
             ),

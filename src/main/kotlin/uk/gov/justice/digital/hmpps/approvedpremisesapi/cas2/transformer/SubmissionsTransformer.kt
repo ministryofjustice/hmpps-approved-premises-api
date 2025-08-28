@@ -53,7 +53,7 @@ class SubmissionsTransformer(
   ): Cas2SubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
     id = jpaSummary.id,
     personName = personName,
-    createdByUserId = jpaSummary.createdByCas2UserId,
+    createdByUserId = jpaSummary.createdByUserId,
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     crn = jpaSummary.crn,

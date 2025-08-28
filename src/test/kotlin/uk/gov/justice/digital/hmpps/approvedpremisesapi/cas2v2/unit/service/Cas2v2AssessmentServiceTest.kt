@@ -33,7 +33,7 @@ class Cas2v2AssessmentServiceTest {
       val cas2User = Cas2UserEntityFactory()
         .produce()
       val cas2v2Application = Cas2ApplicationEntityFactory()
-        .withCreatedByCas2User(cas2User)
+        .withCreatedByUser(cas2User)
         .produce()
       val assessEntity = Cas2AssessmentEntity(
         id = UUID.randomUUID(),
@@ -68,7 +68,7 @@ class Cas2v2AssessmentServiceTest {
       val cas2User = Cas2UserEntityFactory()
         .produce()
       val cas2v2Application = Cas2ApplicationEntityFactory()
-        .withCreatedByCas2User(cas2User)
+        .withCreatedByUser(cas2User)
         .produce()
       val assessEntity = Cas2AssessmentEntity(
         id = assessmentId,

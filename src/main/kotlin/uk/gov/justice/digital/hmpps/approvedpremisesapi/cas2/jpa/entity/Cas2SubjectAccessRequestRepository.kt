@@ -41,7 +41,7 @@ class Cas2SubjectAccessRequestRepository(
         from
         	cas_2_applications ca
         inner join cas_2_users nu on
-        	nu.id = ca.created_by_cas2_user_id
+        	nu.id = ca.created_by_user_id
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number ) 

@@ -71,7 +71,7 @@ class Cas2StartupScript(
         crn = "X320741",
         nomsNumber = seedConfig.onStartup.script.noms,
         createdAt = createdAt,
-        createdByCas2User = applicant,
+        createdByUser = applicant,
         data = dataFor(state = state, nomsNumber = "A1234AI"),
         document = documentFor(state = state, nomsNumber = "A1234AI"),
         submittedAt = submittedAt,

@@ -196,7 +196,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       withData("{}")
       withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
       withAbandonedAt(OffsetDateTime.now())
-      withCreatedByCas2User(userEntity)
+      withCreatedByUser(userEntity)
     }
 
     private fun inProgressApplication(userEntity: Cas2UserEntity, crn: String) = cas2ApplicationEntityFactory.produceAndPersist {
@@ -205,7 +205,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       withData("{}")
       withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
       withHdcEligibilityDate(LocalDate.now().plusMonths(3))
-      withCreatedByCas2User(userEntity)
+      withCreatedByUser(userEntity)
     }
 
     fun submittedApplication(userEntity: Cas2UserEntity, crn: String): Cas2ApplicationEntity {
@@ -215,7 +215,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now())
-        withCreatedByCas2User(userEntity)
+        withCreatedByUser(userEntity)
       }
       application.createApplicationAssignment(
         prisonCode = userEntity.activeNomisCaseloadId!!,
@@ -231,7 +231,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now().minusDays(1))
-        withCreatedByCas2User(userEntity)
+        withCreatedByUser(userEntity)
       }
       application.createApplicationAssignment(
         prisonCode = userEntity.activeNomisCaseloadId!!,
@@ -247,7 +247,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now())
-        withCreatedByCas2User(userEntity)
+        withCreatedByUser(userEntity)
       }
       application.createApplicationAssignment(
         prisonCode = userEntity.activeNomisCaseloadId!!,
@@ -270,7 +270,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
         withSubmittedAt(OffsetDateTime.now())
         withConditionalReleaseDate(LocalDate.now())
-        withCreatedByCas2User(transferredFromUser)
+        withCreatedByUser(transferredFromUser)
       }
       if (!isInternalTransfer) {
         application.createApplicationAssignment(
@@ -424,7 +424,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
 
             val inProgressApplication = Cas2ApplicationEntityFactory()
-              .withCreatedByCas2User(userAPrisonA)
+              .withCreatedByUser(userAPrisonA)
               .withCrn(offenderDetails.otherIds.crn)
               .withData("{}")
               .withCreatedAt(OffsetDateTime.now().minusDays(14))
@@ -555,7 +555,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       ): Cas2ApplicationEntity {
         val isSubmitted = assignmentType != AssignmentType.IN_PROGRESS
         val application = cas2ApplicationEntityFactory.produceAndPersist {
-          withCreatedByCas2User(userEntity)
+          withCreatedByUser(userEntity)
           withCrn(offenderDetails.otherIds.crn)
           withCreatedAt(OffsetDateTime.now().minusDays(28))
           withConditionalReleaseDate(LocalDate.now().plusDays(1))
@@ -648,7 +648,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             repeat(12) {
               val application = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(userEntity)
+                withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
@@ -762,7 +762,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                   withData("{}")
                   withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
                   withReferringPrisonCode(userAPrisonA.activeNomisCaseloadId!!)
-                  withCreatedByCas2User(userAPrisonA)
+                  withCreatedByUser(userAPrisonA)
                 }
               }
 
@@ -776,7 +776,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByCas2User(userBPrisonA)
+                  withCreatedByUser(userBPrisonA)
 
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
@@ -793,7 +793,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates today
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByCas2User(userBPrisonA)
+                  withCreatedByUser(userBPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
@@ -810,7 +810,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(userBPrisonA)
+                withCreatedByUser(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
@@ -827,7 +827,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(userCPrisonB)
+                withCreatedByUser(userCPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
@@ -877,7 +877,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                     withData("{}")
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withReferringPrisonCode(userAPrisonA.activeNomisCaseloadId!!)
-                    withCreatedByCas2User(userAPrisonA)
+                    withCreatedByUser(userAPrisonA)
                   }.id,
                 )
               }
@@ -892,7 +892,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(6) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByCas2User(userBPrisonA)
+                    withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
@@ -907,7 +907,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(2) {
                 userBPrisonAApplicationIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByCas2User(userBPrisonA)
+                    withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
@@ -920,7 +920,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(userBPrisonA)
+                withCreatedByUser(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
@@ -971,7 +971,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByCas2User(pomUserPrisonA)
+                  withCreatedByUser(pomUserPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
@@ -988,7 +988,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release date of today
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
-                  withCreatedByCas2User(pomUserPrisonA)
+                  withCreatedByUser(pomUserPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
@@ -1004,7 +1004,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // submitted application with a conditional release date before today
               val excludedApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(pomUserPrisonA)
+                withCreatedByUser(pomUserPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
@@ -1021,7 +1021,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(pomUserPrisonB)
+                withCreatedByUser(pomUserPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withCreatedAt(OffsetDateTime.now())
@@ -1089,7 +1089,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(3) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                  withCreatedByCas2User(userEntity)
+                  withCreatedByUser(userEntity)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
@@ -1105,7 +1105,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(2) {
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
-                  withCreatedByCas2User(userEntity)
+                  withCreatedByUser(userEntity)
                   withCrn(offenderDetails.otherIds.crn)
                   withData("{}")
                   withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
@@ -1119,7 +1119,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               // submitted application with a conditional release date before today
               val submittedApplicationWithConditionalReleaseDate = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
-                withCreatedByCas2User(userEntity)
+                withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
@@ -1138,7 +1138,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               repeat(4) {
                 unSubmittedIds.add(
                   cas2ApplicationEntityFactory.produceAndPersist {
-                    withCreatedByCas2User(userEntity)
+                    withCreatedByUser(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
                   }.id,
@@ -1147,7 +1147,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // create a submitted application by another user which should not be in results
               val otherUserApplication = cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
@@ -1158,7 +1158,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               // create an unsubmitted application by another user which should not be in results
               cas2ApplicationEntityFactory.produceAndPersist {
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
               }
@@ -1222,7 +1222,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
-              withCreatedByCas2User(userEntity)
+              withCreatedByUser(userEntity)
               withData(
                 data,
               )
@@ -1247,7 +1247,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByCas2User.id == it.createdBy.id &&
+                applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
             }
@@ -1443,7 +1443,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withSubmittedAt(OffsetDateTime.now())
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withData(
                   data,
                 )
@@ -1474,7 +1474,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
               }
@@ -1518,7 +1518,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
-                withCreatedByCas2User(otherUser)
+                withCreatedByUser(otherUser)
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
               }
 
@@ -1732,7 +1732,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withCreatedByCas2User(submittingUser)
+              withCreatedByUser(submittingUser)
             }
 
             val resultBody = webTestClient.put()
@@ -1772,7 +1772,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withCreatedByCas2User(submittingUser)
+              withCreatedByUser(submittingUser)
             }
 
             val resultBody = webTestClient.put()
@@ -1810,7 +1810,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
-              withCreatedByCas2User(submittingUser)
+              withCreatedByUser(submittingUser)
             }
 
             val resultBody = webTestClient.put()
@@ -1851,7 +1851,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
-      withCreatedByCas2User(userEntity)
+      withCreatedByUser(userEntity)
       withData(
         data,
       )
@@ -1874,7 +1874,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
-      withCreatedByCas2User(userEntity)
+      withCreatedByUser(userEntity)
       withReferringPrisonCode(omu.prisonCode)
       withSubmittedAt(OffsetDateTime.now().minusDays(1))
     }

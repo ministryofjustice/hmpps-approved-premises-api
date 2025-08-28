@@ -156,7 +156,7 @@ class Cas2v2ApplicationService(
     val entityToSave = Cas2ApplicationEntity(
       id = id,
       crn = crn,
-      createdByCas2User = user,
+      createdByUser = user,
       data = null,
       document = null,
       createdAt = OffsetDateTime.now(),
@@ -184,7 +184,7 @@ class Cas2v2ApplicationService(
     val application = cas2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
-    if (application.createdByCas2User != user) {
+    if (application.createdByUser != user) {
       return CasResult.Unauthorised()
     }
 
@@ -212,7 +212,7 @@ class Cas2v2ApplicationService(
     val application = cas2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
-    if (application.createdByCas2User != user) {
+    if (application.createdByUser != user) {
       return CasResult.Unauthorised()
     }
 
@@ -249,7 +249,7 @@ class Cas2v2ApplicationService(
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
 
-    if (application.createdByCas2User != user) {
+    if (application.createdByUser != user) {
       return CasResult.Unauthorised()
     }
 
@@ -339,10 +339,10 @@ class Cas2v2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByCas2User.nomisStaffId ?: 0,
-                name = application.createdByCas2User.name,
-                username = application.createdByCas2User.username,
-                usertype = Cas2StaffMember.Usertype.valueOf(application.createdByCas2User.userType.authSource),
+                staffIdentifier = application.createdByUser.nomisStaffId ?: 0,
+                name = application.createdByUser.name,
+                username = application.createdByUser.username,
+                usertype = Cas2StaffMember.Usertype.valueOf(application.createdByUser.userType.authSource),
               ),
             ),
             applicationOrigin = application.applicationOrigin.toString(),
@@ -392,8 +392,8 @@ class Cas2v2ApplicationService(
         "telephoneNumber" to application.telephoneNumber,
         "timeApplicationSubmitted" to (application.submittedAt?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: ""),
         "dateApplicationSubmitted" to (application.submittedAt?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""),
-        "referrerName" to application.createdByCas2User.name,
-        "referrerEmail" to application.createdByCas2User.email,
+        "referrerName" to application.createdByUser.name,
+        "referrerEmail" to application.createdByUser.email,
         "referrerTelephoneNumber" to application.telephoneNumber,
         "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
       ),

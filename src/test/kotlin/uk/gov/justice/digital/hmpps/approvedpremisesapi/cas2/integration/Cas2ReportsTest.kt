@@ -136,7 +136,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId1)
-        withCreatedByCas2User(user1)
+        withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
         withCreatedAt(oldCreated)
@@ -148,7 +148,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId2)
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
         withCreatedAt(newerCreated)
@@ -189,7 +189,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCreatedAt(tooOldCreated)
         withData("{}")
         withSubmittedAt(tooOldSubmitted)
@@ -416,7 +416,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       // TODO besscerule - added as now the query states that applicationOrigin cannot be null so every test needs to set up app data
       cas2ApplicationEntityFactory.produceAndPersist {
         withId(event2.applicationId!!)
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCrn(event1Details.personReference.crn.toString())
         withNomsNumber(event2Details.personReference.noms)
         withData("{}")
@@ -425,7 +425,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(event1.applicationId!!)
-        withCreatedByCas2User(user1)
+        withCreatedByUser(user1)
         withCrn(event1Details.personReference.crn.toString())
         withNomsNumber(event2Details.personReference.noms)
         withData("{}")
@@ -541,7 +541,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByCas2User(user1)
+        withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
         withCreatedAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
@@ -551,7 +551,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
         withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
@@ -562,7 +562,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
@@ -570,7 +570,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       // submitted application, which should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByCas2User(user2)
+        withCreatedByUser(user2)
         withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")
         withSubmittedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(50))
@@ -582,7 +582,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application2.crn,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
-          startedBy = application2.createdByCas2User.username,
+          startedBy = application2.createdByUser.username,
           applicationOrigin = application2.applicationOrigin,
         ),
         UnsubmittedApplicationsReportRow(
@@ -590,7 +590,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
-          startedBy = application1.createdByCas2User.username,
+          startedBy = application1.createdByUser.username,
           applicationOrigin = application1.applicationOrigin,
         ),
       )

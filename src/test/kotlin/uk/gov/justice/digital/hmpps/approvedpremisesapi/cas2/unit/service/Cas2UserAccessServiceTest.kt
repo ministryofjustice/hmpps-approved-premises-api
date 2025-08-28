@@ -29,7 +29,7 @@ class Cas2UserAccessServiceTest {
       @Test
       fun `returns true if currently allocated POM or if in same prison`() {
         val application = Cas2ApplicationEntityFactory()
-          .withCreatedByCas2User(otherUser)
+          .withCreatedByUser(otherUser)
           .withSubmittedAt(OffsetDateTime.now())
           .withReferringPrisonCode(referringPrisonCode)
           .produce()
@@ -65,7 +65,7 @@ class Cas2UserAccessServiceTest {
       @Test
       fun `returns true`() {
         val application = Cas2ApplicationEntityFactory()
-          .withCreatedByCas2User(user)
+          .withCreatedByUser(user)
           .produce()
 
         assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
@@ -85,7 +85,7 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .produce()
 
           assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
@@ -103,7 +103,7 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns false`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("different-prison")
             .produce()
@@ -122,7 +122,7 @@ class Cas2UserAccessServiceTest {
           @Test
           fun `returns false`() {
             val application = Cas2ApplicationEntityFactory()
-              .withCreatedByCas2User(anotherUserWithNoPrison)
+              .withCreatedByUser(anotherUserWithNoPrison)
               .withSubmittedAt(OffsetDateTime.now())
               .produce()
 
@@ -143,7 +143,7 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns true if the user created the application`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByCas2User(user)
+            .withCreatedByUser(user)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
             .produce()
@@ -154,7 +154,7 @@ class Cas2UserAccessServiceTest {
         @Test
         fun `returns true when user NOT creator`() {
           val application = Cas2ApplicationEntityFactory()
-            .withCreatedByCas2User(anotherUser)
+            .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
             .produce()

@@ -17,7 +17,7 @@ import java.util.UUID
 class Cas2v2ApplicationNotesTransformerTest {
   private val user = Cas2UserEntityFactory().produce()
   private val submittedApplication = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(user)
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 

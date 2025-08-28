@@ -23,7 +23,7 @@ import java.util.UUID
 class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var createdByCas2User: Yielded<Cas2UserEntity>? = null
+  private var createdByUser: Yielded<Cas2UserEntity>? = null
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -56,12 +56,12 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.nomsNumber = { nomsNumber }
   }
 
-  fun withCreatedByCas2User(createdByCas2User: Cas2UserEntity) = apply {
-    this.createdByCas2User = { createdByCas2User }
+  fun withCreatedByUser(createdByUser: Cas2UserEntity) = apply {
+    this.createdByUser = { createdByUser }
   }
 
-  fun withYieldedCreatedByCas2User(createdByCas2User: Yielded<Cas2UserEntity>) = apply {
-    this.createdByCas2User = createdByCas2User
+  fun withYieldedCreatedByUser(createdByUser: Yielded<Cas2UserEntity>) = apply {
+    this.createdByUser = createdByUser
   }
 
   fun withData(data: String?) = apply {
@@ -170,7 +170,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       preferredAreas = this.preferredAreas(),
       applicationOrigin = this.applicationOrigin(),
       bailHearingDate = this.bailHearingDate(),
-      createdByCas2User = this.createdByCas2User?.invoke() ?: Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce(),
+      createdByUser = this.createdByUser?.invoke() ?: Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce(),
     )
     return application
   }

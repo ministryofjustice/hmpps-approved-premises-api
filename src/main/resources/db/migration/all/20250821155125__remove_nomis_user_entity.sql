@@ -1,9 +1,14 @@
-ALTER TABLE cas_2_applications DROP COLUMN created_by_user_id CASCADE;
 ALTER TABLE cas_2_application_assignments
     ADD CONSTRAINT cas_2_application_assignments_allocated_pom_user_id_cas_2_fkey
         FOREIGN KEY (allocated_pom_user_id) REFERENCES cas_2_users(id);
 
 ALTER TABLE cas_2_application_assignments DROP constraint IF EXISTS cas_2_application_assignments_allocated_pom_user_id_fkey;
+
+ALTER TABLE cas_2_applications DROP CONSTRAINT IF EXISTS cas2_apps_nomis_user_id_fk;
+
+ALTER TABLE cas_2_applications
+    ADD CONSTRAINT cas2_apps_cas2_user_id_fk
+        FOREIGN KEY (created_by_user_id) REFERENCES cas_2_users(id);
 
 -- First, drop the dependent views
 DROP VIEW IF EXISTS cas_2_application_live_summary;
@@ -14,9 +19,9 @@ CREATE OR REPLACE VIEW cas_2_application_summary AS
 SELECT a.id,
        a.crn,
        a.noms_number,
-       a.created_by_cas2_user_id,
+       a.created_by_user_id,
        -- TODO besscerule I think this should be nu.username (it was copied from the most recent view so i think this is a bug)
-       nu.name as created_by_cas2_user_name,
+       nu.name as created_by_user_name,
        a.created_at,
        a.submitted_at,
        a.hdc_eligibility_date,
@@ -43,7 +48,7 @@ FROM cas_2_applications a
                                                            su.created_at
                     FROM cas_2_status_updates su
                     ORDER BY su.application_id, su.created_at DESC) asu ON a.id = asu.application_id
-         JOIN cas_2_users nu ON nu.id = a.created_by_cas2_user_id
+         JOIN cas_2_users nu ON nu.id = a.created_by_user_id
          LEFT JOIN cas_2_users nu2 ON nu2.id = aa.allocated_pom_user_id;
 
 
@@ -52,8 +57,8 @@ CREATE OR REPLACE VIEW cas_2_application_live_summary AS
 SELECT a.id,
        a.crn,
        a.noms_number,
-       a.created_by_cas2_user_id,
-       a.created_by_cas2_user_name,
+       a.created_by_user_id,
+       a.created_by_user_name,
        a.created_at,
        a.submitted_at,
        a.hdc_eligibility_date,

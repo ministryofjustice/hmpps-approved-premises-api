@@ -15,7 +15,7 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   private var cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private var application: Yielded<Cas2ApplicationEntity> = {
     Cas2ApplicationEntityFactory()
-      .withCreatedByCas2User(cas2User)
+      .withCreatedByUser(cas2User)
       .produce()
   }
   private var nacroReferralId: String? = null

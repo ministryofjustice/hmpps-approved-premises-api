@@ -74,7 +74,7 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
 
   private fun createApplicationEntity(userEntity: Cas2UserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
     withId(UUID.randomUUID())
-    withCreatedByCas2User(userEntity)
+    withCreatedByUser(userEntity)
     withData("{}")
     withSubmittedAt(submittedAt)
   }
