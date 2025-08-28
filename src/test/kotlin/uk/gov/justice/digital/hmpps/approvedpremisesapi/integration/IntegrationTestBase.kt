@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2NoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
@@ -46,6 +47,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.Cas2StatusUpdateTestRepository
@@ -436,7 +439,13 @@ abstract class IntegrationTestBase {
   lateinit var cas2StatusUpdateRepository: Cas2StatusUpdateTestRepository
 
   @Autowired
+  lateinit var cas2UserRepository: Cas2UserRepository
+
+  @Autowired
   lateinit var cas2NoteRepository: Cas2ApplicationNoteRepository
+
+  @Autowired
+  lateinit var cas2StatusUpdateDetailEntityRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
   lateinit var temporaryAccommodationApplicationRepository: TemporaryAccommodationApplicationTestRepository
@@ -629,6 +638,7 @@ abstract class IntegrationTestBase {
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
   lateinit var cas2AssessmentEntityFactory: PersistedFactory<Cas2AssessmentEntity, UUID, Cas2AssessmentEntityFactory>
   lateinit var cas2StatusUpdateEntityFactory: PersistedFactory<Cas2StatusUpdateEntity, UUID, Cas2StatusUpdateEntityFactory>
+  lateinit var cas2UserEntityFactory: PersistedFactory<Cas2UserEntity, UUID, Cas2UserEntityFactory>
   lateinit var cas2StatusUpdateDetailEntityFactory: PersistedFactory<Cas2StatusUpdateDetailEntity, UUID, Cas2StatusUpdateDetailEntityFactory>
   lateinit var cas2NoteEntityFactory: PersistedFactory<Cas2ApplicationNoteEntity, UUID, Cas2NoteEntityFactory>
   lateinit var temporaryAccommodationApplicationEntityFactory: PersistedFactory<TemporaryAccommodationApplicationEntity, UUID, TemporaryAccommodationApplicationEntityFactory>
@@ -752,6 +762,7 @@ abstract class IntegrationTestBase {
     temporaryAccommodationApplicationEntityFactory = PersistedFactory({ TemporaryAccommodationApplicationEntityFactory() }, temporaryAccommodationApplicationRepository)
     offlineApplicationEntityFactory = PersistedFactory({ OfflineApplicationEntityFactory() }, offlineApplicationRepository)
     nomisUserEntityFactory = PersistedFactory({ NomisUserEntityFactory() }, nomisUserRepository)
+    cas2UserEntityFactory = PersistedFactory({ Cas2UserEntityFactory() }, cas2UserRepository)
     externalUserEntityFactory = PersistedFactory({ ExternalUserEntityFactory() }, externalUserRepository)
     userEntityFactory = PersistedFactory({ UserEntityFactory() }, userRepository)
     userRoleAssignmentEntityFactory = PersistedFactory({ UserRoleAssignmentEntityFactory() }, userRoleAssignmentRepository)

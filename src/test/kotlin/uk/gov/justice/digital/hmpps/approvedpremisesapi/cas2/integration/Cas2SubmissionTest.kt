@@ -24,7 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
@@ -172,7 +173,7 @@ class Cas2SubmissionTest(
   inner class GetToIndex {
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
-      externalUserRepository.deleteAll()
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -194,7 +195,7 @@ class Cas2SubmissionTest(
         .isOk
 
       assertThat(
-        externalUserRepository.findByUsername(username),
+        cas2UserRepository.findByUsername(username),
       ).isNotNull
     }
 
@@ -310,7 +311,7 @@ class Cas2SubmissionTest(
 
     private fun createInProgressApplication(
       crn: String,
-      user: NomisUserEntity,
+      user: Cas2UserEntity,
     ): Cas2ApplicationEntity {
       val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
@@ -330,7 +331,7 @@ class Cas2SubmissionTest(
 
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API`() {
-      externalUserRepository.deleteAll()
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -352,7 +353,7 @@ class Cas2SubmissionTest(
         .isNotFound
 
       assertThat(
-        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        cas2UserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
       ).isNotNull
     }
 
@@ -425,7 +426,7 @@ class Cas2SubmissionTest(
 
             val assignmentDate = OffsetDateTime.now().minusDays(5)
 
-            val newPom = nomisUserEntityFactory.produceAndPersist()
+            val newPom = cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.NOMIS) }
             applicationEntity.applicationAssignments.addAll(
               mutableListOf(
                 Cas2ApplicationAssignmentEntity(

@@ -5,15 +5,17 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
+  private var cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private var application: Yielded<Cas2ApplicationEntity> = {
     Cas2ApplicationEntityFactory()
-      .withCreatedByUser(NomisUserEntityFactory().produce())
+      .withCreatedByUser(cas2User)
       .produce()
   }
   private var nacroReferralId: String? = null

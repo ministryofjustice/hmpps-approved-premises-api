@@ -13,8 +13,9 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2LocationChangedService
@@ -52,7 +53,7 @@ class Cas2LocationChangedServiceTest {
   private val nomsNumber = "NOMSABC"
   private val detailUrl = "some/url"
 
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
 
   private val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
 
@@ -68,7 +69,8 @@ class Cas2LocationChangedServiceTest {
 
   @Test
   fun `handle Location Changed Event and save assignment`() {
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
+    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
+      .withCreatedByUser(user).produce()
 
     application.createApplicationAssignment(prisonCode = "OLDID", allocatedPomUser = user)
 
@@ -87,7 +89,8 @@ class Cas2LocationChangedServiceTest {
 
   @Test
   fun `handle Location Changed Event and no further action as prison location not changed`() {
-    val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
+    val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber)
+      .withCreatedByUser(user).produce()
     application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
@@ -103,7 +106,8 @@ class Cas2LocationChangedServiceTest {
   @ParameterizedTest
   @ValueSource(strings = ["OUT", "TRN"])
   fun `no action taken when updated prison code is $`(ignorableCode: String) {
-    val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
+    val application = Cas2ApplicationEntityFactory().withReferringPrisonCode(prisoner.prisonId).withNomsNumber(nomsNumber)
+      .withCreatedByUser(user).produce()
     application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
 
     val releasedPrisoner = prisoner.copy(prisonId = ignorableCode)
@@ -120,7 +124,8 @@ class Cas2LocationChangedServiceTest {
 
   @Test
   fun `handle Location Changed Event and throw error when prisoner not found from event detailUrl`() {
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
+    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
+      .withCreatedByUser(user).produce()
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Failure.StatusCode(
       HttpMethod.GET,

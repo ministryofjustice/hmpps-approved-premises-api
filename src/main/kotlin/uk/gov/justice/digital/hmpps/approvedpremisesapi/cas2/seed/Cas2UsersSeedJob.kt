@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -12,9 +12,9 @@ import java.util.UUID
 import kotlin.random.Random
 
 @Component
-class Cas2v2UsersSeedJob(
+class Cas2UsersSeedJob(
   private val repository: Cas2UserRepository,
-) : SeedJob<Cas2v2UserSeedCsvRow>(
+) : SeedJob<Cas2UserSeedCsvRow>(
   requiredHeaders = setOf(
     "username",
     "email",
@@ -29,7 +29,7 @@ class Cas2v2UsersSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) = Cas2v2UserSeedCsvRow(
+  override fun deserializeRow(columns: Map<String, String>) = Cas2UserSeedCsvRow(
     username = columns["username"]!!.trim().uppercase(),
     email = columns["email"]!!.trim(),
     name = columns["name"]!!.trim(),
@@ -40,10 +40,12 @@ class Cas2v2UsersSeedJob(
     deliusStaffCode = columns["deliusStaffCode"]?.trim()?.takeIf { it.isNotEmpty() },
     isEnabled = columns["isEnabled"]!!.trim().uppercase() == "TRUE",
     isActive = columns["isActive"]!!.trim().uppercase() == "TRUE",
+    nomisAccountType = columns["nomisAccountType"]!!.trim(),
+    externalType = columns["externalType"]!!.trim(),
   )
 
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  override fun processRow(row: Cas2v2UserSeedCsvRow) {
+  override fun processRow(row: Cas2UserSeedCsvRow) {
     log.info("Setting up ${row.username}")
 
     val users = repository.findAll()
@@ -55,14 +57,14 @@ class Cas2v2UsersSeedJob(
     }
 
     try {
-      createCas2v2User(row)
+      createCas2User(row)
     } catch (exception: Exception) {
       throw RuntimeException("Could not create user ${row.username}", exception)
     }
   }
 
   @SuppressWarnings("MagicNumber")
-  private fun createCas2v2User(row: Cas2v2UserSeedCsvRow) {
+  private fun createCas2User(row: Cas2UserSeedCsvRow) {
     repository.save(
       Cas2UserEntity(
         id = UUID.randomUUID(),
@@ -78,6 +80,9 @@ class Cas2v2UsersSeedJob(
         isActive = row.isActive,
         createdAt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(Random.nextLong(1, 365)),
         applications = mutableListOf(),
+        nomisAccountType = row.nomisAccountType,
+        updatedAt = OffsetDateTime.now(ZoneOffset.UTC),
+        externalType = row.externalType,
       ),
     )
   }
@@ -89,7 +94,7 @@ class Cas2v2UsersSeedJob(
   }
 }
 
-data class Cas2v2UserSeedCsvRow(
+data class Cas2UserSeedCsvRow(
   val username: String,
   val email: String,
   val name: String,
@@ -100,4 +105,6 @@ data class Cas2v2UserSeedCsvRow(
   val deliusStaffCode: String?,
   val isEnabled: Boolean,
   val isActive: Boolean,
+  val nomisAccountType: String?,
+  val externalType: String?,
 )

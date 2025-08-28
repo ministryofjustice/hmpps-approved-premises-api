@@ -10,7 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -132,7 +132,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
 
   private fun produceAndPersistBasicApplication(
     crn: String,
-    userEntity: NomisUserEntity,
+    userEntity: Cas2UserEntity,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
       withCrn(crn)
