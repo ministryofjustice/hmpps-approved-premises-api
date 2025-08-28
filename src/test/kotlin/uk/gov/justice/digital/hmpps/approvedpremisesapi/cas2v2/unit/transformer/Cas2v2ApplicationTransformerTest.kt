@@ -162,8 +162,8 @@ class Cas2v2ApplicationTransformerTest {
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
         nomsNumber = "NOMNUM",
-        createdByUserId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
-        createdByUserName = "first last",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
+        userName = "first last",
         createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = null,
         hdcEligibilityDate = null,
@@ -184,7 +184,7 @@ class Cas2v2ApplicationTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId).isEqualTo(application.createdByUserId)
+      assertThat(result.createdByUserId).isEqualTo(application.userId)
       assertThat(result.risks).isNull()
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.crn).isEqualTo(application.crn)
@@ -200,8 +200,8 @@ class Cas2v2ApplicationTransformerTest {
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
         nomsNumber = "NOMNUM",
-        createdByUserId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
-        createdByUserName = "first last",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
+        userName = "first last",
         createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
         hdcEligibilityDate = LocalDate.parse("2023-04-29"),

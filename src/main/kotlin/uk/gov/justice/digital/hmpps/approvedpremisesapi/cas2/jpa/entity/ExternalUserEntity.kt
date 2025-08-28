@@ -18,15 +18,15 @@ interface ExternalUserRepository : JpaRepository<ExternalUserEntity, UUID> {
 @Table(name = "external_users")
 data class ExternalUserEntity(
   @Id
-  override val id: UUID,
+  val id: UUID,
   val username: String,
   var isEnabled: Boolean,
   var origin: String,
-  override var name: String,
-  override var email: String,
+  var name: String,
+  var email: String,
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
-) : UnifiedUser {
+) {
   override fun toString() = "External user $id"
 }

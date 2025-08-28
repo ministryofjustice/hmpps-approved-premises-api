@@ -59,8 +59,8 @@ class Cas2v2ApplicationsTransformer(
     personName: String,
   ): Cas2v2ApplicationSummary = Cas2v2ApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = jpaSummary.createdByUserId,
-    createdByUserName = jpaSummary.createdByUserName,
+    createdByUserId = jpaSummary.userId,
+    createdByUserName = jpaSummary.userName,
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     status = getStatusFromSummary(jpaSummary),

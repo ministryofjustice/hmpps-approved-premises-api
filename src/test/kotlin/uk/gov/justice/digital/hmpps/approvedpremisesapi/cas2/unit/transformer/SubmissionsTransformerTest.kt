@@ -146,7 +146,7 @@ class SubmissionsTransformerTest {
         id = applicationSummary.id,
         crn = applicationSummary.crn,
         nomsNumber = applicationSummary.nomsNumber,
-        createdByUserId = applicationSummary.createdByUserId,
+        createdByUserId = applicationSummary.userId,
         createdAt = applicationSummary.createdAt.toInstant(),
         submittedAt = applicationSummary.submittedAt!!.toInstant(),
         personName = "Example Offender",

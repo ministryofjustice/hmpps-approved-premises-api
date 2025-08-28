@@ -19,7 +19,7 @@ import java.util.UUID
 interface ApplicationSummaryRepository :
   JpaRepository<Cas2ApplicationSummaryEntity, String>,
   JpaSpecificationExecutor<Cas2ApplicationSummaryEntity> {
-  @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.createdByUserId = :userId")
+  @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
   fun findInProgressApplications(userId: UUID, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
@@ -55,9 +55,9 @@ data class Cas2ApplicationSummaryEntity(
   var nomsNumber: String,
   // TODO besscerule changing type seems like a good idea, unless it is not actually the UUID and is a different kind of ID
   @Column(name = "created_by_user_id")
-  val createdByUserId: UUID,
-  @Column(name = "created_by_user_name")
-  val createdByUserName: String,
+  val userId: UUID,
+  @Column(name = "name")
+  val userName: String,
   @Column(name = "allocated_pom_user_id")
   val allocatedPomUserId: UUID?,
   @Column(name = "allocated_pom_name")

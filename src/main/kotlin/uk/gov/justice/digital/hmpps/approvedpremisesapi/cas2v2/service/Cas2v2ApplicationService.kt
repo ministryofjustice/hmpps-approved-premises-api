@@ -339,7 +339,8 @@ class Cas2v2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId ?: 0,
+                // TODO besscerule - check what we want to happen when nomisStaffId doesn't exist? - so it's delius
+                staffIdentifier = (application.createdByUser.nomisStaffId ?: 0).toString(),
                 name = application.createdByUser.name,
                 username = application.createdByUser.username,
                 usertype = Cas2StaffMember.Usertype.valueOf(application.createdByUser.userType.authSource),

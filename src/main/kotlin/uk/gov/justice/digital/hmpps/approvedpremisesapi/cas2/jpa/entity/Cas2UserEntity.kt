@@ -38,12 +38,12 @@ interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
 @Table(name = "cas_2_users")
 data class Cas2UserEntity(
   @Id
-  override val id: UUID,
+  val id: UUID,
   val username: String,
 
   // Cas2v2User interface implementation
-  override var email: String?,
-  override var name: String,
+  var email: String?,
+  var name: String,
 
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
@@ -75,8 +75,16 @@ data class Cas2UserEntity(
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
-) : UnifiedUser {
+
+  // TODO removed Cas2User as no longer necessary as just one user type
+) {
   override fun toString() = "CAS2 user $id"
+
+  fun staffIdentifier() = when (userType) {
+    Cas2UserType.NOMIS -> nomisStaffId?.toString() ?: error("Couldn't resolve nomis ID for user $id")
+    Cas2UserType.DELIUS -> deliusStaffCode ?: error("Couldn't resolve delius ID for user $id")
+    Cas2UserType.EXTERNAL -> "" // BAIL-WIP - this currently needs to be not null - refactor them when we add the user type to cas2 user type
+  }
 
   fun isExternal() = userType == Cas2UserType.EXTERNAL
 }

@@ -23,7 +23,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -87,7 +86,6 @@ data class Cas2ApplicationEntity(
 
   val crn: String,
 
-  // TODO besscerule removed createdByUser and switched to createdByUser - might want to switch the naming back in the future
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: Cas2UserEntity,
@@ -138,7 +136,7 @@ data class Cas2ApplicationEntity(
   fun getCreatedByUserType() = when (createdByUser.userType) {
     Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
     Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
-    Cas2UserType.EXTERNAL -> throw ForbiddenProblem() // BAIL-WIP - The cas2 staff member usertype does not know about external users, we need to add it in the yaml
+    Cas2UserType.EXTERNAL -> Cas2StaffMember.Usertype.auth
   }
 
   val currentPrisonCode: String?

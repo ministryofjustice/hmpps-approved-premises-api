@@ -7,13 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
 class StaffMemberFactory : Factory<Cas2StaffMember> {
-  private var staffIdentifier: Yielded<Long> = { randomInt(1000, 5000).toLong() }
+  private var staffIdentifier: Yielded<String> = { randomInt(1000, 5000).toString() }
   private var name: Yielded<String> = { randomStringUpperCase(6) }
   private var username: Yielded<String> = { randomStringUpperCase(8) }
-
-  fun withStaffIdentifier(id: Long) = apply {
-    this.staffIdentifier = { id }
-  }
 
   fun withName(name: String) = apply {
     this.name = { name }

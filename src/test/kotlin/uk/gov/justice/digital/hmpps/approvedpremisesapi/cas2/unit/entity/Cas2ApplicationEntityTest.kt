@@ -2,12 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.entity
 
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 
 class Cas2ApplicationEntityTest {
 
@@ -99,7 +97,7 @@ class Cas2ApplicationEntityTest {
   }
 
   @Test
-  fun `cas2user of type external throws ForbiddenProblem when user type is external`() {
+  fun `returns correct user type with cas2user of type auth`() {
     val cas2User = Cas2UserEntityFactory()
       .withName("cas2user_name")
       .withUserType(Cas2UserType.EXTERNAL)
@@ -108,6 +106,6 @@ class Cas2ApplicationEntityTest {
       .withCreatedByUser(cas2User)
       .produce()
 
-    assertThrows<ForbiddenProblem> { application.getCreatedByUserType() }
+    assertThat(Cas2StaffMember.Usertype.auth).isEqualTo(application.getCreatedByUserType())
   }
 }
