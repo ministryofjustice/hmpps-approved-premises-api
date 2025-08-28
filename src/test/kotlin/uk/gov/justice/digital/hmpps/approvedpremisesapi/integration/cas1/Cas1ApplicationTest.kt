@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
@@ -2490,6 +2491,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.parse("2007-11-03T10:15:30+01"))
             withExpectedArrival(LocalDate.now())
             withRequestedDuration(2)
+            withSentenceType(SentenceTypeOption.bailPlacement.name)
+            withReleaseType(ReleaseTypeOption.inCommunity.name)
+            withSituation(SituationOption.bailSentence.name)
           }
 
           val submittedButReallocatedPlacementApplication = placementApplicationFactory.produceAndPersist {
@@ -2549,24 +2553,45 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
           assertThat(requestForPlacements[0].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 1, arrivalFlexible = false))
           assertThat(requestForPlacements[0].authorisedPlacementPeriod).isNull()
+          assertThat(requestForPlacements[0].sentenceType).isNull()
+          assertThat(requestForPlacements[0].releaseType).isNull()
+          assertThat(requestForPlacements[0].situation).isNull()
 
           assertThat(requestForPlacements[1].id).isEqualTo(submittedAdditionalPlacementApplication.id)
           assertThat(requestForPlacements[1].type).isEqualTo(RequestForPlacementType.manual)
           assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
           assertThat(requestForPlacements[1].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 2, arrivalFlexible = false))
           assertThat(requestForPlacements[1].authorisedPlacementPeriod).isNull()
+          assertThat(requestForPlacements[1].sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
+          assertThat(requestForPlacements[1].releaseType).isEqualTo(ReleaseTypeOption.inCommunity)
+          assertThat(requestForPlacements[1].situation).isEqualTo(SituationOption.bailSentence)
 
           assertThat(requestForPlacements[2].id).isEqualTo(withdrawnPlacementApplication.id)
           assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.manual)
           assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
           assertThat(requestForPlacements[2].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 2, arrivalFlexible = false))
           assertThat(requestForPlacements[2].authorisedPlacementPeriod).isNull()
+          assertThat(requestForPlacements[2].sentenceType).isNull()
+          assertThat(requestForPlacements[2].releaseType).isNull()
+          assertThat(requestForPlacements[2].situation).isNull()
 
           assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
           assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
           assertThat(requestForPlacements[3].isWithdrawn).isTrue()
           assertThat(requestForPlacements[3].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
           assertThat(requestForPlacements[3].authorisedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
+          assertThat(requestForPlacements[3].sentenceType).isNull()
+          assertThat(requestForPlacements[3].releaseType).isEqualTo(ReleaseTypeOption.licence)
+          assertThat(requestForPlacements[3].situation).isNull()
+
+          assertThat(requestForPlacements[4].id).isEqualTo(placementRequest.id)
+          assertThat(requestForPlacements[4].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[4].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+          assertThat(requestForPlacements[4].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
+          assertThat(requestForPlacements[4].authorisedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
+          assertThat(requestForPlacements[4].sentenceType).isNull()
+          assertThat(requestForPlacements[4].releaseType).isEqualTo(ReleaseTypeOption.licence)
+          assertThat(requestForPlacements[4].situation).isNull()
         }
       }
     }

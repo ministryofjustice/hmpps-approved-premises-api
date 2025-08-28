@@ -10,8 +10,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -63,6 +66,9 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(47)
         .withRequestedDuration(48)
         .withAuthorisedDuration(49)
+        .withSentenceType(SentenceTypeOption.bailPlacement.name)
+        .withReleaseType(ReleaseTypeOption.licence.name)
+        .withSituation(SituationOption.bailSentence.name)
         .produce()
 
       val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true)
@@ -76,6 +82,9 @@ class RequestForPlacementTransformerTest {
       assertThat(result.requestReviewedAt).isEqualTo(placementApplication.decisionMadeAt?.toInstant())
       assertThat(result.document).isNotNull
       assertThat(result.withdrawalReason).isEqualTo(placementApplication.withdrawalReason?.apiValue)
+      assertThat(result.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
+      assertThat(result.releaseType).isEqualTo(ReleaseTypeOption.licence)
+      assertThat(result.situation).isEqualTo(SituationOption.bailSentence)
       assertThat(result.requestedPlacementPeriod.arrival).isEqualTo(LocalDate.of(2012, 9, 9))
       assertThat(result.requestedPlacementPeriod.arrivalFlexible).isFalse
       assertThat(result.requestedPlacementPeriod.duration).isEqualTo(48)
@@ -286,6 +295,9 @@ class RequestForPlacementTransformerTest {
     fun `Transforms the placement request correctly`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
+        .withSentenceType(SentenceTypeOption.bailPlacement.name)
+        .withReleaseType(ReleaseTypeOption.rotl.name)
+        .withSituation(SituationOption.bailAssessment.name)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -325,6 +337,9 @@ class RequestForPlacementTransformerTest {
       assertThat(result.requestReviewedAt).isEqualTo(placementRequest.assessment.submittedAt?.toInstant())
       assertThat(result.document).isNull()
       assertThat(result.withdrawalReason).isEqualTo(placementRequest.withdrawalReason?.apiValue)
+      assertThat(result.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
+      assertThat(result.releaseType).isEqualTo(ReleaseTypeOption.rotl)
+      assertThat(result.situation).isEqualTo(SituationOption.bailAssessment)
     }
 
     @Test

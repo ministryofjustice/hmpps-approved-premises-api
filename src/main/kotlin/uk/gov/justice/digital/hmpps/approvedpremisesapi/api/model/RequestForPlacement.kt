@@ -22,4 +22,7 @@ data class RequestForPlacement(
   val requestReviewedAt: java.time.Instant? = null,
   val document: Any? = null,
   val withdrawalReason: WithdrawPlacementRequestReason? = null,
+  val sentenceType: SentenceTypeOption? = null,
+  val releaseType: ReleaseTypeOption? = null,
+  val situation: SituationOption? = null,
 )
