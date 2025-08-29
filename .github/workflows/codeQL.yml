@@ -11,7 +11,7 @@ on:
 jobs:
   codeQL:
     name: CodeQL
-    runs-on: ubuntu-latest
+    runs-on: hmpps-github-actions-runner
     permissions:
       actions: read
       contents: read
