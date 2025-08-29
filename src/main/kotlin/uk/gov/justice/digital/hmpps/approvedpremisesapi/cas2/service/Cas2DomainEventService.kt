@@ -102,6 +102,7 @@ class Cas2DomainEventService(
         type = enumTypeFromDataType(domainEvent.data::class),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
+        cas3CancelledAt = null,
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS2",
         triggerSource = null,

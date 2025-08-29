@@ -104,10 +104,10 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     """
     SELECT d
     FROM DomainEventEntity d
-    WHERE d.cas3BedspaceId in :cas3BedspaceIds and d.type in :bedspaceDomainEventTypes
+    WHERE d.cas3BedspaceId in :cas3BedspaceIds and d.type in :bedspaceDomainEventTypes and d.cas3CancelledAt is null
     """,
   )
-  fun findBedspacesDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<String>): List<DomainEventEntity>
+  fun findBedspacesActiveDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<String>): List<DomainEventEntity>
 
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
 
@@ -115,10 +115,10 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     """
     SELECT d
     FROM DomainEventEntity d
-    WHERE d.cas3PremisesId = :cas3PremisesId and d.type in :premisesDomainEventTypes
+    WHERE d.cas3PremisesId = :cas3PremisesId and d.type in :premisesDomainEventTypes and d.cas3CancelledAt is null
     """,
   )
-  fun findPremisesDomainEventsByType(cas3PremisesId: UUID, premisesDomainEventTypes: List<String>): List<DomainEventEntity>
+  fun findPremisesActiveDomainEventsByType(cas3PremisesId: UUID, premisesDomainEventTypes: List<String>): List<DomainEventEntity>
 
   @Modifying
   @Query(
@@ -155,6 +155,8 @@ data class DomainEventEntity(
   val type: DomainEventType,
   val occurredAt: OffsetDateTime,
   val createdAt: OffsetDateTime,
+  @Column(name = "cas3_cancelled_at")
+  val cas3CancelledAt: OffsetDateTime?,
   @Type(JsonType::class)
   val data: String,
   val service: String,

@@ -130,62 +130,63 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     return bedspace
   }
 
-  fun createUnarchivePremisesDomainEvent(
+  @SuppressWarnings("LongParameterList")
+  fun createPremisesUnarchiveDomainEvent(
     premises: TemporaryAccommodationPremisesEntity,
     userEntity: UserEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
     currentEndDate: LocalDate,
-  ) {
-    domainEventFactory.produceAndPersist {
-      withService(ServiceName.temporaryAccommodation)
-      withCas3PremisesId(premises.id)
-      withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
-      withData(
-        objectMapper.writeValueAsString(
-          CAS3PremisesUnarchiveEvent(
-            id = UUID.randomUUID(),
-            timestamp = Instant.now(),
-            eventType = EventType.premisesUnarchived,
-            eventDetails =
-            CAS3PremisesUnarchiveEventDetails(
-              premisesId = premises.id,
-              userId = userEntity.id,
-              currentStartDate = currentStartDate,
-              newStartDate = newStartDate,
-              currentEndDate = currentEndDate,
-            ),
+    cancelledAt: OffsetDateTime? = null,
+  ) = domainEventFactory.produceAndPersist {
+    withService(ServiceName.temporaryAccommodation)
+    withCas3PremisesId(premises.id)
+    withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+    withCas3CancelledAt(cancelledAt)
+    withData(
+      objectMapper.writeValueAsString(
+        CAS3PremisesUnarchiveEvent(
+          id = UUID.randomUUID(),
+          timestamp = Instant.now(),
+          eventType = EventType.premisesUnarchived,
+          eventDetails =
+          CAS3PremisesUnarchiveEventDetails(
+            premisesId = premises.id,
+            userId = userEntity.id,
+            currentStartDate = currentStartDate,
+            newStartDate = newStartDate,
+            currentEndDate = currentEndDate,
           ),
         ),
-      )
-    }
+      ),
+    )
   }
 
-  fun createArchivePremisesDomainEvent(
+  fun createPremisesArchiveDomainEvent(
     premises: TemporaryAccommodationPremisesEntity,
     userEntity: UserEntity,
     date: LocalDate,
-  ) {
-    domainEventFactory.produceAndPersist {
-      withService(ServiceName.temporaryAccommodation)
-      withCas3PremisesId(premises.id)
-      withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
-      withData(
-        objectMapper.writeValueAsString(
-          CAS3PremisesArchiveEvent(
-            id = UUID.randomUUID(),
-            timestamp = Instant.now(),
-            eventType = EventType.premisesArchived,
-            eventDetails =
-            CAS3PremisesArchiveEventDetails(
-              premisesId = premises.id,
-              userId = userEntity.id,
-              endDate = date,
-            ),
+    cancelledAt: OffsetDateTime? = null,
+  ) = domainEventFactory.produceAndPersist {
+    withService(ServiceName.temporaryAccommodation)
+    withCas3PremisesId(premises.id)
+    withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
+    withCas3CancelledAt(cancelledAt)
+    withData(
+      objectMapper.writeValueAsString(
+        CAS3PremisesArchiveEvent(
+          id = UUID.randomUUID(),
+          timestamp = Instant.now(),
+          eventType = EventType.premisesArchived,
+          eventDetails =
+          CAS3PremisesArchiveEventDetails(
+            premisesId = premises.id,
+            userId = userEntity.id,
+            endDate = date,
           ),
         ),
-      )
-    }
+      ),
+    )
   }
 
   protected fun createCas3Bedspace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
@@ -218,10 +219,19 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     serviceScope = ServiceName.temporaryAccommodation.value,
   )
 
-  protected fun createBedspaceArchiveDomainEvent(bedspaceId: UUID, premisesId: UUID, userId: UUID, currentEndDate: LocalDate?, endDate: LocalDate) = domainEventFactory.produceAndPersist {
+  @SuppressWarnings("LongParameterList")
+  protected fun createBedspaceArchiveDomainEvent(
+    bedspaceId: UUID,
+    premisesId: UUID,
+    userId: UUID,
+    currentEndDate: LocalDate?,
+    endDate: LocalDate,
+    cancelledAt: OffsetDateTime? = null,
+  ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3BedspaceId(bedspaceId)
     withType(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+    withCas3CancelledAt(cancelledAt)
     withData(
       objectMapper.writeValueAsString(
         CAS3BedspaceArchiveEvent(
@@ -240,10 +250,18 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     )
   }
 
-  protected fun createBedspaceUnarchiveDomainEvent(bedspace: BedEntity, premisesId: UUID, userId: UUID, newStartDate: LocalDate) = domainEventFactory.produceAndPersist {
+  @SuppressWarnings("LongParameterList")
+  protected fun createBedspaceUnarchiveDomainEvent(
+    bedspace: BedEntity,
+    premisesId: UUID,
+    userId: UUID,
+    newStartDate: LocalDate,
+    cancelledAt: OffsetDateTime? = null,
+  ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3BedspaceId(bedspace.id)
     withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+    withCas3CancelledAt(cancelledAt)
     withData(
       objectMapper.writeValueAsString(
         CAS3BedspaceUnarchiveEvent(
