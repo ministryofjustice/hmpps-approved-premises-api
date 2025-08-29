@@ -295,17 +295,18 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Departure Reasons for only temporary accommodation returns 200 with correct body`() {
-    departureReasonRepository.deleteAll()
-
-    departureReasonEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedDepartureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.temporaryAccommodation.value)
-    }
-
-    val expectedJson = objectMapper.writeValueAsString(
-      expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi),
-    )
+    val expectedJson = """
+      [{"id":"60d030db-ce2d-4f1a-b24f-42ce15d268f7","name":"Other","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"ae93ec2c-157a-49fd-a4c9-b67f1a9457d8","name":"Bed Withdrawn - Further custodial sentence imposed","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"b5d8a978-eb20-436e-a00f-f1358a3664d5","name":"Admitted to Hospital/Healthcare Facility","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"1de629ea-c5fb-4e91-9b0b-ef7d4d69bd5b","name":"Bed Withdrawn - Serious Incident related to CAS3 placement","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"d6c85a7e-cf9d-4a47-8da2-a25356d34570","name":"Bed Withdrawn – Person on probation no longer in property","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"93153ad1-38a3-4f4f-809e-ba8297c0565a","name":"Bed Withdrawn – Further offence/behaviour/increasing risk","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"94976884-c32f-4162-b3af-214beed0e988","name":"Bed Withdrawn - Recall/Breach","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"b8975a4d-68ff-4f42-9ac8-5136c4b393ef","name":"Deceased","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"166b6b02-6f42-4447-b278-dd9a0b437b54","name":"Planned Move on","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null},
+      {"id":"529fe9a0-a644-48db-9e62-83c83a623a93","name":"Person on probation moved to another CAS3 property","serviceScope":"temporary-accommodation","isActive":true,"parentReasonId":null}]
+    """.trimIndent()
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -485,17 +486,28 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Move on Categories for only temporary accommodation returns 200 with correct body`() {
-    inactivateExistingMoveOnCategories()
-
-    moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedMoveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.temporaryAccommodation.value)
-    }
-
-    val expectedJson = objectMapper.writeValueAsString(
-      expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
-    )
+    val expectedJson = """
+      [{"id":"33244330-87e9-4cc6-9940-f78586585436","name":"Homeless – rough sleeping","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"a90a77a3-5662-4fa8-85ab-07d0c085052f","name":"Homeless – shelter/emergency hostel/campsite","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"15fb0af2-3406-49c9-81ed-5e42bddf9fc2","name":"Homeless – squat","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"2236cd7e-32c5-4784-a461-8f0aead1d386","name":"Householder (owner – freehold or leasehold)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"d3b9f02e-c3a5-475b-a5dd-124c058900d9","name":"Long term residential healthcare","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"5dfd0cc4-8be3-4788-a7ba-a84d32efe5ea","name":"Pending (awaiting move on outcome in NDelius – to be updated)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"0d8dee49-f49a-4e0e-a20e-80e0c18645ce","name":"Support housing","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"b3a5bf51-f5a3-46fb-8de5-c0f1b1ee1e8c","name":"Updated move on outcome - not recorded in NDelius","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"587dc0dc-9073-4992-9d58-5576753050e9","name":"Rental accommodation - private rental","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"12c739fa-7bb1-416d-bbf2-71362578a7f3","name":"Rental accommodation - social rental","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"91158ed5-467e-4ee8-90d9-4f17a5dac82f","name":"Transient/Short term accommodation","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"bd7425b0-ee9a-491c-a64b-c6a034847778","name":"CAS2","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"b6d65622-44ae-42ac-9da0-c6a02532c3d5","name":"Hospital","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"c532986f-462c-4adf-ab2e-583e49f06ec6","name":"Prison (further custodial event)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"8c392f36-515c-4210-bb72-6255f12abb91","name":"Recalled","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"5d1f4d82-6830-43bf-b197-c5975c0c721b","name":"They’re deceased","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"24e80792-1eee-48fc-9a02-51275c3a6217","name":"Another CAS3 property or bedspace","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"d8e04fa1-9757-4681-bfab-6c61913c8463","name":"CAS1/AP","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"247ae3f4-7958-4c59-97ed-272a39ad411c","name":"Friends or family (settled)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"3de4665a-c848-4797-ba80-502cacc6f7d7","name":"Friends or family (transient)","serviceScope":"temporary-accommodation","isActive":true}]
+    """.trimIndent()
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -693,18 +705,25 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Cancellation Reasons for only temporary accommodation returns 200 with correct body`() {
-    cancellationReasonRepository.deleteAll()
-
-    cancellationReasonEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedCancellationReasons = cancellationReasonEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.temporaryAccommodation.value)
-    }
-
-    val expectedJson = objectMapper.writeValueAsString(
-      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi),
-    )
-
+    val expectedJson = """
+      [{"id":"7c54c8f5-14df-4836-af9c-c66a6021a375","name":"Person on probation failed to arrive","isActive":false,"serviceScope":"temporary-accommodation"},
+      {"id":"8afe2dc8-f024-4ab1-a98d-0e321e317b19","name":"Withdrawn by referrer (e.g. recalled, further custody, placement related risk concern)","isActive":false,"serviceScope":"temporary-accommodation"},
+      {"id":"d2a0d037-53db-4bb2-b9f7-afa07948a3f5","name":"Recording Error (e.g. a data entry error)","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d480","name":"CAS1/AP alternative suitable accommodation provided","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d481","name":"CAS2 alternative accommodation provided","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d482","name":"Changes to booking - new booking not required","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d487","name":"Changes to booking - new booking required (e.g. new release date)","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"3d57413f-ca94-424a-b026-bf9e99ed28fe","name":"Local authority alternative suitable accommodation provided","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d483","name":"No single occupancy bedspace is available","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f023aab7-4bd8-42a3-9f80-7aab3d4f40b8","name":"Other alternative accommodation provided (e.g. friends or family)","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d484","name":"Person on probation failed to arrive (alternative accommodation)","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d489","name":"Person on probation failed to arrive (gate arrest/recall)","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d490","name":"Person on probation failed to arrive (other reason)","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"edd09efb-ef83-42da-a15c-750afd057eb3","name":"Person on probation rejected placement","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d486","name":"Risk or needs cannot be safely managed in CAS3 – new booking not required","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d485","name":"Risk or needs cannot be safely managed in CAS3 – new booking required","isActive":true,"serviceScope":"temporary-accommodation"},
+      {"id":"2a7fc443-2f31-4501-90c4-435a6e8e59d3","name":"Supplier unable to accommodate (explain)","isActive":true,"serviceScope":"temporary-accommodation"}]
+    """.trimIndent()
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
@@ -914,17 +933,29 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Referral Rejection Reason for only temporary accommodation returns 200 with correct body`() {
-    referralRejectionReasonRepository.deleteAll()
-
-    referralRejectionReasonEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedReferralRejectionReasons = referralRejectionReasonEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.temporaryAccommodation.value)
-    }
-
-    val expectedJson = objectMapper.writeValueAsString(
-      expectedReferralRejectionReasons.map(referralRejectionReasonTransformer::transformJpaToApi),
-    )
+    val expectedJson = """
+      [{"id":"f47ac10b-58cc-4372-a567-0e02b2c3d470","name":"CAS1/AP alternative suitable accommodation provided","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d471","name":"CAS2 alternative accommodation provided","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"11506230-49a8-48b5-bdf5-20f51324e8a5","name":"They’re not eligible (not because of NRPF)","serviceScope":"temporary-accommodation","isActive":false},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d472","name":"Consent not given by person on probation","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d473","name":"Local authority alternative suitable accommodation provided (includes Priority Need)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"155ee6dc-ac2a-40d2-a350-90b63fb34a06","name":"No bedspace available in PDU","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"21b8569c-ef2e-4059-8676-323098d16aa5","name":"No recourse to public funds (NRPF)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d474","name":"Not eligible (e.g. already released into the community, HDC)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"88c3b8d5-77c8-4c52-84f0-ec9073e4df50","name":"Not enough time on their licence or post-sentence supervision (PSS)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"85799bf8-8b64-4903-9ab8-b08a77f1a9d3","name":"Another reason (please add)","serviceScope":"temporary-accommodation","isActive":false},
+      {"id":"a1c7d402-77b5-4335-a67b-eba6a71c70bf","name":"Not enough time to place","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d475","name":"Other alternative accommodation provided (e.g. friends or family)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d476","name":"Out of region referral","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d477","name":"Person has had maximum CAS3 placements on current sentence","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d478","name":"Previous behavioural concerns in CAS3","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d479","name":"Referral submitted too early","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d480","name":"Remanded in custody or detained","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"90e9d919-9a39-45cd-b405-7039b5640668","name":"Risk or needs cannot be safely managed in CAS3","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"b19ba749-408f-48c0-907c-11eace2dcf67","name":"Single occupancy bedspace not available","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"311de468-078b-4c39-ae42-8d41575b7726","name":"Suitable bedspace not available (not related to single occupancy availability)","serviceScope":"temporary-accommodation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d481","name":"Supplier unable to accommodate (e.g. arson needs cannot be met)","serviceScope":"temporary-accommodation","isActive":true}]
+    """.trimIndent()
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
