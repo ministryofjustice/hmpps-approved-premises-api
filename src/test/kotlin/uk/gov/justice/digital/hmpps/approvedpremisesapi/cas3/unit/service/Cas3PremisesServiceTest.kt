@@ -1183,17 +1183,9 @@ class Cas3PremisesServiceTest {
   inner class CreateBedspace {
     @Test
     fun `When create a new bedspace returns Success with correct result when validation passed`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
-
-      val room = RoomEntityFactory()
-        .withName(randomStringMultiCaseWithNumbers(10))
-        .withPremises(premises)
-        .produce()
-
-      val bedspace = BedEntityFactory()
-        .withRoom(room)
-        .withStartDate(LocalDate.now().minusDays(5))
-        .produce()
+      val premises = createPremisesEntity()
+      val bedspace = createBedspace(premises, LocalDate.now().plusDays(5))
+      val room = bedspace.room
 
       every { roomRepositoryMock.save(any()) } returns room
       every { bedRepositoryMock.save(any()) } returns bedspace
@@ -1205,6 +1197,52 @@ class Cas3PremisesServiceTest {
         assertThat(bed.startDate).isEqualTo(bedspace.startDate)
         assertThat(bed.room).isEqualTo(room)
         assertThat(bed.room.premises).isEqualTo(premises)
+      }
+    }
+
+    @Test
+    fun `When create a new bedspace in a scheduled to archive premises returns Success and unarchive the premises`() {
+      val bedspaceStartDate = LocalDate.now().plusDays(5)
+      val premises = createPremisesEntity(LocalDate.now().plusDays(2), PropertyStatus.archived)
+      val bedspace = createBedspace(premises, bedspaceStartDate)
+      val room = bedspace.room
+
+      val updatedPremises = temporaryAccommodationPremisesFactory
+        .withId(premises.id)
+        .withStartDate(bedspaceStartDate)
+        .withEndDate(null)
+        .withStatus(PropertyStatus.active)
+        .produce()
+
+      every { roomRepositoryMock.save(any()) } returns room
+      every { bedRepositoryMock.save(any()) } returns bedspace
+      every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns updatedPremises
+      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(match { it.id == premises.id }, premises.startDate, bedspaceStartDate, premises.endDate!!) } returns Unit
+
+      val result = premisesService.createBedspace(premises, room.name, bedspace.startDate!!, null, emptyList())
+
+      assertThatCasResult(result).isSuccess().with { bed ->
+        assertThat(bed.name).isEqualTo("default-bed")
+        assertThat(bed.startDate).isEqualTo(bedspace.startDate)
+        assertThat(bed.room).isEqualTo(room)
+        assertThat(bed.room.premises).isEqualTo(premises)
+      }
+
+      verify(exactly = 1) {
+        premisesRepositoryMock.save(
+          match<TemporaryAccommodationPremisesEntity> {
+            it.id == premises.id
+          },
+        )
+
+        cas3DomainEventServiceMock.savePremisesUnarchiveEvent(
+          match<TemporaryAccommodationPremisesEntity> {
+            it.id == premises.id
+          },
+          any(),
+          any(),
+          any(),
+        )
       }
     }
 
@@ -1237,17 +1275,8 @@ class Cas3PremisesServiceTest {
 
     @Test
     fun `When create a new bedspace with a non exist characteristic returns FieldValidationError with the correct message`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
-
-      val room = RoomEntityFactory()
-        .withName(randomStringMultiCaseWithNumbers(10))
-        .withPremises(premises)
-        .produce()
-
-      val bedspace = BedEntityFactory()
-        .withRoom(room)
-        .withStartDate(LocalDate.now().plusDays(3))
-        .produce()
+      val premises = createPremisesEntity()
+      val bedspace = createBedspace(premises, LocalDate.now().plusDays(3))
 
       val nonExistCharacteristicId = UUID.randomUUID()
 
@@ -1260,18 +1289,9 @@ class Cas3PremisesServiceTest {
 
     @Test
     fun `When create a new bedspace with a wrong model scope characteristic returns FieldValidationError with the correct message`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
+      val premises = createPremisesEntity()
+      val bedspace = createBedspace(premises, LocalDate.now().plusDays(3))
       val characteristicEntityFactory = CharacteristicEntityFactory()
-
-      val room = RoomEntityFactory()
-        .withName(randomStringMultiCaseWithNumbers(10))
-        .withPremises(premises)
-        .produce()
-
-      val bedspace = BedEntityFactory()
-        .withRoom(room)
-        .withStartDate(LocalDate.now().plusDays(3))
-        .produce()
 
       val premisesCharacteristic = characteristicEntityFactory
         .withModelScope("premises")
@@ -1288,18 +1308,9 @@ class Cas3PremisesServiceTest {
 
     @Test
     fun `When create a new bedspace with a wrong service scope characteristic returns FieldValidationError with the correct message`() {
-      val premises = temporaryAccommodationPremisesFactory.produce()
+      val premises = createPremisesEntity()
+      val bedspace = createBedspace(premises, LocalDate.now().plusDays(3))
       val characteristicEntityFactory = CharacteristicEntityFactory()
-
-      val room = RoomEntityFactory()
-        .withName(randomStringMultiCaseWithNumbers(10))
-        .withPremises(premises)
-        .produce()
-
-      val bedspace = BedEntityFactory()
-        .withRoom(room)
-        .withStartDate(LocalDate.now().plusDays(3))
-        .produce()
 
       val premisesCharacteristic = characteristicEntityFactory
         .withModelScope("room")
@@ -3914,7 +3925,7 @@ class Cas3PremisesServiceTest {
     return Pair(premises, bedspace)
   }
 
-  private fun createPremisesEntity(): TemporaryAccommodationPremisesEntity {
+  private fun createPremisesEntity(endDate: LocalDate? = null, status: PropertyStatus = PropertyStatus.active): TemporaryAccommodationPremisesEntity {
     val probationRegion = ProbationRegionEntityFactory()
       .withApArea(ApAreaEntityFactory().produce())
       .produce()
@@ -3931,6 +3942,8 @@ class Cas3PremisesServiceTest {
       .withProbationRegion(probationRegion)
       .withProbationDeliveryUnit(probationDeliveryUnit)
       .withLocalAuthorityArea(localAuthority)
+      .withEndDate(endDate)
+      .withStatus(status)
       .produce()
   }
 

@@ -706,7 +706,10 @@ class Cas3PremisesService(
       createdAt = OffsetDateTime.now(),
     )
     bedspaceRepository.save(bedspace)
-    room.beds.add(bedspace)
+
+    if (premises.status == PropertyStatus.archived && premises.endDate != null && premises.endDate!! > LocalDate.now()) {
+      unarchivePremisesAndSaveDomainEvent(premises, startDate)
+    }
 
     return success(bedspace)
   }

@@ -1789,6 +1789,57 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Create new bedspace in a scheduled to archive premises returns 201 Created with correct body and unarchive the premises`() {
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStatus = PropertyStatus.archived,
+        premisesEndDate = LocalDate.now().plusDays(3),
+      ) { user, jwt, premises ->
+        val bedspaceStartDate = LocalDate.now().minusDays(2)
+        val characteristics = characteristicEntityFactory.produceAndPersistMultiple(5) {
+          withModelScope("room")
+          withServiceScope(ServiceName.temporaryAccommodation.value)
+          withName(randomStringMultiCaseWithNumbers(10))
+        }
+
+        val characteristicIds = characteristics.map { it.id }
+
+        val newBedspace = Cas3NewBedspace(
+          reference = randomStringMultiCaseWithNumbers(10),
+          startDate = bedspaceStartDate,
+          characteristicIds = characteristicIds,
+          notes = randomStringLowerCase(100),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath("reference").isEqualTo(newBedspace.reference)
+          .jsonPath("startDate").isEqualTo(newBedspace.startDate.toString())
+          .jsonPath("notes").isEqualTo(newBedspace.notes)
+          .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+          .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+          .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { ServiceName.temporaryAccommodation.value })
+          .jsonPath("characteristics[*].name").isEqualTo(characteristics.map { it.name })
+
+        // verify premises is unarchived
+        val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.active)
+        assertThat(updatedPremises.startDate).isEqualTo(bedspaceStartDate)
+        assertThat(updatedPremises.endDate).isNull()
+
+        val premisesUnarchiveDomainEvents = domainEventRepository.findByCas3PremisesIdAndType(premises.id, DomainEventType.CAS3_PREMISES_UNARCHIVED)
+        assertThat(premisesUnarchiveDomainEvents).isNotNull()
+        assertThat(premisesUnarchiveDomainEvents.size).isEqualTo(1)
+      }
+    }
+
+    @Test
     fun `When a new bedspace is created with no notes then it defaults to empty`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = createPremises(user.probationRegion)
