@@ -1159,8 +1159,10 @@ class Cas3PremisesService(
     val unarchivePremises = unarchivePremisesAndSaveDomainEvent(premises, restartDate)
 
     val bedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
-    bedspaces.forEach { bedspace ->
-      unarchiveBedspaceAndSaveDomainEvent(bedspace, restartDate)
+    val uniqueBedspaces = bedspaces.groupBy { b -> b.room.name }
+    uniqueBedspaces.forEach { bedspaces ->
+      val lastBedspace = bedspaces.value.sortedByDescending { it.createdAt }.first()
+      unarchiveBedspaceAndSaveDomainEvent(lastBedspace, restartDate)
     }
 
     success(unarchivePremises)
