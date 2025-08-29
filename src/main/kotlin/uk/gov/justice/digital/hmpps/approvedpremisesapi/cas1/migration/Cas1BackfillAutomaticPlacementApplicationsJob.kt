@@ -151,6 +151,9 @@ class Cas1BackfillAutomaticPlacementApplicationsJob(
         allocatedAt = placementRequest.assessment.allocatedAt,
         reallocatedAt = null,
         dueAt = null,
+        sentenceType = application.sentenceType,
+        releaseType = application.releaseType,
+        situation = application.situation,
       ),
     )
 

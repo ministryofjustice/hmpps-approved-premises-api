@@ -235,6 +235,10 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application1Pa1.allocatedToUser!!.id).isEqualTo(application1AssessmentAllocatedTo.id)
     assertThat(application1Pa1.allocatedAt).isEqualTo(application1Pr1.assessment.allocatedAt)
     assertThat(application1Pa1.reallocatedAt).isNull()
+    assertThat(application1Pa1.submissionGroupId).isNotNull()
+    assertThat(application1Pa1.sentenceType).isEqualTo(application1HasSingleInitialPr.sentenceType)
+    assertThat(application1Pa1.releaseType).isEqualTo(application1HasSingleInitialPr.releaseType)
+    assertThat(application1Pa1.situation).isEqualTo(application1HasSingleInitialPr.situation)
 
     assertThat(placementApplicationPlaceholderRepository.findByIdOrNull(application1Placeholder.id)!!.archived).isTrue
 
@@ -268,6 +272,10 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application3Pa1.allocatedToUser!!.id).isEqualTo(application3AssessmentAllocatedTo.id)
     assertThat(application3Pa1.allocatedAt).isEqualTo(application3Pr1.assessment.allocatedAt)
     assertThat(application3Pa1.reallocatedAt).isNull()
+    assertThat(application3Pa1.submissionGroupId).isNotNull()
+    assertThat(application3Pa1.sentenceType).isEqualTo(application3HasMultipleInitialPrs.sentenceType)
+    assertThat(application3Pa1.releaseType).isEqualTo(application3HasMultipleInitialPrs.releaseType)
+    assertThat(application3Pa1.situation).isEqualTo(application3HasMultipleInitialPrs.situation)
 
     val application3Pa2 = placementRequestRepository.findByIdOrNull(application3Pr2.id)!!.placementApplication
     assertThat(application3Pa2).isNotNull()
@@ -293,6 +301,10 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application3Pa2.allocatedToUser!!.id).isEqualTo(application3AssessmentAllocatedTo.id)
     assertThat(application3Pa2.allocatedAt).isEqualTo(application3Pr2.assessment.allocatedAt)
     assertThat(application3Pa2.reallocatedAt).isNull()
+    assertThat(application3Pa2.submissionGroupId).isNotNull()
+    assertThat(application3Pa2.sentenceType).isEqualTo(application3HasMultipleInitialPrs.sentenceType)
+    assertThat(application3Pa2.releaseType).isEqualTo(application3HasMultipleInitialPrs.releaseType)
+    assertThat(application3Pa2.situation).isEqualTo(application3HasMultipleInitialPrs.situation)
 
     assertThat(placementApplicationPlaceholderRepository.findByIdOrNull(application3Placeholder.id)!!.archived).isTrue
 
@@ -320,6 +332,10 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application4Pa1.allocatedToUser!!.id).isEqualTo(application4AssessmentAllocatedTo.id)
     assertThat(application4Pa1.allocatedAt).isEqualTo(application4Pr1.assessment.allocatedAt)
     assertThat(application4Pa1.reallocatedAt).isNull()
+    assertThat(application4Pa1.submissionGroupId).isNotNull()
+    assertThat(application4Pa1.sentenceType).isEqualTo(application3HasMultipleInitialPrsAndNoArrivalDate.sentenceType)
+    assertThat(application4Pa1.releaseType).isEqualTo(application3HasMultipleInitialPrsAndNoArrivalDate.releaseType)
+    assertThat(application4Pa1.situation).isEqualTo(application3HasMultipleInitialPrsAndNoArrivalDate.situation)
 
     val application4Pa2 = placementRequestRepository.findByIdOrNull(application4Pr2.id)!!.placementApplication
     assertThat(application4Pa2).isNotNull()
@@ -345,6 +361,10 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application4Pa2.allocatedToUser!!.id).isEqualTo(application4AssessmentAllocatedTo.id)
     assertThat(application4Pa2.allocatedAt).isEqualTo(application4Pr2.assessment.allocatedAt)
     assertThat(application4Pa2.reallocatedAt).isNull()
+    assertThat(application4Pa2.submissionGroupId).isNotNull()
+    assertThat(application4Pa2.sentenceType).isEqualTo(application3HasMultipleInitialPrsAndNoArrivalDate.sentenceType)
+    assertThat(application4Pa2.releaseType).isEqualTo(application3HasMultipleInitialPrsAndNoArrivalDate.releaseType)
+    assertThat(application4Pa2.situation).isEqualTo(application3HasMultipleInitialPrsAndNoArrivalDate.situation)
 
     assertThat(placementApplicationPlaceholderRepository.findByIdOrNull(application4Placeholder.id)!!.archived).isTrue
 
@@ -372,6 +392,10 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
     assertThat(application5Pa1.allocatedToUser!!.id).isEqualTo(application5AssessmentAllocatedTo.id)
     assertThat(application5Pa1.allocatedAt).isEqualTo(application5Pr1.assessment.allocatedAt)
     assertThat(application5Pa1.reallocatedAt).isNull()
+    assertThat(application5Pa1.submissionGroupId).isNotNull()
+    assertThat(application5Pa1.sentenceType).isEqualTo(application5HasSingleWithdrawnInitialPr.sentenceType)
+    assertThat(application5Pa1.releaseType).isEqualTo(application5HasSingleWithdrawnInitialPr.releaseType)
+    assertThat(application5Pa1.situation).isEqualTo(application5HasSingleWithdrawnInitialPr.situation)
 
     domainEventAsserter.assertDomainEventOfTypeStored(
       application5Pr1.application.id,

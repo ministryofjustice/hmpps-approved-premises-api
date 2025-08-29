@@ -163,6 +163,9 @@ class Cas1PlacementApplicationService(
           allocatedAt = assessment.allocatedAt,
           reallocatedAt = null,
           dueAt = null,
+          releaseType = application.releaseType?.toString(),
+          sentenceType = application.sentenceType?.toString(),
+          situation = application.situation?.toString(),
         ),
       ),
     )

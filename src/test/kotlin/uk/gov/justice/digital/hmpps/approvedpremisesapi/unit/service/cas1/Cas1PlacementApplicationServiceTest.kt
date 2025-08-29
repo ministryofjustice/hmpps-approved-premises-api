@@ -21,6 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -168,6 +170,9 @@ class Cas1PlacementApplicationServiceTest {
         .withCreatedAt(OffsetDateTime.parse("2018-12-03T10:15:30+01:00"))
         .withSubmittedAt(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
         .withDuration(25)
+        .withSentenceType(SentenceTypeOption.bailPlacement.name)
+        .withReleaseType(ReleaseTypeOption.licence.name)
+        .withSituation(SituationOption.bailAssessment.name)
         .produce()
 
       val id = UUID.randomUUID()
@@ -210,6 +215,9 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(persisted.allocatedToUser).isEqualTo(assessor)
       assertThat(persisted.allocatedAt).isEqualTo(OffsetDateTime.parse("2018-12-05T10:15:30+01:00"))
       assertThat(persisted.reallocatedAt).isNull()
+      assertThat(persisted.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement.name)
+      assertThat(persisted.releaseType).isEqualTo(ReleaseTypeOption.licence.name)
+      assertThat(persisted.situation).isEqualTo(SituationOption.bailAssessment.name)
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(persisted, createdByUserName = null) }
     }
