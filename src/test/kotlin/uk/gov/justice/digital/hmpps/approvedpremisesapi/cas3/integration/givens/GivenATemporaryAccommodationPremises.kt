@@ -126,6 +126,7 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
   roles: List<UserRole> = emptyList(),
   bedspaceCount: Int = 1,
   premisesStatus: PropertyStatus = PropertyStatus.active,
+  premisesStartDate: LocalDate = LocalDate.now().minusDays(180),
   premisesEndDate: LocalDate? = null,
   bedStartDates: List<LocalDate> = emptyList(),
   bedEndDates: List<LocalDate?> = emptyList(),
@@ -145,8 +146,9 @@ fun IntegrationTestBase.givenATemporaryAccommodationPremisesComplete(
       roomCharacteristics = roomCharacteristics,
     ) { premises, rooms, beds ->
       // Update premises with status and end date if provided
-      if (premisesStatus != premises.status || premisesEndDate != premises.endDate) {
+      if (premisesStatus != premises.status || premisesEndDate != premises.endDate || premisesStartDate != premises.startDate) {
         premises.status = premisesStatus
+        premises.startDate = premisesStartDate
         premises.endDate = premisesEndDate
         temporaryAccommodationPremisesRepository.save(premises)
       }

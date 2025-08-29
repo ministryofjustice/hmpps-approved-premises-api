@@ -3019,38 +3019,23 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   inner class UnarchivePremises {
     @Test
     fun `Unarchive premises returns 200 OK when successful`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        val pdu = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(userEntity.probationRegion)
-        }
-
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { userEntity.probationRegion }
-          withProbationDeliveryUnit(pdu)
-          withStartDate(LocalDate.now().minusDays(30))
-          withEndDate(LocalDate.now().minusDays(1))
-          withStatus(PropertyStatus.archived)
-        }
-
-        val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
-          withPremises(premises)
-        }
-
-        val bedspaces = mutableListOf<BedEntity>()
-
-        rooms.forEach { room ->
-          bedspaces.addAll(
-            listOf(
-              bedEntityFactory.produceAndPersist {
-                withRoom(room)
-                withStartDate(LocalDate.now().minusDays(30))
-                withEndDate(LocalDate.now().minusDays(1))
-              },
-            ),
-          )
-        }
-
+      givenATemporaryAccommodationPremisesComplete(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(30),
+        premisesEndDate = LocalDate.now().minusDays(1),
+        premisesStatus = PropertyStatus.archived,
+        bedspaceCount = 3,
+        bedStartDates = listOf(
+          LocalDate.now().minusDays(30),
+          LocalDate.now().minusDays(20),
+          LocalDate.now().minusDays(14),
+        ),
+        bedEndDates = listOf(
+          LocalDate.now().minusDays(1),
+          LocalDate.now().minusDays(1),
+          LocalDate.now().minusDays(1),
+        ),
+      ) { user, jwt, premises, rooms, bedspaces ->
         val restartDate = LocalDate.now().plusDays(1)
 
         webTestClient.post()
@@ -3072,11 +3057,84 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         assertThat(updatedPremises.endDate).isNull()
 
         val updatedBedspaces = bedRepository.findAll()
-        assertThat(updatedBedspaces).hasSize(2)
+        assertThat(updatedBedspaces).hasSize(3)
         updatedBedspaces.forEach { bedspace ->
           assertThat(bedspace.startDate).isEqualTo(restartDate)
           assertThat(bedspace.endDate).isNull()
         }
+      }
+    }
+
+    @Test
+    fun `Given unarchive premises with duplicated bedspace reference returns 200 OK and unarchive the lastest created bedspace with the same reference`() {
+      givenATemporaryAccommodationPremisesComplete(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(180),
+        premisesEndDate = LocalDate.now().minusDays(1),
+        premisesStatus = PropertyStatus.archived,
+        bedspaceCount = 3,
+        bedStartDates = listOf(
+          LocalDate.now().minusDays(30),
+          LocalDate.now().minusDays(20),
+          LocalDate.now().minusDays(14),
+        ),
+        bedEndDates = listOf(
+          LocalDate.now().minusDays(1),
+          LocalDate.now().minusDays(1),
+          LocalDate.now().minusDays(1),
+        ),
+      ) { user, jwt, premises, rooms, bedspaces ->
+        val restartDate = LocalDate.now().plusDays(1)
+
+        val originalRoom = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withName(randomStringMultiCaseWithNumbers(10))
+          withNotes(randomStringLowerCase(100))
+        }
+
+        val duplicatedRoom = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withName(originalRoom.name)
+          withNotes(randomStringLowerCase(100))
+        }
+
+        val originalBedspace = bedEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.now().minusDays(180))
+          withEndDate(LocalDate.now().minusDays(170))
+          withRoom(originalRoom)
+          withCreatedAt { OffsetDateTime.now().minusDays(180) }
+        }
+
+        val duplicatedBedspace = bedEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.now().minusDays(160))
+          withEndDate(LocalDate.now().minusDays(1))
+          withRoom(duplicatedRoom)
+          withCreatedAt { OffsetDateTime.now().minusDays(160) }
+        }
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+          .jsonPath("status").isEqualTo("archived")
+
+        val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.active)
+        assertThat(updatedPremises.startDate).isEqualTo(restartDate)
+        assertThat(updatedPremises.endDate).isNull()
+
+        val allBedspaces = bedRepository.findAll()
+        val updateBedspace = allBedspaces.filter { it.startDate == restartDate }
+        assertThat(updateBedspace).hasSize(4)
+        assertThat(updateBedspace.map { it.id }).contains(duplicatedBedspace.id)
+        assertThat(updateBedspace.map { it.id }).doesNotContain(originalBedspace.id)
       }
     }
 
