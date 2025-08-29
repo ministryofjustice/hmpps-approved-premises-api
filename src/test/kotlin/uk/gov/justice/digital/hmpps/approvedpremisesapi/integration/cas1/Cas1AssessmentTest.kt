@@ -29,6 +29,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCrite
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
@@ -1161,6 +1164,9 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withSubmittedAt(OffsetDateTime.now())
+            withSentenceType(SentenceTypeOption.bailPlacement.name)
+            withReleaseType(ReleaseTypeOption.inCommunity.name)
+            withSituation(SituationOption.bailSentence.name)
           }
 
           val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -1241,6 +1247,9 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           assertThat(placementApplication.placementType).isEqualTo(PlacementType.AUTOMATIC)
           assertThat(placementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
           assertThat(placementApplication.authorisedDuration).isEqualTo(placementDates.duration)
+          assertThat(placementApplication.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement.name)
+          assertThat(placementApplication.releaseType).isEqualTo(ReleaseTypeOption.inCommunity.name)
+          assertThat(placementApplication.situation).isEqualTo(SituationOption.bailSentence.name)
 
           assertThat(placementApplicationPlaceholderRepository.findByApplication(application)!!.archived).isTrue
 
