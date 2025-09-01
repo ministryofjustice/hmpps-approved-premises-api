@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -45,6 +46,7 @@ class OffenderServiceTest {
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val adjudicationsConfigBindingModel = PrisonAdjudicationsConfigBindingModel().apply {
     prisonApiPageSize = 2
@@ -56,18 +58,34 @@ class OffenderServiceTest {
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
     adjudicationsConfigBindingModel,
+    mockFeatureFlagService,
   )
 
   @Test
   fun `getOffenderByCrn returns NotFound result when Client returns 404`() {
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(
+      HttpMethod.GET,
+      "/secure/offenders/crn/a-crn",
+      HttpStatus.NOT_FOUND,
+      null
+    )
 
-    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
+    assertThat(
+      offenderService.getOffenderByCrn(
+        "a-crn",
+        "distinguished.name"
+      ) is AuthorisableActionResult.NotFound
+    ).isTrue
   }
 
   @Test
   fun `getOffenderByCrn throws when Client returns other non-2xx status code except 403`() {
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(
+      HttpMethod.GET,
+      "/secure/offenders/crn/a-crn",
+      HttpStatus.BAD_REQUEST,
+      null
+    )
 
     val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
     assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
@@ -81,7 +99,10 @@ class OffenderServiceTest {
       .withLastName("Doe")
       .produce()
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
 
     val result = offenderService.getOffenderByCrn("a-crn", "distinguished.name")
 
@@ -103,10 +124,24 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
+    every {
+      mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(
+        "distinguished.name",
+        "a-crn"
+      )
+    } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name", ignoreLaoRestrictions = true) is AuthorisableActionResult.Success).isTrue
+    assertThat(
+      offenderService.getOffenderByCrn(
+        "a-crn",
+        "distinguished.name",
+        ignoreLaoRestrictions = true
+      ) is AuthorisableActionResult.Success
+    ).isTrue
   }
 
   @Test
@@ -120,10 +155,23 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
+    every {
+      mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(
+        "distinguished.name",
+        "a-crn"
+      )
+    } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(
+      offenderService.getOffenderByCrn(
+        "a-crn",
+        "distinguished.name"
+      ) is AuthorisableActionResult.Unauthorised
+    ).isTrue
   }
 
   @Test
@@ -137,15 +185,28 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns StatusCode(
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
+    every {
+      mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(
+        "distinguished.name",
+        "a-crn"
+      )
+    } returns StatusCode(
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
       ObjectMapperFactory.createRuntimeLikeObjectMapper().writeValueAsString(accessBody),
     )
 
-    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(
+      offenderService.getOffenderByCrn(
+        "a-crn",
+        "distinguished.name"
+      ) is AuthorisableActionResult.Unauthorised
+    ).isTrue
   }
 
   @Test
@@ -157,8 +218,16 @@ class OffenderServiceTest {
       .withCurrentExclusion(true)
       .produce()
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns StatusCode(
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
+    every {
+      mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(
+        "distinguished.name",
+        "a-crn"
+      )
+    } returns StatusCode(
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
@@ -180,10 +249,23 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = true, userExcluded = false, restrictionMessage = null)
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
+    every {
+      mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(
+        "distinguished.name",
+        "a-crn"
+      )
+    } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
+    assertThat(
+      offenderService.getOffenderByCrn(
+        "a-crn",
+        "distinguished.name"
+      ) is AuthorisableActionResult.Unauthorised
+    ).isTrue
   }
 
   @Test
@@ -197,10 +279,21 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = false, restrictionMessage = null)
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
+    every {
+      mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(
+        "distinguished.name",
+        "a-crn"
+      )
+    } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(
+      HttpStatus.OK,
+      resultBody
+    )
 
     val result = offenderService.getOffenderByCrn("a-crn", "distinguished.name")
 
@@ -424,100 +517,111 @@ class OffenderServiceTest {
     }
   }
 
-  @Test
-  fun `getAdjudicationsByNomsNumber returns NotFound when Adjudications request returns a 404`() {
-    val nomsNumber = "NOMS456"
+  @Nested
+  @Deprecated("Deprecating Prison API.  Superseded by Manage Adjudications API.")
+  inner class PrisonAdjudications {
 
-    every {
-      mockPrisonsApiClient.getAdjudicationsPage(
-        nomsNumber = nomsNumber,
-        pageSize = 2,
-        offset = 0,
+    @Test
+    fun `getAdjudicationsByNomsNumber returns NotFound when Adjudications request returns a 404`() {
+      val nomsNumber = "NOMS456"
+
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 0,
+        )
+      } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
+
+      every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
+
+      assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `getAdjudicationsByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
+      val nomsNumber = "NOMS456"
+
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 0,
+        )
+      } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
+
+      every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
+
+      assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `getAdjudicationsByNomsNumber returns Success, traverses pages from Client`() {
+      val nomsNumber = "NOMS456"
+
+      val adjudicationsPageOne = AdjudicationsPageFactory()
+        .withResults(
+          listOf(
+            AdjudicationFactory().withAgencyId("AGNCY1").produce(),
+            AdjudicationFactory().withAgencyId("AGNCY2").produce(),
+          ),
+        )
+        .withAgencies(
+          listOf(
+            AgencyFactory().withAgencyId("AGNCY1").produce(),
+            AgencyFactory().withAgencyId("AGNCY2").produce(),
+          ),
+        )
+        .produce()
+
+      val adjudicationsPageTwo = AdjudicationsPageFactory()
+        .withResults(
+          listOf(
+            AdjudicationFactory().withAgencyId("AGNCY3").produce(),
+          ),
+        )
+        .withAgencies(
+          listOf(
+            AgencyFactory().withAgencyId("AGNCY3").produce(),
+          ),
+        )
+        .produce()
+
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 0,
+        )
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        adjudicationsPageOne,
       )
-    } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
 
-    assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
-  fun `getAdjudicationsByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
-    val nomsNumber = "NOMS456"
-
-    every {
-      mockPrisonsApiClient.getAdjudicationsPage(
-        nomsNumber = nomsNumber,
-        pageSize = 2,
-        offset = 0,
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 2,
+        )
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        adjudicationsPageTwo,
       )
-    } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
 
-    assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
-  }
+      every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
 
-  @Test
-  fun `getAdjudicationsByNomsNumber returns Success, traverses pages from Client`() {
-    val nomsNumber = "NOMS456"
+      val result = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
 
-    val adjudicationsPageOne = AdjudicationsPageFactory()
-      .withResults(
-        listOf(
-          AdjudicationFactory().withAgencyId("AGNCY1").produce(),
-          AdjudicationFactory().withAgencyId("AGNCY2").produce(),
-        ),
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity.results).containsAll(
+        adjudicationsPageOne.results.plus(adjudicationsPageTwo.results),
       )
-      .withAgencies(
-        listOf(
-          AgencyFactory().withAgencyId("AGNCY1").produce(),
-          AgencyFactory().withAgencyId("AGNCY2").produce(),
-        ),
+      assertThat(result.entity.agencies).containsExactlyInAnyOrder(
+        *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray(),
       )
-      .produce()
-
-    val adjudicationsPageTwo = AdjudicationsPageFactory()
-      .withResults(
-        listOf(
-          AdjudicationFactory().withAgencyId("AGNCY3").produce(),
-        ),
-      )
-      .withAgencies(
-        listOf(
-          AgencyFactory().withAgencyId("AGNCY3").produce(),
-        ),
-      )
-      .produce()
-
-    every {
-      mockPrisonsApiClient.getAdjudicationsPage(
-        nomsNumber = nomsNumber,
-        pageSize = 2,
-        offset = 0,
-      )
-    } returns ClientResult.Success(
-      HttpStatus.OK,
-      adjudicationsPageOne,
-    )
-
-    every {
-      mockPrisonsApiClient.getAdjudicationsPage(
-        nomsNumber = nomsNumber,
-        pageSize = 2,
-        offset = 2,
-      )
-    } returns ClientResult.Success(
-      HttpStatus.OK,
-      adjudicationsPageTwo,
-    )
-
-    val result = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-    assertThat(result.entity.results).containsAll(
-      adjudicationsPageOne.results.plus(adjudicationsPageTwo.results),
-    )
-    assertThat(result.entity.agencies).containsExactlyInAnyOrder(
-      *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray(),
-    )
+    }
   }
 
   @Nested
