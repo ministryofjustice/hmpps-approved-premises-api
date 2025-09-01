@@ -131,7 +131,7 @@ class MappaDetailFactory : Factory<MappaDetail> {
 
 class CaseSummaryFactory : Factory<CaseSummary> {
   var crn: Yielded<String> = { randomStringUpperCase(10) }
-  var nomsId: Yielded<String?> = { randomStringUpperCase(10) }
+  var nomsId: Yielded<String?> = { null }
   var pnc: Yielded<String?> = { randomStringUpperCase(10) }
   var name: Yielded<Name> = { NameFactory().produce() }
   var dateOfBirth: Yielded<LocalDate> = { LocalDate.now() }
