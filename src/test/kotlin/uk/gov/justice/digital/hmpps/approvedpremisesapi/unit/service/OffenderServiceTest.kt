@@ -625,6 +625,112 @@ class OffenderServiceTest {
   }
 
   @Nested
+  inner class Adjudications {
+
+    @Test
+    fun `getAdjudicationsByNomsNumber returns NotFound when Adjudications request returns a 404`() {
+      val nomsNumber = "NOMS456"
+
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 0,
+        )
+      } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
+
+      every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns true
+
+      assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `getAdjudicationsByNomsNumber returns Unauthorised when Case Notes request returns a 403`() {
+      val nomsNumber = "NOMS456"
+
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 0,
+        )
+      } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
+
+      every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns true
+
+      assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `getAdjudicationsByNomsNumber returns Success, traverses pages from Client`() {
+      val nomsNumber = "NOMS456"
+
+      val adjudicationsPageOne = AdjudicationsPageFactory()
+        .withResults(
+          listOf(
+            AdjudicationFactory().withAgencyId("AGNCY1").produce(),
+            AdjudicationFactory().withAgencyId("AGNCY2").produce(),
+          ),
+        )
+        .withAgencies(
+          listOf(
+            AgencyFactory().withAgencyId("AGNCY1").produce(),
+            AgencyFactory().withAgencyId("AGNCY2").produce(),
+          ),
+        )
+        .produce()
+
+      val adjudicationsPageTwo = AdjudicationsPageFactory()
+        .withResults(
+          listOf(
+            AdjudicationFactory().withAgencyId("AGNCY3").produce(),
+          ),
+        )
+        .withAgencies(
+          listOf(
+            AgencyFactory().withAgencyId("AGNCY3").produce(),
+          ),
+        )
+        .produce()
+
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 0,
+        )
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        adjudicationsPageOne,
+      )
+
+      every {
+        mockPrisonsApiClient.getAdjudicationsPage(
+          nomsNumber = nomsNumber,
+          pageSize = 2,
+          offset = 2,
+        )
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        adjudicationsPageTwo,
+      )
+
+      every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns true
+
+      val result = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity.results).containsAll(
+        adjudicationsPageOne.results.plus(adjudicationsPageTwo.results),
+      )
+      assertThat(result.entity.agencies).containsExactlyInAnyOrder(
+        *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray(),
+      )
+    }
+  }
+
+  @Nested
   inner class IsLao {
 
     @Test
