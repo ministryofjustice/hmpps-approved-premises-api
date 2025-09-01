@@ -33,6 +33,7 @@ class OffenderService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
+  private val featureFlagService: FeatureFlagService,
 ) {
   companion object {
     const val MAX_OFFENDER_REQUEST_COUNT = 500
@@ -295,6 +296,18 @@ class OffenderService(
   }
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
+    val useManageAdjudicationsApi = featureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED")
+    if (useManageAdjudicationsApi) {
+      log.info("Using Manage Adjudications API to fetch adjudications")
+      return getPrisonAdjudicationsByNomsNumber(nomsNumber)
+    }
+    else {
+      log.info("Using Prison API to fetch adjudications")
+      return getPrisonAdjudicationsByNomsNumber(nomsNumber)
+    }
+  }
+
+  fun getPrisonAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
     val allAdjudications = mutableListOf<Adjudication>()
     val allAgencies = mutableListOf<Agency>()
 
