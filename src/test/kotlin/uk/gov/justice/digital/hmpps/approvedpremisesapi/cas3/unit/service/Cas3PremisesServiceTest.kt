@@ -1398,8 +1398,7 @@ class Cas3PremisesServiceTest {
 
       updatedRoom.beds.add(updatedBedspace)
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
-      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { characteristicServiceMock.getCharacteristic(any()) } answers {
         val characteristicId = it.invocation.args[0] as UUID
         updateBedspaceCharacteristic.firstOrNull { it.id == characteristicId }
@@ -1423,7 +1422,7 @@ class Cas3PremisesServiceTest {
       val (premises, _) = createPremisesAndBedspace()
       val nonExistingBedspaceId = UUID.randomUUID()
 
-      every { bedRepositoryMock.findByIdOrNull(nonExistingBedspaceId) } returns null
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, nonExistingBedspaceId) } returns null
 
       val result = premisesService.updateBedspace(premises, nonExistingBedspaceId, randomStringMultiCaseWithNumbers(10), randomStringMultiCaseWithNumbers(100), emptyList())
 
@@ -1435,20 +1434,18 @@ class Cas3PremisesServiceTest {
       val anotherPremises = temporaryAccommodationPremisesFactory.produce()
       val (_, bedspace) = createPremisesAndBedspace()
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
-      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { bedRepositoryMock.findCas3Bedspace(anotherPremises.id, bedspace.id) } returns null
 
       val result = premisesService.updateBedspace(anotherPremises, bedspace.id, randomStringMultiCaseWithNumbers(10), randomStringMultiCaseWithNumbers(100), emptyList())
 
-      assertThatCasResult(result).isGeneralValidationError("The bedspace does not belong to the specified premises.")
+      assertThatCasResult(result).isNotFound("Bedspace", bedspace.id)
     }
 
     @Test
     fun `When update a bedspace with an empty bedspace reference returns FieldValidationError with the correct message`() {
       val (premises, bedspace) = createPremisesAndBedspace()
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
-      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
 
       val result = premisesService.updateBedspace(premises, bedspace.id, "", randomStringMultiCaseWithNumbers(100), emptyList())
 
@@ -1465,8 +1462,7 @@ class Cas3PremisesServiceTest {
         .withServiceScope(ServiceName.temporaryAccommodation.value)
         .produce()
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
-      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
       every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns false
 
@@ -1485,8 +1481,7 @@ class Cas3PremisesServiceTest {
         .withServiceScope(ServiceName.approvedPremises.value)
         .produce()
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
-      every { roomRepositoryMock.findByIdOrNull(bedspace.room.id) } returns bedspace.room
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { characteristicServiceMock.getCharacteristic(premisesCharacteristic.id) } returns premisesCharacteristic
       every { characteristicServiceMock.modelScopeMatches(premisesCharacteristic, any()) } returns true
       every { characteristicServiceMock.serviceScopeMatches(premisesCharacteristic, any()) } returns false
@@ -1500,7 +1495,7 @@ class Cas3PremisesServiceTest {
     fun `When update a bedspace with reference less than 3 characters returns FieldValidationError with the correct message`() {
       val (premises, bedspace) = createPremisesAndBedspace()
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
 
       val result = premisesService.updateBedspace(premises, bedspace.id, "AB", null, emptyList())
 
@@ -1511,7 +1506,7 @@ class Cas3PremisesServiceTest {
     fun `When update a bedspace with reference containing only special characters returns FieldValidationError with the correct message`() {
       val (premises, bedspace) = createPremisesAndBedspace()
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
 
       val result = premisesService.updateBedspace(premises, bedspace.id, "!@#$%", null, emptyList())
 
@@ -1529,7 +1524,7 @@ class Cas3PremisesServiceTest {
 
       premises.rooms.add(existingRoom)
 
-      every { bedRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
+      every { bedRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
 
       val result = premisesService.updateBedspace(premises, bedspace.id, "existing_ref", null, emptyList())
 
@@ -2571,6 +2566,7 @@ class Cas3PremisesServiceTest {
       val archiveDate = LocalDate.now().plusDays(3)
 
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+      every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns allBedspaces
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, LocalDate.now()) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
@@ -2624,6 +2620,7 @@ class Cas3PremisesServiceTest {
       val archiveDate = LocalDate.now().plusDays(3)
 
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+      every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspaceOne, bedspaceThree)
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, LocalDate.now()) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
@@ -2713,11 +2710,12 @@ class Cas3PremisesServiceTest {
 
     @Test
     fun `When archive a premises with an upcoming bedspace returns Cas3FieldValidationError with the correct message`() {
-      val (premises, _) = createPremisesAndBedspace()
+      val (premises, bedspace) = createPremisesAndBedspace()
       val archiveDate = LocalDate.now().plusDays(5)
       val bedspaceTwo = createBedspace(premises, archiveDate.plusDays(2))
 
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+      every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspace, bedspaceTwo)
 
       val result = premisesService.archivePremises(premises, archiveDate)
 
@@ -2737,6 +2735,7 @@ class Cas3PremisesServiceTest {
         .produce()
 
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+      every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspace)
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, LocalDate.now()) } returns listOf()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns listOf(voidBedspace)
 
@@ -2766,6 +2765,7 @@ class Cas3PremisesServiceTest {
         .produce()
 
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+      every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspaceOne, bedspaceTwo)
       every { bookingRepositoryMock.findActiveOverlappingBookingByPremisesId(premises.id, LocalDate.now()) } returns listOf(booking)
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns listOf(voidBedspace)
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate
@@ -2795,20 +2795,17 @@ class Cas3PremisesServiceTest {
         .withProbationRegion(probationRegion)
         .produce()
 
-      val premises = temporaryAccommodationPremisesFactory
-        .withService(ServiceName.temporaryAccommodation.value)
-        .withProbationRegion(probationRegion)
-        .withProbationDeliveryUnit(probationDeliveryUnit)
-        .withLocalAuthorityArea(localAuthority)
-        .produce()
+      val (premises, bedspace) = createPremisesAndBedspace()
 
       val booking = bookingEntityFactory
         .withPremises(premises)
+        .withBed(bedspace)
         .withStatus(bookingStatus)
         .withArrivalDate(LocalDate.now().plusDays(3))
         .produce()
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
+      every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspace)
       every { localAuthorityAreaRepositoryMock.findByIdOrNull(premises.localAuthorityArea!!.id) } returns localAuthority
       every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
       every {

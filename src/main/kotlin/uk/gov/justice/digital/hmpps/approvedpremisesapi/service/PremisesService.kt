@@ -4,6 +4,7 @@ import arrow.core.Either
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
@@ -167,7 +168,7 @@ class PremisesService(
       if (entity == null) {
         "$.characteristics[$index]" hasValidationError "doesNotExist"
       } else {
-        if (!characteristicService.modelScopeMatches(entity, premises)) {
+        if (!characteristicService.modelScopeMatches(entity, Characteristic.ModelScope.premises)) {
           "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
         }
         if (!characteristicService.serviceScopeMatches(entity, premises)) {
@@ -230,7 +231,7 @@ class PremisesService(
       if (entity == null) {
         validationErrors["$.characteristics[$index]"] = "doesNotExist"
       } else {
-        if (!characteristicService.modelScopeMatches(entity, premises)) {
+        if (!characteristicService.modelScopeMatches(entity, Characteristic.ModelScope.premises)) {
           validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicModelScope"
         }
         if (!characteristicService.serviceScopeMatches(entity, premises)) {
