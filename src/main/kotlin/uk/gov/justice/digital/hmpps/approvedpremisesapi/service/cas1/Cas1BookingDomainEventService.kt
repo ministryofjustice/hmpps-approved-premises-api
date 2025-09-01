@@ -20,10 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -71,26 +69,6 @@ class Cas1BookingDomainEventService(
       situation = application.situation,
       placementRequestId = placementRequest.id,
       transferredFrom = cas1BookingCreatedEvent.transferredFrom,
-    )
-  }
-
-  fun bookingMade(
-    application: ApprovedPremisesApplicationEntity,
-    booking: BookingEntity,
-    user: UserEntity,
-    placementRequest: PlacementRequestEntity,
-  ) {
-    bookingMade(
-      applicationId = application.id,
-      eventNumber = application.eventNumber,
-      bookingInfo = booking.toBookingInfo(),
-      user = user,
-      applicationSubmittedOn = application.submittedAt,
-      releaseType = application.releaseType,
-      sentenceType = application.sentenceType,
-      situation = application.situation,
-      placementRequestId = placementRequest.id,
-      transferredFrom = null,
     )
   }
 
@@ -162,28 +140,6 @@ class Cas1BookingDomainEventService(
       characteristics = bookingChanged.booking.criteria.toSpaceCharacteristics(),
       previousCharacteristics = bookingChanged.previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
       transferredTo = bookingChanged.transferredTo,
-    ),
-  )
-
-  fun bookingChanged(
-    booking: BookingEntity,
-    changedBy: UserEntity,
-    bookingChangedAt: OffsetDateTime,
-    previousArrivalDateIfChanged: LocalDate?,
-    previousDepartureDateIfChanged: LocalDate?,
-  ) = bookingChanged(
-    BookingChangedInfo(
-      bookingId = booking.id,
-      crn = booking.crn,
-      arrivalDate = booking.arrivalDate,
-      departureDate = booking.departureDate,
-      applicationFacade = booking.cas1ApplicationFacade,
-      approvedPremises = booking.premises as ApprovedPremisesEntity,
-      changedAt = bookingChangedAt,
-      changedBy = changedBy,
-      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
-      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
-      isSpaceBooking = false,
     ),
   )
 
@@ -260,26 +216,6 @@ class Cas1BookingDomainEventService(
       ),
     )
   }
-
-  @Deprecated("This can be removed")
-  fun bookingCancelled(
-    booking: BookingEntity,
-    user: UserEntity,
-    cancellation: CancellationEntity,
-    reason: CancellationReasonEntity,
-  ) = bookingCancelled(
-    CancellationInfo(
-      bookingId = booking.id,
-      applicationFacade = booking.cas1ApplicationFacade,
-      cancellationId = cancellation.id,
-      crn = booking.crn,
-      cancelledAt = cancellation.date,
-      reason = reason,
-      cancelledBy = user,
-      premises = booking.premises as ApprovedPremisesEntity,
-      isSpaceBooking = false,
-    ),
-  )
 
   fun spaceBookingCancelled(bookingCancelled: Cas1BookingCancelledEvent) = bookingCancelled(
     CancellationInfo(
