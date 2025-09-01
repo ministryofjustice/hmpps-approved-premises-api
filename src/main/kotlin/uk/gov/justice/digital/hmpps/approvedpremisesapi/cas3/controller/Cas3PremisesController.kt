@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Pre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -78,288 +79,13 @@ class Cas3PremisesController(
   private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
   private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
 ) {
-  @PostMapping(
-    "/premises",
-    consumes = [MediaType.APPLICATION_JSON_VALUE],
-  )
-  fun createPremises(@RequestBody body: Cas3NewPremises): ResponseEntity<Cas3Premises> {
-    if (!userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, body.probationRegionId)) {
-      throw ForbiddenProblem()
-    }
-
-    val premises = extractEntityFromCasResult(
-      cas3PremisesService.createNewPremises(
-        reference = body.reference,
-        addressLine1 = body.addressLine1,
-        addressLine2 = body.addressLine2,
-        town = body.town,
-        postcode = body.postcode,
-        localAuthorityAreaId = body.localAuthorityAreaId,
-        probationRegionId = body.probationRegionId,
-        probationDeliveryUnitId = body.probationDeliveryUnitId,
-        characteristicIds = body.characteristicIds,
-        notes = body.notes,
-        turnaroundWorkingDays = body.turnaroundWorkingDays,
-      ),
-    )
-
-    return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises), HttpStatus.CREATED)
-  }
-
-  @Transactional
-  @PutMapping("/premises/{premisesId}")
-  fun updatePremises(@PathVariable premisesId: UUID, @RequestBody body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
-    val premises = cas3PremisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    return cas3PremisesService.updatePremises(
-      premises = premises,
-      addressLine1 = body.addressLine1,
-      addressLine2 = body.addressLine2,
-      town = body.town,
-      postcode = body.postcode,
-      localAuthorityAreaId = body.localAuthorityAreaId,
-      probationRegionId = body.probationRegionId,
-      characteristicIds = body.characteristicIds,
-      notes = body.notes,
-      probationDeliveryUnitId = body.probationDeliveryUnitId,
-      turnaroundWorkingDays = body.turnaroundWorkingDayCount,
-      reference = body.reference,
-    )
-      .let { extractEntityFromCasResult(it) }
-      .let { cas3PremisesTransformer.transformDomainToApi(it) }
-      .let { ResponseEntity.ok(it) }
-  }
-
   @GetMapping("/premises/{premisesId}")
   fun getPremisesById(@PathVariable premisesId: UUID): ResponseEntity<Cas3Premises> {
-    val premises = cas3PremisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
+    val premises = getAndCheckUserCanViewPremises(premisesId)
 
     val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises))
 
     return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory))
-  }
-
-  @GetMapping("/premises/{premisesId}/can-archive")
-  fun canArchivePremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3ValidationResults> {
-    val premises = cas3PremisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val result = cas3PremisesService.canArchivePremisesInFuture(premisesId)
-
-    return ResponseEntity.ok(result)
-  }
-
-  @GetMapping("/premises/{premisesId}/bedspace-totals")
-  fun getPremisesBedspaceTotals(@PathVariable premisesId: UUID): ResponseEntity<Cas3PremisesBedspaceTotals> {
-    val premises = cas3PremisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-
-    val result = Cas3PremisesBedspaceTotals(
-      id = premises.id,
-      status = if (premises.status == PropertyStatus.active) Cas3PremisesStatus.online else Cas3PremisesStatus.archived,
-      premisesEndDate = premises.endDate,
-      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
-      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
-      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
-    )
-
-    return ResponseEntity.ok(result)
-  }
-
-  @GetMapping("/premises/{premisesId}/bedspaces")
-  fun getPremisesBedspaces(@PathVariable premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val bedspaces = cas3PremisesService.getPremisesBedspaces(premises.id)
-    val bedspacesArchiveHistory = cas3PremisesService.getBedspacesArchiveHistory(bedspaces.map { it.id })
-
-    val result = Cas3Bedspaces(
-      bedspaces = bedspaces.map { bedspace ->
-        val archiveHistory = bedspacesArchiveHistory
-          .firstOrNull { bedspaceArchiveHistory -> bedspaceArchiveHistory.bedspaceId == bedspace.id }
-          ?.actions ?: emptyList()
-        cas3BedspaceTransformer.transformJpaToApi(bedspace, archiveHistory)
-      },
-      totalOnlineBedspaces = bedspaces.count { it.isCas3BedspaceOnline() },
-      totalUpcomingBedspaces = bedspaces.count { it.isCas3BedspaceUpcoming() },
-      totalArchivedBedspaces = bedspaces.count { it.isCas3BedspaceArchived() },
-    )
-
-    return ResponseEntity.ok(result)
-  }
-
-  @Transactional
-  @PostMapping("/premises/{premisesId}/archive")
-  fun archivePremises(
-    @PathVariable premisesId: UUID,
-    @RequestBody body: Cas3ArchivePremises,
-  ): ResponseEntity<Cas3Premises> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val archivedPremises = extractEntityFromCasResult(
-      cas3PremisesService.archivePremises(premises, body.endDate),
-    )
-
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(archivedPremises))
-  }
-
-  @Transactional
-  @PostMapping("/premises/{premisesId}/unarchive")
-  fun unarchivePremises(
-    @PathVariable premisesId: UUID,
-    @RequestBody body: Cas3UnarchivePremises,
-  ): ResponseEntity<Cas3Premises> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val unarchivedPremises = extractEntityFromCasResult(
-      cas3PremisesService.unarchivePremises(premises, body.restartDate),
-    )
-
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(unarchivedPremises))
-  }
-
-  @Suppress("ThrowsCount")
-  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
-  fun getPremisesBedspace(
-    @PathVariable premisesId: UUID,
-    @PathVariable bedspaceId: UUID,
-  ): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val bedspace = extractEntityFromCasResult(cas3PremisesService.getBedspace(premises.id, bedspaceId))
-    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getBedspaceArchiveHistory(bedspaceId))
-
-    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, archiveHistory))
-  }
-
-  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/can-archive")
-  fun canArchiveBedspace(
-    @PathVariable premisesId: UUID,
-    @PathVariable bedspaceId: UUID,
-  ): ResponseEntity<Cas3ValidationResult?> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val result = extractEntityFromCasResult(cas3PremisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId))
-
-    return ResponseEntity.ok(result)
-  }
-
-  @PostMapping("/premises/{premisesId}/bedspaces")
-  fun createBedspace(
-    @PathVariable premisesId: UUID,
-    @RequestBody newBedspace: Cas3NewBedspace,
-  ): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val bedspace = extractEntityFromCasResult(
-      cas3PremisesService.createBedspace(premises, newBedspace.reference, newBedspace.startDate, newBedspace.notes, newBedspace.characteristicIds),
-    )
-
-    return ResponseEntity(cas3BedspaceTransformer.transformJpaToApi(bedspace), HttpStatus.CREATED)
-  }
-
-  @Transactional
-  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
-  fun updateBedspace(
-    @PathVariable premisesId: UUID,
-    @PathVariable bedspaceId: UUID,
-    @RequestBody updateBedspace: Cas3UpdateBedspace,
-  ): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val updatedBedspace = extractEntityFromCasResult(
-      cas3PremisesService.updateBedspace(premises, bedspaceId, updateBedspace.reference, updateBedspace.notes, updateBedspace.characteristicIds),
-    )
-
-    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(updatedBedspace))
-  }
-
-  @Transactional
-  @PostMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/archive")
-  fun archiveBedspace(
-    @PathVariable premisesId: UUID,
-    @PathVariable bedspaceId: UUID,
-    @RequestBody body: Cas3ArchiveBedspace,
-  ): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val archivedBedspace = extractEntityFromCasResult(
-      cas3PremisesService.archiveBedspace(bedspaceId, premises, body.endDate),
-    )
-
-    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(archivedBedspace))
-  }
-
-  @Transactional
-  @PostMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/unarchive")
-  fun unarchiveBedspace(
-    @PathVariable premisesId: UUID,
-    @PathVariable bedspaceId: UUID,
-    @RequestBody body: Cas3UnarchiveBedspace,
-  ): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val unarchivedBedspace = extractEntityFromCasResult(
-      cas3PremisesService.unarchiveBedspace(premises, bedspaceId, body.restartDate),
-    )
-
-    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(unarchivedBedspace))
   }
 
   @GetMapping("/premises/summary")
@@ -401,6 +127,277 @@ class Cas3PremisesController(
     )
 
     return ResponseEntity.ok(sortedResults)
+  }
+
+  @Suppress("ThrowsCount")
+  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
+  fun getPremisesBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val bedspace = extractEntityFromCasResult(cas3PremisesService.getBedspace(premises.id, bedspaceId))
+    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getBedspaceArchiveHistory(bedspaceId))
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, archiveHistory))
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspaces")
+  fun getPremisesBedspaces(@PathVariable premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val bedspaces = cas3PremisesService.getPremisesBedspaces(premises.id)
+    val bedspacesArchiveHistory = cas3PremisesService.getBedspacesArchiveHistory(bedspaces.map { it.id })
+
+    val result = Cas3Bedspaces(
+      bedspaces = bedspaces.map { bedspace ->
+        val archiveHistory = bedspacesArchiveHistory
+          .firstOrNull { bedspaceArchiveHistory -> bedspaceArchiveHistory.bedspaceId == bedspace.id }
+          ?.actions ?: emptyList()
+        cas3BedspaceTransformer.transformJpaToApi(bedspace, archiveHistory)
+      },
+      totalOnlineBedspaces = bedspaces.count { it.isCas3BedspaceOnline() },
+      totalUpcomingBedspaces = bedspaces.count { it.isCas3BedspaceUpcoming() },
+      totalArchivedBedspaces = bedspaces.count { it.isCas3BedspaceArchived() },
+    )
+
+    return ResponseEntity.ok(result)
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspace-totals")
+  fun getPremisesBedspaceTotals(@PathVariable premisesId: UUID): ResponseEntity<Cas3PremisesBedspaceTotals> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val totalBedspaceByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
+
+    val result = Cas3PremisesBedspaceTotals(
+      id = premises.id,
+      status = if (premises.status == PropertyStatus.active) Cas3PremisesStatus.online else Cas3PremisesStatus.archived,
+      premisesEndDate = premises.endDate,
+      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
+      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
+      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+    )
+
+    return ResponseEntity.ok(result)
+  }
+
+  @PostMapping(
+    "/premises",
+    consumes = [MediaType.APPLICATION_JSON_VALUE],
+  )
+  fun createPremises(@RequestBody body: Cas3NewPremises): ResponseEntity<Cas3Premises> {
+    if (!userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, body.probationRegionId)) {
+      throw ForbiddenProblem()
+    }
+
+    val premises = extractEntityFromCasResult(
+      cas3PremisesService.createNewPremises(
+        reference = body.reference,
+        addressLine1 = body.addressLine1,
+        addressLine2 = body.addressLine2,
+        town = body.town,
+        postcode = body.postcode,
+        localAuthorityAreaId = body.localAuthorityAreaId,
+        probationRegionId = body.probationRegionId,
+        probationDeliveryUnitId = body.probationDeliveryUnitId,
+        characteristicIds = body.characteristicIds,
+        notes = body.notes,
+        turnaroundWorkingDays = body.turnaroundWorkingDays,
+      ),
+    )
+
+    return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises), HttpStatus.CREATED)
+  }
+
+  @Transactional
+  @PutMapping("/premises/{premisesId}")
+  fun updatePremises(@PathVariable premisesId: UUID, @RequestBody body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    return cas3PremisesService.updatePremises(
+      premises = premises,
+      addressLine1 = body.addressLine1,
+      addressLine2 = body.addressLine2,
+      town = body.town,
+      postcode = body.postcode,
+      localAuthorityAreaId = body.localAuthorityAreaId,
+      probationRegionId = body.probationRegionId,
+      characteristicIds = body.characteristicIds,
+      notes = body.notes,
+      probationDeliveryUnitId = body.probationDeliveryUnitId,
+      turnaroundWorkingDays = body.turnaroundWorkingDayCount,
+      reference = body.reference,
+    )
+      .let { extractEntityFromCasResult(it) }
+      .let { cas3PremisesTransformer.transformDomainToApi(it) }
+      .let { ResponseEntity.ok(it) }
+  }
+
+  @PostMapping("/premises/{premisesId}/bedspaces")
+  fun createBedspace(
+    @PathVariable premisesId: UUID,
+    @RequestBody newBedspace: Cas3NewBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val bedspace = extractEntityFromCasResult(
+      cas3PremisesService.createBedspace(premises, newBedspace.reference, newBedspace.startDate, newBedspace.notes, newBedspace.characteristicIds),
+    )
+
+    return ResponseEntity(cas3BedspaceTransformer.transformJpaToApi(bedspace), HttpStatus.CREATED)
+  }
+
+  @Transactional
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
+  fun updateBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @RequestBody updateBedspace: Cas3UpdateBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val updatedBedspace = extractEntityFromCasResult(
+      cas3PremisesService.updateBedspace(premises, bedspaceId, updateBedspace.reference, updateBedspace.notes, updateBedspace.characteristicIds),
+    )
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(updatedBedspace))
+  }
+
+  @GetMapping("/premises/{premisesId}/can-archive")
+  fun canArchivePremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3ValidationResults> {
+    getAndCheckUserCanViewPremises(premisesId)
+
+    val result = cas3PremisesService.canArchivePremisesInFuture(premisesId)
+
+    return ResponseEntity.ok(result)
+  }
+
+  @Transactional
+  @PostMapping("/premises/{premisesId}/archive")
+  fun archivePremises(
+    @PathVariable premisesId: UUID,
+    @RequestBody body: Cas3ArchivePremises,
+  ): ResponseEntity<Cas3Premises> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val archivedPremises = extractEntityFromCasResult(
+      cas3PremisesService.archivePremises(premises, body.endDate),
+    )
+
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(archivedPremises))
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/can-archive")
+  fun canArchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3ValidationResult?> {
+    getAndCheckUserCanViewPremises(premisesId)
+
+    val result = extractEntityFromCasResult(
+      cas3PremisesService.canArchiveBedspaceInFuture(premisesId, bedspaceId),
+    )
+
+    return ResponseEntity.ok(result)
+  }
+
+  @Transactional
+  @PostMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/archive")
+  fun archiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @RequestBody body: Cas3ArchiveBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val archivedBedspace = extractEntityFromCasResult(
+      cas3PremisesService.archiveBedspace(bedspaceId, premises, body.endDate),
+    )
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(archivedBedspace))
+  }
+
+  @Transactional
+  @PostMapping("/premises/{premisesId}/unarchive")
+  fun unarchivePremises(
+    @PathVariable premisesId: UUID,
+    @RequestBody body: Cas3UnarchivePremises,
+  ): ResponseEntity<Cas3Premises> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val unarchivedPremises = extractEntityFromCasResult(
+      cas3PremisesService.unarchivePremises(premises, body.restartDate),
+    )
+
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(unarchivedPremises))
+  }
+
+  @Transactional
+  @PostMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/unarchive")
+  fun unarchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @RequestBody body: Cas3UnarchiveBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val unarchivedBedspace = extractEntityFromCasResult(
+      cas3PremisesService.unarchiveBedspace(premises, bedspaceId, body.restartDate),
+    )
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(unarchivedBedspace))
+  }
+
+  @PutMapping("/premises/{premisesId}/cancel-archive")
+  fun cancelScheduledArchivePremises(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<Cas3Premises> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val updatedPremises = extractEntityFromCasResult(
+      cas3PremisesService.cancelScheduledArchivePremises(premisesId),
+    )
+
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(updatedPremises))
+  }
+
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-archive")
+  fun cancelScheduledArchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val result = extractEntityFromCasResult(
+      cas3PremisesService.cancelScheduledArchiveBedspace(premises, bedspaceId),
+    )
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(result))
+  }
+
+  @PutMapping("/premises/{premisesId}/cancel-unarchive")
+  fun cancelScheduledUnarchivePremises(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<Cas3Premises> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+
+    val updatedPremises = extractEntityFromCasResult(
+      cas3PremisesService.cancelScheduledUnarchivePremises(premisesId),
+    )
+
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(updatedPremises))
+  }
+
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-unarchive")
+  fun cancelScheduledUnarchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    getAndCheckUserCanViewPremises(premisesId)
+
+    val result = extractEntityFromCasResult(
+      cas3PremisesService.cancelScheduledUnarchiveBedspace(bedspaceId),
+    )
+
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(result))
   }
 
   @PostMapping("/premises/{premisesId}/bookings/{bookingId}/arrivals")
@@ -482,84 +479,6 @@ class Cas3PremisesController(
     )
   }
 
-  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-unarchive")
-  fun cancelUnarchiveBedspace(
-    @PathVariable premisesId: UUID,
-    @PathVariable bedspaceId: UUID,
-  ): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val result = extractEntityFromCasResult(
-      cas3PremisesService.cancelScheduledUnarchiveBedspace(bedspaceId),
-    )
-
-    return ResponseEntity.ok(
-      cas3BedspaceTransformer.transformJpaToApi(result),
-    )
-  }
-
-  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-archive")
-  fun cancelArchiveBedspace(
-    @PathVariable premisesId: UUID,
-    @PathVariable bedspaceId: UUID,
-  ): ResponseEntity<Cas3Bedspace> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val result = extractEntityFromCasResult(
-      cas3PremisesService.cancelScheduledArchiveBedspace(premises, bedspaceId),
-    )
-
-    return ResponseEntity.ok(
-      cas3BedspaceTransformer.transformJpaToApi(result),
-    )
-  }
-
-  @PutMapping("/premises/{premisesId}/cancel-archive")
-  fun cancelScheduledArchivePremises(
-    @PathVariable premisesId: UUID,
-  ): ResponseEntity<Cas3Premises> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val updatedPremises = extractEntityFromCasResult(
-      cas3PremisesService.cancelScheduledArchivePremises(premisesId),
-    )
-
-    return ResponseEntity.ok(
-      cas3PremisesTransformer.transformDomainToApi(updatedPremises),
-    )
-  }
-
-  @PutMapping("/premises/{premisesId}/cancel-unarchive")
-  fun cancelUnarchivePremises(
-    @PathVariable premisesId: UUID,
-  ): ResponseEntity<Cas3Premises> {
-    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val updatedPremises = extractEntityFromCasResult(
-      cas3PremisesService.cancelScheduledUnarchivePremises(premisesId),
-    )
-
-    return ResponseEntity.ok(
-      cas3PremisesTransformer.transformDomainToApi(updatedPremises),
-    )
-  }
-
   private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): BookingEntity {
     val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
@@ -595,6 +514,16 @@ class Cas3PremisesController(
         "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
       )
     }
+  }
+
+  private fun getAndCheckUserCanViewPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity {
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    return premises
   }
 
   private fun isBedspaceStatusOnlineOrUpcoming(premisesSummary: TemporaryAccommodationPremisesSummary) = premisesSummary.bedspaceId != null &&

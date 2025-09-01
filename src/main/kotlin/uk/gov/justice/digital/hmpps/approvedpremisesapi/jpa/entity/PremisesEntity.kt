@@ -370,6 +370,7 @@ class TemporaryAccommodationPremisesEntity(
   status,
 ) {
   fun isPremisesArchived(): Boolean = endDate != null && endDate!! <= LocalDate.now()
+  fun isPremisesScheduledToArchive(): Boolean = status == PropertyStatus.archived && endDate != null && endDate!! > LocalDate.now()
 }
 
 interface TemporaryAccommodationPremisesSummary {
