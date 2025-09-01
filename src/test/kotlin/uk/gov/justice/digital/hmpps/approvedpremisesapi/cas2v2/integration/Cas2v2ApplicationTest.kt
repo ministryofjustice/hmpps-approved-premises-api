@@ -1399,6 +1399,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       apDeliusContextAddSingleCaseSummaryToBulkResponse(
         caseSummary = CaseSummaryFactory()
           .withCrn(crn)
+          .withNomsId(null)
           .produce(),
       )
       givenACas2v2NomisUser { _, jwt ->
