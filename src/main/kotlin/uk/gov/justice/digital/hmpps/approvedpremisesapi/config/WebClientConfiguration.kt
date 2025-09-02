@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
-import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
@@ -36,7 +35,7 @@ class WebClientConfiguration(
 
   @Bean
   fun authorizedClientManager(clients: ClientRegistrationRepository): OAuth2AuthorizedClientManager {
-    val service: OAuth2AuthorizedClientService = InMemoryOAuth2AuthorizedClientService(clients)
+    val service: OAuth2AuthorizedClientService = ClientCachingOAuth2AuthorizedClientService(clients)
     val manager = AuthorizedClientServiceOAuth2AuthorizedClientManager(clients, service)
     val authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder.builder()
       .clientCredentials()
