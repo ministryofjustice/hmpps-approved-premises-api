@@ -126,6 +126,7 @@ class Cas2ApplicationsSeedJob(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
+        applicationOrigin = application.applicationOrigin,
       ),
     )
     application.assessment = assessment

@@ -139,6 +139,9 @@ class SubjectAccessRequestService(
     val statusUpdateDetailsJson =
       cas2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
     val assessmentsJson = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
+
+    // TODO besscerule - this uses the general domainEvents func and uses the users table instead of cas2 users is this ok?
+    // Maybe we should repurpose the deleted Cas2v2 one?
     val domainEventsJson = cas2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2")
     val domainEventsMetaDataJson =
       cas2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2")

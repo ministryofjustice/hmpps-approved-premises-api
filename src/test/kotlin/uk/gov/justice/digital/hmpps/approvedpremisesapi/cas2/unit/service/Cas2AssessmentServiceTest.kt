@@ -40,6 +40,7 @@ class Cas2AssessmentServiceTest {
         id = UUID.randomUUID(),
         application = application,
         createdAt = OffsetDateTime.now(),
+        applicationOrigin = application.applicationOrigin,
       )
 
       every { mockAssessmentRepository.save(any()) } answers
@@ -75,6 +76,7 @@ class Cas2AssessmentServiceTest {
         id = assessmentId,
         application = application,
         createdAt = OffsetDateTime.now(),
+        applicationOrigin = application.applicationOrigin,
       )
 
       val newAssessmentData = UpdateCas2Assessment(
