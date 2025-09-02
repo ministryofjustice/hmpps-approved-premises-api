@@ -7,8 +7,6 @@ import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
@@ -36,6 +34,7 @@ class Cas2v2DomainEventListener(
     }
   }
 
+  @Suppress("ThrowsCount", "NestedBlockDepth")
   private fun handleEvent(event: HmppsDomainEvent) {
     when (event.eventType) {
       "probation-case.prison-identifier.added", "probation-case.prison-identifier.updated" -> {
