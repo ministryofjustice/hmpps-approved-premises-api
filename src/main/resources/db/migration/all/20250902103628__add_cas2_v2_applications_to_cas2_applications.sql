@@ -1,14 +1,31 @@
-ALTER TABLE cas_2_application_assignments
-    ADD CONSTRAINT cas_2_application_assignments_allocated_pom_user_id_cas_2_fkey
-        FOREIGN KEY (allocated_pom_user_id) REFERENCES cas_2_users(id);
-
-ALTER TABLE cas_2_application_assignments DROP constraint IF EXISTS cas_2_application_assignments_allocated_pom_user_id_fkey;
+ALTER TABLE cas_2_applications DROP COLUMN created_by_cas2_user_id CASCADE;
 
 ALTER TABLE cas_2_applications DROP CONSTRAINT IF EXISTS cas2_apps_nomis_user_id_fk;
 
 ALTER TABLE cas_2_applications
     ADD CONSTRAINT cas2_apps_cas2_user_id_fk
         FOREIGN KEY (created_by_user_id) REFERENCES cas_2_users(id);
+
+INSERT INTO cas_2_applications as a2
+SELECT
+    a2v2.id,
+    a2v2.created_by_user_id,
+    a2v2.crn,
+    a2v2.data,
+    a2v2.schema_version,
+    a2v2.created_at,
+    a2v2.submitted_at,
+    a2v2.document,
+    a2v2.noms_number,
+    a2v2.referring_prison_code,
+    a2v2.preferred_areas,
+    a2v2.hdc_eligibility_date,
+    a2v2.conditional_release_date,
+    a2v2.telephone_number,
+    a2v2.abandoned_at,
+    a2v2.application_origin,
+    a2v2.bail_hearing_date
+FROM cas_2_v2_applications as a2v2;
 
 -- First, drop the dependent views
 DROP VIEW IF EXISTS cas_2_application_live_summary;

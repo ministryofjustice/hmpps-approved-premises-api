@@ -138,6 +138,7 @@ class Cas2StartupScript(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
+        applicationOrigin = application.applicationOrigin,
       ),
     )
     application.assessment = assessment
