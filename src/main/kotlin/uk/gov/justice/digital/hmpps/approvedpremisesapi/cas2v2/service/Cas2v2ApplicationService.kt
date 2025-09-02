@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
@@ -57,6 +58,9 @@ class Cas2v2ApplicationService(
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
+  fun getCas2v2ApplicationsByCrn(crn: String): List<Cas2v2ApplicationEntity> {
+    return cas2v2ApplicationRepository.findAllByCrn(crn)
+  }
 
   fun getCas2v2Applications(
     prisonCode: String?,
@@ -139,7 +143,7 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated<Cas2v2ApplicationEntity> {
-    val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn, applicationOrigin)
+    val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)
 
     val offenderDetails = when (offenderDetailsResult) {
       is Cas2v2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -358,7 +362,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("ThrowsCount")
-  private fun retrievePrisonCode(application: Cas2v2ApplicationEntity): String {
+  fun retrievePrisonCode(application: Cas2v2ApplicationEntity): String {
     val inmateDetailResult = cas2v2OffenderService.getInmateDetailByNomsNumber(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),

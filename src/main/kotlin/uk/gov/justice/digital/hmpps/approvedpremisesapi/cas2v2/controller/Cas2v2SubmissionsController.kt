@@ -96,7 +96,7 @@ class Cas2v2SubmissionsController(
   private fun getPersonDetailAndTransform(
     application: Cas2v2ApplicationEntity,
   ): Cas2v2SubmittedApplication {
-    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(application.crn, application.applicationOrigin)) {
+    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")

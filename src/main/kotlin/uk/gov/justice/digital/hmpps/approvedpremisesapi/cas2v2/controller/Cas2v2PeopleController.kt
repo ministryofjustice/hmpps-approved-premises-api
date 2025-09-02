@@ -21,7 +21,7 @@ class Cas2v2PeopleController(
   fun searchByCrnGet(
     @PathVariable crn: String,
   ): ResponseEntity<Person> {
-    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn, ApplicationOrigin.courtBail)) {
+    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(crn, "Offender", "a CRN")
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for CRN: $crn")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
@@ -34,7 +34,7 @@ class Cas2v2PeopleController(
   fun searchByNomisIdGet(
     @PathVariable nomsNumber: String,
   ): ResponseEntity<Person> {
-    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber, ApplicationOrigin.prisonBail)) {
+    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender", "a nomsNumber (prison number)")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: $nomsNumber")

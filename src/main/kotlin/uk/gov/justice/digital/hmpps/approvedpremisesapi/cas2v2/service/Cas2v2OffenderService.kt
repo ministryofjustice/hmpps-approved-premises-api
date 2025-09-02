@@ -25,7 +25,7 @@ class Cas2v2OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomisIdOrCrn(nomisIdOrCrn: String, applicationOrigin: ApplicationOrigin): Cas2v2OffenderSearchResult {
+  fun getPersonByNomisIdOrCrn(nomisIdOrCrn: String): Cas2v2OffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomisIdOrCrn", probationResponse.toException())
 
     val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))
@@ -51,10 +51,6 @@ class Cas2v2OffenderService(
     }
 
     val caseSummary = caseSummaryList[0]
-
-    if (caseSummary.nomsId == null && applicationOrigin != ApplicationOrigin.courtBail) {
-      return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = nomisIdOrCrn)
-    }
 
     return when (caseSummary.currentRestriction) {
       false -> Cas2v2OffenderSearchResult.Success.Full(

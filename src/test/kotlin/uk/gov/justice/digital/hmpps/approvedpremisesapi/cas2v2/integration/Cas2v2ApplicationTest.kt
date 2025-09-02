@@ -1395,33 +1395,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     }
 
     @Test
-    fun `Create new application for cas2v2 as a Noms user returns 404 when there is no Noms number and it is prisonBail application`() {
-      apDeliusContextAddSingleCaseSummaryToBulkResponse(
-        caseSummary = CaseSummaryFactory()
-          .withCrn(crn)
-          .withNomsId(null)
-          .produce(),
-      )
-      givenACas2v2NomisUser { _, jwt ->
-
-        webTestClient.post()
-          .uri("/cas2v2/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = crn,
-              applicationOrigin = ApplicationOrigin.prisonBail,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isNotFound
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
-      }
-    }
-
-    @Test
     fun `Create new cas2v2 application as a Noms user returns 404 when a person cannot be found`() {
       givenACas2v2NomisUser { _, jwt ->
         apDeliusContextMockUnsuccessfulCaseSummaryCall(404)

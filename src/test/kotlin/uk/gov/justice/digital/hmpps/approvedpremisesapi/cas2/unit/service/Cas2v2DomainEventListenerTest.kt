@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 
 @ExtendWith(MockKExtension::class)
-class Cas2DomainEventListenerTest {
+class Cas2v2DomainEventListenerTest {
 
   @MockK
   lateinit var cas2AllocationChangedService: Cas2AllocationChangedService
