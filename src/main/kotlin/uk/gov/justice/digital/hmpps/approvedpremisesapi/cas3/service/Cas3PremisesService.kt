@@ -697,7 +697,7 @@ class Cas3PremisesService(
   fun canArchiveBedspaceInFuture(premisesId: UUID, bedspaceId: UUID): CasResult<Cas3ValidationResult?> {
     val bedEntity = bedspaceRepository.findCas3Bedspace(premisesId, bedspaceId) ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
 
-    val threeMonthsFromToday = LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
+    val threeMonthsFromToday = LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
     val blockingArchiveDates = mutableListOf<LocalDate>()
 
     val overlapBookings = bookingRepository.findActiveOverlappingBookingByBed(bedspaceId, LocalDate.now())
